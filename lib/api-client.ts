@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://glow-up-channel-backend-761979347865.europe-west1.run.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://latest-glowup-channel-761979347865.europe-west1.run.app';
 
 // Types for API responses
 interface ApiResponse<T = any> {

@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, MapPin, Briefcase, Calendar, BookOpen, X } from 'lucide-react'
+import { Search, Filter, MapPin, Briefcase, Calendar, BookOpen, X, Loader2 } from 'lucide-react'
 import ApiClient from '@/lib/api-client'
 import Link from 'next/link'
 
@@ -28,14 +28,25 @@ interface SearchResults {
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<SearchFilters>({})
-  const [results, setResults] = useState<SearchResults>({
+  const [allResults, setAllResults] = useState<SearchResults>({
+    opportunities: [],
+    events: [],
+    jobs: [],
+    resources: []
+  })
+  const [displayedResults, setDisplayedResults] = useState<SearchResults>({
     opportunities: [],
     events: [],
     jobs: [],
     resources: []
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const observerRef = useRef<HTMLDivElement>(null)
+  const ITEMS_PER_PAGE = 20
 
   const industryOptions = [
     'Technology', 'Healthcare', 'Finance', 'Education', 'Marketing',
@@ -47,18 +58,25 @@ export default function SearchPage() {
     'Graphic Design', 'Content Writing', 'Public Speaking', 'Sales'
   ]
 
-  const performSearch = useCallback(async () => {
+  const performSearch = useCallback(async (page = 1, append = false) => {
     if (!searchQuery.trim()) {
-      setResults({ opportunities: [], events: [], jobs: [], resources: [] })
+      setAllResults({ opportunities: [], events: [], jobs: [], resources: [] })
+      setDisplayedResults({ opportunities: [], events: [], jobs: [], resources: [] })
       return
     }
 
-    setIsLoading(true)
+    if (page === 1) {
+      setIsLoading(true)
+    } else {
+      setLoadingMore(true)
+    }
+
     try {
       // Create a comprehensive search by calling each content type with filters
       const searchParams = {
         search: searchQuery,
-        limit: 20,
+        limit: ITEMS_PER_PAGE,
+        offset: (page - 1) * ITEMS_PER_PAGE,
         ...(filters.location && { country: filters.location }),
         ...(filters.type && { 
           ...(filters.type === 'opportunity' && { category: filters.type }),
@@ -113,30 +131,93 @@ export default function SearchPage() {
         filteredResources = filteredResources.filter(skillsFilter)
       }
 
-      setResults({
+      const newResults = {
         opportunities: filteredOpportunities,
         events: filteredEvents,
         jobs: filteredJobs,
         resources: filteredResources
-      })
+      }
+
+      if (append) {
+        // Helper function to filter duplicates
+        const filterDuplicates = (existing: any[], newItems: any[]) => {
+          const existingIds = new Set(existing.map(item => item._id))
+          return newItems.filter(item => !existingIds.has(item._id))
+        }
+
+        setAllResults(prev => ({
+          opportunities: [...prev.opportunities, ...filterDuplicates(prev.opportunities, newResults.opportunities)],
+          events: [...prev.events, ...filterDuplicates(prev.events, newResults.events)],
+          jobs: [...prev.jobs, ...filterDuplicates(prev.jobs, newResults.jobs)],
+          resources: [...prev.resources, ...filterDuplicates(prev.resources, newResults.resources)]
+        }))
+        setDisplayedResults(prev => ({
+          opportunities: [...prev.opportunities, ...filterDuplicates(prev.opportunities, newResults.opportunities)],
+          events: [...prev.events, ...filterDuplicates(prev.events, newResults.events)],
+          jobs: [...prev.jobs, ...filterDuplicates(prev.jobs, newResults.jobs)],
+          resources: [...prev.resources, ...filterDuplicates(prev.resources, newResults.resources)]
+        }))
+      } else {
+        setAllResults(newResults)
+        setDisplayedResults(newResults)
+      }
+
+      // Check if we have more results
+      const totalResults = newResults.opportunities.length + newResults.events.length + 
+                          newResults.jobs.length + newResults.resources.length
+      setHasMore(totalResults === ITEMS_PER_PAGE * 4) // 4 content types
+      setCurrentPage(page)
+
     } catch (error) {
       console.error('Search error:', error)
-      setResults({ opportunities: [], events: [], jobs: [], resources: [] })
+      if (page === 1) {
+        setAllResults({ opportunities: [], events: [], jobs: [], resources: [] })
+        setDisplayedResults({ opportunities: [], events: [], jobs: [], resources: [] })
+      }
     } finally {
       setIsLoading(false)
+      setLoadingMore(false)
     }
   }, [searchQuery, filters])
+
+  // Load more results
+  const loadMoreResults = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+    await performSearch(currentPage + 1, true)
+  }, [performSearch, currentPage, hasMore, loadingMore])
 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchQuery) {
-        performSearch()
+        performSearch(1, false)
       }
     }, 300)
 
     return () => clearTimeout(timer)
   }, [searchQuery, filters, performSearch])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          loadMoreResults()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current)
+      }
+    }
+  }, [loadMoreResults, hasMore, loadingMore])
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -160,7 +241,7 @@ export default function SearchPage() {
     })
   }
 
-  const totalResults = results.opportunities.length + results.events.length + results.jobs.length + results.resources.length
+  const totalResults = displayedResults.opportunities.length + displayedResults.events.length + displayedResults.jobs.length + displayedResults.resources.length
 
   const renderResultCard = (item: any, type: string) => {
     // Handle different data structures from backend
@@ -393,58 +474,178 @@ export default function SearchPage() {
                     <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     <span className="hidden sm:inline">Opportunities</span>
                     <span className="sm:hidden">Opps</span>
-                    ({results.opportunities.length})
+                    ({displayedResults.opportunities.length})
                   </TabsTrigger>
                   <TabsTrigger value="jobs" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-xs sm:text-sm">
                     <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    Jobs ({results.jobs.length})
+                    Jobs ({displayedResults.jobs.length})
                   </TabsTrigger>
                   <TabsTrigger value="events" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-xs sm:text-sm">
                     <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     <span className="hidden sm:inline">Events</span>
                     <span className="sm:hidden">Evts</span>
-                    ({results.events.length})
+                    ({displayedResults.events.length})
                   </TabsTrigger>
                   <TabsTrigger value="resources" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-xs sm:text-sm">
                     <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     <span className="hidden sm:inline">Resources</span>
                     <span className="sm:hidden">Res</span>
-                    ({results.resources.length})
+                    ({displayedResults.resources.length})
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="all" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {[
-                      ...results.opportunities.map(item => ({ ...item, type: 'opportunity' })),
-                      ...results.jobs.map(item => ({ ...item, type: 'job' })),
-                      ...results.events.map(item => ({ ...item, type: 'event' })),
-                      ...results.resources.map(item => ({ ...item, type: 'resource' }))
-                    ].slice(0, 12).map(item => renderResultCard(item, item.type))}
+                      ...displayedResults.opportunities.map(item => ({ ...item, type: 'opportunity' })),
+                      ...displayedResults.jobs.map(item => ({ ...item, type: 'job' })),
+                      ...displayedResults.events.map(item => ({ ...item, type: 'event' })),
+                      ...displayedResults.resources.map(item => ({ ...item, type: 'resource' }))
+                    ].map(item => renderResultCard(item, item.type))}
+                  </div>
+                  
+                  {/* Infinite Scroll Loading Indicator */}
+                  <div className="mt-8">
+                    {loadingMore && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
+                          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                        </div>
+                        <p className="text-sm text-gray-600">Loading more results...</p>
+                      </div>
+                    )}
+                    
+                    {!hasMore && !loadingMore && totalResults > ITEMS_PER_PAGE && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                          <Search className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-600">You've reached the end! No more results to load.</p>
+                      </div>
+                    )}
+                    
+                    {/* Intersection Observer Target */}
+                    <div ref={observerRef} className="h-4" />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="opportunities" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {results.opportunities.map(item => renderResultCard(item, 'opportunity'))}
+                    {displayedResults.opportunities.map(item => renderResultCard(item, 'opportunity'))}
+                  </div>
+                  
+                  {/* Infinite Scroll Loading Indicator */}
+                  <div className="mt-8">
+                    {loadingMore && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
+                          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                        </div>
+                        <p className="text-sm text-gray-600">Loading more opportunities...</p>
+                      </div>
+                    )}
+                    
+                    {!hasMore && !loadingMore && displayedResults.opportunities.length > ITEMS_PER_PAGE && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                          <Briefcase className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-600">You've reached the end! No more opportunities to load.</p>
+                      </div>
+                    )}
+                    
+                    {/* Intersection Observer Target */}
+                    <div ref={observerRef} className="h-4" />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="jobs" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {results.jobs.map(item => renderResultCard(item, 'job'))}
+                    {displayedResults.jobs.map(item => renderResultCard(item, 'job'))}
+                  </div>
+                  
+                  {/* Infinite Scroll Loading Indicator */}
+                  <div className="mt-8">
+                    {loadingMore && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
+                          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                        </div>
+                        <p className="text-sm text-gray-600">Loading more jobs...</p>
+                      </div>
+                    )}
+                    
+                    {!hasMore && !loadingMore && displayedResults.jobs.length > ITEMS_PER_PAGE && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                          <Briefcase className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-600">You've reached the end! No more jobs to load.</p>
+                      </div>
+                    )}
+                    
+                    {/* Intersection Observer Target */}
+                    <div ref={observerRef} className="h-4" />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="events" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {results.events.map(item => renderResultCard(item, 'event'))}
+                    {displayedResults.events.map(item => renderResultCard(item, 'event'))}
+                  </div>
+                  
+                  {/* Infinite Scroll Loading Indicator */}
+                  <div className="mt-8">
+                    {loadingMore && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
+                          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                        </div>
+                        <p className="text-sm text-gray-600">Loading more events...</p>
+                      </div>
+                    )}
+                    
+                    {!hasMore && !loadingMore && displayedResults.events.length > ITEMS_PER_PAGE && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                          <Calendar className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-600">You've reached the end! No more events to load.</p>
+                      </div>
+                    )}
+                    
+                    {/* Intersection Observer Target */}
+                    <div ref={observerRef} className="h-4" />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="resources" className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {results.resources.map(item => renderResultCard(item, 'resource'))}
+                    {displayedResults.resources.map(item => renderResultCard(item, 'resource'))}
+                  </div>
+                  
+                  {/* Infinite Scroll Loading Indicator */}
+                  <div className="mt-8">
+                    {loadingMore && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
+                          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                        </div>
+                        <p className="text-sm text-gray-600">Loading more resources...</p>
+                      </div>
+                    )}
+                    
+                    {!hasMore && !loadingMore && displayedResults.resources.length > ITEMS_PER_PAGE && (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                          <BookOpen className="w-6 h-6 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-600">You've reached the end! No more resources to load.</p>
+                      </div>
+                    )}
+                    
+                    {/* Intersection Observer Target */}
+                    <div ref={observerRef} className="h-4" />
                   </div>
                 </TabsContent>
               </Tabs>

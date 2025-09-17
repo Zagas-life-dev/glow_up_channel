@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://glow-up-channel-backend-761979347865.europe-west1.run.app'  // Update with your production URL
+  ? 'https://latest-glowup-channel-761979347865.europe-west1.run.app'  // Update with your production URL
   : 'http://localhost:3001';
 
 interface OnboardingData {

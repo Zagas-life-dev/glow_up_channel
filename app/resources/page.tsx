@@ -1,27 +1,29 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useRef, useCallback } from "react"
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { BookOpen, ArrowRight, Heart, Bookmark, Eye, Users, DollarSign } from 'lucide-react'
+import { BookOpen, ArrowRight, Heart, Bookmark, Eye, Users, DollarSign, Loader2 } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 
 function ResourcesContent() {
-    const [resources, setResources] = useState<any[]>([])
-    const [filteredResources, setFilteredResources] = useState<any[]>([])
+    const [allResources, setAllResources] = useState<any[]>([])
     const [displayedResources, setDisplayedResources] = useState<any[]>([])
+    const [filteredResources, setFilteredResources] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingMore, setLoadingMore] = useState(false)
     const [hasMore, setHasMore] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
     const [searchQuery, setSearchQuery] = useState("")
+    const [totalCount, setTotalCount] = useState(0)
     const searchParams = useSearchParams()
     const { user, isAuthenticated } = useAuth()
-    const ITEMS_PER_PAGE = 30
+    const observerRef = useRef<HTMLDivElement>(null)
+    const ITEMS_PER_PAGE = 20
 
     useEffect(() => {
         const tag = searchParams.get('tag')
@@ -30,132 +32,193 @@ function ResourcesContent() {
         }
     }, [searchParams])
 
-  useEffect(() => {
-    const fetchResources = async () => {
-      setLoading(true)
-      try {
-        let recommendedResources: any[] = []
-        let regularResources: any[] = []
-        let promotedResources: any[] = []
-        
-        // Always fetch promoted content (public API)
-        try {
-          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/resources?limit=30`)
-          const promotedData = await promotedRes.json()
-          if (promotedData.success) {
-            promotedResources = promotedData.data?.resources || []
-          }
-        } catch (error) {
-          console.error('Error fetching promoted resources:', error)
+    // Reset pagination when search changes
+    useEffect(() => {
+        if (searchQuery) {
+            setCurrentPage(1)
+            setDisplayedResources([])
+            setHasMore(true)
         }
-        
-        if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
-          const token = localStorage.getItem('accessToken')
-          const headers = { 'Authorization': `Bearer ${token}` }
-          
-          const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/resources?limit=50`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
-          
-          if (recommendedData.success) {
-            recommendedResources = recommendedData.data?.resources || []
-          }
-          
-          if (regularData.success) {
-            regularResources = regularData.data?.resources || []
-          }
-        } else {
-          // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularResources = result.data?.resources || []
-          }
-        }
-        
-        // Merge and deduplicate: promoted first, then recommended, then regular data (removing duplicates)
-        const mergedResources = [...promotedResources]
-        const promotedIds = new Set(promotedResources.map(item => item._id))
-        
-        // Add recommended resources that are not already in promoted
-        const uniqueRecommendedResources = recommendedResources.filter(item => !promotedIds.has(item._id))
-        mergedResources.push(...uniqueRecommendedResources)
-        
-        const recommendedIds = new Set([...promotedResources, ...recommendedResources].map(item => item._id))
-        
-        // Add regular resources that are not already in promoted or recommended
-        const uniqueRegularResources = regularResources.filter(item => !recommendedIds.has(item._id))
-        mergedResources.push(...uniqueRegularResources)
-        
-        setResources(mergedResources)
-        setFilteredResources(mergedResources)
-        
-        // Initialize displayed resources with first page
-        const initialDisplay = mergedResources.slice(0, ITEMS_PER_PAGE)
-        setDisplayedResources(initialDisplay)
-        setHasMore(mergedResources.length > ITEMS_PER_PAGE)
-        setCurrentPage(1)
-        
-        console.log(`Loaded ${promotedResources.length} promoted + ${recommendedResources.length} recommended + ${uniqueRegularResources.length} regular = ${mergedResources.length} total resources`)
-        
-      } catch (error) {
-        console.error('Error fetching resources:', error)
-        setResources([])
-        setFilteredResources([])
-      }
-      setLoading(false)
-    }
-    fetchResources()
-  }, [isAuthenticated, user])
+    }, [searchQuery])
 
+    // Load more resources
+    const loadMoreResources = useCallback(async () => {
+        if (loadingMore || !hasMore) return
+
+        setLoadingMore(true)
+        try {
+            const page = currentPage + 1
+            const offset = (page - 1) * ITEMS_PER_PAGE
+
+            let newResources: any[] = []
+            
+            if (isAuthenticated && user) {
+                const token = localStorage.getItem('accessToken')
+                const headers = { 'Authorization': `Bearer ${token}` }
+                
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=${ITEMS_PER_PAGE}&offset=${offset}`, { headers })
+                const data = await response.json()
+                
+                if (data.success) {
+                    newResources = data.data?.resources || []
+                }
+            } else {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=${ITEMS_PER_PAGE}&offset=${offset}`)
+                const data = await response.json()
+                
+                if (data.success) {
+                    newResources = data.data?.resources || []
+                }
+            }
+
+            if (newResources.length === 0) {
+                setHasMore(false)
+            } else {
+                // Filter out duplicates by checking existing IDs
+                setAllResources(prev => {
+                    const existingIds = new Set(prev.map(item => item._id))
+                    const uniqueNewResources = newResources.filter(item => !existingIds.has(item._id))
+                    
+                    if (uniqueNewResources.length === 0) {
+                        setHasMore(false)
+                        return prev
+                    }
+                    
+                    return [...prev, ...uniqueNewResources]
+                })
+                setCurrentPage(page)
+            }
+        } catch (error) {
+            console.error('Error loading more resources:', error)
+        } finally {
+            setLoadingMore(false)
+        }
+    }, [currentPage, hasMore, loadingMore, isAuthenticated, user])
+
+    // Initial load
+    useEffect(() => {
+        const fetchInitialResources = async () => {
+            setLoading(true)
+            try {
+                let promotedResources: any[] = []
+                let recommendedResources: any[] = []
+                let regularResources: any[] = []
+                
+                // Always fetch promoted content (public API)
+                try {
+                    const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/resources?limit=10`)
+                    const promotedData = await promotedRes.json()
+                    if (promotedData.success) {
+                        promotedResources = promotedData.data?.resources || []
+                    }
+                } catch (error) {
+                    console.error('Error fetching promoted resources:', error)
+                }
+                
+                if (isAuthenticated && user) {
+                    // Fetch both recommendation and regular API data
+                    const token = localStorage.getItem('accessToken')
+                    const headers = { 'Authorization': `Bearer ${token}` }
+                    
+                    const [recommendedRes, regularRes] = await Promise.all([
+                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/resources?limit=20`, { headers }),
+                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=${ITEMS_PER_PAGE}&offset=0`)
+                    ])
+                    
+                    const [recommendedData, regularData] = await Promise.all([
+                        recommendedRes.json(),
+                        regularRes.json()
+                    ])
+                    
+                    if (recommendedData.success) {
+                        recommendedResources = recommendedData.data?.resources || []
+                    }
+                    
+                    if (regularData.success) {
+                        regularResources = regularData.data?.resources || []
+                        setTotalCount(regularData.data?.totalCount || regularResources.length)
+                    }
+                } else {
+                    // Use only regular API for non-authenticated users
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=${ITEMS_PER_PAGE}&offset=0`)
+                    const result = await response.json()
+                    
+                    if (result.success) {
+                        regularResources = result.data?.resources || []
+                        setTotalCount(result.data?.totalCount || regularResources.length)
+                    }
+                }
+                
+                // Merge and deduplicate: promoted first, then recommended, then regular data
+                const mergedResources = [...promotedResources]
+                const promotedIds = new Set(promotedResources.map(item => item._id))
+                
+                // Add recommended resources that are not already in promoted
+                const uniqueRecommendedResources = recommendedResources.filter(item => !promotedIds.has(item._id))
+                mergedResources.push(...uniqueRecommendedResources)
+                
+                const recommendedIds = new Set([...promotedResources, ...recommendedResources].map(item => item._id))
+                
+                // Add regular resources that are not already in promoted or recommended
+                const uniqueRegularResources = regularResources.filter(item => !recommendedIds.has(item._id))
+                mergedResources.push(...uniqueRegularResources)
+                
+                setAllResources(mergedResources)
+                setDisplayedResources(mergedResources)
+                setFilteredResources(mergedResources)
+                
+                console.log(`Loaded ${promotedResources.length} promoted + ${recommendedResources.length} recommended + ${uniqueRegularResources.length} regular = ${mergedResources.length} total resources`)
+                
+            } catch (error) {
+                console.error('Error fetching resources:', error)
+                setAllResources([])
+                setDisplayedResources([])
+                setFilteredResources([])
+            }
+            setLoading(false)
+        }
+        fetchInitialResources()
+    }, [isAuthenticated, user])
+
+    // Filter resources based on search
     useEffect(() => {
         const lowercasedQuery = searchQuery.toLowerCase()
-        const filtered = resources.filter((resource) => {
+        const filtered = allResources.filter((resource) => {
             return (
                 (resource.title?.toLowerCase() || '').includes(lowercasedQuery) ||
                 (resource.description?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (resource.tags && resource.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))||
-                ((!resource.isPaid ? "free" : "paid").toLowerCase().includes(lowercasedQuery)))
+                (resource.tags && resource.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))) ||
+                ((!resource.isPaid ? "free" : "paid").toLowerCase().includes(lowercasedQuery))
             )
-  })
+        })
         setFilteredResources(filtered)
-        
-        // Reset pagination when search changes
-        const initialDisplay = filtered.slice(0, ITEMS_PER_PAGE)
-        setDisplayedResources(initialDisplay)
-        setHasMore(filtered.length > ITEMS_PER_PAGE)
-        setCurrentPage(1)
-    }, [searchQuery, resources])
+        setDisplayedResources(filtered)
+    }, [searchQuery, allResources])
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                    loadMoreResources()
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        if (observerRef.current) {
+            observer.observe(observerRef.current)
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current)
+            }
+        }
+    }, [loadMoreResources, hasMore, loadingMore])
 
     const handleSearch = (query: string) => {
         setSearchQuery(query)
-    }
-
-    const loadMore = () => {
-        if (loadingMore || !hasMore) return
-        
-        setLoadingMore(true)
-        
-        // Simulate loading delay for better UX
-        setTimeout(() => {
-            const nextPage = currentPage + 1
-            const startIndex = nextPage * ITEMS_PER_PAGE
-            const endIndex = startIndex + ITEMS_PER_PAGE
-            const nextBatch = filteredResources.slice(startIndex, endIndex)
-            
-            setDisplayedResources(prev => [...prev, ...nextBatch])
-            setCurrentPage(nextPage)
-            setHasMore(endIndex < filteredResources.length)
-            setLoadingMore(false)
-        }, 500)
     }
 
     const suggestionTags = ["Career Guide", "E-book", "Toolkit", "Premium", "Free"]
@@ -218,7 +281,7 @@ function ResourcesContent() {
                                     <span className="font-semibold text-gray-900"> "{searchQuery}"</span>
                                 </>
                             ) : (
-                                <>Showing {displayedResources.length} of {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}</>
+                                <>Showing {displayedResources.length} of {totalCount > 0 ? totalCount : 'many'} resource{displayedResources.length !== 1 ? 's' : ''}</>
                       )}
                         </p>
                     </div>
@@ -340,40 +403,31 @@ function ResourcesContent() {
                                 ))}
                             </div>
                             
-                            {/* Load More Button */}
-                            {hasMore && (
-                                <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                                    <Button
-                                        onClick={loadMore}
-                                        disabled={loadingMore}
-                                        className="bg-purple-500 hover:bg-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {loadingMore ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                Loading more...
-                                            </>
-                                        ) : (
-                                            <>
-                                                Load More Resources
-                                                <ArrowRight className="ml-2 h-4 w-4" />
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-                            
-                            {/* End of Results Message */}
-                            {!hasMore && filteredResources.length > ITEMS_PER_PAGE && (
-                                <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
-                                        <BookOpen className="w-6 h-6 text-gray-400" />
+                            {/* Infinite Scroll Loading Indicator */}
+                            <div className="mt-8">
+                                {/* Loading More Indicator */}
+                                {loadingMore && (
+                                    <div className="text-center py-8">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full mb-4">
+                                            <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+                                        </div>
+                                        <p className="text-sm text-gray-600">Loading more resources...</p>
                                     </div>
-                                    <p className="text-sm sm:text-base text-gray-600">
-                                        You've reached the end! No more resources to load.
-                                    </p>
-                                </div>
-                            )}
+                                )}
+                                
+                                {/* End of Content Message */}
+                                {!hasMore && !loadingMore && displayedResources.length > ITEMS_PER_PAGE && (
+                                    <div className="text-center py-8">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                                            <BookOpen className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-600">You've reached the end! No more resources to load.</p>
+                                    </div>
+                                )}
+                                
+                                {/* Intersection Observer Target */}
+                                <div ref={observerRef} className="h-4" />
+                            </div>
                         </>
                     ) : (
                         <div className="text-center py-12 sm:py-16 md:py-20">

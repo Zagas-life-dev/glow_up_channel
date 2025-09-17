@@ -1,26 +1,28 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Briefcase, ArrowRight, Heart, Bookmark, Eye, Users, DollarSign, Building, MapPin } from "lucide-react"
+import { Briefcase, ArrowRight, Heart, Bookmark, Eye, Users, DollarSign, Building, MapPin, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 
 function JobsContent() {
-  const [jobs, setJobs] = useState<any[]>([])
-  const [filteredJobs, setFilteredJobs] = useState<any[]>([])
+  const [allJobs, setAllJobs] = useState<any[]>([])
   const [displayedJobs, setDisplayedJobs] = useState<any[]>([])
+  const [filteredJobs, setFilteredJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const [totalCount, setTotalCount] = useState(0)
   const searchParams = useSearchParams()
   const { user, isAuthenticated } = useAuth()
-  const ITEMS_PER_PAGE = 30
+  const observerRef = useRef<HTMLDivElement>(null)
+  const ITEMS_PER_PAGE = 20
 
   useEffect(() => {
     const tag = searchParams.get('tag')
@@ -29,17 +31,81 @@ function JobsContent() {
     }
   }, [searchParams])
 
+  // Reset pagination when search changes
   useEffect(() => {
-  const fetchJobs = async () => {
+    if (searchQuery) {
+      setCurrentPage(1)
+      setDisplayedJobs([])
+      setHasMore(true)
+    }
+  }, [searchQuery])
+
+  // Load more jobs
+  const loadMoreJobs = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+
+    setLoadingMore(true)
+    try {
+      const page = currentPage + 1
+      const offset = (page - 1) * ITEMS_PER_PAGE
+
+      let newJobs: any[] = []
+      
+      if (isAuthenticated && user) {
+        const token = localStorage.getItem('accessToken')
+        const headers = { 'Authorization': `Bearer ${token}` }
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=${ITEMS_PER_PAGE}&offset=${offset}`, { headers })
+        const data = await response.json()
+        
+        if (data.success) {
+          newJobs = data.data?.jobs || []
+        }
+      } else {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=${ITEMS_PER_PAGE}&offset=${offset}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          newJobs = data.data?.jobs || []
+        }
+      }
+
+      if (newJobs.length === 0) {
+        setHasMore(false)
+      } else {
+        // Filter out duplicates by checking existing IDs
+        setAllJobs(prev => {
+          const existingIds = new Set(prev.map(item => item._id))
+          const uniqueNewJobs = newJobs.filter(item => !existingIds.has(item._id))
+          
+          if (uniqueNewJobs.length === 0) {
+            setHasMore(false)
+            return prev
+          }
+          
+          return [...prev, ...uniqueNewJobs]
+        })
+        setCurrentPage(page)
+      }
+    } catch (error) {
+      console.error('Error loading more jobs:', error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [currentPage, hasMore, loadingMore, isAuthenticated, user])
+
+  // Initial load
+  useEffect(() => {
+    const fetchInitialJobs = async () => {
       setLoading(true)
       try {
+        let promotedJobs: any[] = []
         let recommendedJobs: any[] = []
         let regularJobs: any[] = []
-        let promotedJobs: any[] = []
         
         // Always fetch promoted content (public API)
         try {
-          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/jobs?limit=30`)
+          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/jobs?limit=10`)
           const promotedData = await promotedRes.json()
           if (promotedData.success) {
             promotedJobs = promotedData.data?.jobs || []
@@ -54,8 +120,8 @@ function JobsContent() {
           const headers = { 'Authorization': `Bearer ${token}` }
           
           const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/jobs?limit=50`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs`)
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/jobs?limit=20`, { headers }),
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=${ITEMS_PER_PAGE}&offset=0`)
           ])
           
           const [recommendedData, regularData] = await Promise.all([
@@ -69,18 +135,20 @@ function JobsContent() {
           
           if (regularData.success) {
             regularJobs = regularData.data?.jobs || []
+            setTotalCount(regularData.data?.totalCount || regularJobs.length)
           }
         } else {
           // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs`)
-      const result = await response.json()
-      
-      if (result.success) {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=${ITEMS_PER_PAGE}&offset=0`)
+          const result = await response.json()
+          
+          if (result.success) {
             regularJobs = result.data?.jobs || []
+            setTotalCount(result.data?.totalCount || regularJobs.length)
           }
         }
         
-        // Merge and deduplicate: promoted first, then recommended, then regular data (removing duplicates)
+        // Merge and deduplicate: promoted first, then recommended, then regular data
         const mergedJobs = [...promotedJobs]
         const promotedIds = new Set(promotedJobs.map(item => item._id))
         
@@ -94,30 +162,27 @@ function JobsContent() {
         const uniqueRegularJobs = regularJobs.filter(item => !recommendedIds.has(item._id))
         mergedJobs.push(...uniqueRegularJobs)
         
-        setJobs(mergedJobs)
+        setAllJobs(mergedJobs)
+        setDisplayedJobs(mergedJobs)
         setFilteredJobs(mergedJobs)
-        
-        // Initialize displayed jobs with first page
-        const initialDisplay = mergedJobs.slice(0, ITEMS_PER_PAGE)
-        setDisplayedJobs(initialDisplay)
-        setHasMore(mergedJobs.length > ITEMS_PER_PAGE)
-        setCurrentPage(1)
         
         console.log(`Loaded ${promotedJobs.length} promoted + ${recommendedJobs.length} recommended + ${uniqueRegularJobs.length} regular = ${mergedJobs.length} total jobs`)
         
       } catch (error) {
         console.error('Error fetching jobs:', error)
-        setJobs([])
+        setAllJobs([])
+        setDisplayedJobs([])
         setFilteredJobs([])
       }
       setLoading(false)
     }
-    fetchJobs()
+    fetchInitialJobs()
   }, [isAuthenticated, user])
 
+  // Filter jobs based on search
   useEffect(() => {
     const lowercasedQuery = searchQuery.toLowerCase()
-    const filtered = jobs.filter((job) => {
+    const filtered = allJobs.filter((job) => {
       return (
         job.title?.toLowerCase().includes(lowercasedQuery) ||
         job.description?.toLowerCase().includes(lowercasedQuery) ||
@@ -129,35 +194,33 @@ function JobsContent() {
       )
     })
     setFilteredJobs(filtered)
-    
-    // Reset pagination when search changes
-    const initialDisplay = filtered.slice(0, ITEMS_PER_PAGE)
-    setDisplayedJobs(initialDisplay)
-    setHasMore(filtered.length > ITEMS_PER_PAGE)
-    setCurrentPage(1)
-  }, [searchQuery, jobs])
+    setDisplayedJobs(filtered)
+  }, [searchQuery, allJobs])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          loadMoreJobs()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current)
+      }
+    }
+  }, [loadMoreJobs, hasMore, loadingMore])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-  }
-
-  const loadMore = () => {
-    if (loadingMore || !hasMore) return
-    
-    setLoadingMore(true)
-    
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      const nextPage = currentPage + 1
-      const startIndex = nextPage * ITEMS_PER_PAGE
-      const endIndex = startIndex + ITEMS_PER_PAGE
-      const nextBatch = filteredJobs.slice(startIndex, endIndex)
-      
-      setDisplayedJobs(prev => [...prev, ...nextBatch])
-      setCurrentPage(nextPage)
-      setHasMore(endIndex < filteredJobs.length)
-      setLoadingMore(false)
-    }, 500)
   }
 
   const suggestionTags = ["Full-time", "Part-time", "Remote", "Internship", "Contract", "Entry-level"]
@@ -220,7 +283,7 @@ function JobsContent() {
                   <span className="font-semibold text-gray-900"> "{searchQuery}"</span>
                 </>
               ) : (
-                <>Showing {displayedJobs.length} of {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}</>
+                <>Showing {displayedJobs.length} of {totalCount > 0 ? totalCount : 'many'} job{displayedJobs.length !== 1 ? 's' : ''}</>
               )}
             </p>
           </div>
@@ -373,40 +436,31 @@ function JobsContent() {
                 ))}
             </div>
             
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                <Button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Loading more...
-                    </>
-                  ) : (
-                    <>
-                      Load More Jobs
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-            
-            {/* End of Results Message */}
-            {!hasMore && filteredJobs.length > ITEMS_PER_PAGE && (
-              <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
-                  <Briefcase className="w-6 h-6 text-gray-400" />
+            {/* Infinite Scroll Loading Indicator */}
+            <div className="mt-8">
+              {/* Loading More Indicator */}
+              {loadingMore && (
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mb-4">
+                    <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                  </div>
+                  <p className="text-sm text-gray-600">Loading more jobs...</p>
                 </div>
-                <p className="text-sm sm:text-base text-gray-600">
-                  You've reached the end! No more jobs to load.
-                </p>
-              </div>
-            )}
+              )}
+              
+              {/* End of Content Message */}
+              {!hasMore && !loadingMore && displayedJobs.length > ITEMS_PER_PAGE && (
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                    <Briefcase className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600">You've reached the end! No more jobs to load.</p>
+                </div>
+              )}
+              
+              {/* Intersection Observer Target */}
+              <div ref={observerRef} className="h-4" />
+            </div>
           </>
         ) : (
           <div className="text-center py-12 sm:py-16 md:py-20">

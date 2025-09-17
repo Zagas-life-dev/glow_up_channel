@@ -1,27 +1,29 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useRef, useCallback } from "react"
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Calendar, ArrowRight, Heart, Bookmark, Eye, Users } from 'lucide-react'
+import { Calendar, ArrowRight, Heart, Bookmark, Eye, Users, Loader2 } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 
 function EventsContent() {
-    const [events, setEvents] = useState<any[]>([])
-    const [filteredEvents, setFilteredEvents] = useState<any[]>([])
+    const [allEvents, setAllEvents] = useState<any[]>([])
     const [displayedEvents, setDisplayedEvents] = useState<any[]>([])
+    const [filteredEvents, setFilteredEvents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingMore, setLoadingMore] = useState(false)
     const [hasMore, setHasMore] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
     const [searchQuery, setSearchQuery] = useState("")
+    const [totalCount, setTotalCount] = useState(0)
     const searchParams = useSearchParams()
     const { user, isAuthenticated } = useAuth()
-    const ITEMS_PER_PAGE = 30
+    const observerRef = useRef<HTMLDivElement>(null)
+    const ITEMS_PER_PAGE = 20
 
     useEffect(() => {
         const tag = searchParams.get('tag')
@@ -30,95 +32,158 @@ function EventsContent() {
         }
     }, [searchParams])
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true)
-      try {
-        let recommendedEvents: any[] = []
-        let regularEvents: any[] = []
-        let promotedEvents: any[] = []
-        
-        // Always fetch promoted content (public API)
-        try {
-          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/events?limit=30`)
-          const promotedData = await promotedRes.json()
-          if (promotedData.success) {
-            promotedEvents = promotedData.data?.events || []
-          }
-        } catch (error) {
-          console.error('Error fetching promoted events:', error)
+    // Reset pagination when search changes
+    useEffect(() => {
+        if (searchQuery) {
+            setCurrentPage(1)
+            setDisplayedEvents([])
+            setHasMore(true)
         }
-        
-        if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
-          const token = localStorage.getItem('accessToken')
-          const headers = { 'Authorization': `Bearer ${token}` }
-          
-          const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/events?limit=50`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
-          
-          if (recommendedData.success) {
-            recommendedEvents = recommendedData.data?.events || []
-          }
-          
-          if (regularData.success) {
-            regularEvents = regularData.data?.events || []
-          }
-        } else {
-          // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularEvents = result.data?.events || []
-          }
-        }
-        
-        // Merge and deduplicate: promoted first, then recommended, then regular data (removing duplicates)
-        const mergedEvents = [...promotedEvents]
-        const promotedIds = new Set(promotedEvents.map(item => item._id))
-        
-        // Add recommended events that are not already in promoted
-        const uniqueRecommendedEvents = recommendedEvents.filter(item => !promotedIds.has(item._id))
-        mergedEvents.push(...uniqueRecommendedEvents)
-        
-        const recommendedIds = new Set([...promotedEvents, ...recommendedEvents].map(item => item._id))
-        
-        // Add regular events that are not already in promoted or recommended
-        const uniqueRegularEvents = regularEvents.filter(item => !recommendedIds.has(item._id))
-        mergedEvents.push(...uniqueRegularEvents)
-        
-        setEvents(mergedEvents)
-        setFilteredEvents(mergedEvents)
-        
-        // Initialize displayed events with first page
-        const initialDisplay = mergedEvents.slice(0, ITEMS_PER_PAGE)
-        setDisplayedEvents(initialDisplay)
-        setHasMore(mergedEvents.length > ITEMS_PER_PAGE)
-        setCurrentPage(1)
-        
-        console.log(`Loaded ${promotedEvents.length} promoted + ${recommendedEvents.length} recommended + ${uniqueRegularEvents.length} regular = ${mergedEvents.length} total events`)
-        
-      } catch (error) {
-        console.error('Error fetching events:', error)
-        setEvents([])
-        setFilteredEvents([])
-      }
-      setLoading(false)
-    }
-    fetchEvents()
-  }, [isAuthenticated, user])
+    }, [searchQuery])
 
+    // Load more events
+    const loadMoreEvents = useCallback(async () => {
+        if (loadingMore || !hasMore) return
+
+        setLoadingMore(true)
+        try {
+            const page = currentPage + 1
+            const offset = (page - 1) * ITEMS_PER_PAGE
+
+            let newEvents: any[] = []
+            
+            if (isAuthenticated && user) {
+                const token = localStorage.getItem('accessToken')
+                const headers = { 'Authorization': `Bearer ${token}` }
+                
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=${ITEMS_PER_PAGE}&offset=${offset}`, { headers })
+                const data = await response.json()
+                
+                if (data.success) {
+                    newEvents = data.data?.events || []
+                }
+            } else {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=${ITEMS_PER_PAGE}&offset=${offset}`)
+                const data = await response.json()
+                
+                if (data.success) {
+                    newEvents = data.data?.events || []
+                }
+            }
+
+            if (newEvents.length === 0) {
+                setHasMore(false)
+            } else {
+                // Filter out duplicates by checking existing IDs
+                setAllEvents(prev => {
+                    const existingIds = new Set(prev.map(item => item._id))
+                    const uniqueNewEvents = newEvents.filter(item => !existingIds.has(item._id))
+                    
+                    if (uniqueNewEvents.length === 0) {
+                        setHasMore(false)
+                        return prev
+                    }
+                    
+                    return [...prev, ...uniqueNewEvents]
+                })
+                setCurrentPage(page)
+            }
+        } catch (error) {
+            console.error('Error loading more events:', error)
+        } finally {
+            setLoadingMore(false)
+        }
+    }, [currentPage, hasMore, loadingMore, isAuthenticated, user])
+
+    // Initial load
+    useEffect(() => {
+        const fetchInitialEvents = async () => {
+            setLoading(true)
+            try {
+                let promotedEvents: any[] = []
+                let recommendedEvents: any[] = []
+                let regularEvents: any[] = []
+                
+                // Always fetch promoted content (public API)
+                try {
+                    const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/events?limit=10`)
+                    const promotedData = await promotedRes.json()
+                    if (promotedData.success) {
+                        promotedEvents = promotedData.data?.events || []
+                    }
+                } catch (error) {
+                    console.error('Error fetching promoted events:', error)
+                }
+                
+                if (isAuthenticated && user) {
+                    // Fetch both recommendation and regular API data
+                    const token = localStorage.getItem('accessToken')
+                    const headers = { 'Authorization': `Bearer ${token}` }
+                    
+                    const [recommendedRes, regularRes] = await Promise.all([
+                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/events?limit=20`, { headers }),
+                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=${ITEMS_PER_PAGE}&offset=0`)
+                    ])
+                    
+                    const [recommendedData, regularData] = await Promise.all([
+                        recommendedRes.json(),
+                        regularRes.json()
+                    ])
+                    
+                    if (recommendedData.success) {
+                        recommendedEvents = recommendedData.data?.events || []
+                    }
+                    
+                    if (regularData.success) {
+                        regularEvents = regularData.data?.events || []
+                        setTotalCount(regularData.data?.totalCount || regularEvents.length)
+                    }
+                } else {
+                    // Use only regular API for non-authenticated users
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=${ITEMS_PER_PAGE}&offset=0`)
+                    const result = await response.json()
+                    
+                    if (result.success) {
+                        regularEvents = result.data?.events || []
+                        setTotalCount(result.data?.totalCount || regularEvents.length)
+                    }
+                }
+                
+                // Merge and deduplicate: promoted first, then recommended, then regular data
+                const mergedEvents = [...promotedEvents]
+                const promotedIds = new Set(promotedEvents.map(item => item._id))
+                
+                // Add recommended events that are not already in promoted
+                const uniqueRecommendedEvents = recommendedEvents.filter(item => !promotedIds.has(item._id))
+                mergedEvents.push(...uniqueRecommendedEvents)
+                
+                const recommendedIds = new Set([...promotedEvents, ...recommendedEvents].map(item => item._id))
+                
+                // Add regular events that are not already in promoted or recommended
+                const uniqueRegularEvents = regularEvents.filter(item => !recommendedIds.has(item._id))
+                mergedEvents.push(...uniqueRegularEvents)
+                
+                setAllEvents(mergedEvents)
+                setDisplayedEvents(mergedEvents)
+                setFilteredEvents(mergedEvents)
+                
+                console.log(`Loaded ${promotedEvents.length} promoted + ${recommendedEvents.length} recommended + ${uniqueRegularEvents.length} regular = ${mergedEvents.length} total events`)
+                
+            } catch (error) {
+                console.error('Error fetching events:', error)
+                setAllEvents([])
+                setDisplayedEvents([])
+                setFilteredEvents([])
+            }
+            setLoading(false)
+        }
+        fetchInitialEvents()
+    }, [isAuthenticated, user])
+
+    // Filter events based on search
     useEffect(() => {
         const lowercasedQuery = searchQuery.toLowerCase()
-        const filtered = events.filter((event) => {
+        const filtered = allEvents.filter((event) => {
             return (
                 (event.title?.toLowerCase() || '').includes(lowercasedQuery) ||
                 (event.description?.toLowerCase() || '').includes(lowercasedQuery) ||
@@ -128,35 +193,33 @@ function EventsContent() {
             )
         })
         setFilteredEvents(filtered)
-        
-        // Reset pagination when search changes
-        const initialDisplay = filtered.slice(0, ITEMS_PER_PAGE)
-        setDisplayedEvents(initialDisplay)
-        setHasMore(filtered.length > ITEMS_PER_PAGE)
-        setCurrentPage(1)
-    }, [searchQuery, events])
+        setDisplayedEvents(filtered)
+    }, [searchQuery, allEvents])
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                    loadMoreEvents()
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        if (observerRef.current) {
+            observer.observe(observerRef.current)
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current)
+            }
+        }
+    }, [loadMoreEvents, hasMore, loadingMore])
 
     const handleSearch = (query: string) => {
         setSearchQuery(query)
-    }
-
-    const loadMore = () => {
-        if (loadingMore || !hasMore) return
-        
-        setLoadingMore(true)
-        
-        // Simulate loading delay for better UX
-        setTimeout(() => {
-            const nextPage = currentPage + 1
-            const startIndex = nextPage * ITEMS_PER_PAGE
-            const endIndex = startIndex + ITEMS_PER_PAGE
-            const nextBatch = filteredEvents.slice(startIndex, endIndex)
-            
-            setDisplayedEvents(prev => [...prev, ...nextBatch])
-            setCurrentPage(nextPage)
-            setHasMore(endIndex < filteredEvents.length)
-            setLoadingMore(false)
-        }, 500)
     }
 
     const suggestionTags = ["Workshop", "Networking", "Conference", "Online", "Free", "Paid"]
@@ -219,7 +282,7 @@ function EventsContent() {
                                     <span className="font-semibold text-gray-900"> "{searchQuery}"</span>
                                 </>
                             ) : (
-                                <>Showing {displayedEvents.length} of {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}</>
+                                <>Showing {displayedEvents.length} of {totalCount > 0 ? totalCount : 'many'} event{displayedEvents.length !== 1 ? 's' : ''}</>
                             )}
                         </p>
               </div>
@@ -345,39 +408,31 @@ function EventsContent() {
                             </div>
                             
                             {/* Load More Button */}
-                            {hasMore && (
-                                <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                                    <Button
-                                        onClick={loadMore}
-                                        disabled={loadingMore}
-                                        className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {loadingMore ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                Loading more...
-                                            </>
-                                        ) : (
-                                            <>
-                                                Load More Events
-                                                <ArrowRight className="ml-2 h-4 w-4" />
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-                            
-                            {/* End of Results Message */}
-                            {!hasMore && filteredEvents.length > ITEMS_PER_PAGE && (
-                                <div className="text-center mt-8 sm:mt-10 md:mt-12">
-                                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
-                                        <Calendar className="w-6 h-6 text-gray-400" />
+                            {/* Infinite Scroll Loading Indicator */}
+                            <div className="mt-8">
+                                {/* Loading More Indicator */}
+                                {loadingMore && (
+                                    <div className="text-center py-8">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mb-4">
+                                            <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
+                                        </div>
+                                        <p className="text-sm text-gray-600">Loading more events...</p>
                                     </div>
-                                    <p className="text-sm sm:text-base text-gray-600">
-                                        You've reached the end! No more events to load.
-                                    </p>
-                                </div>
-                            )}
+                                )}
+                                
+                                {/* End of Content Message */}
+                                {!hasMore && !loadingMore && displayedEvents.length > ITEMS_PER_PAGE && (
+                                    <div className="text-center py-8">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                                            <Calendar className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-600">You've reached the end! No more events to load.</p>
+                                    </div>
+                                )}
+                                
+                                {/* Intersection Observer Target */}
+                                <div ref={observerRef} className="h-4" />
+                            </div>
                         </>
                     ) : (
                         <div className="text-center py-12 sm:py-16 md:py-20">
