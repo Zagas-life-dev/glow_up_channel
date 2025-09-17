@@ -1,0 +1,38 @@
+# Glow Up Channel
+
+Connect young ambitious people to opportunities, events, and free resources that accelerate personal and professional growth.
+
+## About
+
+Glow Up Channel is a platform designed to help young people discover and access opportunities for career advancement, skill development, and personal growth. We curate and provide access to:
+
+- **Opportunities**: Scholarships, fellowships, internships, grants, and competitions
+- **Jobs**: Full-time, part-time, remote, and internship positions
+- **Events**: Workshops, networking events, and skill-building sessions
+- **Resources**: Educational materials, career guides, and digital tools
+
+## Features
+
+- Modern, responsive design with MTN and Summer Fridays inspiration
+- Advanced search and filtering capabilities
+- Multi-step onboarding process
+- User authentication and profiles
+- Admin dashboard for content management
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Supabase (PostgreSQL, Auth)
+- **Deployment**: Vercel
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run development server: `npm run dev`
+
+## Contributing
+
+We welcome contributions! Please read our contributing guidelines before submitting pull requests.
