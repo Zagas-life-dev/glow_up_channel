@@ -3,7 +3,7 @@
 const https = require('https');
 const http = require('http');
 
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://latest-glowup-channel-761979347865.europe-west1.run.app';
 
 async function testBackendConnection() {
   console.log('🧪 Testing Backend Connection');

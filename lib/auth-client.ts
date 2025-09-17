@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NODE_ENV === 'production' 
-    ? "https://glow-up-channel-backend-761979347865.europe-west1.run.app/api/auth" // Production backend URL
+    ? "https://latest-glowup-channel-761979347865.europe-west1.run.app/api/auth" // Production backend URL
     : "http://localhost:3001/api/auth", // Development backend URL
   fetchOptions: {
     onError(context) {
