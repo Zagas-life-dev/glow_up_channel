@@ -360,14 +360,26 @@ export default function ProviderOnboarding() {
       <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/dashboard/provider')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to Homepage"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard/provider')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+            </div>
             <div>
               <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Provider Onboarding</h1>
               <p className="text-sm lg:text-base text-gray-600">Complete your registration to start posting opportunities</p>

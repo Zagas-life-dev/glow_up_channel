@@ -19,7 +19,21 @@ const signupSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  dob: z.string().min(1, 'Date of birth is required'),
+  dob: z.string()
+    .min(1, 'Date of birth is required')
+    .refine((date) => {
+      const birthDate = new Date(date)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      
+      // Adjust age if birthday hasn't occurred this year
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+        ? age - 1 
+        : age
+      
+      return actualAge >= 16
+    }, 'You must be at least 16 years old to sign up'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
@@ -51,19 +65,13 @@ export default function SignupPage() {
 
     try {
       if (data.role === 'seeker') {
-        // Store additional user data in localStorage for onboarding
-        localStorage.setItem('tempUserData', JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          dob: data.dob
-        }))
-        
         await registerOpportunitySeeker(data.email, data.password)
-        router.push('/onboarding')
+        // Redirect to homepage after successful signup
+        router.push('/')
       } else {
-        // Provider registration - redirect to provider onboarding
+        // Provider registration - redirect to homepage
         await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName)
-        router.push('/dashboard/provider/onboarding')
+        router.push('/')
       }
     } catch (err: any) {
       // Handle specific validation errors from backend
@@ -180,16 +188,27 @@ export default function SignupPage() {
               <Controller
                 name="dob"
                 control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id="dob"
-                    type="date"
-                    className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
-                    disabled={isLoading}
-                  />
-                )}
+                render={({ field }) => {
+                  // Calculate the maximum date (16 years ago from today)
+                  const today = new Date()
+                  const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate())
+                  const maxDateString = maxDate.toISOString().split('T')[0]
+                  
+                  return (
+                    <Input
+                      {...field}
+                      id="dob"
+                      type="date"
+                      max={maxDateString}
+                      className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      disabled={isLoading}
+                    />
+                  )
+                }}
               />
+              <p className="text-xs text-gray-500">
+                You must be at least 16 years old to create an account
+              </p>
               {errors.dob && (
                 <p className="text-sm text-red-600">{errors.dob.message}</p>
                 )}

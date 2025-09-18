@@ -159,22 +159,26 @@ export default function Home() {
     {
       icon: Briefcase,
       title: "Career Opportunities",
-      description: "Find jobs, internships, and career advancement roles."
+      description: "Find jobs, internships, and career advancement roles.",
+      href: "/jobs"
     },
     {
       icon: BookOpen,
       title: "Learning Resources",
-      description: "Access training, workshops, and educational materials."
+      description: "Access training, workshops, and educational materials.",
+      href: "/resources"
     },
     {
       icon: Users,
       title: "Networking Events",
-      description: "Connect with professionals and build meaningful relationships."
+      description: "Connect with professionals and build meaningful relationships.",
+      href: "/events"
     },
     {
       icon: Target,
       title: "Personal Growth",
-      description: "Develop skills and achieve your personal aspirations."
+      description: "Develop skills and achieve your personal aspirations.",
+      href: "/opportunities"
     }
   ]
 
@@ -196,17 +200,24 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {services.map((service, index) => (
-              <div key={index} className="group text-center p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl hover:bg-orange-50 transition-all duration-300 cursor-pointer touch-manipulation">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <service.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
+              <Link key={index} href={service.href} className="block">
+                <div className="group text-center p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl hover:bg-orange-50 transition-all duration-300 cursor-pointer touch-manipulation">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <service.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-orange-600 transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed">
+                    {service.description}
+                  </p>
+                  <div className="mt-3 flex items-center justify-center">
+                    <span className="text-xs text-orange-500 font-medium group-hover:text-orange-600 transition-colors">
+                      Click me
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed">
-                  {service.description}
-                </p>
-            </div>
+              </Link>
             ))}
           </div>
         </div>

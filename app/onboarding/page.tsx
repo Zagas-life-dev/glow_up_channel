@@ -33,7 +33,7 @@ export default function OnboardingPage() {
   const [isCompleting, setIsCompleting] = useState(false)
   const stepComponentRef = useRef<{ submit: () => void }>(null)
   const router = useRouter()
-  const { user, isLoading: isPending } = useAuth()
+  const { user, profile, isLoading: isPending, isOnboardingCompleted } = useAuth()
 
   // Load cached form data and temp user data on mount
   useEffect(() => {
@@ -59,12 +59,15 @@ export default function OnboardingPage() {
     }
   }, [])
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated or if onboarding is already completed
   useEffect(() => {
     if (!isPending && !user) {
       router.push('/login')
+    } else if (user && isOnboardingCompleted) {
+      // User has already completed onboarding, redirect to dashboard
+      router.push('/dashboard')
     }
-  }, [user, isPending, router])
+  }, [user, isOnboardingCompleted, isPending, router])
 
   const handleNext = () => {
     if (stepComponentRef.current) {

@@ -110,7 +110,7 @@ export default function Footer() {
 
               <div className="flex items-start gap-3 justify-center sm:justify-start">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm sm:text-base text-gray-300 text-center sm:text-left">Lagos, Nigeria</span>
+                <span className="text-sm sm:text-base text-gray-300 text-center sm:text-left">Nigeria</span>
               </div>
             </div>
           </div>
@@ -149,11 +149,11 @@ export default function Footer() {
         <div className="border-t border-gray-700 mt-8 sm:mt-12 pt-6 sm:pt-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
             <div className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
-              <p>&copy; 2024 Glow Up Channel. All rights reserved.</p>
+              <p>&copy; 2025 Glow Up Channel. All rights reserved.</p>
             </div>
             <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6 text-xs sm:text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
-                Privacy Policy
+                Privacy Polcy
               </Link>
               <Link href="/terms" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
                 Terms of Service

@@ -10,22 +10,17 @@ import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import AuthGuard from "@/components/auth-guard"
 
 function OpportunitiesContent() {
-  const [allOpportunities, setAllOpportunities] = useState<any[]>([])
-  const [displayedOpportunities, setDisplayedOpportunities] = useState<any[]>([])
+  const [opportunities, setOpportunities] = useState<any[]>([])
   const [filteredOpportunities, setFilteredOpportunities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [totalCount, setTotalCount] = useState(0)
   const searchParams = useSearchParams()
   const { user, isAuthenticated } = useAuth()
   const viewedItems = useRef(new Set<string>())
-  const observerRef = useRef<HTMLDivElement>(null)
-  const ITEMS_PER_PAGE = 20
 
   // Track view for recommendation learning
   const trackView = async (opportunityId: string) => {
@@ -48,68 +43,7 @@ function OpportunitiesContent() {
     }
   }, [searchParams])
 
-  // Reset pagination when search changes
-  useEffect(() => {
-    if (searchQuery) {
-      setCurrentPage(1)
-      setDisplayedOpportunities([])
-      setHasMore(true)
-    }
-  }, [searchQuery])
 
-  // Load more opportunities
-  const loadMoreOpportunities = useCallback(async () => {
-    if (loadingMore || !hasMore) return
-
-    setLoadingMore(true)
-    try {
-      const page = currentPage + 1
-      const offset = (page - 1) * ITEMS_PER_PAGE
-
-      let newOpportunities: any[] = []
-      
-      if (isAuthenticated && user) {
-        const token = localStorage.getItem('accessToken')
-        const headers = { 'Authorization': `Bearer ${token}` }
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=${ITEMS_PER_PAGE}&offset=${offset}`, { headers })
-        const data = await response.json()
-        
-        if (data.success) {
-          newOpportunities = data.data?.opportunities || []
-        }
-      } else {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=${ITEMS_PER_PAGE}&offset=${offset}`)
-        const data = await response.json()
-        
-        if (data.success) {
-          newOpportunities = data.data?.opportunities || []
-        }
-      }
-
-      if (newOpportunities.length === 0) {
-        setHasMore(false)
-      } else {
-        // Filter out duplicates by checking existing IDs
-        setAllOpportunities(prev => {
-          const existingIds = new Set(prev.map(item => item._id))
-          const uniqueNewOpportunities = newOpportunities.filter(item => !existingIds.has(item._id))
-          
-          if (uniqueNewOpportunities.length === 0) {
-            setHasMore(false)
-            return prev
-          }
-          
-          return [...prev, ...uniqueNewOpportunities]
-        })
-        setCurrentPage(page)
-      }
-    } catch (error) {
-      console.error('Error loading more opportunities:', error)
-    } finally {
-      setLoadingMore(false)
-    }
-  }, [currentPage, hasMore, loadingMore, isAuthenticated, user])
 
   // Initial load
   useEffect(() => {
@@ -122,7 +56,7 @@ function OpportunitiesContent() {
         
         // Always fetch promoted content (public API)
         try {
-          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/opportunities?limit=10`)
+          const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/opportunities?limit=100`)
           const promotedData = await promotedRes.json()
           if (promotedData.success) {
             promotedOpportunities = promotedData.data?.opportunities || []
@@ -137,8 +71,8 @@ function OpportunitiesContent() {
           const headers = { 'Authorization': `Bearer ${token}` }
           
           const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/opportunities?limit=20`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=${ITEMS_PER_PAGE}&offset=0`)
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/opportunities?limit=100`, { headers }),
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=1000&offset=0`)
           ])
           
           const [recommendedData, regularData] = await Promise.all([
@@ -156,7 +90,7 @@ function OpportunitiesContent() {
           }
         } else {
           // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=${ITEMS_PER_PAGE}&offset=0`)
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=1000&offset=0`)
           const result = await response.json()
           
           if (result.success) {
@@ -179,16 +113,14 @@ function OpportunitiesContent() {
         const uniqueRegularOpportunities = regularOpportunities.filter(item => !recommendedIds.has(item._id))
         mergedOpportunities.push(...uniqueRegularOpportunities)
         
-        setAllOpportunities(mergedOpportunities)
-        setDisplayedOpportunities(mergedOpportunities)
+        setOpportunities(mergedOpportunities)
         setFilteredOpportunities(mergedOpportunities)
         
         console.log(`Loaded ${promotedOpportunities.length} promoted + ${recommendedOpportunities.length} recommended + ${uniqueRegularOpportunities.length} regular = ${mergedOpportunities.length} total opportunities`)
         
       } catch (error) {
         console.error('Error fetching opportunities:', error)
-        setAllOpportunities([])
-        setDisplayedOpportunities([])
+        setOpportunities([])
         setFilteredOpportunities([])
       }
       setLoading(false)
@@ -199,7 +131,7 @@ function OpportunitiesContent() {
   // Filter opportunities based on search
   useEffect(() => {
     const lowercasedQuery = searchQuery.toLowerCase()
-    const filtered = allOpportunities.filter((opportunity) => {
+    const filtered = opportunities.filter((opportunity) => {
       return (
         (opportunity.title?.toLowerCase() || '').includes(lowercasedQuery) ||
         (opportunity.description?.toLowerCase() || '').includes(lowercasedQuery) ||
@@ -210,30 +142,8 @@ function OpportunitiesContent() {
       )
     })
     setFilteredOpportunities(filtered)
-    setDisplayedOpportunities(filtered)
-  }, [searchQuery, allOpportunities])
+  }, [searchQuery, opportunities])
 
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          loadMoreOpportunities()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (observerRef.current) {
-      observer.observe(observerRef.current)
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observer.unobserve(observerRef.current)
-      }
-    }
-  }, [loadMoreOpportunities, hasMore, loadingMore])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -299,7 +209,7 @@ function OpportunitiesContent() {
                   <span className="font-semibold text-gray-900"> "{searchQuery}"</span>
                 </>
               ) : (
-                <>Showing {displayedOpportunities.length} of {totalCount > 0 ? totalCount : 'many'} opportunit{displayedOpportunities.length !== 1 ? 'ies' : 'y'}</>
+                <>Showing {filteredOpportunities.length} opportunit{filteredOpportunities.length !== 1 ? 'ies' : 'y'}</>
               )}
             </p>
           </div>
@@ -313,9 +223,9 @@ function OpportunitiesContent() {
               </div>
               <p className="text-base sm:text-lg text-gray-600">Loading opportunities...</p>
             </div>
-          ) : displayedOpportunities.length > 0 ? (
+          ) : filteredOpportunities.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {displayedOpportunities.map((opportunity) => (
+              {filteredOpportunities.map((opportunity) => (
                 <Card 
                   key={opportunity._id} 
                   className={`
@@ -451,33 +361,6 @@ function OpportunitiesContent() {
             </div>
           )}
           
-          {/* Infinite Scroll Loading Indicator */}
-          {displayedOpportunities.length > 0 && (
-            <div className="mt-8">
-              {/* Loading More Indicator */}
-              {loadingMore && (
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full mb-4">
-                    <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
-                  </div>
-                  <p className="text-sm text-gray-600">Loading more opportunities...</p>
-                </div>
-              )}
-              
-              {/* End of Content Message */}
-              {!hasMore && !loadingMore && displayedOpportunities.length > ITEMS_PER_PAGE && (
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
-                    <Plane className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-600">You've reached the end! No more opportunities to load.</p>
-                </div>
-              )}
-              
-              {/* Intersection Observer Target */}
-              <div ref={observerRef} className="h-4" />
-            </div>
-          )}
         </div>
     </div>
   )
@@ -485,17 +368,19 @@ function OpportunitiesContent() {
 
 export default function OpportunitiesPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-            <Plane className="w-8 h-8 text-orange-600 animate-pulse" />
+    <AuthGuard>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+              <Plane className="w-8 h-8 text-orange-600 animate-pulse" />
+            </div>
+            <p className="text-lg text-gray-600">Loading...</p>
           </div>
-          <p className="text-lg text-gray-600">Loading...</p>
         </div>
-      </div>
-    }>
-      <OpportunitiesContent />
-    </Suspense>
+      }>
+        <OpportunitiesContent />
+      </Suspense>
+    </AuthGuard>
   )
 }

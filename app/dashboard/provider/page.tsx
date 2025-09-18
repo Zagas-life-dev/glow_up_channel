@@ -15,6 +15,7 @@ import PromotionButton from '@/components/promotion/PromotionButton'
 import PaymentDetails from '@/components/payment-details'
 import { 
   ArrowRight,
+  ArrowLeft,
   TrendingUp,
   Eye,
   Users,
@@ -575,6 +576,19 @@ export default function ProviderDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Back to Homepage Button */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Homepage
+            </Button>
+          </Link>
         </div>
 
         {/* Onboarding Call-to-Action - Only show if not completed */}

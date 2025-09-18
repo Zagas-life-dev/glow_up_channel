@@ -27,6 +27,7 @@ import {
   Headphones
 } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import AuthGuard from '@/components/auth-guard'
 
 type ResourcePageProps = {
   params: Promise<{
@@ -34,7 +35,7 @@ type ResourcePageProps = {
   }>
 }
 
-export default function ResourcePage({ params }: ResourcePageProps) {
+function ResourcePageContent({ params }: ResourcePageProps) {
   const [resource, setResource] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
@@ -432,5 +433,13 @@ export default function ResourcePage({ params }: ResourcePageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ResourcePage({ params }: ResourcePageProps) {
+  return (
+    <AuthGuard>
+      <ResourcePageContent params={params} />
+    </AuthGuard>
   )
 } 

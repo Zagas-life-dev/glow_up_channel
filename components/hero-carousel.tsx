@@ -9,6 +9,285 @@ import { useAuth } from '@/lib/auth-context'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 
+// Fallback carousel data for when no promotions are available
+const fallbackData = [
+  {
+    id: 'opportunities',
+    title: 'Discover Amazing Opportunities',
+    description: 'Find scholarships, internships, grants, and programs that match your goals. Connect with opportunities that can transform your future.',
+    icon: Plane,
+    color: 'from-blue-500 to-blue-700',
+    href: '/opportunities',
+    benefits: ['Scholarships & Grants', 'Internships', 'Programs', 'Networking']
+  },
+  {
+    id: 'events',
+    title: 'Join Inspiring Events',
+    description: 'Attend workshops, conferences, meetups, and networking events. Learn from experts and connect with like-minded individuals.',
+    icon: Calendar,
+    color: 'from-green-500 to-green-700',
+    href: '/events',
+    benefits: ['Workshops', 'Conferences', 'Networking', 'Learning']
+  },
+  {
+    id: 'jobs',
+    title: 'Find Your Dream Job',
+    description: 'Explore job opportunities from top companies. Find positions that match your skills and career aspirations.',
+    icon: Briefcase,
+    color: 'from-purple-500 to-purple-700',
+    href: '/jobs',
+    benefits: ['Remote Work', 'Full-time', 'Part-time', 'Internships']
+  },
+  {
+    id: 'resources',
+    title: 'Access Valuable Resources',
+    description: 'Download guides, templates, courses, and tools to accelerate your growth. Get free and premium resources from experts.',
+    icon: BookOpen,
+    color: 'from-orange-500 to-orange-700',
+    href: '/resources',
+    benefits: ['Free Guides', 'Templates', 'Courses', 'Tools']
+  }
+]
+
+// Fallback Carousel Component
+function FallbackCarousel() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Check if mobile for better UX
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!isPlaying) return
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % fallbackData.length)
+    }, isMobile ? 6000 : 8000)
+    
+    return () => clearInterval(interval)
+  }, [isPlaying, isMobile])
+
+  // Touch/swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      nextSlide()
+    } else if (isRightSwipe) {
+      prevSlide()
+    }
+  }
+
+  const nextSlide = () => {
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    setCurrentSlide((prev) => (prev + 1) % fallbackData.length)
+    setIsPlaying(false)
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
+    setTimeout(() => setIsPlaying(true), 8000)
+  }
+
+  const prevSlide = () => {
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    setCurrentSlide((prev) => (prev - 1 + fallbackData.length) % fallbackData.length)
+    setIsPlaying(false)
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
+    setTimeout(() => setIsPlaying(true), 8000)
+  }
+
+  const goToSlide = (index: number) => {
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    setCurrentSlide(index)
+    setIsPlaying(false)
+    setTimeout(() => {
+      setIsTransitioning(false)
+    }, 1000)
+    setTimeout(() => setIsPlaying(true), 8000)
+  }
+
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying)
+  }
+
+  const currentItem = fallbackData[currentSlide]
+  const { icon: ContentIcon, color } = currentItem
+
+  return (
+    <>
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeInUp 0.8s ease-out;
+        }
+      `}</style>
+      <section 
+        className="relative h-[100svh] min-h-[500px] max-h-[800px] overflow-hidden bg-black"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="relative h-full transition-all duration-1000 ease-in-out">
+          {/* Transition overlay */}
+          {isTransitioning && (
+            <div className="absolute inset-0 bg-black/20 z-30 transition-opacity duration-300" />
+          )}
+          
+          {/* Background Gradient */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${color}`} />
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-black/20" />
+
+          {/* Content Layer */}
+          <div className="relative z-10 h-full flex items-center">
+            <div className="container px-4 sm:px-6 md:px-8 lg:px-12 w-full">
+              <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
+                <div 
+                  key={currentSlide} 
+                  className="space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform animate-fade-in"
+                >
+                  {/* Content Type Badge */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
+                      <ContentIcon className="w-4 h-4 mr-2" />
+                      {currentItem.id.charAt(0).toUpperCase() + currentItem.id.slice(1)}
+                    </div>
+                  </div>
+                  
+                  {/* Title */}
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight">
+                    {currentItem.title}
+                  </h1>
+                  
+                  {/* Description */}
+                  <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl opacity-90 max-w-3xl leading-relaxed">
+                    {currentItem.description}
+                  </p>
+
+                  {/* Benefits */}
+                  <div className="flex flex-wrap gap-3">
+                    {currentItem.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full text-sm">
+                        <span className="text-green-300">✓</span>
+                        <span>{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                    <Link href={currentItem.href}>
+                      <Button
+                        size="lg"
+                        className="w-full sm:w-auto bg-white hover:bg-gray-100 text-gray-900 px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        Explore {currentItem.id.charAt(0).toUpperCase() + currentItem.id.slice(1)}
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </Link>
+                    
+      
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-1 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300 hidden xs:flex"
+            disabled={isTransitioning}
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+          
+          <button
+            onClick={nextSlide}
+            className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300 hidden xs:flex"
+            disabled={isTransitioning}
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Play/Pause Button */}
+          <button
+            onClick={togglePlayPause}
+            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300"
+          >
+            {isPlaying ? (
+              <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-sm"></div>
+                <div className="w-2 h-2 bg-white rounded-sm ml-1"></div>
+              </div>
+            ) : (
+              <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5" />
+            )}
+          </button>
+
+          {/* Slide Indicators */}
+          <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 z-20 flex gap-2">
+            {fallbackData.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? 'bg-white' : 'bg-white/50'
+                }`}
+                disabled={isTransitioning}
+              />
+            ))}
+          </div>
+
+          {/* Mobile Swipe Hint */}
+          <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-20 text-white/60 text-sm hidden xs:block">
+            ← Swipe to navigate →
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
+
 // Backend data structure interfaces
 interface HeroPromotion {
   _id: string
@@ -371,23 +650,9 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
     )
   }
 
-  // Show empty state if no hero promotions
+  // Show fallback carousel if no hero promotions
   if (!heroPromotions || heroPromotions.length === 0) {
-    return (
-      <section className="relative h-[100svh] min-h-[500px] max-h-[800px] overflow-hidden bg-gradient-to-br from-orange-500 to-orange-700">
-        <div className="relative h-full flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-              <Star className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">No Hero Promotions Available</h1>
-            <p className="text-lg sm:text-xl opacity-90 max-w-2xl">
-              Check back later for featured opportunities, events, and resources promoted by our community.
-            </p>
-          </div>
-        </div>
-      </section>
-    )
+    return <FallbackCarousel />
   }
 
   const currentPromotion = heroPromotions[currentSlide]

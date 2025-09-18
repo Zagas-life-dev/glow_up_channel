@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Calendar, MapPin, Target, Clock, Tag } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import AuthGuard from '@/components/auth-guard'
 
 type OpportunityPageProps = {
   params: Promise<{
@@ -14,7 +15,7 @@ type OpportunityPageProps = {
   }>
 }
 
-export default function OpportunityPage({ params }: OpportunityPageProps) {
+function OpportunityPageContent({ params }: OpportunityPageProps) {
   const [opportunity, setOpportunity] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
@@ -332,5 +333,13 @@ export default function OpportunityPage({ params }: OpportunityPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OpportunityPage({ params }: OpportunityPageProps) {
+  return (
+    <AuthGuard>
+      <OpportunityPageContent params={params} />
+    </AuthGuard>
   )
 } 

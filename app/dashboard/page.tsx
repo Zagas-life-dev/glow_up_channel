@@ -22,6 +22,7 @@ import ApiClient from "@/lib/api-client"
 import { useRouter } from 'next/navigation'
 import { 
   ArrowRight,
+  ArrowLeft,
   TrendingUp,
   Users,
   Calendar,
@@ -103,7 +104,7 @@ interface Recommendation {
 
 export default function DashboardPage() {
   const { setHideNavbar, setHideFooter } = usePage()
-  const { user, profile, isLoading: authLoading, logout, upgradeToProvider } = useAuth()
+  const { user, profile, isLoading: authLoading, isOnboardingCompleted, logout, upgradeToProvider } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'overview' | 'saved' | 'provider'>('overview')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -629,6 +630,52 @@ export default function DashboardPage() {
                   </div>
           </div>
           
+        {/* Back to Homepage Button */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Homepage
+            </Button>
+          </Link>
+        </div>
+          
+        {/* Onboarding Prompt for Incomplete Profiles */}
+        {userRole === 'seeker' && profile && !isOnboardingCompleted && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">Complete Your Profile</h3>
+                  <p className="text-blue-100 mb-4">
+                    Finish setting up your profile to get personalized recommendations and unlock all features.
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 bg-blue-400/30 rounded-full h-2">
+                      <div 
+                        className="bg-white h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${profile.completionPercentage || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium">{profile.completionPercentage || 0}% Complete</span>
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <Link href="/onboarding">
+                    <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-6 py-3 rounded-xl transition-colors duration-200">
+                      Complete Profile
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+          
         {/* Tab Navigation */}
           <div className="mb-8">
           <nav className="flex space-x-8 overflow-x-auto">
@@ -825,32 +872,41 @@ export default function DashboardPage() {
                       <div className="space-y-4">
                     {recommendations.map((item) => {
                       const Icon = getTypeIcon(item.type)
+                      const detailUrl = `/${item.type}s/${item._id}`
                       return (
-                        <div key={item._id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                            <Icon className="h-5 w-5 text-white" />
+                        <Link key={item._id} href={detailUrl} className="block">
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
+                            <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                              <Icon className="h-5 w-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 mb-1">{item.title}</h4>
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                            <div className="flex items-center space-x-4 text-xs text-gray-500">
-                              <span className="flex items-center space-x-1">
-                                <MapPin className="h-3 w-3" />
-                                <span>{getLocationString(item.location)}</span>
-                              </span>
-                              <span className="capitalize">{item.type}</span>
-                            </div>
-                            {item.tags && item.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {item.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
+                              <h4 className="font-medium text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">{item.title}</h4>
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span className="flex items-center space-x-1">
+                                  <MapPin className="h-3 w-3" />
+                                  <span>{getLocationString(item.location)}</span>
+                                </span>
+                                <span className="capitalize">{item.type}</span>
                               </div>
-                            )}
+                              {item.tags && item.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {item.tags.slice(0, 3).map((tag, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between mt-3">
+                                <span className="text-xs text-orange-600 font-medium group-hover:text-orange-700">
+                                  View Details
+                                </span>
+                                <ArrowRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
+                              </div>
                             </div>
                           </div>
+                        </Link>
                       )
                     })}
                       </div>

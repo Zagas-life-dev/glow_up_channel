@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Calendar, MapPin, Clock, Users, DollarSign, Tag } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import AuthGuard from '@/components/auth-guard'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 
@@ -16,7 +17,7 @@ type EventPageProps = {
   }>
 }
 
-export default function EventPage({ params }: EventPageProps) {
+function EventPageContent({ params }: EventPageProps) {
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
@@ -253,5 +254,13 @@ export default function EventPage({ params }: EventPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function EventPage({ params }: EventPageProps) {
+  return (
+    <AuthGuard>
+      <EventPageContent params={params} />
+    </AuthGuard>
   )
 }

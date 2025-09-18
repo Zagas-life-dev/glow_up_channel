@@ -7,7 +7,6 @@ import Footer from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from "@/components/ui/sonner"
-import NewsletterPopup from "@/components/newsletter-popup"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 
@@ -37,7 +36,6 @@ export default function RootLayout({
           <AuthProvider>
             <PageProvider>
               <div className="flex min-h-screen flex-col">
-                <NewsletterPopup />
                 <Navbar />
                 <Analytics />
                 <main className="flex-1">{children}</main>

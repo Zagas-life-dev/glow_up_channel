@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Building, MapPin, DollarSign, Clock, Tag } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import AuthGuard from '@/components/auth-guard'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 
@@ -16,7 +17,7 @@ type JobPageProps = {
   }>
 }
 
-export default function JobPage({ params }: JobPageProps) {
+function JobPageContent({ params }: JobPageProps) {
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
@@ -275,5 +276,13 @@ export default function JobPage({ params }: JobPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function JobPage({ params }: JobPageProps) {
+  return (
+    <AuthGuard>
+      <JobPageContent params={params} />
+    </AuthGuard>
   )
 } 

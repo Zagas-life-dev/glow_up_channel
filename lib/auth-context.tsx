@@ -43,6 +43,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isOnboardingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
   registerOpportunitySeeker: (email: string, password: string) => Promise<void>;
   registerOpportunityPoster: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
+  const isOnboardingCompleted = profile?.onboardingCompleted || profile?.completionPercentage === 100 || false;
 
   // Helper function to safely clear user state
   const clearUserState = () => {
@@ -262,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     isLoading,
     isAuthenticated,
+    isOnboardingCompleted,
     login,
     registerOpportunitySeeker,
     registerOpportunityPoster,
