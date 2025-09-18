@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
 import AuthGuard from '@/components/auth-guard'
+import { cleanUrl } from '@/lib/url-utils'
 
 type ResourcePageProps = {
   params: Promise<{
@@ -299,7 +300,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                       size="lg" 
                       className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     >
-                      <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <a href={cleanUrl(resource.fileUrl)} target="_blank" rel="noopener noreferrer">
                         {resource.isPremium ? 'Get Premium Access' : 'Access Resource'}
                         <ExternalLink className="ml-2 h-5 w-5" />
                       </a>
@@ -373,7 +374,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                       asChild 
                       className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl"
                     >
-                      <a href={resource.paymentLink} target="_blank" rel="noopener noreferrer">
+                      <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer">
                         Purchase Now
                       </a>
                     </Button>

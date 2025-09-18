@@ -14,8 +14,8 @@ import AuthGuard from "@/components/auth-guard"
 function ResourcesContent() {
     const [resources, setResources] = useState<any[]>([])
     const [filteredResources, setFilteredResources] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
     const [totalCount, setTotalCount] = useState(0)
     const searchParams = useSearchParams()
     const { user, isAuthenticated } = useAuth()
@@ -28,13 +28,13 @@ function ResourcesContent() {
     }, [searchParams])
 
     // Load all resources
-    useEffect(() => {
+  useEffect(() => {
         const fetchAllResources = async () => {
-            setLoading(true)
-            try {
+      setLoading(true)
+      try {
                 let promotedResources: any[] = []
-                let recommendedResources: any[] = []
-                let regularResources: any[] = []
+        let recommendedResources: any[] = []
+        let regularResources: any[] = []
                 
                 // Always fetch promoted content (public API)
                 try {
@@ -46,37 +46,37 @@ function ResourcesContent() {
                 } catch (error) {
                     console.error('Error fetching promoted resources:', error)
                 }
-                
-                if (isAuthenticated && user) {
-                    // Fetch both recommendation and regular API data
-                    const token = localStorage.getItem('accessToken')
-                    const headers = { 'Authorization': `Bearer ${token}` }
-                    
-                    const [recommendedRes, regularRes] = await Promise.all([
+        
+        if (isAuthenticated && user) {
+          // Fetch both recommendation and regular API data
+          const token = localStorage.getItem('accessToken')
+          const headers = { 'Authorization': `Bearer ${token}` }
+          
+          const [recommendedRes, regularRes] = await Promise.all([
                         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/resources?limit=100`, { headers }),
                         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=1000&offset=0`)
-                    ])
-                    
-                    const [recommendedData, regularData] = await Promise.all([
-                        recommendedRes.json(),
-                        regularRes.json()
-                    ])
-                    
-                    if (recommendedData.success) {
-                        recommendedResources = recommendedData.data?.resources || []
-                    }
-                    
-                    if (regularData.success) {
-                        regularResources = regularData.data?.resources || []
+          ])
+          
+          const [recommendedData, regularData] = await Promise.all([
+            recommendedRes.json(),
+            regularRes.json()
+          ])
+          
+          if (recommendedData.success) {
+            recommendedResources = recommendedData.data?.resources || []
+          }
+          
+          if (regularData.success) {
+            regularResources = regularData.data?.resources || []
                         setTotalCount(regularData.data?.totalCount || regularResources.length)
-                    }
-                } else {
-                    // Use only regular API for non-authenticated users
+          }
+        } else {
+          // Use only regular API for non-authenticated users
                     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=1000&offset=0`)
-                    const result = await response.json()
-                    
-                    if (result.success) {
-                        regularResources = result.data?.resources || []
+          const result = await response.json()
+          
+          if (result.success) {
+            regularResources = result.data?.resources || []
                         setTotalCount(result.data?.totalCount || regularResources.length)
                     }
                 }
@@ -92,23 +92,23 @@ function ResourcesContent() {
                 const recommendedIds = new Set([...promotedResources, ...recommendedResources].map(item => item._id))
                 
                 // Add regular resources that are not already in promoted or recommended
-                const uniqueRegularResources = regularResources.filter(item => !recommendedIds.has(item._id))
-                mergedResources.push(...uniqueRegularResources)
-                
-                setResources(mergedResources)
-                setFilteredResources(mergedResources)
-                
+        const uniqueRegularResources = regularResources.filter(item => !recommendedIds.has(item._id))
+        mergedResources.push(...uniqueRegularResources)
+        
+        setResources(mergedResources)
+        setFilteredResources(mergedResources)
+        
                 console.log(`Loaded ${promotedResources.length} promoted + ${recommendedResources.length} recommended + ${uniqueRegularResources.length} regular = ${mergedResources.length} total resources`)
-                
-            } catch (error) {
-                console.error('Error fetching resources:', error)
-                setResources([])
-                setFilteredResources([])
-            }
-            setLoading(false)
-        }
+        
+      } catch (error) {
+        console.error('Error fetching resources:', error)
+        setResources([])
+        setFilteredResources([])
+      }
+      setLoading(false)
+    }
         fetchAllResources()
-    }, [isAuthenticated, user])
+  }, [isAuthenticated, user])
 
     // Filter resources based on search
     useEffect(() => {
@@ -121,7 +121,7 @@ function ResourcesContent() {
                 (resource.tags && resource.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))) ||
                 ((resource.is_premium ? "premium" : "free").toLowerCase().includes(lowercasedQuery))
             )
-        })
+  })
         setFilteredResources(filtered)
     }, [searchQuery, resources])
 
@@ -131,7 +131,7 @@ function ResourcesContent() {
 
     const suggestionTags = ["E-books", "Courses", "Templates", "Guides", "Tutorials", "Tools"]
 
-    return (
+  return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 text-white">
@@ -140,8 +140,8 @@ function ResourcesContent() {
                     <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/10 rounded-2xl flex items-center justify-center">
                             <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
-                        </div>
-                    </div>
+          </div>
+        </div>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 md:mb-6">
                         Learning Resources
                     </h1>
@@ -152,12 +152,12 @@ function ResourcesContent() {
                     {/* Search Section */}
                     <div className="max-w-xl mx-auto mb-4 sm:mb-6 md:mb-8">
                         <SearchBar
-                            value={searchQuery}
+                  value={searchQuery}
                             onValueChange={handleSearch}
                             placeholder="Search resources by title, category, or type..."
-                        />
-                    </div>
-                    
+            />
+          </div>
+
                     {/* Suggestion Tags */}
                     <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4">
                         <span className="text-sm sm:text-base text-white/80 font-medium mb-1 sm:mb-0">
@@ -173,7 +173,7 @@ function ResourcesContent() {
                             </button>
                         ))}
                     </div>
-                </div>
+            </div>
             </div>
 
             {/* Results Section */}
@@ -189,7 +189,7 @@ function ResourcesContent() {
                                 </>
                             ) : (
                                 <>Showing {filteredResources.length} resources</>
-                            )}
+                      )}
                         </p>
                     </div>
                 )}
@@ -202,8 +202,8 @@ function ResourcesContent() {
                         <p className="text-base sm:text-lg text-gray-600">Loading resources...</p>
                     </div>
                 ) : filteredResources.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                        {filteredResources.map((resource) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+                            {filteredResources.map((resource) => (
                             <Card 
                                 key={resource._id} 
                                 className={`
@@ -211,20 +211,20 @@ function ResourcesContent() {
                                     ${resource.isPromoted ? 'border-2 border-yellow-400' : ''}
                                 `}
                             >
-                                <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-800 text-xs sm:text-sm font-medium rounded-full capitalize">
+                                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+                                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-800 text-xs sm:text-sm font-medium rounded-full capitalize">
                                                 {resource.category || 'Resource'}
-                                            </span>
-                                        </div>
-                                        <span className={`text-xs font-medium ${
-                                            resource.is_premium 
+                                                </span>
+                                            </div>
+                                            <span className={`text-xs font-medium ${
+                                                resource.is_premium 
                                                 ? 'text-purple-500' 
-                                                : 'text-gray-400'
-                                        }`}>
+                                                    : 'text-gray-400'
+                                            }`}>
                                             {resource.is_premium ? 'premium' : 'free'}
-                                        </span>
+                                            </span>
                                     </div>
                                     
                                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors duration-200">
@@ -255,68 +255,89 @@ function ResourcesContent() {
                                                 )}
                                             </div>
                                         )}
-                                    </div>
-                                    
-                                    {/* Engagement Metrics */}
-                                    {resource.metrics && (
-                                        <div className="flex items-center justify-between mb-3 sm:mb-4 p-2 bg-gray-50 rounded-lg">
-                                            <div className="flex items-center space-x-4 text-xs text-gray-600">
-                                                <div className="flex items-center space-x-1">
-                                                    <Eye className="h-3 w-3" />
-                                                    <span>{resource.metrics.viewCount || 0}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-1">
-                                                    <Heart className="h-3 w-3 text-red-500" />
-                                                    <span>{resource.metrics.likeCount || 0}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-1">
-                                                    <Bookmark className="h-3 w-3 text-blue-500" />
-                                                    <span>{resource.metrics.saveCount || 0}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-1">
-                                                    <Users className="h-3 w-3 text-green-500" />
-                                                    <span>{resource.metrics.downloadCount || 0}</span>
+                                        </div>
+
+                                        {/* Engagement Metrics */}
+                                        {resource.metrics && (
+                                            <div className="flex items-center justify-between mb-3 sm:mb-4 p-2 bg-gray-50 rounded-lg">
+                                                <div className="flex items-center space-x-4 text-xs text-gray-600">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Eye className="h-3 w-3" />
+                                                        <span>{resource.metrics.viewCount || 0}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Heart className="h-3 w-3 text-red-500" />
+                                                        <span>{resource.metrics.likeCount || 0}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Bookmark className="h-3 w-3 text-blue-500" />
+                                                        <span>{resource.metrics.saveCount || 0}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Users className="h-3 w-3 text-green-500" />
+                                                        <span>{resource.metrics.downloadCount || 0}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
                                     
                                     <div className="mt-auto">
-                                        <Link href={`/resources/${resource._id}`}>
-                                            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
-                                                Read More
-                                                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                                            </Button>
-                                        </Link>
+                                        {(() => {
+                                            // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+                                            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(resource._id)
+                                            
+                                            if (isValidObjectId) {
+                                                // Internal resource - use Link to detail page
+                                                return (
+                                            <Link href={`/resources/${resource._id}`}>
+                                                        <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
+                                                            Read More
+                                                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                                                        </Button>
+                                                    </Link>
+                                                )
+                                            } else {
+                                                // External resource - open in new tab
+                                                return (
+                                                    <Button 
+                                                        onClick={() => window.open(resource._id, '_blank', 'noopener,noreferrer')}
+                                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
+                                                    >
+                                                View Resource
+                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Button>
+                                                )
+                                            }
+                                        })()}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 sm:py-16 md:py-20">
-                        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4 sm:mb-6">
-                            <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
-                        </div>
+                                    </CardContent>
+                </Card>
+              ))}
+            </div>
+                    ) : (
+                        <div className="text-center py-12 sm:py-16 md:py-20">
+                            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4 sm:mb-6">
+                                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                            </div>
                         <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
                             {searchQuery ? 'No resources found' : 'No resources available'}
-                        </h3>
+                            </h3>
                         <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto">
-                            {searchQuery 
+                                {searchQuery 
                                 ? `No resources match your search for "${searchQuery}". Try a different search term.`
                                 : 'There are no resources available at the moment. Check back later for new content.'
-                            }
-                        </p>
-                        {searchQuery && (
-                            <Button 
+                                }
+                            </p>
+                            {searchQuery && (
+                                <Button 
                                 onClick={() => setSearchQuery('')}
-                                variant="outline"
+                                    variant="outline" 
                                 className="px-6 py-2.5 sm:py-3 rounded-xl"
-                            >
-                                Clear Search
-                            </Button>
-                        )}
-                    </div>
+                                >
+                                    Clear Search
+                                </Button>
+                            )}
+                        </div>
                 )}
             </div>
         </div>
@@ -326,18 +347,18 @@ function ResourcesContent() {
 export default function ResourcesPage() {
     return (
         <AuthGuard>
-            <Suspense fallback={
-                <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                    <div className="text-center">
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
                             <BookOpen className="w-8 h-8 text-purple-600 animate-pulse" />
-                        </div>
-                        <p className="text-lg text-gray-600">Loading...</p>
                     </div>
+                    <p className="text-lg text-gray-600">Loading...</p>
                 </div>
-            }>
-                <ResourcesContent />
-            </Suspense>
+    </div>
+        }>
+            <ResourcesContent />
+        </Suspense>
         </AuthGuard>
-    )
+  )
 }

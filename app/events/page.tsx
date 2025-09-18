@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
+import { getLinkType, openExternalUrl } from "@/lib/url-utils"
 
 function EventsContent() {
     const [events, setEvents] = useState<any[]>([])
@@ -284,12 +285,43 @@ function EventsContent() {
                                     )}
                                     
                                     <div className="mt-auto">
-                                        <Link href={`/events/${event._id}`}>
-                                            <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
-                                                Read More
-                                                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                                            </Button>
-                                        </Link>
+                                        {(() => {
+                                            const linkType = getLinkType(event._id)
+                                            
+                                            if (linkType === 'internal') {
+                                                // Internal event - use Link to detail page
+                                                return (
+                                                    <Link href={`/events/${event._id}`}>
+                                                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
+                                                            Read More
+                                                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                                                        </Button>
+                                                    </Link>
+                                                )
+                                            } else if (linkType === 'external') {
+                                                // External event - open in new tab
+                                                return (
+                                                    <Button 
+                                                        onClick={() => openExternalUrl(event._id)}
+                                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
+                                                    >
+                                                        View Event
+                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                                                    </Button>
+                                                )
+                                            } else {
+                                                // Invalid link - show disabled button
+                                                return (
+                                                    <Button 
+                                                        disabled
+                                                        className="w-full bg-gray-400 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
+                                                    >
+                                                        Invalid Link
+                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                                                    </Button>
+                                                )
+                                            }
+                                        })()}
                                     </div>
                                 </CardContent>
                             </Card>

@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Calendar, MapPin, Target, Clock, Tag } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
 import AuthGuard from '@/components/auth-guard'
+import { cleanUrl } from '@/lib/url-utils'
 
 type OpportunityPageProps = {
   params: Promise<{
@@ -274,7 +275,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                           <li><strong>End Date:</strong> {new Date(opportunity.dates.endDate).toLocaleDateString()}</li>
                         )}
                         {opportunity.url && (
-                          <li><strong>Application URL:</strong> <a href={opportunity.url} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline">Apply Here</a></li>
+                          <li><strong>Application URL:</strong> <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline">Apply Here</a></li>
                         )}
                       </ul>
                     </div>

@@ -298,12 +298,33 @@ function JobsContent() {
                   )}
                   
                   <div className="mt-auto">
-                    <Link href={`/jobs/${job._id}`}>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
-                        Read More
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                      </Button>
-                    </Link>
+                    {(() => {
+                      // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+                      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(job._id)
+                      
+                      if (isValidObjectId) {
+                        // Internal job - use Link to detail page
+                        return (
+                          <Link href={`/jobs/${job._id}`}>
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
+                              Read More
+                              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                            </Button>
+                          </Link>
+                        )
+                      } else {
+                        // External job - open in new tab
+                        return (
+                          <Button 
+                            onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
+                          >
+                            View Job
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                          </Button>
+                        )
+                      }
+                    })()}
                   </div>
                 </CardContent>
               </Card>

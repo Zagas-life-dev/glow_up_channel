@@ -6,6 +6,7 @@ import { Heart, Bookmark, ExternalLink, Send, Calendar, UserCheck } from 'lucide
 import { useAuth } from '@/lib/auth-context'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
+import { isValidUrl, openExternalUrl } from '@/lib/url-utils'
 
 interface EngagementActionsProps {
   type: 'opportunities' | 'events' | 'jobs' | 'resources'
@@ -139,18 +140,28 @@ export default function EngagementActions({
 
 
   const handleExternalLink = async () => {
-    if (externalUrl) {
-      // Track click for analytics/recommendations
-      try {
-        await ApiClient.trackEngagement(type, id, 'click')
-      } catch (error) {
-        console.error('Error tracking click:', error)
-        // Don't prevent the redirect if tracking fails
-      }
-      
-      // Open external link
-      window.open(externalUrl, '_blank', 'noopener,noreferrer')
+    if (!externalUrl) {
+      toast.error('No external link available')
+      return
     }
+
+    // Validate URL before opening
+    if (!isValidUrl(externalUrl)) {
+      toast.error('Invalid external link')
+      console.error('Invalid external URL:', externalUrl)
+      return
+    }
+
+    // Track click for analytics/recommendations
+    try {
+      await ApiClient.trackEngagement(type, id, 'click')
+    } catch (error) {
+      console.error('Error tracking click:', error)
+      // Don't prevent the redirect if tracking fails
+    }
+    
+    // Open external link using our utility function
+    openExternalUrl(externalUrl)
   }
 
   if (isStatusLoading) {
@@ -207,12 +218,12 @@ export default function EngagementActions({
           variant="default"
           size="sm"
           onClick={handleExternalLink}
-          disabled={isLoading || !externalUrl}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white"
+          disabled={isLoading || !externalUrl || !isValidUrl(externalUrl)}
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <Send className="h-4 w-4" />
           <span className="hidden sm:inline">
-            Apply
+            {!externalUrl ? 'No Link' : !isValidUrl(externalUrl) ? 'Invalid Link' : 'Apply'}
           </span>
         </Button>
       )}
@@ -223,12 +234,12 @@ export default function EngagementActions({
           variant="default"
           size="sm"
           onClick={handleExternalLink}
-          disabled={isLoading || !externalUrl}
-          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+          disabled={isLoading || !externalUrl || !isValidUrl(externalUrl)}
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <Calendar className="h-4 w-4" />
           <span className="hidden sm:inline">
-            Register
+            {!externalUrl ? 'No Link' : !isValidUrl(externalUrl) ? 'Invalid Link' : 'Register'}
           </span>
         </Button>
       )}
@@ -239,12 +250,12 @@ export default function EngagementActions({
           variant="default"
           size="sm"
           onClick={handleExternalLink}
-          disabled={isLoading || !externalUrl}
-          className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white"
+          disabled={isLoading || !externalUrl || !isValidUrl(externalUrl)}
+          className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <ExternalLink className="h-4 w-4" />
           <span className="hidden sm:inline">
-            Access Resource
+            {!externalUrl ? 'No Link' : !isValidUrl(externalUrl) ? 'Invalid Link' : 'Access Resource'}
           </span>
         </Button>
       )}

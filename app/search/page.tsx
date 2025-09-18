@@ -120,7 +120,7 @@ function SearchContent() {
   const totalResults = filteredResults.opportunities.length + filteredResults.events.length + 
                       filteredResults.jobs.length + filteredResults.resources.length
 
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white">
@@ -132,8 +132,8 @@ function SearchContent() {
             </div>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 md:mb-6">
-            Search Everything
-          </h1>
+          Search Everything
+        </h1>
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 leading-relaxed">
             Find opportunities, events, jobs, and resources all in one place.
           </p>
@@ -141,20 +141,20 @@ function SearchContent() {
           {/* Search Section */}
           <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
             <div className="flex gap-2 sm:gap-3">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
                 placeholder="Search opportunities, events, jobs, and resources..."
                 className="flex-1 h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-xl sm:rounded-2xl border-0 focus:ring-2 focus:ring-white/20"
-              />
-              <Button 
+          />
+          <Button
                 onClick={() => handleSearch(searchQuery)}
                 className="h-12 sm:h-14 px-6 sm:px-8 bg-white text-gray-900 hover:bg-gray-100 font-medium rounded-xl sm:rounded-2xl"
               >
                 Search
-              </Button>
-            </div>
+          </Button>
+        </div>
           </div>
 
           {/* Filters */}
@@ -167,20 +167,20 @@ function SearchContent() {
               {showFilters ? 'Hide Filters' : 'Show Filters'}
             </Button>
             
-            {showFilters && (
+        {showFilters && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
                 <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue placeholder="Content Type" />
-                  </SelectTrigger>
-                  <SelectContent>
+                    </SelectTrigger>
+                    <SelectContent>
                     <SelectItem value="">All Types</SelectItem>
-                    <SelectItem value="opportunity">Opportunities</SelectItem>
+                      <SelectItem value="opportunity">Opportunities</SelectItem>
                     <SelectItem value="event">Events</SelectItem>
-                    <SelectItem value="job">Jobs</SelectItem>
-                    <SelectItem value="resource">Resources</SelectItem>
-                  </SelectContent>
-                </Select>
+                      <SelectItem value="job">Jobs</SelectItem>
+                      <SelectItem value="resource">Resources</SelectItem>
+                    </SelectContent>
+                  </Select>
 
                 <Select value={filters.location} onValueChange={(value) => handleFilterChange('location', value)}>
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
@@ -207,11 +207,11 @@ function SearchContent() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+                  </div>
             )}
-          </div>
-        </div>
-      </div>
+                  </div>
+                </div>
+              </div>
 
       {/* Results Section */}
       <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12">
@@ -318,9 +318,9 @@ function SearchContent() {
                               <span>{opportunity.metrics.applicationCount || 0}</span>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
+              </div>
+            )}
+
                       <div className="mt-auto">
                         <Link href={`/opportunities/${opportunity._id}`}>
                           <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
@@ -332,8 +332,8 @@ function SearchContent() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </TabsContent>
+                  </div>
+                </TabsContent>
 
             <TabsContent value="events">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
@@ -382,8 +382,8 @@ function SearchContent() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </TabsContent>
+                  </div>
+                </TabsContent>
 
             <TabsContent value="jobs">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
@@ -432,8 +432,8 @@ function SearchContent() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </TabsContent>
+                  </div>
+                </TabsContent>
 
             <TabsContent value="resources">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
@@ -468,7 +468,7 @@ function SearchContent() {
                               <span>{resource.metrics.downloadCount || 0}</span>
                             </div>
                           </div>
-                        </div>
+                  </div>
                       )}
                       
                       <div className="mt-auto">
@@ -482,9 +482,9 @@ function SearchContent() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+                  </div>
+                </TabsContent>
+              </Tabs>
         ) : searchQuery ? (
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4 sm:mb-6">
@@ -539,4 +539,4 @@ export default function SearchPage() {
       </Suspense>
     </AuthGuard>
   )
-}
+} 

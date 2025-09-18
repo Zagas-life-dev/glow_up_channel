@@ -325,12 +325,33 @@ function OpportunitiesContent() {
                         Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
                       </p>
                     )}
-                      <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm py-2 sm:py-3 touch-manipulation">
-                        <Link href={`/opportunities/${opportunity._id}`}>
-                          Read More
-                          <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        </Link>
-                      </Button>
+                      {(() => {
+                        // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+                        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(opportunity._id)
+                        
+                        if (isValidObjectId) {
+                          // Internal opportunity - use Link to detail page
+                          return (
+                            <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm py-2 sm:py-3 touch-manipulation">
+                              <Link href={`/opportunities/${opportunity._id}`}>
+                                Read More
+                                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                              </Link>
+                            </Button>
+                          )
+                        } else {
+                          // External opportunity - open in new tab
+                          return (
+                            <Button 
+                              onClick={() => window.open(opportunity._id, '_blank', 'noopener,noreferrer')}
+                              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm py-2 sm:py-3 touch-manipulation"
+                            >
+                              View Opportunity
+                              <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          )
+                        }
+                      })()}
                   </CardContent>
                 </Card>
               ))}
