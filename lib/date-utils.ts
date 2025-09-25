@@ -60,3 +60,4 @@ export function getDatePickerPropsFor16Plus() {
     max: getMaxDateFor16Plus()
   }
 }
+
