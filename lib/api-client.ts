@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://latest-glowup-channel-761979347865.europe-west1.run.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://latest-glowup-channel-761979347865.europe-west1.run.app'; // "http://localhost:8080" ;
 
 // Types for API responses
 interface ApiResponse<T = any> {
@@ -12,6 +12,9 @@ interface ApiResponse<T = any> {
 interface User {
   _id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
   role: string;
   status: string;
   isActive: boolean;
@@ -23,6 +26,8 @@ interface User {
 interface UserProfile {
   _id: string;
   userId: string;
+  firstName?: string;
+  lastName?: string;
   country: string;
   province: string;
   city?: string;
@@ -190,11 +195,11 @@ export class ApiClient {
     return data;
   }
 
-  static async registerOpportunitySeeker(email: string, password: string): Promise<RegisterResponse> {
+  static async registerOpportunitySeeker(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-seeker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
     });
 
     const data = await this.handleResponse<RegisterResponse>(response);
@@ -202,11 +207,11 @@ export class ApiClient {
     return data;
   }
 
-  static async registerOpportunityPoster(email: string, password: string): Promise<RegisterResponse> {
+  static async registerOpportunityPoster(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-poster`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
     });
 
     const data = await this.handleResponse<RegisterResponse>(response);
@@ -238,6 +243,21 @@ export class ApiClient {
     });
 
     return this.handleResponse<UserProfile>(response);
+  }
+
+  static async updateUser(data: Partial<User>): Promise<User> {
+    console.log('API Client - Updating user with data:', data);
+    console.log('API Client - Request URL:', `${API_BASE_URL}/api/auth/update-user`);
+    
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/update-user`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+
+    console.log('API Client - Response status:', response.status);
+    console.log('API Client - Response ok:', response.ok);
+    
+    return this.handleResponse<User>(response);
   }
 
   static async updateUserProfile(data: Partial<UserProfile>): Promise<UserProfile> {
@@ -920,7 +940,7 @@ export class ApiClient {
       });
 
       const response = await this.makeAuthenticatedRequest(
-        `${API_BASE_URL}/api/admin/content?${queryParams.toString()}`
+        `${API_BASE_URL}/api/admin/content/moderation?${queryParams.toString()}`
       );
 
       return this.handleResponse(response);
@@ -950,30 +970,73 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async requestPayment(contentId: string, contentType: string, paymentNotes: string): Promise<void> {
-    // For now, we'll use a generic approach since the backend doesn't have specific payment request endpoints
-    // This would need to be implemented in the backend
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/request-payment`, {
+  static async requestPayment(contentId: string, contentType: string, amount: number, notes?: string): Promise<any> {
+    console.log('API Client - Requesting payment:', {
+      contentId,
+      contentType,
+      amount,
+      notes,
+      url: `${API_BASE_URL}/api/payments/${contentType}/${contentId}/request`
+    });
+    
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/request`, {
       method: 'POST',
       body: JSON.stringify({ 
-        contentId, 
-        contentType, 
-        paymentNotes 
+        amount,
+        notes: notes || null
+      }),
+    });
+    
+    console.log('API Client - Payment response status:', response.status);
+    console.log('API Client - Payment response ok:', response.ok);
+    
+    return this.handleResponse(response);
+  }
+
+  static async verifyPayment(contentId: string, contentType: string, verified: boolean, notes?: string): Promise<any> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        verified,
+        notes: notes || null
       }),
     });
     return this.handleResponse(response);
   }
 
-  static async verifyPayment(contentId: string, contentType: string): Promise<void> {
-    // For now, we'll use a generic approach since the backend doesn't have specific payment verification endpoints
-    // This would need to be implemented in the backend
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/verify-payment`, {
+  static async uploadPaymentReceipt(contentId: string, contentType: string, receiptUrl: string, paymentCode?: string): Promise<any> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/upload-receipt`, {
       method: 'POST',
       body: JSON.stringify({ 
-        contentId, 
-        contentType 
+        receiptUrl,
+        paymentCode: paymentCode || null
       }),
     });
+    return this.handleResponse(response);
+  }
+
+  static async getPaymentDetails(contentId: string, contentType: string): Promise<any> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/details`);
+    return this.handleResponse(response);
+  }
+
+  static async getContentAwaitingPayment(page = 1, limit = 20, contentType?: string): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('page', page.toString());
+    searchParams.append('limit', limit.toString());
+    if (contentType) searchParams.append('contentType', contentType);
+
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/awaiting-payment?${searchParams.toString()}`);
+    return this.handleResponse(response);
+  }
+
+  static async getContentWithUploadedPayments(page = 1, limit = 20, contentType?: string): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('page', page.toString());
+    searchParams.append('limit', limit.toString());
+    if (contentType) searchParams.append('contentType', contentType);
+
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/uploaded-payments?${searchParams.toString()}`);
     return this.handleResponse(response);
   }
 

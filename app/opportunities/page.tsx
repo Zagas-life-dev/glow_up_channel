@@ -229,7 +229,7 @@ function OpportunitiesContent() {
                 <Card 
                   key={opportunity._id} 
                   className={`
-                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation
+                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation
                     ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
                   `}
                   onMouseEnter={() => trackView(opportunity._id)}
@@ -260,6 +260,11 @@ function OpportunitiesContent() {
                     <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
                       {opportunity.title}
                     </h3>
+                    {opportunity.provider && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        <span className="font-medium">Provider:</span> {opportunity.provider}
+                      </p>
+                    )}
                     <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-3 sm:mb-4 flex-grow line-clamp-3 leading-relaxed">
                       {opportunity.description.length > 150
                         ? `${opportunity.description.substring(0, 150)}...`
@@ -284,14 +289,32 @@ function OpportunitiesContent() {
                       </div>
                     )}
                     
+       {/* Location Display */}
+       {opportunity.location && (opportunity.location.city || opportunity.location.country || opportunity.location.isRemote) && (
+         <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 sm:mb-4">
+           <span className="w-4 h-4 flex-shrink-0">📍</span>
+           <span className="truncate">
+             {typeof opportunity.location === 'string' 
+               ? opportunity.location 
+               : opportunity.location.isRemote ? 'Remote' : 
+                 [opportunity.location.city, opportunity.location.country]
+                   .filter(Boolean)
+                   .join(', ') || 'Location TBD'
+             }
+           </span>
+         </div>
+       )}
+                    
                     {/* Date Display - Show deadline if available, otherwise show start date */}
                     <div className="flex justify-end mb-3 sm:mb-4">
                       <span className="text-xs text-gray-500">
-                        {opportunity.applicationDetails?.deadline 
-                          ? `Deadline: ${new Date(opportunity.applicationDetails.deadline).toLocaleDateString()}`
-                          : opportunity.dates?.startDate 
-                            ? new Date(opportunity.dates.startDate).toLocaleDateString()
-                            : 'TBD'
+                        {opportunity.dates?.applicationDeadline 
+                          ? `Deadline: ${new Date(opportunity.dates.applicationDeadline).toLocaleDateString()}`
+                          : opportunity.applicationDetails?.deadline 
+                            ? `Deadline: ${new Date(opportunity.applicationDetails.deadline).toLocaleDateString()}`
+                            : opportunity.dates?.startDate 
+                              ? new Date(opportunity.dates.startDate).toLocaleDateString()
+                              : 'TBD'
                         }
                       </span>
                     </div>

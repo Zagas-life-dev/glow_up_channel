@@ -934,9 +934,7 @@ export default function ProviderDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <PromotionButton
-                              onClick={() => handlePromoteContent(item._id)}
-                            />
+                           
                             <Button 
                               variant="outline" 
                               size="sm"

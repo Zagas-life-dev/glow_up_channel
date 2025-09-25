@@ -24,6 +24,11 @@ import {
   ChevronUp
 } from 'lucide-react'
 
+// Utility function to determine if a resource is premium/paid
+const isResourcePaid = (resource: any): boolean => {
+    return !!(resource.is_premium || resource.isPremium || resource.price || resource.paymentAmount)
+}
+
 export default function DashboardResourcesPage() {
   const { setHideNavbar, setHideFooter } = usePage()
   const [resources, setResources] = useState<any[]>([])
@@ -267,14 +272,14 @@ export default function DashboardResourcesPage() {
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between mb-3">
                     <Badge 
-                      variant={resource.is_premium ? "default" : "secondary"}
+                      variant={isResourcePaid(resource) ? "default" : "secondary"}
                       className={`${
-                        resource.is_premium 
+                        isResourcePaid(resource)
                           ? 'bg-orange-500 hover:bg-orange-600' 
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
-                      {resource.is_premium ? 'Premium' : 'Free'}
+                      {isResourcePaid(resource) ? 'Premium' : 'Free'}
                     </Badge>
                     <div className={`p-2 rounded-lg ${getResourceTypeColor(resource.resource_type)}`}>
                       {getResourceTypeIcon(resource.resource_type)}

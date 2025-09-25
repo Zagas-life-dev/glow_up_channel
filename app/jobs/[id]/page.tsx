@@ -175,11 +175,20 @@ function JobPageContent({ params }: JobPageProps) {
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Location</p>
                     <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {job.location.country && job.location.province 
-                        ? `${job.location.city || ''} ${job.location.province}, ${job.location.country}`.trim()
-                        : job.location.country || 'Remote'
+                      {typeof job.location === 'string' 
+                        ? job.location 
+                        : job.location.isRemote ? 'Remote Job' : 
+                          [job.location.city, job.location.country]
+                            .filter(Boolean)
+                            .join(', ') || 'Location TBD'
                       }
                     </p>
+                    {!job.location.isRemote && job.location && typeof job.location === 'object' && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {job.location.city && <span>City: {job.location.city}</span>}
+                        {job.location.country && <span className="ml-2">Country: {job.location.country}</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

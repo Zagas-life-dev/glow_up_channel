@@ -14,26 +14,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Eye, EyeOff, UserPlus, AlertCircle, Target, Users } from 'lucide-react'
+import { getDatePickerPropsFor16Plus, calculateAge } from '@/lib/date-utils'
 
 const signupSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters').optional().or(z.literal('')),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').optional().or(z.literal('')),
   email: z.string().email('Please enter a valid email address'),
-  dob: z.string()
+  dateOfBirth: z.string()
     .min(1, 'Date of birth is required')
-    .refine((date) => {
-      const birthDate = new Date(date)
-      const today = new Date()
-      const age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      
-      // Adjust age if birthday hasn't occurred this year
-      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-        ? age - 1 
-        : age
-      
-      return actualAge >= 16
-    }, 'You must be at least 16 years old to sign up'),
+    .refine((date) => calculateAge(date) >= 16, 'You must be at least 16 years old to sign up'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
@@ -64,13 +53,18 @@ export default function SignupPage() {
     setError('')
 
     try {
+      // Convert empty strings to undefined for optional fields
+      const firstName = data.firstName?.trim() || undefined
+      const lastName = data.lastName?.trim() || undefined
+      const dateOfBirth = data.dateOfBirth || undefined
+
       if (data.role === 'seeker') {
-        await registerOpportunitySeeker(data.email, data.password)
+        await registerOpportunitySeeker(data.email, data.password, firstName, lastName, dateOfBirth)
         // Redirect to homepage after successful signup
         router.push('/')
       } else {
         // Provider registration - redirect to homepage
-        await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName)
+        await registerOpportunityPoster(data.email, data.password, firstName, lastName, dateOfBirth)
         router.push('/')
       }
     } catch (err: any) {
@@ -115,7 +109,7 @@ export default function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-gray-700 font-medium">
-                  First Name
+                  First Name (Optional)
                 </Label>
                 <Controller
                   name="firstName"
@@ -137,7 +131,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-gray-700 font-medium">
-                  Last Name
+                  Last Name (Optional)
                 </Label>
                 <Controller
                   name="lastName"
@@ -182,24 +176,22 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dob" className="text-gray-700 font-medium">
+              <Label htmlFor="dateOfBirth" className="text-gray-700 font-medium">
                 Date of Birth
               </Label>
               <Controller
-                name="dob"
+                name="dateOfBirth"
                 control={control}
                 render={({ field }) => {
-                  // Calculate the maximum date (16 years ago from today)
-                  const today = new Date()
-                  const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate())
-                  const maxDateString = maxDate.toISOString().split('T')[0]
+                  const { min, max } = getDatePickerPropsFor16Plus()
                   
                   return (
                     <Input
                       {...field}
-                      id="dob"
+                      id="dateOfBirth"
                       type="date"
-                      max={maxDateString}
+                      min={min}
+                      max={max}
                       className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                       disabled={isLoading}
                     />
@@ -209,8 +201,8 @@ export default function SignupPage() {
               <p className="text-xs text-gray-500">
                 You must be at least 16 years old to create an account
               </p>
-              {errors.dob && (
-                <p className="text-sm text-red-600">{errors.dob.message}</p>
+              {errors.dateOfBirth && (
+                <p className="text-sm text-red-600">{errors.dateOfBirth.message}</p>
                 )}
             </div>
 

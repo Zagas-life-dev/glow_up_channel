@@ -46,6 +46,7 @@ import {
   Heart,
   LogOut
 } from 'lucide-react'
+import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 
 interface ProviderOnboardingData {
   _id: string
@@ -79,7 +80,7 @@ interface ProviderOnboardingData {
 }
 
 export default function ProviderSettings() {
-  const { user, isAuthenticated, profile, logout, updateProfile, isLoading } = useAuth()
+  const { user, isAuthenticated, profile, logout, updateProfile, updateUser, refreshUser, isLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
   const router = useRouter()
   const [onboardingData, setOnboardingData] = useState<ProviderOnboardingData | null>(null)
@@ -91,15 +92,10 @@ export default function ProviderSettings() {
 
   // User data from auth context
   const [userData, setUserData] = useState({
-    firstName: user?.email?.split('@')[0] || "",
-    lastName: "",
     email: user?.email || "",
-    phone: "",
-    location: "",
-    company: "",
-    website: "",
-    bio: "",
-    dateOfBirth: "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    dateOfBirth: user?.dateOfBirth || "",
     avatar: "/images/placeholder-user.jpg"
   })
 
@@ -178,8 +174,9 @@ export default function ProviderSettings() {
       setUserData(prev => ({
         ...prev,
         email: user.email,
-        firstName: user.firstName || user.email?.split('@')[0] || prev.firstName,
-        lastName: user.lastName || prev.lastName
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        dateOfBirth: user.dateOfBirth || ""
       }))
     }
   }, [user])
@@ -202,14 +199,40 @@ export default function ProviderSettings() {
     }
   }, [profile])
 
+  // Refresh local state when user data changes (after refreshUser)
+  useEffect(() => {
+    if (user) {
+      setUserData(prev => ({
+        ...prev,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        dateOfBirth: user.dateOfBirth || ""
+      }))
+    }
+  }, [user])
+
   const handleSave = async () => {
     setIsSaving(true)
     setSaveMessage(null)
     try {
-      // Update profile data including firstName and lastName
+      // Try to update user data (firstName, lastName, dateOfBirth) - with fallback for backward compatibility
+      try {
+        await updateUser({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          dateOfBirth: userData.dateOfBirth
+        })
+        console.log('User data updated successfully')
+      } catch (userUpdateError) {
+        console.warn('Failed to update user data, continuing with profile update:', userUpdateError)
+        // For backward compatibility, we'll still try to update the profile
+        // and include firstName/lastName/dateOfBirth there as a fallback
+      }
+
+      // Update profile data (including firstName and lastName as fallback for backward compatibility)
       await updateProfile({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        firstName: userData.firstName, // Include as fallback
+        lastName: userData.lastName,   // Include as fallback
         country: onboardingDataUser.country,
         province: onboardingDataUser.province,
         city: onboardingDataUser.city,
@@ -222,8 +245,21 @@ export default function ProviderSettings() {
         skills: onboardingDataUser.skills,
         aspirations: onboardingDataUser.aspirations
       })
+      
+      // Refresh user data to ensure UI reflects latest changes
+      console.log('Refreshing user data after save...')
+      await refreshUser()
+      
+      // Update local state to reflect the changes immediately
+      setUserData(prev => ({
+        ...prev,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        dateOfBirth: userData.dateOfBirth
+      }))
+      
       setIsEditing(false)
-      setSaveMessage({ type: 'success', message: 'Profile updated successfully!' })
+      setSaveMessage({ type: 'success', message: 'Profile updated successfully! Data refreshed.' })
       // Clear message after 3 seconds
       setTimeout(() => setSaveMessage(null), 3000)
     } catch (error) {
@@ -688,26 +724,50 @@ export default function ProviderSettings() {
 
                   {/* Profile Form */}
                   <div className="flex-1 space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Personal Information */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name *</Label>
+                        <Label htmlFor="firstName">First Name</Label>
                         <Input
                           id="firstName"
                           value={userData.firstName}
                           onChange={(e) => setUserData({...userData, firstName: e.target.value})}
                           disabled={!isEditing}
                           className="h-11"
+                          placeholder="Enter your first name"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Label htmlFor="lastName">Last Name</Label>
                         <Input
                           id="lastName"
                           value={userData.lastName}
                           onChange={(e) => setUserData({...userData, lastName: e.target.value})}
                           disabled={!isEditing}
                           className="h-11"
+                          placeholder="Enter your last name"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={userData.dateOfBirth}
+                          onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
+                          disabled={!isEditing}
+                          className="h-11"
+                          {...getDatePickerPropsFor16Plus()}
+                        />
+                        <p className="text-xs text-gray-500">
+                          You must be at least 16 years old
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {/* Empty div for grid layout */}
                       </div>
                     </div>
 
@@ -723,77 +783,6 @@ export default function ProviderSettings() {
                           className="h-11"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          value={userData.phone}
-                          onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          value={userData.location}
-                          onChange={(e) => setUserData({...userData, location: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                        <Input
-                          id="dateOfBirth"
-                          type="date"
-                          value={userData.dateOfBirth}
-                          onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="company">Company/Organization</Label>
-                        <Input
-                          id="company"
-                          value={userData.company}
-                          onChange={(e) => setUserData({...userData, company: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          value={userData.website}
-                          onChange={(e) => setUserData({...userData, website: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        value={userData.bio}
-                        onChange={(e) => setUserData({...userData, bio: e.target.value})}
-                        disabled={!isEditing}
-                        rows={4}
-                        className="resize-none"
-                        placeholder="Tell us about yourself..."
-                      />
-                    </div>
 
                     {!isEditing && (
                       <div className="flex space-x-3">
@@ -847,6 +836,7 @@ export default function ProviderSettings() {
                 </div>
               </div>
             )}
+            
             
             {/* Location Section */}
             <Card className="border-0 shadow-lg">

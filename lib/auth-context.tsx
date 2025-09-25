@@ -8,6 +8,7 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
+  dateOfBirth?: string;
   role: string;
   status: string;
   isActive: boolean;
@@ -45,12 +46,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isOnboardingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
-  registerOpportunitySeeker: (email: string, password: string) => Promise<void>;
-  registerOpportunityPoster: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  registerOpportunitySeeker: (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => Promise<void>;
+  registerOpportunityPoster: (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => Promise<void>;
   upgradeToProvider: (email: string, password: string) => Promise<{ user: any; needsApproval: boolean }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -164,10 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerOpportunitySeeker = async (email: string, password: string) => {
+  const registerOpportunitySeeker = async (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => {
     try {
       setIsLoading(true);
-      const response = await ApiClient.registerOpportunitySeeker(email, password);
+      const response = await ApiClient.registerOpportunitySeeker(email, password, firstName, lastName, dateOfBirth);
       setUser(response.user);
       setProfile(null); // New user won't have profile yet
     } catch (error) {
@@ -180,10 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerOpportunityPoster = async (email: string, password: string, firstName: string, lastName: string) => {
+  const registerOpportunityPoster = async (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => {
     try {
       setIsLoading(true);
-      const response = await ApiClient.registerOpportunityPoster(email, password);
+      const response = await ApiClient.registerOpportunityPoster(email, password, firstName, lastName, dateOfBirth);
       setUser(response.user);
       setProfile(null); // New user won't have profile yet
     } catch (error) {
@@ -243,17 +245,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const updatedProfile = await ApiClient.updateUserProfile(data);
       setProfile(updatedProfile);
-      
-      // If firstName or lastName are being updated, also update the user object
-      if (data.firstName !== undefined || data.lastName !== undefined) {
-        setUser(prev => prev ? {
-          ...prev,
-          firstName: data.firstName || prev.firstName,
-          lastName: data.lastName || prev.lastName
-        } : null);
-      }
     } catch (error) {
       console.error('Failed to update profile:', error);
+      throw error;
+    }
+  };
+
+  const updateUser = async (data: Partial<User>) => {
+    try {
+      console.log('Updating user with data:', data);
+      console.log('Current user:', user);
+      const updatedUser = await ApiClient.updateUser(data);
+      console.log('Updated user response:', updatedUser);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
       throw error;
     }
   };
@@ -272,6 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUser,
     updateProfile,
+    updateUser,
   };
 
   return (

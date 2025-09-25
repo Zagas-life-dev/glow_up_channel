@@ -208,7 +208,7 @@ function JobsContent() {
               <Card 
                 key={job._id} 
                 className={`
-                  group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation
+                  group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation
                   ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
                 `}
               >
@@ -239,17 +239,20 @@ function JobsContent() {
                   </p>
                   
                   <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                    {job.location && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className="w-4 h-4 flex-shrink-0">📍</span>
-                        <span className="truncate">
-                          {typeof job.location === 'string' 
-                            ? job.location 
-                            : job.location.city || job.location.address || 'Location TBD'
-                          }
-                        </span>
-                      </div>
-                    )}
+       {job.location && (
+         <div className="flex items-center gap-2 text-sm text-gray-500">
+           <span className="w-4 h-4 flex-shrink-0">📍</span>
+           <span className="truncate">
+             {typeof job.location === 'string' 
+               ? job.location 
+               : job.location.isRemote ? 'Remote' : 
+                 [job.location.city, job.location.country]
+                   .filter(Boolean)
+                   .join(', ') || 'Location TBD'
+             }
+           </span>
+         </div>
+       )}
                     
                     {job.job_type && (
                       <div className="flex items-center gap-2 text-sm text-gray-500">

@@ -455,20 +455,45 @@ export default function PromotionsPage() {
     setPaymentLoading(true)
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promotions/${promotion._id}/payment-details`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
+      // Check payment status to determine the appropriate action
+      if (promotion.paymentStatus === 'pending') {
+        // Request payment details for new payment
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promotions/${promotion._id}/payment-details`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          setPaymentDetails(data.data)
+          setShowPaymentDialog(true)
+        } else {
+          toast.error(data.message || 'Failed to get payment details')
         }
-      })
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        setPaymentDetails(data.data)
-        setShowPaymentDialog(true)
+      } else if (promotion.paymentStatus === 'awaiting_verification') {
+        // Show payment status for awaiting verification
+        toast.info('Payment is awaiting admin verification. You will be notified once it\'s processed.')
+        return
       } else {
-        toast.error(data.message || 'Failed to get payment details')
+        // For other statuses, just show payment details
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promotions/${promotion._id}/payment-details`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          setPaymentDetails(data.data)
+          setShowPaymentDialog(true)
+        } else {
+          toast.error(data.message || 'Failed to get payment details')
+        }
       }
     } catch (error) {
       console.error('Error getting payment details:', error)
@@ -1005,13 +1030,38 @@ export default function PromotionsPage() {
                           </div>
                         </div>
                         
-                        <Button 
-                          className="w-full bg-orange-500 hover:bg-orange-600"
-                          onClick={() => handleRequestPaymentDetails(promotion)}
-                          disabled={paymentLoading}
-                        >
-                          {paymentLoading ? 'Loading...' : 'Request Payment Details'}
-                        </Button>
+                        {/* Only show payment button if content is paid */}
+                        {promotion.content?.isPaid !== false && promotion.content?.isPremium !== false && (
+                          <Button 
+                            className="w-full bg-orange-500 hover:bg-orange-600"
+                            onClick={() => handleRequestPaymentDetails(promotion)}
+                            disabled={paymentLoading}
+                          >
+                            {paymentLoading ? 'Loading...' : 
+                             promotion.paymentStatus === 'pending' ? 'Request Payment Details' :
+                             promotion.paymentStatus === 'awaiting_verification' ? 'View Payment Status' :
+                             'Payment Details'}
+                          </Button>
+                        )}
+                        
+                        {/* Show free content message if content is free */}
+                        {promotion.content?.isPaid === false && (
+                          <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-green-800 font-medium">Free Content - No Payment Required</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {promotion.content?.isPremium === false && (
+                          <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-green-800 font-medium">Free Resource - No Payment Required</span>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )
@@ -1602,7 +1652,9 @@ export default function PromotionsPage() {
               Payment Details
             </DialogTitle>
             <DialogDescription>
-              Complete your payment to activate your promotion
+              {selectedPromotion?.paymentStatus === 'pending' ? 'Complete your payment to activate your promotion' :
+               selectedPromotion?.paymentStatus === 'awaiting_verification' ? 'Your payment is being verified by our team' :
+               'Payment details for your promotion'}
             </DialogDescription>
           </DialogHeader>
           
@@ -1761,27 +1813,39 @@ export default function PromotionsPage() {
                   onClick={handleCancelPayment}
                   disabled={paymentLoading}
                 >
-                  Cancel
+                  {selectedPromotion?.paymentStatus === 'awaiting_verification' ? 'Close' : 'Cancel'}
                 </Button>
-                <Button 
-                  onClick={handlePaymentMade}
-                  disabled={paymentLoading}
-                  className="bg-green-500 hover:bg-green-600"
-                >
-                  {paymentLoading ? (
+                {selectedPromotion?.paymentStatus === 'pending' && (
+                  <Button 
+                    onClick={handlePaymentMade}
+                    disabled={paymentLoading}
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    {paymentLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>
+                          {receiptFile ? 'Confirm Payment & Upload Receipt' : 'I Have Made Payment'}
+                        </span>
+                      </div>
+                    )}
+                  </Button>
+                )}
+                {selectedPromotion?.paymentStatus === 'awaiting_verification' && (
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>
-                        {receiptFile ? 'Confirm Payment & Upload Receipt' : 'I Have Made Payment'}
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-blue-800 text-sm font-medium">
+                        Payment verification in progress...
                       </span>
                     </div>
-                  )}
-                </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

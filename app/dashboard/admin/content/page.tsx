@@ -41,7 +41,9 @@ import {
   Shield,
   User,
   MapPin,
-  Calendar
+  Calendar,
+  RefreshCw,
+  Settings
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -57,6 +59,21 @@ interface ContentItem {
   approvedAt?: string
   createdAt: string
   updatedAt: string
+  publishedAt?: string
+  
+  // Payment information
+  paymentStatus?: 'not_required' | 'pending' | 'awaiting_payment' | 'payment_uploaded' | 'verified' | 'failed'
+  paymentAmount?: number
+  paymentReference?: string
+  paymentReceipt?: string
+  paymentCode?: string
+  paymentRequestedBy?: string
+  paymentRequestedAt?: string
+  paymentUploadedAt?: string
+  paymentVerifiedAt?: string
+  paymentVerifiedBy?: string
+  paymentNotes?: string
+  paymentVerificationNotes?: string
   
   // Financial information
   isPaid?: boolean
@@ -140,13 +157,25 @@ export default function ContentModeration() {
   // Actions
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [showReviewDialog, setShowReviewDialog] = useState(false)
-  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | 'request_payment'>('approve')
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve')
   const [rejectionReason, setRejectionReason] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState<number>(5000)
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
   const [paymentVerification, setPaymentVerification] = useState<'verify' | 'reject'>('verify')
   const [paymentNotes, setPaymentNotes] = useState("")
+  const [activeTab, setActiveTab] = useState('all')
+  
+  // Admin controls
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showStateDialog, setShowStateDialog] = useState(false)
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false)
+  const [editData, setEditData] = useState<any>({})
+  const [newState, setNewState] = useState('')
+  const [scheduleDate, setScheduleDate] = useState('')
+  const [scheduleTime, setScheduleTime] = useState('')
+  const [disableReason, setDisableReason] = useState('')
+  const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
 
   // Hide navbar and footer when this page is active
   useEffect(() => {
@@ -163,9 +192,8 @@ export default function ContentModeration() {
       setLoading(true)
       setError(null)
       
-      console.log('Fetching content for moderation using admin endpoint...')
+      console.log('Fetching content for moderation...')
       
-      // Use the proper admin endpoint that returns ALL content regardless of approval status
       const result = await ApiClient.getContentForModeration(currentPage, itemsPerPage, {
         type: typeFilter !== 'all' ? typeFilter : undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -173,7 +201,7 @@ export default function ContentModeration() {
         search: searchQuery || undefined
       })
 
-      console.log('Admin API response:', result)
+      console.log('Content API response:', result)
 
       // Fetch poster information for each content item
       const contentWithPosters = await Promise.all(
@@ -227,8 +255,17 @@ export default function ContentModeration() {
       setActionLoading(selectedContent._id)
       
       if (reviewAction === 'approve') {
+        // Validate payment amount for paid content
+        if (hasPaidSection(selectedContent)) {
+          if (!paymentAmount || paymentAmount <= 0) {
+            toast.error('Please enter a valid payment amount for paid content')
+            return
+          }
+        }
+        
         await ApiClient.approveContent(selectedContent._id, selectedContent.type)
-        toast.success('Content approved successfully')
+        
+        toast.success('Content approved. You can now request payment from the "Approved" tab.')
       } else if (reviewAction === 'reject') {
         if (!rejectionReason.trim()) {
           toast.error('Please provide a rejection reason')
@@ -236,9 +273,6 @@ export default function ContentModeration() {
         }
         await ApiClient.rejectContent(selectedContent._id, selectedContent.type, rejectionReason)
         toast.success('Content rejected successfully')
-      } else if (reviewAction === 'request_payment') {
-        await ApiClient.requestPayment(selectedContent._id, selectedContent.type, paymentAmount)
-        toast.success('Payment request sent successfully')
       }
       
       setShowReviewDialog(false)
@@ -253,6 +287,42 @@ export default function ContentModeration() {
     }
   }
 
+  const handleRequestPayment = async (content: ContentItem) => {
+    setSelectedContent(content)
+    setPaymentAmountInput(content.paymentAmount || 5000)
+    setShowPaymentDialog(true)
+  }
+
+  const handleConfirmPaymentRequest = async () => {
+    if (!selectedContent) return
+
+    try {
+      setActionLoading(selectedContent._id)
+      
+      console.log('Requesting payment:', {
+        contentId: selectedContent._id,
+        contentType: selectedContent.type,
+        amount: paymentAmountInput
+      })
+      
+      await ApiClient.requestPayment(
+        selectedContent._id, 
+        selectedContent.type, 
+        paymentAmountInput, 
+        'Payment requested by admin for content approval'
+      )
+      toast.success(`Payment request sent for ₦${paymentAmountInput.toLocaleString()}`)
+      setShowPaymentDialog(false)
+      setSelectedContent(null)
+      fetchContent()
+    } catch (error: any) {
+      console.error('Error requesting payment:', error)
+      toast.error(error.message || 'Failed to request payment')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const handlePaymentVerification = async () => {
     if (!selectedContent) return
 
@@ -260,7 +330,12 @@ export default function ContentModeration() {
       setActionLoading(selectedContent._id)
       
       const verified = paymentVerification === 'verify'
-      await ApiClient.verifyPayment(selectedContent._id, selectedContent.type, verified, paymentNotes)
+      await ApiClient.verifyPayment(
+        selectedContent._id, 
+        selectedContent.type, 
+        verified, 
+        paymentNotes
+      )
       
       toast.success(verified ? 'Payment verified and content approved' : 'Payment rejected')
       setShowPaymentDialog(false)
@@ -275,7 +350,113 @@ export default function ContentModeration() {
     }
   }
 
+  // Admin control functions
+  const handleEditContent = async () => {
+    if (!selectedContent) return
+
+    try {
+      setActionLoading(selectedContent._id)
+      
+      // Update content based on type
+      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
+      await (ApiClient[updateMethod] as any)(selectedContent._id, editData)
+      
+      toast.success('Content updated successfully')
+      setShowEditDialog(false)
+      setEditData({})
+      setSelectedContent(null)
+      fetchContent()
+    } catch (error: any) {
+      console.error('Error updating content:', error)
+      toast.error(error.message || 'Failed to update content')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleChangeState = async () => {
+    if (!selectedContent) return
+
+    try {
+      setActionLoading(selectedContent._id)
+      
+      const updateData: any = { status: newState }
+      if (newState === 'inactive') {
+        updateData.disableReason = disableReason
+      }
+      
+      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
+      await (ApiClient[updateMethod] as any)(selectedContent._id, updateData)
+      
+      toast.success(`Content state changed to ${newState}`)
+      setShowStateDialog(false)
+      setNewState('')
+      setDisableReason('')
+      setSelectedContent(null)
+      fetchContent()
+    } catch (error: any) {
+      console.error('Error changing content state:', error)
+      toast.error(error.message || 'Failed to change content state')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleScheduleReview = async () => {
+    if (!selectedContent) return
+
+    try {
+      setActionLoading(selectedContent._id)
+      
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`)
+      const updateData = { 
+        scheduledReviewAt: scheduledDateTime.toISOString(),
+        status: 'draft' // Move to draft until scheduled time
+      }
+      
+      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
+      await (ApiClient[updateMethod] as any)(selectedContent._id, updateData)
+      
+      toast.success(`Content scheduled for review on ${scheduledDateTime.toLocaleString()}`)
+      setShowScheduleDialog(false)
+      setScheduleDate('')
+      setScheduleTime('')
+      setSelectedContent(null)
+      fetchContent()
+    } catch (error: any) {
+      console.error('Error scheduling content review:', error)
+      toast.error(error.message || 'Failed to schedule content review')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDisablePost = async (content: ContentItem) => {
+    try {
+      setActionLoading(content._id)
+      
+      const updateData = { 
+        status: 'inactive',
+        disableReason: disableReason || 'Disabled by admin'
+      }
+      
+      const updateMethod = `update${content.type.charAt(0).toUpperCase() + content.type.slice(1)}` as keyof typeof ApiClient
+      await (ApiClient[updateMethod] as any)(content._id, updateData)
+      
+      toast.success('Post disabled successfully')
+      setDisableReason('')
+      fetchContent()
+    } catch (error: any) {
+      console.error('Error disabling post:', error)
+      toast.error(error.message || 'Failed to disable post')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const getStatusBadge = (item: ContentItem) => {
+    // Unified Workflow - All content goes through the same process
+    
     // Check payment status first
     if (item.paymentStatus === 'awaiting_payment') {
       return <Badge variant="outline" className="bg-orange-100 text-orange-800"><DollarSign className="h-3 w-3 mr-1" />Awaiting Payment</Badge>
@@ -284,15 +465,15 @@ export default function ContentModeration() {
       return <Badge variant="outline" className="bg-blue-100 text-blue-800"><Upload className="h-3 w-3 mr-1" />Payment Uploaded</Badge>
     }
     if (item.paymentStatus === 'verified') {
-      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Payment Verified</Badge>
+      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
     }
     if (item.paymentStatus === 'failed') {
       return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Payment Failed</Badge>
     }
 
-    // 6-State Content Management System
+    // Basic status checks
     if (item.status === 'draft' && !item.isApproved) {
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="h-3 w-3 mr-1" />True Draft</Badge>
+      return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="h-3 w-3 mr-1" />Draft</Badge>
     }
     if (item.status === 'draft' && item.isApproved) {
       return <Badge variant="secondary" className="bg-purple-100 text-purple-800"><Eye className="h-3 w-3 mr-1" />Hidden</Badge>
@@ -307,7 +488,7 @@ export default function ContentModeration() {
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
     }
     if (item.status === 'active' && item.isApproved) {
-      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Approved (Awaiting Payment)</Badge>
     }
     
     return <Badge variant="outline" className="bg-gray-100 text-gray-800"><Clock className="h-3 w-3 mr-1" />Unknown</Badge>
@@ -331,18 +512,57 @@ export default function ContentModeration() {
 
   const getPaymentInfo = (item: ContentItem) => {
     const isPaid = item.isPaid || item.financial?.isPaid || false
-    const price = item.price || item.financial?.amount || 0
+    const price = item.price || item.financial?.amount || item.paymentAmount || 0
     const currency = item.currency || item.financial?.currency || 'NGN'
     
     return { isPaid, price, currency }
   }
+
+  // Helper function to check if content has paid section
+  const hasPaidSection = (item: ContentItem) => {
+    return item.isPaid || item.financial?.isPaid || item.paymentAmount || item.price || false
+  }
+
+  // Categorize content by status - Unified Workflow
+  const categorizedContent = {
+    all: content, // All content regardless of status
+    pending: content.filter(item => item.status === 'active' && !item.isApproved),
+    approved: content.filter(item => {
+      // Show as approved if approved but still awaiting payment processing
+      return item.isApproved && item.paymentStatus === 'awaiting_payment'
+    }),
+    awaitingPayment: content.filter(item => item.paymentStatus === 'awaiting_payment'),
+    paymentUploaded: content.filter(item => item.paymentStatus === 'payment_uploaded'),
+    verified: content.filter(item => item.paymentStatus === 'verified'),
+    rejected: content.filter(item => item.status === 'inactive' && !item.isApproved)
+  }
+
+  // Debug logging
+  console.log('Content categorization debug:', {
+    totalContent: content.length,
+    pending: categorizedContent.pending.length,
+    approved: categorizedContent.approved.length,
+    awaitingPayment: categorizedContent.awaitingPayment.length,
+    paymentUploaded: categorizedContent.paymentUploaded.length,
+    verified: categorizedContent.verified.length,
+    rejected: categorizedContent.rejected.length,
+    sampleContent: content.slice(0, 3).map(item => ({
+      id: item._id,
+      title: item.title,
+      isApproved: item.isApproved,
+      status: item.status,
+      paymentStatus: item.paymentStatus,
+      publishedAt: (item as any).publishedAt,
+      hasPaidSection: hasPaidSection(item)
+    }))
+  })
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-            <FileText className="w-8 h-8 text-orange-600 animate-pulse" />
+            <RefreshCw className="w-8 h-8 text-orange-600 animate-spin" />
           </div>
           <p className="text-lg text-gray-600">Loading content...</p>
         </div>
@@ -360,6 +580,7 @@ export default function ContentModeration() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Content</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <Button onClick={fetchContent} className="mr-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
           <Button asChild variant="outline">
@@ -408,8 +629,8 @@ export default function ContentModeration() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" onClick={fetchContent}>
-                <FileText className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={fetchContent} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
@@ -485,6 +706,9 @@ export default function ContentModeration() {
                     <SelectItem value="all">All payment types</SelectItem>
                     <SelectItem value="free">Free</SelectItem>
                     <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
+                    <SelectItem value="payment_uploaded">Payment Uploaded</SelectItem>
+                    <SelectItem value="verified">Payment Verified</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -508,92 +732,437 @@ export default function ContentModeration() {
           </CardContent>
         </Card>
 
-        {/* Results Summary */}
-        <div className="mb-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          </div>
-          <p className="text-sm text-gray-600">
-            Showing {content.length} content items (all statuses)
-          </p>
-        </div>
-
-        {/* Content Table */}
+        {/* Content Tabs */}
         <Card>
           <CardContent className="p-0">
-            {content.length === 0 ? (
+            <div className="border-b border-gray-200">
+              <div className="flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'all'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  All Content ({categorizedContent.all.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('pending')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'pending'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Pending Review ({categorizedContent.pending.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('approved')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'approved'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Approved ({categorizedContent.approved.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('awaitingPayment')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'awaitingPayment'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Awaiting Payment ({categorizedContent.awaitingPayment.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('paymentUploaded')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'paymentUploaded'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Payment Uploaded ({categorizedContent.paymentUploaded.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('verified')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'verified'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Verified ({categorizedContent.verified.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('rejected')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'rejected'
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Rejected ({categorizedContent.rejected.length})
+                </button>
+          </div>
+        </div>
+
+            {/* Tab Content */}
+            <div className="p-6">
+              {activeTab === 'all' && (
+                <div className="space-y-4">
+                  {/* Content Summary */}
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-gray-900">{categorizedContent.pending.length}</div>
+                      <div className="text-sm text-gray-600">Pending</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-600">{categorizedContent.approved.length}</div>
+                      <div className="text-sm text-green-600">Approved</div>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-orange-600">{categorizedContent.awaitingPayment.length}</div>
+                      <div className="text-sm text-orange-600">Awaiting Payment</div>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-600">{categorizedContent.paymentUploaded.length}</div>
+                      <div className="text-sm text-blue-600">Payment Uploaded</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-600">{categorizedContent.verified.length}</div>
+                      <div className="text-sm text-green-600">Verified</div>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-red-600">{categorizedContent.rejected.length}</div>
+                      <div className="text-sm text-red-600">Rejected</div>
+                    </div>
+                  </div>
+
+                  {categorizedContent.all.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No content found</h3>
-                <p className="text-gray-600">Try adjusting your filters or search criteria.</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Content Found</h3>
+                      <p className="text-gray-600">No content has been submitted yet</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Content
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Provider
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Payment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {content.map((item) => {
-                      const { isPaid, price, currency } = getPaymentInfo(item)
-                      return (
-                        <tr key={item._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                              <div className="text-sm text-gray-500 line-clamp-2">
-                                {item.description?.substring(0, 100)}...
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.all.map((item) => (
+                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {hasPaidSection(item) && (
+                                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                                      <DollarSign className="h-3 w-3 mr-1" />
+                                      Paid
+                                    </Badge>
+                                  )}
+                                  {getStatusBadge(item)}
+                              </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Created: {new Date(item.createdAt).toLocaleDateString()}</span>
+                                  {item.paymentAmount && (
+                                    <span>Amount: ₦{item.paymentAmount.toLocaleString()}</span>
+                                  )}
+                            </div>
+                            </div>
+                              <div className="flex items-center space-x-2">
+                                {/* Show appropriate action based on content status */}
+                                {item.status === 'active' && !item.isApproved && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setShowReviewDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Review
+                                  </Button>
+                                )}
+                                
+                                {item.isApproved && !item.paymentStatus && hasPaidSection(item) && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRequestPayment(item)}
+                                    disabled={actionLoading === item._id}
+                                  >
+                                    <DollarSign className="h-4 w-4 mr-1" />
+                                    Request Payment
+                                  </Button>
+                                )}
+                                
+                                {item.paymentStatus === 'payment_uploaded' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setShowPaymentDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                  >
+                                    <DollarSign className="h-4 w-4 mr-1" />
+                                    Verify Payment
+                                  </Button>
+                                )}
+                                
+                                {item.paymentStatus === 'verified' && (
+                                  <Badge variant="default" className="bg-green-100 text-green-800">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Live
+                                  </Badge>
+                                )}
+                                
+                                {item.status === 'inactive' && !item.isApproved && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setShowReviewDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View Details
+                                  </Button>
+                                )}
+
+                                {/* Admin Controls */}
+                                <div className="flex items-center space-x-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setEditData({
+                                        title: item.title,
+                                        description: item.description,
+                                        tags: item.tags || [],
+                                        industrySectors: item.industrySectors || [],
+                                        targetAudience: item.targetAudience || [],
+                                        // Content-specific fields
+                                        ...(item.type === 'event' && {
+                                          startDate: item.dates?.startDate,
+                                          endDate: item.dates?.endDate,
+                                          location: item.location,
+                                          isRemote: (item as any).isRemote
+                                        }),
+                                        ...(item.type === 'job' && {
+                                          company: (item as any).company,
+                                          location: item.location,
+                                          salary: (item as any).salary,
+                                          employmentType: (item as any).employmentType
+                                        }),
+                                        // Payment fields
+                                        isPaid: item.isPaid,
+                                        paymentAmount: item.paymentAmount,
+                                        paymentStatus: item.paymentStatus,
+                                        paymentReference: item.paymentReference,
+                                        // Status fields
+                                        status: item.status,
+                                        isApproved: item.isApproved
+                                      })
+                                      setShowEditDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                    title="Edit Content"
+                                  >
+                                    <Settings className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setNewState(item.status)
+                                      setShowStateDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                    title="Change State"
+                                  >
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedContent(item)
+                                      setShowScheduleDialog(true)
+                                    }}
+                                    disabled={actionLoading === item._id}
+                                    title="Schedule Review"
+                                  >
+                                    <Calendar className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  {item.status === 'active' && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setSelectedContent(item)
+                                        setDisableReason('')
+                                        if (confirm('Are you sure you want to disable this post?')) {
+                                          handleDisablePost(item)
+                                        }
+                                      }}
+                                      disabled={actionLoading === item._id}
+                                      title="Disable Post"
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getTypeBadge(item.type)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {item.provider || item.organizer || 'Unknown'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'pending' && (
+                <div className="space-y-4">
+                  {categorizedContent.pending.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Content</h3>
+                      <p className="text-gray-600">All content has been reviewed</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.pending.map((item) => (
+                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
                             {getStatusBadge(item)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Created: {new Date(item.createdAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
                             <div className="flex items-center space-x-2">
-                              {isPaid ? (
-                                <>
-                                  <DollarSign className="h-4 w-4 text-green-600" />
-                                  <span className="text-sm text-gray-900">{price} {currency}</span>
-                                </>
-                              ) : (
-                                <span className="text-sm text-gray-500">Free</span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedContent(item)
+                                    setShowReviewDialog(true)
+                                  }}
+                                  disabled={actionLoading === item._id}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Review
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'approved' && (
+                <div className="space-y-4">
+                  {categorizedContent.approved.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Approved Content</h3>
+                      <p className="text-gray-600">No content has been approved yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.approved.map((item) => (
+                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {getStatusBadge(item)}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Approved: {item.approvedAt ? new Date(item.approvedAt).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRequestPayment(item)}
+                                  disabled={actionLoading === item._id}
+                                >
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  Request Payment
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                               )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(item.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              )}
+
+              {activeTab === 'awaitingPayment' && (
+                <div className="space-y-4">
+                  {categorizedContent.awaitingPayment.length === 0 ? (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Content Awaiting Payment</h3>
+                      <p className="text-gray-600">No payment requests are pending</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.awaitingPayment.map((item) => (
+                        <Card key={item._id} className="border border-orange-200 bg-orange-50 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {getStatusBadge(item)}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Amount: ₦{item.paymentAmount?.toLocaleString()}</span>
+                                  <span>Ref: {item.paymentReference}</span>
+                                </div>
+                              </div>
                             <div className="flex items-center space-x-2">
                               <Button
                                 size="sm"
@@ -605,11 +1174,46 @@ export default function ContentModeration() {
                                 disabled={actionLoading === item._id}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
-                                Review
+                                  View Details
                               </Button>
-                              
-                              {/* Payment Verification Button */}
-                              {item.paymentStatus === 'payment_uploaded' && (
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'paymentUploaded' && (
+                <div className="space-y-4">
+                  {categorizedContent.paymentUploaded.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Payment Receipts Uploaded</h3>
+                      <p className="text-gray-600">No payment receipts are waiting for verification</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.paymentUploaded.map((item) => (
+                        <Card key={item._id} className="border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {getStatusBadge(item)}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Amount: ₦{item.paymentAmount?.toLocaleString()}</span>
+                                  <span>Ref: {item.paymentReference}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -623,16 +1227,106 @@ export default function ContentModeration() {
                                   <DollarSign className="h-4 w-4 mr-1" />
                                   Verify Payment
                                 </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+              )}
+
+              {activeTab === 'verified' && (
+                <div className="space-y-4">
+                  {categorizedContent.verified.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Verified Payments</h3>
+                      <p className="text-gray-600">No payments have been verified yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.verified.map((item) => (
+                        <Card key={item._id} className="border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {getStatusBadge(item)}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Verified: {item.paymentVerifiedAt ? new Date(item.paymentVerifiedAt).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Live
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
               </div>
             )}
+                </div>
+              )}
+
+              {activeTab === 'rejected' && (
+                <div className="space-y-4">
+                  {categorizedContent.rejected.length === 0 ? (
+                    <div className="text-center py-12">
+                      <XCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Rejected Content</h3>
+                      <p className="text-gray-600">No content has been rejected</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {categorizedContent.rejected.map((item) => (
+                        <Card key={item._id} className="border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
+                                  {getTypeBadge(item.type)}
+                                  {getStatusBadge(item)}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
+                                  <span>Rejected: {new Date(item.updatedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedContent(item)
+                                    setShowReviewDialog(true)
+                                  }}
+                                  disabled={actionLoading === item._id}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Details
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -722,10 +1416,10 @@ export default function ContentModeration() {
                   {getStatusBadge(selectedContent)}
                   {(() => {
                     const { isPaid, price, currency } = getPaymentInfo(selectedContent)
-                    return isPaid ? (
+                    return isPaid || selectedContent.paymentAmount ? (
                       <Badge variant="outline" className="bg-green-100 text-green-800">
                         <DollarSign className="h-3 w-3 mr-1" />
-                        {price} {currency}
+                        {selectedContent.paymentAmount || price} {currency}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="bg-blue-100 text-blue-800">Free</Badge>
@@ -735,186 +1429,330 @@ export default function ContentModeration() {
                 <p className="text-sm text-gray-700 leading-relaxed">{selectedContent.description}</p>
               </div>
 
-              {/* Provider Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  Provider Information
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Provider</label>
-                    <p className="text-sm text-gray-900">
-                      {selectedContent.provider || selectedContent.organizer || 'Unknown'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Provider ID</label>
-                    <p className="text-sm text-gray-900">
-                      {selectedContent.providerId || selectedContent.organizerId || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Location Information */}
-              {selectedContent.location && (
+              {/* Content-Specific Details */}
+              {selectedContent.type === 'event' && (
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Location Details
+                  <h4 className="font-semibold text-green-900 mb-3 flex items-center">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Event Details
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedContent.location.country && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Country</label>
-                        <p className="text-sm text-gray-900">{selectedContent.location.country}</p>
-                      </div>
-                    )}
-                    {selectedContent.location.province && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Province/State</label>
-                        <p className="text-sm text-gray-900">{selectedContent.location.province}</p>
-                      </div>
-                    )}
-                    {selectedContent.location.city && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">City</label>
-                        <p className="text-sm text-gray-900">{selectedContent.location.city}</p>
-                      </div>
-                    )}
                     <div>
-                      <label className="text-sm font-medium text-gray-600">Type</label>
+                      <label className="text-sm font-medium text-gray-600">Start Date</label>
+                      <p className="text-sm text-gray-900">{selectedContent.dates?.startDate || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">End Date</label>
+                      <p className="text-sm text-gray-900">{selectedContent.dates?.endDate || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Location</label>
                       <p className="text-sm text-gray-900">
-                        {selectedContent.location.isVirtual ? 'Virtual' : 
-                         selectedContent.location.isRemote ? 'Remote' :
-                         selectedContent.location.isHybrid ? 'Hybrid' : 'Physical Location'}
+                        {selectedContent.location ? 
+                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
+                           selectedContent.location.isRemote ? 'Remote' : 
+                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
+                          'Not specified'}
                       </p>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Event Type</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).eventType || 'Not specified'}</p>
+                    </div>
+                    {(selectedContent as any).equipment && (selectedContent as any).equipment.length > 0 && (
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-gray-600">Required Equipment</label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {(selectedContent as any).equipment.map((item: any, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">{item}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Date Information */}
-              {selectedContent.dates && (
+              {selectedContent.type === 'job' && (
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Date Information
+                  <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Job Details
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedContent.dates.startDate && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Start Date</label>
-                        <p className="text-sm text-gray-900">
-                          {new Date(selectedContent.dates.startDate).toLocaleDateString()}
-                        </p>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Company</label>
+                      <p className="text-sm text-gray-900">{(selectedContent as any).company || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Location</label>
+                      <p className="text-sm text-gray-900">
+                        {selectedContent.location ? 
+                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
+                           selectedContent.location.isRemote ? 'Remote' : 
+                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
+                          'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Salary</label>
+                      <p className="text-sm text-gray-900">{(selectedContent as any).salary || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Job Type</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Employment Type</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).employmentType || 'Not specified'}</p>
+                    </div>
+                    {(selectedContent as any).benefits && (selectedContent as any).benefits.length > 0 && (
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-gray-600">Benefits</label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {(selectedContent as any).benefits.map((benefit: any, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">{benefit}</Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
-                    {selectedContent.dates.endDate && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">End Date</label>
-                        <p className="text-sm text-gray-900">
-                          {new Date(selectedContent.dates.endDate).toLocaleDateString()}
-                        </p>
+                  </div>
+                </div>
+              )}
+
+              {selectedContent.type === 'opportunity' && (
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-orange-900 mb-3 flex items-center">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Opportunity Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Category</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).category || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Type</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).opportunityType || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Location</label>
+                      <p className="text-sm text-gray-900">
+                        {selectedContent.location ? 
+                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
+                           selectedContent.location.isRemote ? 'Remote' : 
+                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
+                          'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Application Deadline</label>
+                      <p className="text-sm text-gray-900">
+                        {(selectedContent as any).dates?.applicationDeadline || (selectedContent as any).deadline || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Provider/Contact</label>
+                      <p className="text-sm text-gray-900">{(selectedContent as any).provider || 'Not specified'}</p>
+                    </div>
+                    {(selectedContent as any).requirements && (
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-gray-600">Requirements</label>
+                        <div className="mt-1 space-y-2">
+                          {(selectedContent as any).requirements.educationLevel && (
+                            <p className="text-sm text-gray-900"><strong>Education:</strong> {(selectedContent as any).requirements.educationLevel}</p>
+                          )}
+                          {(selectedContent as any).requirements.careerStage && (
+                            <p className="text-sm text-gray-900"><strong>Career Stage:</strong> {(selectedContent as any).requirements.careerStage}</p>
+                          )}
+                          {(selectedContent as any).requirements.skills && (selectedContent as any).requirements.skills.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Required Skills:</p>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {(selectedContent as any).requirements.skills.map((skill: any, index: number) => (
+                                  <Badge key={index} variant="outline" className="text-xs">{skill}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
-                    {selectedContent.dates.applicationDeadline && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Application Deadline</label>
-                        <p className="text-sm text-gray-900">
-                          {new Date(selectedContent.dates.applicationDeadline).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                    {selectedContent.dates.registrationDeadline && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Registration Deadline</label>
-                        <p className="text-sm text-gray-900">
-                          {new Date(selectedContent.dates.registrationDeadline).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedContent.type === 'resource' && (
+                <div className="bg-indigo-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-indigo-900 mb-3 flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Resource Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Resource Type</label>
+                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).resourceType || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">File URL</label>
+                      <p className="text-sm text-gray-900 break-all">
+                        {(selectedContent as any).fileUrl ? (
+                          <a href={(selectedContent as any).fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            {(selectedContent as any).fileUrl}
+                          </a>
+                        ) : 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Price</label>
+                      <p className="text-sm text-gray-900">
+                        {(selectedContent as any).price ? `₦${(selectedContent as any).price.toLocaleString()}` : 'Free'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Is Premium</label>
+                      <p className="text-sm text-gray-900">
+                        {(selectedContent as any).isPremium ? 'Yes' : 'No'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Tags and Categories */}
-              {(selectedContent.tags?.length || selectedContent.industrySectors?.length || selectedContent.targetAudience?.length) && (
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Tags & Categories</h4>
-                  <div className="space-y-3">
-                    {selectedContent.tags?.length && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Tags</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedContent.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Tags & Categories
+                </h4>
+                <div className="space-y-4">
+                  {selectedContent.tags && selectedContent.tags.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Tags</label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedContent.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">{tag}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedContent.industrySectors && selectedContent.industrySectors.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Industry Sectors</label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedContent.industrySectors.map((sector, index) => (
+                          <Badge key={index} variant="outline" className="text-xs bg-blue-100">{sector}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedContent.targetAudience && selectedContent.targetAudience.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Target Audience</label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedContent.targetAudience.map((audience, index) => (
+                          <Badge key={index} variant="outline" className="text-xs bg-green-100">{audience}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Content Metadata */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Content Metadata
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Created At</label>
+                    <p className="text-sm text-gray-900">{new Date(selectedContent.createdAt).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Updated At</label>
+                    <p className="text-sm text-gray-900">{new Date(selectedContent.updatedAt).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Status</label>
+                    <p className="text-sm text-gray-900 capitalize">{selectedContent.status}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Is Approved</label>
+                    <p className="text-sm text-gray-900">{selectedContent.isApproved ? 'Yes' : 'No'}</p>
+                  </div>
+                  {selectedContent.publishedAt && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Published At</label>
+                      <p className="text-sm text-gray-900">{new Date(selectedContent.publishedAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {(selectedContent as any).scheduledReviewAt && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Scheduled Review</label>
+                      <p className="text-sm text-gray-900">{new Date((selectedContent as any).scheduledReviewAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Information */}
+              {selectedContent.paymentStatus && selectedContent.paymentStatus !== 'not_required' && (
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Payment Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                      <label className="text-sm font-medium text-gray-600">Status</label>
+                      <p className="text-sm text-gray-900 capitalize">{selectedContent.paymentStatus.replace('_', ' ')}</p>
+                  </div>
+                    {selectedContent.paymentAmount && (
+                  <div>
+                        <label className="text-sm font-medium text-gray-600">Amount</label>
+                        <p className="text-sm text-gray-900">₦{selectedContent.paymentAmount.toLocaleString()}</p>
                       </div>
                     )}
-                    {selectedContent.industrySectors?.length && (
+                    {selectedContent.paymentReference && (
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Industry Sectors</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedContent.industrySectors.map((sector, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-blue-100 text-blue-800">
-                              {sector}
-                            </Badge>
-                          ))}
-                        </div>
+                        <label className="text-sm font-medium text-gray-600">Reference</label>
+                        <p className="text-sm text-gray-900 font-mono">{selectedContent.paymentReference}</p>
                       </div>
                     )}
-                    {selectedContent.targetAudience?.length && (
+                    {selectedContent.paymentCode && (
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Target Audience</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedContent.targetAudience.map((audience, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-green-100 text-green-800">
-                              {audience}
-                            </Badge>
-                          ))}
-                        </div>
+                        <label className="text-sm font-medium text-gray-600">Payment Code</label>
+                        <p className="text-sm text-gray-900 font-mono">{selectedContent.paymentCode}</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Submission Details */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Submission Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Created</label>
-                    <p className="text-sm text-gray-900">
-                      {new Date(selectedContent.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                    <p className="text-sm text-gray-900">
-                      {new Date(selectedContent.updatedAt).toLocaleString()}
-                    </p>
-                  </div>
-                  {selectedContent.approvedBy && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Approved By</label>
-                      <p className="text-sm text-gray-900">{selectedContent.approvedBy}</p>
-                    </div>
-                  )}
-                  {selectedContent.approvedAt && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Approved At</label>
-                      <p className="text-sm text-gray-900">
-                        {new Date(selectedContent.approvedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
+              {/* Provider Information */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Provider Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                    <label className="text-sm font-medium text-gray-600">Provider</label>
+                        <p className="text-sm text-gray-900">
+                      {selectedContent.provider || selectedContent.organizer || 'Unknown'}
+                        </p>
+                      </div>
+                      <div>
+                    <label className="text-sm font-medium text-gray-600">Provider ID</label>
+                        <p className="text-sm text-gray-900">
+                      {selectedContent.providerId || selectedContent.organizerId || 'N/A'}
+                        </p>
+                      </div>
+                      </div>
               </div>
 
               {/* Moderation Actions */}
@@ -929,7 +1767,6 @@ export default function ContentModeration() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="approve">✅ Approve Content</SelectItem>
-                        <SelectItem value="request_payment">💰 Request for Payment</SelectItem>
                         <SelectItem value="reject">❌ Reject Content</SelectItem>
                       </SelectContent>
                     </Select>
@@ -950,33 +1787,16 @@ export default function ContentModeration() {
                     </div>
                   )}
 
-                  {reviewAction === 'request_payment' && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
-                        Payment Amount (₦)
-                      </label>
-                      <Input
-                        type="number"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                        placeholder="Enter payment amount"
-                        className="mb-3"
-                      />
-                      <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                        <p className="text-sm text-orange-800">
-                          <strong>Payment Request:</strong> This will notify the user to make payment before content approval.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {reviewAction === 'approve' && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-800">
-                        <strong>Ready to Approve:</strong> This content will be published and made visible to users.
-                      </p>
-                    </div>
-                  )}
+            {reviewAction === 'approve' && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800 mb-2">
+                  <strong>Content Approval:</strong> This content will be approved and moved to the payment processing stage.
+                </p>
+                <p className="text-sm text-orange-800">
+                  After approval, you can request payment from the "Approved" tab. Free content will be auto-approved, paid content will require user payment.
+                </p>
+              </div>
+            )}
                 </div>
               </div>
             </div>
@@ -995,17 +1815,16 @@ export default function ContentModeration() {
             </Button>
             <Button
               onClick={handleReview}
-              disabled={actionLoading === selectedContent?._id || (reviewAction === 'reject' && !rejectionReason.trim())}
+              disabled={
+                actionLoading === selectedContent?._id || 
+                (reviewAction === 'reject' && !rejectionReason.trim())
+              }
               className={
-                reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 
-                reviewAction === 'request_payment' ? 'bg-orange-600 hover:bg-orange-700' :
-                'bg-red-600 hover:bg-red-700'
+                reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
               }
             >
               {actionLoading === selectedContent?._id ? 'Processing...' : 
-               reviewAction === 'approve' ? 'Approve Content' : 
-               reviewAction === 'request_payment' ? 'Request Payment' :
-               'Reject Content'}
+               reviewAction === 'approve' ? 'Approve Content' : 'Reject Content'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1123,6 +1942,461 @@ export default function ContentModeration() {
             >
               {actionLoading === selectedContent?._id ? 'Processing...' : 
                paymentVerification === 'verify' ? 'Verify Payment' : 'Reject Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enhanced Edit Content Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Settings className="h-5 w-5 text-blue-600" />
+              <span>Edit Content - Full Admin Access</span>
+            </DialogTitle>
+            <DialogDescription>
+              Complete editing capabilities for all content fields and metadata.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedContent && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Title *</label>
+                    <Input
+                      value={editData.title || selectedContent.title || ''}
+                      onChange={(e) => setEditData({...editData, title: e.target.value})}
+                      placeholder="Enter content title"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Content Type</label>
+                    <Input
+                      value={selectedContent.type?.charAt(0).toUpperCase() + selectedContent.type?.slice(1) || ''}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Description *</label>
+                  <Textarea
+                    value={editData.description || selectedContent.description || ''}
+                    onChange={(e) => setEditData({...editData, description: e.target.value})}
+                    placeholder="Enter content description"
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* Content-Specific Fields */}
+              {selectedContent.type === 'event' && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-green-900 mb-4">Event Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Start Date</label>
+                      <Input
+                        type="date"
+                        value={editData.startDate || selectedContent.dates?.startDate || ''}
+                        onChange={(e) => setEditData({...editData, startDate: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">End Date</label>
+                      <Input
+                        type="date"
+                        value={editData.endDate || selectedContent.dates?.endDate || ''}
+                        onChange={(e) => setEditData({...editData, endDate: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Location</label>
+                      <Input
+                        value={editData.location || selectedContent.location || ''}
+                        onChange={(e) => setEditData({...editData, location: e.target.value})}
+                        placeholder="Event location"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Is Remote</label>
+                      <Select
+                        value={editData.isRemote?.toString() || (selectedContent as any).isRemote?.toString() || 'false'}
+                        onValueChange={(value) => setEditData({...editData, isRemote: value === 'true'})}
+                      >
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedContent.type === 'job' && (
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-4">Job Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Company</label>
+                      <Input
+                        value={editData.company || (selectedContent as any).company || ''}
+                        onChange={(e) => setEditData({...editData, company: e.target.value})}
+                        placeholder="Company name"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Location</label>
+                      <Input
+                        value={editData.location || selectedContent.location || ''}
+                        onChange={(e) => setEditData({...editData, location: e.target.value})}
+                        placeholder="Job location"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Salary</label>
+                      <Input
+                        value={editData.salary || (selectedContent as any).salary || ''}
+                        onChange={(e) => setEditData({...editData, salary: e.target.value})}
+                        placeholder="Salary range"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Employment Type</label>
+                      <Select
+                        value={editData.employmentType || (selectedContent as any).employmentType || ''}
+                        onValueChange={(value) => setEditData({...editData, employmentType: value})}
+                      >
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="internship">Internship</SelectItem>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Information */}
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-4">Payment Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Is Paid</label>
+                    <Select
+                      value={editData.isPaid?.toString() || selectedContent.isPaid?.toString() || 'false'}
+                      onValueChange={(value) => setEditData({...editData, isPaid: value === 'true'})}
+                    >
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Amount</label>
+                    <Input
+                      type="number"
+                      value={editData.paymentAmount || selectedContent.paymentAmount || ''}
+                      onChange={(e) => setEditData({...editData, paymentAmount: parseFloat(e.target.value) || 0})}
+                      placeholder="Payment amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Status</label>
+                    <Select
+                      value={editData.paymentStatus || selectedContent.paymentStatus || ''}
+                      onValueChange={(value) => setEditData({...editData, paymentStatus: value})}
+                    >
+                      <SelectItem value="not_required">Not Required</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Reference</label>
+                    <Input
+                      value={editData.paymentReference || selectedContent.paymentReference || ''}
+                      onChange={(e) => setEditData({...editData, paymentReference: e.target.value})}
+                      placeholder="Payment reference"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status and Metadata */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Metadata</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+                    <Select
+                      value={editData.status || selectedContent.status || ''}
+                      onValueChange={(value) => setEditData({...editData, status: value})}
+                    >
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Is Approved</label>
+                    <Select
+                      value={editData.isApproved?.toString() || selectedContent.isApproved?.toString() || 'false'}
+                      onValueChange={(value) => setEditData({...editData, isApproved: value === 'true'})}
+                    >
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags and Categories */}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-green-900 mb-4">Tags & Categories</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Tags (comma-separated)</label>
+                    <Input
+                      value={editData.tags?.join(', ') || selectedContent.tags?.join(', ') || ''}
+                      onChange={(e) => setEditData({...editData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)})}
+                      placeholder="Enter tags separated by commas"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Industry Sectors (comma-separated)</label>
+                    <Input
+                      value={editData.industrySectors?.join(', ') || selectedContent.industrySectors?.join(', ') || ''}
+                      onChange={(e) => setEditData({...editData, industrySectors: e.target.value.split(',').map(sector => sector.trim()).filter(sector => sector)})}
+                      placeholder="Enter industry sectors separated by commas"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Target Audience (comma-separated)</label>
+                    <Input
+                      value={editData.targetAudience?.join(', ') || selectedContent.targetAudience?.join(', ') || ''}
+                      onChange={(e) => setEditData({...editData, targetAudience: e.target.value.split(',').map(audience => audience.trim()).filter(audience => audience)})}
+                      placeholder="Enter target audience separated by commas"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="bg-gray-50 p-4 rounded-lg">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditDialog(false)
+                setEditData({})
+                setSelectedContent(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditContent}
+              disabled={actionLoading === selectedContent?._id}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {actionLoading === selectedContent?._id ? 'Updating...' : 'Update Content'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change State Dialog */}
+      <Dialog open={showStateDialog} onOpenChange={setShowStateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <RefreshCw className="h-5 w-5 text-orange-600" />
+              <span>Change Content State</span>
+            </DialogTitle>
+            <DialogDescription>
+              Change the status of this content item.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">New State</label>
+              <Select value={newState} onValueChange={setNewState}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select new state" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {newState === 'inactive' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Disable Reason</label>
+                <Textarea
+                  value={disableReason}
+                  onChange={(e) => setDisableReason(e.target.value)}
+                  placeholder="Enter reason for disabling this content"
+                  rows={3}
+                />
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowStateDialog(false)
+                setNewState('')
+                setDisableReason('')
+                setSelectedContent(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleChangeState}
+              disabled={actionLoading === selectedContent?._id || !newState}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {actionLoading === selectedContent?._id ? 'Updating...' : 'Change State'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Review Dialog */}
+      <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              <span>Schedule Future Review</span>
+            </DialogTitle>
+            <DialogDescription>
+              Schedule this content for future review and approval.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Review Date</label>
+              <Input
+                type="date"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Review Time</label>
+              <Input
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+              />
+            </div>
+            
+            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm text-purple-800">
+                <strong>Note:</strong> Content will be moved to draft status until the scheduled review time.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowScheduleDialog(false)
+                setScheduleDate('')
+                setScheduleTime('')
+                setSelectedContent(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleScheduleReview}
+              disabled={actionLoading === selectedContent?._id || !scheduleDate || !scheduleTime}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {actionLoading === selectedContent?._id ? 'Scheduling...' : 'Schedule Review'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Amount Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Payment</DialogTitle>
+            <DialogDescription>
+              Set the payment amount for this content. The user will need to pay this amount before the content goes live.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Payment Amount (₦)
+              </label>
+              <Input
+                type="number"
+                value={paymentAmountInput}
+                onChange={(e) => setPaymentAmountInput(Number(e.target.value))}
+                placeholder="Enter payment amount"
+                min="1"
+                step="1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Set the amount the user needs to pay for this content to go live
+              </p>
+            </div>
+            
+            <div className="bg-orange-50 border border-orange-200 rounded p-3">
+              <p className="text-sm text-orange-800">
+                <strong>Payment Amount:</strong> ₦{paymentAmountInput.toLocaleString()}
+              </p>
+              <p className="text-xs text-orange-700 mt-1">
+                This amount will be requested from the content creator
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPaymentDialog(false)
+                setSelectedContent(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmPaymentRequest}
+              disabled={actionLoading === selectedContent?._id || !paymentAmountInput || paymentAmountInput <= 0}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {actionLoading === selectedContent?._id ? 'Sending...' : 'Request Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>

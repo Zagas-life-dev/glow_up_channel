@@ -51,15 +51,29 @@ export default function PostingDashboard() {
   const [isEventPaid, setIsEventPaid] = useState(false)
   const [isResourcePaid, setIsResourcePaid] = useState(false)
   
+  // Toggle states for isRemote switches
+  const [isOpportunityRemote, setIsOpportunityRemote] = useState(false)
+  const [isJobRemote, setIsJobRemote] = useState(false)
+  const [isEventRemote, setIsEventRemote] = useState(false)
+  
+  // Salary state for jobs
+  const [hasSalary, setHasSalary] = useState(false)
+  
   // Opportunity type and tags state
   const [opportunityType, setOpportunityType] = useState('')
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [opportunityTags, setOpportunityTags] = useState<string[]>([])
   const [opportunityTagInput, setOpportunityTagInput] = useState('')
+  const [opportunityTagSuggestions, setOpportunityTagSuggestions] = useState<string[]>([])
+  const [showOpportunityTagSuggestions, setShowOpportunityTagSuggestions] = useState(false)
+  const [isLoadingOpportunityTags, setIsLoadingOpportunityTags] = useState(false)
   
   // Job tags state
   const [jobTags, setJobTags] = useState<string[]>([])
   const [jobTagInput, setJobTagInput] = useState('')
+  const [jobTagSuggestions, setJobTagSuggestions] = useState<string[]>([])
+  const [showJobTagSuggestions, setShowJobTagSuggestions] = useState(false)
+  const [isLoadingJobTags, setIsLoadingJobTags] = useState(false)
   
   // Event tags state
   const [eventTags, setEventTags] = useState<string[]>([])
@@ -71,6 +85,9 @@ export default function PostingDashboard() {
   // Resource tags state
   const [resourceTags, setResourceTags] = useState<string[]>([])
   const [resourceTagInput, setResourceTagInput] = useState('')
+  const [resourceTagSuggestions, setResourceTagSuggestions] = useState<string[]>([])
+  const [showResourceTagSuggestions, setShowResourceTagSuggestions] = useState(false)
+  const [isLoadingResourceTags, setIsLoadingResourceTags] = useState(false)
 
   // Opportunity type recommendations
   const opportunityTypeSuggestions = [
@@ -130,18 +147,72 @@ export default function PostingDashboard() {
       return
     }
 
-    if (formType === 'event') {
-      setIsLoadingEventTags(true)
-      try {
-        const response = await ApiClient.getSkillsSuggestions(query)
-        const suggestions = Array.isArray(response) ? response : ((response as any)?.suggestions || [])
-        setEventTagSuggestions(suggestions.slice(0, 8))
+    // Fallback suggestions for all form types
+    const fallbackSuggestions = [
+      'Technology', 'Business', 'Education', 'Healthcare', 'Finance', 'Marketing', 'Design', 'Engineering',
+      'Programming', 'Data Science', 'Artificial Intelligence', 'Machine Learning', 'Web Development',
+      'Mobile Development', 'Cybersecurity', 'Cloud Computing', 'DevOps', 'UI/UX Design',
+      'Digital Marketing', 'Content Writing', 'Project Management', 'Sales', 'Customer Service',
+      'Human Resources', 'Accounting', 'Legal', 'Medicine', 'Nursing', 'Teaching', 'Research',
+      'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes',
+      'SQL', 'MongoDB', 'Git', 'Agile', 'Scrum', 'Leadership', 'Communication', 'Analytics'
+    ].filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/skills/suggestions?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+      const apiSuggestions = data.success ? data.suggestions : []
+      
+      // Combine API suggestions with fallback suggestions, removing duplicates
+      const combinedSuggestions = [...new Set([...apiSuggestions, ...fallbackSuggestions])]
+      const suggestions = combinedSuggestions.slice(0, 7)
+
+      if (formType === 'event') {
+        setIsLoadingEventTags(true)
+        setEventTagSuggestions(suggestions)
         setShowEventTagSuggestions(true)
-      } catch (error) {
-        console.error('Error fetching tag suggestions:', error)
-        setEventTagSuggestions([])
-      } finally {
         setIsLoadingEventTags(false)
+      } else if (formType === 'opportunity') {
+        setIsLoadingOpportunityTags(true)
+        setOpportunityTagSuggestions(suggestions)
+        setShowOpportunityTagSuggestions(true)
+        setIsLoadingOpportunityTags(false)
+      } else if (formType === 'job') {
+        setIsLoadingJobTags(true)
+        setJobTagSuggestions(suggestions)
+        setShowJobTagSuggestions(true)
+        setIsLoadingJobTags(false)
+      } else if (formType === 'resource') {
+        setIsLoadingResourceTags(true)
+        setResourceTagSuggestions(suggestions)
+        setShowResourceTagSuggestions(true)
+        setIsLoadingResourceTags(false)
+      }
+    } catch (error) {
+      console.error('Error fetching tag suggestions:', error)
+      // Use fallback suggestions on error
+      const suggestions = fallbackSuggestions.slice(0, 7)
+      
+      if (formType === 'event') {
+        setIsLoadingEventTags(true)
+        setEventTagSuggestions(suggestions)
+        setShowEventTagSuggestions(true)
+        setIsLoadingEventTags(false)
+      } else if (formType === 'opportunity') {
+        setIsLoadingOpportunityTags(true)
+        setOpportunityTagSuggestions(suggestions)
+        setShowOpportunityTagSuggestions(true)
+        setIsLoadingOpportunityTags(false)
+      } else if (formType === 'job') {
+        setIsLoadingJobTags(true)
+        setJobTagSuggestions(suggestions)
+        setShowJobTagSuggestions(true)
+        setIsLoadingJobTags(false)
+      } else if (formType === 'resource') {
+        setIsLoadingResourceTags(true)
+        setResourceTagSuggestions(suggestions)
+        setShowResourceTagSuggestions(true)
+        setIsLoadingResourceTags(false)
       }
     }
   }
@@ -151,9 +222,11 @@ export default function PostingDashboard() {
     switch (formType) {
       case 'opportunity':
         setOpportunityTagInput(value)
+        searchTagSuggestions(value, 'opportunity')
         break
       case 'job':
         setJobTagInput(value)
+        searchTagSuggestions(value, 'job')
         break
       case 'event':
         setEventTagInput(value)
@@ -161,6 +234,7 @@ export default function PostingDashboard() {
         break
       case 'resource':
         setResourceTagInput(value)
+        searchTagSuggestions(value, 'resource')
         break
     }
   }
@@ -284,16 +358,26 @@ export default function PostingDashboard() {
         submissionData = {
           title: data.title,
           company: data.company,
+          provider: data.provider,
           type: opportunityType || data.type,
           description: data.description,
           url: data.url,
           requirements: data.requirements,
           benefits: data.benefits,
           tags: opportunityTags,
+          location: {
+            country: data.opportunityCountry,
+            province: data.opportunityProvince,
+            city: data.opportunityCity,
+            isRemote: isOpportunityRemote
+          },
           financial: {
             isPaid: isOpportunityPaid,
             amount: data.amount,
             currency: 'NGN'
+          },
+          dates: {
+            applicationDeadline: data.deadline
           }
         }
       } else if (activeTab === 'job') {
@@ -304,9 +388,15 @@ export default function PostingDashboard() {
           description: data.jobDescription,
           url: data.jobUrl,
           tags: jobTags,
+          location: {
+            country: data.jobCountry,
+            province: data.jobProvince,
+            city: data.jobCity,
+            isRemote: isJobRemote
+          },
           pay: {
             isPaid: isJobPaid,
-            amount: data.jobSalary,
+            amount: hasSalary ? 'Salary Present' : data.jobSalary,
             period: data.jobPeriod,
             currency: 'NGN'
           },
@@ -326,7 +416,10 @@ export default function PostingDashboard() {
           price: data.eventPrice,
           currency: 'NGN',
           location: {
-            address: data.eventLocation
+            country: data.eventCountry,
+            province: data.eventProvince,
+            city: data.eventCity,
+            isRemote: isEventRemote
           },
           dates: {
             startDate: data.eventDate,
@@ -516,7 +609,7 @@ export default function PostingDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:shadow-lg ${
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:shadow-sm ${
                     activeTab === tab.id
                       ? `border-orange-500 bg-gradient-to-r ${tab.color} text-white`
                       : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
@@ -551,7 +644,7 @@ export default function PostingDashboard() {
         <div className={`space-y-6 ${!canPost ? 'opacity-50 pointer-events-none' : ''}`}>
           {/* Opportunity Form */}
           {activeTab === 'opportunity' && (
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900">
                   <Target className="h-5 w-5 text-orange-600" />
@@ -585,6 +678,28 @@ export default function PostingDashboard() {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-2">
+                      <Label htmlFor="provider">Provider/Contact Person *</Label>
+                      <Input
+                        id="provider"
+                        name="provider"
+                        placeholder="e.g., John Doe, HR Manager"
+                        required
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deadline">Application Deadline</Label>
+                      <Input
+                        id="deadline"
+                        name="deadline"
+                        type="date"
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
                       <Label htmlFor="type">Opportunity Type *</Label>
                       <div className="relative">
                         <Input
@@ -602,7 +717,7 @@ export default function PostingDashboard() {
                           required
                         />
                         {showTypeDropdown && filteredSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-60 overflow-y-auto">
                             {filteredSuggestions.slice(0, 10).map((suggestion, index) => (
                               <div
                                 key={index}
@@ -616,23 +731,56 @@ export default function PostingDashboard() {
                         )}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Location *</Label>
-                      <Input
-                        id="location"
-                        placeholder="e.g., Lagos, Nigeria or Remote"
-                        required
-                        className="h-11"
-                      />
+                    {/* Location Section */}
+                    <div className="col-span-full bg-gradient-to-r from-orange-50/70 to-amber-50/70 border border-orange-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="opportunityIsRemote" className="text-lg font-bold text-orange-800">
+                            {isOpportunityRemote ? 'Remote Opportunity' : 'In-Person Opportunity'}
+                          </Label>
+                          <p className="text-sm text-orange-600 mt-1 font-medium">
+                            {isOpportunityRemote ? 'This is a remote opportunity' : 'This is an in-person opportunity with a physical location'}
+                          </p>
+                        </div>
+                        <Switch
+                          id="opportunityIsRemote"
+                          checked={isOpportunityRemote}
+                          onCheckedChange={setIsOpportunityRemote}
+                          className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-orange-200/60"
+                        />
+                      </div>
+                      
+                      {!isOpportunityRemote && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-orange-200/60">
+                          <div className="space-y-2">
+                            <Label htmlFor="opportunityCountry" className="text-sm font-semibold text-orange-700">
+                              Country *
+                            </Label>
+                            <Input
+                              id="opportunityCountry"
+                              name="opportunityCountry"
+                              placeholder="e.g., Nigeria"
+                              required
+                              className="h-11 border-orange-200/60 focus:border-orange-400 focus:ring-orange-400 bg-white"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="opportunityCity" className="text-sm font-semibold text-orange-700">
+                              State *
+                            </Label>
+                            <Input
+                              id="opportunityCity"
+                              name="opportunityCity"
+                              placeholder="e.g., Lagos"
+                              required
+                              className="h-11 border-orange-200/60 focus:border-orange-400 focus:ring-orange-400 bg-white"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deadline">Application Deadline</Label>
-                      <Input
-                        id="deadline"
-                        type="date"
-                        className="h-11"
-                      />
-                    </div>
+                    
                   </div>
 
                   {/* Payment Section */}
@@ -724,14 +872,34 @@ export default function PostingDashboard() {
                   <div className="space-y-2">
                     <Label htmlFor="tags">Tags *</Label>
                     <div className="space-y-3">
-                      <Input
-                        id="tags"
-                        value={opportunityTagInput}
-                        onChange={(e) => setOpportunityTagInput(e.target.value)}
-                        onKeyDown={(e) => handleTagAdd(e, 'opportunity')}
-                        placeholder="Type a tag and press Enter (e.g., technology, remote, entry-level)"
-                        className="h-11"
-                      />
+                       <div className="relative">
+                         <Input
+                           id="tags"
+                           value={opportunityTagInput}
+                           onChange={(e) => handleTagInputChange(e.target.value, 'opportunity')}
+                           onKeyDown={(e) => handleTagAdd(e, 'opportunity')}
+                           placeholder="Type a tag and press Enter (e.g., technology, remote, entry-level)"
+                           className="h-11"
+                         />
+                         {showOpportunityTagSuggestions && opportunityTagSuggestions.length > 0 && (
+                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
+                             {opportunityTagSuggestions.map((suggestion, index) => (
+                               <div
+                                 key={index}
+                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                 onMouseDown={() => {
+                                   setOpportunityTagInput(suggestion)
+                                   setOpportunityTags([...opportunityTags, suggestion])
+                                   setOpportunityTagInput('')
+                                   setShowOpportunityTagSuggestions(false)
+                                 }}
+                               >
+                                 {suggestion}
+                               </div>
+                             ))}
+                           </div>
+                         )}
+                       </div>
                       {opportunityTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {opportunityTags.map((tag, index) => (
@@ -779,7 +947,7 @@ export default function PostingDashboard() {
 
           {/* Event Form */}
           {activeTab === 'event' && (
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900">
                   <Calendar className="h-5 w-5 text-green-600" />
@@ -846,26 +1014,57 @@ export default function PostingDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="eventLocation">Location *</Label>
-                      <Input
-                        id="eventLocation"
-                        placeholder="e.g., Lagos Convention Center"
-                        required
-                        className="h-11"
+                  {/* Location Section */}
+                  <div className="bg-gradient-to-r from-green-50/70 to-lime-50/70 border border-green-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="eventIsRemote" className="text-lg font-bold text-green-600">
+                          {isEventRemote ? 'Remote Event' : 'In-Person Event'}
+                        </Label>
+                        <p className="text-sm text-green-500 mt-1 font-medium">
+                          {isEventRemote ? 'This is a remote/virtual event' : 'This is an in-person event with a physical location'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="eventIsRemote"
+                        checked={isEventRemote}
+                        onCheckedChange={setIsEventRemote}
+                        className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-green-200/60"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="eventCapacity">Capacity</Label>
-                      <Input
-                        id="eventCapacity"
-                        type="number"
-                        placeholder="e.g., 100"
-                        className="h-11"
-                      />
-                    </div>
+                    
+                    {!isEventRemote && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-green-200/60">
+                        <div className="space-y-2">
+                          <Label htmlFor="eventCountry" className="text-sm font-semibold text-green-700">
+                            Country *
+                          </Label>
+                          <Input
+                            id="eventCountry"
+                            name="eventCountry"
+                            placeholder="e.g., Nigeria"
+                            required
+                            className="h-11 border-green-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
+                          />
+                        </div>
+                       
+                        <div className="space-y-2">
+                          <Label htmlFor="eventCity" className="text-sm font-semibold text-green-700">
+                            State *
+                          </Label>
+                          <Input
+                            id="eventCity"
+                            name="eventCity"
+                            placeholder="e.g., Lagos"
+                            required
+                            className="h-11 border-green-200/60 focus:border-green-400 focus:ring-green-400 bg-white"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+
 
                   {/* Payment Section */}
                   <div className="bg-gradient-to-r from-green-50/70 to-emerald-50/70 border border-green-200/60 rounded-xl p-6 space-y-4 shadow-sm">
@@ -901,8 +1100,17 @@ export default function PostingDashboard() {
                       </div>
                     )}
                   </div>
-
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="eventCapacity">Capacity</Label>
+                      <Input
+                        id="eventCapacity"
+                        type="number"
+                        placeholder="e.g., 100"
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
                     <Label htmlFor="eventUrl">External Registration URL *</Label>
                     <Input
                       id="eventUrl"
@@ -916,6 +1124,8 @@ export default function PostingDashboard() {
                       Link to where users can register for this event
                     </p>
                   </div>
+                  </div>
+                 
 
                   <div className="space-y-2">
                     <Label htmlFor="eventDescription">Event Description *</Label>
@@ -975,7 +1185,7 @@ export default function PostingDashboard() {
                         
                         {/* Tag Suggestions Dropdown */}
                         {showEventTagSuggestions && eventTagSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
                             {isLoadingEventTags ? (
                               <div className="p-3 text-center text-gray-500">
                                 <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
@@ -1052,7 +1262,7 @@ export default function PostingDashboard() {
 
           {/* Job Form */}
           {activeTab === 'job' && (
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900">
                   <Briefcase className="h-5 w-5 text-blue-600" />
@@ -1088,7 +1298,7 @@ export default function PostingDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="jobType">Employment Type *</Label>
                       <Select required>
@@ -1102,15 +1312,6 @@ export default function PostingDashboard() {
                           <SelectItem value="internship">Internship</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobLocation">Location *</Label>
-                      <Input
-                        id="jobLocation"
-                        placeholder="e.g., Lagos, Nigeria or Remote"
-                        required
-                        className="h-11"
-                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="jobExperience">Experience Level</Label>
@@ -1127,61 +1328,6 @@ export default function PostingDashboard() {
                       </Select>
                     </div>
                   </div>
-
-                  {/* Payment Section */}
-                  <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-blue-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="jobIsPaid" className="text-xl font-black text-blue-800">
-                          {isJobPaid ? 'SALARY POSITION' : 'VOLUNTEER POSITION'}
-                        </Label>
-                        <p className="text-sm text-blue-600 mt-1 font-bold">
-                          {isJobPaid ? 'This job offers competitive compensation' : 'This is an unpaid volunteer position'}
-                        </p>
-                      </div>
-                      <Switch
-                        id="jobIsPaid"
-                        checked={isJobPaid}
-                        onCheckedChange={setIsJobPaid}
-                        className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-blue-200/60"
-                      />
-                    </div>
-                    
-                    {isJobPaid && (
-                      <div className="space-y-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-blue-200/60">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                            <Label htmlFor="jobSalary" className="text-sm font-semibold text-blue-700">
-                              💰 Salary Range *
-                            </Label>
-                      <Input
-                        id="jobSalary"
-                              name="jobSalary"
-                              placeholder="e.g., ₦2M - ₦3M or Negotiable"
-                              className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
-                              required
-                      />
-                    </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="jobPeriod" className="text-sm font-semibold text-blue-700">
-                              ⏰ Payment Period *
-                            </Label>
-                            <Select name="jobPeriod" required>
-                              <SelectTrigger className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white">
-                                <SelectValue placeholder="Select period" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="hourly">Hourly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="annually">Annually</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="jobDeadline">Application Deadline</Label>
@@ -1207,6 +1353,135 @@ export default function PostingDashboard() {
                       </Select>
                     </div>
                   </div>
+                    {/* Location Section */}
+                    <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-blue-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="jobIsRemote" className="text-lg font-bold text-blue-800">
+                            {isJobRemote ? 'Remote Job' : 'In-Person Job'}
+                          </Label>
+                          <p className="text-sm text-blue-600 mt-1 font-medium">
+                            {isJobRemote ? 'This is a remote job' : 'This is an in-person job with a physical location'}
+                          </p>
+                        </div>
+                        <Switch
+                          id="jobIsRemote"
+                          checked={isJobRemote}
+                          onCheckedChange={setIsJobRemote}
+                          className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-blue-200/60"
+                        />
+                      </div>
+                      
+                      {!isJobRemote && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-blue-200/60">
+                          <div className="space-y-2">
+                            <Label htmlFor="jobCountry" className="text-sm font-semibold text-blue-700">
+                              Country *
+                            </Label>
+                            <Input
+                              id="jobCountry"
+                              name="jobCountry"
+                              placeholder="e.g., Nigeria"
+                              required
+                              className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
+                            />
+                          </div>
+                     
+                          <div className="space-y-2">
+                            <Label htmlFor="jobCity" className="text-sm font-semibold text-blue-700">
+                              City *
+                            </Label>
+                            <Input
+                              id="jobCity"
+                              name="jobCity"
+                              placeholder="e.g., Lagos"
+                              required
+                              className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                   
+                  
+
+                  {/* Payment Section */}
+                  <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-blue-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="jobIsPaid" className="text-xl font-black text-blue-800">
+                          {isJobPaid ? 'SALARY POSITION' : 'VOLUNTEER POSITION'}
+                        </Label>
+                        <p className="text-sm text-blue-600 mt-1 font-bold">
+                          {isJobPaid ? 'This job offers competitive compensation' : 'This is an unpaid volunteer position'}
+                        </p>
+                      </div>
+                      <Switch
+                        id="jobIsPaid"
+                        checked={isJobPaid}
+                        onCheckedChange={setIsJobPaid}
+                        className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-blue-200/60"
+                      />
+                    </div>
+                    
+                    {isJobPaid && (
+                      <div className="space-y-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-blue-200/60">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-semibold text-blue-700">
+                              💰 Salary Information
+                            </Label>
+                            <div className="flex items-center gap-3">
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  setHasSalary(true)
+                                  const salaryInput = document.getElementById('jobSalary') as HTMLInputElement
+                                  if (salaryInput) {
+                                    salaryInput.value = 'Salary Present'
+                                  }
+                                }}
+                                className={`px-4 py-2 rounded-lg transition-colors ${
+                                  hasSalary 
+                                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                                }`}
+                              >
+                                {hasSalary ? '✓ Salary Present' : 'Mark as Salary Present'}
+                              </Button>
+                              <span className="text-sm text-gray-600">
+                                {hasSalary ? 'This job includes salary' : 'Click to indicate this job has a salary'}
+                              </span>
+                            </div>
+                            <Input
+                              id="jobSalary"
+                              name="jobSalary"
+                              value={hasSalary ? 'Salary Present' : ''}
+                              readOnly
+                              className="h-11 border-blue-200/60 bg-gray-50 text-gray-700"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="jobPeriod" className="text-sm font-semibold text-blue-700">
+                              ⏰ Payment Period *
+                            </Label>
+                            <Select name="jobPeriod" required>
+                              <SelectTrigger className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white">
+                                <SelectValue placeholder="Select period" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="hourly">Hourly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="annually">Annually</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  
 
                   <div className="space-y-2">
                     <Label htmlFor="jobUrl">External Application URL *</Label>
@@ -1260,14 +1535,34 @@ export default function PostingDashboard() {
                   <div className="space-y-2">
                     <Label htmlFor="jobTags">Tags *</Label>
                     <div className="space-y-3">
-                      <Input
-                        id="jobTags"
-                        value={jobTagInput}
-                        onChange={(e) => setJobTagInput(e.target.value)}
-                        onKeyDown={(e) => handleTagAdd(e, 'job')}
-                        placeholder="Type a tag and press Enter (e.g., remote, senior, frontend, react)"
-                        className="h-11"
-                      />
+                       <div className="relative">
+                         <Input
+                           id="jobTags"
+                           value={jobTagInput}
+                           onChange={(e) => handleTagInputChange(e.target.value, 'job')}
+                           onKeyDown={(e) => handleTagAdd(e, 'job')}
+                           placeholder="Type a tag and press Enter (e.g., remote, senior, frontend, react)"
+                           className="h-11"
+                         />
+                         {showJobTagSuggestions && jobTagSuggestions.length > 0 && (
+                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
+                             {jobTagSuggestions.map((suggestion, index) => (
+                               <div
+                                 key={index}
+                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                 onMouseDown={() => {
+                                   setJobTagInput(suggestion)
+                                   setJobTags([...jobTags, suggestion])
+                                   setJobTagInput('')
+                                   setShowJobTagSuggestions(false)
+                                 }}
+                               >
+                                 {suggestion}
+                               </div>
+                             ))}
+                           </div>
+                         )}
+                       </div>
                       {jobTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {jobTags.map((tag, index) => (
@@ -1315,7 +1610,7 @@ export default function PostingDashboard() {
 
           {/* Resource Contact Form */}
           {activeTab === 'resource' && (
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900">
                   <BookOpen className="h-5 w-5 text-purple-600" />
@@ -1461,14 +1756,34 @@ export default function PostingDashboard() {
                   <div className="space-y-2">
                     <Label htmlFor="resourceTags">Tags *</Label>
                     <div className="space-y-3">
-                      <Input
-                        id="resourceTags"
-                        value={resourceTagInput}
-                        onChange={(e) => setResourceTagInput(e.target.value)}
-                        onKeyDown={(e) => handleTagAdd(e, 'resource')}
-                        placeholder="Type a tag and press Enter (e.g., tutorial, free, coding, design)"
-                        className="h-11"
-                      />
+                       <div className="relative">
+                         <Input
+                           id="resourceTags"
+                           value={resourceTagInput}
+                           onChange={(e) => handleTagInputChange(e.target.value, 'resource')}
+                           onKeyDown={(e) => handleTagAdd(e, 'resource')}
+                           placeholder="Type a tag and press Enter (e.g., tutorial, free, coding, design)"
+                           className="h-11"
+                         />
+                         {showResourceTagSuggestions && resourceTagSuggestions.length > 0 && (
+                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
+                             {resourceTagSuggestions.map((suggestion, index) => (
+                               <div
+                                 key={index}
+                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                 onMouseDown={() => {
+                                   setResourceTagInput(suggestion)
+                                   setResourceTags([...resourceTags, suggestion])
+                                   setResourceTagInput('')
+                                   setShowResourceTagSuggestions(false)
+                                 }}
+                               >
+                                 {suggestion}
+                               </div>
+                             ))}
+                           </div>
+                         )}
+                       </div>
                       {resourceTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {resourceTags.map((tag, index) => (

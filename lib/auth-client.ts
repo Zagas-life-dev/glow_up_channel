@@ -1,9 +1,7 @@
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? "https://latest-glowup-channel-761979347865.europe-west1.run.app/api/auth" // Production backend URL
-    : "http://localhost:3001/api/auth", // Development backend URL
+  baseURL: `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'}/api/auth`,
   fetchOptions: {
     onError(context) {
       // Handle authentication errors globally
@@ -18,6 +16,8 @@ export const authClient = createAuthClient({
     }
   }
 });
+
+
 
 // Export types for TypeScript
 export type Session = typeof authClient.$Infer.Session;

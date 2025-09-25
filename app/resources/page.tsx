@@ -11,6 +11,11 @@ import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
 
+// Utility function to determine if a resource is premium/paid
+const isResourcePaid = (resource: any): boolean => {
+    return !!(resource.is_premium || resource.isPremium || resource.price || resource.paymentAmount)
+}
+
 function ResourcesContent() {
     const [resources, setResources] = useState<any[]>([])
     const [filteredResources, setFilteredResources] = useState<any[]>([])
@@ -207,7 +212,7 @@ function ResourcesContent() {
                             <Card 
                                 key={resource._id} 
                                 className={`
-                                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation
+                                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation
                                     ${resource.isPromoted ? 'border-2 border-yellow-400' : ''}
                                 `}
                             >
@@ -219,11 +224,11 @@ function ResourcesContent() {
                                                 </span>
                                             </div>
                                             <span className={`text-xs font-medium ${
-                                                resource.is_premium 
+                                                isResourcePaid(resource) 
                                                 ? 'text-purple-500' 
                                                     : 'text-gray-400'
                                             }`}>
-                                            {resource.is_premium ? 'premium' : 'free'}
+                                            {isResourcePaid(resource) ? 'premium' : 'free'}
                                             </span>
                                     </div>
                                     

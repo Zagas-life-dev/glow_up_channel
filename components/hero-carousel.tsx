@@ -57,6 +57,8 @@ function FallbackCarousel() {
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
+  const [isSwipeActive, setIsSwipeActive] = useState(false)
 
   // Check if mobile for better UX
   useEffect(() => {
@@ -77,18 +79,33 @@ function FallbackCarousel() {
     return () => clearInterval(interval)
   }, [isPlaying, isMobile])
 
-  // Touch/swipe handlers
+  // Enhanced touch/swipe handlers with direction detection
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
+    setIsSwipeActive(true)
+    setSwipeDirection(null)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
+    if (!touchStart) return
+    
+    const currentTouch = e.targetTouches[0].clientX
+    setTouchEnd(currentTouch)
+    
+    // Determine swipe direction during movement
+    const distance = touchStart - currentTouch
+    if (Math.abs(distance) > 10) {
+      setSwipeDirection(distance > 0 ? 'left' : 'right')
+    }
   }
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
+    if (!touchStart || !touchEnd || !isSwipeActive) {
+      setIsSwipeActive(false)
+      setSwipeDirection(null)
+      return
+    }
     
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > 50
@@ -99,15 +116,25 @@ function FallbackCarousel() {
     } else if (isRightSwipe) {
       prevSlide()
     }
+    
+    // Reset swipe state
+    setIsSwipeActive(false)
+    setSwipeDirection(null)
+    
+    // Pause auto-play for longer after manual swipe to prevent interference
+    setIsPlaying(false)
+    setTimeout(() => setIsPlaying(true), isMobile ? 15000 : 20000) // Extended pause after swipe
   }
 
   const nextSlide = () => {
     if (isTransitioning) return
     setIsTransitioning(true)
+    setSwipeDirection('left') // Forward button = left swipe animation
     setCurrentSlide((prev) => (prev + 1) % fallbackData.length)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
+      setSwipeDirection(null)
     }, 1000)
     setTimeout(() => setIsPlaying(true), 8000)
   }
@@ -115,10 +142,12 @@ function FallbackCarousel() {
   const prevSlide = () => {
     if (isTransitioning) return
     setIsTransitioning(true)
+    setSwipeDirection('right') // Back button = right swipe animation
     setCurrentSlide((prev) => (prev - 1 + fallbackData.length) % fallbackData.length)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
+      setSwipeDirection(null)
     }, 1000)
     setTimeout(() => setIsPlaying(true), 8000)
   }
@@ -126,10 +155,14 @@ function FallbackCarousel() {
   const goToSlide = (index: number) => {
     if (isTransitioning) return
     setIsTransitioning(true)
+    // Determine direction based on current vs target slide
+    const direction = index > currentSlide ? 'left' : 'right'
+    setSwipeDirection(direction)
     setCurrentSlide(index)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
+      setSwipeDirection(null)
     }, 1000)
     setTimeout(() => setIsPlaying(true), 8000)
   }
@@ -154,8 +187,89 @@ function FallbackCarousel() {
             transform: translateY(0);
           }
         }
+        
+        @keyframes slideInFromRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes slideFadeIn {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
         .animate-fade-in {
-          animation: fadeInUp 0.8s ease-out;
+          animation: slideFadeIn 0.8s ease-out;
+        }
+        
+        .animate-slide-in-right {
+          animation: slideInFromRight 0.6s ease-out;
+        }
+        
+        .animate-slide-in-left {
+          animation: slideInFromLeft 0.6s ease-out;
+        }
+        
+        .animate-fade-scale {
+          animation: fadeInScale 0.7s ease-out;
+        }
+        
+        .swipe-indicator {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 60px;
+          background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.8), transparent);
+          border-radius: 2px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .swipe-indicator.left {
+          left: 20px;
+        }
+        
+        .swipe-indicator.right {
+          right: 20px;
+        }
+        
+        .swipe-indicator.active {
+          opacity: 1;
         }
       `}</style>
       <section 
@@ -173,18 +287,31 @@ function FallbackCarousel() {
           {/* Background Gradient */}
           <div className={`absolute inset-0 bg-gradient-to-br ${color}`} />
           
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
-          <div className="absolute inset-0 bg-black/20" />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-black/20" />
 
-          {/* Content Layer */}
-          <div className="relative z-10 h-full flex items-center">
-            <div className="container px-4 sm:px-6 md:px-8 lg:px-12 w-full">
-              <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
-                <div 
-                  key={currentSlide} 
-                  className="space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform animate-fade-in"
-                >
+        {/* Swipe Indicators */}
+        {isSwipeActive && swipeDirection && (
+          <div className={`swipe-indicator ${swipeDirection} ${isSwipeActive ? 'active' : ''}`} />
+        )}
+
+        {/* Content Layer */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="container px-4 sm:px-6 md:px-8 lg:px-12 w-full">
+            <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
+              <div 
+                key={currentSlide} 
+                className={`space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform ${
+                  isTransitioning 
+                    ? swipeDirection === 'left' 
+                      ? 'animate-slide-in-right' 
+                      : swipeDirection === 'right' 
+                        ? 'animate-slide-in-left' 
+                        : 'animate-fade-scale'
+                    : 'animate-fade-in'
+                }`}
+              >
                   {/* Content Type Badge */}
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
@@ -354,6 +481,8 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
+  const [isSwipeActive, setIsSwipeActive] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [engagementStatus, setEngagementStatus] = useState({
     isSaved: false,
@@ -537,11 +666,14 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const goToSlide = (index: number) => {
     if (isTransitioning) return
     setIsTransitioning(true)
+    // Determine direction based on current vs target slide
+    const direction = index > currentSlide ? 'left' : 'right'
+    setSwipeDirection(direction)
     setCurrentSlide(index)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
-      setIsPlaying(true)
+      setSwipeDirection(null)
     }, 1000) // Wait for transition to complete
     setTimeout(() => setIsPlaying(true), isMobile ? 12000 : 15000) // Longer pause after manual interaction
   }
@@ -549,10 +681,12 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const nextSlide = () => {
     if (!heroPromotions || heroPromotions.length === 0 || isTransitioning) return
     setIsTransitioning(true)
+    setSwipeDirection('left') // Forward button = left swipe animation
     setCurrentSlide((prev) => (prev + 1) % heroPromotions.length)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
+      setSwipeDirection(null)
     }, 1000) // Wait for transition to complete
     setTimeout(() => setIsPlaying(true), isMobile ? 12000 : 15000) // Longer pause after manual interaction
   }
@@ -560,10 +694,12 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const prevSlide = () => {
     if (!heroPromotions || heroPromotions.length === 0 || isTransitioning) return
     setIsTransitioning(true)
+    setSwipeDirection('right') // Back button = right swipe animation
     setCurrentSlide((prev) => (prev - 1 + heroPromotions.length) % heroPromotions.length)
     setIsPlaying(false)
     setTimeout(() => {
       setIsTransitioning(false)
+      setSwipeDirection(null)
     }, 1000) // Wait for transition to complete
     setTimeout(() => setIsPlaying(true), isMobile ? 12000 : 15000) // Longer pause after manual interaction
   }
@@ -572,18 +708,33 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
     setIsPlaying(!isPlaying)
   }
 
-  // Touch/swipe handlers
+  // Enhanced touch/swipe handlers with direction detection
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
+    setIsSwipeActive(true)
+    setSwipeDirection(null)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
+    if (!touchStart) return
+    
+    const currentTouch = e.targetTouches[0].clientX
+    setTouchEnd(currentTouch)
+    
+    // Determine swipe direction during movement
+    const distance = touchStart - currentTouch
+    if (Math.abs(distance) > 10) {
+      setSwipeDirection(distance > 0 ? 'left' : 'right')
+    }
   }
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
+    if (!touchStart || !touchEnd || !isSwipeActive) {
+      setIsSwipeActive(false)
+      setSwipeDirection(null)
+      return
+    }
     
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > 50
@@ -594,6 +745,14 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
     } else if (isRightSwipe) {
       prevSlide()
     }
+    
+    // Reset swipe state
+    setIsSwipeActive(false)
+    setSwipeDirection(null)
+    
+    // Pause auto-play for longer after manual swipe to prevent interference
+    setIsPlaying(false)
+    setTimeout(() => setIsPlaying(true), isMobile ? 15000 : 20000) // Extended pause after swipe
   }
 
   // Helper function to get content type info
@@ -741,8 +900,106 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
             transform: translateY(0);
           }
         }
+        
+        @keyframes slideInFromRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes slideFadeIn {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
         .animate-fade-in {
-          animation: fadeInUp 0.8s ease-out;
+          animation: slideFadeIn 0.8s ease-out;
+        }
+        
+        .animate-slide-in-right {
+          animation: slideInFromRight 0.6s ease-out;
+        }
+        
+        .animate-slide-in-left {
+          animation: slideInFromLeft 0.6s ease-out;
+        }
+        
+        .animate-fade-scale {
+          animation: fadeInScale 0.7s ease-out;
+        }
+        
+        .swipe-indicator {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 60px;
+          background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.8), transparent);
+          border-radius: 2px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .swipe-indicator.left {
+          left: 20px;
+        }
+        
+        .swipe-indicator.right {
+          right: 20px;
+        }
+        
+        .swipe-indicator.active {
+          opacity: 1;
+        }
+        
+        .swipe-preview {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          opacity: 0.3;
+          transform: scale(0.95);
+          transition: all 0.3s ease;
+          z-index: 5;
+        }
+        
+        .swipe-preview.active {
+          opacity: 0.6;
+          transform: scale(0.98);
         }
       `}</style>
       <section 
@@ -801,13 +1058,26 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
         <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-black/20" />
 
+        {/* Swipe Indicators */}
+        {isSwipeActive && swipeDirection && (
+          <div className={`swipe-indicator ${swipeDirection} ${isSwipeActive ? 'active' : ''}`} />
+        )}
+
         {/* Content Layer */}
         <div className="relative z-10 h-full flex items-center">
           <div className="container px-4 sm:px-6 md:px-8 lg:px-12 w-full">
             <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
               <div 
                 key={currentSlide} 
-                className="space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform animate-fade-in"
+                className={`space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform ${
+                  isTransitioning 
+                    ? swipeDirection === 'left' 
+                      ? 'animate-slide-in-right' 
+                      : swipeDirection === 'right' 
+                        ? 'animate-slide-in-left' 
+                        : 'animate-fade-scale'
+                    : 'animate-fade-in'
+                }`}
               >
                 {/* Content Type Badge */}
                 <div className="flex items-center gap-3 flex-wrap">

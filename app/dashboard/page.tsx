@@ -68,6 +68,11 @@ interface DashboardStats {
 
 interface SavedItem {
   _id: string
+  id?: string
+  opportunityId?: string
+  jobId?: string
+  eventId?: string
+  resourceId?: string
   title: string
   type: 'opportunity' | 'job' | 'event' | 'resource'
   company?: string
@@ -90,6 +95,11 @@ interface SavedItem {
 
 interface Recommendation {
   _id: string
+  id?: string
+  opportunityId?: string
+  jobId?: string
+  eventId?: string
+  resourceId?: string
   title: string
   description: string
   type: 'opportunity' | 'job' | 'event' | 'resource'
@@ -217,27 +227,43 @@ export default function DashboardPage() {
         console.log('Profile data type:', typeof profileData)
         console.log('Profile data keys:', Object.keys(profileData || {}))
         
-        // Load saved items from backend
+        // Load saved items from backend with better error handling
+        console.log('Loading saved items from backend...')
         const [savedOpportunitiesRes, savedJobsRes, savedEventsRes, savedResourcesRes, recommendationsRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/engagement/saved?limit=10`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { savedOpportunities: [] } }) })),
+          }).catch((err) => {
+            console.error('Error fetching saved opportunities:', err)
+            return { json: () => ({ success: false, data: { savedOpportunities: [] }, error: err.message }) }
+          }),
           
           fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/engagement/jobs/saved?limit=10`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { savedJobs: [] } }) })),
+          }).catch((err) => {
+            console.error('Error fetching saved jobs:', err)
+            return { json: () => ({ success: false, data: { savedJobs: [] }, error: err.message }) }
+          }),
           
           fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/engagement/events/saved?limit=10`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { savedEvents: [] } }) })),
+          }).catch((err) => {
+            console.error('Error fetching saved events:', err)
+            return { json: () => ({ success: false, data: { savedEvents: [] }, error: err.message }) }
+          }),
           
           fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/engagement/resources/saved?limit=10`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { savedResources: [] } }) })),
+          }).catch((err) => {
+            console.error('Error fetching saved resources:', err)
+            return { json: () => ({ success: false, data: { savedResources: [] }, error: err.message }) }
+          }),
           
           fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/feed?limit=10`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { recommendations: [] } }) }))
+          }).catch((err) => {
+            console.error('Error fetching recommendations:', err)
+            return { json: () => ({ success: false, data: { recommendations: [] }, error: err.message }) }
+          })
         ])
         
         const [savedOpportunitiesData, savedJobsData, savedEventsData, savedResourcesData, recommendationsData] = await Promise.all([
@@ -248,13 +274,20 @@ export default function DashboardPage() {
           recommendationsRes.json()
         ])
         
+        // Debug logging for saved items
+        console.log('Saved opportunities data:', savedOpportunitiesData)
+        console.log('Saved jobs data:', savedJobsData)
+        console.log('Saved events data:', savedEventsData)
+        console.log('Saved resources data:', savedResourcesData)
+        console.log('Recommendations data:', recommendationsData)
+        
         // Process saved items
         const allSavedItems: SavedItem[] = []
         
         if (savedOpportunitiesData.success) {
           savedOpportunitiesData.data.savedOpportunities.forEach((item: any) => {
             allSavedItems.push({
-              _id: item._id,
+              _id: item.opportunity._id || item.opportunity.id, // Use the opportunity's ID, not the saved item's ID
               title: item.opportunity.title,
               type: 'opportunity',
               company: item.opportunity.organization,
@@ -268,7 +301,7 @@ export default function DashboardPage() {
         if (savedJobsData.success) {
           savedJobsData.data.savedJobs.forEach((item: any) => {
             allSavedItems.push({
-              _id: item._id,
+              _id: item.job._id || item.job.id, // Use the job's ID, not the saved item's ID
               title: item.job.title,
               type: 'job',
               company: item.job.company,
@@ -282,7 +315,7 @@ export default function DashboardPage() {
         if (savedEventsData.success) {
           savedEventsData.data.savedEvents.forEach((item: any) => {
             allSavedItems.push({
-              _id: item._id,
+              _id: item.event._id || item.event.id, // Use the event's ID, not the saved item's ID
               title: item.event.title,
               type: 'event',
               company: item.event.organizer,
@@ -296,7 +329,7 @@ export default function DashboardPage() {
         if (savedResourcesData.success) {
           savedResourcesData.data.savedResources.forEach((item: any) => {
             allSavedItems.push({
-              _id: item._id,
+              _id: item.resource._id || item.resource.id, // Use the resource's ID, not the saved item's ID
               title: item.resource.title,
               type: 'resource',
               company: item.resource.author,
@@ -312,10 +345,10 @@ export default function DashboardPage() {
         if (recommendationsData.success && recommendationsData.data.recommendations) {
           recommendationsData.data.recommendations.forEach((item: any) => {
             recommendations.push({
-              _id: item._id,
+              _id: item._id || item.id, // Handle different ID field names
               title: item.title,
               description: item.description,
-              type: item.contentType,
+              type: item.contentType || item.type, // Handle different type field names
               tags: item.tags || [],
               location: item.location
             })
@@ -336,6 +369,46 @@ export default function DashboardPage() {
         setStats(stats)
         setSavedItems(allSavedItems.slice(0, 10)) // Show latest 10
         setRecommendations(recommendations)
+        
+        // Debug logging for final state
+        console.log('Final stats:', stats)
+        console.log('Final saved items count:', allSavedItems.length)
+        console.log('Final saved items:', allSavedItems)
+        console.log('Final recommendations count:', recommendations.length)
+        
+        // Fallback: If no saved items found, try alternative endpoints for backward compatibility
+        if (allSavedItems.length === 0) {
+          console.log('No saved items found, trying fallback endpoints...')
+          try {
+            // Try alternative saved items endpoint
+            const fallbackRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/saved-items`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+            })
+            
+            if (fallbackRes.ok) {
+              const fallbackData = await fallbackRes.json()
+              console.log('Fallback saved items data:', fallbackData)
+              
+              if (fallbackData.success && fallbackData.data && fallbackData.data.length > 0) {
+                const fallbackItems: SavedItem[] = fallbackData.data.map((item: any) => ({
+                  _id: item._id || item.id,
+                  title: item.title,
+                  type: item.type || item.contentType,
+                  company: item.company || item.organization || item.author,
+                  location: item.location,
+                  savedAt: new Date(item.savedAt || item.createdAt).toLocaleDateString(),
+                  tags: item.tags || [],
+                  metrics: item.metrics
+                }))
+                
+                console.log('Fallback items processed:', fallbackItems)
+                setSavedItems(fallbackItems.slice(0, 10))
+              }
+            }
+          } catch (fallbackErr) {
+            console.log('Fallback endpoint also failed:', fallbackErr)
+          }
+        }
         
       } catch (err: any) {
         console.error('Error loading dashboard data:', err)
@@ -387,6 +460,16 @@ export default function DashboardPage() {
       case 'opportunity': return 'from-orange-500 to-orange-600'
       case 'resource': return 'from-purple-500 to-purple-600'
       default: return 'from-gray-500 to-gray-600'
+    }
+  }
+
+  const getPluralType = (type: string) => {
+    switch (type) {
+      case 'opportunity': return 'opportunities'
+      case 'job': return 'jobs'
+      case 'event': return 'events'
+      case 'resource': return 'resources'
+      default: return `${type}s`
     }
   }
 
@@ -611,7 +694,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
                 <h2 className="text-2xl font-bold mb-2">
-                  Welcome back, {user.email.split('@')[0]}!
+                  Welcome back, {user.firstName || user.email.split('@')[0]}!
                 </h2>
                 <p className="text-orange-100">
                   {userRole === 'seeker' 
@@ -872,7 +955,9 @@ export default function DashboardPage() {
                       <div className="space-y-4">
                     {recommendations.map((item) => {
                       const Icon = getTypeIcon(item.type)
-                      const detailUrl = `/${item.type}s/${item._id}`
+                      // Handle different ID field names for backward compatibility
+                      const itemId = item._id || (item as any).id || (item as any).opportunityId || (item as any).jobId || (item as any).eventId || (item as any).resourceId
+                      const detailUrl = `/${getPluralType(item.type)}/${itemId}`
                       return (
                         <Link key={item._id} href={detailUrl} className="block">
                           <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
@@ -929,6 +1014,132 @@ export default function DashboardPage() {
                     )}
                   </CardContent>
                 </Card>
+          </div>
+        )}
+
+        {/* Saved Items Tab */}
+        {!isLoading && activeTab === 'saved' && (
+          <div className="space-y-8">
+            {/* Saved Items Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Your Saved Items</h2>
+                <p className="text-gray-600 mt-1">
+                  {savedItems.length > 0 
+                    ? `You have ${savedItems.length} saved item${savedItems.length === 1 ? '' : 's'}`
+                    : 'No saved items yet'
+                  }
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+
+            {/* Saved Items List */}
+            {savedItems.length > 0 ? (
+              <div className="space-y-4">
+                {savedItems.map((item) => {
+                  const Icon = getTypeIcon(item.type)
+                  // Handle different ID field names for backward compatibility
+                  const itemId = item._id || (item as any).id || (item as any).opportunityId || (item as any).jobId || (item as any).eventId || (item as any).resourceId
+                  const detailUrl = `/${getPluralType(item.type)}/${itemId}`
+                  
+                  // Debug logging for URL construction
+                  console.log(`Constructing URL for ${item.type}:`, {
+                    originalId: item._id,
+                    resolvedId: itemId,
+                    detailUrl: detailUrl,
+                    item: item
+                  })
+                  return (
+                    <Link key={item._id} href={detailUrl} className="block">
+                      <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
+                        <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                          <Icon className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">{item.title}</h4>
+                          {item.company && (
+                            <p className="text-sm text-gray-600 mb-2">{item.company}</p>
+                          )}
+                          <div className="flex items-center space-x-4 text-xs text-gray-500">
+                            <span className="flex items-center space-x-1">
+                              <MapPin className="h-3 w-3" />
+                              <span>{getLocationString(item.location)}</span>
+                            </span>
+                            <span className="capitalize">{item.type}</span>
+                            <span className="flex items-center space-x-1">
+                              <Bookmark className="h-3 w-3" />
+                              <span>Saved {item.savedAt}</span>
+                            </span>
+                          </div>
+                          {item.tags && item.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {item.tags.slice(0, 3).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-xs text-orange-600 font-medium group-hover:text-orange-700">
+                              View Details
+                            </span>
+                            <ArrowRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Bookmark className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Saved Items Yet</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Start exploring opportunities, jobs, events, and resources to save items you're interested in.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
+                    <Link href="/opportunities">
+                      <Target className="h-4 w-4 mr-2" />
+                      Browse Opportunities
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/jobs">
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Find Jobs
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/events">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Discover Events
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/resources">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Explore Resources
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

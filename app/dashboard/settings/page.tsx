@@ -36,10 +36,11 @@ import {
   Heart,
   LogOut
 } from 'lucide-react'
+import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 
 export default function SettingsPage() {
   const { setHideNavbar, setHideFooter } = usePage()
-  const { user, profile, logout, updateProfile, isLoading } = useAuth()
+  const { user, profile, logout, updateProfile, updateUser, refreshUser, isLoading } = useAuth()
   const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'preferences' | 'security' | 'notifications'>('profile')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -57,15 +58,10 @@ export default function SettingsPage() {
 
   // User data from auth context
   const [userData, setUserData] = useState({
-    firstName: user?.email?.split('@')[0] || "",
-    lastName: "",
     email: user?.email || "",
-    phone: "",
-    location: "",
-    company: "",
-    website: "",
-    bio: "",
-    dateOfBirth: "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    dateOfBirth: user?.dateOfBirth || "",
     avatar: "/images/placeholder-user.jpg"
   })
 
@@ -103,8 +99,9 @@ export default function SettingsPage() {
       setUserData(prev => ({
         ...prev,
         email: user.email,
-        firstName: user.firstName || user.email?.split('@')[0] || prev.firstName,
-        lastName: user.lastName || prev.lastName
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        dateOfBirth: user.dateOfBirth || ""
       }))
     }
   }, [user])
@@ -127,6 +124,18 @@ export default function SettingsPage() {
     }
   }, [profile])
 
+  // Refresh local state when user data changes (after refreshUser)
+  useEffect(() => {
+    if (user) {
+      setUserData(prev => ({
+        ...prev,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        dateOfBirth: user.dateOfBirth || ""
+      }))
+    }
+  }, [user])
+
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     pushNotifications: false,
@@ -141,10 +150,24 @@ export default function SettingsPage() {
     setIsSaving(true)
     setSaveMessage(null)
     try {
-      // Update profile data including firstName and lastName
+      // Try to update user data (firstName, lastName, dateOfBirth) - with fallback for backward compatibility
+      try {
+        await updateUser({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          dateOfBirth: userData.dateOfBirth
+        })
+        console.log('User data updated successfully')
+      } catch (userUpdateError) {
+        console.warn('Failed to update user data, continuing with profile update:', userUpdateError)
+        // For backward compatibility, we'll still try to update the profile
+        // and include firstName/lastName/dateOfBirth there as a fallback
+      }
+
+      // Update profile data (including firstName and lastName as fallback for backward compatibility)
       await updateProfile({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        firstName: userData.firstName, // Include as fallback
+        lastName: userData.lastName,   // Include as fallback
         country: onboardingData.country,
         province: onboardingData.province,
         city: onboardingData.city,
@@ -157,8 +180,21 @@ export default function SettingsPage() {
         skills: onboardingData.skills,
         aspirations: onboardingData.aspirations
       })
+      
+      // Refresh user data to ensure UI reflects latest changes
+      console.log('Refreshing user data after save...')
+      await refreshUser()
+      
+      // Update local state to reflect the changes immediately
+      setUserData(prev => ({
+        ...prev,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        dateOfBirth: userData.dateOfBirth
+      }))
+      
       setIsEditing(false)
-      setSaveMessage({ type: 'success', message: 'Profile updated successfully!' })
+      setSaveMessage({ type: 'success', message: 'Profile updated successfully! Data refreshed.' })
       // Clear message after 3 seconds
       setTimeout(() => setSaveMessage(null), 3000)
     } catch (error) {
@@ -193,24 +229,25 @@ export default function SettingsPage() {
     "Volunteering & Community Service",
     "Entrepreneurship & Funding",
     "Remote Work & Digital Skills",
+    "Research & Academic Opportunities",
+    "International Exchange Programs"
   ]
 
   const industriesList = [
     "Technology",
-    "Healthcare",
-    "Education & Research",
     "Creative Arts & Media",
-    "Finance & Business",
-    "NGO & Social Impact",
-    "Engineering & Manufacturing",
+    "Business & Finance",
+    "Healthcare & Sciences",
+    "Education & Training",
+    "Government & Public Service"
   ]
 
-  const educationLevels = ["Secondary School", "Undergraduate", "Postgraduate", "PhD"]
+  const educationLevels = ["High School", "Undergraduate", "Graduate", "Professional"]
   const fieldsOfStudy = ["Business", "Engineering", "Arts", "Medicine", "Technology", "Other"]
   const careerStages = [
     "Student",
-    "Entry-Level (0–2 years)",
-    "Mid-Career (3–7 years)",
+    "Entry-Level (0-2 years)",
+    "Mid-Career (3-7 years)",
     "Senior/Executive (8+ years)",
   ]
   const skillsList = [
@@ -227,13 +264,8 @@ export default function SettingsPage() {
     "Access to career opportunities",
     "Mentorship & guidance",
     "Networking & professional connections",
-    "Training & upskilling",
-    "Access to funding/scholarships",
-    "Community & belonging",
-    "Inspiration & motivation",
-    "Build leadership & influence",
-    "Secure a job or internship",
-    "Start or grow a business",
+    "Skill development",
+    "Entrepreneurship support"
   ]
 
   const toggleArrayItem = (array: string[], item: string, setter: (value: string[]) => void) => {
@@ -388,7 +420,7 @@ export default function SettingsPage() {
               <CardContent>
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Avatar Section */}
-                  <div className="flex flex-col items-center space-y-4">
+                  {/* <div className="flex flex-col items-center space-y-4">
                     <div className="relative">
                       <Image
                         src={userData.avatar}
@@ -404,30 +436,54 @@ export default function SettingsPage() {
                     <Button variant="outline" size="sm" className="border-orange-200 text-orange-600 hover:bg-orange-50">
                       Change Photo
                     </Button>
-                  </div>
+                  </div> */}
 
                   {/* Profile Form */}
                   <div className="flex-1 space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Personal Information */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name *</Label>
+                        <Label htmlFor="firstName">First Name</Label>
                         <Input
                           id="firstName"
                           value={userData.firstName}
                           onChange={(e) => setUserData({...userData, firstName: e.target.value})}
                           disabled={!isEditing}
                           className="h-11"
+                          placeholder="Enter your first name"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Label htmlFor="lastName">Last Name</Label>
                         <Input
                           id="lastName"
                           value={userData.lastName}
                           onChange={(e) => setUserData({...userData, lastName: e.target.value})}
                           disabled={!isEditing}
                           className="h-11"
+                          placeholder="Enter your last name"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={userData.dateOfBirth}
+                          onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
+                          disabled={!isEditing}
+                          className="h-11"
+                          {...getDatePickerPropsFor16Plus()}
+                        />
+                        <p className="text-xs text-gray-500">
+                          You must be at least 16 years old
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {/* Empty div for grid layout */}
                       </div>
                     </div>
 
@@ -443,76 +499,6 @@ export default function SettingsPage() {
                           className="h-11"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          value={userData.phone}
-                          onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          value={userData.location}
-                          onChange={(e) => setUserData({...userData, location: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                        <Input
-                          id="dateOfBirth"
-                          type="date"
-                          value={userData.dateOfBirth}
-                          onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="company">Company/Organization</Label>
-                        <Input
-                          id="company"
-                          value={userData.company}
-                          onChange={(e) => setUserData({...userData, company: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          value={userData.website}
-                          onChange={(e) => setUserData({...userData, website: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        value={userData.bio}
-                        onChange={(e) => setUserData({...userData, bio: e.target.value})}
-                        disabled={!isEditing}
-                        rows={4}
-                        className="resize-none"
-                        placeholder="Tell us about yourself..."
-                      />
                     </div>
 
                     {!isEditing && (
@@ -544,6 +530,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+            
             
             {/* Location Section */}
             <Card className="border-0 shadow-lg">

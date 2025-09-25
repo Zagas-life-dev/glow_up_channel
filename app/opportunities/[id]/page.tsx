@@ -166,8 +166,8 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Location</p>
                     <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {opportunity.location.country && opportunity.location.province 
-                        ? `${opportunity.location.city || ''} ${opportunity.location.province}, ${opportunity.location.country}`.trim()
+                      {opportunity.location.country && opportunity.location.city 
+                        ? `${opportunity.location.city || ''}  ${opportunity.location.country}`.trim()
                         : opportunity.location.country || 'Remote'
                       }
                     </p>

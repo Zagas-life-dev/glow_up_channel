@@ -176,11 +176,20 @@ function EventPageContent({ params }: EventPageProps) {
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Location</p>
                     <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {event.location.country && event.location.province 
-                        ? `${event.location.city || ''} ${event.location.province}, ${event.location.country}`.trim()
-                        : event.location.country || 'Online'
+                      {typeof event.location === 'string' 
+                        ? event.location 
+                        : event.location.isRemote ? 'Remote Event' : 
+                          [event.location.city,  event.location.country]
+                            .filter(Boolean)
+                            .join(', ') || 'Location TBD'
                       }
                     </p>
+                    {!event.location.isRemote && event.location && typeof event.location === 'object' && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {event.location.city && <span>City: {event.location.city}</span>}
+                        {event.location.country && <span className="ml-2">Country: {event.location.country}</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
