@@ -422,8 +422,9 @@ export default function PostingDashboard() {
             isRemote: isEventRemote
           },
           dates: {
-            startDate: data.eventDate,
-            startTime: data.eventTime
+            startDate: data.eventStartDate,
+            endDate: data.eventEndDate || null,
+            registrationDeadline: data.eventRegistrationDeadline || null
           },
           capacity: data.eventCapacity
         }
@@ -996,21 +997,40 @@ export default function PostingDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="eventDate">Event Date *</Label>
+                      <Label htmlFor="eventStartDate">Event Start Date *</Label>
                       <Input
-                        id="eventDate"
+                        id="eventStartDate"
+                        name="eventStartDate"
                         type="date"
                         required
                         className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="eventTime">Event Time</Label>
+                      <Label htmlFor="eventEndDate">Event End Date</Label>
                       <Input
-                        id="eventTime"
-                        type="time"
+                        id="eventEndDate"
+                        name="eventEndDate"
+                        type="date"
                         className="h-11"
+                        placeholder="When does the event end?"
                       />
+                      <p className="text-xs text-gray-500">
+                        Leave empty for single-day events
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="eventRegistrationDeadline">Registration Deadline</Label>
+                      <Input
+                        id="eventRegistrationDeadline"
+                        name="eventRegistrationDeadline"
+                        type="date"
+                        className="h-11"
+                        placeholder="When should registration close?"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Leave empty if registration is open until event date
+                      </p>
                     </div>
                   </div>
 

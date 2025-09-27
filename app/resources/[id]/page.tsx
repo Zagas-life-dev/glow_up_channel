@@ -30,11 +30,6 @@ import EngagementActions from '@/components/engagement-actions'
 import AuthGuard from '@/components/auth-guard'
 import { cleanUrl } from '@/lib/url-utils'
 
-// Utility function to determine if a resource is premium/paid
-const isResourcePaid = (resource: any): boolean => {
-    return !!(resource.is_premium || resource.isPremium || resource.price || resource.paymentAmount)
-}
-
 type ResourcePageProps = {
   params: Promise<{
     id: string
@@ -177,14 +172,14 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <Badge 
-                        variant={isResourcePaid(resource) ? "default" : "secondary"}
+                        variant={resource.isPremium ? "default" : "secondary"}
                         className={`${
-                          isResourcePaid(resource)
+                          resource.isPremium 
                             ? 'bg-orange-500 hover:bg-orange-600' 
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {isResourcePaid(resource) ? 'Premium Resource' : 'Free Resource'}
+                        {resource.isPremium ? 'Premium Resource' : 'Free Resource'}
                       </Badge>
                       {resource.category && (
                         <Badge 

@@ -152,22 +152,96 @@ function EventPageContent({ params }: EventPageProps) {
               </div>
             )}
             
+            {/* Event Dates Section */}
+            {event.dates && (event.dates.startDate || event.dates.endDate || event.dates.registrationDeadline) && (
+              <div className="mb-6 sm:mb-8 md:mb-10">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">
+                  Event Dates
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {event.dates.startDate && (
+                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Start Date</p>
+                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
+                          {new Date(event.dates.startDate).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {event.dates.endDate && (
+                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">End Date</p>
+                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
+                          {new Date(event.dates.endDate).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {event.dates.startDate && event.dates.endDate && (
+                          <p className="text-xs text-blue-600 font-medium mt-1">
+                            {(() => {
+                              const start = new Date(event.dates.startDate)
+                              const end = new Date(event.dates.endDate)
+                              const diffTime = Math.abs(end.getTime() - start.getTime())
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+                              return `${diffDays} day${diffDays > 1 ? 's' : ''} event`
+                            })()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {event.dates.registrationDeadline && (
+                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Registration Deadline</p>
+                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
+                          {new Date(event.dates.registrationDeadline).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {(() => {
+                          const deadline = new Date(event.dates.registrationDeadline)
+                          const now = new Date()
+                          const isExpired = deadline < now
+                          return (
+                            <p className={`text-xs font-medium mt-1 ${isExpired ? 'text-red-600' : 'text-orange-600'}`}>
+                              {isExpired ? 'Registration closed' : 'Registration open'}
+                            </p>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Meta Info */}
             <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 border-y border-gray-100 py-4 sm:py-6 md:py-8 mb-6 sm:mb-8 md:mb-10">
-              {event.dates?.startDate && (
-                <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Date</p>
-                    <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {new Date(event.dates.startDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
               {event.location && (
                 <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
