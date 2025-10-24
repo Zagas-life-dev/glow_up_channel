@@ -57,7 +57,14 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
 
     setLoading(true)
     try {
-      const result = await ApiClient.getUnifiedRecommendations(filters)
+      const result = await ApiClient.getUnifiedRecommendations({
+        includeOpportunities: filters.includeOpportunities,
+        includeEvents: filters.includeEvents,
+        includeJobs: filters.includeJobs,
+        includeResources: filters.includeResources,
+        minScore: filters.minScore,
+        limit: filters.limit
+      })
       setRecommendations(result.content)
       setTotal(result.total)
       setUserProfile(result.userProfile)
@@ -97,6 +104,13 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
     if (score >= 60) return 'text-yellow-600'
     if (score >= 40) return 'text-orange-600'
     return 'text-red-600'
+  }
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 85) return 'Highly Recommended'
+    if (score >= 70) return 'Good Match'
+    if (score >= 50) return 'Moderate Match'
+    return 'Low Match'
   }
 
   if (!isAuthenticated) {
@@ -220,7 +234,8 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
                     <div className={`text-2xl font-bold ${getScoreColor(item.score)}`}>
                       {Math.round(item.score)}
                     </div>
-                    <div className="text-xs text-gray-500">relevance score</div>
+                    <div className="text-xs text-gray-500">{getScoreLabel(item.score)}</div>
+                    <div className="text-xs text-gray-400">hybrid score</div>
                   </div>
                 </div>
               </CardHeader>

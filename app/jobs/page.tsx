@@ -204,14 +204,20 @@ function JobsContent() {
           </div>
         ) : filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {filteredJobs.map((job) => (
-              <Card 
-                key={job._id} 
-                className={`
-                  group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation
-                  ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
-                `}
-              >
+            {filteredJobs.map((job) => {
+              // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+              const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(job._id)
+              
+              if (isValidObjectId) {
+                // Internal job - make entire card clickable
+                return (
+                  <Link key={job._id} href={`/jobs/${job._id}`} className="block">
+                    <Card 
+                      className={`
+                        group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
+                        ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
+                      `}
+                    >
                 <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-2">
@@ -300,38 +306,111 @@ function JobsContent() {
                     </div>
                   )}
                   
-                  <div className="mt-auto">
-                    {(() => {
-                      // Check if _id is a valid MongoDB ObjectId (24 hex characters)
-                      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(job._id)
+                    </CardContent>
+                    </Card>
+                  </Link>
+                )
+              } else {
+                // External job - make entire card clickable to open in new tab
+                return (
+                  <Card 
+                    key={job._id}
+                    className={`
+                      group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
+                      ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
+                    `}
+                    onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
+                  >
+                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium rounded-full capitalize">
+                            {job.job_type || 'Job'}
+                          </span>
+                        </div>
+                        {job.salary && (
+                          <span className="text-xs font-medium text-green-600">
+                            {job.salary}
+                          </span>
+                        )}
+                      </div>
                       
-                      if (isValidObjectId) {
-                        // Internal job - use Link to detail page
-                        return (
-                          <Link href={`/jobs/${job._id}`}>
-                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
-                              Read More
-                              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                            </Button>
-                          </Link>
-                        )
-                      } else {
-                        // External job - open in new tab
-                        return (
-                          <Button 
-                            onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
-                          >
-                            View Job
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        )
-                      }
-                    })()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+                        {job.title}
+                      </h3>
+                      
+                      <p className="text-sm text-gray-600 mb-2 sm:mb-3 font-medium">
+                        {job.company}
+                      </p>
+                      
+                      <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-3 flex-grow">
+                        {job.description}
+                      </p>
+                      
+                      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+       {job.location && (
+         <div className="flex items-center gap-2 text-sm text-gray-500">
+           <span className="w-4 h-4 flex-shrink-0">📍</span>
+           <span className="truncate">
+             {typeof job.location === 'string' 
+               ? job.location 
+               : job.location.isRemote ? 'Remote' : 
+                 [job.location.city, job.location.country]
+                   .filter(Boolean)
+                   .join(', ') || 'Location TBD'
+             }
+           </span>
+         </div>
+       )}
+       
+       {job.job_type && (
+         <div className="flex items-center gap-2 text-sm text-gray-500">
+           <Briefcase className="w-4 h-4 flex-shrink-0" />
+           <span className="capitalize">{job.job_type}</span>
+         </div>
+       )}
+       
+       {job.tags && job.tags.length > 0 && (
+         <div className="flex flex-wrap gap-1">
+           {job.tags.slice(0, 3).map((tag: string, index: number) => (
+             <span
+               key={index}
+               className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+             >
+               {tag}
+             </span>
+           ))}
+         </div>
+       )}
+     </div>
+     
+     {job.metrics && (
+       <div className="flex items-center justify-between mb-3 sm:mb-4 p-2 bg-gray-50 rounded-lg">
+         <div className="flex items-center space-x-4 text-xs text-gray-600">
+           <div className="flex items-center space-x-1">
+             <Eye className="h-3 w-3" />
+             <span>{job.metrics.viewCount || 0}</span>
+           </div>
+           <div className="flex items-center space-x-1">
+             <Heart className="h-3 w-3 text-red-500" />
+             <span>{job.metrics.likeCount || 0}</span>
+           </div>
+           <div className="flex items-center space-x-1">
+             <Bookmark className="h-3 w-3 text-blue-500" />
+             <span>{job.metrics.saveCount || 0}</span>
+           </div>
+           <div className="flex items-center space-x-1">
+             <Users className="h-3 w-3 text-green-500" />
+             <span>{job.metrics.applicationCount || 0}</span>
+           </div>
+         </div>
+       </div>
+     )}
+                    </CardContent>
+                  </Card>
+                )
+              }
+            })}
           </div>
         ) : (
           <div className="text-center py-12 sm:py-16 md:py-20">

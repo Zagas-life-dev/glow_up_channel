@@ -205,14 +205,20 @@ function EventsContent() {
                     </div>
                 ) : filteredEvents.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                            {filteredEvents.map((event) => (
-                                <Card 
-                                    key={event._id} 
-                                    className={`
-                                        group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation
-                                        ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
-                                    `}
-                                >
+                            {filteredEvents.map((event) => {
+                                // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+                                const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(event._id)
+                                
+                                if (isValidObjectId) {
+                                    // Internal event - make entire card clickable
+                                    return (
+                                        <Link key={event._id} href={`/events/${event._id}`} className="block">
+                                            <Card 
+                                                className={`
+                                                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
+                                                    ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
+                                                `}
+                                            >
                                     <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                                         <div className="flex items-center justify-between mb-3 sm:mb-4">
                                             <div className="flex items-center gap-2">
@@ -284,48 +290,112 @@ function EventsContent() {
                                             </div>
                                         )}
                                     
-                                    <div className="mt-auto">
-                                        {(() => {
-                                            const linkType = getLinkType(event._id)
+                                        </CardContent>
+                                            </Card>
+                                        </Link>
+                                    )
+                                } else {
+                                    // External event - make entire card clickable to open in new tab
+                                    return (
+                                        <Card 
+                                            key={event._id}
+                                            className={`
+                                                group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
+                                                ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
+                                            `}
+                                            onClick={() => openExternalUrl(event._id)}
+                                        >
+                                            <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+                                                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-800 text-xs sm:text-sm font-medium rounded-full capitalize">
+                                                        {event.category || 'Event'}
+                                                        </span>
+                                                    </div>
+                                                        <span className={`text-xs font-medium ${
+                                                    event.is_free 
+                                                        ? 'text-green-500' 
+                                                                : 'text-gray-400'
+                                                    }`}>
+                                                    {event.is_free ? 'free' : 'paid'}
+                                                        </span>
+                                                </div>
+                                                
+                                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-green-600 transition-colors duration-200">
+                                                    {event.title}
+                                                </h3>
                                             
-                                            if (linkType === 'internal') {
-                                                // Internal event - use Link to detail page
-                                                return (
-                                            <Link href={`/events/${event._id}`}>
-                                                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group">
-                                                            Read More
-                                                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                                                        </Button>
-                                                    </Link>
-                                                )
-                                            } else if (linkType === 'external') {
-                                                // External event - open in new tab
-                                                return (
-                                                    <Button 
-                                                        onClick={() => openExternalUrl(event._id)}
-                                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
-                                                    >
-                                                View Event
-                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                                                    </Button>
-                                                )
-                                            } else {
-                                                // Invalid link - show disabled button
-                                                return (
-                                                    <Button 
-                                                        disabled
-                                                        className="w-full bg-gray-400 text-white font-medium py-2.5 sm:py-3 rounded-xl transition-colors duration-200 group"
-                                                    >
-                                                        Invalid Link
-                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                                        </Button>
-                                                )
-                                            }
-                                        })()}
-                                    </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                            <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-3 flex-grow">
+                                                    {event.description}
+                                                </p>
+                                            
+                                            <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                                                
+                                                
+                                               
+                                                {event.location && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                        <span className="w-4 h-4 flex-shrink-0">📍</span>
+                                                        <span className="truncate">
+                                                            {typeof event.location === 'string' 
+                                                                ? event.location 
+                                                                : event.location.isRemote ? 'Remote' : 
+                                                                  [event.location.city,  event.location.country]
+                                                                    .filter(Boolean)
+                                                                    .join(', ') || 'Location TBD'
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                
+                                                {event.date && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                                                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                                                    </div>
+                                                )}
+                                                
+                                                {event.tags && event.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {event.tags.slice(0, 3).map((tag: string, index: number) => (
+                                                            <span
+                                                                key={index}
+                                                                className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            {event.metrics && (
+                                                <div className="flex items-center justify-between mb-3 sm:mb-4 p-2 bg-gray-50 rounded-lg">
+                                                    <div className="flex items-center space-x-4 text-xs text-gray-600">
+                                                        <div className="flex items-center space-x-1">
+                                                            <Eye className="h-3 w-3" />
+                                                            <span>{event.metrics.viewCount || 0}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <Heart className="h-3 w-3 text-red-500" />
+                                                            <span>{event.metrics.likeCount || 0}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <Bookmark className="h-3 w-3 text-blue-500" />
+                                                            <span>{event.metrics.saveCount || 0}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <Users className="h-3 w-3 text-green-500" />
+                                                            <span>{event.metrics.registrationCount || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                }
+                            })}
             </div>
                     ) : (
                         <div className="text-center py-12 sm:py-16 md:py-20">

@@ -4,8 +4,7 @@
 
 ### **Prerequisites**
 - Node.js 18+ and npm/pnpm
-- PostgreSQL 14+
-- Redis (for caching)
+- MongoDB Atlas account (cloud database)
 - Git and GitHub account
 
 ### **Environment Setup**
@@ -825,8 +824,7 @@ export const AnimatedCard = ({ children, className = '' }) => {
 ```bash
 # .env.local
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/glowup
-REDIS_URL=redis://localhost:6379
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/glowup-channel
 
 # Authentication
 AUTH_SECRET=your-secret-key

@@ -225,16 +225,22 @@ function OpportunitiesContent() {
             </div>
           ) : filteredOpportunities.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {filteredOpportunities.map((opportunity) => (
-                <Card 
-                  key={opportunity._id} 
-                  className={`
-                    group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation
-                    ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
-                  `}
-                  onMouseEnter={() => trackView(opportunity._id)}
-                >
-                  <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+              {filteredOpportunities.map((opportunity) => {
+                // Check if _id is a valid MongoDB ObjectId (24 hex characters)
+                const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(opportunity._id)
+                
+                if (isValidObjectId) {
+                  // Internal opportunity - make entire card clickable
+                  return (
+                    <Link key={opportunity._id} href={`/opportunities/${opportunity._id}`} className="block">
+                      <Card 
+                        className={`
+                          group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation cursor-pointer
+                          ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
+                        `}
+                        onMouseEnter={() => trackView(opportunity._id)}
+                      >
+                        <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <div className="flex items-center gap-2">
                         <span className="px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 text-xs sm:text-sm font-medium rounded-full capitalize">
@@ -287,11 +293,13 @@ function OpportunitiesContent() {
                     {/* Date Display - Show deadline if available, otherwise show start date */}
                     <div className="flex justify-end mb-3 sm:mb-4">
                       <span className="text-xs text-gray-500">
-                        {opportunity.applicationDetails?.deadline 
-                          ? `Deadline: ${new Date(opportunity.applicationDetails.deadline).toLocaleDateString()}`
-                          : opportunity.dates?.startDate 
-                            ? new Date(opportunity.dates.startDate).toLocaleDateString()
-                            : 'TBD'
+                        {opportunity.dates?.applicationDeadline 
+                          ? ` ${new Date(opportunity.dates.applicationDeadline).toLocaleDateString()}`
+                          : opportunity.applicationDetails?.deadline 
+                            ? ` ${new Date(opportunity.applicationDetails.deadline).toLocaleDateString()}`
+                            : opportunity.dates?.startDate 
+                              ? new Date(opportunity.dates.startDate).toLocaleDateString()
+                              : 'TBD'
                         }
                       </span>
                     </div>
@@ -320,41 +328,105 @@ function OpportunitiesContent() {
                       </div>
                     )}
                     
-                    {opportunity.deadline && (
+                    {(opportunity.deadline || opportunity.dates?.applicationDeadline) && (
                       <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
-                        Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
+                        Deadline: {new Date(opportunity.deadline || opportunity.dates?.applicationDeadline).toLocaleDateString()}
                       </p>
                     )}
-                      {(() => {
-                        // Check if _id is a valid MongoDB ObjectId (24 hex characters)
-                        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(opportunity._id)
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                } else {
+                  // External opportunity - make entire card clickable to open in new tab
+                  return (
+                    <Card 
+                      key={opportunity._id}
+                      className={`
+                        group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation cursor-pointer
+                        ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
+                      `}
+                      onMouseEnter={() => trackView(opportunity._id)}
+                      onClick={() => window.open(opportunity._id, '_blank', 'noopener,noreferrer')}
+                    >
+                      <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 text-xs sm:text-sm font-medium rounded-full capitalize">
+                              {opportunity.category || 'Opportunity'}
+                            </span>
+                          </div>
+                          {opportunity.financial?.isPaid !== undefined && (
+                            <span className={`text-xs font-medium ${
+                              opportunity.financial.isPaid 
+                                ? 'text-orange-500' 
+                                : 'text-gray-400'
+                            }`}>
+                              {opportunity.financial.isPaid ? 'paid' : 'free'}
+                            </span>
+                          )}
+                          {opportunity.featured && (
+                            <span className="px-2 sm:px-3 py-1 bg-amber-500 text-white text-xs sm:text-sm font-medium rounded-full">
+                              Featured
+                            </span>
+                          )}
+                        </div>
                         
-                        if (isValidObjectId) {
-                          // Internal opportunity - use Link to detail page
-                          return (
-                            <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm py-2 sm:py-3 touch-manipulation">
-                              <Link href={`/opportunities/${opportunity._id}`}>
-                                Read More
-                                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                              </Link>
-                            </Button>
-                          )
-                        } else {
-                          // External opportunity - open in new tab
-                          return (
-                            <Button 
-                              onClick={() => window.open(opportunity._id, '_blank', 'noopener,noreferrer')}
-                              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm py-2 sm:py-3 touch-manipulation"
-                            >
-                              View Opportunity
-                              <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            </Button>
-                          )
-                        }
-                      })()}
-                  </CardContent>
-                </Card>
-              ))}
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
+                          {opportunity.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-3 sm:mb-4 flex-grow line-clamp-3 leading-relaxed">
+                          {opportunity.description.length > 150
+                            ? `${opportunity.description.substring(0, 150)}...`
+                            : opportunity.description
+                          }
+                        </p>
+                        {opportunity.tags && opportunity.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3 sm:mb-4">
+                            {opportunity.tags.slice(0, 3).map((tag: string, index: number) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {opportunity.metrics && (
+                          <div className="flex items-center justify-between mb-3 sm:mb-4 p-2 bg-gray-50 rounded-lg">
+                            <div className="flex items-center space-x-4 text-xs text-gray-600">
+                              <div className="flex items-center space-x-1">
+                                <Eye className="h-3 w-3" />
+                                <span>{opportunity.metrics.viewCount || 0}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Heart className="h-3 w-3 text-red-500" />
+                                <span>{opportunity.metrics.likeCount || 0}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Bookmark className="h-3 w-3 text-blue-500" />
+                                <span>{opportunity.metrics.saveCount || 0}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Users className="h-3 w-3 text-green-500" />
+                                <span>{opportunity.metrics.applicationCount || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(opportunity.deadline || opportunity.dates?.applicationDeadline) && (
+                          <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
+                            Deadline: {new Date(opportunity.deadline || opportunity.dates?.applicationDeadline).toLocaleDateString()}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                }
+              })}
             </div>
             ) : (
             <div className="text-center py-12 sm:py-16 md:py-20">

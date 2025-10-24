@@ -70,7 +70,7 @@ Goal: Improve retention, data collection, and revenue streams.
 
 ```
 ● Link all user actions (clicks, applications, saves) to a central database
-(Firebase/PostgreSQL).
+(MongoDB Atlas).
 ● Admin analytics dashboard (site visits and activiy, user growth, popular listings,
 revenue metrics).
 ```

@@ -14,7 +14,7 @@
 
 #### **Backend Infrastructure**
 - ✅ **Express.js server** with security middleware
-- ✅ **PostgreSQL database** configuration and connection
+- ✅ **MongoDB Atlas database** configuration and connection
 - ✅ **Redis caching** system for performance
 - ✅ **JWT authentication** with refresh tokens
 - ✅ **Comprehensive database schema** (15+ tables)
@@ -86,7 +86,7 @@
 
 ### **Backend Stack**
 - **Runtime**: Node.js 18+ with Express.js
-- **Database**: PostgreSQL with connection pooling
+- **Database**: MongoDB Atlas (cloud-based)
 - **Cache**: Redis for sessions and performance
 - **Authentication**: JWT + bcrypt + refresh tokens
 - **Email**: Nodemailer with template system
@@ -137,8 +137,8 @@ npm run start-dev
 ```
 
 ### **Database Setup**
-1. Install PostgreSQL and Redis
-2. Create database: `createdb glowup_channel_v2`
+1. Set up MongoDB Atlas account
+2. Create cluster and get connection string
 3. Run schema: `npm run migrate` (when created)
 
 ## 🎨 **Design System**
@@ -181,8 +181,8 @@ npm run start-dev
 
 ## 🌟 **Next Immediate Steps**
 
-1. **Set up PostgreSQL database** and run schema
-2. **Configure Redis** for caching
+1. **Set up MongoDB Atlas database** and configure connection
+2. **Configure environment variables** for database connection
 3. **Complete multi-step signup form** frontend
 4. **Connect frontend to backend** APIs
 5. **Test authentication flow** end-to-end

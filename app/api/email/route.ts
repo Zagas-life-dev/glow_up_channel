@@ -20,7 +20,7 @@ function createEmailTemplate(subject: string, content: string) {
               <!-- Header with Logo -->
               <tr>
                 <td style="padding: 30px 20px; text-align: center; background-color: #000000; border-bottom: 2px solid #FF8C00;">
-                  <img src="https://tvdqtadeojafitwhqyub.supabase.co/storage/v1/object/public/resource-bucket//Glowup-logo.png" alt="Glowup Logo" style="max-width: 180px; height: auto;">
+                  <img src="/images/logo-icon-transparent.png" alt="Glowup Logo" style="max-width: 180px; height: auto;">
                 </td>
               </tr>
               

@@ -109,6 +109,8 @@ interface Recommendation {
     province?: string
     city?: string
   }
+  score?: number
+  reasons?: string[]
 }
 
 
@@ -258,11 +260,11 @@ export default function DashboardPage() {
             return { json: () => ({ success: false, data: { savedResources: [] }, error: err.message }) }
           }),
           
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/feed?limit=10`, {
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/unified?limit=10&includeOpportunities=true&includeEvents=true&includeJobs=true&includeResources=true&minScore=30`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
           }).catch((err) => {
             console.error('Error fetching recommendations:', err)
-            return { json: () => ({ success: false, data: { recommendations: [] }, error: err.message }) }
+            return { json: () => ({ success: false, data: { content: [] }, error: err.message }) }
           })
         ])
         
@@ -340,17 +342,19 @@ export default function DashboardPage() {
           })
         }
         
-        // Process recommendations
+        // Process recommendations from unified endpoint
         const recommendations: Recommendation[] = []
-        if (recommendationsData.success && recommendationsData.data.recommendations) {
-          recommendationsData.data.recommendations.forEach((item: any) => {
+        if (recommendationsData.success && recommendationsData.data.content) {
+          recommendationsData.data.content.forEach((item: any) => {
             recommendations.push({
               _id: item._id || item.id, // Handle different ID field names
               title: item.title,
               description: item.description,
               type: item.contentType || item.type, // Handle different type field names
               tags: item.tags || [],
-              location: item.location
+              location: item.location,
+              score: item.score || 0,
+              reasons: item.reasons || []
             })
           })
         }
@@ -984,11 +988,26 @@ export default function DashboardPage() {
                                 </div>
                               )}
                               <div className="flex items-center justify-between mt-3">
-                                <span className="text-xs text-orange-600 font-medium group-hover:text-orange-700">
-                                  View Details
-                                </span>
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-xs text-orange-600 font-medium group-hover:text-orange-700">
+                                    View Details
+                                  </span>
+                                  {item.score && (
+                                    <div className="flex items-center space-x-1">
+                                      <span className={`text-xs font-medium ${item.score >= 80 ? 'text-green-600' : item.score >= 60 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                                        {Math.round(item.score)}%
+                                      </span>
+                                      <span className="text-xs text-gray-500">match</span>
+                                    </div>
+                                  )}
+                                </div>
                                 <ArrowRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
                               </div>
+                              {item.reasons && item.reasons.length > 0 && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  <strong>Why recommended:</strong> {item.reasons.slice(0, 2).join(', ')}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </Link>

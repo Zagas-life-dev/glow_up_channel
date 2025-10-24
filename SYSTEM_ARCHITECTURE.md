@@ -128,18 +128,18 @@ app/
 ## ⚙️ Backend Architecture
 
 ### **Technology Stack**
-- **Authentication**: BetterAuth
-- **Database**: PostgreSQL
+- **Authentication**: JWT with bcrypt password hashing
+- **Database**: MongoDB Atlas (cloud-based)
 - **API**: RESTful API with proper middleware
-- **File Storage**: Cloud storage (AWS S3/Cloudinary)
+- **File Storage**: Cloudinary for media uploads
 - **Hosting**: Vercel/Netlify for frontend, dedicated backend
 
 ### **Architecture Pattern**
 ```
 Frontend (Next.js) → API Gateway → Backend Services → Database
      ↓                    ↓              ↓            ↓
-  User Interface    Authentication   Business     PostgreSQL
-  Components       & Authorization   Logic        + Redis Cache
+  User Interface    Authentication   Business     MongoDB Atlas
+  Components       & Authorization   Logic        (Cloud Database)
 ```
 
 ### **Service Layer**
@@ -153,259 +153,359 @@ Frontend (Next.js) → API Gateway → Backend Services → Database
 
 ## 🗄️ Database Schema
 
-### **1. Core Tables**
+### **1. Core Collections (MongoDB)**
 
-#### **Users (BetterAuth Managed)**
-```sql
-users (
-  id UUID PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255),
-  role VARCHAR(50) DEFAULT 'seeker',
-  verified BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **Users Collection**
+```javascript
+{
+  _id: ObjectId,
+  email: String (unique),
+  firstName: String,
+  lastName: String,
+  role: String (default: 'opportunity_seeker'),
+  status: String (default: 'approved'),
+  isActive: Boolean (default: true),
+  emailVerified: Boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date,
+  lastLogin: Date
+}
 ```
 
-#### **User Profiles**
-```sql
-user_profiles (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  avatar_url VARCHAR(500),
-  bio TEXT,
-  location_data JSONB,
-  interests TEXT[],
-  skills TEXT[],
-  industry TEXT[],
-  education_level VARCHAR(100),
-  field_of_study VARCHAR(255),
-  institution VARCHAR(255),
-  career_stage VARCHAR(100),
-  aspirations TEXT[],
-  onboarding_completed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **User Profiles Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  country: String,
+  province: String,
+  city: String,
+  careerStage: String,
+  interests: [String],
+  industrySectors: [String],
+  educationLevel: String,
+  fieldOfStudy: String,
+  institution: String,
+  skills: [String],
+  aspirations: [String],
+  onboardingCompleted: Boolean (default: false),
+  completionPercentage: Number (default: 0),
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-#### **User Preferences**
-```sql
-user_preferences (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  interests TEXT[],
-  skills TEXT[],
-  location_data JSONB,
-  career_stage VARCHAR(100),
-  education_level VARCHAR(100),
-  preferred_types TEXT[],
-  salary_range JSONB,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **User Preferences Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  interests: [String],
+  skills: [String],
+  location: {
+    country: String,
+    province: String,
+    city: String
+  },
+  careerStage: String,
+  educationLevel: String,
+  preferredTypes: [String],
+  salaryRange: {
+    min: Number,
+    max: Number,
+    currency: String
+  },
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-### **2. Content Tables**
+### **2. Content Collections**
 
-#### **Opportunities**
-```sql
-opportunities (
-  id UUID PRIMARY KEY,
-  provider_id UUID REFERENCES users(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  type VARCHAR(100),
-  category VARCHAR(100),
-  location VARCHAR(255),
-  salary_range JSONB,
-  requirements TEXT[],
-  tags TEXT[],
-  status VARCHAR(50) DEFAULT 'active',
-  is_premium BOOLEAN DEFAULT FALSE,
-  price DECIMAL(10,2),
-  external_url VARCHAR(500),
-  views INTEGER DEFAULT 0,
-  likes_count INTEGER DEFAULT 0,
-  saves_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **Opportunities Collection**
+```javascript
+{
+  _id: ObjectId,
+  providerId: ObjectId,
+  title: String,
+  description: String,
+  category: String,
+  type: String,
+  provider: String,
+  location: {
+    country: String,
+    province: String,
+    city: String,
+    isRemote: Boolean
+  },
+  requirements: {
+    educationLevel: String,
+    careerStage: String,
+    skills: [String],
+    experience: String,
+    ageRange: String,
+    citizenship: String,
+    other: String
+  },
+  financial: {
+    amount: String,
+    currency: String,
+    isPaid: Boolean,
+    benefits: [String]
+  },
+  dates: {
+    applicationDeadline: Date,
+    startDate: Date,
+    endDate: Date,
+    duration: String
+  },
+  tags: [String],
+  industrySectors: [String],
+  targetAudience: [String],
+  metrics: {
+    viewCount: Number,
+    saveCount: Number,
+    likeCount: Number,
+    clickCount: Number
+  },
+  status: String (default: 'active'),
+  isApproved: Boolean (default: false),
+  isValid: Boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  publishedAt: Date
+}
 ```
 
-#### **Events**
-```sql
-events (
-  id UUID PRIMARY KEY,
-  provider_id UUID REFERENCES users(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  type VARCHAR(100),
-  location VARCHAR(255),
-  start_date TIMESTAMP,
-  end_date TIMESTAMP,
-  capacity INTEGER,
-  registration_required BOOLEAN DEFAULT TRUE,
-  is_free BOOLEAN DEFAULT TRUE,
-  price DECIMAL(10,2),
-  external_url VARCHAR(500),
-  attendees_count INTEGER DEFAULT 0,
-  views INTEGER DEFAULT 0,
-  likes_count INTEGER DEFAULT 0,
-  saves_count INTEGER DEFAULT 0,
-  registrations_count INTEGER DEFAULT 0,
-  status VARCHAR(50) DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **Events Collection**
+```javascript
+{
+  _id: ObjectId,
+  organizerId: ObjectId,
+  providerId: ObjectId,
+  title: String,
+  description: String,
+  eventType: String,
+  organizer: String,
+  isPaid: Boolean,
+  price: Number,
+  currency: String,
+  location: {
+    country: String,
+    province: String,
+    city: String,
+    isRemote: Boolean
+  },
+  dates: {
+    startDate: Date,
+    endDate: Date,
+    registrationDeadline: Date,
+    timezone: String
+  },
+  capacity: {
+    maxAttendees: Number,
+    currentAttendees: Number,
+    isFull: Boolean
+  },
+  requirements: {
+    ageRange: String,
+    skillLevel: String,
+    prerequisites: [String],
+    equipment: [String]
+  },
+  tags: [String],
+  industrySectors: [String],
+  targetAudience: [String],
+  metrics: {
+    viewCount: Number,
+    saveCount: Number,
+    likeCount: Number,
+    registrationCount: Number,
+    clickCount: Number
+  },
+  status: String (default: 'active'),
+  isApproved: Boolean (default: false),
+  isValid: Boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  publishedAt: Date
+}
 ```
 
-#### **Jobs**
-```sql
-jobs (
-  id UUID PRIMARY KEY,
-  provider_id UUID REFERENCES users(id),
-  title VARCHAR(255) NOT NULL,
-  company VARCHAR(255),
-  description TEXT,
-  type VARCHAR(100),
-  location VARCHAR(255),
-  salary_range JSONB,
-  requirements TEXT[],
-  benefits TEXT[],
-  tags TEXT[],
-  status VARCHAR(50) DEFAULT 'active',
-  is_premium BOOLEAN DEFAULT FALSE,
-  price DECIMAL(10,2),
-  external_url VARCHAR(500),
-  views INTEGER DEFAULT 0,
-  likes_count INTEGER DEFAULT 0,
-  saves_count INTEGER DEFAULT 0,
-  applications_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **Jobs Collection**
+```javascript
+{
+  _id: ObjectId,
+  providerId: ObjectId,
+  companyId: ObjectId,
+  title: String,
+  description: String,
+  url: String,
+  jobType: String,
+  company: String,
+  location: {
+    country: String,
+    province: String,
+    city: String,
+    isRemote: Boolean
+  },
+  dates: {
+    applicationDeadline: Date,
+    startDate: Date
+  },
+  pay: {
+    isPaid: Boolean,
+    amount: String,
+    currency: String,
+    period: String
+  },
+  requirements: [String],
+  benefits: [String],
+  tags: [String],
+  industrySectors: [String],
+  targetAudience: [String],
+  metrics: {
+    viewCount: Number,
+    saveCount: Number,
+    likeCount: Number,
+    clickCount: Number
+  },
+  status: String (default: 'active'),
+  isApproved: Boolean (default: false),
+  isValid: Boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  publishedAt: Date
+}
 ```
 
-#### **Resources**
-```sql
-resources (
-  id UUID PRIMARY KEY,
-  provider_id UUID REFERENCES users(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  type VARCHAR(100),
-  media_url VARCHAR(500),
-  thumbnail_url VARCHAR(500),
-  content TEXT,
-  tags TEXT[],
-  is_premium BOOLEAN DEFAULT FALSE,
-  price DECIMAL(10,2),
-  views INTEGER DEFAULT 0,
-  likes_count INTEGER DEFAULT 0,
-  saves_count INTEGER DEFAULT 0,
-  status VARCHAR(50) DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-)
+#### **Resources Collection**
+```javascript
+{
+  _id: ObjectId,
+  createdBy: ObjectId,
+  title: String,
+  description: String,
+  category: String,
+  fileUrl: String,
+  isPremium: Boolean (default: false),
+  isActive: Boolean (default: true),
+  featured: Boolean (default: false),
+  paymentLink: String,
+  tags: [String],
+  image: String,
+  status: String (default: 'active'),
+  isApproved: Boolean (default: false),
+  rejectionReason: String,
+  metrics: {
+    viewCount: Number,
+    downloadCount: Number,
+    likeCount: Number,
+    saveCount: Number,
+    clickCount: Number
+  },
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-### **3. Engagement Tables**
+### **3. Engagement Collections**
 
-#### **User Engagement History**
-```sql
-user_engagement_history (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  item_id UUID,
-  item_type VARCHAR(50),
-  engagement_type VARCHAR(50),
-  engagement_data JSONB,
-  timestamp TIMESTAMP DEFAULT NOW(),
-  item_snapshot JSONB,
-  external_url VARCHAR(500),
-  time_spent_on_page INTEGER,
-  user_agent TEXT
-)
-
--- engagement_type: 'view', 'save', 'like', 'click_through'
--- item_type: 'opportunity', 'event', 'job', 'resource'
--- item_snapshot preserves content data even after deletion
+#### **User Engagement History Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  itemId: ObjectId,
+  itemType: String, // 'opportunity', 'event', 'job', 'resource'
+  engagementType: String, // 'view', 'save', 'like', 'click_through'
+  engagementData: Object,
+  timestamp: Date,
+  itemSnapshot: Object, // preserves content data even after deletion
+  externalUrl: String,
+  timeSpentOnPage: Number,
+  userAgent: String
+}
 ```
 
-#### **Saved Items**
-```sql
-saved_items (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  item_id UUID,
-  item_type VARCHAR(50),
-  saved_at TIMESTAMP DEFAULT NOW(),
-  notes TEXT,
-  UNIQUE(user_id, item_id, item_type)
-)
+#### **Saved Items Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  opportunityId: ObjectId, // for opportunities
+  eventId: ObjectId, // for events
+  jobId: ObjectId, // for jobs
+  resourceId: ObjectId, // for resources
+  contentType: String, // 'opportunity', 'event', 'job', 'resource'
+  savedAt: Date,
+  notes: String
+}
 ```
 
-#### **Likes**
-```sql
-likes (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  item_id UUID,
-  item_type VARCHAR(50),
-  liked_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(user_id, item_id, item_type)
-)
+#### **Likes Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  opportunityId: ObjectId, // for opportunities
+  eventId: ObjectId, // for events
+  jobId: ObjectId, // for jobs
+  resourceId: ObjectId, // for resources
+  contentType: String, // 'opportunity', 'event', 'job', 'resource'
+  likedAt: Date
+}
 ```
 
-#### **Click-Through Analytics**
-```sql
-click_throughs (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  item_id UUID,
-  item_type VARCHAR(50),
-  external_url VARCHAR(500),
-  clicked_at TIMESTAMP DEFAULT NOW(),
-  time_spent_on_page INTEGER,
-  user_agent TEXT,
-  referrer_page VARCHAR(255),
-  user_location JSONB
-)
+#### **Click Tracking Collection**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  opportunityId: ObjectId, // for opportunities
+  eventId: ObjectId, // for events
+  jobId: ObjectId, // for jobs
+  resourceId: ObjectId, // for resources
+  contentType: String, // 'opportunity', 'event', 'job', 'resource'
+  clickedAt: Date,
+  source: String,
+  userAgent: String,
+  referrer: String,
+  sessionId: String
+}
 ```
 
-### **4. Business Tables**
+### **4. Business Collections**
 
-#### **Promotions**
-```sql
-promotions (
-  id UUID PRIMARY KEY,
-  provider_id UUID REFERENCES users(id),
-  item_id UUID,
-  item_type VARCHAR(50),
-  package_type VARCHAR(100),
-  duration_days INTEGER,
-  start_date TIMESTAMP,
-  end_date TIMESTAMP,
-  status VARCHAR(50) DEFAULT 'active',
-  cost DECIMAL(10,2),
-  views_before INTEGER,
-  views_after INTEGER,
-  created_at TIMESTAMP DEFAULT NOW()
-)
+#### **Promotions Collection**
+```javascript
+{
+  _id: ObjectId,
+  providerId: ObjectId,
+  itemId: ObjectId,
+  itemType: String, // 'opportunity', 'event', 'job', 'resource'
+  packageType: String,
+  durationDays: Number,
+  startDate: Date,
+  endDate: Date,
+  status: String (default: 'active'),
+  cost: Number,
+  viewsBefore: Number,
+  viewsAfter: Number,
+  createdAt: Date
+}
 ```
 
 ---
 
 ## 🔐 Authentication System
 
-### **BetterAuth Integration**
-- **Multi-provider support** (Google, GitHub, email/password)
-- **Email verification** and password reset
-- **JWT token management**
-- **Session handling**
-- **Role-based access control**
+### **JWT Authentication System**
+- **Custom JWT implementation** with bcrypt password hashing
+- **Email/password authentication** with secure password handling
+- **JWT token management** with access and refresh tokens
+- **Session handling** with automatic token refresh
+- **Role-based access control** (opportunity_seeker, opportunity_poster, admin, super_admin)
 
 ### **Security Features**
 - **Password hashing** and salting
@@ -644,12 +744,12 @@ GET    /api/analytics/platform     # Platform-wide metrics
 **Current Status**: ✅ **COMPLETED**
 
 ### **Phase 2: Backend & Data (Weeks 5-8)**
-- [ ] **BetterAuth Integration** - Robust authentication system
-- [ ] **Database Schema** - Complete PostgreSQL structure
-- [ ] **API Development** - RESTful endpoints for all features
-- [ ] **File Management** - Media upload and storage
+- [x] **JWT Authentication** - Custom authentication system with bcrypt
+- [x] **Database Schema** - Complete MongoDB Atlas structure
+- [x] **API Development** - RESTful endpoints for all features
+- [x] **File Management** - Cloudinary media upload and storage
 
-**Priority**: 🔴 **HIGH** - Foundation for all features
+**Current Status**: ✅ **COMPLETED**
 
 ### **Phase 3: Engagement & Recommendations (Weeks 9-12)**
 - [ ] **Engagement Tracking** - Save, like, view tracking
@@ -788,10 +888,10 @@ GET    /api/analytics/platform     # Platform-wide metrics
 
 ### **Development Tools**
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express, PostgreSQL, Redis
-- **Authentication**: BetterAuth
-- **File Storage**: AWS S3/Cloudinary
-- **Monitoring**: Sentry, Analytics
+- **Backend**: Node.js, Express, MongoDB Atlas
+- **Authentication**: JWT with bcrypt
+- **File Storage**: Cloudinary
+- **Monitoring**: Vercel Analytics, Sentry
 
 ### **Team Structure**
 - **Frontend Developers**: UI/UX implementation

@@ -10,8 +10,8 @@
 ## 🏗️ **Technical Architecture**
 
 ### **Backend Infrastructure**
-- **Primary Database**: PostgreSQL (replacing Supabase)
-- **Authentication**: JWT + Redis (free tier)
+- **Primary Database**: MongoDB Atlas (cloud-based)
+- **Authentication**: JWT with bcrypt (free tier)
 - **Hosting**: AWS EC2 + RDS
 - **API**: Node.js/Express.js
 - **Caching**: Redis Cloud (30MB free tier)

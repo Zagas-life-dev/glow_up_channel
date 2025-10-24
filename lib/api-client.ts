@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://latest-glowup-channel-761979347865.europe-west1.run.app'; // "http://localhost:8080" ;
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL|| 'http://localhost:8080';
+
 
 // Types for API responses
 interface ApiResponse<T = any> {
@@ -643,6 +644,81 @@ export class ApiClient {
     }
 
     const response = await fetch(`${API_BASE_URL}/api/recommended/resources?${searchParams}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Enhanced unified recommendations with hybrid scoring
+  static async getUnifiedRecommendations(options?: {
+    includeOpportunities?: boolean;
+    includeEvents?: boolean;
+    includeJobs?: boolean;
+    includeResources?: boolean;
+    minScore?: number;
+    limit?: number;
+  }): Promise<{
+    content: any[];
+    total: number;
+    userProfile: any;
+  }> {
+    const searchParams = new URLSearchParams();
+    
+    if (options?.includeOpportunities !== undefined) {
+      searchParams.append('includeOpportunities', options.includeOpportunities.toString());
+    }
+    if (options?.includeEvents !== undefined) {
+      searchParams.append('includeEvents', options.includeEvents.toString());
+    }
+    if (options?.includeJobs !== undefined) {
+      searchParams.append('includeJobs', options.includeJobs.toString());
+    }
+    if (options?.includeResources !== undefined) {
+      searchParams.append('includeResources', options.includeResources.toString());
+    }
+    if (options?.minScore !== undefined) {
+      searchParams.append('minScore', options.minScore.toString());
+    }
+    if (options?.limit !== undefined) {
+      searchParams.append('limit', options.limit.toString());
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/recommended/unified?${searchParams}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Get detailed scoring breakdown for debugging and transparency
+  static async getScoringBreakdown(contentType: string, contentId: string): Promise<{
+    finalScore: number;
+    personalizationScore: number;
+    popularityScore: number;
+    breakdown: {
+      personalization: {
+        interestMatch: number;
+        locationMatch: number;
+        careerStageMatch: number;
+        skillMatch: number;
+        freshness: number;
+        timing: number;
+      };
+      popularity: {
+        views: number;
+        likes: number;
+        saves: number;
+        clicks: number;
+        agePenalty: number;
+      };
+    };
+  }> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('contentType', contentType);
+    searchParams.append('contentId', contentId);
+
+    const response = await fetch(`${API_BASE_URL}/api/recommended/scoring-breakdown?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 

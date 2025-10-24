@@ -5,7 +5,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Calendar, Plane, Briefcase, BookOpen, Users, Target, ArrowRight, Heart, Bookmark, Eye, Star } from "lucide-react"
-// import { createServerSupabaseClient } from '@/lib/supabase'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { useAuth } from "@/lib/auth-context"
 import HeroCarousel from "@/components/hero-carousel"
