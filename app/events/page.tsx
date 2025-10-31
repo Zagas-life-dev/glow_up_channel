@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useRef } from "react"
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Calendar, ArrowRight, Heart, Bookmark, Eye, Users, Dot } from 'lucide-react'
+import { Calendar, ArrowRight, Heart, Bookmark, Eye, Users, Dot, MapPin } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
@@ -35,11 +35,10 @@ function EventsContent() {
       try {
                 let promotedEvents: any[] = []
         let recommendedEvents: any[] = []
-        let regularEvents: any[] = []
         
         // Always fetch promoted content (public API)
         try {
-                    const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/events?limit=100`)
+                    const promotedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promoted/events`)
           const promotedData = await promotedRes.json()
           if (promotedData.success) {
                         promotedEvents = promotedData.data?.events || []
@@ -49,40 +48,23 @@ function EventsContent() {
         }
         
         if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
+          // Fetch recommendation API data
           const token = localStorage.getItem('accessToken')
           const headers = { 'Authorization': `Bearer ${token}` }
           
-          const [recommendedRes, regularRes] = await Promise.all([
-                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/events?limit=100`, { headers }),
-                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=1000&offset=0`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
+          try {
+            const recommendedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/events?limit=100`, { headers })
+            const recommendedData = await recommendedRes.json()
           
           if (recommendedData.success) {
             recommendedEvents = recommendedData.data?.events || []
           }
-          
-          if (regularData.success) {
-            regularEvents = regularData.data?.events || []
-                        setTotalCount(regularData.data?.totalCount || regularEvents.length)
-          }
-        } else {
-          // Use only regular API for non-authenticated users
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?limit=1000&offset=0`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularEvents = result.data?.events || []
-                        setTotalCount(result.data?.totalCount || regularEvents.length)
+          } catch (error) {
+            console.error('Error fetching recommended events:', error)
           }
         }
         
-                // Merge and deduplicate: promoted first, then recommended, then regular data
+        // Merge and deduplicate: promoted first, then recommended
         const mergedEvents = [...promotedEvents]
         const promotedIds = new Set(promotedEvents.map(item => item._id))
         
@@ -90,16 +72,11 @@ function EventsContent() {
         const uniqueRecommendedEvents = recommendedEvents.filter(item => !promotedIds.has(item._id))
         mergedEvents.push(...uniqueRecommendedEvents)
         
-        const recommendedIds = new Set([...promotedEvents, ...recommendedEvents].map(item => item._id))
-        
-        // Add regular events that are not already in promoted or recommended
-        const uniqueRegularEvents = regularEvents.filter(item => !recommendedIds.has(item._id))
-        mergedEvents.push(...uniqueRegularEvents)
-        
         setEvents(mergedEvents)
         setFilteredEvents(mergedEvents)
+        setTotalCount(mergedEvents.length)
         
-        console.log(`Loaded ${promotedEvents.length} promoted + ${recommendedEvents.length} recommended + ${uniqueRegularEvents.length} regular = ${mergedEvents.length} total events`)
+        console.log(`Loaded ${promotedEvents.length} promoted + ${recommendedEvents.length} recommended = ${mergedEvents.length} total events`)
         
       } catch (error) {
         console.error('Error fetching events:', error)
@@ -213,12 +190,12 @@ function EventsContent() {
                                     // Internal event - make entire card clickable
                                     return (
                                         <Link key={event._id} href={`/events/${event._id}`} className="block">
-                                            <Card 
-                                                className={`
+                                <Card 
+                                    className={`
                                                     group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
-                                                    ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
-                                                `}
-                                            >
+                                        ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
+                                    `}
+                                >
                                     <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                                         <div className="flex items-center justify-between mb-3 sm:mb-4">
                                             <div className="flex items-center gap-2">
@@ -248,8 +225,8 @@ function EventsContent() {
                                         
                                        
                                         {event.location && (
-                                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                <span className="w-4 h-4 flex-shrink-0">📍</span>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <MapPin className="w-4 h-4 flex-shrink-0" color="#16a34a"/>
                                                 <span className="truncate">
                                                     {typeof event.location === 'string' 
                                                         ? event.location 
@@ -292,18 +269,18 @@ function EventsContent() {
                                     
                                         </CardContent>
                                             </Card>
-                                        </Link>
-                                    )
+                                                    </Link>
+                                                )
                                 } else {
                                     // External event - make entire card clickable to open in new tab
-                                    return (
+                                                return (
                                         <Card 
                                             key={event._id}
                                             className={`
                                                 group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
                                                 ${event.isPromoted ? 'border-2 border-yellow-400' : ''}
                                             `}
-                                            onClick={() => openExternalUrl(event._id)}
+                                                        onClick={() => openExternalUrl(event._id)}
                                         >
                                             <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                                                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -389,10 +366,10 @@ function EventsContent() {
                                                             <span>{event.metrics.registrationCount || 0}</span>
                                                         </div>
                                                     </div>
-                                                </div>
+                                    </div>
                                             )}
-                                            </CardContent>
-                                        </Card>
+                                    </CardContent>
+                                </Card>
                                     )
                                 }
                             })}

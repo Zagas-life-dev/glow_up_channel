@@ -52,7 +52,6 @@ function OpportunitiesContent() {
       try {
         let promotedOpportunities: any[] = []
         let recommendedOpportunities: any[] = []
-        let regularOpportunities: any[] = []
         
         // Always fetch promoted content (public API)
         try {
@@ -66,40 +65,23 @@ function OpportunitiesContent() {
         }
         
         if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
+          // Fetch recommendation API data
           const token = localStorage.getItem('accessToken')
           const headers = { 'Authorization': `Bearer ${token}` }
           
-          const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/opportunities?limit=100`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=1000&offset=0`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
+          try {
+            const recommendedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/opportunities?limit=100`, { headers })
+            const recommendedData = await recommendedRes.json()
           
           if (recommendedData.success) {
             recommendedOpportunities = recommendedData.data?.opportunities || []
           }
-          
-          if (regularData.success) {
-            regularOpportunities = regularData.data?.opportunities || []
-            setTotalCount(regularData.data?.totalCount || regularOpportunities.length)
-          }
-        } else {
-          // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?limit=1000&offset=0`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularOpportunities = result.data?.opportunities || []
-            setTotalCount(result.data?.totalCount || regularOpportunities.length)
+          } catch (error) {
+            console.error('Error fetching recommended opportunities:', error)
           }
         }
         
-        // Merge and deduplicate: promoted first, then recommended, then regular data
+        // Merge and deduplicate: promoted first, then recommended
         const mergedOpportunities = [...promotedOpportunities]
         const promotedIds = new Set(promotedOpportunities.map(item => item._id))
         
@@ -107,16 +89,11 @@ function OpportunitiesContent() {
         const uniqueRecommendedOpportunities = recommendedOpportunities.filter(item => !promotedIds.has(item._id))
         mergedOpportunities.push(...uniqueRecommendedOpportunities)
         
-        const recommendedIds = new Set([...promotedOpportunities, ...recommendedOpportunities].map(item => item._id))
-        
-        // Add regular opportunities that are not already in promoted or recommended
-        const uniqueRegularOpportunities = regularOpportunities.filter(item => !recommendedIds.has(item._id))
-        mergedOpportunities.push(...uniqueRegularOpportunities)
-        
         setOpportunities(mergedOpportunities)
         setFilteredOpportunities(mergedOpportunities)
+        setTotalCount(mergedOpportunities.length)
         
-        console.log(`Loaded ${promotedOpportunities.length} promoted + ${recommendedOpportunities.length} recommended + ${uniqueRegularOpportunities.length} regular = ${mergedOpportunities.length} total opportunities`)
+        console.log(`Loaded ${promotedOpportunities.length} promoted + ${recommendedOpportunities.length} recommended = ${mergedOpportunities.length} total opportunities`)
         
       } catch (error) {
         console.error('Error fetching opportunities:', error)
@@ -233,14 +210,14 @@ function OpportunitiesContent() {
                   // Internal opportunity - make entire card clickable
                   return (
                     <Link key={opportunity._id} href={`/opportunities/${opportunity._id}`} className="block">
-                      <Card 
-                        className={`
+                <Card 
+                  className={`
                           group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full touch-manipulation cursor-pointer
-                          ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
-                        `}
-                        onMouseEnter={() => trackView(opportunity._id)}
-                      >
-                        <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
+                    ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
+                  `}
+                  onMouseEnter={() => trackView(opportunity._id)}
+                >
+                  <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <div className="flex items-center gap-2">
                         <span className="px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 text-xs sm:text-sm font-medium rounded-full capitalize">
@@ -297,9 +274,9 @@ function OpportunitiesContent() {
                           ? ` ${new Date(opportunity.dates.applicationDeadline).toLocaleDateString()}`
                           : opportunity.applicationDetails?.deadline 
                             ? ` ${new Date(opportunity.applicationDetails.deadline).toLocaleDateString()}`
-                            : opportunity.dates?.startDate 
-                              ? new Date(opportunity.dates.startDate).toLocaleDateString()
-                              : 'TBD'
+                          : opportunity.dates?.startDate 
+                            ? new Date(opportunity.dates.startDate).toLocaleDateString()
+                            : 'TBD'
                         }
                       </span>
                     </div>
@@ -328,18 +305,13 @@ function OpportunitiesContent() {
                       </div>
                     )}
                     
-                    {(opportunity.deadline || opportunity.dates?.applicationDeadline) && (
-                      <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
-                        Deadline: {new Date(opportunity.deadline || opportunity.dates?.applicationDeadline).toLocaleDateString()}
-                      </p>
-                    )}
                         </CardContent>
                       </Card>
-                    </Link>
-                  )
-                } else {
+                              </Link>
+                          )
+                        } else {
                   // External opportunity - make entire card clickable to open in new tab
-                  return (
+                          return (
                     <Card 
                       key={opportunity._id}
                       className={`
@@ -347,7 +319,7 @@ function OpportunitiesContent() {
                         ${opportunity.isPromoted ? 'border-2 border-yellow-400' : ''}
                       `}
                       onMouseEnter={() => trackView(opportunity._id)}
-                      onClick={() => window.open(opportunity._id, '_blank', 'noopener,noreferrer')}
+                              onClick={() => window.open(opportunity._id, '_blank', 'noopener,noreferrer')}
                     >
                       <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -422,8 +394,8 @@ function OpportunitiesContent() {
                             Deadline: {new Date(opportunity.deadline || opportunity.dates?.applicationDeadline).toLocaleDateString()}
                           </p>
                         )}
-                      </CardContent>
-                    </Card>
+                  </CardContent>
+                </Card>
                   )
                 }
               })}

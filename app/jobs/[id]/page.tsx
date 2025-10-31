@@ -212,7 +212,7 @@ function JobPageContent({ params }: JobPageProps) {
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Posted</p>
                   <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                    {new Date(job.created_at).toLocaleDateString()}
+                    {job.dates?.applicationDeadline ? new Date(job.dates.applicationDeadline).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>

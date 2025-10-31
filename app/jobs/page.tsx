@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useRef } from "react"
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Briefcase, ArrowRight, Heart, Bookmark, Eye, Users, Clock, DollarSign } from 'lucide-react'
+import { Briefcase, ArrowRight, Heart, Bookmark, Eye, Users, Clock, DollarSign, MapPin } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
@@ -34,7 +34,6 @@ function JobsContent() {
       try {
         let promotedJobs: any[] = []
         let recommendedJobs: any[] = []
-        let regularJobs: any[] = []
         
         // Always fetch promoted content (public API)
         try {
@@ -48,40 +47,23 @@ function JobsContent() {
         }
         
         if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
+          // Fetch recommendation API data
           const token = localStorage.getItem('accessToken')
           const headers = { 'Authorization': `Bearer ${token}` }
           
-          const [recommendedRes, regularRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/jobs?limit=100`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=1000&offset=0`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
+          try {
+            const recommendedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/jobs?limit=100`, { headers })
+            const recommendedData = await recommendedRes.json()
           
           if (recommendedData.success) {
             recommendedJobs = recommendedData.data?.jobs || []
           }
-          
-          if (regularData.success) {
-            regularJobs = regularData.data?.jobs || []
-            setTotalCount(regularData.data?.totalCount || regularJobs.length)
-          }
-        } else {
-          // Use only regular API for non-authenticated users
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?limit=1000&offset=0`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularJobs = result.data?.jobs || []
-            setTotalCount(result.data?.totalCount || regularJobs.length)
+          } catch (error) {
+            console.error('Error fetching recommended jobs:', error)
           }
         }
         
-        // Merge and deduplicate: promoted first, then recommended, then regular data
+        // Merge and deduplicate: promoted first, then recommended
         const mergedJobs = [...promotedJobs]
         const promotedIds = new Set(promotedJobs.map(item => item._id))
         
@@ -89,16 +71,11 @@ function JobsContent() {
         const uniqueRecommendedJobs = recommendedJobs.filter(item => !promotedIds.has(item._id))
         mergedJobs.push(...uniqueRecommendedJobs)
         
-        const recommendedIds = new Set([...promotedJobs, ...recommendedJobs].map(item => item._id))
-        
-        // Add regular jobs that are not already in promoted or recommended
-        const uniqueRegularJobs = regularJobs.filter(item => !recommendedIds.has(item._id))
-        mergedJobs.push(...uniqueRegularJobs)
-        
         setJobs(mergedJobs)
         setFilteredJobs(mergedJobs)
+        setTotalCount(mergedJobs.length)
         
-        console.log(`Loaded ${promotedJobs.length} promoted + ${recommendedJobs.length} recommended + ${uniqueRegularJobs.length} regular = ${mergedJobs.length} total jobs`)
+        console.log(`Loaded ${promotedJobs.length} promoted + ${recommendedJobs.length} recommended = ${mergedJobs.length} total jobs`)
         
       } catch (error) {
         console.error('Error fetching jobs:', error)
@@ -212,12 +189,12 @@ function JobsContent() {
                 // Internal job - make entire card clickable
                 return (
                   <Link key={job._id} href={`/jobs/${job._id}`} className="block">
-                    <Card 
-                      className={`
+              <Card 
+                className={`
                         group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
-                        ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
-                      `}
-                    >
+                  ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
+                `}
+              >
                 <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-2">
@@ -247,7 +224,7 @@ function JobsContent() {
                   <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
        {job.location && (
          <div className="flex items-center gap-2 text-sm text-gray-500">
-           <span className="w-4 h-4 flex-shrink-0">📍</span>
+           <MapPin className="w-4 h-4 flex-shrink-0 " color="#2563eb"></MapPin>
            <span className="truncate">
              {typeof job.location === 'string' 
                ? job.location 
@@ -308,18 +285,18 @@ function JobsContent() {
                   
                     </CardContent>
                     </Card>
-                  </Link>
-                )
-              } else {
+                          </Link>
+                        )
+                      } else {
                 // External job - make entire card clickable to open in new tab
-                return (
+                        return (
                   <Card 
                     key={job._id}
                     className={`
                       group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
                       ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
                     `}
-                    onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
+                            onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
                   >
                     <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -404,10 +381,10 @@ function JobsContent() {
              <span>{job.metrics.applicationCount || 0}</span>
            </div>
          </div>
-       </div>
+                  </div>
      )}
-                    </CardContent>
-                  </Card>
+                </CardContent>
+              </Card>
                 )
               }
             })}

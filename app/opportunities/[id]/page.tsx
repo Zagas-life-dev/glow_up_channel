@@ -237,7 +237,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                     <div className="text-sm sm:text-base text-gray-600 leading-relaxed">
                       <ul className="space-y-2">
                         {opportunity.financial.isPaid !== undefined && (
-                          <li><strong>Paid Position:</strong> {opportunity.financial.isPaid ? 'Yes' : 'No'}</li>
+                          <li><strong>Paid Opportunity:</strong> {opportunity.financial.isPaid ? 'Yes' : 'No'}</li>
                         )}
                         {opportunity.financial.amount && (
                           <li><strong>Amount:</strong> {opportunity.financial.currency || 'NGN'} {opportunity.financial.amount}</li>

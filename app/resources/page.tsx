@@ -39,7 +39,6 @@ function ResourcesContent() {
       try {
                 let promotedResources: any[] = []
         let recommendedResources: any[] = []
-        let regularResources: any[] = []
                 
                 // Always fetch promoted content (public API)
                 try {
@@ -53,57 +52,35 @@ function ResourcesContent() {
                 }
         
         if (isAuthenticated && user) {
-          // Fetch both recommendation and regular API data
+          // Fetch recommendation API data
           const token = localStorage.getItem('accessToken')
           const headers = { 'Authorization': `Bearer ${token}` }
           
-          const [recommendedRes, regularRes] = await Promise.all([
-                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/resources?limit=100`, { headers }),
-                        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=1000&offset=0`)
-          ])
-          
-          const [recommendedData, regularData] = await Promise.all([
-            recommendedRes.json(),
-            regularRes.json()
-          ])
+          try {
+            const recommendedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/resources?limit=100`, { headers })
+            const recommendedData = await recommendedRes.json()
           
           if (recommendedData.success) {
             recommendedResources = recommendedData.data?.resources || []
           }
-          
-          if (regularData.success) {
-            regularResources = regularData.data?.resources || []
-                        setTotalCount(regularData.data?.totalCount || regularResources.length)
+          } catch (error) {
+            console.error('Error fetching recommended resources:', error)
           }
-        } else {
-          // Use only regular API for non-authenticated users
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?limit=1000&offset=0`)
-          const result = await response.json()
-          
-          if (result.success) {
-            regularResources = result.data?.resources || []
-                        setTotalCount(result.data?.totalCount || regularResources.length)
-                    }
-                }
-                
-                // Merge and deduplicate: promoted first, then recommended, then regular data
+        }
+        
+        // Merge and deduplicate: promoted first, then recommended
                 const mergedResources = [...promotedResources]
                 const promotedIds = new Set(promotedResources.map(item => item._id))
                 
                 // Add recommended resources that are not already in promoted
                 const uniqueRecommendedResources = recommendedResources.filter(item => !promotedIds.has(item._id))
                 mergedResources.push(...uniqueRecommendedResources)
-                
-                const recommendedIds = new Set([...promotedResources, ...recommendedResources].map(item => item._id))
-                
-                // Add regular resources that are not already in promoted or recommended
-        const uniqueRegularResources = regularResources.filter(item => !recommendedIds.has(item._id))
-        mergedResources.push(...uniqueRegularResources)
         
         setResources(mergedResources)
         setFilteredResources(mergedResources)
+        setTotalCount(mergedResources.length)
         
-                console.log(`Loaded ${promotedResources.length} promoted + ${recommendedResources.length} recommended + ${uniqueRegularResources.length} regular = ${mergedResources.length} total resources`)
+        console.log(`Loaded ${promotedResources.length} promoted + ${recommendedResources.length} recommended = ${mergedResources.length} total resources`)
         
       } catch (error) {
         console.error('Error fetching resources:', error)
@@ -216,12 +193,12 @@ function ResourcesContent() {
                                     // Internal resource - make entire card clickable
                                     return (
                                         <Link key={resource._id} href={`/resources/${resource._id}`} className="block">
-                                            <Card 
-                                                className={`
+                            <Card 
+                                className={`
                                                     group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
-                                                    ${resource.isPromoted ? 'border-2 border-yellow-400' : ''}
-                                                `}
-                                            >
+                                    ${resource.isPromoted ? 'border-2 border-yellow-400' : ''}
+                                `}
+                            >
                                     <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                                         <div className="flex items-center justify-between mb-3 sm:mb-4">
                                             <div className="flex items-center gap-2">
@@ -294,18 +271,18 @@ function ResourcesContent() {
                                     
                                         </CardContent>
                                             </Card>
-                                        </Link>
-                                    )
-                                } else {
+                                                    </Link>
+                                                )
+                                            } else {
                                     // External resource - make entire card clickable to open in new tab
-                                    return (
+                                                return (
                                         <Card 
                                             key={resource._id}
                                             className={`
                                                 group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
                                                 ${resource.isPromoted ? 'border-2 border-yellow-400' : ''}
                                             `}
-                                            onClick={() => window.open(resource._id, '_blank', 'noopener,noreferrer')}
+                                                        onClick={() => window.open(resource._id, '_blank', 'noopener,noreferrer')}
                                         >
                                             <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                                                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -371,10 +348,10 @@ function ResourcesContent() {
                                                             <span>{resource.metrics.downloadCount || 0}</span>
                                                         </div>
                                                     </div>
-                                                </div>
+                                    </div>
                                             )}
-                                            </CardContent>
-                                        </Card>
+                                    </CardContent>
+                </Card>
                                     )
                                 }
                             })}
