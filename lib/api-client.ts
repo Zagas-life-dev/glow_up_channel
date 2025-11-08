@@ -1224,6 +1224,61 @@ export class ApiClient {
     });
     return this.handleResponse(response);
   }
+
+  // Email Verification Methods
+  static async sendVerificationCode(): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/send-verification-code`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async verifyEmail(code: string): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/verify-email`, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getVerificationStatus(): Promise<{
+    emailVerified: boolean;
+    email: string;
+    emailVerifiedAt: string | null;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/verification-status`, {
+      method: 'GET',
+    });
+    return this.handleResponse(response);
+  }
+
+  // Password Reset Methods (no authentication required)
+  static async requestPasswordReset(email: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async verifyResetCode(email: string, code: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/verify-reset-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+    return this.handleResponse(response);
+  }
 }
 
 export default ApiClient;

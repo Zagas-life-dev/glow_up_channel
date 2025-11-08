@@ -60,12 +60,12 @@ export default function SignupPage() {
 
       if (data.role === 'seeker') {
         await registerOpportunitySeeker(data.email, data.password, firstName, lastName, dateOfBirth)
-        // Redirect to homepage after successful signup
-        router.push('/')
+        // Redirect to email verification page after successful signup
+        router.push('/verify-email')
       } else {
-        // Provider registration - redirect to homepage
+        // Provider registration - redirect to email verification page
         await registerOpportunityPoster(data.email, data.password, firstName, lastName, dateOfBirth)
-        router.push('/')
+        router.push('/verify-email')
       }
     } catch (err: any) {
       // Handle specific validation errors from backend

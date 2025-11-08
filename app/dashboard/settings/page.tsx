@@ -34,9 +34,14 @@ import {
   Briefcase,
   Star,
   Heart,
-  LogOut
+  LogOut,
+  CheckCircle2,
+  XCircle,
+  Loader2
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
+import ApiClient from '@/lib/api-client'
+import { toast } from 'sonner'
 
 export default function SettingsPage() {
   const { setHideNavbar, setHideFooter } = usePage()
@@ -45,6 +50,9 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const [emailVerified, setEmailVerified] = useState<boolean>(false)
+  const [isLoadingVerification, setIsLoadingVerification] = useState(false)
+  const [isResendingCode, setIsResendingCode] = useState(false)
 
   // Hide navbar when this page is active
   useEffect(() => {
@@ -103,7 +111,23 @@ export default function SettingsPage() {
         lastName: user.lastName || "",
         dateOfBirth: user.dateOfBirth || ""
       }))
+      setEmailVerified(user.emailVerified || false)
     }
+  }, [user])
+
+  // Load verification status on mount
+  useEffect(() => {
+    const loadVerificationStatus = async () => {
+      if (user && ApiClient.isAuthenticated()) {
+        try {
+          const status = await ApiClient.getVerificationStatus()
+          setEmailVerified(status.emailVerified)
+        } catch (error) {
+          console.error('Error loading verification status:', error)
+        }
+      }
+    }
+    loadVerificationStatus()
   }, [user])
 
   useEffect(() => {
@@ -495,9 +519,65 @@ export default function SettingsPage() {
                           type="email"
                           value={userData.email}
                           onChange={(e) => setUserData({...userData, email: e.target.value})}
-                          disabled={!isEditing}
+                          disabled={true}
                           className="h-11"
                         />
+                        {/* Email Verification Status */}
+                        <div className="flex items-center justify-between mt-3 p-3 rounded-lg border bg-gray-50">
+                          <div className="flex items-center gap-2">
+                            {emailVerified ? (
+                              <>
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                <span className="text-sm text-green-700 font-medium">Email Verified</span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-5 w-5 text-orange-600" />
+                                <span className="text-sm text-orange-700 font-medium">Email Not Verified</span>
+                              </>
+                            )}
+                          </div>
+                          {!emailVerified && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                if (isResendingCode) return
+                                setIsResendingCode(true)
+                                try {
+                                  await ApiClient.sendVerificationCode()
+                                  toast.success('Verification code sent! Please check your email.')
+                                  // Redirect to verification page
+                                  window.location.href = '/verify-email'
+                                } catch (error: any) {
+                                  toast.error(error.message || 'Failed to send verification code')
+                                } finally {
+                                  setIsResendingCode(false)
+                                }
+                              }}
+                              disabled={isResendingCode}
+                              className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                            >
+                              {isResendingCode ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Verify Email
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                        {!emailVerified && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Please verify your email address to ensure account security and receive important notifications.
+                          </p>
+                        )}
                       </div>
                     </div>
 

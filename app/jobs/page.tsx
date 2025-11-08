@@ -4,11 +4,12 @@ import { useState, useEffect, Suspense, useRef } from "react"
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Briefcase, ArrowRight, Heart, Bookmark, Eye, Users, Clock, DollarSign, MapPin } from 'lucide-react'
+import { Briefcase, Heart, Bookmark, Eye, Users, Clock, DollarSign, MapPin } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
+import ApiClient from "@/lib/api-client"
 import AuthGuard from "@/components/auth-guard"
 
 function JobsContent() {
@@ -19,6 +20,21 @@ function JobsContent() {
   const [totalCount, setTotalCount] = useState(0)
   const searchParams = useSearchParams()
   const { user, isAuthenticated } = useAuth()
+  const viewedItems = useRef(new Set<string>())
+
+  // Track view for recommendation learning
+  const trackView = async (jobId: string) => {
+    if (!isAuthenticated || viewedItems.current.has(jobId)) return
+    
+    viewedItems.current.add(jobId)
+    
+    try {
+      await ApiClient.trackEngagement('job', jobId, 'view')
+    } catch (error) {
+      console.error('Error tracking view:', error)
+      // Don't show error to user as this is background tracking
+    }
+  }
 
   useEffect(() => {
     const tag = searchParams.get('tag')
@@ -194,6 +210,7 @@ function JobsContent() {
                         group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
                   ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
                 `}
+                onMouseEnter={() => trackView(job._id)}
               >
                 <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -296,6 +313,7 @@ function JobsContent() {
                       group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full touch-manipulation cursor-pointer
                       ${job.isPromoted ? 'border-2 border-yellow-400' : ''}
                     `}
+                    onMouseEnter={() => trackView(job._id)}
                             onClick={() => window.open(job._id, '_blank', 'noopener,noreferrer')}
                   >
                     <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
@@ -327,7 +345,7 @@ function JobsContent() {
                       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
        {job.location && (
          <div className="flex items-center gap-2 text-sm text-gray-500">
-           <span className="w-4 h-4 flex-shrink-0">📍</span>
+           <MapPin className="w-4 h-4 flex-shrink-0" color="#2563eb"></MapPin>
            <span className="truncate">
              {typeof job.location === 'string' 
                ? job.location 
@@ -342,7 +360,7 @@ function JobsContent() {
        
        {job.job_type && (
          <div className="flex items-center gap-2 text-sm text-gray-500">
-           <Briefcase className="w-4 h-4 flex-shrink-0" />
+           <Clock className="w-4 h-4 flex-shrink-0" />
            <span className="capitalize">{job.job_type}</span>
          </div>
        )}
