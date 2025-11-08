@@ -146,7 +146,7 @@ function SearchContent() {
             onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
                 placeholder="Search opportunities, events, jobs, and resources..."
-                className="flex-1 h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-xl sm:rounded-2xl border-0 focus:ring-2 focus:ring-white/20"
+                className="flex-1 h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-xl sm:rounded-2xl border-0 text-black focus:ring-2 focus:ring-white/20"
           />
           <Button
                 onClick={() => handleSearch(searchQuery)}
