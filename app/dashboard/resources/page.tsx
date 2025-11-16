@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { usePage } from "@/contexts/page-context"
-// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

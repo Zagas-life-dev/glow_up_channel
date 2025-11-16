@@ -982,9 +982,70 @@ export class ApiClient {
     activeUsers: number;
     pendingUsers: number;
     recentRegistrations: number;
+    totalOpportunitySeekers: number;
+    totalPosters: number;
+    totalOpportunities: number;
+    totalEvents: number;
+    totalJobs: number;
+    totalResources: number;
     userStats: Record<string, number>;
   }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/stats`);
+    return this.handleResponse(response);
+  }
+
+  // Past Posts API methods
+  static async getPastPostsStats(): Promise<{
+    pastOpportunities: number;
+    pastEvents: number;
+    pastJobs: number;
+    total: number;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/past-posts/stats`);
+    return this.handleResponse(response);
+  }
+
+  static async getPastPosts(
+    collection: 'opportunities' | 'events' | 'jobs',
+    options?: {
+      limit?: number;
+      skip?: number;
+      reason?: string;
+      pastStatus?: 'expired' | 'moved';
+    }
+  ): Promise<{
+    posts: any[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    const searchParams = new URLSearchParams();
+    if (options?.limit) searchParams.append('limit', options.limit.toString());
+    if (options?.skip) searchParams.append('skip', options.skip.toString());
+    if (options?.reason) searchParams.append('reason', options.reason);
+    if (options?.pastStatus) searchParams.append('pastStatus', options.pastStatus);
+
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/admin/past-posts/${collection}?${searchParams.toString()}`
+    );
+    return this.handleResponse(response);
+  }
+
+  // Provider Onboarding Admin Methods
+  static async getAllPostersDetails(): Promise<{
+    success: boolean;
+    posters: any[];
+    stats: {
+      total: number;
+      approved: number;
+      pending: number;
+      onboardingCompleted: number;
+      hasDocuments: number;
+    };
+    message?: string;
+  }> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/provider-onboarding/admin/all`
+    );
     return this.handleResponse(response);
   }
 

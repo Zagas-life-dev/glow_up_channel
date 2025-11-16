@@ -197,3 +197,4 @@
 4. **Account Lockout**: Temporary lockout after multiple reset attempts
 5. **SMS Backup**: Add SMS as backup verification method
 
+

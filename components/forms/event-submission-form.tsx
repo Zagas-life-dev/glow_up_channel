@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { toast } from "sonner"
 
 interface EventFormData {
@@ -27,7 +26,6 @@ interface EventFormData {
 }
 
 export default function EventSubmissionForm() {
-  const supabase = getSupabaseBrowserClient()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   
@@ -104,42 +102,12 @@ export default function EventSubmissionForm() {
         throw new Error("Invalid date or time format")
       }
 
-      // Prepare the event submission data
-      const submittedEvent = {
-        submitter_name: eventForm.name,
-        submitter_email: eventForm.email,
-        title: eventForm.title,
-        description: eventForm.description,
-        date: eventForm.date,
-        time: formattedTime,
-        location: eventForm.location,
-        location_type: eventForm.location_type,
-        is_free: eventForm.is_free,
-        link: eventForm.link.startsWith("http") ? eventForm.link : `https://${eventForm.link}`,
-        status: "pending"
-      }
-
-      console.log("Submitting event:", submittedEvent);
-
-      // Insert into the new submitted_events table
-      const { data, error: submitError } = await supabase
-        .from("submitted_events")
-        .insert([submittedEvent])
-        .select();
-
-      if (submitError) {
-        console.error("Supabase error:", submitError);
-        throw submitError;
-      }
-
-      console.log("Submission successful:", data);
-
-      // Show success message using Sonner toast
-      toast.success("Event submitted successfully!", {
-        description: "Thank you for your contribution. Our team will review it shortly."
+      // TODO: Implement event submission with your backend API
+      toast.error("Feature not available", {
+        description: "Event submission needs to be implemented with your backend API."
       });
 
-      // Reset form after successful submission
+      // Reset form after submission attempt
       setEventForm({
         name: "",
         email: "",

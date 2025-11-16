@@ -156,6 +156,18 @@ export default function Home() {
 
   const services = [
     {
+      icon: Target,
+      title: "Personal Growth",
+      description: "Develop skills and achieve your personal aspirations.",
+      href: "/opportunities"
+    },
+    {
+      icon: Users,
+      title: "Networking Events",
+      description: "Connect with professionals and build meaningful relationships.",
+      href: "/events"
+    },
+    {
       icon: Briefcase,
       title: "Career Opportunities",
       description: "Find jobs, internships, and career advancement roles.",
@@ -166,18 +178,6 @@ export default function Home() {
       title: "Learning Resources",
       description: "Access training, workshops, and educational materials.",
       href: "/resources"
-    },
-    {
-      icon: Users,
-      title: "Networking Events",
-      description: "Connect with professionals and build meaningful relationships.",
-      href: "/events"
-    },
-    {
-      icon: Target,
-      title: "Personal Growth",
-      description: "Develop skills and achieve your personal aspirations.",
-      href: "/opportunities"
     }
   ]
 

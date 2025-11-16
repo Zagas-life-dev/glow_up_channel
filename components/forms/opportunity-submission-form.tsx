@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -28,7 +27,6 @@ interface OpportunityFormData {
 }
 
 export default function OpportunitySubmissionForm() {
-  const supabase = getSupabaseBrowserClient()
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [opportunityForm, setOpportunityForm] = useState<OpportunityFormData>({
@@ -87,29 +85,9 @@ export default function OpportunitySubmissionForm() {
     }
     
     try {
-      // Prepare the submission with proper link formatting
-      const submission = {
-        ...opportunityForm,
-        link: opportunityForm.link.startsWith("http") ? opportunityForm.link : `https://${opportunityForm.link}`
-      }
-
-      console.log('Submitting to Supabase:', submission)
-
-      // Insert into the new submitted_opportunities table
-      const { data, error } = await supabase
-        .from("submitted_opportunities")
-        .insert([submission])
-        .select()
-
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-
-      console.log('Submission successful:', data)
-
-      toast.success("Opportunity submitted", {
-        description: "Thank you for submitting your opportunity! It will be reviewed by our team."
+      // TODO: Implement opportunity submission with your backend API
+      toast.error("Feature not available", {
+        description: "Opportunity submission needs to be implemented with your backend API."
       })
       
       // Reset form

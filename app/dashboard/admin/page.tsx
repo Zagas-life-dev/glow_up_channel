@@ -23,7 +23,8 @@ import {
   FileText,
   FolderOpen,
   Timer,
-  Archive
+  Archive,
+  Calendar
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -155,52 +156,78 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Opportunity Seekers</CardTitle>
+              <Users className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalOpportunitySeekers || 0}</div>
               <p className="text-xs text-muted-foreground">
-                All registered users
+                Total seekers
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">Posters</CardTitle>
+              <UserCheck className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats?.activeUsers || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalPosters || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Currently active
+                Total posters
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-              <Clock className="h-4 w-4 text-orange-600" />
+              <CardTitle className="text-sm font-medium">Opportunities</CardTitle>
+              <TrendingUp className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats?.pendingUsers || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalOpportunities || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Awaiting review
+                Active (past excluded)
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recent Registrations</CardTitle>
-              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium">Events</CardTitle>
+              <Calendar className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats?.recentRegistrations || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalEvents || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Last 30 days
+                Active (past excluded)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Jobs</CardTitle>
+              <FileText className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalJobs || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Active (past excluded)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Resources</CardTitle>
+              <FolderOpen className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalResources || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Total resources
               </p>
             </CardContent>
           </Card>
@@ -259,18 +286,18 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <FolderOpen className="h-5 w-5 text-purple-600" />
-                <span>Business Upload</span>
+                <Users className="h-5 w-5 text-orange-600" />
+                <span>Posters Details</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-600">
-                View provider onboarding documents and business details in organized folders.
+                View all opportunity posters, their onboarding status, uploaded documents, and approval status.
               </p>
               <Button asChild size="sm" className="w-full">
                 <Link href="/dashboard/admin/business-upload">
-                  <FolderOpen className="h-4 w-4 mr-2" />
-                  View Business Files
+                  <Users className="h-4 w-4 mr-2" />
+                  View Posters Details
                 </Link>
               </Button>
             </CardContent>
@@ -372,25 +399,7 @@ export default function AdminDashboard() {
 
           {isSuperAdmin && (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    <span>User Management</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-gray-600">
-                    Create, edit, and manage users, admins, and super admins.
-                  </p>
-                  <Button asChild size="sm" className="w-full">
-                    <Link href="/dashboard/admin/user-management">
-                      <Users className="h-4 w-4 mr-2" />
-                      Manage Users
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              {/*  */}
 
               <Card>
                 <CardHeader>
@@ -415,7 +424,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* User Statistics Breakdown */}
+        {/* User Statistics Breakdown
         {stats?.userStats && (
           <Card>
             <CardHeader>
@@ -439,7 +448,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
       </div>
     </div>
   )

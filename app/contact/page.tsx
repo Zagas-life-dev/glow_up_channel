@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Instagram, Linkedin, Mail, MessageSquare } from "lucide-react"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { toast } from "sonner"
 
 export default function ContactPage() {
@@ -17,7 +16,6 @@ export default function ContactPage() {
     message: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const supabase = getSupabaseBrowserClient()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -29,21 +27,10 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      const { error } = await supabase
-        .from('feedback')
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-        }])
-
-      if (error) throw error
-
-      toast.success("Message sent successfully!", {
-        description: "Thank you for your feedback. We'll get back to you soon."
+      // TODO: Implement contact form submission with your backend API
+      toast.error("Feature not available", {
+        description: "Contact form submission needs to be implemented with your backend API."
       })
-
-      setFormData({ name: "", email: "", message: "" })
     } catch (error: any) {
       toast.error("Error", {
         description: error.message || "Failed to send message. Please try again."

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, Suspense, useRef } from "react"
-// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Briefcase, Heart, Bookmark, Eye, Users, Clock, DollarSign, MapPin } from 'lucide-react'

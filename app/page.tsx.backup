@@ -2,24 +2,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Calendar, Plane, Briefcase, BookOpen, Users, Target, ArrowRight } from "lucide-react"
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import HeroCarousel from "@/components/hero-carousel"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 async function getFeaturedItems() {
-  const supabase = createServerComponentClient({ cookies })
-
-  // Get featured opportunities
-  const { data: opportunities } = await supabase
-    .from('opportunities')
-    .select('*')
-    .eq('featured', true)
-    .order('created_at', { ascending: false })
-    .limit(6)
-  
+  // TODO: Implement featured items fetching with your backend API
   return {
-    opportunities: opportunities || [],
+    opportunities: [],
   }
 }
 
