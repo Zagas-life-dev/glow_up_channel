@@ -37,13 +37,13 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-white/60">
             Sign in to your Glow Up Channel account
           </CardDescription>
         </CardHeader>
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">{error}</span>
             </div>
@@ -60,18 +60,18 @@ export default function LoginPage() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-white/80 font-medium">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                   required
                   disabled={isLoading}
                 />
@@ -79,25 +79,25 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-medium">
+              <Label htmlFor="password" className="text-white/80 font-medium">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 pr-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                   required
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -107,7 +107,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -125,15 +125,15 @@ export default function LoginPage() {
           <div className="space-y-3 text-center">
             <Link
               href="/forgot-password"
-              className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
+              className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
             >
               Forgot your password?
             </Link>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-white/60">
               Don't have an account?{' '}
               <Link
                 href="/signup"
-                className="text-orange-600 hover:text-orange-700 font-semibold transition-colors"
+                className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
               >
                 Sign up
               </Link>

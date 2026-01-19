@@ -2,42 +2,76 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import AuthGuard from "@/components/auth-guard"
+import { cn } from "@/lib/utils"
 import { 
-  Plus,
   Target,
   Calendar,
   Briefcase,
   BookOpen,
-  Users,
   MapPin,
   Clock,
   DollarSign,
   Globe,
-  Mail,
-  Phone,
-  Building,
-  FileText,
   ArrowLeft,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  X,
+  ChevronDown,
+  Plus,
+  Sparkles,
+  Send,
+  Loader2
 } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
-export default function PostingDashboard() {
-  const { setHideNavbar, setHideFooter } = usePage()
+type PostType = 'opportunity' | 'event' | 'job' | 'resource'
+
+const postTypes = [
+  { id: 'opportunity' as PostType, title: 'Opportunity', icon: Target, color: 'orange', desc: 'Internships, scholarships, grants' },
+  { id: 'job' as PostType, title: 'Job', icon: Briefcase, color: 'blue', desc: 'Full-time, part-time positions' },
+  { id: 'event' as PostType, title: 'Event', icon: Calendar, color: 'emerald', desc: 'Workshops, conferences, meetups' },
+  { id: 'resource' as PostType, title: 'Resource', icon: BookOpen, color: 'violet', desc: 'Courses, guides, tools' },
+]
+
+const opportunityTypes = [
+  'Internship', 'Scholarship', 'Grant', 'Fellowship', 'Volunteer Work',
+  'Mentorship Program', 'Training Program', 'Workshop', 'Competition',
+  'Research Opportunity', 'Startup Incubator', 'Accelerator Program',
+  'Hackathon', 'Bootcamp', 'Exchange Program', 'Apprenticeship'
+]
+
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote']
+
+const eventTypes = ['Workshop', 'Conference', 'Webinar', 'Meetup', 'Hackathon', 'Networking', 'Bootcamp', 'Career Fair']
+
+const resourceCategories = ['Course', 'Tutorial', 'E-book', 'Tool', 'Template', 'Guide', 'Podcast', 'Video Series']
+
+function PostingContent() {
+  const router = useRouter()
   const { user, isAuthenticated } = useAuth()
-  const [activeTab, setActiveTab] = useState<'opportunity' | 'event' | 'job' | 'resource'>('opportunity')
+  const [selectedType, setSelectedType] = useState<PostType | null>(null)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // Permission state
   const [canPost, setCanPost] = useState(false)
   const [onboardingStatus, setOnboardingStatus] = useState<{
     completionPercentage: number
@@ -45,282 +79,16 @@ export default function PostingDashboard() {
     reason: string
   } | null>(null)
   
-  // Toggle states for isPaid switches
-  const [isOpportunityPaid, setIsOpportunityPaid] = useState(false)
-  const [isJobPaid, setIsJobPaid] = useState(false)
-  const [isEventPaid, setIsEventPaid] = useState(false)
-  const [isResourcePaid, setIsResourcePaid] = useState(false)
-  
-  // Toggle states for isRemote switches
-  const [isOpportunityRemote, setIsOpportunityRemote] = useState(false)
-  const [isJobRemote, setIsJobRemote] = useState(false)
-  const [isEventRemote, setIsEventRemote] = useState(false)
-  
-  // Salary state for jobs
-  const [hasSalary, setHasSalary] = useState(false)
-  
-  // Opportunity type and tags state
-  const [opportunityType, setOpportunityType] = useState('')
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
-  const [opportunityTags, setOpportunityTags] = useState<string[]>([])
-  const [opportunityTagInput, setOpportunityTagInput] = useState('')
-  const [opportunityTagSuggestions, setOpportunityTagSuggestions] = useState<string[]>([])
-  const [showOpportunityTagSuggestions, setShowOpportunityTagSuggestions] = useState(false)
-  const [isLoadingOpportunityTags, setIsLoadingOpportunityTags] = useState(false)
-  
-  // Job tags state
-  const [jobTags, setJobTags] = useState<string[]>([])
-  const [jobTagInput, setJobTagInput] = useState('')
-  const [jobTagSuggestions, setJobTagSuggestions] = useState<string[]>([])
-  const [showJobTagSuggestions, setShowJobTagSuggestions] = useState(false)
-  const [isLoadingJobTags, setIsLoadingJobTags] = useState(false)
-  
-  // Event tags state
-  const [eventTags, setEventTags] = useState<string[]>([])
-  const [eventTagInput, setEventTagInput] = useState('')
-  const [eventTagSuggestions, setEventTagSuggestions] = useState<string[]>([])
-  const [showEventTagSuggestions, setShowEventTagSuggestions] = useState(false)
-  const [isLoadingEventTags, setIsLoadingEventTags] = useState(false)
-  
-  // Resource tags state
-  const [resourceTags, setResourceTags] = useState<string[]>([])
-  const [resourceTagInput, setResourceTagInput] = useState('')
-  const [resourceTagSuggestions, setResourceTagSuggestions] = useState<string[]>([])
-  const [showResourceTagSuggestions, setShowResourceTagSuggestions] = useState(false)
-  const [isLoadingResourceTags, setIsLoadingResourceTags] = useState(false)
-
-  // Opportunity type recommendations
-  const opportunityTypeSuggestions = [
-    'Internship',
-    'Scholarship',
-    'Grant',
-    'Fellowship',
-    'Volunteer Work',
-    'Mentorship Program',
-    'Training Program',
-    'Workshop',
-    'Competition',
-    'Research Opportunity',
-    'Startup Incubator',
-    'Accelerator Program',
-    'Networking Event',
-    'Conference',
-    'Hackathon',
-    'Bootcamp',
-    'Exchange Program',
-    'Study Abroad',
-    'Job Shadowing',
-    'Apprenticeship',
-    'Freelance Project',
-    'Consulting Opportunity',
-    'Partnership',
-    'Collaboration',
-    'Community Service',
-    'Leadership Program',
-    'Entrepreneurship Program',
-    'Innovation Challenge',
-    'Design Contest',
-    'Writing Competition',
-    'Photography Contest',
-    'Video Contest',
-    'Coding Challenge',
-    'Business Plan Competition',
-    'Pitch Competition'
-  ]
-
-  // Filter suggestions based on input
-  const filteredSuggestions = opportunityTypeSuggestions.filter(suggestion =>
-    suggestion.toLowerCase().includes(opportunityType.toLowerCase())
-  )
-
-  // Handle opportunity type selection
-  const handleTypeSelect = (type: string) => {
-    setOpportunityType(type)
-    setShowTypeDropdown(false)
-  }
-
-  // Search for tag suggestions using skills API
-  const searchTagSuggestions = async (query: string, formType: 'opportunity' | 'job' | 'event' | 'resource') => {
-    if (query.length < 2) {
-      setEventTagSuggestions([])
-      setShowEventTagSuggestions(false)
-      return
-    }
-
-    // Fallback suggestions for all form types
-    const fallbackSuggestions = [
-      'Technology', 'Business', 'Education', 'Healthcare', 'Finance', 'Marketing', 'Design', 'Engineering',
-      'Programming', 'Data Science', 'Artificial Intelligence', 'Machine Learning', 'Web Development',
-      'Mobile Development', 'Cybersecurity', 'Cloud Computing', 'DevOps', 'UI/UX Design',
-      'Digital Marketing', 'Content Writing', 'Project Management', 'Sales', 'Customer Service',
-      'Human Resources', 'Accounting', 'Legal', 'Medicine', 'Nursing', 'Teaching', 'Research',
-      'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes',
-      'SQL', 'MongoDB', 'Git', 'Agile', 'Scrum', 'Leadership', 'Communication', 'Analytics'
-    ].filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/skills/suggestions?q=${encodeURIComponent(query)}`)
-      const data = await response.json()
-      const apiSuggestions = data.success ? data.suggestions : []
-      
-      // Combine API suggestions with fallback suggestions, removing duplicates
-      const combinedSuggestions = [...new Set([...apiSuggestions, ...fallbackSuggestions])]
-      const suggestions = combinedSuggestions.slice(0, 7)
-
-      if (formType === 'event') {
-        setIsLoadingEventTags(true)
-        setEventTagSuggestions(suggestions)
-        setShowEventTagSuggestions(true)
-        setIsLoadingEventTags(false)
-      } else if (formType === 'opportunity') {
-        setIsLoadingOpportunityTags(true)
-        setOpportunityTagSuggestions(suggestions)
-        setShowOpportunityTagSuggestions(true)
-        setIsLoadingOpportunityTags(false)
-      } else if (formType === 'job') {
-        setIsLoadingJobTags(true)
-        setJobTagSuggestions(suggestions)
-        setShowJobTagSuggestions(true)
-        setIsLoadingJobTags(false)
-      } else if (formType === 'resource') {
-        setIsLoadingResourceTags(true)
-        setResourceTagSuggestions(suggestions)
-        setShowResourceTagSuggestions(true)
-        setIsLoadingResourceTags(false)
-      }
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error)
-      // Use fallback suggestions on error
-      const suggestions = fallbackSuggestions.slice(0, 7)
-      
-      if (formType === 'event') {
-        setIsLoadingEventTags(true)
-        setEventTagSuggestions(suggestions)
-        setShowEventTagSuggestions(true)
-        setIsLoadingEventTags(false)
-      } else if (formType === 'opportunity') {
-        setIsLoadingOpportunityTags(true)
-        setOpportunityTagSuggestions(suggestions)
-        setShowOpportunityTagSuggestions(true)
-        setIsLoadingOpportunityTags(false)
-      } else if (formType === 'job') {
-        setIsLoadingJobTags(true)
-        setJobTagSuggestions(suggestions)
-        setShowJobTagSuggestions(true)
-        setIsLoadingJobTags(false)
-      } else if (formType === 'resource') {
-        setIsLoadingResourceTags(true)
-        setResourceTagSuggestions(suggestions)
-        setShowResourceTagSuggestions(true)
-        setIsLoadingResourceTags(false)
-      }
-    }
-  }
-
-  // Handle tag input change with suggestions
-  const handleTagInputChange = (value: string, formType: 'opportunity' | 'job' | 'event' | 'resource') => {
-    switch (formType) {
-      case 'opportunity':
-        setOpportunityTagInput(value)
-        searchTagSuggestions(value, 'opportunity')
-        break
-      case 'job':
-        setJobTagInput(value)
-        searchTagSuggestions(value, 'job')
-        break
-      case 'event':
-        setEventTagInput(value)
-        searchTagSuggestions(value, 'event')
-        break
-      case 'resource':
-        setResourceTagInput(value)
-        searchTagSuggestions(value, 'resource')
-        break
-    }
-  }
-
-  // Handle tag input for different forms
-  const handleTagAdd = (e: React.KeyboardEvent, formType: 'opportunity' | 'job' | 'event' | 'resource') => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      let tagInput = ''
-      let tags: string[] = []
-      let setTags: (tags: string[]) => void = () => {}
-      let setTagInput: (input: string) => void = () => {}
-      
-      switch (formType) {
-        case 'opportunity':
-          tagInput = opportunityTagInput
-          tags = opportunityTags
-          setTags = setOpportunityTags
-          setTagInput = setOpportunityTagInput
-          break
-        case 'job':
-          tagInput = jobTagInput
-          tags = jobTags
-          setTags = setJobTags
-          setTagInput = setJobTagInput
-          break
-        case 'event':
-          tagInput = eventTagInput
-          tags = eventTags
-          setTags = setEventTags
-          setTagInput = setEventTagInput
-          break
-        case 'resource':
-          tagInput = resourceTagInput
-          tags = resourceTags
-          setTags = setResourceTags
-          setTagInput = setResourceTagInput
-          break
-      }
-      
-      if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()])
-        setTagInput('')
-        if (formType === 'event') {
-          setShowEventTagSuggestions(false)
-          setEventTagSuggestions([])
-        }
-      }
-    }
-  }
-
-  // Remove tag for different forms
-  const removeTag = (tagToRemove: string, formType: 'opportunity' | 'job' | 'event' | 'resource') => {
-    switch (formType) {
-      case 'opportunity':
-        setOpportunityTags(opportunityTags.filter(tag => tag !== tagToRemove))
-        break
-      case 'job':
-        setJobTags(jobTags.filter(tag => tag !== tagToRemove))
-        break
-      case 'event':
-        setEventTags(eventTags.filter(tag => tag !== tagToRemove))
-        break
-      case 'resource':
-        setResourceTags(resourceTags.filter(tag => tag !== tagToRemove))
-        break
-    }
-  }
-
-  // Hide navbar when this page is active
-  useEffect(() => {
-    setHideNavbar(true)
-    setHideFooter(true)
-    return () => {
-      setHideNavbar(false)
-      setHideFooter(false)
-    }
-  }, [setHideNavbar, setHideFooter])
+  // Form states
+  const [isPaid, setIsPaid] = useState(false)
+  const [isRemote, setIsRemote] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
 
   // Check posting permission
   useEffect(() => {
-    const checkPostingPermission = async () => {
+    const checkPermission = async () => {
       if (!isAuthenticated || !user) return
-      
-      // All users must complete onboarding
-      
       try {
         const response = await ApiClient.checkPostingPermission()
         setCanPost(response.canPost)
@@ -330,7 +98,6 @@ export default function PostingDashboard() {
           reason: response.reason
         })
       } catch (error) {
-        console.error('Error checking posting permission:', error)
         setCanPost(false)
         setOnboardingStatus({
           completionPercentage: 0,
@@ -339,111 +106,119 @@ export default function PostingDashboard() {
         })
       }
     }
-
-    checkPostingPermission()
+    checkPermission()
   }, [isAuthenticated, user])
+
+  const handleSelectType = (type: PostType) => {
+    setSelectedType(type)
+    setIsSheetOpen(true)
+    setSubmitStatus('idle')
+    setErrorMessage('')
+    setTags([])
+    setTagInput('')
+    setIsPaid(false)
+    setIsRemote(false)
+  }
+
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 10) {
+        setTags([...tags, tagInput.trim()])
+        setTagInput('')
+      }
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedType || !canPost) return
+    
     setIsSubmitting(true)
+    setSubmitStatus('idle')
     
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement)
       const data = Object.fromEntries(formData.entries())
       
-      // Determine which form is being submitted based on activeTab
       let submissionData: any = {}
       
-      if (activeTab === 'opportunity') {
+      if (selectedType === 'opportunity') {
         submissionData = {
           title: data.title,
           company: data.company,
-          provider: data.provider,
-          type: opportunityType || data.type,
+          type: data.type,
           description: data.description,
           url: data.url,
           requirements: data.requirements,
-          benefits: data.benefits,
-          tags: opportunityTags,
+          tags: tags,
           location: {
-            country: data.opportunityCountry,
-            province: data.opportunityProvince,
-            city: data.opportunityCity,
-            isRemote: isOpportunityRemote
+            country: data.country,
+            province: data.province,
+            city: data.city,
+            isRemote: isRemote
           },
-          financial: {
-            isPaid: isOpportunityPaid,
-            amount: data.amount,
-            currency: 'NGN'
-          },
-          dates: {
-            applicationDeadline: data.deadline
-          }
+          financial: { isPaid: isPaid, amount: data.amount, currency: 'NGN' },
+          dates: { applicationDeadline: data.deadline }
         }
-      } else if (activeTab === 'job') {
+      } else if (selectedType === 'job') {
         submissionData = {
-          title: data.jobTitle,
-          company: data.jobCompany,
-          type: data.jobType,
-          description: data.jobDescription,
-          url: data.jobUrl,
-          tags: jobTags,
+          title: data.title,
+          company: data.company,
+          type: data.type,
+          description: data.description,
+          url: data.url,
+          tags: tags,
           location: {
-            country: data.jobCountry,
-            province: data.jobProvince,
-            city: data.jobCity,
-            isRemote: isJobRemote
+            country: data.country,
+            province: data.province,
+            city: data.city,
+            isRemote: isRemote
           },
-          pay: {
-            isPaid: isJobPaid,
-            amount: hasSalary ? 'Salary Present' : data.jobSalary,
-            period: data.jobPeriod,
-            currency: 'NGN'
-          },
-          dates: {
-            applicationDeadline: data.jobDeadline
-          }
+          pay: { isPaid: isPaid, amount: data.salary, period: data.period, currency: 'NGN' },
+          dates: { applicationDeadline: data.deadline }
         }
-      } else if (activeTab === 'event') {
+      } else if (selectedType === 'event') {
         submissionData = {
-          title: data.eventTitle,
-          organizer: data.eventCompany,
-          type: data.eventType,
-          description: data.eventDescription,
-          url: data.eventUrl,
-          tags: eventTags,
-          isPaid: isEventPaid,
-          price: data.eventPrice,
+          title: data.title,
+          organizer: data.organizer,
+          type: data.type,
+          description: data.description,
+          url: data.url,
+          tags: tags,
+          isPaid: isPaid,
+          price: data.price,
           currency: 'NGN',
           location: {
-            country: data.eventCountry,
-            province: data.eventProvince,
-            city: data.eventCity,
-            isRemote: isEventRemote
+            country: data.country,
+            province: data.province,
+            city: data.city,
+            isRemote: isRemote
           },
           dates: {
-            startDate: data.eventStartDate,
-            endDate: data.eventEndDate || null,
-            registrationDeadline: data.eventRegistrationDeadline || null
+            startDate: data.startDate,
+            endDate: data.endDate || null,
+            registrationDeadline: data.deadline || null
           },
-          capacity: data.eventCapacity
+          capacity: data.capacity
         }
-      } else if (activeTab === 'resource') {
+      } else if (selectedType === 'resource') {
         submissionData = {
-          title: data.resourceTitle,
-          author: data.resourceName,
-          description: data.resourceDescription,
-          category: data.resourceCategory,
-          paymentLink: data.resourceUrl,
-          tags: resourceTags
+          title: data.title,
+          author: data.author,
+          description: data.description,
+          category: data.category,
+          paymentLink: data.url,
+          tags: tags
         }
       }
       
-      console.log('Submitting data:', submissionData)
-      
-      // Call the appropriate API based on activeTab
       let response
-      switch (activeTab) {
+      switch (selectedType) {
         case 'opportunity':
           response = await ApiClient.createOpportunity(submissionData)
           break
@@ -456,1400 +231,455 @@ export default function PostingDashboard() {
         case 'resource':
           response = await ApiClient.createResource(submissionData)
           break
-        default:
-          throw new Error(`Unknown form type: ${activeTab}`)
       }
       
-      console.log(`${activeTab} posted successfully!`, response)
+      setSubmitStatus('success')
+      setTimeout(() => {
+        setIsSheetOpen(false)
+        setSelectedType(null)
+      }, 2000)
       
-      // Show success message (you can add a toast notification here)
-      alert(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} posted successfully!`)
-      
-      // Reset form after successful submission
-      const form = document.getElementById('posting-form') as HTMLFormElement
-      if (form) {
-        form.reset()
-        // Reset all tag states
-        setOpportunityTags([])
-        setOpportunityTagInput('')
-        setJobTags([])
-        setJobTagInput('')
-        setEventTags([])
-        setEventTagInput('')
-        setResourceTags([])
-        setResourceTagInput('')
-        setOpportunityType('')
-        setIsOpportunityPaid(false)
-        setIsJobPaid(false)
-        setIsEventPaid(false)
-        setIsResourcePaid(false)
-      }
-      
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      
-      // Show error message to user
-      let errorMessage = 'Failed to post. Please try again.'
-      if (error instanceof Error) {
-        errorMessage = error.message
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = (error as any).message
-      }
-      
-      alert(`Error: ${errorMessage}`)
+    } catch (error: any) {
+      setSubmitStatus('error')
+      setErrorMessage(error.message || 'Failed to post. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const postingTabs = [
-    {
-      id: 'opportunity',
-      title: 'Opportunity',
-      icon: Target,
-      description: 'Post internships, freelance gigs, and other opportunities',
-      color: 'from-orange-500 to-orange-600'
-    },
-    {
-      id: 'event',
-      title: 'Event',
-      icon: Calendar,
-      description: 'Post workshops, conferences, and networking events',
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      id: 'job',
-      title: 'Job',
-      icon: Briefcase,
-      description: 'Post full-time, part-time, and remote positions',
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      id: 'resource',
-      title: 'Resource',
-      icon: BookOpen,
-      description: 'Contact us to list your educational resources',
-      color: 'from-purple-500 to-purple-600'
-    }
-  ]
+  const getTypeConfig = (type: PostType) => postTypes.find(t => t.id === type)!
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+    <div className="min-h-screen pb-8">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Link href="/dashboard/provider" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+      <div className="flex items-center gap-4 mb-8">
+        <Link href="/dashboard/provider" className="p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
+          <ArrowLeft className="w-5 h-5 text-white/60" />
             </Link>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Posting Dashboard</h1>
-              <p className="text-sm lg:text-base text-gray-600">Share opportunities with the community</p>
-            </div>
-          </div>
+          <h1 className="text-xl font-bold text-white">Create Post</h1>
+          <p className="text-sm text-white/50">Share with the community</p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
-        {/* Onboarding Status Check */}
+      {/* Onboarding Warning */}
         {!canPost && onboardingStatus && (
-          <Card className="mb-8 border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50">
-            <CardContent className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-8 w-8 text-orange-600" />
+        <div className="mb-8 p-5 rounded-2xl bg-orange-500/10 border border-orange-500/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Complete Your Provider Onboarding
-                  </h3>
-                  <p className="text-gray-700 mb-4">
-                    {onboardingStatus.reason}. You need to complete your provider onboarding before you can post content.
-                  </p>
+              <h3 className="font-semibold text-white mb-1">Complete Onboarding</h3>
+              <p className="text-sm text-white/60 mb-4">{onboardingStatus.reason}</p>
                   
                   {onboardingStatus.completionPercentage > 0 && (
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Progress</span>
-                        <span className="text-sm text-gray-600">{onboardingStatus.completionPercentage}% Complete</span>
+                  <div className="flex justify-between text-xs text-white/50 mb-1">
+                    <span>Progress</span>
+                    <span>{onboardingStatus.completionPercentage}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                         <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                      className="h-full bg-orange-500 rounded-full transition-all"
                           style={{ width: `${onboardingStatus.completionPercentage}%` }}
-                        ></div>
+                    />
                       </div>
                     </div>
                   )}
                   
-                  <div className="flex space-x-3">
-                    <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white">
                       <Link href="/dashboard/provider/onboarding">
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl">
                         Complete Onboarding
-                      </Link>
                     </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/dashboard/provider">
-                        Provider Dashboard
                       </Link>
-                    </Button>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
         )}
 
-        {/* Posting Type Selection */}
+      {/* Post Type Selection */}
         <div className="mb-8">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">What would you like to post?</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {postingTabs.map((tab) => {
-              const Icon = tab.icon
+        <h2 className="text-sm font-medium text-white/40 uppercase tracking-wider mb-4">What would you like to post?</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {postTypes.map((type) => {
+            const Icon = type.icon
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:shadow-sm ${
-                    activeTab === tab.id
-                      ? `border-orange-500 bg-gradient-to-r ${tab.color} text-white`
-                      : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      activeTab === tab.id ? 'bg-white/20' : 'bg-gray-100'
-                    }`}>
-                      <Icon className={`h-5 w-5 ${
-                        activeTab === tab.id ? 'text-white' : 'text-gray-600'
-                      }`} />
+                key={type.id}
+                onClick={() => handleSelectType(type.id)}
+                disabled={!canPost}
+                className={cn(
+                  "p-4 rounded-2xl border text-left transition-all duration-200 group",
+                  "bg-white/[0.02] border-white/[0.06]",
+                  "hover:bg-white/[0.05] hover:border-white/[0.1]",
+                  !canPost && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <div className={cn(
+                  "w-11 h-11 rounded-xl flex items-center justify-center mb-3",
+                  type.color === 'orange' && "bg-orange-500/10",
+                  type.color === 'blue' && "bg-blue-500/10",
+                  type.color === 'emerald' && "bg-emerald-500/10",
+                  type.color === 'violet' && "bg-violet-500/10"
+                )}>
+                  <Icon className={cn(
+                    "w-5 h-5",
+                    type.color === 'orange' && "text-orange-500",
+                    type.color === 'blue' && "text-blue-500",
+                    type.color === 'emerald' && "text-emerald-500",
+                    type.color === 'violet' && "text-violet-500"
+                  )} />
                     </div>
-                    <h3 className={`font-semibold ${
-                      activeTab === tab.id ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {tab.title}
+                <h3 className="font-semibold text-white mb-1 group-hover:text-orange-400 transition-colors">
+                  {type.title}
                     </h3>
-                  </div>
-                  <p className={`text-sm ${
-                    activeTab === tab.id ? 'text-white/90' : 'text-gray-600'
-                  }`}>
-                    {tab.description}
-                  </p>
+                <p className="text-xs text-white/40">{type.desc}</p>
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Posting Forms */}
-        <div className={`space-y-6 ${!canPost ? 'opacity-50 pointer-events-none' : ''}`}>
-          {/* Opportunity Form */}
-          {activeTab === 'opportunity' && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Target className="h-5 w-5 text-orange-600" />
-                  Post New Opportunity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form id="posting-form" onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Opportunity Title *</Label>
-                      <Input
-                        id="title"
-                        name="title"
-                        placeholder="e.g., Frontend Developer Internship"
-                        required
-                        className="h-11"
-                      />
+      {/* Recent Posts Section */}
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-orange-500" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Company/Organization *</Label>
-                      <Input
-                        id="company"
-                        name="company"
-                        placeholder="e.g., TechCorp Africa"
-                        required
-                        className="h-11"
-                      />
+          <h3 className="font-semibold text-white">Quick Start Guide</h3>
                     </div>
+        <div className="space-y-3">
+          {[
+            { step: 1, text: 'Choose a post type above' },
+            { step: 2, text: 'Fill in the required details' },
+            { step: 3, text: 'Add relevant tags for better discovery' },
+            { step: 4, text: 'Submit for review' },
+          ].map((item) => (
+            <div key={item.step} className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-white/[0.05] flex items-center justify-center text-xs font-medium text-white/50">
+                {item.step}
                   </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="provider">Provider/Contact Person *</Label>
-                      <Input
-                        id="provider"
-                        name="provider"
-                        placeholder="e.g., John Doe, HR Manager"
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deadline">Application Deadline</Label>
-                      <Input
-                        id="deadline"
-                        name="deadline"
-                        type="date"
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-{/* this is a demo */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Opportunity Type *</Label>
-                      <div className="relative">
-                        <Input
-                          id="type"
-                          name="type"
-                          value={opportunityType}
-                          onChange={(e) => {
-                            setOpportunityType(e.target.value)
-                            setShowTypeDropdown(true)
-                          }}
-                          onFocus={() => setShowTypeDropdown(true)}
-                          onBlur={() => setTimeout(() => setShowTypeDropdown(false), 200)}
-                          placeholder="Type or select opportunity type..."
-                          className="h-11"
-                          required
-                        />
-                        {showTypeDropdown && filteredSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-60 overflow-y-auto">
-                            {filteredSuggestions.slice(0, 10).map((suggestion, index) => (
-                              <div
-                                key={index}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                onMouseDown={() => handleTypeSelect(suggestion)}
-                              >
-                                {suggestion}
+              <span className="text-sm text-white/60">{item.text}</span>
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    {/* Location Section */}
-                    <div className="col-span-full bg-gradient-to-r from-orange-50/70 to-amber-50/70 border border-orange-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="opportunityIsRemote" className="text-lg font-bold text-orange-800">
-                            {isOpportunityRemote ? 'Remote Opportunity' : 'In-Person Opportunity'}
-                          </Label>
-                          <p className="text-sm text-orange-600 mt-1 font-medium">
-                            {isOpportunityRemote ? 'This is a remote opportunity' : 'This is an in-person opportunity with a physical location'}
-                          </p>
-                        </div>
-                        <Switch
-                          id="opportunityIsRemote"
-                          checked={isOpportunityRemote}
-                          onCheckedChange={setIsOpportunityRemote}
-                          className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-orange-200/60"
-                        />
                       </div>
                       
-                      {!isOpportunityRemote && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-orange-200/60">
-                          <div className="space-y-2">
-                            <Label htmlFor="opportunityCountry" className="text-sm font-semibold text-orange-700">
-                              Country *
-                            </Label>
-                            <Input
-                              id="opportunityCountry"
-                              name="opportunityCountry"
-                              placeholder="e.g., Nigeria"
-                              required
-                              className="h-11 border-orange-200/60 focus:border-orange-400 focus:ring-orange-400 bg-white"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="opportunityCity" className="text-sm font-semibold text-orange-700">
-                              State *
-                            </Label>
-                            <Input
-                              id="opportunityCity"
-                              name="opportunityCity"
-                              placeholder="e.g., Lagos"
-                              required
-                              className="h-11 border-orange-200/60 focus:border-orange-400 focus:ring-orange-400 bg-white"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                  </div>
-
-                  {/* Payment Section */}
-                  <div className="bg-gradient-to-r from-orange-50/70 to-amber-50/70 border border-orange-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+      {/* Bottom Sheet Form */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="bottom" className="h-[90vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0 overflow-hidden">
+          {selectedType && (
+            <>
+              {/* Sheet Header */}
+              <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
                     <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center",
+                      getTypeConfig(selectedType).color === 'orange' && "bg-orange-500/10",
+                      getTypeConfig(selectedType).color === 'blue' && "bg-blue-500/10",
+                      getTypeConfig(selectedType).color === 'emerald' && "bg-emerald-500/10",
+                      getTypeConfig(selectedType).color === 'violet' && "bg-violet-500/10"
+                    )}>
+                      {(() => {
+                        const Icon = getTypeConfig(selectedType).icon
+                        return <Icon className={cn(
+                          "w-5 h-5",
+                          getTypeConfig(selectedType).color === 'orange' && "text-orange-500",
+                          getTypeConfig(selectedType).color === 'blue' && "text-blue-500",
+                          getTypeConfig(selectedType).color === 'emerald' && "text-emerald-500",
+                          getTypeConfig(selectedType).color === 'violet' && "text-violet-500"
+                        )} />
+                      })()}
+                    </div>
                       <div>
-                        <Label htmlFor="isPaid" className="text-lg font-bold text-orange-800">
-                          {isOpportunityPaid ? 'Paid Opportunity' : 'Free Opportunity'}
-                        </Label>
-                        <p className="text-sm text-orange-600 mt-1 font-medium">
-                          {isOpportunityPaid ? 'This opportunity offers compensation' : 'This is a free opportunity'}
-                        </p>
+                      <SheetTitle className="text-white">New {getTypeConfig(selectedType).title}</SheetTitle>
+                      <SheetDescription className="text-white/40 text-xs">Fill in the details below</SheetDescription>
                       </div>
-                      <Switch
-                        id="isPaid"
-                        checked={isOpportunityPaid}
-                        onCheckedChange={setIsOpportunityPaid}
-                        className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-orange-200/60"
-                      />
                     </div>
-                    
-                    {isOpportunityPaid && (
-                      <div className="space-y-2 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-orange-200/60">
-                        <Label htmlFor="amount" className="text-sm font-semibold text-orange-700">
-                          💵 Compensation Amount *
-                        </Label>
-                        <Input
-                          id="amount"
-                          name="amount"
-                          placeholder="e.g., ₦100,000, ₦50,000/month"
-                          className="h-11 border-orange-200/60 focus:border-orange-400 focus:ring-orange-400 bg-white"
-                          required
-                        />
+                  <button onClick={() => setIsSheetOpen(false)} className="p-2 rounded-lg hover:bg-white/[0.05]">
+                    <X className="w-5 h-5 text-white/60" />
+                  </button>
                       </div>
-                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="url">External Application URL *</Label>
-                    <Input
-                      id="url"
-                      name="url"
-                      type="url"
-                      placeholder="https://example.com/apply"
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Link to where users can apply for this opportunity
-                    </p>
+              {/* Success/Error State */}
+              {submitStatus === 'success' && (
+                <div className="p-6">
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-8 h-8 text-emerald-500" />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      placeholder="Describe the opportunity, requirements, and benefits..."
-                      rows={6}
-                      required
-                      className="resize-none"
-                    />
+                    <h3 className="text-xl font-semibold text-white mb-2">Posted Successfully!</h3>
+                    <p className="text-white/50">Your {selectedType} has been submitted for review.</p>
                   </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="requirements">Requirements</Label>
-                      <Textarea
-                        id="requirements"
-                        name="requirements"
-                        placeholder="List the skills and qualifications needed..."
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="benefits">Benefits & Compensation</Label>
-                      <Textarea
-                        id="benefits"
-                        name="benefits"
-                        placeholder="What will participants gain? (compensation, experience, etc.)"
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Tags *</Label>
-                    <div className="space-y-3">
-                       <div className="relative">
-                         <Input
-                           id="tags"
-                           value={opportunityTagInput}
-                           onChange={(e) => handleTagInputChange(e.target.value, 'opportunity')}
-                           onKeyDown={(e) => handleTagAdd(e, 'opportunity')}
-                           placeholder="Type a tag and press Enter (e.g., technology, remote, entry-level)"
-                           className="h-11"
-                         />
-                         {showOpportunityTagSuggestions && opportunityTagSuggestions.length > 0 && (
-                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
-                             {opportunityTagSuggestions.map((suggestion, index) => (
-                               <div
-                                 key={index}
-                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                 onMouseDown={() => {
-                                   setOpportunityTagInput(suggestion)
-                                   setOpportunityTags([...opportunityTags, suggestion])
-                                   setOpportunityTagInput('')
-                                   setShowOpportunityTagSuggestions(false)
-                                 }}
-                               >
-                                 {suggestion}
-                               </div>
-                             ))}
                            </div>
                          )}
-                       </div>
-                      {opportunityTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {opportunityTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800 border border-orange-200"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTag(tag, 'opportunity')}
-                                className="ml-2 text-orange-600 hover:text-orange-800"
-                              >
-                                ×
+
+              {submitStatus === 'error' && (
+                <div className="m-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-red-400">{errorMessage}</p>
+                    <button onClick={() => setSubmitStatus('idle')} className="text-xs text-red-500 mt-1 hover:underline">
+                      Try again
                               </button>
-                            </span>
-                          ))}
                         </div>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Add relevant tags to help users find this opportunity. Tags are important for the recommendation algorithm.
-                      </p>
                     </div>
-                  </div>
+              )}
 
-                  <div className="flex justify-end space-x-3">
-                    <Button type="button" variant="outline" className="px-6">
-                      Save Draft
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting} className="px-6 bg-orange-500 hover:bg-orange-600">
-                      {isSubmitting ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Posting...</span>
-                        </div>
-                      ) : (
-                        'Post Opportunity'
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Event Form */}
-          {activeTab === 'event' && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Calendar className="h-5 w-5 text-green-600" />
-                  Post New Event
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form id="posting-form" onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Form Content */}
+              {submitStatus !== 'success' && (
+                <div className="overflow-y-auto h-[calc(90vh-80px)] px-6 py-6">
+                  <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+                    {/* Common Fields - Title & Company/Organizer */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="eventTitle">Event Title *</Label>
+                        <Label className="text-white/70">Title *</Label>
                       <Input
-                        id="eventTitle"
-                        name="eventTitle"
-                        placeholder="e.g., Tech Innovation Summit 2024"
+                          name="title"
+                          placeholder={`${getTypeConfig(selectedType).title} title`}
                         required
-                        className="h-11"
+                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="eventCompany">Organizer *</Label>
+                        <Label className="text-white/70">
+                          {selectedType === 'event' ? 'Organizer' : selectedType === 'resource' ? 'Author' : 'Company'} *
+                        </Label>
                       <Input
-                        id="eventCompany"
-                        name="eventCompany"
-                        placeholder="e.g., TechHub Africa"
+                          name={selectedType === 'event' ? 'organizer' : selectedType === 'resource' ? 'author' : 'company'}
+                          placeholder={selectedType === 'event' ? 'Organizer name' : selectedType === 'resource' ? 'Author name' : 'Company name'}
                         required
-                        className="h-11"
+                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Type Selection */}
                     <div className="space-y-2">
-                      <Label htmlFor="eventType">Event Type *</Label>
-                      <Select required>
-                        <SelectTrigger className="h-11">
+                      <Label className="text-white/70">Type *</Label>
+                      <Select name="type" required>
+                        <SelectTrigger className="bg-white/[0.05] border-white/[0.08] text-white h-11 rounded-xl">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="conference">Conference</SelectItem>
-                          <SelectItem value="workshop">Workshop</SelectItem>
-                          <SelectItem value="networking">Networking</SelectItem>
-                          <SelectItem value="seminar">Seminar</SelectItem>
-                          <SelectItem value="training">Training</SelectItem>
+                        <SelectContent className="bg-[#141414] border-white/[0.08]">
+                          {(selectedType === 'opportunity' ? opportunityTypes :
+                            selectedType === 'job' ? jobTypes :
+                            selectedType === 'event' ? eventTypes :
+                            resourceCategories
+                          ).map((t) => (
+                            <SelectItem key={t} value={t} className="text-white hover:bg-white/[0.05]">{t}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="eventStartDate">Event Start Date *</Label>
-                      <Input
-                        id="eventStartDate"
-                        name="eventStartDate"
-                        type="date"
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="eventEndDate">Event End Date</Label>
-                      <Input
-                        id="eventEndDate"
-                        name="eventEndDate"
-                        type="date"
-                        className="h-11"
-                        placeholder="When does the event end?"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Leave empty for single-day events
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="eventRegistrationDeadline">Registration Deadline</Label>
-                      <Input
-                        id="eventRegistrationDeadline"
-                        name="eventRegistrationDeadline"
-                        type="date"
-                        className="h-11"
-                        placeholder="When should registration close?"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Leave empty if registration is open until event date
-                      </p>
-                    </div>
                   </div>
 
-                  {/* Location Section */}
-                  <div className="bg-gradient-to-r from-green-50/70 to-lime-50/70 border border-green-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="eventIsRemote" className="text-lg font-bold text-green-600">
-                          {isEventRemote ? 'Remote Event' : 'In-Person Event'}
-                        </Label>
-                        <p className="text-sm text-green-500 mt-1 font-medium">
-                          {isEventRemote ? 'This is a remote/virtual event' : 'This is an in-person event with a physical location'}
-                        </p>
-                      </div>
-                      <Switch
-                        id="eventIsRemote"
-                        checked={isEventRemote}
-                        onCheckedChange={setIsEventRemote}
-                        className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-green-200/60"
-                      />
-                    </div>
-                    
-                    {!isEventRemote && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-green-200/60">
+                    {/* Description */}
                         <div className="space-y-2">
-                          <Label htmlFor="eventCountry" className="text-sm font-semibold text-green-700">
-                            Country *
-                          </Label>
-                          <Input
-                            id="eventCountry"
-                            name="eventCountry"
-                            placeholder="e.g., Nigeria"
-                            required
-                            className="h-11 border-green-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
-                          />
-                        </div>
-                       
-                        <div className="space-y-2">
-                          <Label htmlFor="eventCity" className="text-sm font-semibold text-green-700">
-                            State *
-                          </Label>
-                          <Input
-                            id="eventCity"
-                            name="eventCity"
-                            placeholder="e.g., Lagos"
-                            required
-                            className="h-11 border-green-200/60 focus:border-green-400 focus:ring-green-400 bg-white"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-
-
-                  {/* Payment Section */}
-                  <div className="bg-gradient-to-r from-green-50/70 to-emerald-50/70 border border-green-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="eventIsPaid" className="text-lg font-bold text-green-800">
-                          {isEventPaid ? 'Paid Event' : 'Free Event'}
-                        </Label>
-                        <p className="text-sm text-green-600 mt-1 font-medium">
-                          {isEventPaid ? 'This event requires payment to attend' : 'This is a free event open to all'}
-                        </p>
-                      </div>
-                      <Switch
-                        id="eventIsPaid"
-                        checked={isEventPaid}
-                        onCheckedChange={setIsEventPaid}
-                        className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-green-200/60"
-                      />
-                    </div>
-                    
-                    {isEventPaid && (
-                      <div className="space-y-2 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-green-200/60">
-                        <Label htmlFor="eventPrice" className="text-sm font-semibold text-green-700">
-                          💵 Event Price *
-                        </Label>
-                        <Input
-                          id="eventPrice"
-                          name="eventPrice"
-                          placeholder="e.g., ₦2,500, ₦5,000"
-                          className="h-11 border-green-200/60 focus:border-green-400 focus:ring-green-400 bg-white"
-                          required
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="eventCapacity">Capacity</Label>
-                      <Input
-                        id="eventCapacity"
-                        type="number"
-                        placeholder="e.g., 100"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="eventUrl">External Registration URL *</Label>
-                    <Input
-                      id="eventUrl"
-                      name="eventUrl"
-                      type="url"
-                      placeholder="https://example.com/register"
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Link to where users can register for this event
-                    </p>
-                  </div>
-                  </div>
-                 
-
-                  <div className="space-y-2">
-                    <Label htmlFor="eventDescription">Event Description *</Label>
+                      <Label className="text-white/70">Description *</Label>
                     <Textarea
-                      id="eventDescription"
-                      name="eventDescription"
-                      placeholder="Describe the event, agenda, and what attendees will gain..."
-                      rows={6}
+                        name="description"
+                        placeholder="Describe in detail..."
                       required
-                      className="resize-none"
-                    />
+                        rows={4}
+                        className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
+                      />
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="eventAgenda">Agenda</Label>
-                      <Textarea
-                        id="eventAgenda"
-                        placeholder="Outline the event schedule and activities..."
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="eventSpeakers">Speakers/Presenters</Label>
-                      <Textarea
-                        id="eventSpeakers"
-                        placeholder="List the speakers and their topics..."
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
+                    {/* URL */}
                   <div className="space-y-2">
-                    <Label htmlFor="eventTags">Tags *</Label>
-                    <div className="space-y-3">
+                      <Label className="text-white/70">External Link</Label>
                       <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                         <Input
-                          id="eventTags"
-                          value={eventTagInput}
-                          onChange={(e) => handleTagInputChange(e.target.value, 'event')}
-                          onKeyDown={(e) => handleTagAdd(e, 'event')}
-                          onFocus={() => {
-                            if (eventTagInput.length >= 2) {
-                              setShowEventTagSuggestions(true)
-                            }
-                          }}
-                          onBlur={() => {
-                            // Delay hiding suggestions to allow clicking on them
-                            setTimeout(() => setShowEventTagSuggestions(false), 200)
-                          }}
-                          placeholder="Type a tag and press Enter (e.g., networking, workshop, tech, free)"
-                          className="h-11"
+                          name="url"
+                          type="url"
+                          placeholder="https://..."
+                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl pl-10"
                         />
-                        
-                        {/* Tag Suggestions Dropdown */}
-                        {showEventTagSuggestions && eventTagSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
-                            {isLoadingEventTags ? (
-                              <div className="p-3 text-center text-gray-500">
-                                <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                                <span className="ml-2">Loading suggestions...</span>
                               </div>
-                            ) : (
-                              eventTagSuggestions
-                                .filter(suggestion => !eventTags.includes(suggestion))
-                                .map((suggestion, index) => (
-                                  <button
-                                    key={index}
-                                    type="button"
-                                    onClick={() => {
-                                      if (!eventTags.includes(suggestion)) {
-                                        setEventTags([...eventTags, suggestion])
-                                        setEventTagInput('')
-                                        setShowEventTagSuggestions(false)
-                                        setEventTagSuggestions([])
-                                      }
-                                    }}
-                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                  >
-                                    {suggestion}
-                                  </button>
-                                ))
+                          </div>
+
+                    {/* Location (not for resource) */}
+                    {selectedType !== 'resource' && (
+                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-white/40" />
+                            <span className="text-sm font-medium text-white/70">Location</span>
+                      </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-white/40">Remote</span>
+                            <Switch checked={isRemote} onCheckedChange={setIsRemote} />
+                    </div>
+                  </div>
+
+                        {!isRemote && (
+                          <div className="grid grid-cols-3 gap-3">
+                            <Input name="country" placeholder="Country" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
+                            <Input name="province" placeholder="State/Province" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
+                            <Input name="city" placeholder="City" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
+                        </div>
+                      )}
+                  </div>
+                    )}
+
+                    {/* Financial (for opportunity, job) or Price (for event) */}
+                    {(selectedType === 'opportunity' || selectedType === 'job' || selectedType === 'event') && (
+                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-white/40" />
+                            <span className="text-sm font-medium text-white/70">
+                              {selectedType === 'event' ? 'Ticket Price' : 'Compensation'}
+                            </span>
+                </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-white/40">{selectedType === 'event' ? 'Paid Event' : 'Paid'}</span>
+                            <Switch checked={isPaid} onCheckedChange={setIsPaid} />
+                    </div>
+                  </div>
+
+                        {isPaid && (
+                          <div className="flex gap-3">
+                      <Input
+                              name={selectedType === 'event' ? 'price' : selectedType === 'job' ? 'salary' : 'amount'}
+                              placeholder="Amount"
+                              className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm flex-1"
+                            />
+                            {selectedType === 'job' && (
+                              <Select name="period">
+                                <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg w-32">
+                                  <SelectValue placeholder="Period" />
+                        </SelectTrigger>
+                                <SelectContent className="bg-[#141414] border-white/[0.08]">
+                                  <SelectItem value="hourly" className="text-white">Hourly</SelectItem>
+                                  <SelectItem value="monthly" className="text-white">Monthly</SelectItem>
+                                  <SelectItem value="yearly" className="text-white">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
                             )}
-                          </div>
-                        )}
-                      </div>
-                      {eventTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {eventTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 border border-green-200"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTag(tag, 'event')}
-                                className="ml-2 text-green-600 hover:text-green-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Add relevant tags to help attendees find this event. Tags are important for the recommendation algorithm.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3">
-                    <Button type="button" variant="outline" className="px-6">
-                      Save Draft
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting} className="px-6 bg-green-500 hover:bg-green-600">
-                      {isSubmitting ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Posting...</span>
-                        </div>
-                      ) : (
-                        'Post Event'
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Job Form */}
-          {activeTab === 'job' && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  Post New Job
-                </CardTitle>
-                <div className="text-sm text-gray-600 mt-2">
-                  <AlertCircle className="h-4 w-4 inline mr-2" />
-                  Job postings require payment. You'll be redirected to payment after form submission.
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form id="posting-form" onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobTitle">Job Title *</Label>
-                      <Input
-                        id="jobTitle"
-                        name="jobTitle"
-                        placeholder="e.g., Senior Software Engineer"
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobCompany">Company *</Label>
-                      <Input
-                        id="jobCompany"
-                        name="jobCompany"
-                        placeholder="e.g., InnovateTech Solutions"
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobType">Employment Type *</Label>
-                      <Select required>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="full-time">Full Time</SelectItem>
-                          <SelectItem value="part-time">Part Time</SelectItem>
-                          <SelectItem value="contract">Contract</SelectItem>
-                          <SelectItem value="internship">Internship</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobExperience">Experience Level</Label>
-                      <Select>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="entry">Entry Level</SelectItem>
-                          <SelectItem value="mid">Mid Level</SelectItem>
-                          <SelectItem value="senior">Senior Level</SelectItem>
-                          <SelectItem value="lead">Lead/Manager</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobDeadline">Application Deadline</Label>
-                      <Input
-                        id="jobDeadline"
-                        name="jobDeadline"
-                        type="date"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobType">Job Type</Label>
-                      <Select name="jobType" required>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select job type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="full-time">Full-time</SelectItem>
-                          <SelectItem value="part-time">Part-time</SelectItem>
-                          <SelectItem value="contract">Contract</SelectItem>
-                          <SelectItem value="internship">Internship</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                    {/* Location Section */}
-                    <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-blue-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="jobIsRemote" className="text-lg font-bold text-blue-800">
-                            {isJobRemote ? 'Remote Job' : 'In-Person Job'}
-                          </Label>
-                          <p className="text-sm text-blue-600 mt-1 font-medium">
-                            {isJobRemote ? 'This is a remote job' : 'This is an in-person job with a physical location'}
-                          </p>
-                        </div>
-                        <Switch
-                          id="jobIsRemote"
-                          checked={isJobRemote}
-                          onCheckedChange={setIsJobRemote}
-                          className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-blue-200/60"
-                        />
-                      </div>
-                      
-                      {!isJobRemote && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-blue-200/60">
-                          <div className="space-y-2">
-                            <Label htmlFor="jobCountry" className="text-sm font-semibold text-blue-700">
-                              Country *
-                            </Label>
-                            <Input
-                              id="jobCountry"
-                              name="jobCountry"
-                              placeholder="e.g., Nigeria"
-                              required
-                              className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
-                            />
-                          </div>
-                     
-                          <div className="space-y-2">
-                            <Label htmlFor="jobCity" className="text-sm font-semibold text-blue-700">
-                              City *
-                            </Label>
-                            <Input
-                              id="jobCity"
-                              name="jobCity"
-                              placeholder="e.g., Lagos"
-                              required
-                              className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white"
-                            />
-                          </div>
                         </div>
                       )}
                     </div>
-                   
-                  
+                    )}
 
-                  {/* Payment Section */}
-                  <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-blue-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="jobIsPaid" className="text-xl font-black text-blue-800">
-                          {isJobPaid ? 'SALARY POSITION' : 'VOLUNTEER POSITION'}
-                        </Label>
-                        <p className="text-sm text-blue-600 mt-1 font-bold">
-                          {isJobPaid ? 'This job offers competitive compensation' : 'This is an unpaid volunteer position'}
-                        </p>
-                      </div>
-                      <Switch
-                        id="jobIsPaid"
-                        checked={isJobPaid}
-                        onCheckedChange={setIsJobPaid}
-                        className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-blue-200/60"
-                      />
+                    {/* Dates */}
+                    {selectedType !== 'resource' && (
+                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-white/40" />
+                          <span className="text-sm font-medium text-white/70">Dates</span>
                     </div>
                     
-                    {isJobPaid && (
-                      <div className="space-y-4 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-blue-200/60">
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-blue-700">
-                              💰 Salary Information
-                            </Label>
-                            <div className="flex items-center gap-3">
-                              <Button
-                                type="button"
-                                onClick={() => {
-                                  setHasSalary(true)
-                                  const salaryInput = document.getElementById('jobSalary') as HTMLInputElement
-                                  if (salaryInput) {
-                                    salaryInput.value = 'Salary Present'
-                                  }
-                                }}
-                                className={`px-4 py-2 rounded-lg transition-colors ${
-                                  hasSalary 
-                                    ? 'bg-green-600 hover:bg-green-700 text-white' 
-                                    : 'bg-green-500 hover:bg-green-600 text-white'
-                                }`}
-                              >
-                                {hasSalary ? '✓ Salary Present' : 'Mark as Salary Present'}
-                              </Button>
-                              <span className="text-sm text-gray-600">
-                                {hasSalary ? 'This job includes salary' : 'Click to indicate this job has a salary'}
-                              </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {selectedType === 'event' ? (
+                            <>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-white/40">Start Date *</Label>
+                                <Input name="startDate" type="date" required className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
                             </div>
-                            <Input
-                              id="jobSalary"
-                              name="jobSalary"
-                              value={hasSalary ? 'Salary Present' : ''}
-                              readOnly
-                              className="h-11 border-blue-200/60 bg-gray-50 text-gray-700"
-                            />
+                              <div className="space-y-1">
+                                <Label className="text-xs text-white/40">End Date</Label>
+                                <Input name="endDate" type="date" className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="jobPeriod" className="text-sm font-semibold text-blue-700">
-                              ⏰ Payment Period *
-                            </Label>
-                            <Select name="jobPeriod" required>
-                              <SelectTrigger className="h-11 border-blue-200/60 focus:border-blue-400 focus:ring-blue-400 bg-white">
-                                <SelectValue placeholder="Select period" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="hourly">Hourly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="annually">Annually</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            </>
+                          ) : (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-white/40">Application Deadline</Label>
+                              <Input name="deadline" type="date" className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
                           </div>
+                          )}
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jobUrl">External Application URL *</Label>
-                    <Input
-                      id="jobUrl"
-                      name="jobUrl"
-                      type="url"
-                      placeholder="https://example.com/apply"
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Link to where candidates can apply for this job
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jobDescription">Job Description *</Label>
-                    <Textarea
-                      id="jobDescription"
-                      name="jobDescription"
-                      placeholder="Describe the role, responsibilities, and requirements..."
-                      rows={6}
-                      required
-                      className="resize-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobRequirements">Requirements</Label>
-                      <Textarea
-                        id="jobRequirements"
-                        placeholder="List the skills, qualifications, and experience needed..."
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jobBenefits">Benefits & Perks</Label>
-                      <Textarea
-                        id="jobBenefits"
-                        placeholder="What benefits does your company offer?"
-                        rows={4}
-                        className="resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
-                  <div className="space-y-2">
-                    <Label htmlFor="jobTags">Tags *</Label>
+                    {/* Tags */}
                     <div className="space-y-3">
-                       <div className="relative">
-                         <Input
-                           id="jobTags"
-                           value={jobTagInput}
-                           onChange={(e) => handleTagInputChange(e.target.value, 'job')}
-                           onKeyDown={(e) => handleTagAdd(e, 'job')}
-                           placeholder="Type a tag and press Enter (e.g., remote, senior, frontend, react)"
-                           className="h-11"
-                         />
-                         {showJobTagSuggestions && jobTagSuggestions.length > 0 && (
-                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
-                             {jobTagSuggestions.map((suggestion, index) => (
-                               <div
-                                 key={index}
-                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                 onMouseDown={() => {
-                                   setJobTagInput(suggestion)
-                                   setJobTags([...jobTags, suggestion])
-                                   setJobTagInput('')
-                                   setShowJobTagSuggestions(false)
-                                 }}
-                               >
-                                 {suggestion}
-                               </div>
-                             ))}
-                           </div>
-                         )}
-                       </div>
-                      {jobTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {jobTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200"
-                            >
+                      <Label className="text-white/70">Tags</Label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {tags.map((tag) => (
+                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] text-white/70 text-sm">
                               {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTag(tag, 'job')}
-                                className="ml-2 text-blue-600 hover:text-blue-800"
-                              >
-                                ×
+                            <button type="button" onClick={() => removeTag(tag)} className="hover:text-white">
+                              <X className="w-3 h-3" />
                               </button>
                             </span>
                           ))}
                         </div>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Add relevant tags to help candidates find this job. Tags are important for the recommendation algorithm.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3">
-                    <Button type="button" variant="outline" className="px-6">
-                      Save Draft
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting} className="px-6 bg-blue-500 hover:bg-blue-600">
-                      {isSubmitting ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Processing...</span>
-                        </div>
-                      ) : (
-                        'Continue to Payment'
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Resource Contact Form */}
-          {activeTab === 'resource' && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <BookOpen className="h-5 w-5 text-purple-600" />
-                  Contact Us About Resources
-                </CardTitle>
-                <div className="text-sm text-gray-600 mt-2">
-                  <CheckCircle className="h-4 w-4 inline mr-2 text-green-600" />
-                  We'd love to help you share your educational resources with the community.
-                </div>
-              </CardHeader>
-              <CardContent>
-                <form id="posting-form" onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="resourceName">Your Name *</Label>
                       <Input
-                        id="resourceName"
-                        name="resourceName"
-                        placeholder="e.g., John Doe"
-                        required
-                        className="h-11"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleAddTag}
+                        placeholder="Type and press Enter to add tags"
+                        className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-10 rounded-xl"
                       />
-                    </div>
+                      <p className="text-xs text-white/30">Add up to 10 tags for better discovery</p>
+                  </div>
+
+                    {/* Requirements (for opportunity) */}
+                    {selectedType === 'opportunity' && (
                     <div className="space-y-2">
-                      <Label htmlFor="resourceEmail">Email Address *</Label>
-                      <Input
-                        id="resourceEmail"
-                        type="email"
-                        placeholder="e.g., john@example.com"
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="resourceCompany">Company/Organization</Label>
-                      <Input
-                        id="resourceCompany"
-                        placeholder="e.g., CodeAcademy"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="resourcePhone">Phone Number</Label>
-                      <Input
-                        id="resourcePhone"
-                        placeholder="e.g., +234 801 234 5678"
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceType">Resource Type *</Label>
-                    <Select required>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select resource type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="course">Online Course</SelectItem>
-                        <SelectItem value="template">Template/Download</SelectItem>
-                        <SelectItem value="guide">Guide/Tutorial</SelectItem>
-                        <SelectItem value="tool">Software Tool</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceUrl">External Resource URL *</Label>
-                    <Input
-                      id="resourceUrl"
-                      name="resourceUrl"
-                      type="url"
-                      placeholder="https://example.com/resource"
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Link to where users can access this resource
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceDescription">Resource Description *</Label>
+                        <Label className="text-white/70">Requirements</Label>
                     <Textarea
-                      id="resourceDescription"
-                      placeholder="Tell us about your resource, what it offers, and who it's for..."
-                      rows={6}
-                      required
-                      className="resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceDetails">Additional Details</Label>
-                    <Textarea
-                      id="resourceDetails"
-                      placeholder="Any additional information, pricing, availability, etc..."
-                      rows={4}
-                      className="resize-none"
-                    />
-                  </div>
-
-                  {/* Payment Section */}
-                  <div className="bg-gradient-to-r from-purple-50/70 to-violet-50/70 border border-purple-200/60 rounded-xl p-6 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="resourceIsPaid" className="text-lg font-bold text-purple-800">
-                          {isResourcePaid ? 'Paid Resource' : 'Free Resource'}
-                        </Label>
-                        <p className="text-sm text-purple-600 mt-1 font-medium">
-                          {isResourcePaid ? 'This resource requires payment to access' : 'This is a free resource available to all'}
-                        </p>
-                      </div>
-                      <Switch
-                        id="resourceIsPaid"
-                        checked={isResourcePaid}
-                        onCheckedChange={setIsResourcePaid}
-                        className="data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-purple-200/60"
-                      />
-                    </div>
-                    
-                    {isResourcePaid && (
-                      <div className="space-y-2 animate-in slide-in-from-top-2 duration-200 bg-white/80 rounded-lg p-4 border border-purple-200/60">
-                        <Label htmlFor="resourcePrice" className="text-sm font-semibold text-purple-700">
-                          💵 Resource Price *
-                        </Label>
-                        <Input
-                          id="resourcePrice"
-                          name="resourcePrice"
-                          placeholder="e.g., ₦5,000 or $50"
-                          className="h-11 border-purple-200/60 focus:border-purple-400 focus:ring-purple-400 bg-white"
-                          required
+                          name="requirements"
+                          placeholder="List the requirements..."
+                          rows={3}
+                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
                         />
                       </div>
                     )}
-                  </div>
 
-                  {/* Tags Section */}
+                    {/* Capacity (for event) */}
+                    {selectedType === 'event' && (
                   <div className="space-y-2">
-                    <Label htmlFor="resourceTags">Tags *</Label>
-                    <div className="space-y-3">
-                       <div className="relative">
+                        <Label className="text-white/70">Capacity</Label>
                          <Input
-                           id="resourceTags"
-                           value={resourceTagInput}
-                           onChange={(e) => handleTagInputChange(e.target.value, 'resource')}
-                           onKeyDown={(e) => handleTagAdd(e, 'resource')}
-                           placeholder="Type a tag and press Enter (e.g., tutorial, free, coding, design)"
-                           className="h-11"
-                         />
-                         {showResourceTagSuggestions && resourceTagSuggestions.length > 0 && (
-                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-sm max-h-48 overflow-y-auto">
-                             {resourceTagSuggestions.map((suggestion, index) => (
-                               <div
-                                 key={index}
-                                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                 onMouseDown={() => {
-                                   setResourceTagInput(suggestion)
-                                   setResourceTags([...resourceTags, suggestion])
-                                   setResourceTagInput('')
-                                   setShowResourceTagSuggestions(false)
-                                 }}
-                               >
-                                 {suggestion}
-                               </div>
-                             ))}
+                          name="capacity"
+                          type="number"
+                          placeholder="Maximum attendees (optional)"
+                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+                        />
                            </div>
                          )}
-                       </div>
-                      {resourceTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {resourceTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTag(tag, 'resource')}
-                                className="ml-2 text-purple-600 hover:text-purple-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Add relevant tags to help users find this resource. Tags are important for the recommendation algorithm.
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex justify-end space-x-3">
-                    <Button type="button" variant="outline" className="px-6">
-                      Clear Form
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting} className="px-6 bg-purple-500 hover:bg-purple-600">
+                    {/* Submit Button */}
+                    <div className="pt-4 pb-8">
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl"
+                      >
                       {isSubmitting ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Sending...</span>
-                        </div>
-                      ) : (
-                        'Send Message'
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Submit {getTypeConfig(selectedType).title}
+                          </>
                       )}
                     </Button>
                   </div>
                 </form>
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </>
           )}
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 } 
+
+export default function PostingDashboard() {
+  return (
+    <AuthGuard>
+      <PostingContent />
+    </AuthGuard>
+  )
+}

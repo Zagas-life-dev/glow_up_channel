@@ -66,20 +66,20 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+    <div className="min-h-screen pb-24 md:pb-8">
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-orange-600/5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 sm:mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 sm:mb-8">
               More Than a Platform.
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">
                 A Movement.
               </span>
             </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto">
-              For far too long, brilliant African minds have been sidelined. Not due to a lack of talent, ambition, or drive, but because of a critical lack of <strong>access</strong>.
+            <p className="text-lg sm:text-xl lg:text-2xl text-white/70 mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto">
+              For far too long, brilliant African minds have been sidelined. Not due to a lack of talent, ambition, or drive, but because of a critical lack of <strong className="text-white">access</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-full shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300">
@@ -88,7 +88,7 @@ export default function AboutPage() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300">
+              <Button asChild variant="outline" size="lg" className="border-2 border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 px-8 py-4 text-lg rounded-full transition-all duration-300">
                 <Link href="/contact">Get in Touch</Link>
               </Button>
             </div>
@@ -97,18 +97,18 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon
               return (
                 <div key={index} className="text-center group">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-orange-500/30">
+                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-orange-400" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{stat.number}</div>
-                  <div className="text-sm sm:text-base text-gray-600 font-medium">{stat.label}</div>
+                  <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{stat.number}</div>
+                  <div className="text-sm sm:text-base text-white/60 font-medium">{stat.label}</div>
                 </div>
               )
             })}
@@ -117,39 +117,39 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-orange-50 to-white">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
               Our Mission & Vision
             </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              We are the bridge that connects raw, vetted talent with the providers ready to help them <strong>glow up</strong>.
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
+              We are the bridge that connects raw, vetted talent with the providers ready to help them <strong className="text-white">glow up</strong>.
             </p>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Mission Card */}
-            <Card className="border-0 shadow-xl shadow-orange-500/10 hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 group">
+            <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 group">
               <CardContent className="p-8 sm:p-10">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mb-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Target className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mb-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-orange-500/30">
+                  <Target className="h-8 w-8 sm:h-10 sm:w-10 text-orange-400" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Mission</h3>
-                <p className="text-lg text-gray-600 leading-relaxed">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">Our Mission</h3>
+                <p className="text-lg text-white/70 leading-relaxed">
                   To democratize access for African youth by providing a direct pathway to growth opportunities, practical knowledge, and a professional network, empowering them to build impactful careers and businesses.
                 </p>
               </CardContent>
             </Card>
 
             {/* Vision Card */}
-            <Card className="border-0 shadow-xl shadow-orange-500/10 hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 group">
+            <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 group">
               <CardContent className="p-8 sm:p-10">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mb-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Lightbulb className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mb-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-orange-500/30">
+                  <Lightbulb className="h-8 w-8 sm:h-10 sm:w-10 text-orange-400" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Vision</h3>
-                <p className="text-lg text-gray-600 leading-relaxed">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">Our Vision</h3>
+                <p className="text-lg text-white/70 leading-relaxed">
                   A future where every young African has the tools and access they need to unlock their full potential and compete on the global stage, transforming the continent's economic landscape.
                 </p>
               </CardContent>
@@ -159,13 +159,13 @@ export default function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
               Our Core Values
             </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
               The principles that guide everything we do and every decision we make.
             </p>
           </div>
@@ -174,13 +174,13 @@ export default function AboutPage() {
             {values.map((value, index) => {
               const Icon = value.icon
               return (
-                <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-2">
+                <Card key={index} className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 group hover:-translate-y-2">
                   <CardContent className="p-6 sm:p-8 text-center">
-                    <div className={`w-16 h-16 mx-auto mb-6 bg-gradient-to-br ${value.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="h-8 w-8 text-white" />
+                    <div className={`w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-orange-500/30`}>
+                      <Icon className="h-8 w-8 text-orange-400" />
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{value.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">{value.title}</h3>
+                    <p className="text-white/70 leading-relaxed">{value.description}</p>
                   </CardContent>
                 </Card>
               )
@@ -190,13 +190,13 @@ export default function AboutPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-orange-50 to-white">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
               How You Start Your Glow Up Journey
             </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
               Whether you're seeking opportunities or providing them, we have a place for you in our community.
             </p>
           </div>
@@ -204,11 +204,11 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
             {/* For Opportunity Seekers */}
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                <Users className="h-8 w-8 text-orange-500 mr-3" />
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center">
+                <Users className="h-8 w-8 text-orange-400 mr-3" />
                 For Opportunity Seekers
               </h3>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-white/70 mb-6">
                 Are you ready to unlock your potential? Glow Up Channel is your one-stop shop.
               </p>
               <div className="space-y-4">
@@ -219,8 +219,8 @@ export default function AboutPage() {
                   "Connect with mentors and potential employers"
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{item}</span>
+                    <CheckCircle className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">{item}</span>
                   </div>
                 ))}
               </div>
@@ -233,11 +233,11 @@ export default function AboutPage() {
 
             {/* For Opportunity Providers */}
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 flex items-center">
-                <Target className="h-8 w-8 text-orange-500 mr-3" />
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center">
+                <Target className="h-8 w-8 text-orange-400 mr-3" />
                 For Opportunity Providers
               </h3>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-white/70 mb-6">
                 Tired of the endless search for qualified, passionate talent? We've done the vetting for you.
               </p>
               <div className="space-y-4">
@@ -248,8 +248,8 @@ export default function AboutPage() {
                   "Reach your target audience effectively"
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{item}</span>
+                    <CheckCircle className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">{item}</span>
                   </div>
                 ))}
               </div>
@@ -264,19 +264,19 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-r from-orange-500 to-orange-600">
+      <section className="py-16 sm:py-24 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-y border-orange-500/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
             Ready to Transform Your Future?
           </h2>
-          <p className="text-lg sm:text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/70 mb-8 max-w-2xl mx-auto">
             Join thousands of African youth who are already accessing new opportunities and building the careers of their dreams.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-4 text-lg rounded-full shadow-lg">
+            <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-full shadow-lg">
               <Link href="/signup">Get Started Today</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-orange-600 px-8 py-4 text-lg rounded-full">
+            <Button asChild size="lg" variant="outline" className="border-2 border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 px-8 py-4 text-lg rounded-full">
               <Link href="/contact">Learn More</Link>
             </Button>
           </div>

@@ -105,7 +105,7 @@ export default function Footer() {
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 justify-center sm:justify-start">
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm sm:text-base text-gray-300">info.glowupchannel@gmail.com</span>
+                <span className="text-sm sm:text-base text-gray-300">glowupdiaries.info@gmail.com</span>
               </div>
 
               <div className="flex items-start gap-3 justify-center sm:justify-start">

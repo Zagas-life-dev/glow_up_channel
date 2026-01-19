@@ -1,15 +1,30 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { notFound } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { notFound, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Building, MapPin, DollarSign, Clock, Tag } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  ExternalLink, 
+  Building, 
+  MapPin, 
+  DollarSign, 
+  Clock, 
+  Briefcase,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Share2
+} from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import ContentShareComposer from '@/components/content-share-composer'
 import AuthGuard from '@/components/auth-guard'
+import { cleanUrl } from '@/lib/url-utils'
+import { cn } from '@/lib/utils'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+import { toast } from 'sonner'
 
 type JobPageProps = {
   params: Promise<{
@@ -18,25 +33,12 @@ type JobPageProps = {
 }
 
 function JobPageContent({ params }: JobPageProps) {
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
-  const { isAuthenticated } = useAuth()
-  const viewedItems = useRef(new Set<string>())
-
-  // Track view for recommendation learning
-  const trackView = async (jobId: string) => {
-    if (!isAuthenticated || viewedItems.current.has(jobId)) return
-    
-    viewedItems.current.add(jobId)
-    
-    try {
-      await ApiClient.trackEngagement('job', jobId, 'view')
-    } catch (error) {
-      console.error('Error tracking view:', error)
-      // Don't show error to user as this is background tracking
-    }
-  }
+  const [showShareComposer, setShowShareComposer] = useState(false)
 
   useEffect(() => {
     const loadParams = async () => {
@@ -78,199 +80,228 @@ function JobPageContent({ params }: JobPageProps) {
     getJob()
   }, [id])
 
+  // Show skeleton immediately while loading
   if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12 lg:py-16">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-4 sm:p-6 md:p-8 lg:p-12">
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                <div className="h-12 bg-gray-200 rounded mb-6"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-6"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <ContentDetailSkeleton />
   }
 
   if (!job) {
     notFound()
   }
 
-  return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12 lg:py-16">
-        <div className="max-w-5xl mx-auto">
-          {/* Back Button */}
-          <Link href="/jobs" className="inline-flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-orange-600 transition-colors mb-6 sm:mb-8 group touch-manipulation">
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 group-hover:-translate-x-1 transition-transform" />
-            Back to Jobs
-          </Link>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
 
-          <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-4 sm:p-6 md:p-8 lg:p-12"
-            onMouseEnter={() => trackView(id)}
-          >
-            {/* Header */}
-            <div className="mb-6 sm:mb-8 md:mb-10">
-              <span className="px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 text-xs sm:text-sm font-medium rounded-full mb-3 sm:mb-4 inline-block capitalize">
-                {job.jobType || 'Job'}
-              </span>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">
-                {job.title}
-              </h1>
-              {job.company && (
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 leading-relaxed">
-                  {job.company}
-                </p>
+  const getLocationString = () => {
+    if (!job.location) return 'Location TBD'
+    if (typeof job.location === 'string') return job.location
+    if (job.location.isRemote) return 'Remote'
+    const parts = [job.location.city, job.location.country].filter(Boolean)
+    return parts.join(', ') || 'Location TBD'
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] pb-20 md:pb-8">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 text-white/60" />
+            </button>
+            <h1 className="text-lg font-semibold text-white">Job</h1>
+            <div className="w-9" />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* Main Card */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                <Briefcase className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-white truncate">{job.company || 'Company'}</h2>
+                  {job.jobType && (
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs px-2 py-0.5 capitalize">
+                      {job.jobType}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-white/50">Job Opening</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-white leading-tight">
+              {job.title}
+            </h3>
+
+            {/* Meta Info Row */}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
+              {job.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>{getLocationString()}</span>
+                </div>
+              )}
+              {job.pay?.amount && (
+                <div className="flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4" />
+                  <span>{job.pay.amount} {job.pay.currency} {job.pay.period && `per ${job.pay.period}`}</span>
+                </div>
+              )}
+              {job.dates?.applicationDeadline && (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  <span>Apply by {formatDate(job.dates.applicationDeadline)}</span>
+                </div>
               )}
             </div>
 
             {/* Tags */}
             {job.tags && job.tags.length > 0 && (
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <div className="flex items-center gap-2 mb-3">
-                  <Tag className="h-4 w-4 text-gray-600" />
-                  <h3 className="text-sm font-medium text-gray-600">Tags</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {job.tags.map((tag: string, index: number) => (
-                    <Badge 
-                      key={index} 
-                      variant="outline" 
-                      className="px-3 py-1 text-xs bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
-                    >
-                      {tag}
-                    </Badge>
+              <div className="flex flex-wrap gap-2">
+                {job.tags.map((tag: string, index: number) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline"
+                    className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs px-2 py-0.5"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Description */}
+            {job.description && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Description
+                </h4>
+                <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
+                  {job.description}
+                </p>
+              </div>
+            )}
+
+            {/* Requirements */}
+            {job.requirements && job.requirements.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Requirements
+                </h4>
+                <ul className="space-y-1.5 text-sm text-white/70 pl-6 list-disc">
+                  {job.requirements.map((requirement: string, index: number) => (
+                    <li key={index}>{requirement}</li>
                   ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Benefits */}
+            {job.benefits && job.benefits.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Benefits
+                </h4>
+                <ul className="space-y-1.5 text-sm text-white/70 pl-6 list-disc">
+                  {job.benefits.map((benefit: string, index: number) => (
+                    <li key={index}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Location Details */}
+            {job.location && typeof job.location === 'object' && !job.location.isRemote && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Location Details
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  {job.location.city && (
+                    <div>City: {job.location.city}</div>
+                  )}
+                  {job.location.country && (
+                    <div>Country: {job.location.country}</div>
+                  )}
+                  {job.location.address && (
+                    <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                      <span className="font-medium text-white/90">Address: </span>
+                      <span>{job.location.address}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-            
-            {/* Meta Info */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 border-y border-gray-100 py-4 sm:py-6 md:py-8 mb-6 sm:mb-8 md:mb-10">
-              {job.company && (
-                <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Building className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Company</p>
-                    <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {job.company}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {job.location && (
-                <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Location</p>
-                    <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {typeof job.location === 'string' 
-                        ? job.location 
-                        : job.location.isRemote ? 'Remote Job' : 
-                          [job.location.city, job.location.country]
-                            .filter(Boolean)
-                            .join(', ') || 'Location TBD'
-                      }
-                    </p>
-                    {!job.location.isRemote && job.location && typeof job.location === 'object' && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {job.location.city && <span>City: {job.location.city}</span>}
-                        {job.location.country && <span className="ml-2">Country: {job.location.country}</span>}
+
+            {/* Dates */}
+            {job.dates && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Important Dates
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  {job.dates.applicationDeadline && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/40" />
+                      <div>
+                        <span className="font-medium text-white/90">Application Deadline: </span>
+                        <span>{formatDate(job.dates.applicationDeadline)}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {job.pay?.amount && (
-                <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Salary</p>
-                    <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {job.pay.amount} {job.pay.currency} {job.pay.period && `per ${job.pay.period}`}
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Posted</p>
-                  <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                    {job.dates?.applicationDeadline ? new Date(job.dates.applicationDeadline).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="prose prose-sm sm:prose-base md:prose-lg lg:prose-xl max-w-none text-gray-700 leading-relaxed">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-6">
-                Job Description
-              </h2>
-              <div className="text-sm sm:text-base md:text-lg leading-relaxed whitespace-pre-wrap">
-                {job.description}
-              </div>
-              
-              {/* Additional Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-8 sm:mt-10 md:mt-12">
-                {job.requirements && job.requirements.length > 0 && (
-                  <div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                      Requirements
-                    </h3>
-                    <div className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                      <ul className="space-y-2">
-                        {job.requirements.map((requirement: string, index: number) => (
-                          <li key={index}>• {requirement}</li>
-                        ))}
-                      </ul>
                     </div>
-                  </div>
-                )}
-                {job.benefits && job.benefits.length > 0 && (
-                  <div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                      Benefits
-                    </h3>
-                    <div className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                      <ul className="space-y-2">
-                        {job.benefits.map((benefit: string, index: number) => (
-                          <li key={index}>• {benefit}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Engagement Actions */}
-            <div className="mt-8 sm:mt-10 md:mt-12 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-100">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                    Take Action
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    Like, save, or apply for this job
-                </p>
+            {/* Pay */}
+            {job.pay && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Compensation
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  {job.pay.amount && (
+                    <div>
+                      <span className="font-medium text-white/90">Amount: </span>
+                      <span>{job.pay.currency || 'NGN'} {job.pay.amount}</span>
+                      {job.pay.period && (
+                        <span className="text-white/50"> per {job.pay.period}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-4 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between mb-4">
                 {id && (
                   <EngagementActions 
                     type="jobs" 
@@ -279,11 +310,55 @@ function JobPageContent({ params }: JobPageProps) {
                     className="flex-shrink-0"
                   />
                 )}
+                {isAuthenticated && (
+                  <Button
+                    onClick={() => setShowShareComposer(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 text-white/70 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Post About This
+                  </Button>
+                )}
               </div>
+              {job.url && (
+                <Button
+                  asChild
+                  size="lg"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl"
+                >
+                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                    Apply
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Content Share Composer */}
+      {showShareComposer && job && (
+        <ContentShareComposer
+          content={{
+            _id: job._id,
+            title: job.title,
+            description: job.description,
+            type: 'job',
+            company: job.company,
+            location: job.location,
+            dates: job.dates,
+            pay: job.pay
+          }}
+          onPostCreated={() => {
+            setShowShareComposer(false)
+            toast.success('Post created!')
+          }}
+          onClose={() => setShowShareComposer(false)}
+        />
+      )}
     </div>
   )
 }
@@ -294,4 +369,4 @@ export default function JobPage({ params }: JobPageProps) {
       <JobPageContent params={params} />
     </AuthGuard>
   )
-} 
+}

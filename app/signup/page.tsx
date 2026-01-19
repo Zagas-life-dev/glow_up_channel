@@ -14,15 +14,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Eye, EyeOff, UserPlus, AlertCircle, Target, Users } from 'lucide-react'
-import { getDatePickerPropsFor16Plus, calculateAge } from '@/lib/date-utils'
+import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
 
 const signupSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters').optional().or(z.literal('')),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters').optional().or(z.literal('')),
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
   dateOfBirth: z.string()
     .min(1, 'Date of birth is required')
-    .refine((date) => calculateAge(date) >= 16, 'You must be at least 16 years old to sign up'),
+    .refine((date) => calculateAge(date) >= 5, 'You must be at least 5 years old to sign up'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
@@ -53,10 +53,10 @@ export default function SignupPage() {
     setError('')
 
     try {
-      // Convert empty strings to undefined for optional fields
-      const firstName = data.firstName?.trim() || undefined
-      const lastName = data.lastName?.trim() || undefined
-      const dateOfBirth = data.dateOfBirth || undefined
+      // Trim and validate required fields
+      const firstName = data.firstName.trim()
+      const lastName = data.lastName.trim()
+      const dateOfBirth = data.dateOfBirth
 
       if (data.role === 'seeker') {
         await registerOpportunitySeeker(data.email, data.password, firstName, lastName, dateOfBirth)
@@ -84,13 +84,13 @@ export default function SignupPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
             Join Glow Up Channel
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-white/60">
             Create your account to get started
           </CardDescription>
         </CardHeader>
@@ -98,7 +98,7 @@ export default function SignupPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">{error}</span>
             </div>
@@ -108,8 +108,8 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-gray-700 font-medium">
-                  First Name (Optional)
+                <Label htmlFor="firstName" className="text-white/80 font-medium">
+                  First Name <span className="text-red-400">*</span>
                 </Label>
                 <Controller
                   name="firstName"
@@ -119,19 +119,20 @@ export default function SignupPage() {
                       {...field}
                       id="firstName"
                       placeholder="First name"
-                      className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
+                      required
                     />
                   )}
                 />
                 {errors.firstName && (
-                  <p className="text-sm text-red-600">{errors.firstName.message}</p>
+                  <p className="text-sm text-red-400">{errors.firstName.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-gray-700 font-medium">
-                  Last Name (Optional)
+                <Label htmlFor="lastName" className="text-white/80 font-medium">
+                  Last Name <span className="text-red-400">*</span>
                 </Label>
                 <Controller
                   name="lastName"
@@ -141,19 +142,20 @@ export default function SignupPage() {
                       {...field}
                       id="lastName"
                       placeholder="Last name"
-                      className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
+                      required
                     />
                   )}
                 />
                 {errors.lastName && (
-                  <p className="text-sm text-red-600">{errors.lastName.message}</p>
+                  <p className="text-sm text-red-400">{errors.lastName.message}</p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-white/80 font-medium">
                 Email
               </Label>
               <Controller
@@ -165,25 +167,25 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                    className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                     disabled={isLoading}
                   />
                 )}
               />
               {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+                <p className="text-sm text-red-400">{errors.email.message}</p>
                 )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="text-gray-700 font-medium">
+              <Label htmlFor="dateOfBirth" className="text-white/80 font-medium">
                 Date of Birth
               </Label>
               <Controller
                 name="dateOfBirth"
                 control={control}
                 render={({ field }) => {
-                  const { min, max } = getDatePickerPropsFor16Plus()
+                  const { min, max } = getDatePickerPropsFor5Plus()
                   
                   return (
                     <Input
@@ -192,22 +194,23 @@ export default function SignupPage() {
                       type="date"
                       min={min}
                       max={max}
-                      className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
+                      required
                     />
                   )
                 }}
               />
-              <p className="text-xs text-gray-500">
-                You must be at least 16 years old to create an account
+              <p className="text-xs text-white/50">
+                You must be at least 5 years old to create an account
               </p>
               {errors.dateOfBirth && (
-                <p className="text-sm text-red-600">{errors.dateOfBirth.message}</p>
+                <p className="text-sm text-red-400">{errors.dateOfBirth.message}</p>
                 )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-medium">
+              <Label htmlFor="password" className="text-white/80 font-medium">
                 Password
               </Label>
               <div className="relative">
@@ -220,7 +223,7 @@ export default function SignupPage() {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Create a password"
-                      className="pr-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      className="pr-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
                     />
                   )}
@@ -228,13 +231,13 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white/60"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <div className="text-xs text-gray-500 space-y-1">
+              <div className="text-xs text-white/50 space-y-1">
                 <p>Password must contain:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   <li>At least 8 characters</li>
@@ -244,13 +247,13 @@ export default function SignupPage() {
                 </ul>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-600">{errors.password.message}</p>
+                <p className="text-sm text-red-400">{errors.password.message}</p>
                 )}
             </div>
 
             {/* Role Selection */}
             <div className="space-y-3">
-              <Label className="text-gray-700 font-medium">I want to join as a:</Label>
+              <Label className="text-white/80 font-medium">I want to join as a:</Label>
               <Controller
                 name="role"
                 control={control}
@@ -260,31 +263,31 @@ export default function SignupPage() {
                     onValueChange={field.onChange}
                     className="space-y-3"
                   >
-                    <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50/50 transition-colors">
+                    <div className="flex items-center space-x-3 p-4 border border-white/[0.1] rounded-lg hover:border-orange-500/30 hover:bg-orange-500/5 transition-colors bg-white/[0.02]">
                       <RadioGroupItem value="seeker" id="seeker" />
                       <Label htmlFor="seeker" className="flex-1 cursor-pointer">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Users className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <Users className="w-5 h-5 text-blue-400" />
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900">Opportunity Seeker</div>
-                            <div className="text-sm text-gray-600">Find and apply for opportunities</div>
+                            <div className="font-medium text-white">Opportunity Seeker</div>
+                            <div className="text-sm text-white/60">Find and apply for opportunities</div>
                           </div>
                         </div>
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50/50 transition-colors">
+                    <div className="flex items-center space-x-3 p-4 border border-white/[0.1] rounded-lg hover:border-orange-500/30 hover:bg-orange-500/5 transition-colors bg-white/[0.02]">
                       <RadioGroupItem value="provider" id="provider" />
                       <Label htmlFor="provider" className="flex-1 cursor-pointer">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <Target className="w-5 h-5 text-orange-600" />
+                          <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <Target className="w-5 h-5 text-orange-400" />
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900">Opportunity Provider</div>
-                            <div className="text-sm text-gray-600">Post opportunities and events</div>
+                            <div className="font-medium text-white">Opportunity Provider</div>
+                            <div className="text-sm text-white/60">Post opportunities and events</div>
                           </div>
                         </div>
                       </Label>
@@ -293,13 +296,13 @@ export default function SignupPage() {
                 )}
               />
               {errors.role && (
-                <p className="text-sm text-red-600">{errors.role.message}</p>
+                <p className="text-sm text-red-400">{errors.role.message}</p>
               )}
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -316,11 +319,11 @@ export default function SignupPage() {
             </Button>
           </form>
 
-          <div className="text-center text-sm text-gray-600">
+          <div className="text-center text-sm text-white/60">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-orange-600 hover:text-orange-700 font-semibold transition-colors"
+              className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
             >
               Sign in
             </Link>

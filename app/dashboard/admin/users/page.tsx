@@ -36,7 +36,10 @@ import {
   ChevronRight,
   UserCheck,
   UserX,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  FileText,
+  FileSpreadsheet
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -153,6 +156,56 @@ export default function UserManagement() {
     }
   }
 
+  const handleDownload = async (format: 'excel') => {
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        toast.error('Authentication required')
+        return
+      }
+
+      const formatMap = {
+        // csv: { endpoint: 'csv', mimeType: 'text/csv', extension: 'csv' },
+        excel: { endpoint: 'excel', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', extension: 'xlsx' }
+        // pdf: { endpoint: 'pdf', mimeType: 'application/pdf', extension: 'pdf' }
+      }
+
+      const formatInfo = formatMap[format]
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'}/api/admin/users/export/${formatInfo.endpoint}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to download ${format.toUpperCase()}`)
+      }
+
+      // Get the blob from response
+      const blob = await response.blob()
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `users-export-${new Date().toISOString().split('T')[0]}.${formatInfo.extension}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success(`${format.toUpperCase()} file downloaded successfully`)
+    } catch (error: any) {
+      console.error(`Error downloading ${format}:`, error)
+      toast.error(error.message || `Failed to download ${format.toUpperCase()}`)
+    }
+  }
+
   const handleToggleStatus = async (userId: string, isActive: boolean) => {
     try {
       setActionLoading(userId)
@@ -246,7 +299,17 @@ export default function UserManagement() {
                 <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownload('excel')}
+                disabled={loading}
+                className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
               <Button variant="outline" size="sm" onClick={fetchUsers}>
                 <Users className="h-4 w-4 mr-2" />
                 Refresh

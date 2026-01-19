@@ -2,13 +2,13 @@ import type React from "react"
 import type { Metadata } from "next/types"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer"
+import AppLayout from "@/components/app-layout"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
+import { PlaylistProvider } from "@/contexts/playlist-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,20 +29,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <head />
       <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
           <AuthProvider>
-            <PageProvider>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <Analytics />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <Toaster position="top-center" />
-              </div>
-            </PageProvider>
+            <PlaylistProvider>
+              <PageProvider>
+                <AppLayout>
+                  <Analytics />
+                  {children}
+                  <Toaster position="bottom-center" />
+                </AppLayout>
+              </PageProvider>
+            </PlaylistProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

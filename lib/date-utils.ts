@@ -3,12 +3,12 @@
  */
 
 /**
- * Calculate the maximum date that ensures the user is at least 16 years old
+ * Calculate the maximum date that ensures the user is at least 5 years old
  * @returns ISO date string (YYYY-MM-DD) for the maximum allowed date
  */
-export function getMaxDateFor16Plus(): string {
+export function getMaxDateFor5Plus(): string {
   const today = new Date()
-  const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate())
+  const maxDate = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate())
   return maxDate.toISOString().split('T')[0]
 }
 
@@ -42,6 +42,38 @@ export function calculateAge(dateOfBirth: string): number {
 }
 
 /**
+ * Check if a date of birth makes the person at least 5 years old
+ * @param dateOfBirth - Date of birth string (YYYY-MM-DD)
+ * @returns true if the person is at least 5 years old
+ */
+export function isAtLeast5(dateOfBirth: string): boolean {
+  return calculateAge(dateOfBirth) >= 5
+}
+
+/**
+ * Get date picker props for forms that require 5+ age validation
+ * @returns Object with min and max date strings for date input
+ */
+export function getDatePickerPropsFor5Plus() {
+  return {
+    min: getMinDateForReasonableAge(),
+    max: getMaxDateFor5Plus()
+  }
+}
+
+/**
+ * @deprecated Use getMaxDateFor5Plus instead
+ * Calculate the maximum date that ensures the user is at least 16 years old
+ * @returns ISO date string (YYYY-MM-DD) for the maximum allowed date
+ */
+export function getMaxDateFor16Plus(): string {
+  const today = new Date()
+  const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate())
+  return maxDate.toISOString().split('T')[0]
+}
+
+/**
+ * @deprecated Use isAtLeast5 instead
  * Check if a date of birth makes the person at least 16 years old
  * @param dateOfBirth - Date of birth string (YYYY-MM-DD)
  * @returns true if the person is at least 16 years old
@@ -51,6 +83,7 @@ export function isAtLeast16(dateOfBirth: string): boolean {
 }
 
 /**
+ * @deprecated Use getDatePickerPropsFor5Plus instead
  * Get date picker props for forms that require 16+ age validation
  * @returns Object with min and max date strings for date input
  */

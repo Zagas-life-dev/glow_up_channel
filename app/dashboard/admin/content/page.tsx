@@ -160,11 +160,11 @@ export default function ContentModeration() {
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve')
   const [rejectionReason, setRejectionReason] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [paymentAmount, setPaymentAmount] = useState<number>(5000)
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
   const [paymentVerification, setPaymentVerification] = useState<'verify' | 'reject'>('verify')
   const [paymentNotes, setPaymentNotes] = useState("")
   const [activeTab, setActiveTab] = useState('all')
+  const [bypassPayment, setBypassPayment] = useState(false)
   
   // Admin controls
   const [showEditDialog, setShowEditDialog] = useState(false)
@@ -255,17 +255,15 @@ export default function ContentModeration() {
       setActionLoading(selectedContent._id)
       
       if (reviewAction === 'approve') {
-        // Validate payment amount for paid content
-        if (hasPaidSection(selectedContent)) {
-          if (!paymentAmount || paymentAmount <= 0) {
-            toast.error('Please enter a valid payment amount for paid content')
-            return
-          }
+        await ApiClient.approveContent(selectedContent._id, selectedContent.type, {
+          bypassPayment: bypassPayment
+        })
+        
+        if (bypassPayment) {
+          toast.success('Content approved and published without requiring payment.')
+        } else {
+          toast.success('Content approved. You can now request payment from the "Approved" tab.')
         }
-        
-        await ApiClient.approveContent(selectedContent._id, selectedContent.type)
-        
-        toast.success('Content approved. You can now request payment from the "Approved" tab.')
       } else if (reviewAction === 'reject') {
         if (!rejectionReason.trim()) {
           toast.error('Please provide a rejection reason')
@@ -277,6 +275,7 @@ export default function ContentModeration() {
       
       setShowReviewDialog(false)
       setRejectionReason("")
+      setBypassPayment(false)
       setSelectedContent(null)
       fetchContent()
     } catch (error: any) {
@@ -467,6 +466,9 @@ export default function ContentModeration() {
     if (item.paymentStatus === 'verified') {
       return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
     }
+    if (item.paymentStatus === 'not_required' && item.status === 'active' && item.isApproved) {
+      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
+    }
     if (item.paymentStatus === 'failed') {
       return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Payment Failed</Badge>
     }
@@ -533,7 +535,7 @@ export default function ContentModeration() {
     }),
     awaitingPayment: content.filter(item => item.paymentStatus === 'awaiting_payment'),
     paymentUploaded: content.filter(item => item.paymentStatus === 'payment_uploaded'),
-    verified: content.filter(item => item.paymentStatus === 'verified'),
+    verified: content.filter(item => item.paymentStatus === 'verified' || item.paymentStatus === 'not_required'),
     rejected: content.filter(item => item.status === 'inactive' && !item.isApproved)
   }
 
@@ -883,6 +885,7 @@ export default function ContentModeration() {
                                     variant="outline"
                                     onClick={() => {
                                       setSelectedContent(item)
+                                      setBypassPayment(false)
                                       setShowReviewDialog(true)
                                     }}
                                     disabled={actionLoading === item._id}
@@ -933,6 +936,7 @@ export default function ContentModeration() {
                                     variant="outline"
                                     onClick={() => {
                                       setSelectedContent(item)
+                                      setBypassPayment(false)
                                       setShowReviewDialog(true)
                                     }}
                                     disabled={actionLoading === item._id}
@@ -1073,6 +1077,7 @@ export default function ContentModeration() {
                                   variant="outline"
                                   onClick={() => {
                                     setSelectedContent(item)
+                                    setBypassPayment(false)
                                     setShowReviewDialog(true)
                                   }}
                                   disabled={actionLoading === item._id}
@@ -1787,14 +1792,35 @@ export default function ContentModeration() {
                     </div>
                   )}
 
-            {reviewAction === 'approve' && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 mb-2">
-                  <strong>Content Approval:</strong> This content will be approved and moved to the payment processing stage.
-                </p>
-                <p className="text-sm text-orange-800">
-                  After approval, you can request payment from the "Approved" tab. Free content will be auto-approved, paid content will require user payment.
-                </p>
+            {reviewAction === 'approve' && selectedContent && (
+              <div className="space-y-3">
+                {hasPaidSection(selectedContent) && (
+                  <div className="flex items-start space-x-2">
+                    <input
+                      id="bypass-payment"
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      checked={bypassPayment}
+                      onChange={(e) => setBypassPayment(e.target.checked)}
+                    />
+                    <label htmlFor="bypass-payment" className="text-sm text-gray-700">
+                      Bypass payment for this content (make it live without requiring a payment from the provider).
+                    </label>
+                  </div>
+                )}
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 mb-2">
+                    <strong>Content Approval:</strong>{' '}
+                    {bypassPayment
+                      ? 'This content will be approved and published immediately without any payment.'
+                      : 'This content will be approved and moved to the payment processing stage.'}
+                  </p>
+                  {!bypassPayment && (
+                    <p className="text-sm text-orange-800">
+                      After approval, you can request payment from the "Approved" tab. Free content will be auto-approved, paid content will require user payment.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
                 </div>

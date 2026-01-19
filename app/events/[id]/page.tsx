@@ -1,15 +1,30 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { notFound } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { notFound, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Calendar, MapPin, Clock, Users, DollarSign, Tag } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  ExternalLink, 
+  Calendar, 
+  MapPin, 
+  Clock, 
+  DollarSign,
+  Users,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Share2
+} from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
+import ContentShareComposer from '@/components/content-share-composer'
 import AuthGuard from '@/components/auth-guard'
+import { cleanUrl } from '@/lib/url-utils'
+import { cn } from '@/lib/utils'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+import { toast } from 'sonner'
 
 type EventPageProps = {
   params: Promise<{
@@ -18,25 +33,12 @@ type EventPageProps = {
 }
 
 function EventPageContent({ params }: EventPageProps) {
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string>('')
-  const { isAuthenticated } = useAuth()
-  const viewedItems = useRef(new Set<string>())
-
-  // Track view for recommendation learning
-  const trackView = async (eventId: string) => {
-    if (!isAuthenticated || viewedItems.current.has(eventId)) return
-    
-    viewedItems.current.add(eventId)
-    
-    try {
-      await ApiClient.trackEngagement('event', eventId, 'view')
-    } catch (error) {
-      console.error('Error tracking view:', error)
-      // Don't show error to user as this is background tracking
-    }
-  }
+  const [showShareComposer, setShowShareComposer] = useState(false)
 
   useEffect(() => {
     const loadParams = async () => {
@@ -78,161 +80,183 @@ function EventPageContent({ params }: EventPageProps) {
     getEvent()
   }, [id])
 
+  // Show skeleton immediately while loading
   if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen py-16 sm:py-18 md:py-20 lg:py-20">
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12 lg:py-16">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-4 sm:p-6 md:p-8 lg:p-12">
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                <div className="h-12 bg-gray-200 rounded mb-6"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded mb-6"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <ContentDetailSkeleton />
   }
 
   if (!event) {
     notFound()
   }
 
-  return (
-    <div className="bg-gray-50 min-h-screen py-16 sm:py-18 md:py-20 lg:py-20">
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12 lg:py-16">
-        <div className="max-w-5xl mx-auto">
-          {/* Back Button */}
-          <Link href="/events" className="inline-flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-orange-600 transition-colors mb-6 sm:mb-8 group touch-manipulation">
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 group-hover:-translate-x-1 transition-transform" />
-            Back to Events
-          </Link>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
 
-          <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-4 sm:p-6 md:p-8 lg:p-12"
-            onMouseEnter={() => trackView(id)}
-          >
-            {/* Header */}
-            <div className="mb-6 sm:mb-8 md:mb-10">
-              <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-800 text-xs sm:text-sm font-medium rounded-full mb-3 sm:mb-4 inline-block">
-                Event
-              </span>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">
-                {event.title}
-              </h1>
-              {event.organizer && (
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 leading-relaxed">
-                  Organized by {event.organizer}
-                </p>
+  const getLocationString = () => {
+    if (!event.location) return 'Location TBD'
+    if (typeof event.location === 'string') return event.location
+    if (event.location.isRemote) return 'Remote Event'
+    const parts = [event.location.city, event.location.country].filter(Boolean)
+    return parts.join(', ') || 'Location TBD'
+  }
+
+  const isRegistrationOpen = () => {
+    if (!event.dates?.registrationDeadline) return true
+    return new Date(event.dates.registrationDeadline) > new Date()
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] pb-20 md:pb-8">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 text-white/60" />
+            </button>
+            <h1 className="text-lg font-semibold text-white">Event</h1>
+            <div className="w-9" />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* Main Card */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-white truncate">{event.organizer || 'Event Organizer'}</h2>
+                <p className="text-xs text-white/50">Event</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-white leading-tight">
+              {event.title}
+            </h3>
+
+            {/* Meta Info Row */}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
+              {event.dates?.startDate && (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDate(event.dates.startDate)}</span>
+                </div>
               )}
+              {event.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>{getLocationString()}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4" />
+                <span>{event.isPaid ? 'Paid' : 'Free'}</span>
+              </div>
             </div>
 
             {/* Tags */}
             {event.tags && event.tags.length > 0 && (
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <div className="flex items-center gap-2 mb-3">
-                  <Tag className="h-4 w-4 text-gray-600" />
-                  <h3 className="text-sm font-medium text-gray-600">Tags</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {event.tags.map((tag: string, index: number) => (
-                    <Badge 
-                      key={index} 
-                      variant="outline" 
-                      className="px-3 py-1 text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {event.tags.map((tag: string, index: number) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline"
+                    className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs px-2 py-0.5"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
               </div>
             )}
-            
-            {/* Event Dates Section */}
-            {event.dates && (event.dates.startDate || event.dates.endDate || event.dates.registrationDeadline) && (
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">
-                  Event Dates
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+
+            {/* Description */}
+            {event.description && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Description
+                </h4>
+                <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
+                  {event.description}
+                </p>
+              </div>
+            )}
+
+            {/* Event Dates */}
+            {event.dates && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Event Schedule
+                </h4>
+                <div className="space-y-2 text-sm text-white/70 pl-6">
                   {event.dates.startDate && (
-                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Start Date</p>
-                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
-                          {new Date(event.dates.startDate).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-white/40" />
+                      <div>
+                        <span className="font-medium text-white/90">Start: </span>
+                        <span>{formatDate(event.dates.startDate)}</span>
                       </div>
                     </div>
                   )}
-
                   {event.dates.endDate && (
-                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">End Date</p>
-                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
-                          {new Date(event.dates.endDate).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                        {event.dates.startDate && event.dates.endDate && (
-                          <p className="text-xs text-blue-600 font-medium mt-1">
-                            {(() => {
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-white/40" />
+                      <div>
+                        <span className="font-medium text-white/90">End: </span>
+                        <span>{formatDate(event.dates.endDate)}</span>
+                        {event.dates.startDate && (
+                          <span className="text-white/50 ml-2">
+                            ({(() => {
                               const start = new Date(event.dates.startDate)
                               const end = new Date(event.dates.endDate)
                               const diffTime = Math.abs(end.getTime() - start.getTime())
                               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-                              return `${diffDays} day${diffDays > 1 ? 's' : ''} event`
-                            })()}
-                          </p>
+                              return `${diffDays} day${diffDays > 1 ? 's' : ''}`
+                            })()})
+                          </span>
                         )}
                       </div>
                     </div>
                   )}
-
                   {event.dates.registrationDeadline && (
-                    <div className="flex items-center gap-3 sm:gap-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/40" />
+                      <div>
+                        <span className="font-medium text-white/90">Registration Deadline: </span>
+                        <span>{formatDate(event.dates.registrationDeadline)}</span>
+                        {!isRegistrationOpen() && (
+                          <Badge className="ml-2 bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+                            Closed
+                          </Badge>
+                        )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Registration Deadline</p>
-                        <p className="text-sm sm:text-base text-gray-800 font-semibold">
-                          {new Date(event.dates.registrationDeadline).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                        {(() => {
-                          const deadline = new Date(event.dates.registrationDeadline)
-                          const now = new Date()
-                          const isExpired = deadline < now
-                          return (
-                            <p className={`text-xs font-medium mt-1 ${isExpired ? 'text-red-600' : 'text-orange-600'}`}>
-                              {isExpired ? 'Registration closed' : 'Registration open'}
-                            </p>
-                          )
-                        })()}
+                    </div>
+                  )}
+                  {event.dates.timezone && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/40" />
+                      <div>
+                        <span className="font-medium text-white/90">Timezone: </span>
+                        <span>{event.dates.timezone}</span>
                       </div>
                     </div>
                   )}
@@ -240,89 +264,160 @@ function EventPageContent({ params }: EventPageProps) {
               </div>
             )}
 
-            {/* Meta Info */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 border-y border-gray-100 py-4 sm:py-6 md:py-8 mb-6 sm:mb-8 md:mb-10">
-              {event.location && (
-                <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Location</p>
-                    <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                      {typeof event.location === 'string' 
-                        ? event.location 
-                        : event.location.isRemote ? 'Remote Event' : 
-                          [event.location.city,  event.location.country]
-                            .filter(Boolean)
-                            .join(', ') || 'Location TBD'
-                      }
-                    </p>
-                    {!event.location.isRemote && event.location && typeof event.location === 'object' && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {event.location.city && <span>City: {event.location.city}</span>}
-                        {event.location.country && <span className="ml-2">Country: {event.location.country}</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Cost</p>
-                  <p className="text-sm sm:text-base text-gray-800 font-semibold truncate">
-                    {!event.isPaid ? 'Free' : 'Paid'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            {event.description && (
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                  About This Event
-                </h2>
-                <div className="prose prose-sm sm:prose-base max-w-none text-gray-700 leading-relaxed">
-                  <p className="whitespace-pre-wrap">{event.description}</p>
+            {/* Location Details */}
+            {event.location && typeof event.location === 'object' && !event.location.isRemote && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Location Details
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  {event.location.city && (
+                    <div>City: {event.location.city}</div>
+                  )}
+                  {event.location.country && (
+                    <div>Country: {event.location.country}</div>
+                  )}
+                  {event.location.address && (
+                    <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                      <span className="font-medium text-white/90">Address: </span>
+                      <span>{event.location.address}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Tags */}
-            {event.tags && event.tags.length > 0 && (
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {event.tags.map((tag: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 sm:px-4 sm:py-2 bg-green-100 text-green-800 text-xs sm:text-sm font-medium rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            {/* Capacity */}
+            {event.capacity && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Capacity
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  {event.capacity.maxAttendees && (
+                    <div>
+                      <span className="font-medium text-white/90">Max Attendees: </span>
+                      <span>{event.capacity.maxAttendees}</span>
+                    </div>
+                  )}
+                  {event.capacity.currentAttendees !== undefined && (
+                    <div>
+                      <span className="font-medium text-white/90">Current Attendees: </span>
+                      <span>{event.capacity.currentAttendees}</span>
+                    </div>
+                  )}
+                  {event.capacity.isFull && (
+                    <div className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-medium inline-block">
+                      Event Full
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Engagement Actions */}
-            <div className="mt-8 sm:mt-10 md:mt-12 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-100">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                    Take Action
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    Like, save, or register for this event
-                  </p>
+            {/* Requirements */}
+            {event.requirements && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Requirements
+                </h4>
+                <div className="space-y-2 text-sm text-white/70 pl-6">
+                  {event.requirements.ageRange && (
+                    <div>
+                      <span className="font-medium text-white/90">Age Range: </span>
+                      <span>{event.requirements.ageRange}</span>
+                    </div>
+                  )}
+                  {event.requirements.skillLevel && (
+                    <div>
+                      <span className="font-medium text-white/90">Skill Level: </span>
+                      <span>{event.requirements.skillLevel}</span>
+                    </div>
+                  )}
+                  {event.requirements.prerequisites && event.requirements.prerequisites.length > 0 && (
+                    <div>
+                      <span className="font-medium text-white/90 block mb-1">Prerequisites: </span>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {event.requirements.prerequisites.map((prereq: string, index: number) => (
+                          <li key={index}>{prereq}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {event.requirements.equipment && event.requirements.equipment.length > 0 && (
+                    <div>
+                      <span className="font-medium text-white/90 block mb-1">Equipment Needed: </span>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {event.requirements.equipment.map((equip: string, index: number) => (
+                          <li key={index}>{equip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+              </div>
+            )}
+
+            {/* Agenda */}
+            {event.agenda && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Agenda
+                </h4>
+                <div className="text-sm text-white/70 pl-6">
+                  {typeof event.agenda === 'string' ? (
+                    <p className="leading-relaxed whitespace-pre-wrap">{event.agenda}</p>
+                  ) : Array.isArray(event.agenda) ? (
+                    <ul className="space-y-2 list-none">
+                      {event.agenda.map((item: any, index: number) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <Clock className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
+                          <div>
+                            {item.time && (
+                              <span className="font-medium text-white/90">{item.time} - </span>
+                            )}
+                            <span>{item.title || item}</span>
+                            {item.description && (
+                              <p className="text-white/60 text-xs mt-0.5">{item.description}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
+            {/* Pricing */}
+            {(event.isPaid || event.price) && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Pricing
+                </h4>
+                <div className="space-y-1.5 text-sm text-white/70 pl-6">
+                  <div>
+                    <span className="font-medium text-white/90">Event Type: </span>
+                    <span>{event.isPaid ? 'Paid' : 'Free'}</span>
+                  </div>
+                  {event.price && (
+                    <div>
+                      <span className="font-medium text-white/90">Price: </span>
+                      <span>{event.currency || 'NGN'} {event.price}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-4 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between mb-4">
                 {id && (
                   <EngagementActions 
                     type="events" 
@@ -331,11 +426,56 @@ function EventPageContent({ params }: EventPageProps) {
                     className="flex-shrink-0"
                   />
                 )}
+                {isAuthenticated && (
+                  <Button
+                    onClick={() => setShowShareComposer(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 text-white/70 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-xl"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Post About This
+                  </Button>
+                )}
               </div>
+              {event.url && isRegistrationOpen() && (
+                <Button
+                  asChild
+                  size="lg"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                >
+                  <a href={cleanUrl(event.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                    Register
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Content Share Composer */}
+      {showShareComposer && event && (
+        <ContentShareComposer
+          content={{
+            _id: event._id,
+            title: event.title,
+            description: event.description,
+            type: 'event',
+            organization: event.organizer,
+            location: event.location,
+            dates: event.dates,
+            isPaid: event.isPaid,
+            price: event.price
+          }}
+          onPostCreated={() => {
+            setShowShareComposer(false)
+            toast.success('Post created!')
+          }}
+          onClose={() => setShowShareComposer(false)}
+        />
+      )}
     </div>
   )
 }

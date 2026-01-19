@@ -339,13 +339,13 @@ export default function ProviderDashboard() {
 
   const getStatusColor = (status: string, isApproved: boolean) => {
     // 6-State Content Management System - Color coding
-    if (status === 'draft' && !isApproved) return 'bg-blue-100 text-blue-800' // True Draft - Blue
-    if (status === 'draft' && isApproved) return 'bg-purple-100 text-purple-800' // Hidden - Purple
-    if (status === 'inactive' && !isApproved) return 'bg-red-100 text-red-800' // Inactive (Not Approved) - Red
-    if (status === 'inactive' && isApproved) return 'bg-gray-100 text-gray-800' // Inactive (Approved) - Gray
-    if (status === 'active' && !isApproved) return 'bg-yellow-100 text-yellow-800' // Pending - Yellow
-    if (status === 'active' && isApproved) return 'bg-green-100 text-green-800' // Live - Green
-    return 'bg-gray-100 text-gray-800'
+    if (status === 'draft' && !isApproved) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // True Draft - Blue
+    if (status === 'draft' && isApproved) return 'bg-violet-500/20 text-violet-400 border border-violet-500/30' // Hidden - Purple
+    if (status === 'inactive' && !isApproved) return 'bg-red-500/20 text-red-400 border border-red-500/30' // Inactive (Not Approved) - Red
+    if (status === 'inactive' && isApproved) return 'bg-white/10 text-white/60 border border-white/20' // Inactive (Approved) - Gray
+    if (status === 'active' && !isApproved) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' // Pending - Yellow
+    if (status === 'active' && isApproved) return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' // Live - Green
+    return 'bg-white/10 text-white/60 border border-white/20'
   }
 
   const getStatusText = (status: string, isApproved: boolean) => {
@@ -438,10 +438,10 @@ export default function ProviderDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading provider dashboard...</p>
+          <p className="text-white/60">Loading provider dashboard...</p>
         </div>
       </div>
     )
@@ -449,12 +449,12 @@ export default function ProviderDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-4">Please log in to access your provider dashboard</p>
-          <Button asChild>
+          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
+          <p className="text-white/60 mb-4">Please log in to access your provider dashboard</p>
+          <Button asChild className="bg-orange-500 hover:bg-orange-600">
             <Link href="/login">Sign In</Link>
           </Button>
         </div>
@@ -464,16 +464,16 @@ export default function ProviderDashboard() {
 
   if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Crown className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Provider Access Required</h2>
-          <p className="text-gray-600 mb-4">You need to be an opportunity provider to access this dashboard</p>
+          <Crown className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Provider Access Required</h2>
+          <p className="text-white/60 mb-4">You need to be an opportunity provider to access this dashboard</p>
           <div className="flex space-x-4 justify-center">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="bg-orange-500 hover:bg-orange-600">
               <Link href="/dashboard/settings">Upgrade Account</Link>
             </Button>
           </div>
@@ -483,9 +483,9 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen pb-24 md:pb-8">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -504,7 +504,7 @@ export default function ProviderDashboard() {
             
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              <Button asChild className="bg-orange-500 hover:bg-orange-600">
+              <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
                 <Link href="/dashboard/posting">
                   <Plus className="h-4 w-4 mr-2" />
                   Post Content
@@ -516,12 +516,13 @@ export default function ProviderDashboard() {
                 variant="outline" 
                 size="sm"
                 disabled={isLoading}
+                className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
                 <Link href="/dashboard/provider/settings">
                   <Settings className="h-4 w-4 mr-2" />
                   Provider Settings
@@ -531,7 +532,7 @@ export default function ProviderDashboard() {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600">
+              <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl">
                 <Link href="/dashboard/posting">
                   <Plus className="h-4 w-4 mr-2" />
                   Post
@@ -545,25 +546,25 @@ export default function ProviderDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
-            <span className="text-red-700">{error}</span>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center">
+            <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
+            <span className="text-red-400">{error}</span>
           </div>
         )}
 
         {/* Welcome Section */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-6 text-white">
+          <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-2">
+                <h2 className="text-2xl font-bold mb-2 text-white">
                   Welcome back, {user.email.split('@')[0]}!
                 </h2>
-                <p className="text-orange-100 mb-3">
+                <p className="text-white/70 mb-3">
                   Manage your content and grow your reach as an opportunity provider.
                 </p>
                 <Link href="/dashboard/provider/promotions">
-                  <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <Button variant="outline" className="bg-white/[0.05] border-white/20 text-white hover:bg-white/10 rounded-xl">
                     <Zap className="w-4 h-4 mr-2" />
                     Manage Promotions
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -571,8 +572,8 @@ export default function ProviderDashboard() {
                 </Link>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold">{stats.activePostings}</div>
-                <div className="text-orange-100 text-sm">Active Postings</div>
+                <div className="text-3xl font-bold text-white">{stats.activePostings}</div>
+                <div className="text-white/60 text-sm">Active Postings</div>
               </div>
             </div>
           </div>
@@ -583,7 +584,7 @@ export default function ProviderDashboard() {
           <Link href="/">
             <Button 
               variant="outline" 
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200"
+              className="flex items-center gap-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Homepage
@@ -594,27 +595,27 @@ export default function ProviderDashboard() {
         {/* Onboarding Call-to-Action - Only show if not completed */}
         {onboardingStatus && !onboardingStatus.isCompleted && (
         <div className="mb-8">
-          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <Card className="border border-blue-500/30 bg-blue-500/10">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <Building className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                    <Building className="w-6 h-6 text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-lg font-semibold text-white mb-1">
                       Complete Your Provider Profile
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-white/60">
                       Set up your organization details and verification to start posting opportunities with full features.
                     </p>
                       {onboardingStatus.completionPercentage > 0 && (
                         <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <div className="flex items-center justify-between text-xs text-white/50 mb-1">
                             <span>Progress</span>
                             <span>{onboardingStatus.completionPercentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-white/10 rounded-full h-2">
                             <div 
                               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                               style={{ width: `${onboardingStatus.completionPercentage}%` }}
@@ -624,7 +625,7 @@ export default function ProviderDashboard() {
                       )}
                   </div>
                 </div>
-                <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl">
                   <Link href="/dashboard/provider/onboarding">
                     <Building className="h-4 w-4 mr-2" />
                       {onboardingStatus.completionPercentage > 0 ? 'Continue Setup' : 'Complete Setup'}
@@ -638,43 +639,43 @@ export default function ProviderDashboard() {
                 
         {/* Tab Navigation */}
         <div className="mb-8">
-          <nav className="flex space-x-8 overflow-x-auto">
+          <nav className="flex space-x-8 overflow-x-auto pb-2">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'overview'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
               }`}
             >
               Overview
             </button>
             <button
               onClick={() => setActiveTab('content')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'content'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
               }`}
             >
               My Content
             </button>
             <button
               onClick={() => setActiveTab('applications')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'applications'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
               }`}
             >
               Applications
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                 activeTab === 'analytics'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
               }`}
             >
               Analytics
@@ -686,7 +687,7 @@ export default function ProviderDashboard() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading provider dashboard data...</p>
+            <p className="text-white/60">Loading provider dashboard data...</p>
           </div>
         )}
 
@@ -694,60 +695,60 @@ export default function ProviderDashboard() {
         {!isLoading && activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Postings</p>
-                      <p className="text-3xl font-bold text-orange-600">
+                      <p className="text-sm font-medium text-white/60">Total Postings</p>
+                      <p className="text-3xl font-bold text-orange-400">
                         {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                      <FileText className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl flex items-center justify-center border border-orange-500/30">
+                      <FileText className="h-6 w-6 text-orange-400" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Views</p>
-                      <p className="text-3xl font-bold text-blue-600">{stats.totalViews}</p>
+                      <p className="text-sm font-medium text-white/60">Total Views</p>
+                      <p className="text-3xl font-bold text-blue-400">{stats.totalViews}</p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                      <Eye className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30">
+                      <Eye className="h-6 w-6 text-blue-400" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Applications</p>
-                      <p className="text-3xl font-bold text-green-600">{stats.totalApplications}</p>
+                      <p className="text-sm font-medium text-white/60">Applications</p>
+                      <p className="text-3xl font-bold text-emerald-400">{stats.totalApplications}</p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                      <Send className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
+                      <Send className="h-6 w-6 text-emerald-400" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Pending</p>
-                      <p className="text-3xl font-bold text-yellow-600">{stats.pendingApprovals}</p>
+                      <p className="text-sm font-medium text-white/60">Pending</p>
+                      <p className="text-3xl font-bold text-yellow-400">{stats.pendingApprovals}</p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
-                      <Clock className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-500/30">
+                      <Clock className="h-6 w-6 text-yellow-400" />
                     </div>
                   </div>
                 </CardContent>
@@ -755,34 +756,34 @@ export default function ProviderDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-white/[0.06] bg-white/[0.02]">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-orange-600" />
+                <CardTitle className="flex items-center text-white">
+                  <Zap className="h-5 w-5 mr-2 text-orange-400" />
                   Quick Actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Button asChild className="h-auto p-4 flex flex-col items-center space-y-2">
+                  <Button asChild className="h-auto p-4 flex flex-col items-center space-y-2 bg-orange-500 hover:bg-orange-600 rounded-xl">
                     <Link href="/dashboard/posting">
                       <Target className="h-6 w-6" />
                       <span>Post Opportunity</span>
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
+                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
                     <Link href="/dashboard/posting">
                       <Calendar className="h-6 w-6" />
                       <span>Post Event</span>
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
+                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
                     <Link href="/dashboard/posting">
                       <Briefcase className="h-6 w-6" />
                       <span>Post Job</span>
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
+                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
                     <Link href="/dashboard/posting">
                       <BookOpen className="h-6 w-6" />
                       <span>Post Resource</span>
@@ -793,10 +794,10 @@ export default function ProviderDashboard() {
             </Card>
 
             {/* Recent Activity */}
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-white/[0.06] bg-white/[0.02]">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="h-5 w-5 mr-2 text-orange-600" />
+                <CardTitle className="flex items-center text-white">
+                  <Activity className="h-5 w-5 mr-2 text-orange-400" />
                   Recent Activity
                 </CardTitle>
               </CardHeader>
@@ -806,13 +807,13 @@ export default function ProviderDashboard() {
                     {postedItems.slice(0, 5).map((item) => {
                       const Icon = getTypeIcon(item.type)
                       return (
-                        <div key={item._id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                            <Icon className="h-5 w-5 text-white" />
+                        <div key={item._id} className="flex items-center space-x-4 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                          <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)}/20 rounded-full flex items-center justify-center flex-shrink-0 border border-${item.type === 'job' ? 'blue' : item.type === 'event' ? 'emerald' : item.type === 'opportunity' ? 'orange' : 'violet'}-500/30`}>
+                            <Icon className={`h-5 w-5 text-${item.type === 'job' ? 'blue' : item.type === 'event' ? 'emerald' : item.type === 'opportunity' ? 'orange' : 'violet'}-400`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 mb-1">{item.title}</h4>
-                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                            <h4 className="font-medium text-white mb-1">{item.title}</h4>
+                            <div className="flex items-center space-x-4 text-xs text-white/50">
                               <span className="capitalize">{item.type}</span>
                               <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
                               <Badge className={getStatusColor(item.status, item.isApproved)}>
@@ -820,13 +821,13 @@ export default function ProviderDashboard() {
                               </Badge>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <div className="flex items-center space-x-2 text-xs text-white/50">
                             <div className="flex items-center space-x-1">
                               <Eye className="h-3 w-3" />
                               <span>{item.metrics?.viewCount || 0}</span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
+                              <Heart className="h-3 w-3 text-red-400" />
                               <span>{item.metrics?.likeCount || 0}</span>
                             </div>
                           </div>
@@ -850,14 +851,14 @@ export default function ProviderDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <FileText className="h-8 w-8 text-white" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                      <FileText className="h-8 w-8 text-orange-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Content Yet</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <h3 className="text-lg font-semibold text-white mb-2">No Content Yet</h3>
+                    <p className="text-sm text-white/60 mb-4">
                       Start by posting your first opportunity, event, or job
                     </p>
-                    <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
+                    <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
                       <Link href="/dashboard/posting">
                         Post Your First Content
                         <ArrowRight className="h-4 w-4 ml-2" />

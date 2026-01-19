@@ -1088,11 +1088,12 @@ export class ApiClient {
     }
   }
 
-  static async approveContent(contentId: string, contentType: string): Promise<void> {
+  static async approveContent(contentId: string, contentType: string, options?: { bypassPayment?: boolean }): Promise<void> {
     const endpoint = this.getContentEndpoint(contentType, contentId, 'approve');
     console.log('Approving content:', { contentId, contentType, endpoint });
     const response = await this.makeAuthenticatedRequest(endpoint, {
       method: 'POST',
+      body: options ? JSON.stringify(options) : undefined,
     });
     return this.handleResponse(response);
   }
@@ -1337,6 +1338,22 @@ export class ApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code, newPassword }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async deleteAccount(): Promise<void> {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
     });
     return this.handleResponse(response);
   }

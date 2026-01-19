@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { usePage } from "@/contexts/page-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
 import SkillsInput from "@/components/ui/skills-input"
 import { 
@@ -37,85 +36,189 @@ import {
   LogOut,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  Lock,
+  Eye,
+  EyeOff,
+  Link as LinkIcon,
+  Plus,
+  X,
+  Sparkles,
+  TrendingUp,
+  Building2,
+  Lightbulb
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+
+// Social platforms config
+const socialPlatforms = [
+  { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/username' },
+  { key: 'twitter', label: 'Twitter / X', placeholder: 'https://twitter.com/username' },
+  { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/username' },
+  { key: 'github', label: 'GitHub', placeholder: 'https://github.com/username' },
+  { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@username' },
+  { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@username' },
+]
+
+// Career stage options
+const careerStages = [
+  'Student',
+  'Entry-Level (0-2 years)',
+  'Mid-Career (3-7 years)',
+  'Senior/Executive (8+ years)'
+]
+
+// Education level options
+const educationLevels = [
+  'High School',
+  'Undergraduate',
+  'Graduate',
+  'Professional'
+]
+
+// Interest options
+const interestOptions = [
+  'Jobs & Career Opportunities',
+  'Scholarships & Grants',
+  'Training & Workshops',
+  'Networking Events',
+  'Volunteering & Community Service',
+  'Entrepreneurship & Funding',
+  'Remote Work & Digital Skills',
+  'Research & Academic Opportunities',
+  'International Exchange Programs'
+]
+
+// Industry sector options
+const industrySectorOptions = [
+  'Technology',
+  'Creative Arts & Media',
+  'Business & Finance',
+  'Healthcare & Sciences',
+  'Government & Public Service'
+]
+
+// Aspiration options
+const aspirationOptions = [
+  'Access to career opportunities',
+  'Mentorship & guidance',
+  'Networking & professional connections',
+  'Skill development',
+  'Entrepreneurship support'
+]
 
 export default function SettingsPage() {
-  const { setHideNavbar, setHideFooter } = usePage()
-  const { user, profile, logout, updateProfile, updateUser, refreshUser, isLoading } = useAuth()
-  const [activeTab, setActiveTab] = useState<'profile' | 'onboarding' | 'preferences' | 'security' | 'notifications'>('profile')
+  const router = useRouter()
+  const { user, profile, logout, refreshUser, isLoading } = useAuth()
+  const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'privacy' | 'security' | 'notifications'>('basic')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [emailVerified, setEmailVerified] = useState<boolean>(false)
-  const [isLoadingVerification, setIsLoadingVerification] = useState(false)
   const [isResendingCode, setIsResendingCode] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
-  // Hide navbar when this page is active
-  useEffect(() => {
-    setHideFooter(true)
-    setHideNavbar(true)
-    return () => {
-      setHideNavbar(false)
-      setHideFooter(false)
-    }
-  }, [setHideNavbar, setHideFooter])
+  // Basic Info State
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [bio, setBio] = useState('')
+  const [headline, setHeadline] = useState('')
+  const [website, setWebsite] = useState('')
+  const [skills, setSkills] = useState<string[]>([])
+  const [newSkill, setNewSkill] = useState('')
+  const [workCompany, setWorkCompany] = useState('')
+  const [workTitle, setWorkTitle] = useState('')
+  const [educationSchool, setEducationSchool] = useState('')
+  const [educationDegree, setEducationDegree] = useState('')
+  const [educationField, setEducationField] = useState('')
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({})
+  const [profileImage, setProfileImage] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
 
-  // User data from auth context
-  const [userData, setUserData] = useState({
-    email: user?.email || "",
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    dateOfBirth: user?.dateOfBirth || "",
-    avatar: "/images/placeholder-user.jpg"
+  // Background/Onboarding State
+  const [country, setCountry] = useState('')
+  const [province, setProvince] = useState('')
+  const [city, setCity] = useState('')
+  const [careerStage, setCareerStage] = useState('')
+  const [interests, setInterests] = useState<string[]>([])
+  const [industrySectors, setIndustrySectors] = useState<string[]>([])
+  const [educationLevel, setEducationLevel] = useState('')
+  const [fieldOfStudy, setFieldOfStudy] = useState('')
+  const [institution, setInstitution] = useState('')
+  const [aspirations, setAspirations] = useState<string[]>([])
+
+  // Privacy State
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [showConnections, setShowConnections] = useState(true)
+
+  // Preferences State
+  const [preferences, setPreferences] = useState({
+    emailNotifications: true,
+    pushNotifications: false,
+    marketingEmails: false,
+    weeklyDigest: true,
+    language: "en",
+    timezone: "Africa/Lagos",
+    theme: "dark"
   })
 
-  // Onboarding data from auth context
-  const [onboardingData, setOnboardingData] = useState({
-    // Location
-    country: profile?.country || "",
-    province: profile?.province || "",
-    city: profile?.city || "",
-    
-    // Interests
-    interests: profile?.interests || [],
-    
-    // Industry
-    industries: profile?.industrySectors || [],
-    
-    // Education
-    highestLevel: profile?.educationLevel || "",
-    fieldOfStudy: profile?.fieldOfStudy || "",
-    institution: profile?.institution || "",
-    
-    // Career
-    careerStage: profile?.careerStage || "",
-    
-    // Skills
-    skills: profile?.skills || [],
-    
-    // Aspirations
-    aspirations: profile?.aspirations || []
-  })
+  // Security State
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
-  // Update local state when user/profile data changes
+  // Load data from profile/user
   useEffect(() => {
     if (user) {
-      setUserData(prev => ({
-        ...prev,
-        email: user.email,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        dateOfBirth: user.dateOfBirth || ""
-      }))
+      setFirstName(user.firstName || '')
+      setLastName(user.lastName || '')
       setEmailVerified(user.emailVerified || false)
     }
   }, [user])
 
-  // Load verification status on mount
+  useEffect(() => {
+    if (profile) {
+      // Basic Info
+      setBio(profile.bio || '')
+      setHeadline(profile.headline || '')
+      setWebsite(profile.website || '')
+      setSkills(profile.skills || [])
+      setWorkCompany(profile.work?.company || '')
+      setWorkTitle(profile.work?.title || '')
+      setEducationSchool(profile.education?.school || '')
+      setEducationDegree(profile.education?.degree || '')
+      setEducationField(profile.education?.field || '')
+      setSocialLinks(profile.socialLinks || {})
+      setProfileImage(profile.profileImage || user?.profileImage || '')
+      setPhoneNumber(profile.phoneNumber || '')
+      
+      // Privacy
+      setIsPrivate(profile.isPrivate || false)
+      setShowConnections(profile.showConnections !== false)
+
+      // Onboarding/Background
+      if (profile.onboarding) {
+        setCountry(profile.onboarding.country || '')
+        setProvince(profile.onboarding.province || '')
+        setCity(profile.onboarding.city || '')
+        setCareerStage(profile.onboarding.careerStage || '')
+        setInterests(profile.onboarding.interests || [])
+        setIndustrySectors(profile.onboarding.industrySectors || [])
+        setEducationLevel(profile.onboarding.educationLevel || '')
+        setFieldOfStudy(profile.onboarding.fieldOfStudy || '')
+        setInstitution(profile.onboarding.institution || '')
+        setAspirations(profile.onboarding.aspirations || [])
+      }
+    }
+  }, [profile, user])
+
+  // Load verification status
   useEffect(() => {
     const loadVerificationStatus = async () => {
       if (user && ApiClient.isAuthenticated()) {
@@ -130,201 +233,233 @@ export default function SettingsPage() {
     loadVerificationStatus()
   }, [user])
 
-  useEffect(() => {
-    if (profile) {
-      setOnboardingData({
-        country: profile.country || "",
-        province: profile.province || "",
-        city: profile.city || "",
-        interests: profile.interests || [],
-        industries: profile.industrySectors || [],
-        highestLevel: profile.educationLevel || "",
-        fieldOfStudy: profile.fieldOfStudy || "",
-        institution: profile.institution || "",
-        careerStage: profile.careerStage || "",
-        skills: profile.skills || [],
-        aspirations: profile.aspirations || []
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('accessToken')
+    return token ? { 'Authorization': `Bearer ${token}` } : {}
+  }
+
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB')
+      return
+    }
+
+    setUploadingImage(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch(`${API_BASE_URL}/api/profile/image`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: formData
       })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setProfileImage(data.data.profileImage)
+        await refreshUser()
+        toast.success('Profile picture updated!')
+      } else {
+        toast.error(data.message || 'Failed to upload image')
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err)
+      toast.error('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
     }
-  }, [profile])
+  }
 
-  // Refresh local state when user data changes (after refreshUser)
-  useEffect(() => {
-    if (user) {
-      setUserData(prev => ({
-        ...prev,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        dateOfBirth: user.dateOfBirth || ""
-      }))
+  // Toggle array items
+  const toggleArrayItem = (arr: string[], item: string, setArr: (v: string[]) => void) => {
+    if (arr.includes(item)) {
+      setArr(arr.filter(i => i !== item))
+    } else {
+      setArr([...arr, item])
     }
-  }, [user])
+  }
 
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    marketingEmails: false,
-    weeklyDigest: true,
-    language: "en",
-    timezone: "Africa/Lagos",
-    theme: "light"
-  })
+  // Add skill
+  const addSkill = () => {
+    const trimmed = newSkill.trim()
+    if (trimmed && !skills.includes(trimmed) && skills.length < 20) {
+      setSkills([...skills, trimmed])
+      setNewSkill('')
+    }
+  }
 
+  // Remove skill
+  const removeSkill = (skill: string) => {
+    setSkills(skills.filter(s => s !== skill))
+  }
+
+  // Update social link
+  const updateSocialLink = (platform: string, url: string) => {
+    setSocialLinks({ ...socialLinks, [platform]: url })
+  }
+
+  // Save profile
   const handleSave = async () => {
     setIsSaving(true)
-    setSaveMessage(null)
+
     try {
-      // Try to update user data (firstName, lastName, dateOfBirth) - with fallback for backward compatibility
-      try {
-        await updateUser({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          dateOfBirth: userData.dateOfBirth
-        })
-        console.log('User data updated successfully')
-      } catch (userUpdateError) {
-        console.warn('Failed to update user data, continuing with profile update:', userUpdateError)
-        // For backward compatibility, we'll still try to update the profile
-        // and include firstName/lastName/dateOfBirth there as a fallback
+      // Update user profile
+      const userUpdates: Record<string, any> = {
+        firstName: firstName || null,
+        lastName: lastName || null,
+        bio: bio || null,
+        headline: headline || null,
+        website: website || null,
+        skills,
+        work: workCompany || workTitle ? { company: workCompany, title: workTitle } : null,
+        education: educationSchool || educationDegree || educationField 
+          ? { school: educationSchool, degree: educationDegree, field: educationField } 
+          : null,
+        socialLinks: Object.fromEntries(
+          Object.entries(socialLinks).filter(([_, v]) => v)
+        ),
+        isPrivate,
+        showConnections,
+        phoneNumber: phoneNumber || null
       }
 
-      // Update profile data (including firstName and lastName as fallback for backward compatibility)
-      await updateProfile({
-        firstName: userData.firstName, // Include as fallback
-        lastName: userData.lastName,   // Include as fallback
-        country: onboardingData.country,
-        province: onboardingData.province,
-        city: onboardingData.city,
-        interests: onboardingData.interests,
-        industrySectors: onboardingData.industries,
-        educationLevel: onboardingData.highestLevel,
-        fieldOfStudy: onboardingData.fieldOfStudy,
-        institution: onboardingData.institution,
-        careerStage: onboardingData.careerStage,
-        skills: onboardingData.skills,
-        aspirations: onboardingData.aspirations
+      const response = await fetch(`${API_BASE_URL}/api/profile`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userUpdates)
       })
-      
-      // Refresh user data to ensure UI reflects latest changes
-      console.log('Refreshing user data after save...')
+
+      const data = await response.json()
+
+      if (!data.success) {
+        toast.error(data.message || 'Failed to save profile')
+        setIsSaving(false)
+        return
+      }
+
+      // Update onboarding profile if we have onboarding data
+      if (profile?.onboarding) {
+        const onboardingUpdates = {
+          country,
+          province,
+          city: city || undefined,
+          careerStage,
+          interests,
+          industrySectors,
+          educationLevel,
+          fieldOfStudy: fieldOfStudy || undefined,
+          institution: institution || undefined,
+          skills,
+          aspirations
+        }
+
+        const onboardingResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
+          method: 'PUT',
+          headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(onboardingUpdates)
+        })
+
+        const onboardingData = await onboardingResponse.json()
+
+        if (!onboardingData.success) {
+          console.warn('Failed to update onboarding data:', onboardingData.message)
+        }
+      }
+
+      // Refresh user data
       await refreshUser()
       
-      // Update local state to reflect the changes immediately
-      setUserData(prev => ({
-        ...prev,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        dateOfBirth: userData.dateOfBirth
-      }))
-      
       setIsEditing(false)
-      setSaveMessage({ type: 'success', message: 'Profile updated successfully! Data refreshed.' })
-      // Clear message after 3 seconds
-      setTimeout(() => setSaveMessage(null), 3000)
-    } catch (error) {
-      console.error('Failed to save profile:', error)
-      setSaveMessage({ type: 'error', message: 'Failed to save profile. Please try again.' })
-      // Clear error message after 5 seconds
-      setTimeout(() => setSaveMessage(null), 5000)
+      toast.success('Profile updated successfully!')
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      toast.error('Failed to save profile')
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleCancel = () => {
-    setIsEditing(false)
-    // Reset form data if needed
-  }
+  const handleDeleteAccount = async () => {
+    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
+      '• Your profile and preferences\n' +
+      '• All saved opportunities, events, jobs, and resources\n' +
+      '• All liked content\n' +
+      '• All application history\n' +
+      '• All other account data\n\n' +
+      'This action cannot be undone!'
+    
+    if (!confirm(confirmMessage)) {
+      return
+    }
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'onboarding', label: 'Onboarding Details', icon: Target },
-    { id: 'preferences', label: 'Preferences', icon: Palette },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell }
-  ]
+    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
+    const userInput = prompt(finalConfirm)
+    
+    if (userInput !== 'DELETE') {
+      toast.error('Account deletion cancelled')
+      return
+    }
 
-  // Lists for selection fields
-  const interestsList = [
-    "Jobs & Career Opportunities",
-    "Scholarships & Grants",
-    "Training & Workshops",
-    "Networking Events",
-    "Volunteering & Community Service",
-    "Entrepreneurship & Funding",
-    "Remote Work & Digital Skills",
-    "Research & Academic Opportunities",
-    "International Exchange Programs"
-  ]
-
-  const industriesList = [
-    "Technology",
-    "Creative Arts & Media",
-    "Business & Finance",
-    "Healthcare & Sciences",
-    "Education & Training",
-    "Government & Public Service"
-  ]
-
-  const educationLevels = ["High School", "Undergraduate", "Graduate", "Professional"]
-  const fieldsOfStudy = ["Business", "Engineering", "Arts", "Medicine", "Technology", "Other"]
-  const careerStages = [
-    "Student",
-    "Entry-Level (0-2 years)",
-    "Mid-Career (3-7 years)",
-    "Senior/Executive (8+ years)",
-  ]
-  const skillsList = [
-    "Web Development",
-    "Data Science",
-    "Digital Marketing",
-    "Project Management",
-    "Graphic Design",
-    "Content Writing",
-    "Public Speaking",
-    "Sales",
-  ]
-  const aspirationsList = [
-    "Access to career opportunities",
-    "Mentorship & guidance",
-    "Networking & professional connections",
-    "Skill development",
-    "Entrepreneurship support"
-  ]
-
-  const toggleArrayItem = (array: string[], item: string, setter: (value: string[]) => void) => {
-    if (array.includes(item)) {
-      setter(array.filter(i => i !== item))
-    } else {
-      setter([...array, item])
+    setIsDeletingAccount(true)
+    
+    try {
+      await ApiClient.deleteAccount()
+      toast.success('Account deleted successfully')
+      
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      
+      setTimeout(() => {
+        logout()
+        router.push('/')
+      }, 2000)
+      
+    } catch (error: any) {
+      console.error('Delete account error:', error)
+      toast.error(error.message || 'Failed to delete account. Please try again.')
+      setIsDeletingAccount(false)
     }
   }
 
-  // Show loading state while user data is being fetched
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-            <User className="w-8 h-8 text-orange-600 animate-pulse" />
-          </div>
-          <p className="text-lg text-gray-600">Loading your profile...</p>
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/60">Loading your settings...</p>
         </div>
       </div>
     )
   }
 
-  // Show error state if no user data
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <User className="w-8 h-8 text-red-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 border border-red-500/30">
+            <User className="w-8 h-8 text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Profile Not Found</h2>
-          <p className="text-gray-600 mb-4">Unable to load your profile data. Please try logging in again.</p>
-          <Button onClick={logout} className="bg-orange-500 hover:bg-orange-600">
+          <h2 className="text-xl font-semibold text-white mb-2">Profile Not Found</h2>
+          <p className="text-white/60 mb-4">Unable to load your profile data. Please try logging in again.</p>
+          <Button onClick={logout} className="bg-orange-500 hover:bg-orange-600 rounded-xl">
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
@@ -334,774 +469,797 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+    <div className="min-h-screen bg-[#0a0a0a] pb-20 md:pb-8">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </Link>
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Settings</h1>
-              <p className="text-sm lg:text-base text-gray-600">Manage your account and preferences</p>
+      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors">
+                <ArrowLeft className="h-5 w-5 text-white/60" />
+              </Link>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Settings</h1>
+                <p className="text-sm text-white/50 hidden sm:block">Manage your account and preferences</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={logout}
+                variant="outline"
+                size="sm"
+                className="border-white/10 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl"
+              >
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Sign Out</span>
+              </Button>
+              
+              {isEditing && (
+                <>
+                  <Button 
+                    onClick={() => setIsEditing(false)} 
+                    variant="outline" 
+                    size="sm"
+                    className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={isSaving} 
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Save</span>
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <Button
-              onClick={logout}
-              variant="outline"
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-          
-          {isEditing && (
-            <div className="flex items-center space-x-3">
-              <Button onClick={handleCancel} variant="outline" className="border-gray-200">
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving} className="bg-orange-500 hover:bg-orange-600">
-                {isSaving ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Saving...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Save className="h-4 w-4" />
-                    <span>Save Changes</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
-        {/* Success/Error Messages */}
-        {saveMessage && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center ${
-            saveMessage.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
-            <div className={`w-5 h-5 mr-3 ${
-              saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {saveMessage.type === 'success' ? '✓' : '✗'}
-            </div>
-            <span className="font-medium">{saveMessage.message}</span>
-          </div>
-        )}
-
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
         {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => {
+        <div className="mb-6">
+          <div className="flex gap-1 p-1 bg-white/[0.03] rounded-xl overflow-x-auto">
+            {[
+              { id: 'basic', label: 'Basic Info', icon: User },
+              { id: 'background', label: 'Background', icon: Target },
+              { id: 'privacy', label: 'Privacy', icon: Lock },
+              { id: 'security', label: 'Security', icon: Shield },
+              { id: 'notifications', label: 'Notifications', icon: Bell }
+            ].map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                     activeTab === tab.id
-                      ? 'bg-orange-500 text-white shadow-lg'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
+                      ? "bg-orange-500 text-white"
+                      : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
+                  )}
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Profile Tab */}
-        {activeTab === 'profile' && (
+        {/* Basic Info Tab */}
+        {activeTab === 'basic' && (
           <div className="space-y-6">
-            {/* Profile Header */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <User className="h-5 w-5 text-orange-600" />
-                  Profile Information
-                </CardTitle>
-                {!profile && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Profile Incomplete:</strong> Complete your onboarding details to see your full profile information.
-                    </p>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Avatar Section */}
-                  {/* <div className="flex flex-col items-center space-y-4">
-                    <div className="relative">
-                      <Image
-                        src={userData.avatar}
-                        alt="Profile"
-                        width={120}
-                        height={120}
-                        className="w-30 h-30 rounded-full border-4 border-orange-100"
-                      />
-                      <button className="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
-                        <Camera className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-                    <Button variant="outline" size="sm" className="border-orange-200 text-orange-600 hover:bg-orange-50">
-                      Change Photo
-                    </Button>
-                  </div> */}
-
-                  {/* Profile Form */}
-                  <div className="flex-1 space-y-6">
-                    {/* Personal Information */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={userData.firstName}
-                          onChange={(e) => setUserData({...userData, firstName: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          placeholder="Enter your first name"
-                        />
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+              {/* Profile Image */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden bg-[#141414] border-2 border-white/[0.06]">
+                    {profileImage ? (
+                      <Image src={profileImage} alt="Profile" width={128} height={128} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center">
+                        <span className="text-2xl md:text-3xl font-semibold text-white">
+                          {(firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase()}
+                        </span>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={userData.lastName}
-                          onChange={(e) => setUserData({...userData, lastName: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          placeholder="Enter your last name"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                        <Input
-                          id="dateOfBirth"
-                          type="date"
-                          value={userData.dateOfBirth}
-                          onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          {...getDatePickerPropsFor16Plus()}
-                        />
-                        <p className="text-xs text-gray-500">
-                          You must be at least 16 years old
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        {/* Empty div for grid layout */}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={userData.email}
-                          onChange={(e) => setUserData({...userData, email: e.target.value})}
-                          disabled={true}
-                          className="h-11"
-                        />
-                        {/* Email Verification Status */}
-                        <div className="flex items-center justify-between mt-3 p-3 rounded-lg border bg-gray-50">
-                          <div className="flex items-center gap-2">
-                            {emailVerified ? (
-                              <>
-                                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                <span className="text-sm text-green-700 font-medium">Email Verified</span>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="h-5 w-5 text-orange-600" />
-                                <span className="text-sm text-orange-700 font-medium">Email Not Verified</span>
-                              </>
-                            )}
-                          </div>
-                          {!emailVerified && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                if (isResendingCode) return
-                                setIsResendingCode(true)
-                                try {
-                                  await ApiClient.sendVerificationCode()
-                                  toast.success('Verification code sent! Please check your email.')
-                                  // Redirect to verification page
-                                  window.location.href = '/verify-email'
-                                } catch (error: any) {
-                                  toast.error(error.message || 'Failed to send verification code')
-                                } finally {
-                                  setIsResendingCode(false)
-                                }
-                              }}
-                              disabled={isResendingCode}
-                              className="border-orange-300 text-orange-600 hover:bg-orange-50"
-                            >
-                              {isResendingCode ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                  Sending...
-                                </>
-                              ) : (
-                                <>
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Verify Email
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                        {!emailVerified && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Please verify your email address to ensure account security and receive important notifications.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {!isEditing && (
-                      <Button onClick={() => setIsEditing(true)} className="bg-orange-500 hover:bg-orange-600">
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Button>
                     )}
                   </div>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage || !isEditing}
+                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploadingImage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                {isEditing && (
+                  <p className="text-xs text-white/40 mt-2">Tap to change photo</p>
+                )}
+              </div>
 
-        {/* Onboarding Details Tab */}
-        {activeTab === 'onboarding' && (
-          <div className="space-y-6">
-            {!profile && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <Target className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-800">Complete Your Profile</h3>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Fill out your onboarding details to help us personalize your experience and show you relevant opportunities.
-                    </p>
-                  </div>
+              {/* Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white/60 text-sm mb-2 block">First Name</Label>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="John"
+                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white/60 text-sm mb-2 block">Last Name</Label>
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="Doe"
+                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  />
                 </div>
               </div>
-            )}
-            
-            
-            {/* Location Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  Location Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country *</Label>
-                    <Input
-                      id="country"
-                      value={onboardingData.country}
-                      onChange={(e) => setOnboardingData({...onboardingData, country: e.target.value})}
-                      disabled={!isEditing}
-                      className="h-11"
-                      placeholder="e.g., Nigeria"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="province">Province/State *</Label>
-                    <Input
-                      id="province"
-                      value={onboardingData.province}
-                      onChange={(e) => setOnboardingData({...onboardingData, province: e.target.value})}
-                      disabled={!isEditing}
-                      className="h-11"
-                      placeholder="e.g., Lagos"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City/Town (Optional)</Label>
-                    <Input
-                      id="city"
-                      value={onboardingData.city}
-                      onChange={(e) => setOnboardingData({...onboardingData, city: e.target.value})}
-                      disabled={!isEditing}
-                      className="h-11"
-                      placeholder="e.g., Ikeja"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Interests Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Target className="h-5 w-5 text-green-600" />
-                  What are you looking for?
-                </CardTitle>
-                <p className="text-sm text-gray-600">Select all that apply. This will help us tailor content for you.</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {interestsList.map(interest => (
-                    <button
-                      key={interest}
-                      onClick={() => isEditing && toggleArrayItem(onboardingData.interests, interest, (value) => setOnboardingData({...onboardingData, interests: value}))}
-                      disabled={!isEditing}
-                      className={`relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200 ${
-                        onboardingData.interests.includes(interest)
-                          ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                          : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
-                      } ${!isEditing ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
+              {/* Email */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block">Email Address</Label>
+                <Input
+                  value={user?.email || ''}
+                  disabled
+                  className="bg-white/[0.03] border-white/[0.08] text-white/50 rounded-xl h-11"
+                />
+                <div className="flex items-center justify-between mt-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex items-center gap-2">
+                    {emailVerified ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <span className="text-sm text-emerald-400 font-medium">Email Verified</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-orange-500" />
+                        <span className="text-sm text-orange-400 font-medium">Email Not Verified</span>
+                      </>
+                    )}
+                  </div>
+                  {!emailVerified && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (isResendingCode) return
+                        setIsResendingCode(true)
+                        try {
+                          await ApiClient.sendVerificationCode()
+                          toast.success('Verification code sent! Please check your email.')
+                          router.push('/verify-email')
+                        } catch (error: any) {
+                          toast.error(error.message || 'Failed to send verification code')
+                        } finally {
+                          setIsResendingCode(false)
+                        }
+                      }}
+                      disabled={isResendingCode}
+                      className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl"
                     >
-                      {onboardingData.interests.includes(interest) && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
+                      {isResendingCode ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Verify
+                        </>
                       )}
-                      {interest}
-                    </button>
-                  ))}
+                    </Button>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Industry Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Building className="h-5 w-5 text-purple-600" />
-                  Industry Information
-                </CardTitle>
-                <p className="text-sm text-gray-600">What industry are you in or interested in?</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {industriesList.map(industry => (
-                    <button
-                      key={industry}
-                      onClick={() => isEditing && toggleArrayItem(onboardingData.industries, industry, (value) => setOnboardingData({...onboardingData, industries: value}))}
-                      disabled={!isEditing}
-                      className={`relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200 ${
-                        onboardingData.industries.includes(industry)
-                          ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                          : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
-                      } ${!isEditing ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
-                    >
-                      {onboardingData.industries.includes(industry) && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      )}
-                      {industry}
-                    </button>
-                  ))}
+              {/* Headline */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block">Headline</Label>
+                <Input
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="e.g. Software Engineer | Entrepreneur"
+                  maxLength={100}
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block">Bio</Label>
+                <Textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Tell people about yourself..."
+                  maxLength={500}
+                  rows={3}
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl focus:border-orange-500/50 resize-none disabled:opacity-50"
+                />
+                <p className="text-xs text-white/30 mt-1 text-right">{bio.length}/500</p>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block">Phone Number</Label>
+                <Input
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  disabled={!isEditing}
+                  type="tel"
+                  placeholder="+1234567890"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
+
+              {/* Work */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <Briefcase className="w-4 h-4" />
+                  <span>Work</span>
                 </div>
-              </CardContent>
-            </Card>
+                <Input
+                  value={workTitle}
+                  onChange={(e) => setWorkTitle(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Job Title"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+                <Input
+                  value={workCompany}
+                  onChange={(e) => setWorkCompany(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Company"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
 
-            {/* Education Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <GraduationCap className="h-5 w-5 text-indigo-600" />
-                  Educational Background
-                </CardTitle>
-                <p className="text-sm text-gray-600">This information is optional but highly recommended.</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <Label>Highest Level Completed</Label>
-                    <Select 
-                      value={onboardingData.highestLevel} 
-                      onValueChange={(value) => setOnboardingData({...onboardingData, highestLevel: value})}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {educationLevels.map(level => (
-                          <SelectItem key={level} value={level}>{level}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Field of Study</Label>
-                    <Select 
-                      value={onboardingData.fieldOfStudy} 
-                      onValueChange={(value) => setOnboardingData({...onboardingData, fieldOfStudy: value})}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select field" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fieldsOfStudy.map(field => (
-                          <SelectItem key={field} value={field}>{field}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="institution">Institution Name (Optional)</Label>
-                    <Input
-                      id="institution"
-                      value={onboardingData.institution}
-                      onChange={(e) => setOnboardingData({...onboardingData, institution: e.target.value})}
-                      disabled={!isEditing}
-                      className="h-11"
-                      placeholder="e.g., University of Example"
-                    />
-                  </div>
+              {/* Education */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Education</span>
                 </div>
-              </CardContent>
-            </Card>
+                <Input
+                  value={educationSchool}
+                  onChange={(e) => setEducationSchool(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="School/University"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+                <Input
+                  value={educationDegree}
+                  onChange={(e) => setEducationDegree(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Degree"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+                <Input
+                  value={educationField}
+                  onChange={(e) => setEducationField(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Field of Study"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
 
-            {/* Career Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Briefcase className="h-5 w-5 text-amber-600" />
-                  Career Information
-                </CardTitle>
-                <p className="text-sm text-gray-600">What's your current career stage?</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {careerStages.map(stage => (
-                    <button
-                      key={stage}
-                      onClick={() => isEditing && setOnboardingData({...onboardingData, careerStage: stage})}
-                      disabled={!isEditing}
-                      className={`relative flex items-center justify-center p-4 h-20 text-center rounded-xl border-2 transition-all duration-200 ${
-                        onboardingData.careerStage === stage
-                          ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                          : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
-                      } ${!isEditing ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
-                    >
-                      {onboardingData.careerStage === stage && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      )}
-                      {stage}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Skills Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Star className="h-5 w-5 text-yellow-600" />
-                  Current Skills
-                </CardTitle>
-                <p className="text-sm text-gray-600">This is optional, but helps us recommend better content.</p>
-              </CardHeader>
-              <CardContent>
+              {/* Skills */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Skills
+                </Label>
                 {isEditing ? (
-                  <SkillsInput
-                    value={onboardingData.skills || []}
-                    onChange={(skills) => setOnboardingData({...onboardingData, skills})}
-                    placeholder="Type your skills and press Enter..."
-                    maxSkills={15}
-                  />
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                        placeholder="Add a skill..."
+                        className="flex-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                      />
+                      <Button 
+                        onClick={addSkill}
+                        disabled={!newSkill.trim() || skills.length >= 20}
+                        variant="outline"
+                        size="icon"
+                        className="border-white/10 text-white/60 hover:text-white rounded-xl h-10 w-10"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.map((skill, i) => (
+                          <span 
+                            key={i}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs"
+                          >
+                            {skill}
+                            <button onClick={() => removeSkill(skill)} className="opacity-60 hover:opacity-100">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {onboardingData.skills && onboardingData.skills.length > 0 ? (
-                      onboardingData.skills.map((skill: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full"
+                  <div className="flex flex-wrap gap-1.5">
+                    {skills.length > 0 ? (
+                      skills.map((skill, i) => (
+                        <span 
+                          key={i}
+                          className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs"
                         >
                           {skill}
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-500 text-sm">No skills added yet</span>
+                      <span className="text-white/40 text-sm">No skills added yet</span>
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Aspirations Section */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Heart className="h-5 w-5 text-red-600" />
-                  What do you want to gain from GlowUp Channel?
-                </CardTitle>
-                <p className="text-sm text-gray-600">Select all that apply. This helps us align with your goals.</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {aspirationsList.map(aspiration => (
+              {/* Website & Social Links */}
+              <div className="space-y-3">
+                <Label className="text-white/60 text-sm block flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3" />
+                  Links
+                </Label>
+                <Input
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="https://yourwebsite.com"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+                {socialPlatforms.map((platform) => (
+                  <Input
+                    key={platform.key}
+                    value={socialLinks[platform.key] || ''}
+                    onChange={(e) => updateSocialLink(platform.key, e.target.value)}
+                    disabled={!isEditing}
+                    placeholder={platform.placeholder}
+                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  />
+                ))}
+              </div>
+
+              {!isEditing && (
+                <Button 
+                  onClick={() => setIsEditing(true)} 
+                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Background Tab */}
+        {activeTab === 'background' && (
+          <div className="space-y-6">
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+              {/* Location */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <MapPin className="w-4 h-4" />
+                  <span>Location</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Input
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="Country"
+                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  />
+                  <Input
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="Province/State"
+                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  />
+                </div>
+                <Input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="City (optional)"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
+
+              {/* Career Stage */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Career Stage
+                </Label>
+                <Select value={careerStage} onValueChange={setCareerStage} disabled={!isEditing}>
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 disabled:opacity-50">
+                    <SelectValue placeholder="Select career stage" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                    {careerStages.map((stage) => (
+                      <SelectItem key={stage} value={stage} className="text-white focus:bg-white/[0.05]">
+                        {stage}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Education */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2 text-white/60 text-sm">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Education</span>
+                </div>
+                <Select value={educationLevel} onValueChange={setEducationLevel} disabled={!isEditing}>
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 disabled:opacity-50">
+                    <SelectValue placeholder="Education level" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                    {educationLevels.map((level) => (
+                      <SelectItem key={level} value={level} className="text-white focus:bg-white/[0.05]">
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={fieldOfStudy}
+                  onChange={(e) => setFieldOfStudy(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Field of Study"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+                <Input
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="Institution/University"
+                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                />
+              </div>
+
+              {/* Interests */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  Interests
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map((interest) => (
+                    <button
+                      key={interest}
+                      onClick={() => isEditing && toggleArrayItem(interests, interest, setInterests)}
+                      disabled={!isEditing}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                        interests.includes(interest)
+                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                        !isEditing && "opacity-50 cursor-default"
+                      )}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Industry Sectors */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                  <Building2 className="w-3 h-3" />
+                  Industry Sectors
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {industrySectorOptions.map((sector) => (
+                    <button
+                      key={sector}
+                      onClick={() => isEditing && toggleArrayItem(industrySectors, sector, setIndustrySectors)}
+                      disabled={!isEditing}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                        industrySectors.includes(sector)
+                          ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                        !isEditing && "opacity-50 cursor-default"
+                      )}
+                    >
+                      {sector}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Aspirations */}
+              <div>
+                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                  <Lightbulb className="w-3 h-3" />
+                  What are you looking for?
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {aspirationOptions.map((aspiration) => (
                     <button
                       key={aspiration}
-                      onClick={() => isEditing && toggleArrayItem(onboardingData.aspirations, aspiration, (value) => setOnboardingData({...onboardingData, aspirations: value}))}
+                      onClick={() => isEditing && toggleArrayItem(aspirations, aspiration, setAspirations)}
                       disabled={!isEditing}
-                      className={`relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200 ${
-                        onboardingData.aspirations.includes(aspiration)
-                          ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                          : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
-                      } ${!isEditing ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
-                    >
-                      {onboardingData.aspirations.includes(aspiration) && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                        aspirations.includes(aspiration)
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                        !isEditing && "opacity-50 cursor-default"
                       )}
+                    >
                       {aspiration}
                     </button>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            {!isEditing && (
-              <div className="flex justify-center">
-                <Button onClick={() => setIsEditing(true)} className="bg-orange-500 hover:bg-orange-600">
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Onboarding Details
-                </Button>
               </div>
-            )}
+
+              {!isEditing && (
+                <Button 
+                  onClick={() => setIsEditing(true)} 
+                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Background
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Preferences Tab */}
-        {activeTab === 'preferences' && (
+        {/* Privacy Tab */}
+        {activeTab === 'privacy' && (
           <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Palette className="h-5 w-5 text-purple-600" />
-                  Account Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="language">Language</Label>
-                      <Select value={preferences.language} onValueChange={(value) => setPreferences({...preferences, language: value})}>
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="ar">Arabic</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select value={preferences.timezone} onValueChange={(value) => setPreferences({...preferences, timezone: value})}>
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Africa/Lagos">Africa/Lagos (GMT+1)</SelectItem>
-                          <SelectItem value="Africa/Cairo">Africa/Cairo (GMT+2)</SelectItem>
-                          <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (GMT+2)</SelectItem>
-                          <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
-                        </SelectContent>
-                      </Select>
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-4">
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {isPrivate ? <Lock className="w-5 h-5 text-white/40" /> : <Globe className="w-5 h-5 text-emerald-500" />}
+                    <div>
+                      <p className="text-sm font-medium text-white">Private Account</p>
+                      <p className="text-xs text-white/40">New followers will need your approval</p>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="theme">Theme</Label>
-                    <Select value={preferences.theme} onValueChange={(value) => setPreferences({...preferences, theme: value})}>
-                      <SelectTrigger className="h-11">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="auto">Auto (System)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Switch
+                    checked={isPrivate}
+                    onCheckedChange={setIsPrivate}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-orange-500"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-white/40" />}
+                    <div>
+                      <p className="text-sm font-medium text-white">Show Connections</p>
+                      <p className="text-xs text-white/40">Let others see your follower counts</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={showConnections}
+                    onCheckedChange={setShowConnections}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                <p className="text-sm text-orange-400 font-medium mb-1">Privacy Tips</p>
+                <ul className="text-xs text-white/50 space-y-1">
+                  <li>• Private accounts require approval for new followers</li>
+                  <li>• Hidden connections only affect the count display</li>
+                  <li>• Your posts visibility can be set individually</li>
+                </ul>
+              </div>
+
+              {!isEditing && (
+                <Button 
+                  onClick={() => setIsEditing(true)} 
+                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Privacy Settings
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
         {/* Security Tab */}
         {activeTab === 'security' && (
           <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  Security Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Change Password</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Current Password</Label>
-                        <Input
-                          id="currentPassword"
-                          type="password"
-                          placeholder="Enter current password"
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">New Password</Label>
-                        <Input
-                          id="newPassword"
-                          type="password"
-                          placeholder="Enter new password"
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-                    <Button className="bg-blue-500 hover:bg-blue-600">
-                      Update Password
-                    </Button>
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Change Password</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-white/60 text-sm mb-2 block">Current Password</Label>
+                    <Input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                    />
                   </div>
-
-                  <div className="border-t border-gray-200 pt-6">
-                    <h4 className="font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Two-Factor Authentication</p>
-                        <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-                      </div>
-                      <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50">
-                        Enable 2FA
-                      </Button>
-                    </div>
+                  <div>
+                    <Label className="text-white/60 text-sm mb-2 block">New Password</Label>
+                    <Input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                    />
                   </div>
+                  <div>
+                    <Label className="text-white/60 text-sm mb-2 block">Confirm New Password</Label>
+                    <Input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                    />
+                  </div>
+                  <Button className="bg-blue-500 hover:bg-blue-600 rounded-xl">
+                    Update Password
+                  </Button>
+                </div>
+              </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <h4 className="font-medium text-gray-900 mb-4">Danger Zone</h4>
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <h5 className="font-medium text-red-900 mb-2">Delete Account</h5>
-                      <p className="text-sm text-red-700 mb-4">
-                        Once you delete your account, there is no going back. Please be certain.
-                      </p>
-                      <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+              <div className="border-t border-white/[0.06] pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Two-Factor Authentication</h3>
+                <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+                  <div>
+                    <p className="font-medium text-white">Two-Factor Authentication</p>
+                    <p className="text-sm text-white/50">Add an extra layer of security to your account</p>
+                  </div>
+                  <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl">
+                    Enable 2FA
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-t border-white/[0.06] pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Danger Zone</h3>
+                <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                  <h4 className="font-medium text-red-400 mb-2">Delete Account</h4>
+                  <p className="text-sm text-white/50 mb-4">
+                    Once you delete your account, there is no going back. Please be certain.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl"
+                    onClick={handleDeleteAccount}
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Account
-                      </Button>
-                    </div>
-                  </div>
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
           <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Bell className="h-5 w-5 text-green-600" />
-                  Notification Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Email Notifications</p>
-                          <p className="text-sm text-gray-600">Receive notifications via email</p>
-                        </div>
-                        <Switch
-                          checked={preferences.emailNotifications}
-                          onCheckedChange={(checked) => setPreferences({...preferences, emailNotifications: checked})}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Marketing Emails</p>
-                          <p className="text-sm text-gray-600">Receive promotional and marketing emails</p>
-                        </div>
-                        <Switch
-                          checked={preferences.marketingEmails}
-                          onCheckedChange={(checked) => setPreferences({...preferences, marketingEmails: checked})}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Weekly Digest</p>
-                          <p className="text-sm text-gray-600">Receive a weekly summary of activities</p>
-                        </div>
-                        <Switch
-                          checked={preferences.weeklyDigest}
-                          onCheckedChange={(checked) => setPreferences({...preferences, weeklyDigest: checked})}
-                        />
-                      </div>
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Email Notifications</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-white">Email Notifications</p>
+                      <p className="text-sm text-white/50">Receive notifications via email</p>
                     </div>
+                    <Switch
+                      checked={preferences.emailNotifications}
+                      onCheckedChange={(checked) => setPreferences({...preferences, emailNotifications: checked})}
+                      className="data-[state=checked]:bg-orange-500"
+                    />
                   </div>
-
-                  <div className="border-t border-gray-200 pt-6">
-                    <h4 className="font-medium text-gray-900 mb-4">Push Notifications</h4>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">Push Notifications</p>
-                        <p className="text-sm text-gray-600">Receive notifications on your device</p>
-                      </div>
-                      <Switch
-                        checked={preferences.pushNotifications}
-                        onCheckedChange={(checked) => setPreferences({...preferences, pushNotifications: checked})}
-                      />
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-white">Marketing Emails</p>
+                      <p className="text-sm text-white/50">Receive promotional and marketing emails</p>
                     </div>
+                    <Switch
+                      checked={preferences.marketingEmails}
+                      onCheckedChange={(checked) => setPreferences({...preferences, marketingEmails: checked})}
+                      className="data-[state=checked]:bg-orange-500"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-white">Weekly Digest</p>
+                      <p className="text-sm text-white/50">Receive a weekly summary of activities</p>
+                    </div>
+                    <Switch
+                      checked={preferences.weeklyDigest}
+                      onCheckedChange={(checked) => setPreferences({...preferences, weeklyDigest: checked})}
+                      className="data-[state=checked]:bg-orange-500"
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="border-t border-white/[0.06] pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Push Notifications</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-white">Push Notifications</p>
+                    <p className="text-sm text-white/50">Receive notifications on your device</p>
+                  </div>
+                  <Switch
+                    checked={preferences.pushNotifications}
+                    onCheckedChange={(checked) => setPreferences({...preferences, pushNotifications: checked})}
+                    className="data-[state=checked]:bg-orange-500"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

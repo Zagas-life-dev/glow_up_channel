@@ -49,9 +49,55 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
   ]
 
   // Debounced search function
-  const searchSuggestions = useCallback((query: string) => {
-    if (query.trim()) {
-      // Use local suggestions for all queries (API temporarily disabled)
+  const searchSuggestions = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setFilteredSuggestions([])
+      setShowSuggestions(false)
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    
+    try {
+      // Try API first if onSearchSuggestions is provided
+      if (onSearchSuggestions) {
+        const apiSuggestions = await onSearchSuggestions(query)
+        const filtered = apiSuggestions
+          .filter(skill => !value.includes(skill))
+          .slice(0, 8)
+        setFilteredSuggestions(filtered)
+        setShowSuggestions(true)
+        setIsLoading(false)
+        return
+      }
+
+      // Fallback to API call
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/skills/suggestions?q=${encodeURIComponent(query)}`, {
+        headers
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.suggestions) {
+          const filtered = data.suggestions
+            .filter((skill: string) => !value.includes(skill))
+            .slice(0, 8)
+          setFilteredSuggestions(filtered)
+          setShowSuggestions(true)
+          setIsLoading(false)
+          return
+        }
+      }
+
+      // Fallback to local suggestions
       const queryLower = query.toLowerCase()
       const filtered = (suggestions.length > 0 ? suggestions : defaultSuggestions)
         .filter(skill => 
@@ -63,12 +109,22 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
       setFilteredSuggestions(filtered)
       setShowSuggestions(true)
       setIsLoading(false)
-    } else {
-      setFilteredSuggestions([])
-      setShowSuggestions(false)
+    } catch (error) {
+      console.error('Error fetching skill suggestions:', error)
+      // Fallback to local suggestions on error
+      const queryLower = query.toLowerCase()
+      const filtered = (suggestions.length > 0 ? suggestions : defaultSuggestions)
+        .filter(skill => 
+          skill.toLowerCase().includes(queryLower) && 
+          !value.includes(skill)
+        )
+        .slice(0, 8)
+      
+      setFilteredSuggestions(filtered)
+      setShowSuggestions(true)
       setIsLoading(false)
     }
-  }, [value, suggestions, defaultSuggestions])
+  }, [value, suggestions, defaultSuggestions, onSearchSuggestions])
 
   // Debounced effect for search
   useEffect(() => {

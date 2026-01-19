@@ -91,6 +91,7 @@ export default function ProviderSettings() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
   // User profile data
   const [userData, setUserData] = useState({
@@ -246,6 +247,54 @@ export default function ProviderSettings() {
 
   const handleCancel = () => {
     setIsEditing(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    // Double confirmation
+    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
+      '• Your profile and preferences\n' +
+      '• All saved opportunities, events, jobs, and resources\n' +
+      '• All liked content\n' +
+      '• All application history\n' +
+      '• All promotions and provider data\n' +
+      '• All other account data\n\n' +
+      'This action cannot be undone!'
+    
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
+    // Second confirmation
+    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
+    const userInput = prompt(finalConfirm)
+    
+    if (userInput !== 'DELETE') {
+      toast.error('Account deletion cancelled')
+      return
+    }
+
+    setIsDeletingAccount(true)
+    
+    try {
+      await ApiClient.deleteAccount()
+      toast.success('Account deleted successfully')
+      
+      // Clear local storage
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      
+      // Logout and redirect to home
+      setTimeout(() => {
+        logout()
+        window.location.href = '/'
+      }, 2000)
+      
+    } catch (error: any) {
+      console.error('Delete account error:', error)
+      toast.error(error.message || 'Failed to delete account. Please try again.')
+      setIsDeletingAccount(false)
+    }
+  }
     setError(null)
     // Reset form data to original values
     if (user) {
@@ -928,9 +977,23 @@ export default function ProviderSettings() {
                       <p className="text-sm text-red-700 mb-4">
                         Once you delete your account, there is no going back. Please be certain.
                       </p>
-                      <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Account
+                      <Button 
+                        variant="outline" 
+                        className="border-red-200 text-red-600 hover:bg-red-50"
+                        onClick={handleDeleteAccount}
+                        disabled={isDeletingAccount}
+                      >
+                        {isDeletingAccount ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Account
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

@@ -1,32 +1,35 @@
 "use client"
 
-import { useState, useEffect, Suspense, useRef } from "react"
+import { useState, useEffect, Suspense, useCallback, useMemo } from "react"
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Search, ArrowRight, Heart, Bookmark, Eye, Users, Calendar, Briefcase, BookOpen, Plane } from 'lucide-react'
-import { Card, CardContent } from "@/components/ui/card"
+import { 
+  Search, 
+  ArrowRight, 
+  Filter, 
+  X, 
+  MapPin, 
+  Calendar, 
+  Briefcase, 
+  BookOpen, 
+  Target,
+  Loader2,
+  Sparkles,
+  SlidersHorizontal
+} from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
+import { cn } from "@/lib/utils"
+import FeedCard from "@/components/feed-card"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 
 function SearchContent() {
-  const [allResults, setAllResults] = useState({
-    opportunities: [] as any[],
-    events: [] as any[],
-    jobs: [] as any[],
-    resources: [] as any[]
-  })
-  const [filteredResults, setFilteredResults] = useState({
-    opportunities: [] as any[],
-    events: [] as any[],
-    jobs: [] as any[],
-    resources: [] as any[]
-  })
-  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState<'all' | 'opportunities' | 'events' | 'jobs' | 'resources'>('all')
   const [filters, setFilters] = useState({
     location: '',
     type: '',
@@ -41,28 +44,27 @@ function SearchContent() {
     'Design', 'Sales', 'Engineering', 'Consulting', 'Non-profit'
   ]
 
-  useEffect(() => {
-    const query = searchParams.get('q')
-    if (query) {
-      setSearchQuery(query)
-      performSearch(query)
-    }
-  }, [searchParams])
+  // Storage key based on search query and filters
+  const storageKey = useMemo(() => {
+    const parts = ['search', searchQuery, activeTab, filters.location, filters.type, filters.industry]
+    return parts.filter(Boolean).join('_')
+  }, [searchQuery, activeTab, filters])
 
-  const performSearch = async (query: string) => {
-    if (!query.trim()) {
-      setAllResults({ opportunities: [], events: [], jobs: [], resources: [] })
-      setFilteredResults({ opportunities: [], events: [], jobs: [], resources: [] })
-      return
+  // Fetch function for search
+  const fetchSearchResults = useCallback(async (lastId: string | null) => {
+    if (!searchQuery.trim()) {
+      return { items: [], lastId: null, hasMore: false }
     }
 
-    setIsLoading(true)
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+    if (!backendUrl) {
+      return { items: [], lastId: null, hasMore: false }
+    }
+
     try {
-      // Create a comprehensive search by calling each content type with filters
-      const searchParams = {
-        search: query,
-        limit: '1000',
-        offset: '0',
+      const searchParams = new URLSearchParams({
+        search: searchQuery,
+        limit: '20',
         ...(filters.location && { country: filters.location }),
         ...(filters.type && { 
           ...(filters.type === 'opportunity' && { category: filters.type }),
@@ -71,448 +73,343 @@ function SearchContent() {
           ...(filters.type === 'resource' && { category: filters.type })
         }),
         ...(filters.industry && { industry: filters.industry })
+      })
+
+      if (lastId) {
+        searchParams.append('lastId', lastId)
       }
 
-      const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities?${new URLSearchParams(searchParams)}`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events?${new URLSearchParams(searchParams)}`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs?${new URLSearchParams(searchParams)}`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources?${new URLSearchParams(searchParams)}`)
-      ])
-
-      const [opportunitiesData, eventsData, jobsData, resourcesData] = await Promise.all([
-        opportunitiesRes.json(),
-        eventsRes.json(),
-        jobsRes.json(),
-        resourcesRes.json()
-      ])
-
-      const newResults = {
-        opportunities: opportunitiesData.success ? opportunitiesData.data?.opportunities || [] : [],
-        events: eventsData.success ? eventsData.data?.events || [] : [],
-        jobs: jobsData.success ? jobsData.data?.jobs || [] : [],
-        resources: resourcesData.success ? resourcesData.data?.resources || [] : []
+      // Determine which endpoint to call based on active tab
+      let endpoint = ''
+      let dataKey = ''
+      if (activeTab === 'all') {
+        // For 'all', we need to fetch from all types and combine
+        // For simplicity, we'll fetch from opportunities as the primary type
+        // In a real implementation, you might want to fetch from all types
+        endpoint = 'opportunities'
+        dataKey = 'opportunities'
+      } else {
+        endpoint = activeTab
+        dataKey = activeTab
       }
 
-      setAllResults(newResults)
-      setFilteredResults(newResults)
+      const response = await fetch(`${backendUrl}/api/${endpoint}?${searchParams}`)
+      const data = await response.json()
 
+      if (data.success) {
+        const items = (data.data?.[dataKey] || []).map((item: any) => ({ 
+          ...item, 
+          type: dataKey.slice(0, -1) // Remove 's' from end
+        }))
+        
+        return {
+          items,
+          lastId: data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null),
+          hasMore: data.data?.pagination?.hasMore || false
+        }
+      }
+      return { items: [], lastId: null, hasMore: false }
     } catch (error) {
       console.error('Search error:', error)
-      setAllResults({ opportunities: [], events: [], jobs: [], resources: [] })
-      setFilteredResults({ opportunities: [], events: [], jobs: [], resources: [] })
-    } finally {
-      setIsLoading(false)
+      return { items: [], lastId: null, hasMore: false }
     }
-  }
+  }, [searchQuery, activeTab, filters])
+
+  // Use cursor pagination hook
+  const {
+    items: allResults,
+    isLoading,
+    hasMore,
+    loadMore,
+    reset: resetSearch
+  } = useCursorPagination<any>({
+    fetchFunction: fetchSearchResults,
+    storageKey,
+    resetOnMount: false,
+    limit: 20
+  })
+
+  // Use infinite scroll hook
+  const { sentinelRef, threshold } = useInfiniteScroll({
+    hasMore,
+    isLoading,
+    onLoadMore: loadMore,
+    itemsBeforeLoad: 5, // Start loading when 5 items from the end
+    estimatedItemHeight: 350 // Estimated height of each search result card
+  })
+
+  useEffect(() => {
+    const query = searchParams.get('q')
+    if (query) {
+      setSearchQuery(query)
+      resetSearch()
+    }
+  }, [searchParams])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    performSearch(query)
+    resetSearch()
   }
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
-    performSearch(searchQuery)
+    resetSearch()
   }
 
-  const totalResults = filteredResults.opportunities.length + filteredResults.events.length + 
-                      filteredResults.jobs.length + filteredResults.resources.length
+  const clearFilter = (key: string) => {
+    const newFilters = { ...filters, [key]: '' }
+    setFilters(newFilters)
+    resetSearch()
+  }
 
-    return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 md:py-20 text-center">
-          <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/10 rounded-2xl flex items-center justify-center">
-              <Search className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 md:mb-6">
-          Search Everything
-        </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 leading-relaxed">
-            Find opportunities, events, jobs, and resources all in one place.
-          </p>
-          
-          {/* Search Section */}
-          <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-            <div className="flex gap-2 sm:gap-3">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+  const clearAllFilters = () => {
+    setFilters({ location: '', type: '', industry: '' })
+    resetSearch()
+  }
+
+  const getCurrentResults = () => {
+    return allResults
+  }
+
+  const totalResults = allResults.length
+  const activeFiltersCount = Object.values(filters).filter(v => v).length
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.08]">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          {/* Header */}
+          <div className="py-4">
+            <h1 className="text-xl font-bold text-white mb-4">Search</h1>
+            
+            {/* Search Input */}
+            <div className="relative mb-4">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
                 placeholder="Search opportunities, events, jobs, and resources..."
-                className="flex-1 h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-xl sm:rounded-2xl border-0 text-black focus:ring-2 focus:ring-white/20"
-          />
-          <Button
-                onClick={() => handleSearch(searchQuery)}
-                className="h-12 sm:h-14 px-6 sm:px-8 bg-white text-gray-900 hover:bg-gray-100 font-medium rounded-xl sm:rounded-2xl"
+                className="pl-12 pr-4 h-12 text-base bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 rounded-xl"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('')
+                    resetSearch()
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-white/[0.05]"
+                >
+                  <X className="w-4 h-4 text-white/40" />
+                </button>
+              )}
+            </div>
+
+            {/* Active Filters */}
+            {activeFiltersCount > 0 && (
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <span className="text-xs text-white/50">Filters:</span>
+                {filters.type && (
+                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                    {filters.type}
+                    <button
+                      onClick={() => clearFilter('type')}
+                      className="ml-1.5 hover:text-orange-300"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {filters.location && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                    {filters.location}
+                    <button
+                      onClick={() => clearFilter('location')}
+                      className="ml-1.5 hover:text-blue-300"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {filters.industry && (
+                  <Badge variant="secondary" className="bg-violet-500/20 text-violet-400 border-violet-500/30">
+                    {filters.industry}
+                    <button
+                      onClick={() => clearFilter('industry')}
+                      className="ml-1.5 hover:text-violet-300"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                <Button
+                  onClick={clearAllFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs text-white/50 hover:text-white"
+                >
+                  Clear all
+                </Button>
+              </div>
+            )}
+
+            {/* Filter Toggle */}
+            <div className="flex items-center justify-between gap-4">
+              <Button
+                onClick={() => setShowFilters(!showFilters)}
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-9 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-lg",
+                  showFilters && "bg-white/[0.05] text-white border-white/20"
+                )}
               >
-                Search
-          </Button>
-        </div>
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500 text-white rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
 
-          {/* Filters */}
-          <div className="max-w-4xl mx-auto">
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              className="mb-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>
-            
-        {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
-                <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Content Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
-                      <SelectItem value="opportunity">Opportunities</SelectItem>
-                    <SelectItem value="event">Events</SelectItem>
-                      <SelectItem value="job">Jobs</SelectItem>
-                      <SelectItem value="resource">Resources</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                <Select value={filters.location} onValueChange={(value) => handleFilterChange('location', value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
-                    <SelectItem value="Remote">Remote</SelectItem>
-                    <SelectItem value="Nigeria">Nigeria</SelectItem>
-                    <SelectItem value="USA">USA</SelectItem>
-                    <SelectItem value="UK">UK</SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={filters.industry} onValueChange={(value) => handleFilterChange('industry', value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Industries</SelectItem>
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="pb-4 border-t border-white/[0.06] pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-white/70 mb-2 block">Content Type</label>
+                  <select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange('type', e.target.value)}
+                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                  >
+                    <option value="">All Types</option>
+                    <option value="opportunity">Opportunities</option>
+                    <option value="event">Events</option>
+                    <option value="job">Jobs</option>
+                    <option value="resource">Resources</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-white/70 mb-2 block">Location</label>
+                  <select
+                    value={filters.location}
+                    onChange={(e) => handleFilterChange('location', e.target.value)}
+                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                  >
+                    <option value="">All Locations</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="USA">USA</option>
+                    <option value="UK">UK</option>
+                    <option value="Canada">Canada</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-white/70 mb-2 block">Industry</label>
+                  <select
+                    value={filters.industry}
+                    onChange={(e) => handleFilterChange('industry', e.target.value)}
+                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                  >
+                    <option value="">All Industries</option>
                     {industryOptions.map(industry => (
-                      <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                      <option key={industry} value={industry}>{industry}</option>
                     ))}
-                  </SelectContent>
-                </Select>
-                  </div>
-            )}
-                  </div>
+                  </select>
                 </div>
               </div>
-
-      {/* Results Section */}
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12">
-        {/* Results Summary */}
-        {!isLoading && searchQuery && (
-          <div className="mb-6 sm:mb-8">
-            <p className="text-sm sm:text-base text-gray-600">
-              Found {totalResults} result{totalResults !== 1 ? 's' : ''} for 
-              <span className="font-semibold text-gray-900"> "{searchQuery}"</span>
-            </p>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="text-center py-12 sm:py-16 md:py-20">
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full mb-4">
-              <Search className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600 animate-pulse" />
             </div>
-            <p className="text-base sm:text-lg text-gray-600">Searching...</p>
+          )}
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
+        {isLoading && allResults.length === 0 ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
+                <div className="animate-pulse space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-white/[0.08]" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-white/[0.08] rounded w-32" />
+                      <div className="h-3 bg-white/[0.08] rounded w-20" />
+                    </div>
+                  </div>
+                  <div className="h-4 bg-white/[0.08] rounded w-full" />
+                  <div className="h-4 bg-white/[0.08] rounded w-3/4" />
+                </div>
+              </div>
+            ))}
           </div>
-        ) : totalResults > 0 ? (
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6 sm:mb-8">
-              <TabsTrigger value="all">All ({totalResults})</TabsTrigger>
-              <TabsTrigger value="opportunities">Opportunities ({filteredResults.opportunities.length})</TabsTrigger>
-              <TabsTrigger value="events">Events ({filteredResults.events.length})</TabsTrigger>
-              <TabsTrigger value="jobs">Jobs ({filteredResults.jobs.length})</TabsTrigger>
-              <TabsTrigger value="resources">Resources ({filteredResults.resources.length})</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="space-y-8">
-              {/* All Results */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {[...filteredResults.opportunities, ...filteredResults.events, ...filteredResults.jobs, ...filteredResults.resources].map((item, index) => (
-                  <Card key={`${item._id}-${index}`} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-2 mb-3">
-                        {item.category === 'opportunity' || item.title?.includes('scholarship') || item.title?.includes('fellowship') ? (
-                          <Plane className="w-4 h-4 text-orange-500" />
-                        ) : item.category === 'event' || item.date ? (
-                          <Calendar className="w-4 h-4 text-green-500" />
-                        ) : item.category === 'job' || item.company ? (
-                          <Briefcase className="w-4 h-4 text-blue-500" />
-                        ) : (
-                          <BookOpen className="w-4 h-4 text-purple-500" />
-                        )}
-                        <span className="text-xs font-medium text-gray-500 uppercase">
-                          {item.category || (item.date ? 'Event' : item.company ? 'Job' : 'Resource')}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                        {item.title}
-                      </h3>
-                      
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">
-                        {item.description}
-                      </p>
-                      
-                      <div className="mt-auto">
-                        <Link href={`/${item.category || 'opportunities'}/${item._id}`}>
-                          <Button className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="opportunities">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {filteredResults.opportunities.map((opportunity) => (
-                  <Card key={opportunity._id} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Plane className="w-4 h-4 text-orange-500" />
-                        <span className="text-xs font-medium text-gray-500 uppercase">Opportunity</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{opportunity.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">{opportunity.description}</p>
-                      
-                      {/* Engagement Metrics */}
-                      {opportunity.metrics && (
-                        <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-4 text-xs text-gray-600">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{opportunity.metrics.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
-                              <span>{opportunity.metrics.likeCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Bookmark className="h-3 w-3 text-blue-500" />
-                              <span>{opportunity.metrics.saveCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Users className="h-3 w-3 text-green-500" />
-                              <span>{opportunity.metrics.applicationCount || 0}</span>
-                            </div>
-                          </div>
-              </div>
-            )}
-
-                      <div className="mt-auto">
-                        <Link href={`/opportunities/${opportunity._id}`}>
-                          <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                  </div>
-                </TabsContent>
-
-            <TabsContent value="events">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {filteredResults.events.map((event) => (
-                  <Card key={event._id} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="w-4 h-4 text-green-500" />
-                        <span className="text-xs font-medium text-gray-500 uppercase">Event</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">{event.description}</p>
-                      
-                      {/* Engagement Metrics */}
-                      {event.metrics && (
-                        <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-4 text-xs text-gray-600">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{event.metrics.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
-                              <span>{event.metrics.likeCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Bookmark className="h-3 w-3 text-blue-500" />
-                              <span>{event.metrics.saveCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Users className="h-3 w-3 text-green-500" />
-                              <span>{event.metrics.registrationCount || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="mt-auto">
-                        <Link href={`/events/${event._id}`}>
-                          <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                  </div>
-                </TabsContent>
-
-            <TabsContent value="jobs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {filteredResults.jobs.map((job) => (
-                  <Card key={job._id} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Briefcase className="w-4 h-4 text-blue-500" />
-                        <span className="text-xs font-medium text-gray-500 uppercase">Job</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{job.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">{job.description}</p>
-                      
-                      {/* Engagement Metrics */}
-                      {job.metrics && (
-                        <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-4 text-xs text-gray-600">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{job.metrics.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
-                              <span>{job.metrics.likeCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Bookmark className="h-3 w-3 text-blue-500" />
-                              <span>{job.metrics.saveCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Users className="h-3 w-3 text-green-500" />
-                              <span>{job.metrics.applicationCount || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="mt-auto">
-                        <Link href={`/jobs/${job._id}`}>
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                  </div>
-                </TabsContent>
-
-            <TabsContent value="resources">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {filteredResults.resources.map((resource) => (
-                  <Card key={resource._id} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
-                    <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-2 mb-3">
-                        <BookOpen className="w-4 h-4 text-purple-500" />
-                        <span className="text-xs font-medium text-gray-500 uppercase">Resource</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{resource.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">{resource.description}</p>
-                      
-                      {/* Engagement Metrics */}
-                      {resource.metrics && (
-                        <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-4 text-xs text-gray-600">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{resource.metrics.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
-                              <span>{resource.metrics.likeCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Bookmark className="h-3 w-3 text-blue-500" />
-                              <span>{resource.metrics.saveCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Users className="h-3 w-3 text-green-500" />
-                              <span>{resource.metrics.downloadCount || 0}</span>
-                            </div>
-                          </div>
-                  </div>
-                      )}
-                      
-                      <div className="mt-auto">
-                        <Link href={`/resources/${resource._id}`}>
-                          <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-xl transition-colors duration-200 group">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-        ) : searchQuery ? (
-          <div className="text-center py-12 sm:py-16 md:py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4 sm:mb-6">
-              <Search className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+        ) : searchQuery && totalResults === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
+              <Search className="w-10 h-10 text-orange-500/50" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
-              No results found
-            </h3>
-            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto">
-              No results match your search for "{searchQuery}". Try a different search term or adjust your filters.
+            <h3 className="text-lg font-semibold text-white mb-2">No results found</h3>
+            <p className="text-sm text-white/50 mb-6 max-w-md mx-auto">
+              No results match your search for <span className="font-medium text-white">"{searchQuery}"</span>. Try a different search term or adjust your filters.
             </p>
-            <Button 
-              onClick={() => setSearchQuery('')}
+            <Button
+              onClick={() => {
+                setSearchQuery('')
+                resetSearch()
+                setFilters({ location: '', type: '', industry: '' })
+              }}
               variant="outline"
-              className="px-6 py-2.5 sm:py-3 rounded-xl"
+              className="border-white/10 text-white/70 hover:text-white rounded-full"
             >
               Clear Search
             </Button>
           </div>
+        ) : searchQuery && totalResults > 0 ? (
+          <div className="space-y-4">
+            {getCurrentResults().map((item) => (
+              <FeedCard
+                key={item._id}
+                item={item}
+              />
+            ))}
+
+            {/* Infinite scroll sentinel */}
+            <div
+              ref={sentinelRef}
+              style={{
+                height: '1px',
+                width: '100%',
+                marginTop: `${threshold}px`
+              }}
+            />
+
+            {/* Loading indicator */}
+            {isLoading && allResults.length > 0 && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+              </div>
+            )}
+
+            {/* End of feed message */}
+            {!hasMore && allResults.length > 0 && (
+              <div className="text-center py-8 text-white/40 text-sm">
+                You've reached the end of the search results
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="text-center py-12 sm:py-16 md:py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4 sm:mb-6">
-              <Search className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+          <div className="text-center py-20">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-10 h-10 text-orange-500/50" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
-              Start your search
-            </h3>
-            <p className="text-base sm:text-lg text-gray-600 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold text-white mb-2">Start your search</h3>
+            <p className="text-sm text-white/50 max-w-md mx-auto">
               Enter a search term above to find opportunities, events, jobs, and resources.
             </p>
           </div>
@@ -526,12 +423,10 @@ export default function SearchPage() {
   return (
     <AuthGuard>
       <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <Search className="w-8 h-8 text-gray-600 animate-pulse" />
-            </div>
-            <p className="text-lg text-gray-600">Loading...</p>
+            <Loader2 className="w-8 h-8 text-orange-500 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-white/60">Loading...</p>
           </div>
         </div>
       }>
@@ -539,4 +434,4 @@ export default function SearchPage() {
       </Suspense>
     </AuthGuard>
   )
-} 
+}

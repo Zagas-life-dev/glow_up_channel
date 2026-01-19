@@ -1392,7 +1392,7 @@ export default function PromotionsPage() {
                       <img
                         src={heroImagePreview}
                         alt="Hero image preview"
-                        className={`max-w-md max-h-64 rounded-lg border border-gray-200 object-cover ${heroImageUploading ? 'opacity-50' : ''}`}
+                        className={`max-w-md max-h-64 rounded-lg border border-gray-200 object-contain bg-gray-50 ${heroImageUploading ? 'opacity-50' : ''}`}
                       />
                       {heroImageUploading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
