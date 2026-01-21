@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
+import { ApiClient } from "@/lib/api-client"
 
 interface EventFormData {
   name: string
@@ -95,19 +96,41 @@ export default function EventSubmissionForm() {
         }
       }
       
-      // For validation only - not sending this to the server
-      const dateForValidation = new Date(`${eventForm.date}T${formattedTime}`);
+      // Create ISO date string for backend
+      const eventDateTime = new Date(`${eventForm.date}T${formattedTime}`);
       
-      if (isNaN(dateForValidation.getTime())) {
-        throw new Error("Invalid date or time format")
+      if (isNaN(eventDateTime.getTime())) {
+        throw new Error("Invalid date or time format. Please check your input.")
       }
 
-      // TODO: Implement event submission with your backend API
-      toast.error("Feature not available", {
-        description: "Event submission needs to be implemented with your backend API."
-      });
+      // Map form data to backend format
+      const eventData = {
+        title: eventForm.title.trim(),
+        description: eventForm.description.trim(),
+        url: eventForm.link.trim(),
+        eventType: 'networking', // Default, can be enhanced with a select field
+        organizer: eventForm.name.trim(),
+        isPaid: !eventForm.is_free,
+        location: {
+          city: eventForm.location.trim(),
+          isRemote: eventForm.location_type === 'online'
+        },
+        dates: {
+          startDate: eventDateTime.toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        },
+        status: 'active',
+        isApproved: false // Requires admin approval
+      }
 
-      // Reset form after submission attempt
+      await ApiClient.createEvent(eventData)
+      
+      toast.success("Event Submitted", {
+        description: "Your event has been submitted successfully and is pending approval."
+      })
+      setError(null)
+
+      // Reset form after successful submission
       setEventForm({
         name: "",
         email: "",
@@ -123,11 +146,27 @@ export default function EventSubmissionForm() {
       });
       
     } catch (error: any) {
-      console.error("Submission error:", error);
-      setError(error.message || "Failed to submit event");
-      toast.error("Error submitting event", {
-        description: error.message || "Please try again later."
-      });
+      const errorMessage = error.message || "Failed to submit event. Please try again."
+      setError(errorMessage)
+      
+      // Handle specific error cases
+      if (errorMessage.includes('Authentication') || errorMessage.includes('token')) {
+        toast.error("Authentication Required", {
+          description: "Please log in to submit an event."
+        })
+      } else if (errorMessage.includes('DUPLICATE_TITLE') || errorMessage.includes('already exists')) {
+        toast.error("Duplicate Event", {
+          description: "An event with this title already exists. Please use a different title."
+        })
+      } else if (errorMessage.includes('Validation failed')) {
+        toast.error("Validation Error", {
+          description: "Please check your input and try again."
+        })
+      } else {
+        toast.error("Submission Failed", {
+          description: errorMessage
+        })
+      }
     } finally {
       setLoading(false)
     }

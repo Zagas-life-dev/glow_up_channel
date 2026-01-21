@@ -44,7 +44,8 @@ import {
   Lightbulb,
   TrendingUp,
   Crown,
-  BookOpen
+  BookOpen,
+  AlertCircle
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -59,6 +60,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 
 interface OnboardingData {
   country: string
@@ -195,6 +207,9 @@ export default function ProfilePage() {
   const { savedPlaylists, fetchSavedPlaylists } = usePlaylist()
   const userId = params.id as string
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' })
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null)
@@ -845,32 +860,126 @@ export default function ProfilePage() {
                   </Button>
                 </Link>
               ) : (
-                <Button 
-                  onClick={async () => {
-                    setIsUpgrading(true)
-                    try {
-                      await upgradeToProvider(currentUser?.email || '', '')
-                      router.push('/dashboard/provider/onboarding')
-                    } catch (error: any) {
-                      console.error('Upgrade error:', error)
-                      // Show upgrade modal or handle error
-                    } finally {
-                      setIsUpgrading(false)
-                    }
-                  }}
-                  disabled={isUpgrading}
-                  variant="outline" 
-                  className="flex-1 border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl h-9 text-sm font-medium"
-                >
-                  {isUpgrading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Crown className="w-4 h-4 mr-2" />
-                      Become Provider
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button 
+                    onClick={() => {
+                      setUpgradeForm({ email: currentUser?.email || '', password: '' })
+                      setUpgradeError(null)
+                      setShowUpgradeModal(true)
+                    }}
+                    variant="outline" 
+                    className="flex-1 border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl h-9 text-sm font-medium"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Become Provider
+                  </Button>
+                  
+                  {/* Upgrade Modal */}
+                  <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+                    <DialogContent className="bg-[#141414] border-white/[0.08] rounded-2xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-white flex items-center gap-2">
+                          <Crown className="w-5 h-5 text-orange-500" />
+                          Upgrade to Provider
+                        </DialogTitle>
+                        <DialogDescription className="text-white/50">
+                          Confirm your password to upgrade your account to provider status
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <form onSubmit={async (e) => {
+                        e.preventDefault()
+                        if (!upgradeForm.password) {
+                          setUpgradeError('Password is required')
+                          return
+                        }
+                        
+                        setIsUpgrading(true)
+                        setUpgradeError(null)
+                        
+                        try {
+                          await upgradeToProvider(upgradeForm.email, upgradeForm.password)
+                          toast.success('Successfully upgraded to provider!')
+                          setShowUpgradeModal(false)
+                          router.push('/dashboard/provider')
+                        } catch (error: any) {
+                          setUpgradeError(error.message || 'Failed to upgrade. Please check your password and try again.')
+                        } finally {
+                          setIsUpgrading(false)
+                        }
+                      }} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="upgrade-email" className="text-white/70">Email</Label>
+                          <Input
+                            id="upgrade-email"
+                            type="email"
+                            value={upgradeForm.email}
+                            onChange={(e) => setUpgradeForm(prev => ({ ...prev, email: e.target.value }))}
+                            className="bg-white/[0.05] border-white/[0.08] text-white"
+                            required
+                            disabled
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="upgrade-password" className="text-white/70">Password</Label>
+                          <Input
+                            id="upgrade-password"
+                            type="password"
+                            value={upgradeForm.password}
+                            onChange={(e) => {
+                              setUpgradeForm(prev => ({ ...prev, password: e.target.value }))
+                              setUpgradeError(null)
+                            }}
+                            placeholder="Enter your password to confirm"
+                            className="bg-white/[0.05] border-white/[0.08] text-white"
+                            required
+                            autoFocus
+                          />
+                        </div>
+                        
+                        {upgradeError && (
+                          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-red-400">{upgradeError}</span>
+                          </div>
+                        )}
+                        
+                        <DialogFooter>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setShowUpgradeModal(false)
+                              setUpgradeError(null)
+                            }} 
+                            disabled={isUpgrading} 
+                            className="text-white/60 hover:text-white"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            className="bg-orange-500 hover:bg-orange-600" 
+                            disabled={isUpgrading}
+                          >
+                            {isUpgrading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Upgrading...
+                              </>
+                            ) : (
+                              <>
+                                <Crown className="w-4 h-4 mr-2" />
+                                Upgrade
+                              </>
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
             </>
           ) : (

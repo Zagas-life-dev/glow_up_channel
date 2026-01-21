@@ -1,60 +1,60 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import PromotionButton from '@/components/promotion/PromotionButton'
 import PaymentDetails from '@/components/payment-details'
 import { 
   ArrowRight,
-  ArrowLeft,
   TrendingUp,
   Eye,
-  Users,
   Calendar,
   Target,
   Briefcase,
   BookOpen,
-  Star,
   Plus,
   Settings,
   BarChart3,
   Zap,
   Heart,
   MapPin,
-  GraduationCap,
-  User,
-  Mail,
   Building,
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  ChevronDown,
-  MoreVertical,
   Crown,
-  DollarSign,
-  Globe,
-  Award,
-  Lightbulb,
   Bookmark,
   Edit,
   Trash2,
   ExternalLink,
   Clock,
   Activity,
-  TrendingDown,
   FileText,
   Send,
   UserCheck,
-  Download
+  Home,
+  Menu,
+  X,
+  ChevronRight,
+  Sparkles,
+  LayoutDashboard,
+  MoreVertical
 } from 'lucide-react'
 
 interface ProviderStats {
@@ -95,6 +95,11 @@ interface PostedItem {
     city?: string
   }
   tags?: string[]
+  paymentStatus?: string
+  paymentAmount?: number
+  paymentReference?: string
+  paymentReceipt?: string
+  paymentNotes?: string
 }
 
 interface Application {
@@ -112,9 +117,11 @@ export default function ProviderDashboard() {
   const { setHideNavbar, setHideFooter } = usePage()
   const { user, profile, isLoading: authLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
   const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'applications' | 'analytics'>('overview')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   
   // Dashboard data state
   const [stats, setStats] = useState<ProviderStats>({
@@ -136,7 +143,6 @@ export default function ProviderDashboard() {
     isCompleted: boolean
     completionPercentage: number
   } | null>(null)
-  
 
   // Hide navbar when this page is active
   useEffect(() => {
@@ -156,248 +162,213 @@ export default function ProviderDashboard() {
   }, [authLoading, user])
 
   // Load provider dashboard data function
-    const loadProviderData = async () => {
-      if (!user || (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin')) return
-      
-      setIsLoading(true)
-      setError('')
-      
+  const loadProviderData = useCallback(async () => {
+    if (!user || (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin')) return
+    
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      // Check onboarding status
       try {
-        // Check onboarding status
-        {
-          try {
-            const onboardingResponse = await ApiClient.getProviderOnboarding()
-            setOnboardingStatus({
-              isCompleted: onboardingResponse.onboarding?.isCompleted || false,
-              completionPercentage: onboardingResponse.onboarding?.completionPercentage || 0
-            })
-          } catch (onboardingError) {
-            console.log('No onboarding data found, user needs to complete onboarding')
-            setOnboardingStatus({
-              isCompleted: false,
-              completionPercentage: 0
-            })
-          }
-        }
-        // Load user's posted content
-        const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/my/opportunities?limit=50`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { opportunities: [] } }) })),
-          
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events/my/events?limit=50`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { events: [] } }) })),
-          
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/my/jobs?limit=50`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { jobs: [] } }) })),
-          
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources/my/resources?limit=50`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-          }).catch(() => ({ json: () => ({ success: false, data: { resources: [] } }) }))
-        ])
-        
-        const [opportunitiesData, eventsData, jobsData, resourcesData] = await Promise.all([
-          opportunitiesRes.json(),
-          eventsRes.json(),
-          jobsRes.json(),
-          resourcesRes.json()
-        ])
-        
-        // Process posted items
-        const allPostedItems: PostedItem[] = []
-        
-        if (opportunitiesData.success) {
-          opportunitiesData.data.opportunities.forEach((item: any) => {
-            allPostedItems.push({
-              _id: item._id,
-              title: item.title,
-              type: 'opportunity',
-              company: item.provider,
-              status: item.status,
-              isApproved: item.isApproved,
-              createdAt: item.createdAt,
-              updatedAt: item.updatedAt,
-              metrics: item.metrics,
-              location: item.location,
-              tags: item.tags
-            })
-          })
-        }
-        
-        if (eventsData.success) {
-          eventsData.data.events.forEach((item: any) => {
-            allPostedItems.push({
-              _id: item._id,
-              title: item.title,
-              type: 'event',
-              organizer: item.organizer,
-              status: item.status,
-              isApproved: item.isApproved,
-              createdAt: item.createdAt,
-              updatedAt: item.updatedAt,
-              metrics: item.metrics,
-              location: item.location,
-              tags: item.tags
-            })
-          })
-        }
-        
-        if (jobsData.success) {
-          jobsData.data.jobs.forEach((item: any) => {
-            allPostedItems.push({
-              _id: item._id,
-              title: item.title,
-              type: 'job',
-              company: item.company,
-              status: item.status,
-              isApproved: item.isApproved,
-              createdAt: item.createdAt,
-              updatedAt: item.updatedAt,
-              metrics: item.metrics,
-              location: item.location,
-              tags: item.tags
-            })
-          })
-        }
-        
-        if (resourcesData.success) {
-          resourcesData.data.resources.forEach((item: any) => {
-            allPostedItems.push({
-              _id: item._id,
-              title: item.title,
-              type: 'resource',
-              company: item.author,
-              status: item.status,
-              isApproved: item.isApproved,
-              createdAt: item.createdAt,
-              updatedAt: item.updatedAt,
-              metrics: item.metrics,
-              location: undefined,
-              tags: item.tags
-            })
-          })
-        }
-        
-        // Calculate stats
-        const stats: ProviderStats = {
-          totalOpportunities: opportunitiesData.success ? opportunitiesData.data.opportunities.length : 0,
-          totalEvents: eventsData.success ? eventsData.data.events.length : 0,
-          totalJobs: jobsData.success ? jobsData.data.jobs.length : 0,
-          totalResources: resourcesData.success ? resourcesData.data.resources.length : 0,
-          totalViews: allPostedItems.reduce((sum, item) => sum + (item.metrics?.viewCount || 0), 0),
-          totalApplications: allPostedItems.reduce((sum, item) => sum + (item.metrics?.applicationCount || 0), 0),
-          totalRegistrations: allPostedItems.reduce((sum, item) => sum + (item.metrics?.registrationCount || 0), 0),
-          totalLikes: allPostedItems.reduce((sum, item) => sum + (item.metrics?.likeCount || 0), 0),
-          totalSaves: allPostedItems.reduce((sum, item) => sum + (item.metrics?.saveCount || 0), 0),
-          pendingApprovals: allPostedItems.filter(item => !item.isApproved).length,
-          activePostings: allPostedItems.filter(item => item.status === 'active' && item.isApproved).length
-        }
-        
-        setStats(stats)
-        setPostedItems(allPostedItems.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()))
-        
-      } catch (err: any) {
-        console.error('Error loading provider dashboard data:', err)
-        setError('Failed to load dashboard data')
-      } finally {
-        setIsLoading(false)
+        const onboardingResponse = await ApiClient.getProviderOnboarding()
+        setOnboardingStatus({
+          isCompleted: onboardingResponse.onboarding?.isCompleted || false,
+          completionPercentage: onboardingResponse.onboarding?.completionPercentage || 0
+        })
+      } catch (onboardingError) {
+        console.log('No onboarding data found')
+        setOnboardingStatus({
+          isCompleted: false,
+          completionPercentage: 0
+        })
       }
+
+      // Load user's posted content
+      const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/my/opportunities?limit=50`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }).catch(() => ({ json: () => ({ success: false, data: { opportunities: [] } }) })),
+        
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events/my/events?limit=50`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }).catch(() => ({ json: () => ({ success: false, data: { events: [] } }) })),
+        
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/my/jobs?limit=50`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }).catch(() => ({ json: () => ({ success: false, data: { jobs: [] } }) })),
+        
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources/my/resources?limit=50`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+        }).catch(() => ({ json: () => ({ success: false, data: { resources: [] } }) }))
+      ])
+      
+      const [opportunitiesData, eventsData, jobsData, resourcesData] = await Promise.all([
+        opportunitiesRes.json(),
+        eventsRes.json(),
+        jobsRes.json(),
+        resourcesRes.json()
+      ])
+      
+      // Process posted items
+      const allPostedItems: PostedItem[] = []
+      
+      if (opportunitiesData.success) {
+        opportunitiesData.data.opportunities.forEach((item: any) => {
+          allPostedItems.push({
+            _id: item._id,
+            title: item.title,
+            type: 'opportunity',
+            company: item.provider,
+            status: item.status,
+            isApproved: item.isApproved,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            metrics: item.metrics,
+            location: item.location,
+            tags: item.tags,
+            paymentStatus: item.paymentStatus,
+            paymentAmount: item.paymentAmount,
+            paymentReference: item.paymentReference,
+            paymentReceipt: item.paymentReceipt,
+            paymentNotes: item.paymentNotes
+          })
+        })
+      }
+      
+      if (eventsData.success) {
+        eventsData.data.events.forEach((item: any) => {
+          allPostedItems.push({
+            _id: item._id,
+            title: item.title,
+            type: 'event',
+            organizer: item.organizer,
+            status: item.status,
+            isApproved: item.isApproved,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            metrics: item.metrics,
+            location: item.location,
+            tags: item.tags
+          })
+        })
+      }
+      
+      if (jobsData.success) {
+        jobsData.data.jobs.forEach((item: any) => {
+          allPostedItems.push({
+            _id: item._id,
+            title: item.title,
+            type: 'job',
+            company: item.company,
+            status: item.status,
+            isApproved: item.isApproved,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            metrics: item.metrics,
+            location: item.location,
+            tags: item.tags
+          })
+        })
+      }
+      
+      if (resourcesData.success) {
+        resourcesData.data.resources.forEach((item: any) => {
+          allPostedItems.push({
+            _id: item._id,
+            title: item.title,
+            type: 'resource',
+            company: item.author,
+            status: item.status,
+            isApproved: item.isApproved,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            metrics: item.metrics,
+            tags: item.tags
+          })
+        })
+      }
+      
+      // Calculate stats
+      const stats: ProviderStats = {
+        totalOpportunities: opportunitiesData.success ? opportunitiesData.data.opportunities.length : 0,
+        totalEvents: eventsData.success ? eventsData.data.events.length : 0,
+        totalJobs: jobsData.success ? jobsData.data.jobs.length : 0,
+        totalResources: resourcesData.success ? resourcesData.data.resources.length : 0,
+        totalViews: allPostedItems.reduce((sum, item) => sum + (item.metrics?.viewCount || 0), 0),
+        totalApplications: allPostedItems.reduce((sum, item) => sum + (item.metrics?.applicationCount || 0), 0),
+        totalRegistrations: allPostedItems.reduce((sum, item) => sum + (item.metrics?.registrationCount || 0), 0),
+        totalLikes: allPostedItems.reduce((sum, item) => sum + (item.metrics?.likeCount || 0), 0),
+        totalSaves: allPostedItems.reduce((sum, item) => sum + (item.metrics?.saveCount || 0), 0),
+        pendingApprovals: allPostedItems.filter(item => !item.isApproved).length,
+        activePostings: allPostedItems.filter(item => item.status === 'active' && item.isApproved).length
+      }
+      
+      setStats(stats)
+      setPostedItems(allPostedItems.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()))
+      
+    } catch (err: any) {
+      console.error('Error loading provider dashboard data:', err)
+      setError('Failed to load dashboard data')
+    } finally {
+      setIsLoading(false)
     }
+  }, [user])
 
   // Load provider dashboard data
   useEffect(() => {
     loadProviderData()
-  }, [user])
+  }, [loadProviderData])
 
   const getLocationString = (location?: any): string => {
-    if (!location) return 'TBD'
+    if (!location) return 'Remote'
     const parts = [location.city, location.province, location.country].filter(Boolean)
-    return parts.join(', ') || 'TBD'
+    return parts.join(', ') || 'Remote'
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'job': return Briefcase
-      case 'event': return Calendar
-      case 'opportunity': return Target
-      case 'resource': return BookOpen
-      default: return Star
+  const getTypeConfig = (type: string) => {
+    const configs = {
+      'job': { icon: Briefcase, bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', label: 'Job' },
+      'event': { icon: Calendar, bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', label: 'Event' },
+      'opportunity': { icon: Target, bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', label: 'Opportunity' },
+      'resource': { icon: BookOpen, bg: 'bg-violet-500/10', border: 'border-violet-500/30', text: 'text-violet-400', label: 'Resource' }
     }
-  }
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'job': return 'from-blue-500 to-blue-600'
-      case 'event': return 'from-green-500 to-green-600'
-      case 'opportunity': return 'from-orange-500 to-orange-600'
-      case 'resource': return 'from-purple-500 to-purple-600'
-      default: return 'from-gray-500 to-gray-600'
-    }
+    return configs[type as keyof typeof configs] || configs.opportunity
   }
 
   const getStatusColor = (status: string, isApproved: boolean) => {
-    // 6-State Content Management System - Color coding
-    if (status === 'draft' && !isApproved) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30' // True Draft - Blue
-    if (status === 'draft' && isApproved) return 'bg-violet-500/20 text-violet-400 border border-violet-500/30' // Hidden - Purple
-    if (status === 'inactive' && !isApproved) return 'bg-red-500/20 text-red-400 border border-red-500/30' // Inactive (Not Approved) - Red
-    if (status === 'inactive' && isApproved) return 'bg-white/10 text-white/60 border border-white/20' // Inactive (Approved) - Gray
-    if (status === 'active' && !isApproved) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' // Pending - Yellow
-    if (status === 'active' && isApproved) return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' // Live - Green
+    if (status === 'draft' && !isApproved) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+    if (status === 'draft' && isApproved) return 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
+    if (status === 'inactive' && !isApproved) return 'bg-red-500/20 text-red-400 border border-red-500/30'
+    if (status === 'inactive' && isApproved) return 'bg-white/10 text-white/60 border border-white/20'
+    if (status === 'active' && !isApproved) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+    if (status === 'active' && isApproved) return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
     return 'bg-white/10 text-white/60 border border-white/20'
   }
 
   const getStatusText = (status: string, isApproved: boolean) => {
-    // 6-State Content Management System
-    if (status === 'draft' && !isApproved) return 'True Draft' // State 5: Draft not yet submitted
-    if (status === 'draft' && isApproved) return 'Hidden' // State 6: Draft approved but hidden
-    if (status === 'inactive' && !isApproved) return 'Inactive (Not Approved)' // State 1: Inactive + Not Approved
-    if (status === 'inactive' && isApproved) return 'Inactive (Approved)' // State 2: Inactive + Approved
-    if (status === 'active' && !isApproved) return 'Pending' // State 3: Active + Not Approved
-    if (status === 'active' && isApproved) return 'Live' // State 4: Active + Approved (Live)
+    if (status === 'draft' && !isApproved) return 'Draft'
+    if (status === 'draft' && isApproved) return 'Hidden'
+    if (status === 'inactive' && !isApproved) return 'Inactive'
+    if (status === 'inactive' && isApproved) return 'Inactive'
+    if (status === 'active' && !isApproved) return 'Pending'
+    if (status === 'active' && isApproved) return 'Live'
     return 'Unknown'
   }
 
-  // Promotion handlers
-  const handlePromoteContent = (contentId: string) => {
-    // Navigate to promotions management page
-    router.push('/dashboard/provider/promotions')
-  }
-
-
-  // Content management handlers
   const handleEditContent = (item: any) => {
-    // Navigate to edit page or open edit modal
-    console.log('Edit content:', item)
-    
-    // For now, show a toast message
     toast.info(`Edit functionality for ${item.type} "${item.title}" will be available soon!`)
-    
-    // TODO: Implement edit functionality
-    // This could navigate to an edit page or open an edit modal
-    // Example: router.push(`/dashboard/posting/edit/${item.type}/${item._id}`)
   }
 
   const handleViewContent = (item: any) => {
-    // Open content in new tab or navigate to view page
-    console.log('View content:', item)
-    
-    // Check if item has a URL field
     if (item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer')
     } else {
-      // If no URL, show a toast with the content details
       toast.info(`Viewing ${item.type}: "${item.title}"`)
-      
-      // TODO: Implement view functionality
-      // This could navigate to a view page or open a modal
-      // Example: router.push(`/content/${item.type}/${item._id}`)
     }
   }
 
   const handleDeleteContent = async (item: any) => {
-    // Confirm deletion
     const confirmed = window.confirm(
       `Are you sure you want to delete "${item.title}"? This action cannot be undone.`
     )
@@ -405,9 +376,6 @@ export default function ProviderDashboard() {
     if (!confirmed) return
     
     try {
-      console.log('Deleting content:', item)
-      
-      // Call the appropriate delete API based on content type
       switch (item.type) {
         case 'opportunity':
           await ApiClient.deleteOpportunity(item._id)
@@ -426,8 +394,6 @@ export default function ProviderDashboard() {
       }
       
       toast.success(`${item.type} "${item.title}" deleted successfully!`)
-      
-      // Refresh the content list
       loadProviderData()
       
     } catch (error) {
@@ -438,7 +404,7 @@ export default function ProviderDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white/60">Loading provider dashboard...</p>
@@ -449,12 +415,12 @@ export default function ProviderDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+        <div className="text-center max-w-md">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
           <p className="text-white/60 mb-4">Please log in to access your provider dashboard</p>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600">
+          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
             <Link href="/login">Sign In</Link>
           </Button>
         </div>
@@ -464,16 +430,16 @@ export default function ProviderDashboard() {
 
   if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+        <div className="text-center max-w-md">
           <Crown className="h-12 w-12 text-orange-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">Provider Access Required</h2>
           <p className="text-white/60 mb-4">You need to be an opportunity provider to access this dashboard</p>
-          <div className="flex space-x-4 justify-center">
-            <Button asChild variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
-            <Button asChild className="bg-orange-500 hover:bg-orange-600">
+            <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
               <Link href="/dashboard/settings">Upgrade Account</Link>
             </Button>
           </div>
@@ -482,564 +448,790 @@ export default function ProviderDashboard() {
     )
   }
 
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider' },
+    { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/provider' },
+    { id: 'applications', label: 'Applications', icon: UserCheck, href: '/dashboard/provider' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/provider' },
+  ]
+
+  const quickLinks = [
+    { label: 'Post Content', icon: Plus, href: '/dashboard/posting', variant: 'default' as const },
+    { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
+    { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
+    { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
+  ]
+
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <Link href="/" className="flex items-center">
-                  <Image
-                    src="/images/logo-transparent.svg"
-                    alt="Glow Up Channel"
-                    width={120}
-                    height={0}
-                    className="h-16 w-32 sm:h-20 sm:w-40 md:h-24 md:w-48 lg:h-28 lg:w-56 xl:h-32 xl:w-64 w-auto"
-                  />
+    <div className="min-h-screen bg-[#0a0a0a] flex">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <Crown className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-white">Provider Hub</h1>
+              <p className="text-xs text-white/50">Dashboard</p>
+            </div>
+          </div>
+          
+          {/* User Info */}
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <p className="text-sm font-medium text-white truncate">
+              {user?.firstName || user?.email?.split('@')[0]}
+            </p>
+            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  isActive 
+                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-white/[0.06] space-y-2">
+          {quickLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <Button
+                key={link.label}
+                asChild
+                variant={link.variant}
+                className={cn(
+                  "w-full justify-start",
+                  link.variant === 'default' 
+                    ? "bg-orange-500 hover:bg-orange-600" 
+                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Link href={link.href}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {link.label}
                 </Link>
+              </Button>
+            )
+          })}
+        </div>
+
+        {/* Stats Summary */}
+        <div className="p-4 border-t border-white/[0.06]">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-white/50">Active Postings</span>
+              <span className="text-lg font-bold text-orange-400">{stats.activePostings}</span>
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              {(() => {
+                const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
+                const maxTotal = Math.max(totalPostings, 1)
+                const percentage = Math.min((stats.activePostings / maxTotal) * 100, 100)
+                return (
+                  <div 
+                    className="h-full bg-orange-500 rounded-full transition-all"
+                    style={{ width: `${percentage}%` }}
+                  />
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header - Only visible on mobile */}
+        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                <Crown className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white">Provider Hub</h1>
               </div>
             </div>
             
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
-                <Link href="/dashboard/posting">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post Content
-                </Link>
-              </Button>
-              
+            <div className="flex items-center gap-2">
               <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline" 
+                onClick={() => loadProviderData()} 
+                variant="ghost" 
                 size="sm"
                 disabled={isLoading}
-                className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
+                className="h-9 w-9 p-0 text-white/60"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
               </Button>
               
-              <Button asChild variant="outline" size="sm" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
-                <Link href="/dashboard/provider/settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Provider Settings
-                </Link>
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl">
-                <Link href="/dashboard/posting">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-            <span className="text-red-400">{error}</span>
-          </div>
-        )}
-
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-2 text-white">
-                  Welcome back, {user.email.split('@')[0]}!
-                </h2>
-                <p className="text-white/70 mb-3">
-                  Manage your content and grow your reach as an opportunity provider.
-                </p>
-                <Link href="/dashboard/provider/promotions">
-                  <Button variant="outline" className="bg-white/[0.05] border-white/20 text-white hover:bg-white/10 rounded-xl">
-                    <Zap className="w-4 h-4 mr-2" />
-                    Manage Promotions
-                    <ArrowRight className="w-4 h-4 ml-2" />
+              {/* Quick Actions Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0 text-white/60"
+                  >
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
-                </Link>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-white">{stats.activePostings}</div>
-                <div className="text-white/60 text-sm">Active Postings</div>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                >
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
+                      <Plus className="h-4 w-4 text-orange-400" />
+                      <span>Post Content</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
+                      <Zap className="h-4 w-4 text-orange-400" />
+                      <span>Promotions</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
+                      <Settings className="h-4 w-4 text-orange-400" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/" className="flex items-center gap-3 w-full">
+                      <Home className="h-4 w-4 text-orange-400" />
+                      <span>Home</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* <Button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                variant="ghost" 
+                size="sm"
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button> */}
             </div>
           </div>
-        </div>
 
-        {/* Back to Homepage Button */}
-        <div className="mb-6">
-          <Link href="/">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Homepage
-            </Button>
-          </Link>
-        </div>
-
-        {/* Onboarding Call-to-Action - Only show if not completed */}
-        {onboardingStatus && !onboardingStatus.isCompleted && (
-        <div className="mb-8">
-          <Card className="border border-blue-500/30 bg-blue-500/10">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                    <Building className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      Complete Your Provider Profile
-                    </h3>
-                    <p className="text-sm text-white/60">
-                      Set up your organization details and verification to start posting opportunities with full features.
-                    </p>
-                      {onboardingStatus.completionPercentage > 0 && (
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs text-white/50 mb-1">
-                            <span>Progress</span>
-                            <span>{onboardingStatus.completionPercentage}%</span>
-                          </div>
-                          <div className="w-full bg-white/10 rounded-full h-2">
-                            <div 
-                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${onboardingStatus.completionPercentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                </div>
-                <Button asChild className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl">
-                  <Link href="/dashboard/provider/onboarding">
-                    <Building className="h-4 w-4 mr-2" />
-                      {onboardingStatus.completionPercentage > 0 ? 'Continue Setup' : 'Complete Setup'}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        )}
-                
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <nav className="flex space-x-8 overflow-x-auto pb-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'overview'
-                  ? 'border-orange-500 text-orange-400'
-                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'content'
-                  ? 'border-orange-500 text-orange-400'
-                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
-              }`}
-            >
-              My Content
-            </button>
-            <button
-              onClick={() => setActiveTab('applications')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'applications'
-                  ? 'border-orange-500 text-orange-400'
-                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
-              }`}
-            >
-              Applications
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeTab === 'analytics'
-                  ? 'border-orange-500 text-orange-400'
-                  : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/20'
-              }`}
-            >
-              Analytics
-            </button>
-          </nav>
-        </div>
-                
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-white/60">Loading provider dashboard data...</p>
-          </div>
-        )}
-
-        {/* Overview Tab */}
-        {!isLoading && activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-white/60">Total Postings</p>
-                      <p className="text-3xl font-bold text-orange-400">
-                        {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl flex items-center justify-center border border-orange-500/30">
-                      <FileText className="h-6 w-6 text-orange-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-white/60">Total Views</p>
-                      <p className="text-3xl font-bold text-blue-400">{stats.totalViews}</p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                      <Eye className="h-6 w-6 text-blue-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-white/60">Applications</p>
-                      <p className="text-3xl font-bold text-emerald-400">{stats.totalApplications}</p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                      <Send className="h-6 w-6 text-emerald-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-white/60">Pending</p>
-                      <p className="text-3xl font-bold text-yellow-400">{stats.pendingApprovals}</p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-500/30">
-                      <Clock className="h-6 w-6 text-yellow-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card className="border border-white/[0.06] bg-white/[0.02]">
-              <CardHeader>
-                <CardTitle className="flex items-center text-white">
-                  <Zap className="h-5 w-5 mr-2 text-orange-400" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Button asChild className="h-auto p-4 flex flex-col items-center space-y-2 bg-orange-500 hover:bg-orange-600 rounded-xl">
-                    <Link href="/dashboard/posting">
-                      <Target className="h-6 w-6" />
-                      <span>Post Opportunity</span>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
-                    <Link href="/dashboard/posting">
-                      <Calendar className="h-6 w-6" />
-                      <span>Post Event</span>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
-                    <Link href="/dashboard/posting">
-                      <Briefcase className="h-6 w-6" />
-                      <span>Post Job</span>
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
-                    <Link href="/dashboard/posting">
-                      <BookOpen className="h-6 w-6" />
-                      <span>Post Resource</span>
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="border border-white/[0.06] bg-white/[0.02]">
-              <CardHeader>
-                <CardTitle className="flex items-center text-white">
-                  <Activity className="h-5 w-5 mr-2 text-orange-400" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {postedItems.length > 0 ? (
-                  <div className="space-y-4">
-                    {postedItems.slice(0, 5).map((item) => {
-                      const Icon = getTypeIcon(item.type)
+          {/* Mobile Sidebar Drawer */}
+          {sidebarOpen && (
+            <>
+              <div 
+                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+                <div className="p-4 space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activeTab === item.id
+                    
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id as any)
+                          setSidebarOpen(false)
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                          isActive 
+                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                        <span>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                  
+                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                    {quickLinks.map((link) => {
+                      const Icon = link.icon
                       return (
-                        <div key={item._id} className="flex items-center space-x-4 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)}/20 rounded-full flex items-center justify-center flex-shrink-0 border border-${item.type === 'job' ? 'blue' : item.type === 'event' ? 'emerald' : item.type === 'opportunity' ? 'orange' : 'violet'}-500/30`}>
-                            <Icon className={`h-5 w-5 text-${item.type === 'job' ? 'blue' : item.type === 'event' ? 'emerald' : item.type === 'opportunity' ? 'orange' : 'violet'}-400`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white mb-1">{item.title}</h4>
-                            <div className="flex items-center space-x-4 text-xs text-white/50">
-                              <span className="capitalize">{item.type}</span>
-                              <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
-                              <Badge className={getStatusColor(item.status, item.isApproved)}>
-                                {getStatusText(item.status, item.isApproved)}
-                              </Badge>
+                        <Button
+                          key={link.label}
+                          asChild
+                          variant={link.variant}
+                          className={cn(
+                            "w-full justify-start",
+                            link.variant === 'default' 
+                              ? "bg-orange-500 hover:bg-orange-600" 
+                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                          )}
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <Link href={link.href}>
+                            <Icon className="w-4 h-4 mr-2" />
+                            {link.label}
+                          </Link>
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-400 break-words">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Welcome Section */}
+            {/* <div className="mb-4 md:mb-8">
+              <div className="p-4 md:p-6 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                        <Crown className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h1 className="text-lg md:text-xl font-bold text-white truncate">
+                          Welcome back, {user?.firstName || user?.email?.split('@')[0]}!
+                        </h1>
+                        <p className="text-xs md:text-sm text-white/50 mt-0.5">
+                          Manage your content and grow your reach
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05]">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white">
+                        {stats.activePostings}
+                      </div>
+                      <span className="text-xs text-white/50 hidden sm:inline">Active</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> */}
+
+            {/* Onboarding Call-to-Action */}
+            {onboardingStatus && !onboardingStatus.isCompleted && (
+              <div className="mb-4 md:mb-8">
+                <Card className="border border-blue-500/30 bg-blue-500/10">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+                          <Building className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base md:text-lg font-semibold text-white mb-1">
+                            Complete Your Provider Profile
+                          </h3>
+                          <p className="text-xs md:text-sm text-white/60 mb-2">
+                            Set up your organization details to unlock full features
+                          </p>
+                          {onboardingStatus.completionPercentage > 0 && (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between text-xs text-white/50 mb-1">
+                                <span>Progress</span>
+                                <span>{onboardingStatus.completionPercentage}%</span>
+                              </div>
+                              <div className="w-full bg-white/10 rounded-full h-1.5">
+                                <div 
+                                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                  style={{ width: `${onboardingStatus.completionPercentage}%` }}
+                                />
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2 text-xs text-white/50">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{item.metrics?.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-400" />
-                              <span>{item.metrics?.likeCount || 0}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Payment Details */}
-                          {item.paymentStatus && item.paymentStatus !== 'not_required' && (
-                            <PaymentDetails
-                              contentId={item._id}
-                              contentType={item.type}
-                              paymentStatus={item.paymentStatus}
-                              paymentAmount={item.paymentAmount}
-                              paymentReference={item.paymentReference}
-                              paymentReceipt={item.paymentReceipt}
-                              paymentNotes={item.paymentNotes}
-                              onStatusUpdate={fetchPostedItems}
-                            />
                           )}
                         </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
-                      <FileText className="h-8 w-8 text-orange-400" />
+                      </div>
+                      <Button asChild size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl w-full sm:w-auto">
+                        <Link href="/dashboard/provider/onboarding">
+                          <Building className="h-4 w-4 mr-2" />
+                          {onboardingStatus.completionPercentage > 0 ? 'Continue' : 'Start Setup'}
+                        </Link>
+                      </Button>
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">No Content Yet</h3>
-                    <p className="text-sm text-white/60 mb-4">
-                      Start by posting your first opportunity, event, or job
-                    </p>
-                    <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
-                      <Link href="/dashboard/posting">
-                        Post Your First Content
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+                    
+            {/* Loading State */}
+            {isLoading && (
+              <div className="text-center py-12 md:py-16">
+                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-sm md:text-base text-white/60">Loading dashboard data...</p>
+              </div>
+            )}
 
-        {/* Content Tab */}
-        {!isLoading && activeTab === 'content' && (
-          <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-orange-600" />
-                    My Content
-                  </div>
-                  <Button asChild className="bg-orange-500 hover:bg-orange-600">
-                    <Link href="/dashboard/posting">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Post New Content
-                    </Link>
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {postedItems.length > 0 ? (
-                  <div className="space-y-4">
-                    {postedItems.map((item) => {
-                      const Icon = getTypeIcon(item.type)
-                      return (
-                        <div key={item._id} className="space-y-4">
-                          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${getTypeColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                            <Icon className="h-5 w-5 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 mb-1">{item.title}</h4>
-                            <div className="flex items-center space-x-4 text-xs text-gray-500">
-                              <span className="capitalize">{item.type}</span>
-                              <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
-                              <Badge className={getStatusColor(item.status, item.isApproved)}>
-                                {getStatusText(item.status, item.isApproved)}
-                              </Badge>
-                            </div>
-                            {item.tags && item.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {item.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-4 text-xs text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{item.metrics?.viewCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Heart className="h-3 w-3 text-red-500" />
-                              <span>{item.metrics?.likeCount || 0}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Bookmark className="h-3 w-3 text-blue-500" />
-                              <span>{item.metrics?.saveCount || 0}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                           
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleEditContent(item)}
-                              title="Edit Content"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewContent(item)}
-                              title="View Content"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleDeleteContent(item)}
-                              title="Delete Content"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+            {/* Overview Tab */}
+            {!isLoading && activeTab === 'overview' && (
+              <div className="space-y-4 md:space-y-6">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Total</p>
+                          <p className="text-xl md:text-3xl font-bold text-orange-400 mt-1">
+                            {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources}
+                          </p>
                         </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <FileText className="h-8 w-8 text-white" />
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl flex items-center justify-center border border-orange-500/30 flex-shrink-0">
+                          <FileText className="h-5 w-5 md:h-6 md:w-6 text-orange-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Views</p>
+                          <p className="text-xl md:text-3xl font-bold text-blue-400 mt-1">{stats.totalViews}</p>
+                        </div>
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30 flex-shrink-0">
+                          <Eye className="h-5 w-5 md:h-6 md:w-6 text-blue-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Applications</p>
+                          <p className="text-xl md:text-3xl font-bold text-emerald-400 mt-1">{stats.totalApplications}</p>
+                        </div>
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30 flex-shrink-0">
+                          <Send className="h-5 w-5 md:h-6 md:w-6 text-emerald-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Pending</p>
+                          <p className="text-xl md:text-3xl font-bold text-yellow-400 mt-1">{stats.pendingApprovals}</p>
+                        </div>
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-500/30 flex-shrink-0">
+                          <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                      <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                      Quick Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                      <Button asChild className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 bg-orange-500 hover:bg-orange-600 rounded-xl">
+                        <Link href="/dashboard/posting">
+                          <Target className="h-5 w-5 md:h-6 md:w-6" />
+                          <span className="text-xs md:text-sm">Opportunity</span>
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                        <Link href="/dashboard/posting">
+                          <Calendar className="h-5 w-5 md:h-6 md:w-6" />
+                          <span className="text-xs md:text-sm">Event</span>
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                        <Link href="/dashboard/posting">
+                          <Briefcase className="h-5 w-5 md:h-6 md:w-6" />
+                          <span className="text-xs md:text-sm">Job</span>
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                        <Link href="/dashboard/posting">
+                          <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
+                          <span className="text-xs md:text-sm">Resource</span>
+                        </Link>
+                      </Button>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Content Yet</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Start by posting your first opportunity, event, or job
-                    </p>
-                    <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
-                      <Link href="/dashboard/posting">
-                        Post Your First Content
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  </CardContent>
+                </Card>
 
-        {/* Applications Tab */}
-        {!isLoading && activeTab === 'applications' && (
-          <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <UserCheck className="h-5 w-5 mr-2 text-orange-600" />
-                  Applications & Registrations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <UserCheck className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Applications Coming Soon</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    This feature will show all applications and registrations for your posted content
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                {/* Recent Activity */}
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                      <Activity className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                      Recent Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    {postedItems.length > 0 ? (
+                      <div className="space-y-3 md:space-y-4">
+                        {postedItems.slice(0, 5).map((item) => {
+                          const config = getTypeConfig(item.type)
+                          const Icon = config.icon
+                          
+                          return (
+                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all">
+                              <div className="flex items-start gap-3">
+                                <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
+                                  <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-white mb-1 line-clamp-1 text-sm md:text-base">{item.title}</h4>
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 mb-2">
+                                    <span className="capitalize">{config.label}</span>
+                                    <span>•</span>
+                                    <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+                                    <Badge className={cn("text-xs", getStatusColor(item.status, item.isApproved))}>
+                                      {getStatusText(item.status, item.isApproved)}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/50">
+                                    <div className="flex items-center gap-1.5">
+                                      <Eye className="h-3.5 w-3.5" />
+                                      <span>{item.metrics?.viewCount || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <Heart className="h-3.5 w-3.5 text-red-400" />
+                                      <span>{item.metrics?.likeCount || 0}</span>
+                                    </div>
+                                    {item.location && (
+                                      <div className="flex items-center gap-1.5">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span className="truncate max-w-[120px]">{getLocationString(item.location)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {item.paymentStatus && item.paymentStatus !== 'not_required' && (
+                                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                                      <PaymentDetails
+                                        contentId={item._id}
+                                        contentType={item.type}
+                                        paymentStatus={item.paymentStatus}
+                                        paymentAmount={item.paymentAmount}
+                                        paymentReference={item.paymentReference}
+                                        paymentReceipt={item.paymentReceipt}
+                                        paymentNotes={item.paymentNotes}
+                                        onStatusUpdate={loadProviderData}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 md:py-12">
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                          <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
+                        </div>
+                        <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Content Yet</h3>
+                        <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                          Start by posting your first opportunity, event, or job
+                        </p>
+                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
+                          <Link href="/dashboard/posting">
+                            Post Your First Content
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-        {/* Analytics Tab */}
-        {!isLoading && activeTab === 'analytics' && (
-          <div className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2 text-orange-600" />
-                  Analytics & Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Analytics Coming Soon</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Detailed analytics and insights for your content performance will be available here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Content Tab */}
+            {!isLoading && activeTab === 'content' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <CardTitle className="flex items-center text-white text-base md:text-lg">
+                        <FileText className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                        My Content
+                      </CardTitle>
+                      <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                        <Link href="/dashboard/posting">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Post New
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    {postedItems.length > 0 ? (
+                      <div className="space-y-3 md:space-y-4">
+                        {postedItems.map((item) => {
+                          const config = getTypeConfig(item.type)
+                          const Icon = config.icon
+                          
+                          return (
+                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all">
+                              <div className="flex items-start gap-3">
+                                <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
+                                  <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-3 mb-2">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-medium text-white mb-1 line-clamp-2 text-sm md:text-base">{item.title}</h4>
+                                      <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 mb-2">
+                                        <span className="capitalize">{config.label}</span>
+                                        <span>•</span>
+                                        <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+                                        <Badge className={cn("text-xs", getStatusColor(item.status, item.isApproved))}>
+                                          {getStatusText(item.status, item.isApproved)}
+                                        </Badge>
+                                      </div>
+                                      
+                                      {item.tags && item.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                          {item.tags.slice(0, 3).map((tag, index) => (
+                                            <Badge key={index} variant="outline" className="text-xs border-white/10 text-white/60">
+                                              {tag}
+                                            </Badge>
+                                          ))}
+                                          {item.tags.length > 3 && (
+                                            <Badge variant="outline" className="text-xs border-white/10 text-white/40">
+                                              +{item.tags.length - 3}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => handleEditContent(item)}
+                                        className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.08]"
+                                        title="Edit"
+                                      >
+                                        <Edit className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => handleViewContent(item)}
+                                        className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.08]"
+                                        title="View"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => handleDeleteContent(item)}
+                                        className="h-8 w-8 p-0 text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 mt-3 pt-3 border-t border-white/[0.06]">
+                                    <div className="flex items-center gap-1.5">
+                                      <Eye className="h-3.5 w-3.5" />
+                                      <span>{item.metrics?.viewCount || 0} views</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <Heart className="h-3.5 w-3.5 text-red-400" />
+                                      <span>{item.metrics?.likeCount || 0} likes</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <Bookmark className="h-3.5 w-3.5 text-blue-400" />
+                                      <span>{item.metrics?.saveCount || 0} saves</span>
+                                    </div>
+                                    {item.location && (
+                                      <div className="flex items-center gap-1.5">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span className="truncate max-w-[120px]">{getLocationString(item.location)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {item.paymentStatus && item.paymentStatus !== 'not_required' && (
+                                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                                      <PaymentDetails
+                                        contentId={item._id}
+                                        contentType={item.type}
+                                        paymentStatus={item.paymentStatus}
+                                        paymentAmount={item.paymentAmount}
+                                        paymentReference={item.paymentReference}
+                                        paymentReceipt={item.paymentReceipt}
+                                        paymentNotes={item.paymentNotes}
+                                        onStatusUpdate={loadProviderData}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 md:py-12">
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                          <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
+                        </div>
+                        <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Content Yet</h3>
+                        <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                          Start by posting your first opportunity, event, or job
+                        </p>
+                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
+                          <Link href="/dashboard/posting">
+                            Post Your First Content
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Applications Tab */}
+            {!isLoading && activeTab === 'applications' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6">
+                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                      <UserCheck className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                      Applications & Registrations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="text-center py-8 md:py-12">
+                      <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                        <UserCheck className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
+                      </div>
+                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Applications Coming Soon</h3>
+                      <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                        This feature will show all applications and registrations for your posted content
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Analytics Tab */}
+            {!isLoading && activeTab === 'analytics' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6">
+                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                      <BarChart3 className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                      Analytics & Insights
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="text-center py-8 md:py-12">
+                      <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                        <BarChart3 className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
+                      </div>
+                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Analytics Coming Soon</h3>
+                      <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                        Detailed analytics and insights for your content performance will be available here
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
-        )}
+        </main>
+
+        {/* Mobile Bottom Navigation - Only visible on mobile */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+          <div className="flex items-center justify-around h-16 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
+                    isActive 
+                      ? "text-orange-400" 
+                      : "text-white/50"
+                  )}
+                >
+                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                  <span className={cn(
+                    "text-[10px] font-medium truncate w-full text-center",
+                    isActive && "text-orange-400"
+                  )}>
+                    {item.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </nav>
       </div>
-
     </div>
   )
 }
-

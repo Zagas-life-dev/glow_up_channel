@@ -201,7 +201,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const upgradeToProvider = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await ApiClient.upgradeToProvider(email, password);
+      // Include user profile data to ensure data portability
+      const userData = {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        dateOfBirth: user?.dateOfBirth
+      };
+      const response = await ApiClient.upgradeToProvider(email, password, userData);
       setUser(response.user);
       // Keep existing profile data
       return response;

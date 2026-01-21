@@ -2,17 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
+import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
 import AuthGuard from "@/components/auth-guard"
 import { cn } from "@/lib/utils"
+import { toast } from 'sonner'
 import { 
   Target,
   Calendar,
@@ -30,7 +39,14 @@ import {
   Plus,
   Sparkles,
   Send,
-  Loader2
+  Loader2,
+  Home,
+  Menu,
+  Settings,
+  Zap,
+  LayoutDashboard,
+  MoreVertical,
+  RefreshCw
 } from 'lucide-react'
 import {
   Sheet,
@@ -64,12 +80,16 @@ const resourceCategories = ['Course', 'Tutorial', 'E-book', 'Tool', 'Template', 
 
 function PostingContent() {
   const router = useRouter()
+  const pathname = usePathname()
+  const { setHideNavbar, setHideFooter } = usePage()
   const { user, isAuthenticated } = useAuth()
   const [selectedType, setSelectedType] = useState<PostType | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   
   // Permission state
   const [canPost, setCanPost] = useState(false)
@@ -84,6 +104,16 @@ function PostingContent() {
   const [isRemote, setIsRemote] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+
+  // Hide navbar when this page is active
+  useEffect(() => {
+    setHideNavbar(true)
+    setHideFooter(true)
+    return () => {
+      setHideNavbar(false)
+      setHideFooter(false)
+    }
+  }, [setHideNavbar, setHideFooter])
 
   // Check posting permission
   useEffect(() => {
@@ -249,18 +279,256 @@ function PostingContent() {
 
   const getTypeConfig = (type: PostType) => postTypes.find(t => t.id === type)!
 
+  const navItems = [
+    { id: 'post', label: 'Post Content', icon: Plus, href: '/dashboard/posting' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider' },
+    { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/provider/settings' },
+  ]
+
+  const quickLinks = [
+    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider', variant: 'default' as const },
+    { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
+    { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
+    { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
+  ]
+
+  const handleRefresh = () => {
+    setLoading(true)
+    // Re-check posting permission
+    const checkPermission = async () => {
+      if (!isAuthenticated || !user) return
+      try {
+        const response = await ApiClient.checkPostingPermission()
+        setCanPost(response.canPost)
+        setOnboardingStatus({
+          completionPercentage: response.completionPercentage,
+          isCompleted: response.isCompleted,
+          reason: response.reason
+        })
+      } catch (error) {
+        setCanPost(false)
+        setOnboardingStatus({
+          completionPercentage: 0,
+          isCompleted: false,
+          reason: 'Failed to verify onboarding status'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkPermission()
+  }
+
   return (
-    <div className="min-h-screen pb-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/dashboard/provider" className="p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
-          <ArrowLeft className="w-5 h-5 text-white/60" />
-            </Link>
+    <div className="min-h-screen bg-[#0a0a0a] flex">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-orange-500" />
+            </div>
             <div>
-          <h1 className="text-xl font-bold text-white">Create Post</h1>
-          <p className="text-sm text-white/50">Share with the community</p>
+              <h1 className="text-base font-bold text-white">Post Content</h1>
+              <p className="text-xs text-white/50">Create & Share</p>
+            </div>
+          </div>
+          
+          {/* User Info */}
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <p className="text-sm font-medium text-white truncate">
+              {user?.firstName || user?.email?.split('@')[0]}
+            </p>
+            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+          </div>
         </div>
-      </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  isActive 
+                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-white/[0.06] space-y-2">
+          {quickLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <Button
+                key={link.label}
+                asChild
+                variant={link.variant}
+                className={cn(
+                  "w-full justify-start",
+                  link.variant === 'default' 
+                    ? "bg-orange-500 hover:bg-orange-600" 
+                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Link href={link.href}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {link.label}
+                </Link>
+              </Button>
+            )
+          })}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header - Only visible on mobile */}
+        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                <Plus className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white">Post Content</h1>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleRefresh} 
+                variant="ghost" 
+                size="sm"
+                disabled={loading}
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              </Button>
+              
+              {/* Quick Actions Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0 text-white/60"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                >
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
+                      <LayoutDashboard className="h-4 w-4 text-orange-400" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
+                      <Zap className="h-4 w-4 text-orange-400" />
+                      <span>Promotions</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
+                      <Settings className="h-4 w-4 text-orange-400" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/" className="flex items-center gap-3 w-full">
+                      <Home className="h-4 w-4 text-orange-400" />
+                      <span>Home</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Mobile Sidebar Drawer */}
+          {sidebarOpen && (
+            <>
+              <div 
+                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+                <div className="p-4 space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+                    
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                          isActive 
+                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                        <span>{item.label}</span>
+                      </Link>
+                    )
+                  })}
+                  
+                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                    {quickLinks.map((link) => {
+                      const Icon = link.icon
+                      return (
+                        <Button
+                          key={link.label}
+                          asChild
+                          variant={link.variant}
+                          className={cn(
+                            "w-full justify-start",
+                            link.variant === 'default' 
+                              ? "bg-orange-500 hover:bg-orange-600" 
+                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                          )}
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <Link href={link.href}>
+                            <Icon className="w-4 h-4 mr-2" />
+                            {link.label}
+                          </Link>
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
 
       {/* Onboarding Warning */}
         {!canPost && onboardingStatus && (
@@ -672,6 +940,40 @@ function PostingContent() {
           )}
         </SheetContent>
       </Sheet>
+          </div>
+        </main>
+
+        {/* Mobile Bottom Navigation - Only visible on mobile */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+          <div className="flex items-center justify-around h-16 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
+                    isActive 
+                      ? "text-orange-400" 
+                      : "text-white/50"
+                  )}
+                >
+                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                  <span className={cn(
+                    "text-[10px] font-medium truncate w-full text-center",
+                    isActive && "text-orange-400"
+                  )}>
+                    {item.label}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
+      </div>
     </div>
   )
 } 

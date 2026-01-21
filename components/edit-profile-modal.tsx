@@ -576,7 +576,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   onChange={setSkills}
                   placeholder="Type a skill and press Enter..."
                   maxSkills={20}
-                  className="[&_input]:bg-white/[0.03] [&_input]:border-white/[0.08] [&_input]:text-white [&_input]:rounded-xl [&_input]:h-10 [&_input]:focus:border-orange-500/50 [&_.bg-white]:bg-gray-900 [&_.border-gray-200]:border-white/10 [&_.text-gray-700]:text-white [&_.hover\\:bg-orange-50]:hover:bg-orange-500/10"
+                  className="[&_input]:bg-white/[0.03] [&_input]:border-white/[0.08] [&_input]:text-white [&_input]:rounded-xl [&_input]:h-10 [&_input]:focus:border-orange-500/50 [&_.bg-white]:bg-gray-900 [&_.border-gray-200]:border-white/10 [&_.text-gray-700]:text-white [&_button]:hover:bg-orange-500/10 [&_button]:focus:bg-orange-500/10"
                 />
               </div>
 

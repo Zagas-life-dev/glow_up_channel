@@ -13,6 +13,7 @@ import { toast } from "sonner"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { ApiClient } from "@/lib/api-client"
 
 interface OpportunityFormData {
   submitter_name: string
@@ -74,10 +75,9 @@ export default function OpportunitySubmissionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    console.log('Form submitted:', opportunityForm)
     
     if (!checkOpportunityFormValidity()) {
-      toast.error("Missing information", {
+      toast.error("Validation Error", {
         description: "Please fill in all required fields"
       })
       setLoading(false)
@@ -85,9 +85,31 @@ export default function OpportunitySubmissionForm() {
     }
     
     try {
-      // TODO: Implement opportunity submission with your backend API
-      toast.error("Feature not available", {
-        description: "Opportunity submission needs to be implemented with your backend API."
+      // Map form data to backend format
+      const opportunityData = {
+        title: opportunityForm.title.trim(),
+        description: opportunityForm.description.trim(),
+        url: opportunityForm.link.trim(),
+        category: opportunityForm.category,
+        type: opportunityForm.category, // Using category as type for now
+        provider: opportunityForm.submitter_name.trim(),
+        location: {
+          isRemote: false // Default, can be enhanced later
+        },
+        requirements: {
+          other: opportunityForm.eligibility.trim()
+        },
+        dates: {
+          applicationDeadline: opportunityForm.deadline ? new Date(opportunityForm.deadline).toISOString() : null
+        },
+        status: 'active',
+        isApproved: false // Requires admin approval
+      }
+
+      await ApiClient.createOpportunity(opportunityData)
+      
+      toast.success("Opportunity Submitted", {
+        description: "Your opportunity has been submitted successfully and is pending approval."
       })
       
       // Reset form
@@ -104,10 +126,26 @@ export default function OpportunitySubmissionForm() {
       })
       setSelectedDate(undefined)
     } catch (error: any) {
-      console.error('Submission error details:', error)
-      toast.error("Submission failed", {
-        description: error.message || "Failed to submit opportunity. Please try again."
-      })
+      const errorMessage = error.message || "Failed to submit opportunity. Please try again."
+      
+      // Handle specific error cases
+      if (errorMessage.includes('Authentication') || errorMessage.includes('token')) {
+        toast.error("Authentication Required", {
+          description: "Please log in to submit an opportunity."
+        })
+      } else if (errorMessage.includes('DUPLICATE_TITLE') || errorMessage.includes('already exists')) {
+        toast.error("Duplicate Opportunity", {
+          description: "An opportunity with this title already exists. Please use a different title."
+        })
+      } else if (errorMessage.includes('Validation failed')) {
+        toast.error("Validation Error", {
+          description: "Please check your input and try again."
+        })
+      } else {
+        toast.error("Submission Failed", {
+          description: errorMessage
+        })
+      }
     } finally {
       setLoading(false)
     }

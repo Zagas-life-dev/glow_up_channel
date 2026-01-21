@@ -1,4 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL|| 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+if (!API_BASE_URL && typeof window !== 'undefined') {
+  console.error('NEXT_PUBLIC_BACKEND_URL environment variable is required');
+  throw new Error('Backend URL not configured. Please set NEXT_PUBLIC_BACKEND_URL environment variable.');
+}
 
 
 // Types for API responses
@@ -1246,15 +1251,33 @@ export class ApiClient {
   }
 
   // User role upgrade API methods
-  static async upgradeToProvider(email: string, password: string): Promise<{ user: any; needsApproval: boolean }> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-poster`, {
+  static async upgradeToProvider(email: string, password: string, userData?: { firstName?: string; lastName?: string; dateOfBirth?: string }): Promise<{ user: any; tokens: { accessToken: string; refreshToken: string }; needsApproval: boolean }> {
+    const requestBody: any = { email, password };
+    
+    // Include user profile data if provided to ensure data portability
+    if (userData) {
+      if (userData.firstName) requestBody.firstName = userData.firstName;
+      if (userData.lastName) requestBody.lastName = userData.lastName;
+      if (userData.dateOfBirth) requestBody.dateOfBirth = userData.dateOfBirth;
+    }
+    
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/upgrade-to-provider`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(requestBody),
     });
-    return this.handleResponse(response);
+    const result = await this.handleResponse<{ user: any; tokens: { accessToken: string; refreshToken: string }; needsApproval: boolean }>(response);
+    
+    // Update tokens if provided
+    if (result.tokens) {
+      this.setTokens(result.tokens);
+    }
+    
+    // Return in expected format
+    return {
+      user: result.user,
+      tokens: result.tokens,
+      needsApproval: result.needsApproval
+    };
   }
 
   // Provider Onboarding Methods

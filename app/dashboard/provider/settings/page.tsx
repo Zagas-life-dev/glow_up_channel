@@ -1,10 +1,18 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
@@ -16,6 +24,7 @@ import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { 
   Building2, 
   Mail, 
@@ -45,7 +54,18 @@ import {
   Heart,
   LogOut,
   Settings,
-  AlertCircle
+  AlertCircle,
+  Home,
+  Menu,
+  X,
+  LayoutDashboard,
+  Activity,
+  RefreshCw,
+  Crown,
+  Loader2,
+  Plus,
+  Zap,
+  MoreVertical
 } from 'lucide-react'
 
 interface ProviderOnboardingData {
@@ -80,9 +100,10 @@ interface ProviderOnboardingData {
 }
 
 export default function ProviderSettings() {
-  const { user, isAuthenticated, profile, logout, updateProfile, updateUser, refreshUser, isLoading } = useAuth()
+  const { user, isAuthenticated, profile, logout, updateProfile, updateUser, refreshUser, isLoading: authLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
   const router = useRouter()
+  const pathname = usePathname()
   
   // State management
   const [onboardingData, setOnboardingData] = useState<ProviderOnboardingData | null>(null)
@@ -92,6 +113,7 @@ export default function ProviderSettings() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // User profile data
   const [userData, setUserData] = useState({
@@ -139,36 +161,36 @@ export default function ProviderSettings() {
 
   // Check authentication
   useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      router.push('/auth/login')
+    if (!isAuthenticated && !authLoading) {
+      router.push('/login')
       return
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, authLoading, router])
 
   // Load provider onboarding data
-  useEffect(() => {
-    const loadProviderData = async () => {
-      if (!isAuthenticated) return
+  const loadProviderData = useCallback(async () => {
+    if (!isAuthenticated) return
+    
+    try {
+      setLoading(true)
+      setError(null)
       
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const response = await ApiClient.getProviderOnboarding()
-        setOnboardingData(response.onboarding)
-      } catch (error: any) {
-        console.error('Error loading provider data:', error)
-        setError(error.message || 'Failed to load provider data')
-        toast.error('Failed to load provider settings')
-      } finally {
-        setLoading(false)
-      }
+      const response = await ApiClient.getProviderOnboarding()
+      setOnboardingData(response.onboarding)
+    } catch (error: any) {
+      console.error('Error loading provider data:', error)
+      setError(error.message || 'Failed to load provider data')
+      toast.error('Failed to load provider settings')
+    } finally {
+      setLoading(false)
     }
+  }, [isAuthenticated])
 
+  useEffect(() => {
     if (isAuthenticated) {
       loadProviderData()
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, loadProviderData])
 
   // Update local state when user/profile data changes
   useEffect(() => {
@@ -247,54 +269,6 @@ export default function ProviderSettings() {
 
   const handleCancel = () => {
     setIsEditing(false)
-  }
-
-  const handleDeleteAccount = async () => {
-    // Double confirmation
-    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
-      '• Your profile and preferences\n' +
-      '• All saved opportunities, events, jobs, and resources\n' +
-      '• All liked content\n' +
-      '• All application history\n' +
-      '• All promotions and provider data\n' +
-      '• All other account data\n\n' +
-      'This action cannot be undone!'
-    
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
-    // Second confirmation
-    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
-    const userInput = prompt(finalConfirm)
-    
-    if (userInput !== 'DELETE') {
-      toast.error('Account deletion cancelled')
-      return
-    }
-
-    setIsDeletingAccount(true)
-    
-    try {
-      await ApiClient.deleteAccount()
-      toast.success('Account deleted successfully')
-      
-      // Clear local storage
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      
-      // Logout and redirect to home
-      setTimeout(() => {
-        logout()
-        window.location.href = '/'
-      }, 2000)
-      
-    } catch (error: any) {
-      console.error('Delete account error:', error)
-      toast.error(error.message || 'Failed to delete account. Please try again.')
-      setIsDeletingAccount(false)
-    }
-  }
     setError(null)
     // Reset form data to original values
     if (user) {
@@ -322,6 +296,49 @@ export default function ProviderSettings() {
     }
   }
 
+  const handleDeleteAccount = async () => {
+    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
+      '• Your profile and preferences\n' +
+      '• All saved opportunities, events, jobs, and resources\n' +
+      '• All liked content\n' +
+      '• All application history\n' +
+      '• All promotions and provider data\n' +
+      '• All other account data\n\n' +
+      'This action cannot be undone!'
+    
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
+    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
+    const userInput = prompt(finalConfirm)
+    
+    if (userInput !== 'DELETE') {
+      toast.error('Account deletion cancelled')
+      return
+    }
+
+    setIsDeletingAccount(true)
+    
+    try {
+      await ApiClient.deleteAccount()
+      toast.success('Account deleted successfully')
+      
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      
+      setTimeout(() => {
+        logout()
+        window.location.href = '/'
+      }, 2000)
+      
+    } catch (error: any) {
+      console.error('Delete account error:', error)
+      toast.error(error.message || 'Failed to delete account. Please try again.')
+      setIsDeletingAccount(false)
+    }
+  }
+
   const getProviderTypeLabel = (type: string) => {
     const types: { [key: string]: string } = {
       'individual': 'Individual',
@@ -344,12 +361,12 @@ export default function ProviderSettings() {
     })
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading provider settings...</p>
+          <p className="text-white/60">Loading provider settings...</p>
         </div>
       </div>
     )
@@ -357,660 +374,912 @@ export default function ProviderSettings() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
-          <p className="text-gray-600 mb-4">Please log in to access provider settings.</p>
-          <Button onClick={() => router.push('/auth/login')}>
-            Go to Login
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Authentication Required</h2>
+          <p className="text-white/60 mb-4">Please log in to access provider settings.</p>
+          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+            <Link href="/login">Go to Login</Link>
           </Button>
         </div>
       </div>
     )
   }
 
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider/settings' },
+    { id: 'profile', label: 'Profile', icon: User, href: '/dashboard/provider/settings' },
+    { id: 'organization', label: 'Organization', icon: Building2, href: '/dashboard/provider/settings' },
+    { id: 'preferences', label: 'Preferences', icon: Palette, href: '/dashboard/provider/settings' },
+    { id: 'security', label: 'Security', icon: Shield, href: '/dashboard/provider/settings' },
+  ]
+
+  const quickLinks = [
+    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider', variant: 'outline' as const },
+    { label: 'Post Content', icon: Plus, href: '/dashboard/posting', variant: 'default' as const },
+    { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
+    { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard/provider')}
-                className="p-2"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Provider Settings</h1>
-                <p className="text-gray-600 mt-1">Manage your organization details and account settings</p>
-              </div>
+    <div className="min-h-screen bg-[#0a0a0a] flex">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <Settings className="w-5 h-5 text-orange-500" />
             </div>
-            <div className="flex items-center space-x-3">
-              {onboardingData && (
-                <Badge 
-                  variant={onboardingData.isCompleted ? "default" : "secondary"}
-                  className={onboardingData.isCompleted ? "bg-green-500" : "bg-yellow-500"}
-                >
-                  {onboardingData.isCompleted ? (
-                    <><CheckCircle className="w-4 h-4 mr-1" /> Completed</>
-                  ) : (
-                    <><Clock className="w-4 h-4 mr-1" /> In Progress</>
-                  )}
-                </Badge>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard/provider/onboarding')}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                {onboardingData?.isCompleted ? 'View Onboarding' : 'Continue Onboarding'}
-              </Button>
-              <Button
-                onClick={logout}
-                variant="outline"
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+            <div>
+              <h1 className="text-base font-bold text-white">Settings</h1>
+              <p className="text-xs text-white/50">Provider</p>
             </div>
+          </div>
+          
+          {/* User Info */}
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <p className="text-sm font-medium text-white truncate">
+              {user?.firstName || user?.email?.split('@')[0]}
+            </p>
+            <p className="text-xs text-white/50 truncate">{user?.email}</p>
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-center">
-            <AlertCircle className="w-5 h-5 mr-3 text-red-600" />
-            <span className="font-medium">{error}</span>
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  isActive 
+                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-white/[0.06] space-y-2">
+          {quickLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <Button
+                key={link.label}
+                asChild
+                variant={link.variant}
+                className={cn(
+                  "w-full justify-start",
+                  link.variant === 'default' 
+                    ? "bg-orange-500 hover:bg-orange-600" 
+                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Link href={link.href}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {link.label}
+                </Link>
+              </Button>
+            )
+          })}
+        </div>
+
+        {/* Onboarding Status */}
+        {onboardingData && (
+          <div className="p-4 border-t border-white/[0.06]">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-white/50">Onboarding</span>
+                <Badge className={cn(
+                  "text-xs",
+                  onboardingData.isCompleted 
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+                    : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                )}>
+                  {onboardingData.isCompleted ? 'Complete' : 'In Progress'}
+                </Badge>
+              </div>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                {(() => {
+                  const percentage = onboardingData.completionPercentage || 0
+                  return (
+                    <div 
+                      className="h-full bg-orange-500 rounded-full transition-all"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  )
+                })()}
+              </div>
+            </div>
           </div>
         )}
+      </aside>
 
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'overview', label: 'Overview', icon: Settings },
-              { id: 'profile', label: 'Profile', icon: User },
-              { id: 'organization', label: 'Organization', icon: Building2 },
-              { id: 'preferences', label: 'Preferences', icon: Palette },
-              { id: 'security', label: 'Security', icon: Shield }
-            ].map((tab) => {
-              const Icon = tab.icon
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header - Only visible on mobile */}
+        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                <Settings className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white">Settings</h1>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => loadProviderData()} 
+                variant="ghost" 
+                size="sm"
+                disabled={loading}
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              </Button>
+              
+              {/* Quick Actions Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0 text-white/60"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                >
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
+                      <LayoutDashboard className="h-4 w-4 text-orange-400" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
+                      <Plus className="h-4 w-4 text-orange-400" />
+                      <span>Post Content</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
+                      <Zap className="h-4 w-4 text-orange-400" />
+                      <span>Promotions</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/" className="flex items-center gap-3 w-full">
+                      <Home className="h-4 w-4 text-orange-400" />
+                      <span>Home</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* <Button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                variant="ghost" 
+                size="sm"
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button> */}
+            </div>
+          </div>
+
+          {/* Mobile Sidebar Drawer */}
+          {sidebarOpen && (
+            <>
+              <div 
+                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+                <div className="p-4 space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activeTab === item.id
+                    
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id as any)
+                          setSidebarOpen(false)
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                          isActive 
+                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                        )}
+                      >
+                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                        <span>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                  
+                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                    {quickLinks.map((link) => {
+                      const Icon = link.icon
+                      return (
+                        <Button
+                          key={link.label}
+                          asChild
+                          variant={link.variant}
+                          className={cn(
+                            "w-full justify-start",
+                            link.variant === 'default' 
+                              ? "bg-orange-500 hover:bg-orange-600" 
+                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                          )}
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <Link href={link.href}>
+                            <Icon className="w-4 h-4 mr-2" />
+                            {link.label}
+                          </Link>
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-400 break-words">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-4 md:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                  {/* Progress Card */}
+                  <div className="lg:col-span-1">
+                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                      <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                          <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                          Onboarding Progress
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                        {onboardingData ? (
+                          <>
+                            <div>
+                              <div className="flex items-center justify-between text-sm mb-2">
+                                <span className="text-white/60">Completion</span>
+                                <span className="font-medium text-white">{onboardingData.completionPercentage}%</span>
+                              </div>
+                              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-orange-500 rounded-full transition-all"
+                                  style={{ width: `${onboardingData.completionPercentage}%` }}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center justify-between">
+                                <span className="text-white/60">Status</span>
+                                <Badge className={cn(
+                                  "text-xs",
+                                  onboardingData.isCompleted 
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+                                    : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                                )}>
+                                  {onboardingData.isCompleted ? 'Completed' : 'In Progress'}
+                                </Badge>
+                              </div>
+                              
+                              {onboardingData.completedAt && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-white/60">Completed</span>
+                                  <span className="font-medium text-white text-xs">{formatDate(onboardingData.completedAt)}</span>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-white/60">Last Updated</span>
+                                <span className="font-medium text-white text-xs">{formatDate(onboardingData.updatedAt)}</span>
+                              </div>
+                            </div>
+
+                            <Button 
+                              asChild 
+                              variant="outline" 
+                              className="w-full border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                            >
+                              <Link href="/dashboard/provider/onboarding">
+                                <Edit className="h-4 w-4 mr-2" />
+                                {onboardingData.isCompleted ? 'View Onboarding' : 'Continue Onboarding'}
+                              </Link>
+                            </Button>
+                          </>
+                        ) : (
+                          <div className="text-center py-4">
+                            <AlertCircle className="w-8 h-8 text-white/40 mx-auto mb-2" />
+                            <p className="text-sm text-white/50 mb-4">No onboarding data found</p>
+                            <Button 
+                              asChild 
+                              className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                            >
+                              <Link href="/dashboard/provider/onboarding">
+                                Start Onboarding
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Organization Summary */}
+                  <div className="lg:col-span-2">
+                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                      <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                          <Building2 className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                          Organization Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 md:p-6 pt-0">
+                        {onboardingData ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-xs md:text-sm font-medium text-white/60">Organization Name</label>
+                                <p className="text-white font-medium mt-1">{onboardingData.organizationName}</p>
+                              </div>
+                              <div>
+                                <label className="text-xs md:text-sm font-medium text-white/60">Provider Type</label>
+                                <p className="text-white font-medium mt-1">
+                                  {getProviderTypeLabel(onboardingData.providerType)}
+                                  {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="text-xs md:text-sm font-medium text-white/60">Contact Person</label>
+                                <p className="text-white font-medium mt-1">{onboardingData.contactPersonName}</p>
+                              </div>
+                              <div>
+                                <label className="text-xs md:text-sm font-medium text-white/60">Email</label>
+                                <p className="text-white font-medium mt-1">{onboardingData.officialEmail}</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs md:text-sm font-medium text-white/60">About Organization</label>
+                              <p className="text-white mt-1 text-sm md:text-base">{onboardingData.aboutOrganization}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 md:py-12">
+                            <Building2 className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                            <p className="text-white/60 mb-4">No organization data available</p>
+                            <Button 
+                              asChild 
+                              className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                            >
+                              <Link href="/dashboard/provider/onboarding">
+                                Complete Onboarding
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                      <User className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                      Profile Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="space-y-6">
+                      {/* Personal Information */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName" className="text-white/70">First Name</Label>
+                          <Input
+                            id="firstName"
+                            value={userData.firstName}
+                            onChange={(e) => setUserData({...userData, firstName: e.target.value})}
+                            disabled={!isEditing}
+                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            placeholder="Enter your first name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName" className="text-white/70">Last Name</Label>
+                          <Input
+                            id="lastName"
+                            value={userData.lastName}
+                            onChange={(e) => setUserData({...userData, lastName: e.target.value})}
+                            disabled={!isEditing}
+                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            placeholder="Enter your last name"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-white/70">Email Address</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={userData.email}
+                            disabled
+                            className="h-11 bg-white/[0.03] border-white/[0.06] text-white/60"
+                          />
+                          <p className="text-xs text-white/40">Email cannot be changed</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dateOfBirth" className="text-white/70">Date of Birth</Label>
+                          <Input
+                            id="dateOfBirth"
+                            type="date"
+                            value={userData.dateOfBirth}
+                            onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
+                            disabled={!isEditing}
+                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Location Information */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-white">Location Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="country" className="text-white/70">Country</Label>
+                            <Input
+                              id="country"
+                              value={profileData.country}
+                              onChange={(e) => setProfileData({...profileData, country: e.target.value})}
+                              disabled={!isEditing}
+                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              placeholder="e.g., Nigeria"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="province" className="text-white/70">Province/State</Label>
+                            <Input
+                              id="province"
+                              value={profileData.province}
+                              onChange={(e) => setProfileData({...profileData, province: e.target.value})}
+                              disabled={!isEditing}
+                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              placeholder="e.g., Lagos"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="city" className="text-white/70">City/Town</Label>
+                            <Input
+                              id="city"
+                              value={profileData.city}
+                              onChange={(e) => setProfileData({...profileData, city: e.target.value})}
+                              disabled={!isEditing}
+                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              placeholder="e.g., Ikeja"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/[0.06]">
+                        {!isEditing ? (
+                          <Button onClick={() => setIsEditing(true)} className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        ) : (
+                          <>
+                            <Button onClick={handleCancel} variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl w-full sm:w-auto">
+                              Cancel
+                            </Button>
+                            <Button onClick={handleSave} disabled={isSaving} className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                              {isSaving ? (
+                                <div className="flex items-center space-x-2">
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <span>Saving...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <Save className="h-4 w-4" />
+                                  <span>Save Changes</span>
+                                </div>
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Organization Tab */}
+            {activeTab === 'organization' && (
+              <div className="space-y-4 md:space-y-6">
+                {onboardingData ? (
+                  <>
+                    {/* Organization Information */}
+                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                      <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                          <Building2 className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                          Organization Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Organization Name</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.organizationName}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Provider Type</label>
+                            <p className="text-white font-medium mt-1">
+                              {getProviderTypeLabel(onboardingData.providerType)}
+                              {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Contact Person</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.contactPersonName}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Role</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.contactPersonRole}</p>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs md:text-sm font-medium text-white/60">Address</label>
+                          <p className="text-white mt-1">{onboardingData.providerAddress}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs md:text-sm font-medium text-white/60">About Organization</label>
+                          <p className="text-white mt-1">{onboardingData.aboutOrganization}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Contact Information */}
+                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                      <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                          <Mail className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                          Contact Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Official Email</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.officialEmail}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Phone Number</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.phoneNumber}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">State of Operation</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.stateOfOperation}</p>
+                          </div>
+                          <div>
+                            <label className="text-xs md:text-sm font-medium text-white/60">Year Established</label>
+                            <p className="text-white font-medium mt-1">{onboardingData.yearEstablished}</p>
+                          </div>
+                        </div>
+                        
+                        {(onboardingData.website || onboardingData.socialMediaHandles) && (
+                          <>
+                            <Separator className="bg-white/[0.06]" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {onboardingData.website && (
+                                <div>
+                                  <label className="text-xs md:text-sm font-medium text-white/60">Website</label>
+                                  <p className="text-white font-medium mt-1">{onboardingData.website}</p>
+                                </div>
+                              )}
+                              {onboardingData.socialMediaHandles && (
+                                <div>
+                                  <label className="text-xs md:text-sm font-medium text-white/60">Social Media</label>
+                                  <p className="text-white font-medium mt-1">{onboardingData.socialMediaHandles}</p>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <Card className="border border-white/[0.06] bg-white/[0.02]">
+                    <CardContent className="p-4 md:p-6 text-center py-12">
+                      <Building2 className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Organization Data</h3>
+                      <p className="text-sm text-white/60 mb-6">Complete your provider onboarding to see organization details.</p>
+                      <Button 
+                        asChild 
+                        className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                      >
+                        <Link href="/dashboard/provider/onboarding">
+                          Complete Onboarding
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Preferences Tab */}
+            {activeTab === 'preferences' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                      <Palette className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                      Account Preferences
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="language" className="text-white/70">Language</Label>
+                          <Select value={preferences.language} onValueChange={(value) => setPreferences({...preferences, language: value})}>
+                            <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#141414] border-white/[0.08]">
+                              <SelectItem value="en" className="text-white">English</SelectItem>
+                              <SelectItem value="fr" className="text-white">French</SelectItem>
+                              <SelectItem value="es" className="text-white">Spanish</SelectItem>
+                              <SelectItem value="ar" className="text-white">Arabic</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="timezone" className="text-white/70">Timezone</Label>
+                          <Select value={preferences.timezone} onValueChange={(value) => setPreferences({...preferences, timezone: value})}>
+                            <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#141414] border-white/[0.08]">
+                              <SelectItem value="Africa/Lagos" className="text-white">Africa/Lagos (GMT+1)</SelectItem>
+                              <SelectItem value="Africa/Cairo" className="text-white">Africa/Cairo (GMT+2)</SelectItem>
+                              <SelectItem value="Africa/Johannesburg" className="text-white">Africa/Johannesburg (GMT+2)</SelectItem>
+                              <SelectItem value="UTC" className="text-white">UTC (GMT+0)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="theme" className="text-white/70">Theme</Label>
+                        <Select value={preferences.theme} onValueChange={(value) => setPreferences({...preferences, theme: value})}>
+                          <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#141414] border-white/[0.08]">
+                            <SelectItem value="light" className="text-white">Light</SelectItem>
+                            <SelectItem value="dark" className="text-white">Dark</SelectItem>
+                            <SelectItem value="auto" className="text-white">Auto (System)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-white/[0.06]">
+                        <h4 className="font-medium text-white">Notification Preferences</h4>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-white">Email Notifications</p>
+                              <p className="text-sm text-white/60">Receive notifications via email</p>
+                            </div>
+                            <Switch
+                              checked={preferences.emailNotifications}
+                              onCheckedChange={(checked) => setPreferences({...preferences, emailNotifications: checked})}
+                            />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-white">Marketing Emails</p>
+                              <p className="text-sm text-white/60">Receive promotional and marketing emails</p>
+                            </div>
+                            <Switch
+                              checked={preferences.marketingEmails}
+                              onCheckedChange={(checked) => setPreferences({...preferences, marketingEmails: checked})}
+                            />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-white">Weekly Digest</p>
+                              <p className="text-sm text-white/60">Receive a weekly summary of activities</p>
+                            </div>
+                            <Switch
+                              checked={preferences.weeklyDigest}
+                              onCheckedChange={(checked) => setPreferences({...preferences, weeklyDigest: checked})}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+              <div className="space-y-4 md:space-y-6">
+                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                      <Shield className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
+                      Security Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-white">Change Password</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="currentPassword" className="text-white/70">Current Password</Label>
+                            <Input
+                              id="currentPassword"
+                              type="password"
+                              placeholder="Enter current password"
+                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="newPassword" className="text-white/70">New Password</Label>
+                            <Input
+                              id="newPassword"
+                              type="password"
+                              placeholder="Enter new password"
+                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            />
+                          </div>
+                        </div>
+                        <Button className="bg-blue-500 hover:bg-blue-600 rounded-xl">
+                          Update Password
+                        </Button>
+                      </div>
+
+                      <div className="border-t border-white/[0.06] pt-6">
+                        <h4 className="font-medium text-white mb-4">Two-Factor Authentication</h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                          <div>
+                            <p className="font-medium text-white">Two-Factor Authentication</p>
+                            <p className="text-sm text-white/60">Add an extra layer of security to your account</p>
+                          </div>
+                          <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl w-full sm:w-auto">
+                            Enable 2FA
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-white/[0.06] pt-6">
+                        <h4 className="font-medium text-white mb-4">Danger Zone</h4>
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                          <h5 className="font-medium text-red-400 mb-2">Delete Account</h5>
+                          <p className="text-sm text-red-400/80 mb-4">
+                            Once you delete your account, there is no going back. Please be certain.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl"
+                            onClick={handleDeleteAccount}
+                            disabled={isDeletingAccount}
+                          >
+                            {isDeletingAccount ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Account
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Mobile Bottom Navigation - Only visible on mobile */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+          <div className="flex items-center justify-around h-16 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'bg-orange-500 text-white shadow-sm'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                  }`}
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
+                    isActive 
+                      ? "text-orange-400" 
+                      : "text-white/50"
+                  )}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span>{tab.label}</span>
+                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
+                  <span className={cn(
+                    "text-[10px] font-medium truncate w-full text-center",
+                    isActive && "text-orange-400"
+                  )}>
+                    {item.label}
+                  </span>
                 </button>
               )
             })}
           </div>
-        </div>
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Progress Card */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5 text-orange-600" />
-                    <span>Onboarding Progress</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {onboardingData ? (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-gray-600">Completion</span>
-                          <span className="font-medium">{onboardingData.completionPercentage}%</span>
-                        </div>
-                        <Progress value={onboardingData.completionPercentage} className="h-2" />
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Status</span>
-                          <Badge variant={onboardingData.isCompleted ? "default" : "secondary"}>
-                            {onboardingData.isCompleted ? 'Completed' : 'In Progress'}
-                          </Badge>
-                        </div>
-                        
-                        {onboardingData.completedAt && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Completed</span>
-                            <span className="font-medium">{formatDate(onboardingData.completedAt)}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Last Updated</span>
-                          <span className="font-medium">{formatDate(onboardingData.updatedAt)}</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-4">
-                      <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">No onboarding data found</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Organization Summary */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Building2 className="w-5 h-5 text-orange-600" />
-                    <span>Organization Summary</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {onboardingData ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Organization Name</label>
-                          <p className="text-gray-900 font-medium">{onboardingData.organizationName}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Provider Type</label>
-                          <p className="text-gray-900 font-medium">
-                            {getProviderTypeLabel(onboardingData.providerType)}
-                            {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Contact Person</label>
-                          <p className="text-gray-900 font-medium">{onboardingData.contactPersonName}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Email</label>
-                          <p className="text-gray-900 font-medium">{onboardingData.officialEmail}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">About Organization</label>
-                        <p className="text-gray-900 mt-1">{onboardingData.aboutOrganization}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500 mb-4">No organization data available</p>
-                      <Button onClick={() => router.push('/dashboard/provider/onboarding')}>
-                        Complete Onboarding
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Profile Tab */}
-        {activeTab === 'profile' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <User className="h-5 w-5 text-orange-600" />
-                  Profile Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* Personal Information */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        value={userData.firstName}
-                        onChange={(e) => setUserData({...userData, firstName: e.target.value})}
-                        disabled={!isEditing}
-                        className="h-11"
-                        placeholder="Enter your first name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        value={userData.lastName}
-                        onChange={(e) => setUserData({...userData, lastName: e.target.value})}
-                        disabled={!isEditing}
-                        className="h-11"
-                        placeholder="Enter your last name"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={userData.email}
-                        disabled
-                        className="h-11 bg-gray-50"
-                      />
-                      <p className="text-xs text-gray-500">Email cannot be changed</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        value={userData.dateOfBirth}
-                        onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
-                        disabled={!isEditing}
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Location Information */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Location Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Input
-                          id="country"
-                          value={profileData.country}
-                          onChange={(e) => setProfileData({...profileData, country: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          placeholder="e.g., Nigeria"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="province">Province/State</Label>
-                        <Input
-                          id="province"
-                          value={profileData.province}
-                          onChange={(e) => setProfileData({...profileData, province: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          placeholder="e.g., Lagos"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City/Town</Label>
-                        <Input
-                          id="city"
-                          value={profileData.city}
-                          onChange={(e) => setProfileData({...profileData, city: e.target.value})}
-                          disabled={!isEditing}
-                          className="h-11"
-                          placeholder="e.g., Ikeja"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-end space-x-3 pt-4">
-                    {!isEditing ? (
-                      <Button onClick={() => setIsEditing(true)} className="bg-orange-500 hover:bg-orange-600">
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    ) : (
-                      <>
-                        <Button onClick={handleCancel} variant="outline">
-                          Cancel
-                        </Button>
-                        <Button onClick={handleSave} disabled={isSaving} className="bg-orange-500 hover:bg-orange-600">
-                          {isSaving ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span>Saving...</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <Save className="h-4 w-4" />
-                              <span>Save Changes</span>
-                            </div>
-                          )}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Organization Tab */}
-        {activeTab === 'organization' && (
-          <div className="space-y-6">
-            {onboardingData ? (
-              <>
-                {/* Organization Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Building2 className="w-5 h-5 text-orange-600" />
-                      <span>Organization Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Organization Name</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.organizationName}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Provider Type</label>
-                        <p className="text-gray-900 font-medium">
-                          {getProviderTypeLabel(onboardingData.providerType)}
-                          {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Contact Person</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.contactPersonName}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Role</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.contactPersonRole}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Address</label>
-                      <p className="text-gray-900">{onboardingData.providerAddress}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">About Organization</label>
-                      <p className="text-gray-900">{onboardingData.aboutOrganization}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Mail className="w-5 h-5 text-orange-600" />
-                      <span>Contact Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Official Email</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.officialEmail}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Phone Number</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.phoneNumber}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">State of Operation</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.stateOfOperation}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Year Established</label>
-                        <p className="text-gray-900 font-medium">{onboardingData.yearEstablished}</p>
-                      </div>
-                    </div>
-                    
-                    {(onboardingData.website || onboardingData.socialMediaHandles) && (
-                      <>
-                        <Separator />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {onboardingData.website && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-500">Website</label>
-                              <p className="text-gray-900 font-medium">{onboardingData.website}</p>
-                            </div>
-                          )}
-                          {onboardingData.socialMediaHandles && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-500">Social Media</label>
-                              <p className="text-gray-900 font-medium">{onboardingData.socialMediaHandles}</p>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Organization Data</h3>
-                  <p className="text-gray-600 mb-6">Complete your provider onboarding to see organization details.</p>
-                  <Button onClick={() => router.push('/dashboard/provider/onboarding')}>
-                    Complete Onboarding
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* Preferences Tab */}
-        {activeTab === 'preferences' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Palette className="h-5 w-5 text-purple-600" />
-                  Account Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="language">Language</Label>
-                      <Select value={preferences.language} onValueChange={(value) => setPreferences({...preferences, language: value})}>
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="ar">Arabic</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select value={preferences.timezone} onValueChange={(value) => setPreferences({...preferences, timezone: value})}>
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Africa/Lagos">Africa/Lagos (GMT+1)</SelectItem>
-                          <SelectItem value="Africa/Cairo">Africa/Cairo (GMT+2)</SelectItem>
-                          <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (GMT+2)</SelectItem>
-                          <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="theme">Theme</Label>
-                    <Select value={preferences.theme} onValueChange={(value) => setPreferences({...preferences, theme: value})}>
-                      <SelectTrigger className="h-11">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="auto">Auto (System)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Notification Preferences</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Email Notifications</p>
-                          <p className="text-sm text-gray-600">Receive notifications via email</p>
-                        </div>
-                        <Switch
-                          checked={preferences.emailNotifications}
-                          onCheckedChange={(checked) => setPreferences({...preferences, emailNotifications: checked})}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Marketing Emails</p>
-                          <p className="text-sm text-gray-600">Receive promotional and marketing emails</p>
-                        </div>
-                        <Switch
-                          checked={preferences.marketingEmails}
-                          onCheckedChange={(checked) => setPreferences({...preferences, marketingEmails: checked})}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">Weekly Digest</p>
-                          <p className="text-sm text-gray-600">Receive a weekly summary of activities</p>
-                        </div>
-                        <Switch
-                          checked={preferences.weeklyDigest}
-                          onCheckedChange={(checked) => setPreferences({...preferences, weeklyDigest: checked})}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Security Tab */}
-        {activeTab === 'security' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  Security Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Change Password</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Current Password</Label>
-                        <Input
-                          id="currentPassword"
-                          type="password"
-                          placeholder="Enter current password"
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">New Password</Label>
-                        <Input
-                          id="newPassword"
-                          type="password"
-                          placeholder="Enter new password"
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-                    <Button className="bg-blue-500 hover:bg-blue-600">
-                      Update Password
-                    </Button>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-6">
-                    <h4 className="font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Two-Factor Authentication</p>
-                        <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-                      </div>
-                      <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50">
-                        Enable 2FA
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-6">
-                    <h4 className="font-medium text-gray-900 mb-4">Danger Zone</h4>
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <h5 className="font-medium text-red-900 mb-2">Delete Account</h5>
-                      <p className="text-sm text-red-700 mb-4">
-                        Once you delete your account, there is no going back. Please be certain.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                        onClick={handleDeleteAccount}
-                        disabled={isDeletingAccount}
-                      >
-                        {isDeletingAccount ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Deleting...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Account
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        </nav>
       </div>
     </div>
   )
 }
-
-
-
-
-
-
-
-

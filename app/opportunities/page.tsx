@@ -61,6 +61,7 @@ function OpportunitiesContent() {
           }
         } catch (error) {
           console.error('Error fetching promoted opportunities:', error)
+          // Continue with empty array - don't block the page
         }
         
         if (isAuthenticated && user) {
@@ -70,13 +71,20 @@ function OpportunitiesContent() {
           
           try {
             const recommendedRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommended/opportunities?limit=100`, { headers })
+            
+            if (!recommendedRes.ok) {
+              throw new Error(`HTTP ${recommendedRes.status}: ${recommendedRes.statusText}`)
+            }
+            
             const recommendedData = await recommendedRes.json()
           
-          if (recommendedData.success) {
-            recommendedOpportunities = recommendedData.data?.opportunities || []
-          }
+            if (recommendedData.success) {
+              recommendedOpportunities = recommendedData.data?.opportunities || []
+            }
           } catch (error) {
             console.error('Error fetching recommended opportunities:', error)
+            // Continue with empty array - don't block the page
+            // User will still see promoted opportunities
           }
         }
         
