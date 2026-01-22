@@ -47,7 +47,6 @@ import {
   Activity,
   FileText,
   Send,
-  UserCheck,
   Home,
   Menu,
   X,
@@ -118,7 +117,7 @@ export default function ProviderDashboard() {
   const { user, profile, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'applications' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'promotions' | 'analytics'>('overview')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -451,13 +450,12 @@ export default function ProviderDashboard() {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider' },
     { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/provider' },
-    { id: 'applications', label: 'Applications', icon: UserCheck, href: '/dashboard/provider' },
+    { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/provider' },
   ]
 
   const quickLinks = [
     { label: 'Post Content', icon: Plus, href: '/dashboard/posting', variant: 'default' as const },
-    { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
     { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
@@ -604,12 +602,6 @@ export default function ProviderDashboard() {
                     <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
                       <Plus className="h-4 w-4 text-orange-400" />
                       <span>Post Content</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
-                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
-                      <Zap className="h-4 w-4 text-orange-400" />
-                      <span>Promotions</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
@@ -1149,25 +1141,34 @@ export default function ProviderDashboard() {
               </div>
             )}
 
-            {/* Applications Tab */}
-            {!isLoading && activeTab === 'applications' && (
+            {/* Promotions Tab */}
+            {!isLoading && activeTab === 'promotions' && (
               <div className="space-y-4 md:space-y-6">
                 <Card className="border border-white/[0.06] bg-white/[0.02]">
                   <CardHeader className="p-4 md:p-6">
                     <CardTitle className="flex items-center text-white text-base md:text-lg">
-                      <UserCheck className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                      Applications & Registrations
+                      <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
+                      Promotions
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="text-center py-8 md:py-12">
                       <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
-                        <UserCheck className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
+                        <Zap className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                       </div>
-                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Applications Coming Soon</h3>
-                      <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
-                        This feature will show all applications and registrations for your posted content
+                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Promote Your Content</h3>
+                      <p className="text-xs md:text-sm text-white/60 mb-6 px-4">
+                        Boost the visibility of your opportunities, events, jobs, and resources
                       </p>
+                      <Button 
+                        asChild
+                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+                      >
+                        <Link href="/dashboard/provider/promotions">
+                          <Zap className="h-4 w-4 mr-2" />
+                          Manage Promotions
+                        </Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

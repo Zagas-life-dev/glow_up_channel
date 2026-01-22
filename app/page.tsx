@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useAuth } from "@/lib/auth-context"
 import FeedContainer from "@/components/feed-container"
-import { Target, Briefcase, Calendar, BookOpen, Sparkles } from "lucide-react"
+import { Target, Briefcase, Calendar, BookOpen, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
@@ -22,6 +22,9 @@ const tabs: { id: TabType; label: string; icon: any }[] = [
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const { user, isAuthenticated } = useAuth()
+  const tabNavRef = useRef<HTMLDivElement>(null)
+  const [showLeftScroll, setShowLeftScroll] = useState(false)
+  const [showRightScroll, setShowRightScroll] = useState(true)
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -200,16 +203,57 @@ export default function Home() {
     resetContent()
   }, [activeTab])
 
+  // Check scroll position for scroll indicators
+  const checkScrollPosition = useCallback(() => {
+    if (!tabNavRef.current) return
+    
+    const { scrollLeft, scrollWidth, clientWidth } = tabNavRef.current
+    setShowLeftScroll(scrollLeft > 0)
+    setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 1)
+  }, [])
+
+  useEffect(() => {
+    const nav = tabNavRef.current
+    if (!nav) return
+
+    checkScrollPosition()
+    nav.addEventListener('scroll', checkScrollPosition)
+    window.addEventListener('resize', checkScrollPosition)
+
+    return () => {
+      nav.removeEventListener('scroll', checkScrollPosition)
+      window.removeEventListener('resize', checkScrollPosition)
+    }
+  }, [checkScrollPosition])
+
   const getCurrentItems = () => {
     return allContent
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
+    <div className="min-h-screen pb-24 md:pb-8 overflow-x-hidden">
       {/* Tab Navigation */}
       <div className="sticky top-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-3xl mx-auto px-4 md:px-6">
-          <nav className="flex overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-6 md:px-6">
+        <div className="max-w-2xl mx-auto relative">
+          {/* Left scroll gradient indicator */}
+          {showLeftScroll && (
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#0a0a0a]/95 to-transparent pointer-events-none z-10 flex items-center">
+              <ChevronLeft className="w-4 h-4 text-white/40 ml-2" />
+            </div>
+          )}
+          
+          {/* Right scroll gradient indicator */}
+          {showRightScroll && (
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#0a0a0a]/95 to-transparent pointer-events-none z-10 flex items-center justify-end">
+              <ChevronRight className="w-4 h-4 text-white/40 mr-2" />
+            </div>
+          )}
+
+          <nav 
+            ref={tabNavRef}
+            className="flex overflow-x-auto scrollbar-hide px-4 scroll-smooth"
+            style={{ scrollBehavior: 'smooth' }}
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -219,14 +263,14 @@ export default function Home() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-4 text-sm font-medium whitespace-nowrap relative transition-all",
+                    "flex items-center gap-1.5 px-3 py-3.5 text-sm font-medium whitespace-nowrap relative transition-all flex-shrink-0",
                     isActive 
                       ? "text-white" 
                       : "text-white/50 hover:text-white/80"
                   )}
                 >
                   <Icon className={cn(
-                    "w-4 h-4",
+                    "w-4 h-4 flex-shrink-0",
                     isActive && tab.id === 'opportunities' && "text-orange-500",
                     isActive && tab.id === 'jobs' && "text-blue-500",
                     isActive && tab.id === 'events' && "text-emerald-500",
@@ -237,7 +281,7 @@ export default function Home() {
                   
                   {/* Active indicator */}
                   {isActive && (
-                    <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-orange-500 rounded-full" />
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-orange-500 rounded-full" />
                   )}
                 </button>
               )
@@ -247,7 +291,7 @@ export default function Home() {
       </div>
 
       {/* Feed Content */}
-      <div className="max-w-3xl mx-auto px-4 md:px-6 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Welcome Section (only when not loading and has content) */}
         {!isLoading && allContent.length > 0 && activeTab === 'all' && (
           <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20">

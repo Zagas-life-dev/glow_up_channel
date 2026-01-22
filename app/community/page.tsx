@@ -205,12 +205,12 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8">
-      {/* Sticky Header - Instagram/X Style */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.08]">
-        <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8 overflow-x-hidden">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.04]">
+        <div className="max-w-2xl mx-auto px-4">
           {/* Main Header */}
-          <div className="px-4 md:px-6 py-3 flex items-center justify-between">
+          <div className="py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-white">Community</h1>
               {isRefreshing && (
@@ -270,7 +270,7 @@ export default function CommunityPage() {
 
           {/* Sort Options - Only for Explore */}
           {activeTab === 'explore' && (
-            <div className="px-4 md:px-6 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <div className="px-4 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => { setSortBy('trending'); setFilterHashtag(null) }}
                 className={cn(
@@ -301,17 +301,17 @@ export default function CommunityPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto px-4">
         {/* Post Composer - At Top */}
         {isAuthenticated && (
-          <div className="px-4 md:px-6 pt-6 pb-4 border-b border-white/[0.06]">
+          <div className="pt-6 pb-4 border-b border-white/[0.06]">
             <PostComposer onPostCreated={handlePostCreated} />
           </div>
         )}
 
         {/* Trending Hashtags - Horizontal Scroll */}
         {trendingHashtags.length > 0 && activeTab === 'explore' && (
-          <div className="px-4 md:px-6 py-4 border-b border-white/[0.06]">
+          <div className="py-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-orange-500" />
               <h3 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Trending Now</h3>
@@ -340,29 +340,41 @@ export default function CommunityPage() {
         )}
 
         {/* Posts Feed */}
-        <div className="px-4 md:px-6 py-6">
+        <div className="pt-6">
           {(isLoading && posts.length === 0) || (isRefreshing && posts.length === 0) ? (
             // Loading Skeletons - Show when initial loading or refreshing with no posts
-            <div className="space-y-4">
+            <div className="space-y-4 w-full max-w-full">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
-                  <div className="animate-pulse space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/[0.08]" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-white/[0.08] rounded w-32" />
-                        <div className="h-3 bg-white/[0.08] rounded w-20" />
+                <div key={i} className="w-full max-w-full rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+                  <div className="p-4 w-full max-w-full overflow-hidden">
+                    <div className="animate-pulse space-y-3">
+                      {/* Author Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-white/[0.08]" />
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="h-4 bg-white/[0.08] rounded w-24" />
+                            <div className="h-3 bg-white/[0.08] rounded w-20" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="h-64 bg-white/[0.08] rounded-xl" />
-                    <div className="space-y-2">
-                      <div className="h-4 bg-white/[0.08] rounded w-full" />
-                      <div className="h-4 bg-white/[0.08] rounded w-3/4" />
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="h-8 w-16 bg-white/[0.08] rounded" />
-                      <div className="h-8 w-16 bg-white/[0.08] rounded" />
-                      <div className="h-8 w-16 bg-white/[0.08] rounded" />
+                      
+                      {/* Content */}
+                      <div className="space-y-2">
+                        <div className="h-4 bg-white/[0.08] rounded w-full" />
+                        <div className="h-4 bg-white/[0.08] rounded w-5/6" />
+                        <div className="h-4 bg-white/[0.08] rounded w-4/6" />
+                      </div>
+                      
+                      {/* Image Skeleton */}
+                      <div className="h-64 bg-white/[0.08] rounded-xl" />
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-0.5 sm:gap-1 pt-3 border-t border-white/[0.06]">
+                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
+                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
+                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
+                      </div>
                     </div>
                   </div>
                 </div>

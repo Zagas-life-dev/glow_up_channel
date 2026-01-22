@@ -320,16 +320,17 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
 
   const details = fullDetails || item
   // Show "Show more" if description is long OR if there are additional details to show
+  const detailsAny = details as any
   const hasMoreDetails = (item.description && item.description.length > 150) || 
-    (item.type === 'opportunity' && (item.requirements || item.financial || item.dates)) ||
-    (item.type === 'event' && (item.dates || item.location || item.capacity || item.requirements)) ||
-    (item.type === 'job' && (item.requirements || item.benefits || item.pay || item.dates)) ||
-    (item.type === 'resource' && (item.category || item.duration))
+    (item.type === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
+    (item.type === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
+    (item.type === 'job' && (detailsAny.requirements || detailsAny.benefits || detailsAny.pay || detailsAny.dates)) ||
+    (item.type === 'resource' && (detailsAny.category || detailsAny.duration))
 
   return (
     <>
       <article className={cn(
-        "relative p-5 rounded-2xl border transition-all duration-300",
+        "w-full max-w-full relative p-4 rounded-2xl border transition-all duration-300",
         "bg-white/[0.02] border-white/[0.06]",
         "hover:bg-white/[0.04] hover:border-white/[0.1]",
         "hover:shadow-lg hover:shadow-black/20"
@@ -338,7 +339,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         {item.score && item.score > 0 && (
           <div className="absolute -top-2 -right-2 z-10">
             <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-semibold",
+              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
               "bg-gradient-to-r from-orange-500 to-orange-600 text-white",
               "shadow-lg shadow-orange-500/30"
             )}>

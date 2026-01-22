@@ -141,28 +141,44 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
+      if (!API_BASE_URL) {
+        console.warn('Backend URL not configured, skipping playlists fetch')
+        setError('Backend not configured')
+        return
+      }
+
       // Fetch own playlists
       const myResponse = await fetch(`${API_BASE_URL}/api/playlists/my`, {
         headers: getAuthHeaders()
       })
-      const myData = await myResponse.json()
-      
-      if (myData.success) {
-        setPlaylists(myData.data.playlists || [])
+
+      if (myResponse.ok) {
+        const myData = await myResponse.json()
+        if (myData.success) {
+          setPlaylists(myData.data.playlists || [])
+        }
+      } else {
+        console.warn(`Failed to fetch own playlists: ${myResponse.status} ${myResponse.statusText}`)
       }
 
       // Fetch shared playlists
       const sharedResponse = await fetch(`${API_BASE_URL}/api/playlists/shared`, {
         headers: getAuthHeaders()
       })
-      const sharedData = await sharedResponse.json()
-      
-      if (sharedData.success) {
-        setSharedPlaylists(sharedData.data.playlists || [])
+
+      if (sharedResponse.ok) {
+        const sharedData = await sharedResponse.json()
+        if (sharedData.success) {
+          setSharedPlaylists(sharedData.data.playlists || [])
+        }
+      } else {
+        console.warn(`Failed to fetch shared playlists: ${sharedResponse.status} ${sharedResponse.statusText}`)
       }
     } catch (err) {
       console.error('Error fetching playlists:', err)
       setError('Failed to load playlists')
+      setPlaylists([])
+      setSharedPlaylists([])
     } finally {
       setIsLoading(false)
     }
@@ -170,18 +186,40 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
 
   // Fetch public playlists
   const fetchPublicPlaylists = useCallback(async () => {
-    setIsLoading(true)
+    // Don't set global loading state for public playlists (non-critical)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/playlists/public?limit=50`)
+      // Check if API_BASE_URL is available
+      if (!API_BASE_URL) {
+        console.warn('Backend URL not configured, skipping public playlists fetch')
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/playlists/public?limit=50`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        console.warn(`Failed to fetch public playlists: ${response.status} ${response.statusText}`)
+        return
+      }
+
       const data = await response.json()
       
       if (data.success) {
         setPublicPlaylists(data.data.playlists || [])
       }
     } catch (err) {
-      console.error('Error fetching public playlists:', err)
-    } finally {
-      setIsLoading(false)
+      // Silently handle network errors - public playlists are not critical
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Error fetching public playlists (non-critical):', err)
+      }
+      // Set empty array on error to prevent UI issues
+      setPublicPlaylists([])
     }
   }, [])
 
@@ -193,9 +231,20 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      if (!API_BASE_URL) {
+        console.warn('Backend URL not configured, skipping invitations fetch')
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/playlists/invitations`, {
         headers: getAuthHeaders()
       })
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch invitations: ${response.status} ${response.statusText}`)
+        return
+      }
+
       const data = await response.json()
       
       if (data.success) {
@@ -203,6 +252,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error('Error fetching invitations:', err)
+      setInvitations([])
     }
   }, [isAuthenticated, user, getAuthHeaders])
 
@@ -214,9 +264,20 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      if (!API_BASE_URL) {
+        console.warn('Backend URL not configured, skipping saved playlists fetch')
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/playlists/saved`, {
         headers: getAuthHeaders()
       })
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch saved playlists: ${response.status} ${response.statusText}`)
+        return
+      }
+
       const data = await response.json()
       
       if (data.success) {
@@ -224,6 +285,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error('Error fetching saved playlists:', err)
+      setSavedPlaylists([])
     }
   }, [isAuthenticated, user, getAuthHeaders])
 

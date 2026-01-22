@@ -30,7 +30,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <head />
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Glow Up Channel is a platform for young ambitious people to connect to opportunities, events, and free resources." />
+        <meta name="keywords" content="Glow Up Channel, opportunities, events, resources, young ambitious people" />
+        <meta name="author" content="Glow Up Channel" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="bingbot" content="index, follow" />
+        <meta name="yandexbot" content="index, follow" />
+        <meta name="google" content="notranslate" />
+        <meta name="google" content="notranslate" />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
           <AuthProvider>

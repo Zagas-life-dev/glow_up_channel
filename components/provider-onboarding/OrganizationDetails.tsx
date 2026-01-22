@@ -34,18 +34,10 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-          <Building2 className="w-8 h-8 text-orange-600" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900">Organization Details</h3>
-        <p className="text-sm text-gray-600">Tell us about your organization</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Organization Name */}
         <div className="md:col-span-2">
-          <Label htmlFor="organizationName" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="organizationName" className="text-sm font-medium text-white/70 mb-2 block">
             Organization/Provider Name *
           </Label>
           <Input
@@ -53,24 +45,24 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.organizationName || ''}
             onChange={(e) => updateData({ organizationName: e.target.value })}
             placeholder="Enter your organization name"
-            className="mt-1"
+            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
           />
         </div>
 
         {/* Provider Type */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
+          <Label className="text-sm font-medium text-white/70 mb-3 block">
             Provider Type *
           </Label>
           <RadioGroup
             value={data.providerType || ''}
             onValueChange={handleProviderTypeChange}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
           >
             {PROVIDER_TYPES.map((type) => (
-              <div key={type.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={type.value} id={type.value} />
-                <Label htmlFor={type.value} className="text-sm text-gray-700 cursor-pointer">
+              <div key={type.value} className="flex items-center space-x-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
+                <RadioGroupItem value={type.value} id={type.value} className="border-white/30 data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500" />
+                <Label htmlFor={type.value} className="text-sm text-white/70 cursor-pointer flex-1">
                   {type.label}
                 </Label>
               </div>
@@ -82,14 +74,14 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
               value={data.otherProviderType || ''}
               onChange={(e) => updateData({ otherProviderType: e.target.value })}
               placeholder="Please specify"
-              className="mt-3"
+              className="mt-3 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
             />
           )}
         </div>
 
         {/* Contact Person */}
         <div>
-          <Label htmlFor="contactPersonName" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="contactPersonName" className="text-sm font-medium text-white/70 mb-2 block">
             Contact Person Name *
           </Label>
           <Input
@@ -97,12 +89,12 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonName || ''}
             onChange={(e) => updateData({ contactPersonName: e.target.value })}
             placeholder="Full name"
-            className="mt-1"
+            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
           />
         </div>
 
         <div>
-          <Label htmlFor="contactPersonRole" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="contactPersonRole" className="text-sm font-medium text-white/70 mb-2 block">
             Contact Person Role *
           </Label>
           <Input
@@ -110,13 +102,13 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonRole || ''}
             onChange={(e) => updateData({ contactPersonRole: e.target.value })}
             placeholder="e.g., HR Manager, CEO"
-            className="mt-1"
+            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
           />
         </div>
 
         {/* Provider Address */}
         <div className="md:col-span-2">
-          <Label htmlFor="providerAddress" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="providerAddress" className="text-sm font-medium text-white/70 mb-2 block">
             Provider's Address *
           </Label>
           <Textarea
@@ -125,13 +117,13 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ providerAddress: e.target.value })}
             placeholder="Enter complete address"
             rows={3}
-            className="mt-1"
+            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
           />
         </div>
 
         {/* About Organization */}
         <div className="md:col-span-2">
-          <Label htmlFor="aboutOrganization" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="aboutOrganization" className="text-sm font-medium text-white/70 mb-2 block">
             About the organization/provider *
           </Label>
           <Textarea
@@ -140,16 +132,16 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ aboutOrganization: e.target.value })}
             placeholder="Describe your organization, mission, and what you do"
             rows={4}
-            className="mt-1"
+            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
           />
         </div>
       </div>
 
       {/* Completion Status */}
       {isComplete && (
-        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-xs">✓</span>
+        <div className="flex items-center gap-3 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl">
+          <div className="w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-emerald-400 text-xs">✓</span>
           </div>
           <span className="text-sm font-medium">Organization details completed</span>
         </div>

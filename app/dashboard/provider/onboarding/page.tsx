@@ -2,65 +2,64 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { 
   ArrowLeft,
   ArrowRight,
   Check,
   Building2,
-  FileText,
-  Upload,
   Shield,
-  Users,
-  Calendar,
-  MapPin,
   Mail,
-  Phone,
-  Globe,
-  Image as ImageIcon,
-  FileUp,
-  CheckCircle
+  CheckCircle,
+  X,
+  ChevronRight,
+  Home,
+  LayoutDashboard
 } from 'lucide-react'
 
-// Step 1: Organization Details
+// Step Components
 import OrganizationDetails from '@/components/provider-onboarding/OrganizationDetails'
-// Step 2: Contact Information
 import ContactInformation from '@/components/provider-onboarding/ContactInformation'
-// Step 3: Verification Documents
 import VerificationDocuments from '@/components/provider-onboarding/VerificationDocuments'
-// Step 4: Terms & Conditions
 import TermsAndConditions from '@/components/provider-onboarding/TermsAndConditions'
+
 const STEPS = [
   {
     id: 'organization',
-    title: 'Organization Details',
+    title: 'Organization',
+    shortTitle: 'Organization',
     description: 'Tell us about your organization',
     icon: Building2,
     component: OrganizationDetails
   },
   {
     id: 'contact',
-    title: 'Contact Information',
+    title: 'Contact Info',
+    shortTitle: 'Contact',
     description: 'How can we reach you?',
     icon: Mail,
     component: ContactInformation
   },
   {
     id: 'verification',
-    title: 'Registration & Verification',
+    title: 'Verification',
+    shortTitle: 'Verify',
     description: 'Upload verification documents',
     icon: Shield,
     component: VerificationDocuments
   },
   {
     id: 'terms',
-    title: 'Terms & Conditions',
+    title: 'Terms',
+    shortTitle: 'Terms',
     description: 'Agree to our terms',
     icon: CheckCircle,
     component: TermsAndConditions
@@ -105,7 +104,6 @@ interface ProviderData {
 }
 
 const initialData: ProviderData = {
-  // Organization Details
   organizationName: '',
   providerType: '',
   otherProviderType: '',
@@ -113,65 +111,50 @@ const initialData: ProviderData = {
   contactPersonRole: '',
   providerAddress: '',
   aboutOrganization: '',
-  
-  // Contact Information
   officialEmail: '',
   phoneNumber: '',
   stateOfOperation: '',
   yearEstablished: '',
   website: '',
   socialMediaHandles: '',
-  
-  // Registration Status
   isRegistered: false,
   registrationNumber: '',
   nationalId: '',
   passportId: '',
   otherId: '',
   otherIdType: '',
-  
-  // Verification Documents
   verificationDocument: null,
   verificationDocumentUrl: '',
   verificationDocumentType: '',
   organizationLogo: null,
   organizationLogoUrl: '',
-  
-  // Terms & Conditions
   agreedToTerms: false
 }
 
-// Validation function for provider onboarding data
 const validateProviderOnboardingData = (data: ProviderData) => {
   const errors: string[] = []
 
-  // Organization Details validation
   if (!data.organizationName?.trim()) errors.push('Organization Name')
   if (!data.providerType?.trim()) errors.push('Provider Type')
   if (!data.contactPersonName?.trim()) errors.push('Contact Person Name')
   if (!data.contactPersonRole?.trim()) errors.push('Contact Person Role')
   if (!data.providerAddress?.trim()) errors.push('Provider Address')
   if (!data.aboutOrganization?.trim()) errors.push('About Organization')
-
-  // Contact Information validation
   if (!data.officialEmail?.trim()) errors.push('Official Email')
   if (!data.phoneNumber?.trim()) errors.push('Phone Number')
   if (!data.stateOfOperation?.trim()) errors.push('State of Operation')
   if (!data.yearEstablished?.trim()) errors.push('Year Established')
 
-  // Registration validation
   if (data.isRegistered && !data.registrationNumber?.trim()) {
     errors.push('Registration Number')
   } else if (!data.isRegistered && !data.nationalId?.trim() && !data.passportId?.trim() && !data.otherId?.trim()) {
     errors.push('At least one form of identification')
   }
 
-  // Verification validation
   if (!data.verificationDocument && !data.verificationDocumentUrl) {
     errors.push('Verification Document')
   }
 
-  // Terms validation
   if (!data.agreedToTerms) errors.push('Terms and Conditions agreement')
 
   return {
@@ -190,7 +173,6 @@ export default function ProviderOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
-  // Hide navbar and footer when this page is active
   useEffect(() => {
     setHideNavbar(true)
     setHideFooter(true)
@@ -200,28 +182,14 @@ export default function ProviderOnboarding() {
     }
   }, [setHideNavbar, setHideFooter])
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/auth/login')
+      router.push('/login')
     }
   }, [isAuthenticated, router])
 
-  // Clear cached data when component unmounts (user navigates away)
-  useEffect(() => {
-    return () => {
-      // Only clear if onboarding is not completed
-      if (currentStep < STEPS.length - 1) {
-        // Keep the data cached for potential return
-        console.log('Provider onboarding data cached for potential return')
-      }
-    }
-  }, [currentStep])
-
-  // Load cached form data on mount
   useEffect(() => {
     const cachedData = localStorage.getItem('providerOnboardingFormData')
-    
     if (cachedData) {
       try {
         const parsedData = JSON.parse(cachedData)
@@ -235,8 +203,6 @@ export default function ProviderOnboarding() {
   const updateFormData = (updates: Partial<ProviderData>) => {
     const updatedData = { ...formData, ...updates }
     setFormData(updatedData)
-    
-    // Cache form data after each update
     localStorage.setItem('providerOnboardingFormData', JSON.stringify(updatedData))
   }
 
@@ -262,7 +228,6 @@ export default function ProviderOnboarding() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
-      // Validate that all required fields are filled
       const validation = validateProviderOnboardingData(formData)
       if (!validation.isValid) {
         toast.error(`Please complete all required fields: ${validation.errors.join(', ')}`)
@@ -270,28 +235,19 @@ export default function ProviderOnboarding() {
         return
       }
 
-      // Filter out File objects and other non-serializable data
       const serializableData = Object.keys(formData).reduce((acc, key) => {
         const value = formData[key as keyof ProviderData]
-        // Skip File objects and null values for files
-        if (value instanceof File || (key.includes('Document') && value === null) || (key.includes('Logo') && value === null) || (key.includes('Banner') && value === null)) {
+        if (value instanceof File || (key.includes('Document') && value === null) || (key.includes('Logo') && value === null)) {
           return acc
         }
         acc[key] = value
         return acc
       }, {} as any)
       
-      console.log('Submitting provider onboarding with data:', serializableData)
-      
-      // Update onboarding data in backend (single API call)
       const response = await ApiClient.updateProviderOnboarding(serializableData)
-      console.log('Provider onboarding data updated successfully:', response)
       
-      // Check if onboarding is completed
       if (response.isCompleted) {
-        // Clear cached data after successful save
         localStorage.removeItem('providerOnboardingFormData')
-        
         toast.success('Provider registration completed successfully!')
         router.push('/dashboard/provider')
       } else {
@@ -299,7 +255,6 @@ export default function ProviderOnboarding() {
       }
     } catch (error) {
       console.error('Error submitting provider data:', error)
-      console.error('Error details:', error)
       const errorMessage = error instanceof Error ? error.message : 'Please try again.'
       toast.error(`Failed to complete registration: ${errorMessage}`)
     } finally {
@@ -329,24 +284,27 @@ export default function ProviderOnboarding() {
   const canProceed = isStepComplete(currentStep)
   const progress = ((currentStep + 1) / STEPS.length) * 100
   
-  // Calculate overall completion percentage
   const calculateCompletionPercentage = () => {
     const validation = validateProviderOnboardingData(formData)
-    const totalFields = 12; // Total number of required fields (6 org + 4 contact + 1 verification + 1 terms)
-    const completedFields = totalFields - validation.errors.length;
-    return Math.round((completedFields / totalFields) * 100);
+    const totalFields = 12
+    const completedFields = totalFields - validation.errors.length
+    return Math.round((completedFields / totalFields) * 100)
   }
 
   const completionPercentage = calculateCompletionPercentage()
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-            <Shield className="w-8 h-8 text-orange-600" />
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-orange-500" />
           </div>
-          <p className="text-lg text-gray-600">Please log in to access provider onboarding</p>
+          <h2 className="text-xl font-semibold text-white mb-2">Authentication Required</h2>
+          <p className="text-white/60 mb-4">Please log in to access provider onboarding</p>
+          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+            <Link href="/login">Sign In</Link>
+          </Button>
         </div>
       </div>
     )
@@ -355,181 +313,298 @@ export default function ProviderOnboarding() {
   const CurrentStepComponent = STEPS[currentStep].component
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Back to Homepage"
-              >
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
-              </Button>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      {/* Mobile Header - Compact */}
+      <header className="sticky top-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06] lg:hidden">
+        <div className="flex items-center justify-between h-14 px-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/dashboard/provider')}
+              className="h-9 w-9 p-0 text-white/60"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-sm font-bold text-white">Provider Setup</h1>
+              <p className="text-[10px] text-white/50">Step {currentStep + 1} of {STEPS.length}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="h-9 w-9 p-0 text-white/60"
+          >
+            <Link href="/dashboard/provider">
+              <X className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="px-4 pb-3 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-white/50">Progress</span>
+            <span className="text-white/70 font-medium">{completionPercentage}%</span>
+          </div>
+          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+        </div>
+      </header>
+
+      {/* Desktop Header */}
+      <header className="hidden lg:block border-b border-white/[0.06] bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/dashboard/provider')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Back to Dashboard"
+                className="text-white/60 hover:text-white"
               >
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
               </Button>
+              <div>
+                <h1 className="text-xl font-bold text-white">Provider Onboarding</h1>
+                <p className="text-sm text-white/50">Complete your registration to start posting opportunities</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Provider Onboarding</h1>
-              <p className="text-sm lg:text-base text-gray-600">Complete your registration to start posting opportunities</p>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-white/60 hover:text-white"
+            >
+              <Link href="/dashboard/provider">
+                <X className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
           
-          <div className="text-sm text-gray-500">
-            Step {currentStep + 1} of {STEPS.length}
+          {/* Desktop Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-white/60">Step {currentStep + 1} of {STEPS.length}</span>
+              <span className="text-white/70 font-medium">{completionPercentage}% Complete</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
           </div>
         </div>
-        
-        {/* Progress Bar */}
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Step Progress</span>
-            <span className="text-gray-500">{currentStep + 1} of {STEPS.length}</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-          
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Overall Completion</span>
-            <span className="text-gray-500">{completionPercentage}%</span>
-          </div>
-          <Progress value={completionPercentage} className="h-1" />
-        </div>
-      </div>
+      </header>
 
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Step Navigation */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Registration Steps</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {STEPS.map((step, index) => {
-                  const Icon = step.icon
-                  const isCompleted = completedSteps.includes(index)
-                  const isCurrent = currentStep === index
-                  const canAccess = index <= completedSteps.length || index === 0
-                  
-                  return (
-                    <button
-                      key={step.id}
-                      onClick={() => goToStep(index)}
-                      disabled={!canAccess}
-                      className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-all ${
-                        isCurrent
-                          ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                          : isCompleted
-                          ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                          : canAccess
-                          ? 'text-gray-600 hover:bg-gray-50'
-                          : 'text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        isCompleted
-                          ? 'bg-green-500 text-white'
-                          : isCurrent
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}>
-                        {isCompleted ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Icon className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{step.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{step.description}</p>
-                      </div>
-                    </button>
-                  )
-                })}
-              </CardContent>
-            </Card>
-          </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:flex-row max-w-6xl mx-auto w-full px-4 lg:px-6 py-4 lg:py-8 gap-6">
+        {/* Step Indicator - Desktop Sidebar */}
+        <aside className="hidden lg:flex flex-col w-64 flex-shrink-0">
+          <Card className="bg-white/[0.02] border-white/[0.06] sticky top-24">
+            <CardContent className="p-4 space-y-2">
+              {STEPS.map((step, index) => {
+                const Icon = step.icon
+                const isCompleted = completedSteps.includes(index) || isStepComplete(index)
+                const isCurrent = currentStep === index
+                const canAccess = index <= completedSteps.length || index === 0
+                
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => goToStep(index)}
+                    disabled={!canAccess}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all",
+                      isCurrent
+                        ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                        : isCompleted
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : canAccess
+                        ? "text-white/60 hover:text-white hover:bg-white/[0.05] border border-transparent"
+                        : "text-white/30 cursor-not-allowed border border-transparent"
+                    )}
+                  >
+                    <div className={cn(
+                      "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
+                      isCompleted
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : isCurrent
+                        ? "bg-orange-500/20 text-orange-400"
+                        : "bg-white/5 text-white/30"
+                    )}>
+                      {isCompleted ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{step.title}</p>
+                      <p className="text-xs text-white/40 truncate">{step.description}</p>
+                    </div>
+                    {isCurrent && (
+                      <ChevronRight className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                    )}
+                  </button>
+                )
+              })}
+            </CardContent>
+          </Card>
+        </aside>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    {React.createElement(STEPS[currentStep].icon, { className: "w-5 h-5 text-orange-600" })}
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">{STEPS[currentStep].title}</CardTitle>
-                    <p className="text-sm text-gray-600">{STEPS[currentStep].description}</p>
-                  </div>
+        {/* Step Content */}
+        <main className="flex-1 min-w-0">
+          <Card className="bg-white/[0.02] border-white/[0.06]">
+            <CardContent className="p-4 md:p-6 lg:p-8">
+              {/* Step Header */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                  {React.createElement(STEPS[currentStep].icon, { className: "w-6 h-6 text-orange-400" })}
                 </div>
-              </CardHeader>
-              <CardContent>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    {STEPS[currentStep].title}
+                  </h2>
+                  <p className="text-sm text-white/50">{STEPS[currentStep].description}</p>
+                </div>
+                {/* Mobile Step Indicator */}
+                <div className="lg:hidden flex items-center gap-1">
+                  {STEPS.map((_, index) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-all",
+                        index === currentStep
+                          ? "w-6 bg-orange-500"
+                          : index < currentStep
+                          ? "bg-emerald-500"
+                          : "bg-white/20"
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Step Component */}
+              <div className="mb-8">
                 <CurrentStepComponent
                   data={formData}
                   updateData={updateFormData}
                   isComplete={isStepComplete(currentStep)}
                 />
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between gap-3 pt-6 border-t border-white/[0.06]">
+                <Button
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 0}
+                  className={cn(
+                    "flex items-center gap-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]",
+                    currentStep === 0 && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </Button>
                 
-                {/* Navigation Buttons */}
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                {currentStep === STEPS.length - 1 ? (
                   <Button
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={currentStep === 0}
-                    className="flex items-center space-x-2"
+                    onClick={handleSubmit}
+                    disabled={!canProceed || isSubmitting}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 md:px-8 flex items-center gap-2"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Previous</span>
-                  </Button>
-                  
-                  <div className="flex items-center space-x-3">
-                    {currentStep === STEPS.length - 1 ? (
-                      <Button
-                        onClick={handleSubmit}
-                        disabled={!canProceed || isSubmitting}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                      >
-                        {isSubmitting ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Completing Registration...</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Complete Registration</span>
-                          </div>
-                        )}
-                      </Button>
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Completing...</span>
+                      </>
                     ) : (
-                      <Button
-                        onClick={nextStep}
-                        disabled={!canProceed}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                      >
-                        <span>Next</span>
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Complete Registration</span>
+                      </>
                     )}
-                  </div>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={nextStep}
+                    disabled={!canProceed}
+                    className={cn(
+                      "bg-orange-500 hover:bg-orange-600 text-white px-6 md:px-8 flex items-center gap-2",
+                      !canProceed && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <span>Next</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+
+      {/* Mobile Step Pills - Bottom */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
+          {STEPS.map((step, index) => {
+            const Icon = step.icon
+            const isCompleted = completedSteps.includes(index) || isStepComplete(index)
+            const isCurrent = currentStep === index
+            
+            return (
+              <button
+                key={step.id}
+                onClick={() => goToStep(index)}
+                disabled={index > completedSteps.length && index !== 0}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
+                  isCurrent
+                    ? "text-orange-400"
+                    : isCompleted
+                    ? "text-emerald-400"
+                    : "text-white/30"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center",
+                  isCurrent
+                    ? "bg-orange-500/20"
+                    : isCompleted
+                    ? "bg-emerald-500/20"
+                    : "bg-white/5"
+                )}>
+                  {isCompleted ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Icon className="w-4 h-4" />
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <span className={cn(
+                  "text-[10px] font-medium truncate w-full text-center",
+                  isCurrent && "text-orange-400"
+                )}>
+                  {step.shortTitle}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
+
+      {/* Spacer for mobile bottom nav */}
+      <div className="lg:hidden h-16" />
     </div>
   )
 }

@@ -69,14 +69,14 @@ const opportunityTypes = [
   'Internship', 'Scholarship', 'Grant', 'Fellowship', 'Volunteer Work',
   'Mentorship Program', 'Training Program', 'Workshop', 'Competition',
   'Research Opportunity', 'Startup Incubator', 'Accelerator Program',
-  'Hackathon', 'Bootcamp', 'Exchange Program', 'Apprenticeship'
+  'Hackathon', 'Bootcamp', 'Exchange Program', 'Apprenticeship', 'Other',
 ]
 
-const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote']
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote', 'Other']
 
-const eventTypes = ['Workshop', 'Conference', 'Webinar', 'Meetup', 'Hackathon', 'Networking', 'Bootcamp', 'Career Fair']
+const eventTypes = ['Workshop', 'Conference', 'Webinar', 'Meetup', 'Hackathon', 'Networking', 'Bootcamp', 'Career Fair', 'Other']
 
-const resourceCategories = ['Course', 'Tutorial', 'E-book', 'Tool', 'Template', 'Guide', 'Podcast', 'Video Series']
+const resourceCategories = ['Course', 'Tutorial', 'E-book', 'Tool', 'Template', 'Guide', 'Podcast', 'Video Series', 'Product', 'Other']
 
 function PostingContent() {
   const router = useRouter()
@@ -441,12 +441,12 @@ function PostingContent() {
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  {/* <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
                     <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
                       <Zap className="h-4 w-4 text-orange-400" />
                       <span>Promotions</span>
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
                     <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
                       <Settings className="h-4 w-4 text-orange-400" />
@@ -714,12 +714,12 @@ function PostingContent() {
                     </div>
                     <div className="space-y-2">
                         <Label className="text-white/70">
-                          {selectedType === 'event' ? 'Organizer' : selectedType === 'resource' ? 'Author' : 'Company'} *
+                          {selectedType === 'event' ? 'Organizer' : selectedType === 'resource' ? 'Creator' : 'Company'} 
                         </Label>
                       <Input
                           name={selectedType === 'event' ? 'organizer' : selectedType === 'resource' ? 'author' : 'company'}
-                          placeholder={selectedType === 'event' ? 'Organizer name' : selectedType === 'resource' ? 'Author name' : 'Company name'}
-                        required
+                          placeholder={selectedType === 'event' ? 'Organizer name' : selectedType === 'resource' ? 'Creator name' : 'Company name'}
+                        
                           className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
                       />
                     </div>
@@ -758,13 +758,14 @@ function PostingContent() {
 
                     {/* URL */}
                   <div className="space-y-2">
-                      <Label className="text-white/70">External Link</Label>
+                      <Label className="text-white/70">External Link *</Label>
                       <div className="relative">
                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                         <Input
                           name="url"
                           type="url"
                           placeholder="https://..."
+                          required
                           className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl pl-10"
                         />
                               </div>
@@ -779,7 +780,7 @@ function PostingContent() {
                             <span className="text-sm font-medium text-white/70">Location</span>
                       </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-white/40">Remote</span>
+                            <span className="text-xs text-white/40">Virtual</span>
                             <Switch checked={isRemote} onCheckedChange={setIsRemote} />
                     </div>
                   </div>

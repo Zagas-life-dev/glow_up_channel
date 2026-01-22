@@ -339,7 +339,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
   }
 
   return (
-    <article className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:bg-white/[0.03] transition-colors">
+    <article className="w-full max-w-full rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:bg-white/[0.03] transition-colors">
       {/* Repost Header */}
       {localPost.isRepost && localPost.repostedBy && (
         <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-white/40">
@@ -350,7 +350,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         </div>
       )}
 
-      <div className="p-4">
+      <div className="p-4 w-full max-w-full overflow-hidden">
         {/* Author Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
@@ -420,16 +420,16 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         <div className="mb-3">
           {/* Text */}
           {localPost.content.text && (
-            <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap mb-3">
+            <p className="text-base text-white/90 leading-relaxed whitespace-pre-wrap break-words mb-3">
               {renderText(localPost.content.text)}
             </p>
           )}
 
           {/* Images Carousel */}
           {localPost.content.images && localPost.content.images.length > 0 && (
-            <div className="mb-3 relative">
+            <div className="mb-3 relative -mx-4 md:mx-0">
               <div 
-                className="relative aspect-square bg-black rounded-xl overflow-hidden select-none"
+                className="relative w-[calc(100%+2rem)] md:w-full aspect-square bg-black rounded-none md:rounded-xl overflow-hidden select-none"
                 onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
                 onTouchMove={(e) => setTouchEnd(e.targetTouches[0].clientX)}
                 onTouchEnd={() => {
@@ -611,11 +611,11 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         </>
                       )}
                     </div>
-                    <h4 className="text-sm font-semibold text-white mb-1 line-clamp-2">
+                    <h4 className="text-sm font-semibold text-white mb-1 line-clamp-2 break-words">
                       {localPost.content.contentReference.title}
                     </h4>
                     {localPost.content.contentReference.description && (
-                      <p className="text-xs text-white/60 line-clamp-2 mb-2">
+                      <p className="text-xs text-white/60 line-clamp-2 mb-2 break-words">
                         {localPost.content.contentReference.description}
                       </p>
                     )}
@@ -671,8 +671,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
             return (
               <div className="mb-3 rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <BarChart3 className="w-4 h-4 text-orange-500" />
-                  <h4 className="text-sm font-semibold text-white">{poll.question}</h4>
+                  <BarChart3 className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                  <h4 className="text-sm font-semibold text-white break-words">{poll.question}</h4>
                 </div>
                 
                 <div className="space-y-2">
@@ -698,9 +698,9 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                             : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04] cursor-pointer"
                         )}
                       >
-                        <div className="relative z-10 p-3 flex items-center justify-between">
+                        <div className="relative z-10 p-3 flex items-center justify-between gap-2">
                           <span className={cn(
-                            "text-sm",
+                            "text-sm break-words flex-1 min-w-0",
                             isSelected ? "text-orange-500 font-medium" : "text-white"
                           )}>
                             {option.text}

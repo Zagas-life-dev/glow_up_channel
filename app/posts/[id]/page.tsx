@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from "@/components/ui/button"
 import PostCard from '@/components/post-card'
-import PostComposer from '@/components/post-composer'
 import PostDetailSkeleton from '@/components/skeletons/post-detail-skeleton'
 import ReplyCard from '@/components/reply-card'
 import { cn } from '@/lib/utils'

@@ -24,24 +24,42 @@ export default function FeedContainer({
   }
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full max-w-full">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-white/[0.05] animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 bg-white/[0.05] rounded-lg w-24 animate-pulse" />
-                <div className="h-4 bg-white/[0.05] rounded-lg w-3/4 animate-pulse" />
+          <div key={i} className="w-full max-w-full relative rounded-2xl border transition-all duration-300 bg-white/[0.02] border-white/[0.06] overflow-hidden">
+            <div className="p-4 w-full max-w-full overflow-hidden">
+              <div className="animate-pulse">
+                {/* Header Row - matches FeedCard structure */}
+                <div className="flex items-start gap-4 mb-4">
+                  {/* Type Icon */}
+                  <div className="w-11 h-11 rounded-xl bg-white/[0.08] flex-shrink-0" />
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    {/* Type & Provider */}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="h-3 bg-white/[0.08] rounded w-16" />
+                      <div className="h-3 bg-white/[0.08] rounded w-20" />
+                    </div>
+                    
+                    {/* Title */}
+                    <div className="h-4 bg-white/[0.08] rounded w-3/4" />
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="mb-4 space-y-2">
+                  <div className="h-3 bg-white/[0.08] rounded w-full" />
+                  <div className="h-3 bg-white/[0.08] rounded w-5/6" />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <div className="h-7 bg-white/[0.08] rounded-lg w-20" />
+                  <div className="h-7 bg-white/[0.08] rounded-lg w-16" />
+                  <div className="h-7 bg-white/[0.08] rounded-lg w-16" />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2 mb-4">
-              <div className="h-3 bg-white/[0.05] rounded-lg animate-pulse" />
-              <div className="h-3 bg-white/[0.05] rounded-lg w-5/6 animate-pulse" />
-            </div>
-            <div className="flex gap-2">
-              <div className="h-7 bg-white/[0.05] rounded-lg w-20 animate-pulse" />
-              <div className="h-7 bg-white/[0.05] rounded-lg w-16 animate-pulse" />
-              <div className="h-7 bg-white/[0.05] rounded-lg w-16 animate-pulse" />
             </div>
           </div>
         ))}
@@ -64,7 +82,7 @@ export default function FeedContainer({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-full">
       {items.map((item) => (
         <FeedCard 
           key={item._id} 
