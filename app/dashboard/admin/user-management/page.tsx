@@ -158,7 +158,8 @@ export default function UserManagementPage() {
       }
     } catch (error) {
       console.error('Error creating user:', error)
-      toast.error(`Failed to create user: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      toast.error(`Failed to create user: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -199,7 +200,8 @@ export default function UserManagementPage() {
       }
     } catch (error) {
       console.error('Error updating user:', error)
-      toast.error(`Failed to update user: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      toast.error(`Failed to update user: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -229,7 +231,8 @@ export default function UserManagementPage() {
       }
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error(`Failed to delete user: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      toast.error(`Failed to delete user: ${errorMessage}`)
     }
   }
 

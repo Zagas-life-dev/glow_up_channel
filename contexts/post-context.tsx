@@ -146,9 +146,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    return token ? { 'Authorization': `Bearer ${token}` } : {}
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   // Fetch feed

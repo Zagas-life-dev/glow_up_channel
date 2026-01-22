@@ -23,7 +23,7 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
   
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>()
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isVideo = resource.resource_type === 'video'
   const isAudio = resource.resource_type === 'audio'

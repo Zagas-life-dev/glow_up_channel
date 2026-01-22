@@ -17,6 +17,7 @@ interface ApiResponse<T = any> {
 
 interface User {
   _id: string;
+  id?: string; // Alias for _id for compatibility
   email: string;
   firstName?: string;
   lastName?: string;
@@ -27,6 +28,9 @@ interface User {
   emailVerified: boolean;
   createdAt: string;
   approvedAt?: string;
+  profileImage?: string;
+  phoneNumber?: string;
+  name?: string;
 }
 
 interface UserProfile {
@@ -49,6 +53,35 @@ interface UserProfile {
   completionPercentage: number;
   createdAt: string;
   updatedAt: string;
+  bio?: string;
+  headline?: string;
+  website?: string;
+  work?: {
+    company?: string;
+    title?: string;
+  };
+  education?: {
+    school?: string;
+    degree?: string;
+    field?: string;
+  };
+  socialLinks?: Record<string, string>;
+  profileImage?: string;
+  phoneNumber?: string;
+  isPrivate?: boolean;
+  showConnections?: boolean;
+  onboarding?: {
+    country?: string;
+    province?: string;
+    city?: string;
+    careerStage?: string;
+    interests?: string[];
+    industrySectors?: string[];
+    educationLevel?: string;
+    fieldOfStudy?: string;
+    institution?: string;
+    aspirations?: string[];
+  };
 }
 
 interface AuthTokens {
@@ -1288,12 +1321,12 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async updateProviderOnboarding(data: any): Promise<void> {
+  static async updateProviderOnboarding(data: any): Promise<{ isCompleted: boolean; completionPercentage: number; onboarding?: any }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/provider-onboarding`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return this.handleResponse(response);
+    return this.handleResponse<{ isCompleted: boolean; completionPercentage: number; onboarding?: any }>(response);
   }
 
   static async completeProviderOnboarding(): Promise<void> {

@@ -50,9 +50,9 @@ export function UserInfoCard({ data }: UserInfoCardProps) {
                 {user.email}
               </a>
               {user.emailVerified ? (
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" title="Verified" />
+                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" aria-label="Verified" />
               ) : (
-                <XCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" title="Not verified" />
+                <XCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" aria-label="Not verified" />
               )}
             </div>
           </div>
@@ -132,7 +132,7 @@ export function UserInfoCard({ data }: UserInfoCardProps) {
             <div className="flex-1">
               <p className="text-sm text-muted-foreground mb-2">Skills</p>
               <div className="flex flex-wrap gap-2">
-                {profile.skills.slice(0, 5).map((skill, index) => (
+                {profile.skills.slice(0, 5).map((skill: string, index: number) => (
                   <span
                     key={index}
                     className="px-2 py-1 bg-muted text-foreground rounded-md text-xs"

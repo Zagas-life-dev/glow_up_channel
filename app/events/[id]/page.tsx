@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
+import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import AuthGuard from '@/components/auth-guard'
 import { cleanUrl } from '@/lib/url-utils'
 import { cn } from '@/lib/utils'

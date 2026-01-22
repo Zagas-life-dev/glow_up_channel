@@ -46,11 +46,13 @@ export default function AppTopBar() {
   const [showConnectionRequests, setShowConnectionRequests] = useState(false)
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([])
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    return token 
-      ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      : { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   const fetchConnectionRequests = useCallback(async () => {

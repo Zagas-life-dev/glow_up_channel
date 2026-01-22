@@ -92,7 +92,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               <p className="text-sm font-medium text-muted-foreground">Skills</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
+              {skills.map((skill: string, index: number) => (
                 <span
                   key={index}
                   className="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 rounded-full text-sm font-medium border border-orange-200"

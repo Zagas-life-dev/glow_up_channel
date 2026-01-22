@@ -48,11 +48,13 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [action, setAction] = useState<'accept' | 'decline' | null>(null)
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    return token 
-      ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      : { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   const handleRespond = async (request: ConnectionRequest, responseAction: 'accept' | 'decline') => {

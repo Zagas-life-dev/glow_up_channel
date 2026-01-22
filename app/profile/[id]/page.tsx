@@ -341,10 +341,10 @@ export default function ProfilePage() {
       profileData.onboarding?.province,
       profileData.onboarding?.careerStage,
       profileData.onboarding?.educationLevel,
-      profileData.onboarding?.interests?.length > 0,
-      profileData.onboarding?.industrySectors?.length > 0,
-      profileData.onboarding?.aspirations?.length > 0,
-      profileData.onboarding?.onboardingSkills?.length > 0
+      (profileData.onboarding?.interests?.length ?? 0) > 0,
+      (profileData.onboarding?.industrySectors?.length ?? 0) > 0,
+      (profileData.onboarding?.aspirations?.length ?? 0) > 0,
+      (profileData.onboarding?.onboardingSkills?.length ?? 0) > 0
     ]
     
     const completedFields = fields.filter(field => {

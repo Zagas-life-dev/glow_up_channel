@@ -83,9 +83,13 @@ function PostPageContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return { 'Authorization': `Bearer ${token}` }
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

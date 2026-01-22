@@ -10,7 +10,13 @@ import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  fallback: ["system-ui", "arial"],
+  adjustFontFallback: true,
+})
 
 export const metadata: Metadata = {
   title: "Glow Up Channel",

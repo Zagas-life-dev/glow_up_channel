@@ -12,6 +12,7 @@ export interface PlaylistItem {
   organization?: string
   author?: string
   description?: string
+  location?: string
   addedAt: string
   addedBy?: {
     _id: string
@@ -124,9 +125,13 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   // Fetch user's own playlists
@@ -396,13 +401,13 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     if (!user) return false
     
     // Owner can always edit
-    if (playlist.createdBy._id === user.id || playlist.createdBy.email === user.email) {
+    if (playlist.createdBy._id === user._id || playlist.createdBy.email === user.email) {
       return true
     }
-    
+
     // Check if user is a collaborator with editor role
     const collaborator = playlist.collaborators?.find(
-      c => (c.userId === user.id || c.email === user.email) && c.status === 'accepted'
+      c => (c.userId === user._id || c.email === user.email) && c.status === 'accepted'
     )
     
     return collaborator?.role === 'editor'

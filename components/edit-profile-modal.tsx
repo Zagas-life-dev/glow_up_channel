@@ -143,6 +143,8 @@ const aspirationOptions = [
 ]
 
 export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }: EditProfileModalProps) {
+  const { refreshUser } = useAuth()
+  
   // Form state - Basic Info
   const [firstName, setFirstName] = useState(profile.firstName || '')
   const [lastName, setLastName] = useState(profile.lastName || '')
@@ -211,9 +213,13 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
     setAspirations(profile.onboarding?.aspirations || [])
   }, [profile])
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return token ? { 'Authorization': `Bearer ${token}` } : {}
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }
 
   // Handle image upload

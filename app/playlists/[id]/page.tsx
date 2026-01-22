@@ -118,7 +118,7 @@ export default function PlaylistDetailPage() {
   }
 
   const isOwner = user && playlist && (
-    user.id === playlist.createdBy._id || 
+    user._id === playlist.createdBy._id || 
     user.email === playlist.createdBy.email
   )
 

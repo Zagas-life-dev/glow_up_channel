@@ -57,7 +57,30 @@ export function useUserProfile() {
       // If user has completed onboarding, fetch recommendations
       if (userProfile?.onboarding_completed) {
         const userRecommendations = await ApiClient.getRecommendations(session.user.id)
-        setRecommendations(userRecommendations)
+        // Transform array into Recommendations object structure
+        const transformedRecommendations: Recommendations = {
+          opportunities: [],
+          events: [],
+          jobs: [],
+          resources: []
+        }
+        
+        if (Array.isArray(userRecommendations)) {
+          userRecommendations.forEach((item: any) => {
+            const contentType = item.type || item.contentType
+            if (contentType === 'opportunity') {
+              transformedRecommendations.opportunities.push(item)
+            } else if (contentType === 'event') {
+              transformedRecommendations.events.push(item)
+            } else if (contentType === 'job') {
+              transformedRecommendations.jobs.push(item)
+            } else if (contentType === 'resource') {
+              transformedRecommendations.resources.push(item)
+            }
+          })
+        }
+        
+        setRecommendations(transformedRecommendations)
       }
     } catch (err) {
       console.error('Error fetching user profile:', err)
@@ -72,7 +95,30 @@ export function useUserProfile() {
 
     try {
       const userRecommendations = await ApiClient.getRecommendations(session.user.id)
-      setRecommendations(userRecommendations)
+      // Transform array into Recommendations object structure
+      const transformedRecommendations: Recommendations = {
+        opportunities: [],
+        events: [],
+        jobs: [],
+        resources: []
+      }
+      
+      if (Array.isArray(userRecommendations)) {
+        userRecommendations.forEach((item: any) => {
+          const contentType = item.type || item.contentType
+          if (contentType === 'opportunity') {
+            transformedRecommendations.opportunities.push(item)
+          } else if (contentType === 'event') {
+            transformedRecommendations.events.push(item)
+          } else if (contentType === 'job') {
+            transformedRecommendations.jobs.push(item)
+          } else if (contentType === 'resource') {
+            transformedRecommendations.resources.push(item)
+          }
+        })
+      }
+      
+      setRecommendations(transformedRecommendations)
     } catch (err) {
       console.error('Error refreshing recommendations:', err)
     }

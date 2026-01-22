@@ -60,6 +60,8 @@ interface Promotion {
     title: string
     description: string
     image?: string
+    isPaid?: boolean
+    isPremium?: boolean
   }
 }
 
@@ -160,7 +162,7 @@ export default function PromotionsPage() {
       console.log('Packages response:', packagesData)
       
       if (packagesData.success) {
-        const packagesArray = Object.values(packagesData.data.packages)
+        const packagesArray = Object.values(packagesData.data.packages) as Package[]
         
         // Add custom package option
         const customPackage: Package = {
@@ -249,17 +251,17 @@ export default function PromotionsPage() {
       
       if (opportunitiesRes.success) {
         const opportunities = opportunitiesRes.data.opportunities || []
-        allContent.push(...opportunities.map(item => ({ ...item, contentType: 'opportunity' })))
+        allContent.push(...opportunities.map((item: any) => ({ ...item, contentType: 'opportunity' })))
       }
       
       if (eventsRes.success) {
         const events = eventsRes.data.events || []
-        allContent.push(...events.map(item => ({ ...item, contentType: 'event' })))
+        allContent.push(...events.map((item: any) => ({ ...item, contentType: 'event' })))
       }
       
       if (jobsRes.success) {
         const jobs = jobsRes.data.jobs || []
-        allContent.push(...jobs.map(item => ({ ...item, contentType: 'job' })))
+        allContent.push(...jobs.map((item: any) => ({ ...item, contentType: 'job' })))
       }
       
       setUserContent(allContent)

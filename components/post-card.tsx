@@ -142,11 +142,15 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
     setCurrentImageIndex(0)
   }, [post._id])
 
-  const isOwner = user?.id === post.author._id || user?.email === post.author.email
+  const isOwner = user?._id === post.author._id || user?.email === post.author.email
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }
 
   const handleLike = async () => {

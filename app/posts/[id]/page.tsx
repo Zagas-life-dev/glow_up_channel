@@ -30,7 +30,7 @@ interface Post {
   }
   hashtags: string[]
   mentions: any[]
-  visibility: string
+  visibility: 'public' | 'private'
   likeCount: number
   replyCount: number
   repostCount: number
@@ -86,9 +86,13 @@ export default function PostDetailPage() {
   const [isLoadingReplies, setIsLoadingReplies] = useState(false)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }, [])
 
   const fetchPost = useCallback(async () => {

@@ -233,9 +233,13 @@ export default function SettingsPage() {
     loadVerificationStatus()
   }, [user])
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('accessToken')
-    return token ? { 'Authorization': `Bearer ${token}` } : {}
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }
 
   // Handle image upload

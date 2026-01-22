@@ -54,7 +54,8 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
       }
     } catch (error) {
       console.error('File upload error:', error)
-      alert(`Upload failed: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      alert(`Upload failed: ${errorMessage}`)
     } finally {
       setIsUploading(false)
     }

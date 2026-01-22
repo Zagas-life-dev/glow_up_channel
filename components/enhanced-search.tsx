@@ -58,7 +58,14 @@ export default function EnhancedSearch() {
     setIsLoading(true)
     try {
       const searchResults = await ApiClient.searchContent(searchQuery, filters)
-      setResults(searchResults)
+      // Transform array into SearchResults format
+      const transformedResults: SearchResults = {
+        opportunities: searchResults.filter((item: any) => item.type === 'opportunity' || item.contentType === 'opportunity'),
+        events: searchResults.filter((item: any) => item.type === 'event' || item.contentType === 'event'),
+        jobs: searchResults.filter((item: any) => item.type === 'job' || item.contentType === 'job'),
+        resources: searchResults.filter((item: any) => item.type === 'resource' || item.contentType === 'resource')
+      }
+      setResults(transformedResults)
     } catch (error) {
       console.error('Search error:', error)
       setResults({ opportunities: [], events: [], jobs: [], resources: [] })

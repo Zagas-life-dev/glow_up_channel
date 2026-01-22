@@ -77,7 +77,7 @@ export default function PlaylistsPage() {
 
   const isOwner = (playlist: Playlist) => {
     if (!user || !playlist.createdBy) return false
-    return user.id === playlist.createdBy._id || user.email === playlist.createdBy.email
+    return user._id === playlist.createdBy._id || user.email === playlist.createdBy.email
   }
 
   return (
@@ -405,7 +405,7 @@ export default function PlaylistsPage() {
           setShowCreateModal(false)
           setEditingPlaylist(null)
         }}
-        editPlaylist={editingPlaylist}
+        editPlaylist={editingPlaylist || undefined}
       />
     </div>
   )
