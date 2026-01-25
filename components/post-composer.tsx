@@ -199,6 +199,11 @@ export default function PostComposer({
       const data = await response.json()
       if (data.success) {
         toast.success('Post created!')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        if (data.data.post?._id) {
+          trackPostCreated(data.data.post._id)
+        }
         onPostCreated(data.data.post)
         
         // Reset form

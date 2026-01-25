@@ -27,6 +27,7 @@ import {
   Trash2
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { trackPostCreated } from '@/lib/tracking'
 import AuthGuard from '@/components/auth-guard'
 import ApiClient from '@/lib/api-client'
 import { usePage } from '@/contexts/page-context'
@@ -296,6 +297,12 @@ function PostPageContent() {
       const data = await response.json()
       if (data.success) {
         toast.success('Post created!')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        if (data.data.post?._id) {
+          trackPostCreated(data.data.post._id)
+        }
+        
         router.push('/community')
       } else {
         throw new Error(data.message || 'Failed to create post')

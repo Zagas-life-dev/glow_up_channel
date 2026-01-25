@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
+import { trackContentView } from '@/lib/tracking'
 
 type ResourcePageProps = {
   params: Promise<{
@@ -74,6 +75,11 @@ function ResourcePageContent({ params }: ResourcePageProps) {
         }
         
         setResource(result.data.resource)
+        
+        // Track content view for active user activity (fire-and-forget, won't throw errors)
+        if (isAuthenticated) {
+          trackContentView('resource', id)
+        }
       } catch (error) {
         console.error('Error fetching resource:', error)
         notFound()

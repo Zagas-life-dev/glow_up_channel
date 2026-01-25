@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Sparkles } from "lucide-react"
 
-export default function Home() {
+export default function UnderConstructionPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="text-center max-w-2xl mx-auto">

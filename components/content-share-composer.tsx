@@ -28,6 +28,7 @@ import {
   DollarSign
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { trackPostCreated } from '@/lib/tracking'
 
 interface ContentItem {
   _id: string

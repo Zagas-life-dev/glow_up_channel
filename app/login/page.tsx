@@ -44,7 +44,7 @@ export default function LoginPage() {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-white/60">
-            Sign in to your Glow Up Channel account
+            Sign in to your GlowUp account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

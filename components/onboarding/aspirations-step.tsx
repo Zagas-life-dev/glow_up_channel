@@ -38,7 +38,7 @@ const AspirationsStep = forwardRef<any, AspirationsStepProps>(({ onSubmit, initi
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-semibold text-gray-900">What do you want to gain from GlowUp Channel?</h3>
+        <h3 className="text-2xl font-semibold text-gray-900">What do you want to gain from GlowUp?</h3>
         <p className="mt-2 text-gray-600">Select all that apply. This helps us align with your goals.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

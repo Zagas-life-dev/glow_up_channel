@@ -37,6 +37,8 @@ import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
 import { cleanUrl } from '@/lib/url-utils'
+import { trackLike, trackSave, trackShare } from '@/lib/tracking'
+import { toast } from 'sonner'
 
 interface FeedCardProps {
   item: {
@@ -139,6 +141,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
   const [showShareComposer, setShowShareComposer] = useState(false)
   const [fullDetails, setFullDetails] = useState<any>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [engagementStatusLoaded, setEngagementStatusLoaded] = useState(false)
   
   // Use controlled expanded state if provided, otherwise use local state
   const [localExpanded, setLocalExpanded] = useState(false)
@@ -146,6 +149,65 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
 
   const config = typeConfig[item.type] || typeConfig.opportunity
   const TypeIcon = config.icon
+
+  // Load engagement status (like/save) when component mounts
+  useEffect(() => {
+    // Reset status loaded flag when item changes
+    setEngagementStatusLoaded(false)
+    
+    if (isAuthenticated && item._id) {
+      loadEngagementStatus()
+    } else {
+      // Reset to false if not authenticated
+      setIsLiked(false)
+      setIsSaved(false)
+      setEngagementStatusLoaded(true)
+    }
+  }, [isAuthenticated, item._id])
+
+  const loadEngagementStatus = async () => {
+    // Don't make API call if item ID is invalid or already loaded
+    if (!item._id || !isAuthenticated || engagementStatusLoaded) {
+      return
+    }
+
+    try {
+      const apiType = item.type === 'opportunity' ? 'opportunities' 
+        : item.type === 'job' ? 'jobs'
+        : item.type === 'event' ? 'events'
+        : 'resources'
+      
+      const status = await ApiClient.getEngagementStatus(apiType, item._id)
+      setIsLiked(status.isLiked || false)
+      setIsSaved(status.isSaved || false)
+      setEngagementStatusLoaded(true)
+    } catch (error: any) {
+      // Mark as loaded even on error to prevent retry loops
+      setEngagementStatusLoaded(true)
+      
+      // Handle 404 gracefully - item might not exist or might have been deleted
+      // This is not a critical error, just means we can't determine engagement status
+      const errorMessage = error?.message?.toLowerCase() || '';
+      if (errorMessage.includes('not found') || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('resource not found')) {
+        // Item doesn't exist - reset to default state
+        setIsLiked(false)
+        setIsSaved(false)
+        return
+      }
+      
+      // For authentication errors, also reset to default (user might have logged out)
+      if (errorMessage.includes('authentication') || errorMessage.includes('401')) {
+        setIsLiked(false)
+        setIsSaved(false)
+        return
+      }
+      
+      // For other errors, silently fail and keep default state
+      // Don't log to console to avoid noise
+    }
+  }
 
   // Load full details when expanded
   useEffect(() => {
@@ -198,6 +260,10 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
     
     if (!isAuthenticated) return
 
+    // Store previous state in case we need to revert
+    const previousLikedState = isLiked
+    const previousLikeCount = likeCount
+
     try {
       const apiType = item.type === 'opportunity' ? 'opportunities' 
         : item.type === 'job' ? 'jobs'
@@ -209,12 +275,47 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         setIsLiked(false)
         setLikeCount(prev => Math.max(0, prev - 1))
       } else {
-        await ApiClient.likeItem(apiType, item._id)
+        // Optimistically update UI
         setIsLiked(true)
         setLikeCount(prev => prev + 1)
+        
+        await ApiClient.likeItem(apiType, item._id)
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackLike(item.type, item._id)
       }
       onEngage?.()
-    } catch (error) {
+    } catch (error: any) {
+      // Revert optimistic update on error
+      setIsLiked(previousLikedState)
+      setLikeCount(previousLikeCount)
+      
+      const errorMessage = error?.message || 'Failed to update like status'
+      
+      // Handle specific validation errors from backend
+      if (errorMessage.includes('only like active') || 
+          errorMessage.includes('only save active') ||
+          errorMessage.includes('only engage with active') ||
+          errorMessage.includes('applications are closed') ||
+          errorMessage.includes('deadline has passed') ||
+          errorMessage.includes('event has ended')) {
+        
+        const contentType = item.type === 'opportunity' ? 'opportunity' 
+          : item.type === 'job' ? 'job'
+          : item.type === 'event' ? 'event'
+          : 'resource'
+        
+        toast.error(
+          `This ${contentType} is no longer active. Applications may be closed or the deadline has passed.`,
+          { duration: 4000 }
+        )
+      } else if (errorMessage.includes('authentication') || errorMessage.includes('401')) {
+        toast.error('Please sign in to like content', { duration: 3000 })
+      } else {
+        // Generic error message
+        toast.error('Failed to update like status. Please try again.', { duration: 3000 })
+      }
+      
       console.error('Error toggling like:', error)
     }
   }
@@ -224,6 +325,9 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
     e.stopPropagation()
     
     if (!isAuthenticated) return
+
+    // Store previous state in case we need to revert
+    const previousSavedState = isSaved
 
     try {
       const apiType = item.type === 'opportunity' ? 'opportunities' 
@@ -235,11 +339,45 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         await ApiClient.unsaveItem(apiType, item._id)
         setIsSaved(false)
       } else {
-        await ApiClient.saveItem(apiType, item._id)
+        // Optimistically update UI
         setIsSaved(true)
+        
+        await ApiClient.saveItem(apiType, item._id)
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackSave(item.type, item._id)
       }
       onEngage?.()
-    } catch (error) {
+    } catch (error: any) {
+      // Revert optimistic update on error
+      setIsSaved(previousSavedState)
+      
+      const errorMessage = error?.message || 'Failed to update save status'
+      
+      // Handle specific validation errors from backend
+      if (errorMessage.includes('only like active') || 
+          errorMessage.includes('only save active') ||
+          errorMessage.includes('only engage with active') ||
+          errorMessage.includes('applications are closed') ||
+          errorMessage.includes('deadline has passed') ||
+          errorMessage.includes('event has ended')) {
+        
+        const contentType = item.type === 'opportunity' ? 'opportunity' 
+          : item.type === 'job' ? 'job'
+          : item.type === 'event' ? 'event'
+          : 'resource'
+        
+        toast.error(
+          `This ${contentType} is no longer active. Applications may be closed or the deadline has passed.`,
+          { duration: 4000 }
+        )
+      } else if (errorMessage.includes('authentication') || errorMessage.includes('401')) {
+        toast.error('Please sign in to save content', { duration: 3000 })
+      } else {
+        // Generic error message
+        toast.error('Failed to update save status. Please try again.', { duration: 3000 })
+      }
+      
       console.error('Error toggling save:', error)
     }
   }
@@ -256,12 +394,16 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
           title: item.title,
           url
         })
+        // Track active user activity if share was successful (fire-and-forget)
+        trackShare(item.type, item._id)
       } catch (err) {
-        // User cancelled share
+        // User cancelled share - don't track
       }
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(url)
+      // Track active user activity (fire-and-forget)
+      trackShare(item.type, item._id)
     }
   }
 

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { isValidUrl, openExternalUrl } from '@/lib/url-utils'
+import { trackLike, trackSave, trackContentView } from '@/lib/tracking'
 
 interface EngagementActionsProps {
   type: 'opportunities' | 'events' | 'jobs' | 'resources'
@@ -80,6 +81,8 @@ export default function EngagementActions({
           console.error('Error tracking engagement:', trackingError)
           // Don't show error to user as this is background tracking
         }
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackLike(type, id)
       }
     } catch (error: any) {
       console.error('Error toggling like:', error)
@@ -121,6 +124,8 @@ export default function EngagementActions({
           console.error('Error tracking engagement:', trackingError)
           // Don't show error to user as this is background tracking
         }
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackSave(type, id)
       }
     } catch (error: any) {
       console.error('Error toggling save:', error)
@@ -159,6 +164,15 @@ export default function EngagementActions({
       console.error('Error tracking click:', error)
       // Don't prevent the redirect if tracking fails
     }
+    
+    // Track active user activity (clicking external link is engagement)
+    // Normalize type: opportunities -> opportunity, etc.
+    const normalizedType = type === 'opportunities' ? 'opportunity' 
+      : type === 'events' ? 'event'
+      : type === 'jobs' ? 'job'
+      : type === 'resources' ? 'resource'
+      : type;
+    trackContentView(normalizedType as 'opportunity' | 'event' | 'job' | 'resource', id)
     
     // Open external link using our utility function
     openExternalUrl(externalUrl)

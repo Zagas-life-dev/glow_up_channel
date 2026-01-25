@@ -9,6 +9,7 @@ import PostCard from '@/components/post-card'
 import PostDetailSkeleton from '@/components/skeletons/post-detail-skeleton'
 import ReplyCard from '@/components/reply-card'
 import { cn } from '@/lib/utils'
+import { trackComment } from '@/lib/tracking'
 import {
   ArrowLeft,
   Loader2,
@@ -335,6 +336,9 @@ function ReplyComposer({
       if (data.success) {
         onReplyCreated(data.data.reply)
         setText('')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackComment(postId)
       }
     } catch (error) {
       console.error('Error creating reply:', error)

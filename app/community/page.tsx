@@ -8,6 +8,7 @@ import PostComposer from '@/components/post-composer'
 import { cn } from '@/lib/utils'
 import { useCursorPagination } from '@/hooks/use-cursor-pagination'
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll'
+import { trackCommunityEngagement } from '@/lib/tracking'
 import {
   Users,
   Compass,
@@ -112,34 +113,47 @@ export default function CommunityPage() {
 
   // Fetch function for cursor-based pagination
   const fetchPosts = useCallback(async (lastId: string | null) => {
-    let url = ''
-    
-    if (activeTab === 'connections' && isAuthenticated) {
-      url = `${API_BASE_URL}/api/posts/feed?limit=20`
-      if (lastId) url += `&lastId=${lastId}`
-    } else {
-      url = `${API_BASE_URL}/api/posts/explore?limit=20&sort=${sortBy}`
-      if (lastId) url += `&lastId=${lastId}`
-      if (filterHashtag) {
-        url += `&hashtag=${filterHashtag}`
+    try {
+      let url = ''
+      
+      if (activeTab === 'connections' && isAuthenticated) {
+        url = `${API_BASE_URL}/api/posts/feed?limit=20`
+        if (lastId) url += `&lastId=${lastId}`
+      } else {
+        url = `${API_BASE_URL}/api/posts/explore?limit=20&sort=${sortBy}`
+        if (lastId) url += `&lastId=${lastId}`
+        if (filterHashtag) {
+          url += `&hashtag=${filterHashtag}`
+        }
+        // Add personalized=false if user wants to bypass personalized feed
+        // For now, always try personalized first, it will fallback automatically
       }
-      // Add personalized=false if user wants to bypass personalized feed
-      // For now, always try personalized first, it will fallback automatically
-    }
 
-    const response = await fetch(url, {
-      headers: getAuthHeaders()
-    })
+      const response = await fetch(url, {
+        headers: getAuthHeaders()
+      })
 
-    const data = await response.json()
-    if (data.success) {
-      return {
-        items: data.data.posts || [],
-        lastId: data.data.lastId || null,
-        hasMore: data.data.hasMore || false
+      if (!response.ok) {
+        // If response is not ok, return empty results
+        console.warn('Failed to fetch posts:', response.status, response.statusText)
+        return { items: [], lastId: null, hasMore: false }
       }
+
+      const data = await response.json()
+      if (data.success) {
+        return {
+          items: data.data.posts || [],
+          lastId: data.data.lastId || null,
+          hasMore: data.data.hasMore || false
+        }
+      }
+      return { items: [], lastId: null, hasMore: false }
+    } catch (error) {
+      // Handle network errors, CORS errors, etc.
+      console.error('Error fetching posts:', error)
+      // Return empty results instead of throwing
+      return { items: [], lastId: null, hasMore: false }
     }
-    return { items: [], lastId: null, hasMore: false }
   }, [activeTab, isAuthenticated, sortBy, filterHashtag, getAuthHeaders])
 
   // Use cursor pagination hook
@@ -177,7 +191,11 @@ export default function CommunityPage() {
         setTrendingHashtags(data.data.hashtags || [])
       }
     } catch (error) {
-      console.error('Error fetching trending hashtags:', error)
+      // Silently fail - don't break the UI if backend is unavailable
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Error fetching trending hashtags:', error)
+      }
     }
   }, [getAuthHeaders])
 
@@ -246,7 +264,7 @@ export default function CommunityPage() {
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   <Users className="w-4 h-4" />
-                  Following
+                  Partnering
                 </span>
                 {activeTab === 'connections' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
@@ -392,12 +410,12 @@ export default function CommunityPage() {
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">
                 {activeTab === 'connections' 
-                  ? 'No posts from people you follow' 
+                  ? 'No posts from people you partner with' 
                   : 'No posts found'}
               </h3>
               <p className="text-sm text-white/50 mb-6 max-w-sm mx-auto">
                 {activeTab === 'connections'
-                  ? 'Start following people to see their posts here, or explore trending content.'
+                  ? 'Start partnering with people to see their posts here, or explore trending content.'
                   : filterHashtag
                   ? `No posts found for #${filterHashtag}. Try another hashtag!`
                   : 'Be the first to share something with the community!'}

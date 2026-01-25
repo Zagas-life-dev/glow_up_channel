@@ -777,7 +777,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                     {isPrivate ? <Lock className="w-5 h-5 text-white/40" /> : <Globe className="w-5 h-5 text-emerald-500" />}
                     <div>
                       <p className="text-sm font-medium text-white">Private Account</p>
-                      <p className="text-xs text-white/40">New followers will need your approval</p>
+                      <p className="text-xs text-white/40">New partners will need your approval</p>
                     </div>
                   </div>
                   <Switch
@@ -792,7 +792,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                     {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-white/40" />}
                     <div>
                       <p className="text-sm font-medium text-white">Show Connections</p>
-                      <p className="text-xs text-white/40">Let others see your follower counts</p>
+                      <p className="text-xs text-white/40">Let others see your partner counts</p>
                     </div>
                   </div>
                   <Switch
@@ -806,7 +806,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
               <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
                 <p className="text-sm text-orange-400 font-medium mb-1">Privacy Tips</p>
                 <ul className="text-xs text-white/50 space-y-1">
-                  <li>• Private accounts require approval for new followers</li>
+                  <li>• Private accounts require approval for new partners</li>
                   <li>• Hidden connections only affect the count display</li>
                   <li>• Your posts visibility can be set individually</li>
                 </ul>

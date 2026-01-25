@@ -37,7 +37,7 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
             <div className="prose prose-sm max-w-none">
               <h4 className="font-semibold text-gray-900 mb-2">1. Platform Usage</h4>
               <p className="text-gray-600 mb-4">
-                By using the Glow Up Channel platform, you agree to use it responsibly and in accordance with our community guidelines. 
+                By using the GlowUp platform, you agree to use it responsibly and in accordance with our community guidelines. 
                 You are responsible for all content you post and the accuracy of information provided.
               </p>
 

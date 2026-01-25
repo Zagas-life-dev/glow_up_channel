@@ -52,6 +52,7 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
   const [filteredConnections, setFilteredConnections] = useState<Connection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const typeLabel = type === 'followers' ? 'Partners' : 'Partnering'
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -121,7 +122,7 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
               <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
                 <Users className="w-5 h-5 text-orange-500" />
               </div>
-              <SheetTitle className="text-white capitalize">{type}</SheetTitle>
+              <SheetTitle className="text-white">{typeLabel}</SheetTitle>
             </div>
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
               <X className="w-5 h-5 text-white/60" />
@@ -150,14 +151,14 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
               <h3 className="font-medium text-white mb-1">
-                {searchQuery ? 'No Results' : `No ${type}`}
+                {searchQuery ? 'No Results' : type === 'followers' ? 'No Partners' : 'No Partnering Yet'}
               </h3>
               <p className="text-sm text-white/50">
                 {searchQuery 
                   ? 'Try a different search term'
                   : type === 'followers' 
-                    ? "No one is following this user yet"
-                    : "This user isn't following anyone yet"
+                    ? "No one is partnering with this user yet"
+                    : "This user isn't partnering with anyone yet"
                 }
               </p>
             </div>

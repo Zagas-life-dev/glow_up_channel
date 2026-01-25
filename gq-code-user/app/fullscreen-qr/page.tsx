@@ -125,7 +125,7 @@ export default function FullscreenQRPage() {
       </div>
 
       <p className="text-sm text-gray-400 tracking-wide uppercase">
-        Powered by <span className="font-semibold text-orange-400">Glow Up Channel</span>
+        Powered by <span className="font-semibold text-orange-400">GlowUp</span>
       </p>
     </div>
   );

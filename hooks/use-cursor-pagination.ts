@@ -100,8 +100,17 @@ export function useCursorPagination<T extends { _id: string }>({
 
       setHasMore(result.hasMore && result.items.length === limit)
     } catch (err: any) {
-      console.error('Error fetching items:', err)
+      // Silently handle errors - don't break the UI
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Error fetching items:', err)
+      }
       setError(err.message || 'Failed to fetch items')
+      // Set empty state instead of throwing
+      if (reset) {
+        setItems([])
+      }
+      setHasMore(false)
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)

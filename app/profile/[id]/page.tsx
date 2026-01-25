@@ -574,14 +574,14 @@ export default function ProfilePage() {
                 className="text-center hover:opacity-70 transition-opacity"
               >
                 <p className="text-lg sm:text-xl font-bold text-white">{profile.followersCount ?? 0}</p>
-                <p className="text-xs text-white/40">Followers</p>
+                <p className="text-xs text-white/40">Partners</p>
               </button>
               <button 
                 onClick={() => setShowConnectionsList('following')}
                 className="text-center hover:opacity-70 transition-opacity"
               >
                 <p className="text-lg sm:text-xl font-bold text-white">{profile.followingCount ?? 0}</p>
-                <p className="text-xs text-white/40">Following</p>
+                <p className="text-xs text-white/40">Partnering</p>
               </button>
             </div>
           )}
@@ -999,7 +999,7 @@ export default function ProfilePage() {
                 {connectLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : connectionStatus?.isFollowing ? (
-                  'Following'
+                  'Partnering'
                 ) : connectionStatus?.isPending ? (
                   <>
                     <Clock className="w-4 h-4 mr-1.5" />
@@ -1008,15 +1008,16 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4 mr-1.5" />
-                    Follow
+                    Partner
                   </>
                 )}
               </Button>
               <Button 
                 variant="outline"
-                className="flex-1 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06] rounded-xl h-9 text-sm font-medium"
+                disabled={true}
+                className="flex-1 border-white/[0.08] bg-white/[0.03] text-white/10  rounded-xl h-9 text-sm font-medium"
               >
-                Message
+                Message (coming soon)
               </Button>
             </>
           )}
@@ -1025,7 +1026,7 @@ export default function ProfilePage() {
         {/* Follows You Badge */}
         {!isOwner && connectionStatus?.followsYou && (
           <div className="mb-5 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-center">
-            <span className="text-xs text-white/50">Follows you</span>
+            <span className="text-xs text-white/50">Partners you</span>
           </div>
         )}
 

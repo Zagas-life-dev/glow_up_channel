@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 const routes = [
-  { name: "Home", path: "/", description: "Welcome to Glow Up Channel" },
+  { name: "Home", path: "/", description: "Welcome to GlowUp" },
   { 
     name: "Opportunities", 
     path: "/opportunities", 
@@ -113,14 +113,14 @@ export default function Navbar() {
               <div className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12">
                 <Image
                   src="/images/logo-icon-transparent.png"
-                  alt="Glow Up Channel"
+                  alt="GlowUp"
                   fill
                   className="object-contain group-hover:scale-105 transition-transform duration-200"
                   priority
                 />
               </div>
               <span className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Glow Up Channel
+                GlowUp
               </span>
             </Link>
 

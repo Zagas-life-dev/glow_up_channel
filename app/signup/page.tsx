@@ -88,7 +88,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-            Join Glow Up Channel
+            Join GlowUp
           </CardTitle>
           <CardDescription className="text-white/60">
             Create your account to get started

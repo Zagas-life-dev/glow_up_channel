@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
+import { trackLike, trackRepost, trackSave, trackShare, trackVote, trackCommunityEngagement } from '@/lib/tracking'
 
 interface Post {
   _id: string
@@ -165,18 +166,58 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         method: 'POST',
         headers: getAuthHeaders()
       })
-      const data = await response.json()
+
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        // Try to get error message from response
+        let errorMessage = 'Failed to like post'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } catch {
+          // If we can't parse error, use default message
+          errorMessage = response.status === 401 
+            ? 'Please log in to like posts'
+            : response.status === 404
+            ? 'Post not found'
+            : 'Failed to like post'
+        }
+        toast.error(errorMessage)
+        return
+      }
+
+      // Parse response
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        toast.error('Invalid response from server')
+        return
+      }
+
       if (data.success) {
         const updated = {
           ...localPost,
-          hasLiked: data.data.liked,
-          likeCount: data.data.likeCount
+          hasLiked: data.data?.liked ?? true, // Default to true if not provided
+          likeCount: data.data?.likeCount ?? localPost.likeCount
         }
         setLocalPost(updated)
         onUpdate?.(updated)
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        // Only track if it was a like (not an unlike)
+        if (data.data?.liked) {
+          trackLike('post', post._id)
+        }
+      } else {
+        toast.error(data.message || 'Failed to like post')
       }
-    } catch (error) {
-      toast.error('Failed to like post')
+    } catch (error: any) {
+      // Handle network errors (backend down, CORS, etc.)
+      const errorMessage = error.message?.includes('Failed to fetch') || error.message?.includes('ERR_CONNECTION_REFUSED')
+        ? 'Cannot connect to server. Please check your connection.'
+        : 'Failed to like post. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setIsLiking(false)
     }
@@ -203,6 +244,11 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         setLocalPost(updated)
         onUpdate?.(updated)
         toast.success(data.data.bookmarked ? 'Saved to bookmarks' : 'Removed from bookmarks')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        if (data.data.bookmarked) {
+          trackSave('post', post._id)
+        }
       }
     } catch (error) {
       toast.error('Failed to bookmark post')
@@ -233,6 +279,10 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           onUpdate(data.data.post)
         }
         toast.success('Vote recorded!')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackVote(post._id)
+        trackCommunityEngagement('vote', post._id)
       } else {
         throw new Error(data.message || 'Failed to vote')
       }
@@ -260,6 +310,21 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         method: 'POST',
         headers: getAuthHeaders()
       })
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to repost'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } catch {
+          errorMessage = response.status === 401 
+            ? 'Please log in to repost'
+            : 'Failed to repost'
+        }
+        toast.error(errorMessage)
+        return
+      }
+
       const data = await response.json()
       if (data.success) {
         const updated = {
@@ -270,9 +335,17 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         setLocalPost(updated)
         onUpdate?.(updated)
         toast.success('Reposted!')
+        
+        // Track active user activity (fire-and-forget, won't throw errors)
+        trackRepost(post._id)
+      } else {
+        toast.error(data.message || 'Failed to repost')
       }
-    } catch (error) {
-      toast.error('Failed to repost')
+    } catch (error: any) {
+      const errorMessage = error.message?.includes('Failed to fetch') || error.message?.includes('ERR_CONNECTION_REFUSED')
+        ? 'Cannot connect to server. Please check your connection.'
+        : 'Failed to repost. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setIsReposting(false)
     }
@@ -305,12 +378,18 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           text: post.content.text?.substring(0, 100),
           url
         })
+        // Track active user activity if share was successful (fire-and-forget)
+        trackShare('post', post._id)
+        trackCommunityEngagement('share', post._id)
       } catch (err) {
-        // User cancelled
+        // User cancelled share - don't track
       }
     } else {
       navigator.clipboard.writeText(url)
       toast.success('Link copied!')
+      // Track active user activity (fire-and-forget)
+      trackShare('post', post._id)
+      trackCommunityEngagement('share', post._id)
     }
   }
 

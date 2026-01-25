@@ -518,8 +518,8 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     <p className="font-medium text-white">Private Account</p>
                     <p className="text-xs text-white/50">
                       {formData.isPrivate 
-                        ? "People must request to follow you"
-                        : "Anyone can follow you"}
+                        ? "People must request to partner with you"
+                        : "Anyone can partner with you"}
                     </p>
                   </div>
                 </div>
@@ -536,7 +536,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     <p className="font-medium text-white">Show Connections</p>
                     <p className="text-xs text-white/50">
                       {formData.showConnections 
-                        ? "Your followers/following are visible"
+                        ? "Your partners/partnering are visible"
                         : "Your connections are hidden"}
                     </p>
                   </div>

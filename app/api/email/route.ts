@@ -27,7 +27,7 @@ function createEmailTemplate(subject: string, content: string) {
               <!-- Header with Logo -->
               <tr>
                 <td style="padding: 30px 20px; text-align: center; background-color: #000000; border-bottom: 2px solid #FF8C00;">
-                  <img src="/images/logo-icon-transparent.png" alt="Glowup Logo" style="max-width: 180px; height: auto;">
+                  <img src="/images/logo-icon-transparent.png" alt="GlowUp Logo" style="max-width: 180px; height: auto;">
                 </td>
               </tr>
               
@@ -47,7 +47,7 @@ function createEmailTemplate(subject: string, content: string) {
               <!-- Footer -->
               <tr>
                 <td style="padding: 30px; background-color: #000000; text-align: center; color: #ffffff; font-size: 14px; border-top: 2px solid #FF8C00;">
-                  <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} Glowupchannel. All rights reserved.</p>
+                  <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} GlowUp. All rights reserved.</p>
                   <p style="margin: 0;">
                     <a href="https://glowupchannel.com/privacy" style="color: #FF8C00; text-decoration: underline; margin: 0 5px;">Privacy Policy</a> | 
                     <a href="https://glowupchannel.com/terms" style="color: #FF8C00; text-decoration: underline; margin: 0 5px;">Terms of Service</a>
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     const resend = getResend()
     const data = await resend.emails.send({
-      from: 'Glow Up Channel <noreply@updates.glowupchannel.com>',
+      from: 'GlowUp <noreply@updates.glowupchannel.com>',
       to: [to],
       subject: subject,
       html: htmlContent,

@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
+import { trackContentView } from '@/lib/tracking'
 
 type EventPageProps = {
   params: Promise<{
@@ -70,6 +71,11 @@ function EventPageContent({ params }: EventPageProps) {
         }
         
         setEvent(result.data.event)
+        
+        // Track content view for active user activity (fire-and-forget, won't throw errors)
+        if (isAuthenticated) {
+          trackContentView('event', id)
+        }
       } catch (error) {
         console.error('Error fetching event:', error)
         notFound()

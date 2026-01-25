@@ -209,7 +209,7 @@ export default function AboutPage() {
                 For Opportunity Seekers
               </h3>
               <p className="text-lg text-white/70 mb-6">
-                Are you ready to unlock your potential? Glow Up Channel is your one-stop shop.
+                Are you ready to unlock your potential? GlowUp is your one-stop shop.
               </p>
               <div className="space-y-4">
                 {[

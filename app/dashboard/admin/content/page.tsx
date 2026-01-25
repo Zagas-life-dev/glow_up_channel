@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
@@ -9,6 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { 
   Select,
   SelectContent,
@@ -43,10 +52,27 @@ import {
   MapPin,
   Calendar,
   RefreshCw,
-  Settings
+  Settings,
+  Home,
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  MoreVertical,
+  Target,
+  Briefcase,
+  BookOpen,
+  Sparkles,
+  Zap,
+  Ban,
+  CheckCircle2,
+  X,
+  ExternalLink,
+  Edit,
+  Trash2
 } from "lucide-react"
-import Link from "next/link"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+import { formatDistanceToNow } from "date-fns"
 
 interface ContentItem {
   _id: string
@@ -60,122 +86,59 @@ interface ContentItem {
   createdAt: string
   updatedAt: string
   publishedAt?: string
-  
-  // Payment information
   paymentStatus?: 'not_required' | 'pending' | 'awaiting_payment' | 'payment_uploaded' | 'verified' | 'failed'
   paymentAmount?: number
-  paymentReference?: string
-  paymentReceipt?: string
-  paymentCode?: string
-  paymentRequestedBy?: string
-  paymentRequestedAt?: string
-  paymentUploadedAt?: string
-  paymentVerifiedAt?: string
-  paymentVerifiedBy?: string
-  paymentNotes?: string
-  paymentVerificationNotes?: string
-  
-  // Financial information
-  isPaid?: boolean
-  price?: number
-  currency?: string
-  financial?: {
-    amount?: number
-    currency?: string
-    isPaid?: boolean
-  }
-  
-  // Provider information
   providerId?: string
+  organizerId?: string
   provider?: string
   organizer?: string
-  organizerId?: string
-  
-  // Location information
   location?: {
     country?: string
-    province?: string
     city?: string
-    address?: string
     isRemote?: boolean
-    isHybrid?: boolean
-    isVirtual?: boolean
   }
-  
-  // Date information
-  dates?: {
-    startDate?: string
-    endDate?: string
-    applicationDeadline?: string
-    registrationDeadline?: string
-  }
-  
-  // Content metadata
-  tags?: string[]
-  industrySectors?: string[]
-  targetAudience?: string[]
-  
-  // Metrics
-  metrics?: {
-    viewCount?: number
-    likeCount?: number
-    saveCount?: number
-    applicationCount?: number
-    registrationCount?: number
-  }
-  
-  // Poster details
   poster?: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-    phone?: string
-    company?: string
-    role: string
-    createdAt: string
+    name?: string
+    email?: string
   }
+  [key: string]: any
 }
 
-export default function ContentModeration() {
-  const { user, isAuthenticated, isLoading } = useAuth()
+type StatusFilter = 'all' | 'live' | 'pending' | 'true_draft' | 'hidden' | 'inactive_not_approved' | 'inactive_approved'
+type TypeFilter = 'all' | 'opportunity' | 'event' | 'job' | 'resource'
+type PaymentFilter = 'all' | 'not_required' | 'awaiting_payment' | 'payment_uploaded' | 'verified'
+
+export default function AdminContent() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
+  const router = useRouter()
+  const pathname = usePathname()
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [itemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   
   // Filters
-  const [searchQuery, setSearchQuery] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [paymentFilter, setPaymentFilter] = useState("all")
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   
-  // Actions
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
+  // Dialogs
   const [showReviewDialog, setShowReviewDialog] = useState(false)
-  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve')
-  const [rejectionReason, setRejectionReason] = useState("")
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
-  const [paymentVerification, setPaymentVerification] = useState<'verify' | 'reject'>('verify')
-  const [paymentNotes, setPaymentNotes] = useState("")
-  const [activeTab, setActiveTab] = useState('all')
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve')
+  const [rejectionReason, setRejectionReason] = useState('')
   const [bypassPayment, setBypassPayment] = useState(false)
-  
-  // Admin controls
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showStateDialog, setShowStateDialog] = useState(false)
-  const [showScheduleDialog, setShowScheduleDialog] = useState(false)
-  const [editData, setEditData] = useState<any>({})
-  const [newState, setNewState] = useState('')
-  const [scheduleDate, setScheduleDate] = useState('')
-  const [scheduleTime, setScheduleTime] = useState('')
-  const [disableReason, setDisableReason] = useState('')
   const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
+  const [paymentVerification, setPaymentVerification] = useState<'verify' | 'reject'>('verify')
+  const [paymentNotes, setPaymentNotes] = useState('')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   // Hide navbar and footer when this page is active
   useEffect(() => {
@@ -188,11 +151,11 @@ export default function ContentModeration() {
   }, [setHideNavbar, setHideFooter])
 
   const fetchContent = useCallback(async () => {
+    if (!isAuthenticated || !user) return
+    
     try {
       setLoading(true)
       setError(null)
-      
-      console.log('Fetching content for moderation...')
       
       const result = await ApiClient.getContentForModeration(currentPage, itemsPerPage, {
         type: typeFilter !== 'all' ? typeFilter : undefined,
@@ -200,8 +163,6 @@ export default function ContentModeration() {
         payment: paymentFilter !== 'all' ? paymentFilter : undefined,
         search: searchQuery || undefined
       })
-
-      console.log('Content API response:', result)
 
       // Fetch poster information for each content item
       const contentWithPosters = await Promise.all(
@@ -226,8 +187,6 @@ export default function ContentModeration() {
       setTotalCount(result.pagination.totalCount)
       setTotalPages(result.pagination.totalPages)
       
-      console.log('Content loaded:', contentWithPosters.length)
-      
     } catch (error: any) {
       console.error('Error fetching content:', error)
       setError(error.message || 'Failed to load content')
@@ -235,10 +194,10 @@ export default function ContentModeration() {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, itemsPerPage, typeFilter, statusFilter, paymentFilter, searchQuery])
+  }, [currentPage, itemsPerPage, typeFilter, statusFilter, paymentFilter, searchQuery, isAuthenticated, user])
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+    if (!authLoading && isAuthenticated && user) {
       if (user.role !== 'admin' && user.role !== 'super_admin') {
         setError('Access denied. Admin privileges required.')
         setLoading(false)
@@ -246,7 +205,12 @@ export default function ContentModeration() {
       }
       fetchContent()
     }
-  }, [isLoading, isAuthenticated, user, fetchContent])
+  }, [authLoading, isAuthenticated, user, fetchContent])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [typeFilter, statusFilter, paymentFilter, searchQuery])
 
   const handleReview = async () => {
     if (!selectedContent) return
@@ -298,12 +262,6 @@ export default function ContentModeration() {
     try {
       setActionLoading(selectedContent._id)
       
-      console.log('Requesting payment:', {
-        contentId: selectedContent._id,
-        contentType: selectedContent.type,
-        amount: paymentAmountInput
-      })
-      
       await ApiClient.requestPayment(
         selectedContent._id, 
         selectedContent.type, 
@@ -349,245 +307,75 @@ export default function ContentModeration() {
     }
   }
 
-  // Admin control functions
-  const handleEditContent = async () => {
-    if (!selectedContent) return
-
-    try {
-      setActionLoading(selectedContent._id)
-      
-      // Update content based on type
-      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
-      await (ApiClient[updateMethod] as any)(selectedContent._id, editData)
-      
-      toast.success('Content updated successfully')
-      setShowEditDialog(false)
-      setEditData({})
-      setSelectedContent(null)
-      fetchContent()
-    } catch (error: any) {
-      console.error('Error updating content:', error)
-      toast.error(error.message || 'Failed to update content')
-    } finally {
-      setActionLoading(null)
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'opportunity': return Target
+      case 'event': return Calendar
+      case 'job': return Briefcase
+      case 'resource': return BookOpen
+      default: return FileText
     }
   }
 
-  const handleChangeState = async () => {
-    if (!selectedContent) return
-
-    try {
-      setActionLoading(selectedContent._id)
-      
-      const updateData: any = { status: newState }
-      if (newState === 'inactive') {
-        updateData.disableReason = disableReason
-      }
-      
-      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
-      await (ApiClient[updateMethod] as any)(selectedContent._id, updateData)
-      
-      toast.success(`Content state changed to ${newState}`)
-      setShowStateDialog(false)
-      setNewState('')
-      setDisableReason('')
-      setSelectedContent(null)
-      fetchContent()
-    } catch (error: any) {
-      console.error('Error changing content state:', error)
-      toast.error(error.message || 'Failed to change content state')
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const handleScheduleReview = async () => {
-    if (!selectedContent) return
-
-    try {
-      setActionLoading(selectedContent._id)
-      
-      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`)
-      const updateData = { 
-        scheduledReviewAt: scheduledDateTime.toISOString(),
-        status: 'draft' // Move to draft until scheduled time
-      }
-      
-      const updateMethod = `update${selectedContent.type.charAt(0).toUpperCase() + selectedContent.type.slice(1)}` as keyof typeof ApiClient
-      await (ApiClient[updateMethod] as any)(selectedContent._id, updateData)
-      
-      toast.success(`Content scheduled for review on ${scheduledDateTime.toLocaleString()}`)
-      setShowScheduleDialog(false)
-      setScheduleDate('')
-      setScheduleTime('')
-      setSelectedContent(null)
-      fetchContent()
-    } catch (error: any) {
-      console.error('Error scheduling content review:', error)
-      toast.error(error.message || 'Failed to schedule content review')
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const handleDisablePost = async (content: ContentItem) => {
-    try {
-      setActionLoading(content._id)
-      
-      const updateData = { 
-        status: 'inactive',
-        disableReason: disableReason || 'Disabled by admin'
-      }
-      
-      const updateMethod = `update${content.type.charAt(0).toUpperCase() + content.type.slice(1)}` as keyof typeof ApiClient
-      await (ApiClient[updateMethod] as any)(content._id, updateData)
-      
-      toast.success('Post disabled successfully')
-      setDisableReason('')
-      fetchContent()
-    } catch (error: any) {
-      console.error('Error disabling post:', error)
-      toast.error(error.message || 'Failed to disable post')
-    } finally {
-      setActionLoading(null)
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'opportunity': return 'text-orange-400 bg-orange-500/10 border-orange-500/20'
+      case 'event': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+      case 'job': return 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+      case 'resource': return 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+      default: return 'text-white/60 bg-white/5 border-white/10'
     }
   }
 
   const getStatusBadge = (item: ContentItem) => {
-    // Unified Workflow - All content goes through the same process
-    
-    // Check payment status first
-    if (item.paymentStatus === 'awaiting_payment') {
-      return <Badge variant="outline" className="bg-orange-100 text-orange-800"><DollarSign className="h-3 w-3 mr-1" />Awaiting Payment</Badge>
-    }
-    if (item.paymentStatus === 'payment_uploaded') {
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800"><Upload className="h-3 w-3 mr-1" />Payment Uploaded</Badge>
-    }
-    if (item.paymentStatus === 'verified') {
-      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
-    }
-    if (item.paymentStatus === 'not_required' && item.status === 'active' && item.isApproved) {
-      return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Live</Badge>
-    }
-    if (item.paymentStatus === 'failed') {
-      return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Payment Failed</Badge>
-    }
+    const isLive = item.status === 'active' && item.isApproved
+    const isPending = item.status === 'active' && !item.isApproved
+    const isDraft = item.status === 'draft'
+    const isInactive = item.status === 'inactive'
 
-    // Basic status checks
-    if (item.status === 'draft' && !item.isApproved) {
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="h-3 w-3 mr-1" />Draft</Badge>
+    if (isLive) {
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Live</Badge>
+    } else if (isPending) {
+      return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Pending</Badge>
+    } else if (isDraft) {
+      return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">Draft</Badge>
+    } else if (isInactive) {
+      return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Inactive</Badge>
     }
-    if (item.status === 'draft' && item.isApproved) {
-      return <Badge variant="secondary" className="bg-purple-100 text-purple-800"><Eye className="h-3 w-3 mr-1" />Hidden</Badge>
-    }
-    if (item.status === 'inactive' && !item.isApproved) {
-      return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Inactive (Not Approved)</Badge>
-    }
-    if (item.status === 'inactive' && item.isApproved) {
-      return <Badge variant="destructive" className="bg-gray-100 text-gray-800"><XCircle className="h-3 w-3 mr-1" />Inactive (Approved)</Badge>
-    }
-    if (item.status === 'active' && !item.isApproved) {
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
-    }
-    if (item.status === 'active' && item.isApproved) {
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Approved (Awaiting Payment)</Badge>
-    }
-    
-    return <Badge variant="outline" className="bg-gray-100 text-gray-800"><Clock className="h-3 w-3 mr-1" />Unknown</Badge>
+    return null
   }
 
-  const getTypeBadge = (type: string) => {
-    const typeColors = {
-      'opportunity': 'bg-blue-100 text-blue-800',
-      'event': 'bg-green-100 text-green-800',
-      'job': 'bg-purple-100 text-purple-800',
-      'resource': 'bg-orange-100 text-orange-800'
+  const getPaymentBadge = (item: ContentItem) => {
+    if (!item.paymentStatus || item.paymentStatus === 'not_required') {
+      return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">No Payment</Badge>
+    } else if (item.paymentStatus === 'awaiting_payment') {
+      return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Awaiting Payment</Badge>
+    } else if (item.paymentStatus === 'payment_uploaded') {
+      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Receipt Uploaded</Badge>
+    } else if (item.paymentStatus === 'verified') {
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Verified</Badge>
+    } else if (item.paymentStatus === 'failed') {
+      return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Failed</Badge>
     }
+    return null
+  }
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const live = content.filter(item => item.status === 'active' && item.isApproved).length
+    const pending = content.filter(item => item.status === 'active' && !item.isApproved).length
+    const drafts = content.filter(item => item.status === 'draft').length
+    const inactive = content.filter(item => item.status === 'inactive').length
     
-    const typeDisplay = type.charAt(0).toUpperCase() + type.slice(1)
+    return { live, pending, drafts, inactive, total: content.length }
+  }, [content])
+
+  if (authLoading) {
     return (
-      <Badge variant="outline" className={typeColors[type as keyof typeof typeColors] || ''}>
-        {typeDisplay}
-      </Badge>
-    )
-  }
-
-  const getPaymentInfo = (item: ContentItem) => {
-    const isPaid = item.isPaid || item.financial?.isPaid || false
-    const price = item.price || item.financial?.amount || item.paymentAmount || 0
-    const currency = item.currency || item.financial?.currency || 'NGN'
-    
-    return { isPaid, price, currency }
-  }
-
-  // Helper function to check if content has paid section
-  const hasPaidSection = (item: ContentItem) => {
-    return item.isPaid || item.financial?.isPaid || item.paymentAmount || item.price || false
-  }
-
-  // Categorize content by status - Unified Workflow
-  const categorizedContent = {
-    all: content, // All content regardless of status
-    pending: content.filter(item => item.status === 'active' && !item.isApproved),
-    approved: content.filter(item => {
-      // Show as approved if approved but still awaiting payment processing
-      return item.isApproved && item.paymentStatus === 'awaiting_payment'
-    }),
-    awaitingPayment: content.filter(item => item.paymentStatus === 'awaiting_payment'),
-    paymentUploaded: content.filter(item => item.paymentStatus === 'payment_uploaded'),
-    verified: content.filter(item => item.paymentStatus === 'verified' || item.paymentStatus === 'not_required'),
-    rejected: content.filter(item => item.status === 'inactive' && !item.isApproved)
-  }
-
-  // Debug logging
-  console.log('Content categorization debug:', {
-    totalContent: content.length,
-    pending: categorizedContent.pending.length,
-    approved: categorizedContent.approved.length,
-    awaitingPayment: categorizedContent.awaitingPayment.length,
-    paymentUploaded: categorizedContent.paymentUploaded.length,
-    verified: categorizedContent.verified.length,
-    rejected: categorizedContent.rejected.length,
-    sampleContent: content.slice(0, 3).map(item => ({
-      id: item._id,
-      title: item.title,
-      isApproved: item.isApproved,
-      status: item.status,
-      paymentStatus: item.paymentStatus,
-      publishedAt: (item as any).publishedAt,
-      hasPaidSection: hasPaidSection(item)
-    }))
-  })
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
-            <RefreshCw className="w-8 h-8 text-orange-600 animate-spin" />
-          </div>
-          <p className="text-lg text-gray-600">Loading content...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Content</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Button onClick={fetchContent} className="mr-4">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/admin">Back to Admin</Link>
-          </Button>
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/60">Loading content...</p>
         </div>
       </div>
     )
@@ -595,16 +383,16 @@ export default function ContentModeration() {
 
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'super_admin')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+            <AlertTriangle className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+          <p className="text-white/60 mb-6">
             You need admin or super admin privileges to access this page.
           </p>
-          <Button asChild>
+          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
             <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
         </div>
@@ -612,761 +400,497 @@ export default function ContentModeration() {
     )
   }
 
+  const isSuperAdmin = user?.role === 'super_admin'
+
+  const navItems = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/admin' },
+    { id: 'users', label: 'Users', icon: Users, href: '/dashboard/admin/users' },
+    { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/admin/content' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/admin/analytics' },
+  ]
+
+  const quickLinks = [
+    { label: 'User Management', icon: Users, href: '/dashboard/admin/users', variant: 'default' as const },
+    { label: 'Settings', icon: Settings, href: '/dashboard/admin/settings', variant: 'outline' as const },
+    { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard/admin">
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Back to Admin
+    <div className="min-h-screen bg-[#0a0a0a] flex">
+      {/* Desktop Sidebar - Fixed */}
+      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] fixed left-0 top-0 bottom-0 h-screen overflow-y-auto">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-white/[0.06] flex-shrink-0">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-white">Admin Hub</h1>
+              <p className="text-xs text-white/50">Platform Management</p>
+            </div>
+          </div>
+          
+          {/* User Info */}
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm font-medium text-white truncate flex-1 min-w-0">
+                {user?.firstName || user?.email?.split('@')[0]}
+              </p>
+              <Badge 
+                variant={isSuperAdmin ? "destructive" : "secondary"} 
+                className="text-xs ml-2 flex-shrink-0"
+              >
+                {isSuperAdmin ? "Super" : "Admin"}
+              </Badge>
+            </div>
+            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href || (item.id === 'content' && pathname?.includes('/dashboard/admin/content'))
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  isActive 
+                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
+                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-orange-400")} />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="p-4 border-t border-white/[0.06] space-y-2 flex-shrink-0">
+          {quickLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <Button
+                key={link.label}
+                asChild
+                variant={link.variant}
+                className={cn(
+                  "w-full justify-start",
+                  link.variant === 'default' 
+                    ? "bg-orange-500 hover:bg-orange-600" 
+                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                )}
+              >
+                <Link href={link.href}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {link.label}
                 </Link>
               </Button>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Content Moderation</h1>
+            )
+          })}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => router.push('/dashboard/admin')}
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white">Content</h1>
+                <p className="text-xs text-white/50">Manage content</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" onClick={fetchContent} disabled={loading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => fetchContent()} 
+                variant="ghost" 
+                size="sm"
+                disabled={loading}
+                className="h-9 w-9 p-0 text-white/60"
+              >
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0 text-white/60"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                >
+                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                    <Link href="/dashboard/admin" className="flex items-center gap-3 w-full">
+                      <Home className="h-4 w-4 text-orange-400" />
+                      <span>Back to Admin</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            {/* Desktop Header */}
+            <div className="hidden lg:flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 hover:text-white hover:bg-white/[0.05]"
+                >
+                  <Link href="/dashboard/admin">
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Back to Admin
+                  </Link>
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-white">Content Management</h1>
+                    <p className="text-sm text-white/50">Moderate and manage all platform content</p>
+                  </div>
+                </div>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => fetchContent()}
+                disabled={loading}
+                className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
                 Refresh
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Filter className="h-5 w-5" />
-              <span>Filters</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search content..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-400 break-words">{error}</p>
                 </div>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Type</label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
-                    <SelectItem value="opportunity">Opportunity</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="job">Job</SelectItem>
-                    <SelectItem value="resource">Resource</SelectItem>
-                  </SelectContent>
-                </Select>
+            )}
+
+            {/* Stats - Bento Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="rounded-xl border p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 hover:opacity-90 transition-opacity">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-white/70">Live Content</p>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400/50" />
+                </div>
+                <p className="text-2xl font-bold text-emerald-400">{stats.live}</p>
+                <p className="text-xs text-white/50 mt-1">Active & approved</p>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    <SelectItem value="live">Live (Active + Approved)</SelectItem>
-                    <SelectItem value="pending">Pending (Active + Not Approved)</SelectItem>
-                    <SelectItem value="true_draft">True Draft (Draft + Not Approved)</SelectItem>
-                    <SelectItem value="hidden">Hidden (Draft + Approved)</SelectItem>
-                    <SelectItem value="inactive_not_approved">Inactive (Not Approved)</SelectItem>
-                    <SelectItem value="inactive_approved">Inactive (Approved)</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="rounded-xl border p-4 bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30 hover:opacity-90 transition-opacity">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-white/70">Pending</p>
+                  <Clock className="w-5 h-5 text-yellow-400/50" />
+                </div>
+                <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+                <p className="text-xs text-white/50 mt-1">Awaiting review</p>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Payment</label>
-                <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All payment types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All payment types</SelectItem>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
-                    <SelectItem value="payment_uploaded">Payment Uploaded</SelectItem>
-                    <SelectItem value="verified">Payment Verified</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="rounded-xl border p-4 bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30 hover:opacity-90 transition-opacity">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-white/70">Drafts</p>
+                  <FileText className="w-5 h-5 text-gray-400/50" />
+                </div>
+                <p className="text-2xl font-bold text-gray-400">{stats.drafts}</p>
+                <p className="text-xs text-white/50 mt-1">Unpublished</p>
               </div>
-              
-              <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchQuery("")
-                    setTypeFilter("all")
-                    setStatusFilter("all")
-                    setPaymentFilter("all")
-                    setCurrentPage(1)
-                  }}
-                  className="w-full"
-                >
-                  Clear Filters
-                </Button>
+
+              <div className="rounded-xl border p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30 hover:opacity-90 transition-opacity">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-white/70">Total</p>
+                  <BarChart3 className="w-5 h-5 text-blue-400/50" />
+                </div>
+                <p className="text-2xl font-bold text-blue-400">{totalCount.toLocaleString()}</p>
+                <p className="text-xs text-white/50 mt-1">All content</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Content Tabs */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="border-b border-gray-200">
-              <div className="flex space-x-8 px-6">
-                <button
-                  onClick={() => setActiveTab('all')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'all'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  All Content ({categorizedContent.all.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('pending')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'pending'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Pending Review ({categorizedContent.pending.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('approved')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'approved'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Approved ({categorizedContent.approved.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('awaitingPayment')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'awaitingPayment'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Awaiting Payment ({categorizedContent.awaitingPayment.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('paymentUploaded')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'paymentUploaded'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Payment Uploaded ({categorizedContent.paymentUploaded.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('verified')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'verified'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Verified ({categorizedContent.verified.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('rejected')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'rejected'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Rejected ({categorizedContent.rejected.length})
-                </button>
-          </div>
-        </div>
-
-            {/* Tab Content */}
-            <div className="p-6">
-              {activeTab === 'all' && (
-                <div className="space-y-4">
-                  {/* Content Summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-gray-900">{categorizedContent.pending.length}</div>
-                      <div className="text-sm text-gray-600">Pending</div>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-green-600">{categorizedContent.approved.length}</div>
-                      <div className="text-sm text-green-600">Approved</div>
-                    </div>
-                    <div className="bg-orange-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-orange-600">{categorizedContent.awaitingPayment.length}</div>
-                      <div className="text-sm text-orange-600">Awaiting Payment</div>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-blue-600">{categorizedContent.paymentUploaded.length}</div>
-                      <div className="text-sm text-blue-600">Payment Uploaded</div>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-green-600">{categorizedContent.verified.length}</div>
-                      <div className="text-sm text-green-600">Verified</div>
-                    </div>
-                    <div className="bg-red-50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-red-600">{categorizedContent.rejected.length}</div>
-                      <div className="text-sm text-red-600">Rejected</div>
+            {/* Filters */}
+            <Card className="bg-white/[0.02] border-white/[0.06] mb-6">
+              <CardContent className="p-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* Search */}
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <Input
+                        placeholder="Search content..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 bg-white/[0.03] border-white/10 text-white placeholder:text-white/40"
+                      />
                     </div>
                   </div>
 
-                  {categorizedContent.all.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Content Found</h3>
-                      <p className="text-gray-600">No content has been submitted yet</p>
-              </div>
-            ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.all.map((item) => (
-                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {hasPaidSection(item) && (
-                                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                                      <DollarSign className="h-3 w-3 mr-1" />
-                                      Paid
-                                    </Badge>
-                                  )}
-                                  {getStatusBadge(item)}
-                              </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Created: {new Date(item.createdAt).toLocaleDateString()}</span>
-                                  {item.paymentAmount && (
-                                    <span>Amount: ₦{item.paymentAmount.toLocaleString()}</span>
-                                  )}
-                            </div>
-                            </div>
-                              <div className="flex items-center space-x-2">
-                                {/* Show appropriate action based on content status */}
-                                {item.status === 'active' && !item.isApproved && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setBypassPayment(false)
-                                      setShowReviewDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Review
-                                  </Button>
-                                )}
-                                
-                                {item.isApproved && !item.paymentStatus && hasPaidSection(item) && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleRequestPayment(item)}
-                                    disabled={actionLoading === item._id}
-                                  >
-                                    <DollarSign className="h-4 w-4 mr-1" />
-                                    Request Payment
-                                  </Button>
-                                )}
-                                
-                                {item.paymentStatus === 'payment_uploaded' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setShowPaymentDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                  >
-                                    <DollarSign className="h-4 w-4 mr-1" />
-                                    Verify Payment
-                                  </Button>
-                                )}
-                                
-                                {item.paymentStatus === 'verified' && (
-                                  <Badge variant="default" className="bg-green-100 text-green-800">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Live
-                                  </Badge>
-                                )}
-                                
-                                {item.status === 'inactive' && !item.isApproved && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setBypassPayment(false)
-                                      setShowReviewDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View Details
-                                  </Button>
-                                )}
+                  {/* Type Filter */}
+                  <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+                    <SelectTrigger className="w-full lg:w-40 bg-white/[0.03] border-white/10 text-white">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#141414] border-white/10">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="opportunity">Opportunities</SelectItem>
+                      <SelectItem value="event">Events</SelectItem>
+                      <SelectItem value="job">Jobs</SelectItem>
+                      <SelectItem value="resource">Resources</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                                {/* Admin Controls */}
-                                <div className="flex items-center space-x-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setEditData({
-                                        title: item.title,
-                                        description: item.description,
-                                        tags: item.tags || [],
-                                        industrySectors: item.industrySectors || [],
-                                        targetAudience: item.targetAudience || [],
-                                        // Content-specific fields
-                                        ...(item.type === 'event' && {
-                                          startDate: item.dates?.startDate,
-                                          endDate: item.dates?.endDate,
-                                          location: item.location,
-                                          isRemote: (item as any).isRemote
-                                        }),
-                                        ...(item.type === 'job' && {
-                                          company: (item as any).company,
-                                          location: item.location,
-                                          salary: (item as any).salary,
-                                          employmentType: (item as any).employmentType
-                                        }),
-                                        // Payment fields
-                                        isPaid: item.isPaid,
-                                        paymentAmount: item.paymentAmount,
-                                        paymentStatus: item.paymentStatus,
-                                        paymentReference: item.paymentReference,
-                                        // Status fields
-                                        status: item.status,
-                                        isApproved: item.isApproved
-                                      })
-                                      setShowEditDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                    title="Edit Content"
-                                  >
-                                    <Settings className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setNewState(item.status)
-                                      setShowStateDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                    title="Change State"
-                                  >
-                                    <RefreshCw className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setSelectedContent(item)
-                                      setShowScheduleDialog(true)
-                                    }}
-                                    disabled={actionLoading === item._id}
-                                    title="Schedule Review"
-                                  >
-                                    <Calendar className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  {item.status === 'active' && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        setSelectedContent(item)
-                                        setDisableReason('')
-                                        if (confirm('Are you sure you want to disable this post?')) {
-                                          handleDisablePost(item)
-                                        }
-                                      }}
-                                      disabled={actionLoading === item._id}
-                                      title="Disable Post"
-                                      className="text-red-600 hover:text-red-700"
-                                    >
-                                      <XCircle className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  {/* Status Filter */}
+                  <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+                    <SelectTrigger className="w-full lg:w-40 bg-white/[0.03] border-white/10 text-white">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#141414] border-white/10">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="live">Live</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="true_draft">Draft</SelectItem>
+                      <SelectItem value="hidden">Hidden</SelectItem>
+                      <SelectItem value="inactive_not_approved">Inactive (Not Approved)</SelectItem>
+                      <SelectItem value="inactive_approved">Inactive (Approved)</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Payment Filter */}
+                  <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}>
+                    <SelectTrigger className="w-full lg:w-40 bg-white/[0.03] border-white/10 text-white">
+                      <SelectValue placeholder="Payment" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#141414] border-white/10">
+                      <SelectItem value="all">All Payment</SelectItem>
+                      <SelectItem value="not_required">Not Required</SelectItem>
+                      <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
+                      <SelectItem value="payment_uploaded">Receipt Uploaded</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
+              </CardContent>
+            </Card>
 
-              {activeTab === 'pending' && (
-                <div className="space-y-4">
-                  {categorizedContent.pending.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Content</h3>
-                      <p className="text-gray-600">All content has been reviewed</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.pending.map((item) => (
-                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                            {getStatusBadge(item)}
+            {/* Loading State */}
+            {loading && content.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-sm text-white/60">Loading content...</p>
+              </div>
+            )}
+
+            {/* Content List */}
+            {!loading && content.length === 0 && (
+              <Card className="bg-white/[0.02] border-white/[0.06]">
+                <CardContent className="p-12 text-center">
+                  <FileText className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-white mb-2">No content found</h3>
+                  <p className="text-sm text-white/60">Try adjusting your filters or search query.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Content Cards */}
+            {content.length > 0 && (
+              <div className="space-y-4 mb-6">
+                {content.map((item) => {
+                  const TypeIcon = getTypeIcon(item.type)
+                  
+                  return (
+                    <Card key={item._id} className="bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] transition-colors">
+                      <CardContent className="p-5">
+                        <div className="flex flex-col lg:flex-row gap-4">
+                          {/* Left: Content Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", getTypeColor(item.type))}>
+                                <TypeIcon className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <h3 className="text-base font-semibold text-white line-clamp-2">{item.title}</h3>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {getStatusBadge(item)}
+                                    {getPaymentBadge(item)}
+                                  </div>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Created: {new Date(item.createdAt).toLocaleDateString()}</span>
+                                <p className="text-sm text-white/60 line-clamp-2 mb-3">{item.description}</p>
+                                
+                                {/* Meta Info */}
+                                <div className="flex flex-wrap items-center gap-4 text-xs text-white/50">
+                                  {item.poster && (
+                                    <div className="flex items-center gap-1.5">
+                                      <User className="w-3.5 h-3.5" />
+                                      <span>{item.poster.name || 'Unknown'}</span>
+                                    </div>
+                                  )}
+                                  {item.location?.city && (
+                                    <div className="flex items-center gap-1.5">
+                                      <MapPin className="w-3.5 h-3.5" />
+                                      <span>{item.location.city}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
+                                  </div>
                                 </div>
                               </div>
-                            <div className="flex items-center space-x-2">
+                            </div>
+                          </div>
+
+                          {/* Right: Actions */}
+                          <div className="flex flex-col gap-2 lg:w-48">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedContent(item)
+                                  setShowDetailsDialog(true)
+                                }}
+                                className="flex-1 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View
+                              </Button>
+                              {!item.isApproved && (
                                 <Button
+                                  variant="default"
                                   size="sm"
-                                  variant="outline"
                                   onClick={() => {
                                     setSelectedContent(item)
-                                    setBypassPayment(false)
+                                    setReviewAction('approve')
                                     setShowReviewDialog(true)
                                   }}
                                   disabled={actionLoading === item._id}
+                                  className="flex-1 bg-emerald-500 hover:bg-emerald-600"
                                 >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  Review
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Approve
                                 </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'approved' && (
-                <div className="space-y-4">
-                  {categorizedContent.approved.length === 0 ? (
-                    <div className="text-center py-12">
-                      <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Approved Content</h3>
-                      <p className="text-gray-600">No content has been approved yet</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.approved.map((item) => (
-                        <Card key={item._id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {getStatusBadge(item)}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Approved: {item.approvedAt ? new Date(item.approvedAt).toLocaleDateString() : 'N/A'}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
+                              )}
+                              {item.isApproved && item.paymentStatus === 'awaiting_payment' && (
                                 <Button
-                                  size="sm"
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => handleRequestPayment(item)}
                                   disabled={actionLoading === item._id}
+                                  className="flex-1 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                                 >
-                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  <DollarSign className="w-4 h-4 mr-2" />
                                   Request Payment
                                 </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
                               )}
-                            </div>
-              )}
-
-              {activeTab === 'awaitingPayment' && (
-                <div className="space-y-4">
-                  {categorizedContent.awaitingPayment.length === 0 ? (
-                    <div className="text-center py-12">
-                      <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Content Awaiting Payment</h3>
-                      <p className="text-gray-600">No payment requests are pending</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.awaitingPayment.map((item) => (
-                        <Card key={item._id} className="border border-orange-200 bg-orange-50 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {getStatusBadge(item)}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Amount: ₦{item.paymentAmount?.toLocaleString()}</span>
-                                  <span>Ref: {item.paymentReference}</span>
-                                </div>
-                              </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedContent(item)
-                                  setShowReviewDialog(true)
-                                }}
-                                disabled={actionLoading === item._id}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                  View Details
-                              </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'paymentUploaded' && (
-                <div className="space-y-4">
-                  {categorizedContent.paymentUploaded.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Payment Receipts Uploaded</h3>
-                      <p className="text-gray-600">No payment receipts are waiting for verification</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.paymentUploaded.map((item) => (
-                        <Card key={item._id} className="border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {getStatusBadge(item)}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Amount: ₦{item.paymentAmount?.toLocaleString()}</span>
-                                  <span>Ref: {item.paymentReference}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
+                              {item.paymentStatus === 'payment_uploaded' && (
                                 <Button
-                                  size="sm"
                                   variant="outline"
-                                  className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                  size="sm"
                                   onClick={() => {
                                     setSelectedContent(item)
                                     setShowPaymentDialog(true)
                                   }}
                                   disabled={actionLoading === item._id}
+                                  className="flex-1 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
                                 >
-                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  <CreditCard className="w-4 h-4 mr-2" />
                                   Verify Payment
                                 </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
                               )}
                             </div>
-              )}
-
-              {activeTab === 'verified' && (
-                <div className="space-y-4">
-                  {categorizedContent.verified.length === 0 ? (
-                    <div className="text-center py-12">
-                      <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Verified Payments</h3>
-                      <p className="text-gray-600">No payments have been verified yet</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.verified.map((item) => (
-                        <Card key={item._id} className="border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {getStatusBadge(item)}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Verified: {item.paymentVerifiedAt ? new Date(item.paymentVerifiedAt).toLocaleDateString() : 'N/A'}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Badge variant="default" className="bg-green-100 text-green-800">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Live
-                                </Badge>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            {!item.isApproved && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedContent(item)
+                                  setReviewAction('reject')
+                                  setShowReviewDialog(true)
+                                }}
+                                disabled={actionLoading === item._id}
+                                className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+                              >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Reject
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
               </div>
             )}
-                </div>
-              )}
 
-              {activeTab === 'rejected' && (
-                <div className="space-y-4">
-                  {categorizedContent.rejected.length === 0 ? (
-                    <div className="text-center py-12">
-                      <XCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Rejected Content</h3>
-                      <p className="text-gray-600">No content has been rejected</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {categorizedContent.rejected.map((item) => (
-                        <Card key={item._id} className="border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
-                                  {getTypeBadge(item.type)}
-                                  {getStatusBadge(item)}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                  <span>Provider: {item.provider || item.organizer || 'Unknown'}</span>
-                                  <span>Rejected: {new Date(item.updatedAt).toLocaleDateString()}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedContent(item)
-                                    setShowReviewDialog(true)
-                                  }}
-                                  disabled={actionLoading === item._id}
-                                >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View Details
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <Card className="mt-4">
-            <CardContent className="p-4">
+            {/* Pagination */}
+            {totalPages > 1 && (
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+                <p className="text-sm text-white/60">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
-                </div>
-                <div className="flex items-center space-x-2">
+                </p>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1 || loading}
+                    className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <ChevronLeft className="w-4 h-4 mr-1" />
                     Previous
                   </Button>
-                  
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
+                      let pageNum
                       if (totalPages <= 5) {
-                        pageNum = i + 1;
+                        pageNum = i + 1
                       } else if (currentPage <= 3) {
-                        pageNum = i + 1;
+                        pageNum = i + 1
                       } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
+                        pageNum = totalPages - 4 + i
                       } else {
-                        pageNum = currentPage - 2 + i;
+                        pageNum = currentPage - 2 + i
                       }
-                      
                       return (
                         <Button
                           key={pageNum}
@@ -1374,580 +898,185 @@ export default function ContentModeration() {
                           size="sm"
                           onClick={() => setCurrentPage(pageNum)}
                           disabled={loading}
-                          className="w-8 h-8 p-0"
+                          className={cn(
+                            currentPage === pageNum
+                              ? "bg-orange-500 hover:bg-orange-600"
+                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                          )}
                         >
                           {pageNum}
                         </Button>
-                      );
+                      )
                     })}
                   </div>
-                  
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages || loading}
+                    className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
                   >
                     Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </div>
+        </main>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-white/[0.06] z-30">
+          <div className="flex items-center justify-around h-16 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href || (item.id === 'content' && pathname?.includes('/dashboard/admin/content'))
+              
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-0 flex-1",
+                    isActive 
+                      ? "text-orange-400" 
+                      : "text-white/50"
+                  )}
+                >
+                  <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-orange-400")} />
+                  <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
       </div>
 
       {/* Review Dialog */}
       <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-[#141414] border-white/[0.08] text-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-orange-600" />
-              <span>Content Review & Moderation</span>
+            <DialogTitle className="text-white">
+              {reviewAction === 'approve' ? 'Approve Content' : 'Reject Content'}
             </DialogTitle>
-            <DialogDescription>
-              Review content details and take moderation action.
+            <DialogDescription className="text-white/60">
+              {reviewAction === 'approve' 
+                ? 'This content will be approved and made available on the platform.'
+                : 'Please provide a reason for rejecting this content.'}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedContent && (
-            <div className="space-y-6">
-              {/* Content Overview */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{selectedContent.title}</h3>
-                <div className="flex items-center space-x-4 mb-3">
-                  {getTypeBadge(selectedContent.type)}
-                  {getStatusBadge(selectedContent)}
-                  {(() => {
-                    const { isPaid, price, currency } = getPaymentInfo(selectedContent)
-                    return isPaid || selectedContent.paymentAmount ? (
-                      <Badge variant="outline" className="bg-green-100 text-green-800">
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        {selectedContent.paymentAmount || price} {currency}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800">Free</Badge>
-                    )
-                  })()}
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{selectedContent.description}</p>
-              </div>
-
-              {/* Content-Specific Details */}
-              {selectedContent.type === 'event' && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-green-900 mb-3 flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Event Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Start Date</label>
-                      <p className="text-sm text-gray-900">{selectedContent.dates?.startDate || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">End Date</label>
-                      <p className="text-sm text-gray-900">{selectedContent.dates?.endDate || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Location</label>
-                      <p className="text-sm text-gray-900">
-                        {selectedContent.location ? 
-                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
-                           selectedContent.location.isRemote ? 'Remote' : 
-                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
-                          'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Event Type</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).eventType || 'Not specified'}</p>
-                    </div>
-                    {(selectedContent as any).equipment && (selectedContent as any).equipment.length > 0 && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-600">Required Equipment</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {(selectedContent as any).equipment.map((item: any, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">{item}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedContent.type === 'job' && (
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
-                    <User className="h-4 w-4 mr-2" />
-                    Job Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Company</label>
-                      <p className="text-sm text-gray-900">{(selectedContent as any).company || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Location</label>
-                      <p className="text-sm text-gray-900">
-                        {selectedContent.location ? 
-                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
-                           selectedContent.location.isRemote ? 'Remote' : 
-                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
-                          'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Salary</label>
-                      <p className="text-sm text-gray-900">{(selectedContent as any).salary || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Job Type</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Employment Type</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).employmentType || 'Not specified'}</p>
-                    </div>
-                    {(selectedContent as any).benefits && (selectedContent as any).benefits.length > 0 && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-600">Benefits</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {(selectedContent as any).benefits.map((benefit: any, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">{benefit}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedContent.type === 'opportunity' && (
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-orange-900 mb-3 flex items-center">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Opportunity Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Category</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).category || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Type</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).opportunityType || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Location</label>
-                      <p className="text-sm text-gray-900">
-                        {selectedContent.location ? 
-                          (typeof selectedContent.location === 'string' ? selectedContent.location : 
-                           selectedContent.location.isRemote ? 'Remote' : 
-                           `${selectedContent.location.city || ''}${selectedContent.location.country ? `, ${selectedContent.location.country}` : ''}`) : 
-                          'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Application Deadline</label>
-                      <p className="text-sm text-gray-900">
-                        {(selectedContent as any).dates?.applicationDeadline || (selectedContent as any).deadline || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Provider/Contact</label>
-                      <p className="text-sm text-gray-900">{(selectedContent as any).provider || 'Not specified'}</p>
-                    </div>
-                    {(selectedContent as any).requirements && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-600">Requirements</label>
-                        <div className="mt-1 space-y-2">
-                          {(selectedContent as any).requirements.educationLevel && (
-                            <p className="text-sm text-gray-900"><strong>Education:</strong> {(selectedContent as any).requirements.educationLevel}</p>
-                          )}
-                          {(selectedContent as any).requirements.careerStage && (
-                            <p className="text-sm text-gray-900"><strong>Career Stage:</strong> {(selectedContent as any).requirements.careerStage}</p>
-                          )}
-                          {(selectedContent as any).requirements.skills && (selectedContent as any).requirements.skills.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600">Required Skills:</p>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {(selectedContent as any).requirements.skills.map((skill: any, index: number) => (
-                                  <Badge key={index} variant="outline" className="text-xs">{skill}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedContent.type === 'resource' && (
-                <div className="bg-indigo-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-indigo-900 mb-3 flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Resource Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Resource Type</label>
-                      <p className="text-sm text-gray-900 capitalize">{(selectedContent as any).type || (selectedContent as any).resourceType || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">File URL</label>
-                      <p className="text-sm text-gray-900 break-all">
-                        {(selectedContent as any).fileUrl ? (
-                          <a href={(selectedContent as any).fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            {(selectedContent as any).fileUrl}
-                          </a>
-                        ) : 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Price</label>
-                      <p className="text-sm text-gray-900">
-                        {(selectedContent as any).price ? `₦${(selectedContent as any).price.toLocaleString()}` : 'Free'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Is Premium</label>
-                      <p className="text-sm text-gray-900">
-                        {(selectedContent as any).isPremium ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Tags and Categories */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Tags & Categories
-                </h4>
-                <div className="space-y-4">
-                  {selectedContent.tags && selectedContent.tags.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Tags</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedContent.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">{tag}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedContent.industrySectors && selectedContent.industrySectors.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Industry Sectors</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedContent.industrySectors.map((sector, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-blue-100">{sector}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedContent.targetAudience && selectedContent.targetAudience.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Target Audience</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedContent.targetAudience.map((audience, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-green-100">{audience}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Content Metadata */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Content Metadata
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Created At</label>
-                    <p className="text-sm text-gray-900">{new Date(selectedContent.createdAt).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Updated At</label>
-                    <p className="text-sm text-gray-900">{new Date(selectedContent.updatedAt).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Status</label>
-                    <p className="text-sm text-gray-900 capitalize">{selectedContent.status}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Is Approved</label>
-                    <p className="text-sm text-gray-900">{selectedContent.isApproved ? 'Yes' : 'No'}</p>
-                  </div>
-                  {selectedContent.publishedAt && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Published At</label>
-                      <p className="text-sm text-gray-900">{new Date(selectedContent.publishedAt).toLocaleString()}</p>
-                    </div>
-                  )}
-                  {(selectedContent as any).scheduledReviewAt && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Scheduled Review</label>
-                      <p className="text-sm text-gray-900">{new Date((selectedContent as any).scheduledReviewAt).toLocaleString()}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment Information */}
-              {selectedContent.paymentStatus && selectedContent.paymentStatus !== 'not_required' && (
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Payment Information
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                      <label className="text-sm font-medium text-gray-600">Status</label>
-                      <p className="text-sm text-gray-900 capitalize">{selectedContent.paymentStatus.replace('_', ' ')}</p>
-                  </div>
-                    {selectedContent.paymentAmount && (
-                  <div>
-                        <label className="text-sm font-medium text-gray-600">Amount</label>
-                        <p className="text-sm text-gray-900">₦{selectedContent.paymentAmount.toLocaleString()}</p>
-                      </div>
-                    )}
-                    {selectedContent.paymentReference && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Reference</label>
-                        <p className="text-sm text-gray-900 font-mono">{selectedContent.paymentReference}</p>
-                      </div>
-                    )}
-                    {selectedContent.paymentCode && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Payment Code</label>
-                        <p className="text-sm text-gray-900 font-mono">{selectedContent.paymentCode}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Provider Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  Provider Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                    <label className="text-sm font-medium text-gray-600">Provider</label>
-                        <p className="text-sm text-gray-900">
-                      {selectedContent.provider || selectedContent.organizer || 'Unknown'}
-                        </p>
-                      </div>
-                      <div>
-                    <label className="text-sm font-medium text-gray-600">Provider ID</label>
-                        <p className="text-sm text-gray-900">
-                      {selectedContent.providerId || selectedContent.organizerId || 'N/A'}
-                        </p>
-                      </div>
-                      </div>
-              </div>
-
-              {/* Moderation Actions */}
-              <div className="border-t pt-4">
-                <h4 className="font-semibold text-gray-900 mb-3">Moderation Action</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Select Action</label>
-                    <Select value={reviewAction} onValueChange={(value: any) => setReviewAction(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="approve">✅ Approve Content</SelectItem>
-                        <SelectItem value="reject">❌ Reject Content</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {reviewAction === 'reject' && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
-                        Rejection Reason *
-                      </label>
-                      <Textarea
-                        placeholder="Please provide a clear reason for rejection..."
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        rows={3}
-                        className="border-red-200 focus:border-red-400"
-                      />
-                    </div>
-                  )}
-
-            {reviewAction === 'approve' && selectedContent && (
-              <div className="space-y-3">
-                {hasPaidSection(selectedContent) && (
-                  <div className="flex items-start space-x-2">
-                    <input
-                      id="bypass-payment"
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      checked={bypassPayment}
-                      onChange={(e) => setBypassPayment(e.target.checked)}
-                    />
-                    <label htmlFor="bypass-payment" className="text-sm text-gray-700">
-                      Bypass payment for this content (make it live without requiring a payment from the provider).
-                    </label>
-                  </div>
-                )}
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 mb-2">
-                    <strong>Content Approval:</strong>{' '}
-                    {bypassPayment
-                      ? 'This content will be approved and published immediately without any payment.'
-                      : 'This content will be approved and moved to the payment processing stage.'}
-                  </p>
-                  {!bypassPayment && (
-                    <p className="text-sm text-orange-800">
-                      After approval, you can request payment from the "Approved" tab. Free content will be auto-approved, paid content will require user payment.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-                </div>
+          {reviewAction === 'approve' && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="bypassPayment"
+                  checked={bypassPayment}
+                  onChange={(e) => setBypassPayment(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 bg-white/[0.03] text-orange-500 focus:ring-orange-500"
+                />
+                <label htmlFor="bypassPayment" className="text-sm text-white/70">
+                  Approve without requiring payment
+                </label>
               </div>
             </div>
           )}
           
-          <DialogFooter className="border-t pt-4">
+          {reviewAction === 'reject' && (
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Enter rejection reason..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/40 min-h-[100px]"
+              />
+            </div>
+          )}
+          
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
                 setShowReviewDialog(false)
                 setRejectionReason("")
+                setBypassPayment(false)
                 setSelectedContent(null)
               }}
+              className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
             >
               Cancel
             </Button>
             <Button
               onClick={handleReview}
-              disabled={
-                actionLoading === selectedContent?._id || 
-                (reviewAction === 'reject' && !rejectionReason.trim())
-              }
-              className={
-                reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-              }
+              disabled={actionLoading === selectedContent?._id || (reviewAction === 'reject' && !rejectionReason.trim())}
+              className={cn(
+                reviewAction === 'approve'
+                  ? "bg-emerald-500 hover:bg-emerald-600"
+                  : "bg-red-500 hover:bg-red-600"
+              )}
             >
-              {actionLoading === selectedContent?._id ? 'Processing...' : 
-               reviewAction === 'approve' ? 'Approve Content' : 'Reject Content'}
+              {reviewAction === 'approve' ? 'Approve' : 'Reject'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Payment Verification Dialog */}
+      {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="bg-[#141414] border-white/[0.08] text-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              <span>Payment Verification</span>
+            <DialogTitle className="text-white">
+              {selectedContent?.paymentStatus === 'payment_uploaded' 
+                ? 'Verify Payment' 
+                : 'Request Payment'}
             </DialogTitle>
-            <DialogDescription>
-              Verify the uploaded payment receipt and approve or reject the content.
+            <DialogDescription className="text-white/60">
+              {selectedContent?.paymentStatus === 'payment_uploaded'
+                ? 'Review the payment receipt and verify or reject the payment.'
+                : 'Set the payment amount for this content.'}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedContent && (
-            <div className="space-y-6">
-              {/* Content Details */}
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">{selectedContent.title}</h4>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span className="capitalize">{selectedContent.type}</span>
-                  <span>Amount: ₦{selectedContent.paymentAmount?.toLocaleString()}</span>
-                  <span>Ref: {selectedContent.paymentReference}</span>
-                </div>
-              </div>
-
-              {/* Payment Receipt */}
-              {selectedContent.paymentReceipt && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Payment Receipt
-                  </label>
-                  <div className="border rounded-lg p-4">
-                    <a
-                      href={selectedContent.paymentReceipt}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View Receipt Image
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Verification Action */}
+          {selectedContent?.paymentStatus === 'payment_uploaded' ? (
+            <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Verification Action
-                </label>
+                <label className="text-sm font-medium text-white/70 mb-2 block">Verification</label>
                 <Select value={paymentVerification} onValueChange={(value: any) => setPaymentVerification(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/[0.03] border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="verify">✅ Verify Payment & Approve Content</SelectItem>
-                    <SelectItem value="reject">❌ Reject Payment</SelectItem>
+                  <SelectContent className="bg-[#141414] border-white/10">
+                    <SelectItem value="verify">Verify Payment</SelectItem>
+                    <SelectItem value="reject">Reject Payment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Notes */}
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Notes (Optional)
-                </label>
+                <label className="text-sm font-medium text-white/70 mb-2 block">Notes</label>
                 <Textarea
-                  placeholder="Add any notes about the payment verification..."
+                  placeholder="Add verification notes..."
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
-                  rows={3}
+                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/40 min-h-[100px]"
                 />
               </div>
-
-              {/* Action Info */}
-              {paymentVerification === 'verify' && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
-                    <strong>Verify Payment:</strong> This will approve the payment and publish the content.
-                  </p>
-                </div>
-              )}
-
-              {paymentVerification === 'reject' && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800">
-                    <strong>Reject Payment:</strong> This will mark the payment as failed and notify the user.
-                  </p>
-                </div>
-              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-white/70 mb-2 block">Payment Amount (₦)</label>
+                <Input
+                  type="number"
+                  value={paymentAmountInput}
+                  onChange={(e) => setPaymentAmountInput(Number(e.target.value))}
+                  className="bg-white/[0.03] border-white/10 text-white"
+                  placeholder="5000"
+                />
+              </div>
             </div>
           )}
-
+          
           <DialogFooter>
             <Button
               variant="outline"
@@ -1956,473 +1085,77 @@ export default function ContentModeration() {
                 setPaymentNotes("")
                 setSelectedContent(null)
               }}
+              className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
             >
               Cancel
             </Button>
             <Button
-              onClick={handlePaymentVerification}
+              onClick={selectedContent?.paymentStatus === 'payment_uploaded' ? handlePaymentVerification : handleConfirmPaymentRequest}
               disabled={actionLoading === selectedContent?._id}
-              className={
-                paymentVerification === 'verify' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-              }
+              className="bg-orange-500 hover:bg-orange-600"
             >
-              {actionLoading === selectedContent?._id ? 'Processing...' : 
-               paymentVerification === 'verify' ? 'Verify Payment' : 'Reject Payment'}
+              {selectedContent?.paymentStatus === 'payment_uploaded' ? 'Verify' : 'Request Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Enhanced Edit Content Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="bg-[#141414] border-white/[0.08] text-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Settings className="h-5 w-5 text-blue-600" />
-              <span>Edit Content - Full Admin Access</span>
-            </DialogTitle>
-            <DialogDescription>
-              Complete editing capabilities for all content fields and metadata.
+            <DialogTitle className="text-white">{selectedContent?.title}</DialogTitle>
+            <DialogDescription className="text-white/60">
+              {selectedContent?.type} • {formatDistanceToNow(new Date(selectedContent?.createdAt || new Date()), { addSuffix: true })}
             </DialogDescription>
           </DialogHeader>
           
           {selectedContent && (
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-900 mb-4">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Title *</label>
-                    <Input
-                      value={editData.title || selectedContent.title || ''}
-                      onChange={(e) => setEditData({...editData, title: e.target.value})}
-                      placeholder="Enter content title"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Content Type</label>
-                    <Input
-                      value={selectedContent.type?.charAt(0).toUpperCase() + selectedContent.type?.slice(1) || ''}
-                      disabled
-                      className="bg-gray-100"
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Description *</label>
-                  <Textarea
-                    value={editData.description || selectedContent.description || ''}
-                    onChange={(e) => setEditData({...editData, description: e.target.value})}
-                    placeholder="Enter content description"
-                    rows={4}
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-white/70 mb-2">Description</h4>
+                <p className="text-sm text-white/90">{selectedContent.description}</p>
               </div>
-
-              {/* Content-Specific Fields */}
-              {selectedContent.type === 'event' && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-green-900 mb-4">Event Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Start Date</label>
-                      <Input
-                        type="date"
-                        value={editData.startDate || selectedContent.dates?.startDate || ''}
-                        onChange={(e) => setEditData({...editData, startDate: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">End Date</label>
-                      <Input
-                        type="date"
-                        value={editData.endDate || selectedContent.dates?.endDate || ''}
-                        onChange={(e) => setEditData({...editData, endDate: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Location</label>
-                      <Input
-                        value={editData.location || selectedContent.location || ''}
-                        onChange={(e) => setEditData({...editData, location: e.target.value})}
-                        placeholder="Event location"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Is Remote</label>
-                      <Select
-                        value={editData.isRemote?.toString() || (selectedContent as any).isRemote?.toString() || 'false'}
-                        onValueChange={(value) => setEditData({...editData, isRemote: value === 'true'})}
-                      >
-                        <SelectItem value="true">Yes</SelectItem>
-                        <SelectItem value="false">No</SelectItem>
-                      </Select>
-                    </div>
-                  </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-white/70 mb-2">Status</h4>
+                  {getStatusBadge(selectedContent)}
                 </div>
-              )}
-
-              {selectedContent.type === 'job' && (
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-purple-900 mb-4">Job Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Company</label>
-                      <Input
-                        value={editData.company || (selectedContent as any).company || ''}
-                        onChange={(e) => setEditData({...editData, company: e.target.value})}
-                        placeholder="Company name"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Location</label>
-                      <Input
-                        value={editData.location || selectedContent.location || ''}
-                        onChange={(e) => setEditData({...editData, location: e.target.value})}
-                        placeholder="Job location"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Salary</label>
-                      <Input
-                        value={editData.salary || (selectedContent as any).salary || ''}
-                        onChange={(e) => setEditData({...editData, salary: e.target.value})}
-                        placeholder="Salary range"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Employment Type</label>
-                      <Select
-                        value={editData.employmentType || (selectedContent as any).employmentType || ''}
-                        onValueChange={(value) => setEditData({...editData, employmentType: value})}
-                      >
-                        <SelectItem value="full-time">Full-time</SelectItem>
-                        <SelectItem value="part-time">Part-time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="internship">Internship</SelectItem>
-                      </Select>
-                    </div>
-                  </div>
+                <div>
+                  <h4 className="text-sm font-medium text-white/70 mb-2">Payment Status</h4>
+                  {getPaymentBadge(selectedContent)}
                 </div>
-              )}
-
-              {/* Payment Information */}
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-yellow-900 mb-4">Payment Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedContent.poster && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Is Paid</label>
-                    <Select
-                      value={editData.isPaid?.toString() || selectedContent.isPaid?.toString() || 'false'}
-                      onValueChange={(value) => setEditData({...editData, isPaid: value === 'true'})}
-                    >
-                      <SelectItem value="true">Yes</SelectItem>
-                      <SelectItem value="false">No</SelectItem>
-                    </Select>
+                    <h4 className="text-sm font-medium text-white/70 mb-2">Poster</h4>
+                    <p className="text-sm text-white/90">{selectedContent.poster.name}</p>
+                    <p className="text-xs text-white/60">{selectedContent.poster.email}</p>
                   </div>
+                )}
+                {selectedContent.location && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Amount</label>
-                    <Input
-                      type="number"
-                      value={editData.paymentAmount || selectedContent.paymentAmount || ''}
-                      onChange={(e) => setEditData({...editData, paymentAmount: parseFloat(e.target.value) || 0})}
-                      placeholder="Payment amount"
-                    />
+                    <h4 className="text-sm font-medium text-white/70 mb-2">Location</h4>
+                    <p className="text-sm text-white/90">
+                      {selectedContent.location.city || 'N/A'}
+                      {selectedContent.location.isRemote && ' (Remote)'}
+                    </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Status</label>
-                    <Select
-                      value={editData.paymentStatus || selectedContent.paymentStatus || ''}
-                      onValueChange={(value) => setEditData({...editData, paymentStatus: value})}
-                    >
-                      <SelectItem value="not_required">Not Required</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Reference</label>
-                    <Input
-                      value={editData.paymentReference || selectedContent.paymentReference || ''}
-                      onChange={(e) => setEditData({...editData, paymentReference: e.target.value})}
-                      placeholder="Payment reference"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Status and Metadata */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Metadata</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
-                    <Select
-                      value={editData.status || selectedContent.status || ''}
-                      onValueChange={(value) => setEditData({...editData, status: value})}
-                    >
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Is Approved</label>
-                    <Select
-                      value={editData.isApproved?.toString() || selectedContent.isApproved?.toString() || 'false'}
-                      onValueChange={(value) => setEditData({...editData, isApproved: value === 'true'})}
-                    >
-                      <SelectItem value="true">Yes</SelectItem>
-                      <SelectItem value="false">No</SelectItem>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags and Categories */}
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-900 mb-4">Tags & Categories</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Tags (comma-separated)</label>
-                    <Input
-                      value={editData.tags?.join(', ') || selectedContent.tags?.join(', ') || ''}
-                      onChange={(e) => setEditData({...editData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)})}
-                      placeholder="Enter tags separated by commas"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Industry Sectors (comma-separated)</label>
-                    <Input
-                      value={editData.industrySectors?.join(', ') || selectedContent.industrySectors?.join(', ') || ''}
-                      onChange={(e) => setEditData({...editData, industrySectors: e.target.value.split(',').map(sector => sector.trim()).filter(sector => sector)})}
-                      placeholder="Enter industry sectors separated by commas"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Target Audience (comma-separated)</label>
-                    <Input
-                      value={editData.targetAudience?.join(', ') || selectedContent.targetAudience?.join(', ') || ''}
-                      onChange={(e) => setEditData({...editData, targetAudience: e.target.value.split(',').map(audience => audience.trim()).filter(audience => audience)})}
-                      placeholder="Enter target audience separated by commas"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
           
-          <DialogFooter className="bg-gray-50 p-4 rounded-lg">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowEditDialog(false)
-                setEditData({})
-                setSelectedContent(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEditContent}
-              disabled={actionLoading === selectedContent?._id}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {actionLoading === selectedContent?._id ? 'Updating...' : 'Update Content'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Change State Dialog */}
-      <Dialog open={showStateDialog} onOpenChange={setShowStateDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <RefreshCw className="h-5 w-5 text-orange-600" />
-              <span>Change Content State</span>
-            </DialogTitle>
-            <DialogDescription>
-              Change the status of this content item.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">New State</label>
-              <Select value={newState} onValueChange={setNewState}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select new state" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {newState === 'inactive' && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Disable Reason</label>
-                <Textarea
-                  value={disableReason}
-                  onChange={(e) => setDisableReason(e.target.value)}
-                  placeholder="Enter reason for disabling this content"
-                  rows={3}
-                />
-              </div>
-            )}
-          </div>
-          
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
-                setShowStateDialog(false)
-                setNewState('')
-                setDisableReason('')
+                setShowDetailsDialog(false)
                 setSelectedContent(null)
               }}
+              className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleChangeState}
-              disabled={actionLoading === selectedContent?._id || !newState}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              {actionLoading === selectedContent?._id ? 'Updating...' : 'Change State'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Schedule Review Dialog */}
-      <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
-              <span>Schedule Future Review</span>
-            </DialogTitle>
-            <DialogDescription>
-              Schedule this content for future review and approval.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Review Date</label>
-              <Input
-                type="date"
-                value={scheduleDate}
-                onChange={(e) => setScheduleDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Review Time</label>
-              <Input
-                type="time"
-                value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
-              />
-            </div>
-            
-            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm text-purple-800">
-                <strong>Note:</strong> Content will be moved to draft status until the scheduled review time.
-              </p>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowScheduleDialog(false)
-                setScheduleDate('')
-                setScheduleTime('')
-                setSelectedContent(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleScheduleReview}
-              disabled={actionLoading === selectedContent?._id || !scheduleDate || !scheduleTime}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {actionLoading === selectedContent?._id ? 'Scheduling...' : 'Schedule Review'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Amount Dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Request Payment</DialogTitle>
-            <DialogDescription>
-              Set the payment amount for this content. The user will need to pay this amount before the content goes live.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Payment Amount (₦)
-              </label>
-              <Input
-                type="number"
-                value={paymentAmountInput}
-                onChange={(e) => setPaymentAmountInput(Number(e.target.value))}
-                placeholder="Enter payment amount"
-                min="1"
-                step="1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Set the amount the user needs to pay for this content to go live
-              </p>
-            </div>
-            
-            <div className="bg-orange-50 border border-orange-200 rounded p-3">
-              <p className="text-sm text-orange-800">
-                <strong>Payment Amount:</strong> ₦{paymentAmountInput.toLocaleString()}
-              </p>
-              <p className="text-xs text-orange-700 mt-1">
-                This amount will be requested from the content creator
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowPaymentDialog(false)
-                setSelectedContent(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmPaymentRequest}
-              disabled={actionLoading === selectedContent?._id || !paymentAmountInput || paymentAmountInput <= 0}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              {actionLoading === selectedContent?._id ? 'Sending...' : 'Request Payment'}
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

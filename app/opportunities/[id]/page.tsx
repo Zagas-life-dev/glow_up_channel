@@ -33,6 +33,7 @@ import { cleanUrl } from '@/lib/url-utils'
 import { cn } from '@/lib/utils'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+import { trackContentView } from '@/lib/tracking'
 
 type OpportunityPageProps = {
   params: Promise<{
@@ -77,6 +78,11 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
         }
         
         setOpportunity(result.data.opportunity)
+        
+        // Track content view for active user activity (fire-and-forget, won't throw errors)
+        if (isAuthenticated) {
+          trackContentView('opportunity', id)
+        }
       } catch (error) {
         console.error('Error fetching opportunity:', error)
         notFound()

@@ -156,19 +156,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(userData.profile);
       }
     } catch (error: any) {
-      console.error('Auth initialization failed:', error);
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Auth initialization failed:', error);
+      }
       
       // Handle rate limiting specifically
       if (error.message?.includes('Too many requests')) {
-        console.warn('Rate limited - will retry later');
         // Don't clear tokens for rate limiting, just set loading to false
         setIsLoading(false);
         return;
       }
       
-      // Clear invalid tokens and reset state for other errors
-      clearUserState();
-      await ApiClient.logout();
+      // If it's a network error (backend down), don't clear tokens
+      // User might still be logged in, just backend is unavailable
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+        // Backend is down - keep user state but mark as offline
+        setIsLoading(false);
+        return;
+      }
+      
+      // Only clear tokens for actual auth errors (invalid token, etc.)
+      // Don't try to logout if backend is down (will cause another error)
+      if (error.message?.includes('Invalid token') || error.message?.includes('Token expired') || error.message?.includes('Unauthorized')) {
+        clearUserState();
+        try {
+          await ApiClient.logout();
+        } catch (logoutError) {
+          // Ignore logout errors (backend might be down)
+        }
+      }
     } finally {
       setIsLoading(false);
     }

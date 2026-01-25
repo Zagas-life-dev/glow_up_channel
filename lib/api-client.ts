@@ -196,29 +196,34 @@ export class ApiClient {
   }
 
   private static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-    let response = await fetch(url, {
-      ...options,
-      headers: {
-        ...this.getAuthHeaders(),
-        ...options.headers,
-      },
-    });
+    try {
+      let response = await fetch(url, {
+        ...options,
+        headers: {
+          ...this.getAuthHeaders(),
+          ...options.headers,
+        },
+      });
 
-    // If token is expired, try to refresh
-    if (response.status === 401) {
-      const refreshed = await this.refreshTokenIfNeeded();
-      if (refreshed) {
-        response = await fetch(url, {
-          ...options,
-          headers: {
-            ...this.getAuthHeaders(),
-            ...options.headers,
-          },
-        });
+      // If token is expired, try to refresh
+      if (response.status === 401) {
+        const refreshed = await this.refreshTokenIfNeeded();
+        if (refreshed) {
+          response = await fetch(url, {
+            ...options,
+            headers: {
+              ...this.getAuthHeaders(),
+              ...options.headers,
+            },
+          });
+        }
       }
-    }
 
-    return response;
+      return response;
+    } catch (error: any) {
+      // Re-throw network errors so callers can handle them
+      throw error;
+    }
   }
 
   // Authentication Methods
@@ -269,6 +274,9 @@ export class ApiClient {
         method: 'POST',
         headers: this.getAuthHeaders(),
       });
+    } catch (error) {
+      // Ignore network errors - clear tokens anyway
+      // Backend might be down, but we still want to logout locally
     } finally {
       this.clearTokens();
     }
@@ -811,8 +819,26 @@ export class ApiClient {
     hasApplied?: boolean;
     isRegistered?: boolean;
   }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/${type}/${id}/status`);
-    return this.handleResponse(response);
+    try {
+      const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/${type}/${id}/status`);
+      return this.handleResponse(response);
+    } catch (error: any) {
+      // If it's a 404 or "not found" error, return default values instead of throwing
+      // Backend returns messages like "Opportunity not found", "Content not found", etc.
+      const errorMessage = error?.message?.toLowerCase() || '';
+      if (errorMessage.includes('not found') || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('resource not found')) {
+        return {
+          isSaved: false,
+          isLiked: false,
+          hasApplied: false,
+          isRegistered: false
+        };
+      }
+      // Re-throw other errors (auth errors, network errors, etc.)
+      throw error;
+    }
   }
 
   static async saveItem(type: 'opportunities' | 'events' | 'jobs' | 'resources', id: string, notes?: string): Promise<void> {
@@ -1026,6 +1052,8 @@ export class ApiClient {
     totalEvents: number;
     totalJobs: number;
     totalResources: number;
+    dailyActiveUsers?: number;
+    dailyVisitors?: number;
     userStats: Record<string, number>;
   }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/stats`);

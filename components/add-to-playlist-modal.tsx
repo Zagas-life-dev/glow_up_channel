@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from '@/contexts/playlist-context'
 import { cn } from '@/lib/utils'
+import { trackAddToPlaylist } from '@/lib/tracking'
 import {
   Sheet,
   SheetContent,
@@ -63,6 +64,9 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
     try {
       await addToPlaylist(playlist._id, item)
       setAddedTo([...addedTo, playlist._id])
+      
+      // Track active user activity (fire-and-forget, won't throw errors)
+      trackAddToPlaylist(item.type, item._id)
     } catch (err: any) {
       setError(err.message || 'Failed to add to playlist')
     } finally {
