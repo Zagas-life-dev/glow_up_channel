@@ -4,11 +4,11 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import AppLayout from "@/components/app-layout"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
+import VisitTracker from "@/components/visit-tracker"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -19,7 +19,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "Glow Up Channel",
+  title: "GlowUp",
   description: "Connect young ambitious people to opportunities, events, and free resources.",
   generator: 'v0.dev',
   icons: {
@@ -38,9 +38,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="Glow Up Channel is a platform for young ambitious people to connect to opportunities, events, and free resources." />
-        <meta name="keywords" content="Glow Up Channel, opportunities, events, resources, young ambitious people" />
-        <meta name="author" content="Glow Up Channel" />
+        <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
+        <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
+        <meta name="author" content="GlowUp" />
         <meta name="robots" content="index, follow" />
         <meta name="googlebot" content="index, follow" />
         <meta name="bingbot" content="index, follow" />
@@ -54,7 +54,7 @@ export default function RootLayout({
             <PlaylistProvider>
               <PageProvider>
                 <AppLayout>
-                  <Analytics />
+                  <VisitTracker />
                   {children}
                   <Toaster position="bottom-center" />
                 </AppLayout>
