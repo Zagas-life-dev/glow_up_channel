@@ -281,7 +281,7 @@ export function trackPostCreated(postId: string): void {
 /**
  * Track community engagement (when user opens community and engages with posts)
  */
-export function trackCommunityEngagement(action: 'view' | 'like' | 'reply' | 'repost' | 'save' | 'vote', postId?: string): void {
+export function trackCommunityEngagement(action: 'view' | 'like' | 'reply' | 'repost' | 'save' | 'vote' | 'share', postId?: string): void {
   trackActiveActivity('community_engagement', {
     contentType: 'community',
     contentId: postId

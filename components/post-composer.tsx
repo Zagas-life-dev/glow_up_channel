@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import HashtagAutocomplete from '@/components/ui/hashtag-autocomplete'
+import { trackPostCreated } from '@/lib/tracking'
 
 interface PostComposerProps {
   onPostCreated: (post: any) => void
