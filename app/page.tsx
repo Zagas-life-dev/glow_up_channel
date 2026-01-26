@@ -1,9 +1,22 @@
 "use client"
 
+import { useEffect } from "react"
 import Image from "next/image"
 import { Sparkles } from "lucide-react"
+import { usePage } from "@/contexts/page-context"
 
 export default function Home() {
+  const { setHideNavbar, setHideFooter } = usePage()
+
+  useEffect(() => {
+    setHideNavbar(true)
+    setHideFooter(true)
+    
+    return () => {
+      setHideNavbar(false)
+      setHideFooter(false)
+    }
+  }, [setHideNavbar, setHideFooter])
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="text-center max-w-2xl mx-auto">
