@@ -30,11 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-      <Script async 
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
-          crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        >        </Script>
+        <meta name="google-adsense-slot" content="3194443159" />
+        <meta name="google-adsense-account" content="ca-pub-4275585712096268"></meta>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268" crossOrigin="anonymous"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
