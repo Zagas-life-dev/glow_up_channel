@@ -128,6 +128,16 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </div>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              By signing in, you agree to our{" "}
+              <Link
+                href="/privacy-policy"
+                className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </CardContent>
       </Card>

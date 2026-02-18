@@ -308,14 +308,26 @@ export default function SignupPage() {
             </Button>
           </form>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-            >
-              Sign in
-            </Link>
+          <div className="space-y-2 text-center text-sm text-muted-foreground">
+            <div>
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
+              >
+                Sign in
+              </Link>
+            </div>
+            <p className="text-xs max-w-sm mx-auto">
+              By creating an account, you agree to our{' '}
+              <Link
+                href="/privacy-policy"
+                className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </CardContent>
       </Card>

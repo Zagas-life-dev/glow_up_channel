@@ -276,6 +276,9 @@ export default function AppTopBar() {
                   <DropdownMenuItem asChild className="text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
                     <Link href="/dashboard/settings">Settings</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="text-muted-foreground hover:text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
+                    <Link href="/privacy-policy">Privacy Policy</Link>
+                  </DropdownMenuItem>
                   {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
                     <DropdownMenuItem asChild className="text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
                       <Link href="/dashboard/provider">Provider Hub</Link>
