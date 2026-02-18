@@ -1,5 +1,6 @@
 "use client"
 
+<<<<<<< HEAD
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,75 +17,26 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import { Target } from 'lucide-react'
 import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
+=======
+import { useEffect } from "react"
+import Image from "next/image"
+import { Sparkles, ArrowRight } from "lucide-react"
+>>>>>>> cbec9f4b7df93a7bf0e86ccf74af4dc65c2b65a6
 
-const signupSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  dateOfBirth: z.string()
-    .min(1, 'Date of birth is required')
-    .refine((date) => calculateAge(date) >= 5, 'You must be at least 5 years old to sign up'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
-  role: z.enum(['seeker', 'provider'], {
-    required_error: 'Please select a role',
-  }),
-})
+const REDIRECT_URL = "https://www.glowupchannel.com"
 
-type SignupForm = z.infer<typeof signupSchema>
+export default function RedirectPage() {
+  useEffect(() => {
+    // Redirect after a brief delay to show the message
+    const timer = setTimeout(() => {
+      window.location.href = REDIRECT_URL
+    }, 2000) // 2 second delay
 
-export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
-  const { registerOpportunitySeeker, registerOpportunityPoster } = useAuth()
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignupForm>({
-    resolver: zodResolver(signupSchema),
-  })
-
-  const onSubmit = async (data: SignupForm) => {
-    setIsLoading(true)
-    setError('')
-
-    try {
-      // Trim and validate required fields
-      const firstName = data.firstName.trim()
-      const lastName = data.lastName.trim()
-      const dateOfBirth = data.dateOfBirth
-
-      if (data.role === 'seeker') {
-        await registerOpportunitySeeker(data.email, data.password, firstName, lastName, dateOfBirth)
-        // Redirect to email verification page after successful signup
-        router.push('/verify-email')
-      } else {
-        // Provider registration - redirect to email verification page
-        await registerOpportunityPoster(data.email, data.password, firstName, lastName, dateOfBirth)
-        router.push('/verify-email')
-      }
-    } catch (err: any) {
-      // Handle specific validation errors from backend
-      if (err.message && err.message.includes('Validation failed')) {
-        setError('Please check your password requirements: at least 8 characters with uppercase, lowercase, and number.')
-      } else if (err.message && err.message.includes('already exists')) {
-        setError('An account with this email already exists. Please try logging in instead.')
-      } else {
-        setError(err.message || 'An unexpected error occurred. Please try again.')
-      }
-      console.error('Signup error:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md border border-border bg-card backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
@@ -319,9 +271,65 @@ export default function SignupPage() {
             >
               Sign in
             </Link>
+=======
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="text-center max-w-2xl mx-auto">
+        {/* Logo */}
+        <div className="mb-8 flex justify-center">
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+            <Image
+              src="/images/logo-icon-transparent.png"
+              alt="Glow Up Channel"
+              fill
+              className="object-contain"
+              priority
+            />
+>>>>>>> cbec9f4b7df93a7bf0e86ccf74af4dc65c2b65a6
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Main Text */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+          Redirecting...
+        </h1>
+        
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <p className="text-xl sm:text-2xl text-white/70">
+            Taking you to
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <Sparkles className="w-5 h-5 text-orange-500 animate-pulse" />
+          <a 
+            href={REDIRECT_URL}
+            className="text-xl sm:text-2xl lg:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500 font-semibold hover:from-orange-300 hover:to-orange-400 transition-colors"
+          >
+            app.studybetterai.com
+          </a>
+          <ArrowRight className="w-5 h-5 text-orange-500 animate-pulse" />
+        </div>
+
+        <p className="text-sm text-white/50 mb-8">
+          If you are not redirected automatically,{" "}
+          <a 
+            href={REDIRECT_URL}
+            className="text-orange-500 hover:text-orange-400 underline"
+          >
+            click here
+          </a>
+        </p>
+
+        {/* Loading indicator */}
+        <div className="flex justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0s' }} />
+          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
+          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
+        </div>
+      </div>
+
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.1),_transparent_70%)] pointer-events-none -z-10" />
     </div>
   )
-} 
+}
