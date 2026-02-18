@@ -33,7 +33,8 @@ export default function RootLayout({
       <Script async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
           crossOrigin="anonymous"
-        />
+          strategy="beforeInteractive"
+        >        </Script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
