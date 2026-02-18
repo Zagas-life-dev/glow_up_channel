@@ -31,8 +31,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-slot" content="3194443159" />
+        <Script async src="//www.ezojs.com/ezoic/sa.min.js" strategy="beforeInteractive"></Script>
+        <Script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></Script>
+        <Script data-cfasync="false" src="https://thegatekeeperconsent.com/cmp.min.js" strategy="beforeInteractive"></Script>
+        <Script strategy="beforeInteractive">
+          {`window.ezstandalone = window.ezstandalone || {};
+          ezstandalone.cmd = ezstandalone.cmd || [];`}
+        </Script>
         <meta name="google-adsense-account" content="ca-pub-4275585712096268"></meta>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268" crossOrigin="anonymous"></script>
+        <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268" crossOrigin="anonymous"></Script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
