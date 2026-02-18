@@ -5,7 +5,9 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from "@/components/ui/button"
 import PostCard from '@/components/post-card'
 import PostComposer from '@/components/post-composer'
+import FeedAd from '@/components/feed-ad'
 import { cn } from '@/lib/utils'
+import { buildFeedWithAds } from '@/lib/feed-ads'
 import { useCursorPagination } from '@/hooks/use-cursor-pagination'
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll'
 import { trackCommunityEngagement } from '@/lib/tracking'
@@ -431,16 +433,20 @@ export default function CommunityPage() {
               )}
             </div>
           ) : (
-            // Posts List with spacing like home page
+            // Posts List with spacing like home page (ads every 5 posts)
             <div className="space-y-4">
-              {posts.map((post) => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  onUpdate={handlePostUpdate}
-                  onDelete={handlePostDelete}
-                />
-              ))}
+              {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+                item.type === 'post' ? (
+                  <PostCard
+                    key={item.post._id}
+                    post={item.post}
+                    onUpdate={handlePostUpdate}
+                    onDelete={handlePostDelete}
+                  />
+                ) : (
+                  <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''} />
+                )
+              )}
               
               {/* Infinite scroll sentinel */}
               <div

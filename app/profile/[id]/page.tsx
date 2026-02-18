@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
 import EditProfileModal from '@/components/edit-profile-modal'
 import PostCard from '@/components/post-card'
+import FeedAd from '@/components/feed-ad'
+import { buildFeedWithAds } from '@/lib/feed-ads'
 import ConnectionRequestsModal from '@/components/connection-requests-modal'
 import ConnectionsListModal from '@/components/connections-list-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
@@ -1126,9 +1128,13 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {posts.map((post) => (
-                  <PostCard key={post._id} post={post} onUpdate={fetchPosts} />
-                ))}
+                {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+                  item.type === 'post' ? (
+                    <PostCard key={item.post._id} post={item.post} onUpdate={fetchPosts} />
+                  ) : (
+                    <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''} />
+                  )
+                )}
               </div>
             )}
           </TabsContent>

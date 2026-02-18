@@ -10,6 +10,8 @@ import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
 import PostComposer from "@/components/post-composer"
 import PostCard from "@/components/post-card"
+import FeedAd from "@/components/feed-ad"
+import { buildFeedWithAds } from "@/lib/feed-ads"
 
 interface ChannelPageState {
   channel: Channel | null
@@ -329,14 +331,18 @@ export default function ChannelDetailPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                onUpdate={handlePostUpdate}
-                onDelete={handlePostDelete}
-              />
-            ))}
+            {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+              item.type === "post" ? (
+                <PostCard
+                  key={item.post._id}
+                  post={item.post}
+                  onUpdate={handlePostUpdate}
+                  onDelete={handlePostDelete}
+                />
+              ) : (
+                <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""} />
+              )
+            )}
           </div>
         )}
       </div>
