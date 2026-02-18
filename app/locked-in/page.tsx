@@ -150,134 +150,247 @@ function LockedInPageContent() {
   const canStart = intentionInput.trim().length > 0
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center text-white p-6">
-      <div className="w-full max-w-md flex flex-col items-center gap-6">
-        <h1 className="text-xl font-semibold text-white/80 uppercase tracking-wider">
-          Locked In
-        </h1>
+    <div className="min-h-screen bg-page relative overflow-hidden px-4 py-10 flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_60%)]" />
+      <div className="relative w-full max-w-5xl grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] items-start">
+        {/* Focus card */}
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/70 border border-border/70 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Locked In session
+            </span>
+          </div>
 
-        <LockedInWithStats />
+          <div className="rounded-2xl bg-card/90 border border-border/80 shadow-xl p-6 sm:p-7 flex flex-col gap-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+                  Stay locked in on one thing
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">
+                  Set your intention, break it into a few to-dos, and let the timer keep you honest.
+                </p>
+              </div>
+              <div className="hidden sm:block rounded-xl px-3 py-2 bg-primary/10 border border-primary/30 text-xs text-primary">
+                Session timer
+              </div>
+            </div>
 
-        <div className="text-6xl md:text-7xl font-mono tabular-nums">
-          {formatElapsed(elapsedSeconds)}
+            <div className="rounded-2xl bg-background/60 border border-border/70 px-5 py-6 flex flex-col items-center gap-3">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Elapsed
+              </span>
+              <div className="text-5xl sm:text-6xl md:text-7xl font-mono tabular-nums text-foreground">
+                {formatElapsed(elapsedSeconds)}
+              </div>
+            </div>
+
+            {!isActive && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Intention
+                  </label>
+                  <Textarea
+                    placeholder="What are you locking in on for this session?"
+                    value={intentionInput}
+                    onChange={(e) => setIntentionInput(e.target.value)}
+                    className="min-h-[90px] resize-none rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground"
+                    maxLength={500}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    To-do list
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add one small task"
+                      value={todoInput}
+                      onChange={(e) => setTodoInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addPendingTodo()}
+                      className="rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addPendingTodo}
+                      className="rounded-xl border-border text-foreground hover:bg-muted"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {pendingTodos.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {pendingTodos.map((t) => (
+                        <li
+                          key={t.id}
+                          className="flex items-center justify-between rounded-xl bg-muted/70 px-3 py-2 text-xs sm:text-sm text-foreground"
+                        >
+                          <span className="line-clamp-2">{t.text}</span>
+                          <button
+                            type="button"
+                            onClick={() => removePendingTodo(t.id)}
+                            className="ml-3 text-muted-foreground hover:text-foreground text-xs"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {startError && (
+                  <p className="text-sm text-red-400 text-center">{startError}</p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <p className="text-[11px] text-muted-foreground max-w-xs">
+                    Sessions auto-save to your history when you end them, so you can see how often you’re really locked in.
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={handleStart}
+                    disabled={!canStart || starting}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-full px-8"
+                  >
+                    {starting ? "Starting…" : "Start session"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {isActive && (
+              <>
+                {state.intention != null && state.intention !== "" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Intention
+                    </label>
+                    <p className="rounded-xl bg-muted/70 px-3 py-2 text-sm text-foreground">
+                      {state.intention}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    To-do list
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add task"
+                      value={todoInput}
+                      onChange={(e) => setTodoInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addActiveTodo()}
+                      className="rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addActiveTodo}
+                      className="rounded-xl border-border text-foreground hover:bg-muted"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {state.todoList.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {state.todoList.map((t) => (
+                        <li
+                          key={t.id}
+                          className="flex items-center gap-2 rounded-xl bg-muted/70 px-3 py-2 text-xs sm:text-sm"
+                        >
+                          <Checkbox
+                            checked={t.done}
+                            onCheckedChange={() => toggleTodo(t.id)}
+                            className="border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                          />
+                          <span className={t.done ? "text-muted-foreground line-through" : "text-foreground"}>
+                            {t.text}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeActiveTodo(t.id)}
+                            className="ml-auto text-muted-foreground hover:text-foreground text-[11px]"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {state.isPaused ? (
+                      <Button
+                        size="lg"
+                        onClick={resumeSession}
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-full px-6"
+                      >
+                        Resume
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={pauseSession}
+                        className="border-border text-foreground hover:bg-muted rounded-full px-6"
+                      >
+                        Pause
+                      </Button>
+                    )}
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={handleEndSession}
+                      className="border-red-500/80 text-red-400 hover:bg-red-500/10 rounded-full px-6"
+                    >
+                      End session
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground max-w-[220px]">
+                    You can browse anywhere in GlowUp while this runs. If you close the app or browser, we&apos;ll pause the timer and resume when you return—use “End session” to save it to your history.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {!isActive && (
-          <>
-            <div className="w-full space-y-2">
-              <label className="text-xs font-medium text-white/60">Intention</label>
-              <Textarea
-                placeholder="What do you want to focus on?"
-                value={intentionInput}
-                onChange={(e) => setIntentionInput(e.target.value)}
-                className="min-h-[80px] resize-none rounded-lg border-white/20 bg-white/5 text-white placeholder:text-white/40"
-                maxLength={500}
-              />
-            </div>
-            <div className="w-full space-y-2">
-              <label className="text-xs font-medium text-white/60">To-do</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a task"
-                  value={todoInput}
-                  onChange={(e) => setTodoInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addPendingTodo()}
-                  className="rounded-lg border-white/20 bg-white/5 text-white placeholder:text-white/40"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addPendingTodo} className="rounded-lg border-white/20 text-white hover:bg-white/10">
-                  Add
-                </Button>
-              </div>
-              {pendingTodos.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {pendingTodos.map((t) => (
-                    <li key={t.id} className="flex items-center justify-between rounded bg-white/5 px-3 py-2 text-sm">
-                      <span>{t.text}</span>
-                      <button type="button" onClick={() => removePendingTodo(t.id)} className="text-white/60 hover:text-white">
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {startError && (
-              <p className="text-sm text-red-400 text-center">{startError}</p>
-            )}
-            <Button
-              size="lg"
-              onClick={handleStart}
-              disabled={!canStart || starting}
-              className="bg-white text-black hover:bg-white/90 rounded-full px-8 disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {starting ? "Starting…" : "Start"}
-            </Button>
-          </>
-        )}
-
-        {isActive && (
-          <>
-            {state.intention != null && state.intention !== "" && (
-              <div className="w-full space-y-1">
-                <label className="text-xs font-medium text-white/60">Intention</label>
-                <p className="rounded-lg bg-white/5 px-3 py-2 text-sm text-white/90">{state.intention}</p>
-              </div>
-            )}
-
-            <div className="w-full space-y-2">
-              <label className="text-xs font-medium text-white/60">To-do</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add task"
-                  value={todoInput}
-                  onChange={(e) => setTodoInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addActiveTodo()}
-                  className="rounded-lg border-white/20 bg-white/5 text-white placeholder:text-white/40 text-sm"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addActiveTodo} className="rounded-lg border-white/20 text-white hover:bg-white/10">
-                  Add
-                </Button>
-              </div>
-              {state.todoList.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {state.todoList.map((t) => (
-                    <li key={t.id} className="flex items-center gap-2 rounded bg-white/5 px-3 py-2 text-sm">
-                      <Checkbox
-                        checked={t.done}
-                        onCheckedChange={() => toggleTodo(t.id)}
-                        className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-                      />
-                      <span className={t.done ? "text-white/50 line-through" : ""}>{t.text}</span>
-                      <button type="button" onClick={() => removeActiveTodo(t.id)} className="ml-auto text-white/50 hover:text-white text-xs">
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {state.isPaused ? (
-                <Button size="lg" onClick={resumeSession} className="bg-white text-black hover:bg-white/90 rounded-full px-8">
-                  Resume
-                </Button>
-              ) : (
-                <Button size="lg" variant="outline" onClick={pauseSession} className="border-white text-white hover:bg-white/10 rounded-full px-8">
-                  Pause
-                </Button>
-              )}
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={handleEndSession}
-                className="border-red-500/80 text-red-400 hover:bg-red-500/20 rounded-full px-8"
+        {/* Right column: stats + helpers */}
+        <div className="space-y-4">
+          <LockedInWithStats />
+          <div className="rounded-2xl bg-card/90 border border-border/80 p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">
+              Why “Locked In” matters
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              GlowUp sessions are built for deep focus. Every minute you log helps you see
+              how often you’re really showing up for your goals.
+            </p>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <li>• Set one clear intention per session.</li>
+              <li>• Keep tasks small and specific.</li>
+              <li>• End sessions to log real progress.</li>
+            </ul>
+            <div className="pt-2 border-t border-border/60 flex flex-col gap-1">
+              <Link
+                href="/locked-in/history"
+                className="text-xs text-primary hover:underline"
               >
-                End session
-              </Button>
+                View session history
+              </Link>
+              <span className="text-[11px] text-muted-foreground">
+                Your history is private to you and helps you track consistency over time.
+              </span>
             </div>
-          </>
-        )}
+          </div>
+        </div>
 
         <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
           <DialogContent className="sm:max-w-md">
@@ -329,7 +442,7 @@ function LockedInPageContent() {
         </Dialog>
 
         <p className="text-sm text-white/50 text-center max-w-xs">
-          You can leave this page and browse the site; the timer will keep running. Closing the tab or leaving the site will end and save this session.
+          You can leave this page and keep using GlowUp; the timer will keep running. If you close the app or browser, we&apos;ll pause your session and resume it when you come back. Only ending the session will save it to your history.
         </p>
         <Link href="/locked-in/history" className="text-sm text-white/70 hover:text-white underline">
           View session history

@@ -12,6 +12,9 @@ import PostComposer from "@/components/post-composer"
 import PostCard from "@/components/post-card"
 import FeedAd from "@/components/feed-ad"
 import { buildFeedWithAds } from "@/lib/feed-ads"
+import { PageShell } from "@/components/layout/page-shell"
+import { PageHeader } from "@/components/layout/page-header"
+import { SectionCard } from "@/components/layout/section-card"
 
 interface ChannelPageState {
   channel: Channel | null
@@ -228,73 +231,56 @@ export default function ChannelDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <PageShell className="flex items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading channel…</p>
-      </div>
+      </PageShell>
     )
   }
 
   if (error || !state.channel) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-sm text-destructive">{error || "Channel not found"}</p>
-        <Link href="/channels" className="text-xs text-primary underline">
-          Back to channels
-        </Link>
-      </div>
+      <PageShell className="flex flex-col items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-sm text-destructive">{error || "Channel not found"}</p>
+          <Link href="/channels" className="text-xs text-primary underline">
+            Back to channels
+          </Link>
+        </div>
+      </PageShell>
     )
   }
 
-  const header = (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        <h1 className="text-xl md:text-2xl font-bold">{state.channel.name}</h1>
-        <Badge variant={state.channel.type === "public" ? "outline" : "secondary"} className="text-[10px] uppercase">
-          {state.channel.type}
-        </Badge>
-        {state.membership && (
-          <Badge variant="secondary" className="text-[10px] uppercase">
-            {state.membership.role}
-          </Badge>
-        )}
-      </div>
-      {state.channel.description && (
-        <p className="text-sm text-muted-foreground max-w-2xl">{state.channel.description}</p>
+  const headerActions = (
+    <div className="flex gap-2 flex-wrap">
+      {!state.membership && isAuthenticated && state.channel.type === "public" && (
+        <Button size="sm" onClick={handleJoin} disabled={joinLoading}>
+          {joinLoading ? "Joining…" : "Join channel"}
+        </Button>
       )}
-      <p className="text-xs text-muted-foreground">
-        {state.channel.memberCount} member{state.channel.memberCount === 1 ? "" : "s"}
-      </p>
-      <div className="flex gap-2 pt-1 flex-wrap">
-        {!state.membership && isAuthenticated && state.channel.type === "public" && (
-          <Button size="sm" onClick={handleJoin} disabled={joinLoading}>
-            {joinLoading ? "Joining…" : "Join channel"}
+      {!state.membership && isAuthenticated && state.channel.type === "private" && (
+        <Button size="sm" onClick={handleJoin} disabled={joinLoading || joinStatus === "pending"}>
+          {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
+        </Button>
+      )}
+      {!isAuthenticated && state.channel.type === "public" && (
+        <Link href="/login">
+          <Button size="sm" variant="outline">
+            Sign in to join
           </Button>
-        )}
-        {!state.membership && isAuthenticated && state.channel.type === "private" && (
-          <Button size="sm" onClick={handleJoin} disabled={joinLoading || joinStatus === "pending"}>
-            {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
+        </Link>
+      )}
+      {!isAuthenticated && state.channel.type === "private" && (
+        <Link href="/login">
+          <Button size="sm" variant="outline">
+            Sign in to request access
           </Button>
-        )}
-        {!isAuthenticated && state.channel.type === "public" && (
-          <Link href="/login">
-            <Button size="sm" variant="outline">
-              Sign in to join
-            </Button>
-          </Link>
-        )}
-        {!isAuthenticated && state.channel.type === "private" && (
-          <Link href="/login">
-            <Button size="sm" variant="outline">
-              Sign in to request access
-            </Button>
-          </Link>
-        )}
-      </div>
+        </Link>
+      )}
     </div>
   )
 
   const feedSection = canViewFeed ? (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-4">
       {isAuthenticated && state.membership && state.channel && (
         <div className="pt-2 pb-4 border-b border-border">
           <PostComposer
@@ -326,9 +312,11 @@ export default function ChannelDetailPage() {
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
-            No posts in this channel yet.
-          </div>
+          <SectionCard
+            className="mt-4 text-center"
+            title="No posts in this channel yet"
+            description="Start the conversation by sharing something with this group."
+          />
         ) : (
           <div className="space-y-4">
             {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
@@ -348,19 +336,56 @@ export default function ChannelDetailPage() {
       </div>
     </div>
   ) : (
-    <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
-      This is a private channel. Join to see posts and participate in the conversation.
-    </div>
+    <SectionCard
+      className="mt-4"
+      title="Private channel"
+      description="Join to see posts and participate in the conversation."
+    />
   )
 
   const pageContent = (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <div className="space-y-4">
-          {header}
+    <PageShell fullWidth>
+      <div className="max-w-5xl mx-auto pt-4 pb-10 space-y-6">
+        <PageHeader
+          title={state.channel.name}
+          description={
+            state.channel.description || `${state.channel.memberCount} member${state.channel.memberCount === 1 ? "" : "s"}`
+          }
+          icon={<span className="text-lg font-bold">#</span>}
+          actions={headerActions}
+        />
+
+        <SectionCard
+          title={
+            <span className="flex items-center gap-2">
+              {state.channel.name}
+              <Badge
+                variant={state.channel.type === "public" ? "outline" : "secondary"}
+                className="text-[10px] uppercase"
+              >
+                {state.channel.type}
+              </Badge>
+              {state.membership && (
+                <Badge variant="secondary" className="text-[10px] uppercase">
+                  {state.membership.role}
+                </Badge>
+              )}
+            </span>
+          }
+          description={
+            state.channel.description && (
+              <span className="text-xs text-muted-foreground block">
+                {state.channel.description}
+              </span>
+            )
+          }
+        >
+          <p className="text-xs text-muted-foreground mb-2">
+            {state.channel.memberCount} member{state.channel.memberCount === 1 ? "" : "s"}
+          </p>
 
           {state.channel.isOwner && (
-            <div className="rounded-xl border bg-card p-4 space-y-3">
+            <div className="mt-4 rounded-xl border bg-card p-4 space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="text-sm font-semibold">Members & requests</h2>
                 <div className="flex items-center gap-2">
@@ -506,9 +531,9 @@ export default function ChannelDetailPage() {
           )}
 
           {feedSection}
-        </div>
+        </SectionCard>
       </div>
-    </div>
+    </PageShell>
   )
 
   // Allow public read for public channels; guard posting by isAuthenticated above

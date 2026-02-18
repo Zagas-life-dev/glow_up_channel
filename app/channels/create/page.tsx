@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import ApiClient from "@/lib/api-client"
 import AuthGuard from "@/components/auth-guard"
+import { PageShell } from "@/components/layout/page-shell"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default function CreateChannelPage() {
   const router = useRouter()
@@ -36,14 +38,14 @@ export default function CreateChannelPage() {
   }
 
   const content = (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Create a channel</h1>
-          <p className="text-sm text-muted-foreground">
-            Channel names act as slugs (e.g. <code>#dev-talk</code>) and must be unique.
-          </p>
-        </div>
+    <PageShell>
+      <div className="max-w-xl mx-auto space-y-6 pt-6 pb-10">
+        <PageHeader
+          title="Create a channel"
+          description="Channel names act as slugs (e.g. #dev-talk) and must be unique."
+          icon={<span className="text-lg font-bold">#</span>}
+          variant="gradient"
+        />
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Channel name (slug)</label>
@@ -111,7 +113,7 @@ export default function CreateChannelPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   )
 
   return <AuthGuard>{content}</AuthGuard>

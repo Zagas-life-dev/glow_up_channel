@@ -6,7 +6,7 @@
  * - Active Daily Users: When users engage with content (like, share, repost, save, post, view content)
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 /**
  * Get or create a session ID

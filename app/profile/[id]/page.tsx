@@ -68,6 +68,9 @@ import {
   RiGraduationCapLine,
   RiPlayList2Fill,
 } from "react-icons/ri"
+import { PageShell } from "@/components/layout/page-shell"
+import { PageHeader } from "@/components/layout/page-header"
+import { SectionCard } from "@/components/layout/section-card"
 
 interface OnboardingData {
   country: string
@@ -490,7 +493,7 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <PageShell className="flex items-center justify-center">
         <div className="text-center max-w-sm">
           <div className="w-20 h-20 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
             <RiUserLine className="w-8 h-8 text-muted-foreground" aria-hidden />
@@ -502,7 +505,7 @@ export default function ProfilePage() {
             Go Back
           </Button>
         </div>
-      </div>
+      </PageShell>
     )
   }
 
@@ -518,64 +521,58 @@ export default function ProfilePage() {
   const activeSocialLinks = Object.entries(profile.socialLinks || {}).filter(([_, url]) => url)
 
   return (
-    <div className="min-h-screen pb-24 lg:pb-8">
+    <PageShell>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button 
-            onClick={() => router.back()} 
-            className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
-          >
-            <RiArrowLeftLine className="w-5 h-5 text-muted-foreground" aria-hidden />
-          </button>
-          
-          <div className="text-center">
-            <h1 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{displayName}</h1>
-            <p className="text-[11px] text-muted-foreground">{profile.postCount} posts</p>
-          </div>
-
-          <div className="flex items-center gap-0.5 -mr-1">
-            {isOwner && (
-              <button
-                type="button"
-                onClick={handleOpenQrDashboard}
-                disabled={isOpeningQrDashboard}
-                className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-                title="Manage QR Profile"
-                aria-label="Manage QR Profile"
-              >
-                {isOpeningQrDashboard ? (
-                  <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
-                ) : (
-                  <RiQrCodeLine className="w-5 h-5" aria-hidden />
-                )}
-              </button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-full hover:bg-muted transition-colors">
-                  <RiMoreLine className="w-5 h-5 text-muted-foreground" aria-hidden />
+      <div className="max-w-2xl mx-auto">
+        <PageHeader
+          sticky
+          title={displayName}
+          description={`${profile.postCount} posts`}
+          icon={<RiUserLine className="w-5 h-5 text-orange-400" aria-hidden />}
+          actions={
+            <div className="flex items-center gap-1">
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={handleOpenQrDashboard}
+                  disabled={isOpeningQrDashboard}
+                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  title="Manage QR Profile"
+                  aria-label="Manage QR Profile"
+                >
+                  {isOpeningQrDashboard ? (
+                    <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
+                  ) : (
+                    <RiQrCodeLine className="w-5 h-5" aria-hidden />
+                  )}
                 </button>
-              </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl min-w-[180px]">
-              <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
-                Share Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
-                Copy Link
-              </DropdownMenuItem>
-              {!isOwner && (
-                <>
-                  <DropdownMenuSeparator className="bg-muted" />
-                  <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-lg">
-                    Block User
-                  </DropdownMenuItem>
-                </>
               )}
-            </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 rounded-full hover:bg-muted transition-colors">
+                    <RiMoreLine className="w-5 h-5 text-muted-foreground" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl min-w-[180px]">
+                  <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
+                    Share Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
+                    Copy Link
+                  </DropdownMenuItem>
+                  {!isOwner && (
+                    <>
+                      <DropdownMenuSeparator className="bg-muted" />
+                      <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-lg">
+                        Block User
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          }
+        />
       </div>
 
       {/* Profile Content */}
@@ -849,30 +846,37 @@ export default function ProfilePage() {
 
         {/* Profile Completion (only for own profile) */}
         {isOwner && completionPercentage < 100 && (
-          <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-600/5 border border-orange-500/20">
+          <SectionCard
+            emphasized
+            className="mb-5"
+            title="Profile completion"
+            description="Complete a few more details to unlock better recommendations."
+            icon={<RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />}
+          >
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />
-                <span className="text-sm font-medium text-foreground">Profile Completion</span>
-              </div>
-              <span className="text-sm font-bold text-orange-400">{completionPercentage}%</span>
+              <span className="text-xs text-muted-foreground">
+                Your profile is {completionPercentage}% complete
+              </span>
+              <span className="text-sm font-bold text-orange-400">
+                {completionPercentage}%
+              </span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>
             <Link href="/onboarding">
-                <Button 
-                  size="sm" 
-                  className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-xl h-8 text-xs"
-                >
-                  Complete Your Profile
-                  <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
-                </Button>
+              <Button
+                size="sm"
+                className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-xl h-8 text-xs"
+              >
+                Complete your profile
+                <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
+              </Button>
             </Link>
-          </div>
+          </SectionCard>
         )}
 
         {/* Action Buttons */}
@@ -1352,6 +1356,6 @@ export default function ProfilePage() {
           onUpdate={fetchProfile}
         />
       )}
-    </div>
+    </PageShell>
   )
 }

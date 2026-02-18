@@ -29,6 +29,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { PageShell } from "@/components/layout/page-shell"
+import { PageHeader } from "@/components/layout/page-header"
+import { SectionCard } from "@/components/layout/section-card"
 
 type TabType = 'my' | 'shared' | 'saved' | 'public'
 
@@ -80,122 +83,105 @@ export default function PlaylistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page pb-24 lg:pb-8">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-2xl border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <div className="py-4">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
-                  <RiPlayList2Fill className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Playlists</h1>
-                  <p className="text-xs text-muted-foreground">Organize your favorite content</p>
-                </div>
-              </div>
-              {isAuthenticated && (
-                <Button 
-                  onClick={() => setShowCreateModal(true)} 
-                  className="bg-primary hover:bg-primary/90 text-foreground rounded-full h-9 px-4"
-                >
-                  <RiAddLine className="w-4 h-4 mr-2" />
-                  New Playlist
-                </Button>
-              )}
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border">
-              {isAuthenticated && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('my')}
-                    className={cn(
-                      "px-4 py-3 text-sm font-semibold relative transition-colors",
-                      activeTab === 'my'
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-muted-foreground"
-                    )}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <RiPlayList2Fill className="w-4 h-4" />
-                      My Playlists
-                      {playlists.length > 0 && (
-                        <span className="px-1.5 py-0.5 text-xs bg-muted rounded-full">
-                          {playlists.length}
-                        </span>
-                      )}
-                    </span>
-                    {activeTab === 'my' && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('shared')}
-                    className={cn(
-                      "px-4 py-3 text-sm font-semibold relative transition-colors",
-                      activeTab === 'shared'
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-muted-foreground"
-                    )}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <RiUserAddLine className="w-4 h-4" />
-                      Shared
-                      {sharedPlaylists.length > 0 && (
-                        <span className="px-1.5 py-0.5 text-xs bg-violet-500/20 text-violet-400 rounded-full">
-                          {sharedPlaylists.length}
-                        </span>
-                      )}
-                    </span>
-                    {activeTab === 'shared' && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('saved')}
-                    className={cn(
-                      "px-4 py-3 text-sm font-semibold relative transition-colors",
-                      activeTab === 'saved'
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-muted-foreground"
-                    )}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <RiBookmarkLine className="w-4 h-4" />
-                      Saved
-                      {savedPlaylists.length > 0 && (
-                        <span className="px-1.5 py-0.5 text-xs bg-primary/20 text-orange-400 rounded-full">
-                          {savedPlaylists.length}
-                        </span>
-                      )}
-                    </span>
-                    {activeTab === 'saved' && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                    )}
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => setActiveTab('public')}
-                className={cn(
-                  "px-4 py-3 text-sm font-semibold relative transition-colors",
-                  activeTab === 'public'
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-muted-foreground"
-                )}
+    <PageShell fullWidth>
+      {/* Header + tabs */}
+      <div className="max-w-6xl mx-auto">
+        <PageHeader
+          sticky
+          title="Playlists"
+          description="Organize and revisit the content that matters most to your glow up."
+          icon={<RiPlayList2Fill className="w-5 h-5 text-orange-500" />}
+          actions={
+            isAuthenticated ? (
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-primary hover:bg-primary/90 text-foreground rounded-full h-9 px-4"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  <RiGlobalLine className="w-4 h-4" />
-                  Discover
-                </span>
-                {activeTab === 'public' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
-                )}
-              </button>
-            </div>
+                <RiAddLine className="w-4 h-4 mr-2" />
+                New Playlist
+              </Button>
+            ) : null
+          }
+        />
+
+        {/* Tabs */}
+        <div className="mt-2 border-b border-border">
+          <div className="flex flex-wrap items-center gap-1">
+            {isAuthenticated && (
+              <>
+                <button
+                  onClick={() => setActiveTab("my")}
+                  className={cn(
+                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    activeTab === "my"
+                      ? "bg-primary/20 text-foreground border border-primary/40"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <RiPlayList2Fill className="w-4 h-4" />
+                    My Playlists
+                    {playlists.length > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] bg-muted rounded-full">
+                        {playlists.length}
+                      </span>
+                    )}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("shared")}
+                  className={cn(
+                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    activeTab === "shared"
+                      ? "bg-violet-500/15 text-foreground border border-violet-500/40"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <RiUserAddLine className="w-4 h-4" />
+                    Shared
+                    {sharedPlaylists.length > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] bg-violet-500/20 text-violet-400 rounded-full">
+                        {sharedPlaylists.length}
+                      </span>
+                    )}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("saved")}
+                  className={cn(
+                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    activeTab === "saved"
+                      ? "bg-primary/20 text-foreground border border-primary/40"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <RiBookmarkLine className="w-4 h-4" />
+                    Saved
+                    {savedPlaylists.length > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] bg-primary/20 text-orange-400 rounded-full">
+                        {savedPlaylists.length}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => setActiveTab("public")}
+              className={cn(
+                "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                activeTab === "public"
+                  ? "bg-emerald-500/15 text-foreground border border-emerald-500/40"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <RiGlobalLine className="w-4 h-4" />
+                Discover
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -221,43 +207,48 @@ export default function PlaylistsPage() {
             ))}
           </div>
         ) : currentPlaylists.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
-              {activeTab === 'my' ? (
-                <RiPlayList2Fill className="w-10 h-10 text-orange-500/50" />
-              ) : activeTab === 'shared' ? (
-                <RiUserAddLine className="w-10 h-10 text-violet-500/50" />
-              ) : activeTab === 'saved' ? (
-                <RiBookmarkLine className="w-10 h-10 text-orange-500/50" />
+          <SectionCard
+            className="max-w-xl mx-auto text-center py-10"
+            icon={
+              activeTab === "my" ? (
+                <RiPlayList2Fill className="w-5 h-5 text-orange-500" />
+              ) : activeTab === "shared" ? (
+                <RiUserAddLine className="w-5 h-5 text-violet-400" />
+              ) : activeTab === "saved" ? (
+                <RiBookmarkLine className="w-5 h-5 text-orange-500" />
               ) : (
-                <RiGlobalLine className="w-10 h-10 text-emerald-500/50" />
-              )}
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              {activeTab === 'my' ? 'No Playlists Yet' : 
-               activeTab === 'shared' ? 'No Shared Playlists' :
-               activeTab === 'saved' ? 'No Saved Playlists' :
-               'No Public Playlists'}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-              {activeTab === 'my'
-                ? 'Create your first playlist to organize opportunities, jobs, events, and resources.'
-                : activeTab === 'shared'
-                ? 'You haven\'t been invited to any playlists yet. When someone invites you to collaborate, it will appear here.'
-                : activeTab === 'saved'
-                ? 'You haven\'t saved any playlists yet. Browse public playlists and save the ones you like!'
-                : 'Be the first to share a public playlist with the community!'}
-            </p>
-            {isAuthenticated && activeTab !== 'shared' && activeTab !== 'saved' && (
-              <Button 
-                onClick={() => setShowCreateModal(true)} 
-                className="bg-primary hover:bg-primary/90 text-foreground rounded-full"
+                <RiGlobalLine className="w-5 h-5 text-emerald-500" />
+              )
+            }
+            title={
+              activeTab === "my"
+                ? "No playlists yet"
+                : activeTab === "shared"
+                ? "No shared playlists"
+                : activeTab === "saved"
+                ? "No saved playlists"
+                : "No public playlists"
+            }
+            description={
+              activeTab === "my"
+                ? "Create your first playlist to organize opportunities, jobs, events, and resources."
+                : activeTab === "shared"
+                ? "You haven't been invited to any playlists yet. When someone invites you to collaborate, it will appear here."
+                : activeTab === "saved"
+                ? "You haven't saved any playlists yet. Browse public playlists and save the ones you like."
+                : "Be the first to share a public playlist with the community."
+            }
+          >
+            {isAuthenticated && activeTab !== "shared" && activeTab !== "saved" && (
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-4 bg-primary hover:bg-primary/90 text-foreground rounded-full"
               >
                 <RiAddLine className="w-4 h-4 mr-2" />
-                Create Playlist
+                Create playlist
               </Button>
             )}
-          </div>
+          </SectionCard>
         ) : (
           <div className="space-y-4">
             {currentPlaylists.map((playlist) => {
@@ -406,6 +397,6 @@ export default function PlaylistsPage() {
         }}
         editPlaylist={editingPlaylist || undefined}
       />
-    </div>
+    </PageShell>
   )
 }

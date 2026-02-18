@@ -21,6 +21,10 @@ import {
   Sparkles,
   Flame
 } from 'lucide-react'
+import { PageShell } from "@/components/layout/page-shell"
+import { PageHeader } from "@/components/layout/page-header"
+import { SectionCard } from "@/components/layout/section-card"
+import { TabStrip } from "@/components/layout/tab-strip"
 
 interface Post {
   _id: string
@@ -229,18 +233,15 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page pb-24 lg:pb-8 overflow-x-hidden">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4">
-          {/* Main Header */}
-          <div className="py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-foreground">Community</h1>
-              {isRefreshing && (
-                <div className="h-4 w-4 rounded bg-muted animate-pulse" />
-              )}
-            </div>
+    <PageShell>
+      {/* Sticky Header + tabs */}
+      <div className="max-w-2xl mx-auto">
+        <PageHeader
+          sticky
+          title="Community"
+          description="Share what you’re building and discover what others are working on."
+          icon={<Users className="w-5 h-5 text-orange-400" />}
+          actions={
             <Button
               onClick={handleRefresh}
               disabled={isRefreshing}
@@ -250,92 +251,82 @@ export default function CommunityPage() {
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
-          </div>
+          }
+          className="pt-2 pb-2"
+        />
 
-          {/* Tabs - Instagram Style */}
-          <div className="flex border-b border-border">
-            {isAuthenticated && (
-              <button
-                onClick={() => setActiveTab('connections')}
-                className={cn(
-                  "flex-1 px-4 py-3 text-sm font-semibold relative transition-colors",
-                  activeTab === 'connections'
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-muted-foreground"
-                )}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  <Users className="w-4 h-4" />
-                  Partnering
-                </span>
-                {activeTab === 'connections' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-            )}
+        <div className="border-b border-border pb-1">
+          <TabStrip
+            tabs={[
+              ...(isAuthenticated
+                ? [
+                    {
+                      id: "connections",
+                      label: "Partnering",
+                      icon: Users,
+                    } as const,
+                  ]
+                : []),
+              {
+                id: "explore",
+                label: "Explore",
+                icon: Compass,
+              } as const,
+            ]}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as "connections" | "explore")}
+          />
+        </div>
+
+        {/* Sort Options - Only for Explore */}
+        {activeTab === "explore" && (
+          <div className="py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <button
-              onClick={() => setActiveTab('explore')}
+              onClick={() => {
+                setSortBy("trending")
+                setFilterHashtag(null)
+              }}
               className={cn(
-                "flex-1 px-4 py-3 text-sm font-semibold relative transition-colors",
-                activeTab === 'explore'
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-muted-foreground"
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
+                sortBy === "trending" && !filterHashtag
+                  ? "bg-primary/20 text-orange-400 border border-orange-500/30"
+                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
               )}
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                <Compass className="w-4 h-4" />
-                Explore
-              </span>
-              {activeTab === 'explore' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              <Flame className="w-3 h-3" />
+              Trending
+            </button>
+            <button
+              onClick={() => {
+                setSortBy("recent")
+                setFilterHashtag(null)
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
+                sortBy === "recent" && !filterHashtag
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
               )}
+            >
+              <Sparkles className="w-3 h-3" />
+              Recent
             </button>
           </div>
-
-          {/* Sort Options - Only for Explore */}
-          {activeTab === 'explore' && (
-            <div className="px-4 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              <button
-                onClick={() => { setSortBy('trending'); setFilterHashtag(null) }}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
-                  sortBy === 'trending' && !filterHashtag
-                    ? "bg-primary/20 text-orange-400 border border-orange-500/30"
-                    : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                )}
-              >
-                <Flame className="w-3 h-3" />
-                Trending
-              </button>
-              <button
-                onClick={() => { setSortBy('recent'); setFilterHashtag(null) }}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
-                  sortBy === 'recent' && !filterHashtag
-                    ? "bg-primary/20 text-primary border border-primary/30"
-                    : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                )}
-              >
-                <Sparkles className="w-3 h-3" />
-                Recent
-              </button>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto">
         {/* Post Composer - At Top */}
         {isAuthenticated && (
-          <div className="pt-6 pb-4 border-b border-border">
+          <div className="pt-6 pb-4 border-b border-border px-4">
             <PostComposer onPostCreated={handlePostCreated} />
           </div>
         )}
 
         {/* Trending Hashtags - Horizontal Scroll */}
         {trendingHashtags.length > 0 && activeTab === 'explore' && (
-          <div className="py-4 border-b border-border">
+          <div className="px-4 py-4 border-b border-border">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-orange-500" />
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trending Now</h3>
@@ -364,7 +355,7 @@ export default function CommunityPage() {
         )}
 
         {/* Posts Feed */}
-        <div className="pt-6">
+        <div className="px-4 pt-6 pb-10 lg:pb-14">
           {(isLoading && posts.length === 0) || (isRefreshing && posts.length === 0) ? (
             // Loading Skeletons - Show when initial loading or refreshing with no posts
             <div className="space-y-4 w-full max-w-full">
@@ -405,33 +396,35 @@ export default function CommunityPage() {
               ))}
             </div>
           ) : posts.length === 0 && !isLoading && !isRefreshing ? (
-            // Empty State
-            <div className="py-20 text-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-10 h-10 text-orange-500/50" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {activeTab === 'connections' 
-                  ? 'No posts from people you partner with' 
-                  : 'No posts found'}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                {activeTab === 'connections'
-                  ? 'Start partnering with people to see their posts here, or explore trending content.'
+            // Empty State styled like dashboard cards
+            <SectionCard
+              className="mt-10 text-center"
+              icon={
+                <Sparkles className="w-5 h-5 text-orange-500" aria-hidden />
+              }
+              title={
+                activeTab === "connections"
+                  ? "No posts from people you partner with"
+                  : "No posts found"
+              }
+              description={
+                activeTab === "connections"
+                  ? "Start partnering with people to see their posts here, or explore trending content."
                   : filterHashtag
                   ? `No posts found for #${filterHashtag}. Try another hashtag!`
-                  : 'Be the first to share something with the community!'}
-              </p>
+                  : "Be the first to share something with the community!"
+              }
+            >
               {filterHashtag && (
                 <Button
                   onClick={() => setFilterHashtag(null)}
                   variant="outline"
-                  className="border-border text-muted-foreground hover:text-foreground rounded-full"
+                  className="mt-4 border-border text-muted-foreground hover:text-foreground rounded-full"
                 >
                   Clear Filter
                 </Button>
               )}
-            </div>
+            </SectionCard>
           ) : (
             // Posts List with spacing like home page (ads every 5 posts)
             <div className="space-y-4">
@@ -480,14 +473,14 @@ export default function CommunityPage() {
               
               {/* End of feed message */}
               {!hasMore && posts.length > 0 && (
-                <div className="text-center py-8 text-muted-foreground text-sm">
+                <p className="text-center py-8 text-muted-foreground text-sm">
                   You've reached the end of the feed
-                </div>
+                </p>
               )}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import FeedContainer from "@/components/feed-container"
@@ -18,7 +18,6 @@ import {
   RiGlobalLine,
   RiArrowUpLine,
   RiArrowRightLine,
-  RiArrowLeftLine,
   RiCheckboxCircleLine,
   RiArrowRightLine as RiRightArrowAlt,
 } from "react-icons/ri"
@@ -26,6 +25,9 @@ import { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
 import { cn } from "@/lib/utils"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
+import { PageShell } from "@/components/layout/page-shell"
+import { SectionCard } from "@/components/layout/section-card"
+import { TabStrip } from "@/components/layout/tab-strip"
 
 type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
 
@@ -115,37 +117,75 @@ const providerSteps = [
 
 function LandingPage() {
   return (
-    <div className="min-h-screen pb-24 md:pb-8 bg-page overflow-x-hidden">
+    <PageShell>
       {/* Hero */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.15),_transparent_55%)]" />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <Badge className="bg-primary/20 text-orange-300 border border-orange-500/30 mb-4">
-              GlowUp
-            </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
-              More than a platform.
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
-                A movement for access.
-              </span>
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8">
-              Brilliant African talent has always existed. What’s been missing is access.
-              GlowUp bridges the gap with opportunities, resources, and a community
-              that helps you grow with intention.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
-                <Link href="/opportunities">
-                  Explore Opportunities
-                  <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
-                <Link href="/submit">Become a Provider</Link>
-              </Button>
+        <div className="relative">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] items-center">
+            <div className="max-w-3xl">
+              <Badge className="bg-primary/20 text-orange-300 border border-orange-500/30 mb-4">
+                GlowUp
+              </Badge>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
+                More than a platform.
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
+                  A movement for access.
+                </span>
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8">
+                Brilliant African talent has always existed. What’s been missing is access.
+                GlowUp bridges the gap with opportunities, resources, and deep focus tools
+                like Locked In sessions to keep you moving.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
+                  <Link href="/signup">
+                    Get Started
+                    <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                  <Link href="/submit">Become a Provider</Link>
+                </Button>
+              </div>
             </div>
+
+            {/* Hero preview card, aligned with dashboard/QR card style */}
+            <Card className="bg-card/90 border border-border/70 shadow-xl rounded-2xl">
+              <CardContent className="p-5 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">
+                      GlowUp session
+                    </p>
+                    <p className="text-sm text-foreground mt-1">
+                      Stay locked in on one goal at a time.
+                    </p>
+                  </div>
+                  <div className="rounded-full px-3 py-1 bg-primary/10 border border-primary/30 text-[11px] text-primary">
+                    In beta
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-background/70 border border-border/70 px-4 py-5 flex flex-col items-center gap-2">
+                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    Example timer
+                  </span>
+                  <div className="text-4xl sm:text-5xl font-mono tabular-nums text-foreground">
+                    25:00
+                  </div>
+                </div>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground text-sm">
+                    Design your glow up like a practice, not a one-off win.
+                  </p>
+                  <p>
+                    Use sessions, playlists, and your dashboard to track how often you’re
+                    really showing up for your goals.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="mt-10 grid sm:grid-cols-3 gap-4">
@@ -163,7 +203,7 @@ function LandingPage() {
 
       {/* Stats */}
       <section className="py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {landingStats.map((stat) => {
                 const StatIcon = stat.icon
@@ -187,7 +227,7 @@ function LandingPage() {
 
       {/* Story */}
       <section className="py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">The Story</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
@@ -199,7 +239,7 @@ function LandingPage() {
               to grow with — this is your home base.
             </p>
           </div>
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border rounded-2xl">
             <CardContent className="p-6 space-y-4">
               {[
                 { title: "Discover", text: "Get curated opportunities built for growth." },
@@ -223,7 +263,7 @@ function LandingPage() {
 
       {/* Tracks */}
       <section className="py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">What You’ll Find</h2>
@@ -251,8 +291,8 @@ function LandingPage() {
 
       {/* How It Works */}
       <section className="py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-8">
-          <Card className="bg-card border-border">
+        <div className="grid lg:grid-cols-2 gap-8">
+          <Card className="bg-card border-border rounded-2xl">
             <CardContent className="p-6">
               <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <RiGroupLine className="w-6 h-6 text-orange-400" aria-hidden />
@@ -272,7 +312,7 @@ function LandingPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border rounded-2xl">
             <CardContent className="p-6">
               <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <RiFocus3Line className="w-6 h-6 text-orange-400" aria-hidden />
@@ -296,8 +336,8 @@ function LandingPage() {
 
       {/* CTA */}
       <section className="py-14 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30">
+        <div className="max-w-5xl mx-auto">
+          <Card className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl">
             <CardContent className="p-8 sm:p-10 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 Ready to start your glow up?
@@ -317,16 +357,13 @@ function LandingPage() {
           </Card>
         </div>
       </section>
-    </div>
+    </PageShell>
   )
 }
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-  const tabNavRef = useRef<HTMLDivElement>(null)
-  const [showLeftScroll, setShowLeftScroll] = useState(false)
-  const [showRightScroll, setShowRightScroll] = useState(true)
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -576,29 +613,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when auth changes
   }, [isAuthenticated, authLoading])
 
-  // Check scroll position for scroll indicators
-  const checkScrollPosition = useCallback(() => {
-    if (!tabNavRef.current) return
-    
-    const { scrollLeft, scrollWidth, clientWidth } = tabNavRef.current
-    setShowLeftScroll(scrollLeft > 0)
-    setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 1)
-  }, [])
-
-  useEffect(() => {
-    const nav = tabNavRef.current
-    if (!nav) return
-
-    checkScrollPosition()
-    nav.addEventListener('scroll', checkScrollPosition)
-    window.addEventListener('resize', checkScrollPosition)
-
-    return () => {
-      nav.removeEventListener('scroll', checkScrollPosition)
-      window.removeEventListener('resize', checkScrollPosition)
-    }
-  }, [checkScrollPosition])
-
   const getCurrentItems = () => {
     return allContent
   }
@@ -612,96 +626,48 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 overflow-x-hidden">
+    <PageShell>
       {/* Tab Navigation */}
-      <div className="sticky top-0 z-30 bg-page/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto relative">
-          {/* Left scroll gradient indicator */}
-          {showLeftScroll && (
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-page/95 to-transparent pointer-events-none z-10 flex items-center">
-              <RiArrowLeftLine className="w-4 h-4 text-muted-foreground ml-2" aria-hidden />
-            </div>
-          )}
-          
-          {/* Right scroll gradient indicator */}
-          {showRightScroll && (
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-page/95 to-transparent pointer-events-none z-10 flex items-center justify-end">
-              <RiArrowRightLine className="w-4 h-4 text-muted-foreground mr-2" aria-hidden />
-            </div>
-          )}
-
-          <nav 
-            ref={tabNavRef}
-            className="flex overflow-x-auto scrollbar-hide px-4 scroll-smooth"
-            style={{ scrollBehavior: 'smooth' }}
-          >
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id
-              const TabIcon = tabIcons[tab.id]
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-3.5 text-sm font-medium whitespace-nowrap relative transition-all flex-shrink-0",
-                    isActive 
-                      ? "text-foreground" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <TabIcon
-                    className={cn(
-                      "w-4 h-4 flex-shrink-0",
-                      isActive && tab.id === 'opportunities' && "text-orange-500",
-                      isActive && tab.id === 'jobs' && "text-primary",
-                      isActive && tab.id === 'events' && "text-emerald-500",
-                      isActive && tab.id === 'resources' && "text-violet-500",
-                      isActive && tab.id === 'all' && "text-orange-500"
-                    )}
-                    aria-hidden
-                  />
-                  <span>{tab.label}</span>
-                  
-                  {/* Active indicator */}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
-              )
-            })}
-          </nav>
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 bg-page/95 backdrop-blur-xl border-b border-border px-4 sm:px-6 lg:px-8 pt-1 pb-1">
+        <div className="max-w-2xl mx-auto">
+          <TabStrip
+            tabs={tabs.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              icon: tabIcons[tab.id],
+            }))}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as TabType)}
+          />
         </div>
       </div>
 
       {/* Feed Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Welcome Section (only when not loading and has content) */}
-        {!isLoading && allContent.length > 0 && activeTab === 'all' && (
-          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">
-                  {isAuthenticated ? `Hey${user?.firstName ? `, ${user.firstName}` : ''}!` : 'Discover Opportunities'}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {isAuthenticated 
-                    ? "Here are picks to help you Glow Up" 
-                    : "Sign in to get personalized recommendations"}
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-2xl mx-auto py-6">
+        {!isLoading && allContent.length > 0 && activeTab === "all" && (
+          <SectionCard
+            emphasized
+            className="mb-6"
+            title={
+              isAuthenticated
+                ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}!`
+                : "Discover Opportunities"
+            }
+            description={
+              isAuthenticated
+                ? "Here are picks to help you Glow Up."
+                : "Sign in to get personalized recommendations."
+            }
+            icon={<RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />}
+          />
         )}
-        
-        <FeedContainer 
-          items={getCurrentItems()} 
+
+        <FeedContainer
+          items={getCurrentItems()}
           loading={isLoading}
           emptyMessage={
-            activeTab === 'all' 
-              ? "No content available yet. Check back soon!" 
+            activeTab === "all"
+              ? "No content available yet. Check back soon!"
               : `No ${activeTab} found. Try another category!`
           }
         />
@@ -710,9 +676,9 @@ export default function Home() {
         <div
           ref={sentinelRef}
           style={{
-            height: '1px',
-            width: '100%',
-            marginTop: `${threshold}px`
+            height: "1px",
+            width: "100%",
+            marginTop: `${threshold}px`,
           }}
         />
 
@@ -731,6 +697,6 @@ export default function Home() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }
