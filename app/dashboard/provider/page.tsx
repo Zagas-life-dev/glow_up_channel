@@ -327,22 +327,22 @@ export default function ProviderDashboard() {
 
   const getTypeConfig = (type: string) => {
     const configs = {
-      'job': { icon: Briefcase, bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', label: 'Job' },
+      'job': { icon: Briefcase, bg: 'bg-primary/10', border: 'border-primary/30', text: 'text-primary', label: 'Job' },
       'event': { icon: Calendar, bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', label: 'Event' },
-      'opportunity': { icon: Target, bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', label: 'Opportunity' },
+      'opportunity': { icon: Target, bg: 'bg-primary/10', border: 'border-orange-500/30', text: 'text-orange-400', label: 'Opportunity' },
       'resource': { icon: BookOpen, bg: 'bg-violet-500/10', border: 'border-violet-500/30', text: 'text-violet-400', label: 'Resource' }
     }
     return configs[type as keyof typeof configs] || configs.opportunity
   }
 
   const getStatusColor = (status: string, isApproved: boolean) => {
-    if (status === 'draft' && !isApproved) return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+    if (status === 'draft' && !isApproved) return 'bg-primary/20 text-primary border border-primary/30'
     if (status === 'draft' && isApproved) return 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
     if (status === 'inactive' && !isApproved) return 'bg-red-500/20 text-red-400 border border-red-500/30'
-    if (status === 'inactive' && isApproved) return 'bg-white/10 text-white/60 border border-white/20'
+    if (status === 'inactive' && isApproved) return 'bg-muted text-muted-foreground border border-border'
     if (status === 'active' && !isApproved) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
     if (status === 'active' && isApproved) return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-    return 'bg-white/10 text-white/60 border border-white/20'
+    return 'bg-muted text-muted-foreground border border-border'
   }
 
   const getStatusText = (status: string, isApproved: boolean) => {
@@ -403,10 +403,10 @@ export default function ProviderDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center bg-page">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading provider dashboard...</p>
+          <p className="text-muted-foreground">Loading provider dashboard...</p>
         </div>
       </div>
     )
@@ -414,12 +414,12 @@ export default function ProviderDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-page px-4">
         <div className="text-center max-w-md">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
-          <p className="text-white/60 mb-4">Please log in to access your provider dashboard</p>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">Please log in to access your provider dashboard</p>
+          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
             <Link href="/login">Sign In</Link>
           </Button>
         </div>
@@ -429,16 +429,16 @@ export default function ProviderDashboard() {
 
   if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-page px-4">
         <div className="text-center max-w-md">
           <Crown className="h-12 w-12 text-orange-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Provider Access Required</h2>
-          <p className="text-white/60 mb-4">You need to be an opportunity provider to access this dashboard</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Provider Access Required</h2>
+          <p className="text-muted-foreground mb-4">You need to be an opportunity provider to access this dashboard</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+            <Button asChild variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
-            <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+            <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
               <Link href="/dashboard/settings">Upgrade Account</Link>
             </Button>
           </div>
@@ -461,27 +461,27 @@ export default function ProviderDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-page flex">
       {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-white/[0.06]">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <Crown className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-white">Provider Hub</h1>
-              <p className="text-xs text-white/50">Dashboard</p>
+              <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
+              <p className="text-xs text-muted-foreground">Dashboard</p>
             </div>
           </div>
           
           {/* User Info */}
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-sm font-medium text-white truncate">
+          <div className="p-3 rounded-xl bg-muted border border-border">
+            <p className="text-sm font-medium text-foreground truncate">
               {user?.firstName || user?.email?.split('@')[0]}
             </p>
-            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
 
@@ -498,8 +498,8 @@ export default function ProviderDashboard() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive 
-                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -510,7 +510,7 @@ export default function ProviderDashboard() {
         </nav>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-white/[0.06] space-y-2">
+        <div className="p-4 border-t border-border space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
             return (
@@ -521,8 +521,8 @@ export default function ProviderDashboard() {
                 className={cn(
                   "w-full justify-start",
                   link.variant === 'default' 
-                    ? "bg-orange-500 hover:bg-orange-600" 
-                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary hover:bg-primary/90" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Link href={link.href}>
@@ -535,20 +535,20 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Stats Summary */}
-        <div className="p-4 border-t border-white/[0.06]">
+        <div className="p-4 border-t border-border">
           <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/50">Active Postings</span>
+              <span className="text-xs text-muted-foreground">Active Postings</span>
               <span className="text-lg font-bold text-orange-400">{stats.activePostings}</span>
             </div>
-            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               {(() => {
                 const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
                 const maxTotal = Math.max(totalPostings, 1)
                 const percentage = Math.min((stats.activePostings / maxTotal) * 100, 100)
                 return (
                   <div 
-                    className="h-full bg-orange-500 rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${percentage}%` }}
                   />
                 )
@@ -561,14 +561,14 @@ export default function ProviderDashboard() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Crown className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-white">Provider Hub</h1>
+                <h1 className="text-sm font-bold text-foreground">Provider Hub</h1>
               </div>
             </div>
             
@@ -578,7 +578,7 @@ export default function ProviderDashboard() {
                 variant="ghost" 
                 size="sm"
                 disabled={isLoading}
-                className="h-9 w-9 p-0 text-white/60"
+                className="h-9 w-9 p-0 text-muted-foreground"
               >
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
               </Button>
@@ -589,29 +589,29 @@ export default function ProviderDashboard() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="h-9 w-9 p-0 text-white/60"
+                    className="h-9 w-9 p-0 text-muted-foreground"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
                 >
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
                       <Plus className="h-4 w-4 text-orange-400" />
                       <span>Post Content</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
                       <Settings className="h-4 w-4 text-orange-400" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuSeparator className="bg-muted my-1" />
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/" className="flex items-center gap-3 w-full">
                       <Home className="h-4 w-4 text-orange-400" />
                       <span>Home</span>
@@ -624,7 +624,7 @@ export default function ProviderDashboard() {
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 variant="ghost" 
                 size="sm"
-                className="h-9 w-9 p-0 text-white/60"
+                className="h-9 w-9 p-0 text-muted-foreground"
               >
                 {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </Button> */}
@@ -638,7 +638,7 @@ export default function ProviderDashboard() {
                 className="fixed inset-0 bg-black/50 z-30 lg:hidden"
                 onClick={() => setSidebarOpen(false)}
               />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
                 <div className="p-4 space-y-1">
                   {navItems.map((item) => {
                     const Icon = item.icon
@@ -654,8 +654,8 @@ export default function ProviderDashboard() {
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                           isActive 
-                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         )}
                       >
                         <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -664,7 +664,7 @@ export default function ProviderDashboard() {
                     )
                   })}
                   
-                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                  <div className="pt-4 mt-4 border-t border-border space-y-2">
                     {quickLinks.map((link) => {
                       const Icon = link.icon
                       return (
@@ -675,8 +675,8 @@ export default function ProviderDashboard() {
                           className={cn(
                             "w-full justify-start",
                             link.variant === 'default' 
-                              ? "bg-orange-500 hover:bg-orange-600" 
-                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                              ? "bg-primary hover:bg-primary/90" 
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                           onClick={() => setSidebarOpen(false)}
                         >
@@ -713,14 +713,14 @@ export default function ProviderDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
                         <Crown className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h1 className="text-lg md:text-xl font-bold text-white truncate">
+                        <h1 className="text-lg md:text-xl font-bold text-foreground truncate">
                           Welcome back, {user?.firstName || user?.email?.split('@')[0]}!
                         </h1>
-                        <p className="text-xs md:text-sm text-white/50 mt-0.5">
+                        <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                           Manage your content and grow your reach
                         </p>
                       </div>
@@ -728,11 +728,11 @@ export default function ProviderDashboard() {
                   </div>
                   
                   <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05]">
-                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-foreground">
                         {stats.activePostings}
                       </div>
-                      <span className="text-xs text-white/50 hidden sm:inline">Active</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">Active</span>
                     </div>
                   </div>
                 </div>
@@ -742,29 +742,29 @@ export default function ProviderDashboard() {
             {/* Onboarding Call-to-Action */}
             {onboardingStatus && !onboardingStatus.isCompleted && (
               <div className="mb-4 md:mb-8">
-                <Card className="border border-blue-500/30 bg-blue-500/10">
+                <Card className="border border-primary/30 bg-primary/10">
                   <CardContent className="p-4 md:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 flex-shrink-0">
-                          <Building className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30 flex-shrink-0">
+                          <Building className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base md:text-lg font-semibold text-white mb-1">
+                          <h3 className="text-base md:text-lg font-semibold text-foreground mb-1">
                             Complete Your Provider Profile
                           </h3>
-                          <p className="text-xs md:text-sm text-white/60 mb-2">
+                          <p className="text-xs md:text-sm text-muted-foreground mb-2">
                             Set up your organization details to unlock full features
                           </p>
                           {onboardingStatus.completionPercentage > 0 && (
                             <div className="mt-2">
-                              <div className="flex items-center justify-between text-xs text-white/50 mb-1">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                                 <span>Progress</span>
                                 <span>{onboardingStatus.completionPercentage}%</span>
                               </div>
-                              <div className="w-full bg-white/10 rounded-full h-1.5">
+                              <div className="w-full bg-muted rounded-full h-1.5">
                                 <div 
-                                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                  className="bg-primary/100 h-1.5 rounded-full transition-all duration-300"
                                   style={{ width: `${onboardingStatus.completionPercentage}%` }}
                                 />
                               </div>
@@ -772,7 +772,7 @@ export default function ProviderDashboard() {
                           )}
                         </div>
                       </div>
-                      <Button asChild size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl w-full sm:w-auto">
+                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-foreground rounded-xl w-full sm:w-auto">
                         <Link href="/dashboard/provider/onboarding">
                           <Building className="h-4 w-4 mr-2" />
                           {onboardingStatus.completionPercentage > 0 ? 'Continue' : 'Start Setup'}
@@ -788,7 +788,7 @@ export default function ProviderDashboard() {
             {isLoading && (
               <div className="text-center py-12 md:py-16">
                 <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-sm md:text-base text-white/60">Loading dashboard data...</p>
+                <p className="text-sm md:text-base text-muted-foreground">Loading dashboard data...</p>
               </div>
             )}
 
@@ -797,11 +797,11 @@ export default function ProviderDashboard() {
               <div className="space-y-4 md:space-y-6">
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                  <Card className="border border-border bg-card hover:bg-muted transition-all">
                     <CardContent className="p-4 md:p-6">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Total</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total</p>
                           <p className="text-xl md:text-3xl font-bold text-orange-400 mt-1">
                             {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources}
                           </p>
@@ -813,25 +813,25 @@ export default function ProviderDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                  <Card className="border border-border bg-card hover:bg-muted transition-all">
                     <CardContent className="p-4 md:p-6">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Views</p>
-                          <p className="text-xl md:text-3xl font-bold text-blue-400 mt-1">{stats.totalViews}</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Views</p>
+                          <p className="text-xl md:text-3xl font-bold text-primary mt-1">{stats.totalViews}</p>
                         </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30 flex-shrink-0">
-                          <Eye className="h-5 w-5 md:h-6 md:w-6 text-blue-400" />
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-primary/20 to-primary/20 rounded-xl flex items-center justify-center border border-primary/30 flex-shrink-0">
+                          <Eye className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                  <Card className="border border-border bg-card hover:bg-muted transition-all">
                     <CardContent className="p-4 md:p-6">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Applications</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Applications</p>
                           <p className="text-xl md:text-3xl font-bold text-emerald-400 mt-1">{stats.totalApplications}</p>
                         </div>
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30 flex-shrink-0">
@@ -841,11 +841,11 @@ export default function ProviderDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                  <Card className="border border-border bg-card hover:bg-muted transition-all">
                     <CardContent className="p-4 md:p-6">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-white/60 truncate">Pending</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending</p>
                           <p className="text-xl md:text-3xl font-bold text-yellow-400 mt-1">{stats.pendingApprovals}</p>
                         </div>
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-500/30 flex-shrink-0">
@@ -857,34 +857,34 @@ export default function ProviderDashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
                       <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
                       Quick Actions
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                      <Button asChild className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 bg-orange-500 hover:bg-orange-600 rounded-xl">
+                      <Button asChild className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 bg-primary hover:bg-primary/90 rounded-xl">
                         <Link href="/dashboard/posting">
                           <Target className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Opportunity</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                         <Link href="/dashboard/posting">
                           <Calendar className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Event</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                         <Link href="/dashboard/posting">
                           <Briefcase className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Job</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl">
+                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                         <Link href="/dashboard/posting">
                           <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Resource</span>
@@ -895,9 +895,9 @@ export default function ProviderDashboard() {
                 </Card>
 
                 {/* Recent Activity */}
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
                       <Activity className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
                       Recent Activity
                     </CardTitle>
@@ -910,15 +910,15 @@ export default function ProviderDashboard() {
                           const Icon = config.icon
                           
                           return (
-                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all">
+                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-muted border border-border hover:bg-muted transition-all">
                               <div className="flex items-start gap-3">
                                 <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
                                   <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
                                 </div>
                                 
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-white mb-1 line-clamp-1 text-sm md:text-base">{item.title}</h4>
-                                  <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 mb-2">
+                                  <h4 className="font-medium text-foreground mb-1 line-clamp-1 text-sm md:text-base">{item.title}</h4>
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
                                     <span className="capitalize">{config.label}</span>
                                     <span>•</span>
                                     <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
@@ -927,7 +927,7 @@ export default function ProviderDashboard() {
                                     </Badge>
                                   </div>
                                   
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/50">
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                     <div className="flex items-center gap-1.5">
                                       <Eye className="h-3.5 w-3.5" />
                                       <span>{item.metrics?.viewCount || 0}</span>
@@ -945,7 +945,7 @@ export default function ProviderDashboard() {
                                   </div>
                                   
                                   {item.paymentStatus && item.paymentStatus !== 'not_required' && (
-                                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                                    <div className="mt-3 pt-3 border-t border-border">
                                       <PaymentDetails
                                         contentId={item._id}
                                         contentType={item.type}
@@ -969,11 +969,11 @@ export default function ProviderDashboard() {
                         <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
                           <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Content Yet</h3>
-                        <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                        <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
                           Start by posting your first opportunity, event, or job
                         </p>
-                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
+                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl">
                           <Link href="/dashboard/posting">
                             Post Your First Content
                             <ArrowRight className="h-4 w-4 ml-2" />
@@ -989,14 +989,14 @@ export default function ProviderDashboard() {
             {/* Content Tab */}
             {!isLoading && activeTab === 'content' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <CardTitle className="flex items-center text-white text-base md:text-lg">
+                      <CardTitle className="flex items-center text-foreground text-base md:text-lg">
                         <FileText className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
                         My Content
                       </CardTitle>
-                      <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90 rounded-xl w-full sm:w-auto">
                         <Link href="/dashboard/posting">
                           <Plus className="h-4 w-4 mr-2" />
                           Post New
@@ -1012,7 +1012,7 @@ export default function ProviderDashboard() {
                           const Icon = config.icon
                           
                           return (
-                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all">
+                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-muted border border-border hover:bg-muted transition-all">
                               <div className="flex items-start gap-3">
                                 <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
                                   <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
@@ -1021,8 +1021,8 @@ export default function ProviderDashboard() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start justify-between gap-3 mb-2">
                                     <div className="flex-1 min-w-0">
-                                      <h4 className="font-medium text-white mb-1 line-clamp-2 text-sm md:text-base">{item.title}</h4>
-                                      <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 mb-2">
+                                      <h4 className="font-medium text-foreground mb-1 line-clamp-2 text-sm md:text-base">{item.title}</h4>
+                                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
                                         <span className="capitalize">{config.label}</span>
                                         <span>•</span>
                                         <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
@@ -1034,12 +1034,12 @@ export default function ProviderDashboard() {
                                       {item.tags && item.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5 mt-2">
                                           {item.tags.slice(0, 3).map((tag, index) => (
-                                            <Badge key={index} variant="outline" className="text-xs border-white/10 text-white/60">
+                                            <Badge key={index} variant="outline" className="text-xs border-border text-muted-foreground">
                                               {tag}
                                             </Badge>
                                           ))}
                                           {item.tags.length > 3 && (
-                                            <Badge variant="outline" className="text-xs border-white/10 text-white/40">
+                                            <Badge variant="outline" className="text-xs border-border text-muted-foreground">
                                               +{item.tags.length - 3}
                                             </Badge>
                                           )}
@@ -1052,7 +1052,7 @@ export default function ProviderDashboard() {
                                         variant="ghost" 
                                         size="sm"
                                         onClick={() => handleEditContent(item)}
-                                        className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.08]"
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                                         title="Edit"
                                       >
                                         <Edit className="h-3.5 w-3.5" />
@@ -1061,7 +1061,7 @@ export default function ProviderDashboard() {
                                         variant="ghost" 
                                         size="sm"
                                         onClick={() => handleViewContent(item)}
-                                        className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.08]"
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                                         title="View"
                                       >
                                         <ExternalLink className="h-3.5 w-3.5" />
@@ -1078,7 +1078,7 @@ export default function ProviderDashboard() {
                                     </div>
                                   </div>
                                   
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 mt-3 pt-3 border-t border-white/[0.06]">
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
                                     <div className="flex items-center gap-1.5">
                                       <Eye className="h-3.5 w-3.5" />
                                       <span>{item.metrics?.viewCount || 0} views</span>
@@ -1088,7 +1088,7 @@ export default function ProviderDashboard() {
                                       <span>{item.metrics?.likeCount || 0} likes</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                      <Bookmark className="h-3.5 w-3.5 text-blue-400" />
+                                      <Bookmark className="h-3.5 w-3.5 text-primary" />
                                       <span>{item.metrics?.saveCount || 0} saves</span>
                                     </div>
                                     {item.location && (
@@ -1100,7 +1100,7 @@ export default function ProviderDashboard() {
                                   </div>
                                   
                                   {item.paymentStatus && item.paymentStatus !== 'not_required' && (
-                                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                                    <div className="mt-3 pt-3 border-t border-border">
                                       <PaymentDetails
                                         contentId={item._id}
                                         contentType={item.type}
@@ -1124,11 +1124,11 @@ export default function ProviderDashboard() {
                         <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
                           <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Content Yet</h3>
-                        <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                        <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
                           Start by posting your first opportunity, event, or job
                         </p>
-                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl">
+                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl">
                           <Link href="/dashboard/posting">
                             Post Your First Content
                             <ArrowRight className="h-4 w-4 ml-2" />
@@ -1144,9 +1144,9 @@ export default function ProviderDashboard() {
             {/* Promotions Tab */}
             {!isLoading && activeTab === 'promotions' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
                       <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
                       Promotions
                     </CardTitle>
@@ -1156,13 +1156,13 @@ export default function ProviderDashboard() {
                       <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
                         <Zap className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                       </div>
-                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Promote Your Content</h3>
-                      <p className="text-xs md:text-sm text-white/60 mb-6 px-4">
+                      <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Promote Your Content</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-6 px-4">
                         Boost the visibility of your opportunities, events, jobs, and resources
                       </p>
                       <Button 
                         asChild
-                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+                        className="bg-primary hover:bg-primary/90 text-foreground rounded-xl"
                       >
                         <Link href="/dashboard/provider/promotions">
                           <Zap className="h-4 w-4 mr-2" />
@@ -1178,9 +1178,9 @@ export default function ProviderDashboard() {
             {/* Analytics Tab */}
             {!isLoading && activeTab === 'analytics' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="flex items-center text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
                       <BarChart3 className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
                       Analytics & Insights
                     </CardTitle>
@@ -1190,8 +1190,8 @@ export default function ProviderDashboard() {
                       <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
                         <BarChart3 className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                       </div>
-                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">Analytics Coming Soon</h3>
-                      <p className="text-xs md:text-sm text-white/60 mb-4 px-4">
+                      <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Analytics Coming Soon</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
                         Detailed analytics and insights for your content performance will be available here
                       </p>
                     </div>
@@ -1203,7 +1203,7 @@ export default function ProviderDashboard() {
         </main>
 
         {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around h-16 px-2">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -1217,7 +1217,7 @@ export default function ProviderDashboard() {
                     "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
                     isActive 
                       ? "text-orange-400" 
-                      : "text-white/50"
+                      : "text-muted-foreground"
                   )}
                 >
                   <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />

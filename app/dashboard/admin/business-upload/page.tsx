@@ -403,13 +403,13 @@ export default function PostersDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Users className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Posters Details</h1>
+                <h1 className="text-2xl font-bold text-foreground">Posters Details</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -464,10 +464,10 @@ export default function PostersDetailsPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                  <CheckCircle className="w-5 h-5 text-primary" />
                   <div>
                     <p className="text-sm text-gray-600">Onboarding Complete</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.onboardingCompleted}</p>
+                    <p className="text-2xl font-bold text-primary">{stats.onboardingCompleted}</p>
                   </div>
                 </div>
               </CardContent>
@@ -599,7 +599,7 @@ export default function PostersDetailsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Organization Details */}
                       <div className="space-y-4">
-                        <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                        <h4 className="font-semibold text-foreground flex items-center space-x-2">
                           <Building2 className="w-4 h-4" />
                           <span>Organization Details</span>
                         </h4>
@@ -653,7 +653,7 @@ export default function PostersDetailsPage() {
 
                         {/* Registration Details */}
                         <div className="pt-4 border-t">
-                          <h5 className="font-semibold text-gray-900 flex items-center space-x-2 mb-2">
+                          <h5 className="font-semibold text-foreground flex items-center space-x-2 mb-2">
                             <Shield className="w-4 h-4" />
                             <span>Registration Status</span>
                           </h5>
@@ -667,7 +667,7 @@ export default function PostersDetailsPage() {
 
                         {/* User Account Details */}
                         <div className="pt-4 border-t">
-                          <h5 className="font-semibold text-gray-900 flex items-center space-x-2 mb-2">
+                          <h5 className="font-semibold text-foreground flex items-center space-x-2 mb-2">
                             <User className="w-4 h-4" />
                             <span>User Account</span>
                           </h5>
@@ -683,7 +683,7 @@ export default function PostersDetailsPage() {
                           
                           {/* Approval Actions */}
                           <div className="mt-4 pt-4 border-t">
-                            <h6 className="text-sm font-semibold text-gray-900 mb-2">Approval Actions</h6>
+                            <h6 className="text-sm font-semibold text-foreground mb-2">Approval Actions</h6>
                             <div className="flex flex-wrap gap-2">
                               {!poster.isApproved ? (
                                 <Button
@@ -726,7 +726,7 @@ export default function PostersDetailsPage() {
 
                       {/* Documents and Status */}
                       <div className="space-y-4">
-                        <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                        <h4 className="font-semibold text-foreground flex items-center space-x-2">
                           <FileText className="w-4 h-4" />
                           <span>Uploaded Documents</span>
                         </h4>

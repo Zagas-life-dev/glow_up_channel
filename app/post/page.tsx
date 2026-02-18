@@ -13,7 +13,6 @@ import {
   Globe,
   Lock,
   X,
-  Loader2,
   Send,
   ChevronLeft,
   ChevronRight,
@@ -411,8 +410,8 @@ function PostPageContent() {
   }
 
   const contentTypeColors = {
-    opportunity: 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-    job: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    opportunity: 'text-orange-500 bg-primary/10 border-orange-500/20',
+    job: 'text-primary bg-primary/10 border-primary/20',
     event: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
     resource: 'text-violet-500 bg-violet-500/10 border-violet-500/20'
   }
@@ -420,27 +419,23 @@ function PostPageContent() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8">
+    <div className="min-h-screen bg-page pb-24 lg:pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-page/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-white/[0.05] transition-colors"
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-semibold text-white">Create Post</h1>
+          <h1 className="text-lg font-semibold text-foreground">Create Post</h1>
           <Button
             onClick={handleSubmit}
             disabled={isPosting || isUploading || (!text.trim() && images.length === 0 && !selectedPlaylist && selectedContent.length === 0 && !(showPollCreator && pollQuestion.trim() && pollOptions.filter((o: string) => o.trim()).length >= 2))}
-            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-4 h-8"
+            className="bg-primary hover:bg-primary/90 text-foreground rounded-full px-4 h-8"
           >
-            {isPosting || isUploading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              'Share'
-            )}
+            Share
           </Button>
         </div>
       </div>
@@ -448,7 +443,7 @@ function PostPageContent() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* User Info */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-white">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-foreground">
             {(user as any).profileImage ? (
               <Image
                 src={(user as any).profileImage}
@@ -462,12 +457,12 @@ function PostPageContent() {
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-foreground">
               {user.firstName || user.email?.split('@')[0] || 'User'}
             </p>
             <button
               onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
-              className="text-xs text-white/50 hover:text-white/70 flex items-center gap-1"
+              className="text-xs text-muted-foreground hover:text-muted-foreground flex items-center gap-1"
             >
               {visibility === 'public' ? (
                 <>
@@ -491,7 +486,7 @@ function PostPageContent() {
             value={text}
             onChange={handleTextChange}
             placeholder="Write a caption..."
-            className="w-full bg-transparent text-white placeholder:text-white/30 resize-none outline-none text-[15px] leading-relaxed min-h-[120px]"
+            className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none text-[15px] leading-relaxed min-h-[120px]"
             rows={5}
           />
           <HashtagAutocomplete
@@ -519,7 +514,7 @@ function PostPageContent() {
                 onClick={() => removeImage(currentImageIndex)}
                 className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors z-10"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-foreground" />
               </button>
 
               {/* Navigation Arrows */}
@@ -530,7 +525,7 @@ function PostPageContent() {
                       onClick={() => setCurrentImageIndex(prev => prev - 1)}
                       className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors z-10"
                     >
-                      <ChevronLeft className="w-5 h-5 text-white" />
+                      <ChevronLeft className="w-5 h-5 text-foreground" />
                     </button>
                   )}
                   {currentImageIndex < images.length - 1 && (
@@ -538,7 +533,7 @@ function PostPageContent() {
                       onClick={() => setCurrentImageIndex(prev => prev + 1)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors z-10"
                     >
-                      <ChevronRight className="w-5 h-5 text-white" />
+                      <ChevronRight className="w-5 h-5 text-foreground" />
                     </button>
                   )}
                 </>
@@ -554,8 +549,8 @@ function PostPageContent() {
                       className={cn(
                         "h-1.5 rounded-full transition-all",
                         index === currentImageIndex
-                          ? "w-6 bg-white"
-                          : "w-1.5 bg-white/40 hover:bg-white/60"
+                          ? "w-6 bg-card"
+                          : "w-1.5 bg-muted hover:bg-card/60"
                       )}
                     />
                   ))}
@@ -569,22 +564,22 @@ function PostPageContent() {
         <div className="space-y-4 mb-6">
           {/* Selected Playlist */}
           {selectedPlaylist && (
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="p-4 rounded-xl bg-muted border border-border">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
                     <ListMusic className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{selectedPlaylist.name}</p>
-                    <p className="text-xs text-white/40">{selectedPlaylist.itemCount || 0} items</p>
+                    <p className="text-sm font-medium text-foreground">{selectedPlaylist.name}</p>
+                    <p className="text-xs text-muted-foreground">{selectedPlaylist.itemCount || 0} items</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedPlaylist(null)}
-                  className="p-1 rounded-lg hover:bg-white/[0.05]"
+                  className="p-1 rounded-lg hover:bg-muted"
                 >
-                  <X className="w-4 h-4 text-white/40" />
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
             </div>
@@ -601,15 +596,15 @@ function PostPageContent() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{content.title}</p>
-                      <p className="text-xs text-white/50 capitalize">{content.type}</p>
+                      <p className="text-sm font-medium text-foreground">{content.title}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{content.type}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedContent(prev => prev.filter((_, i) => i !== index))}
-                    className="p-1 rounded-lg hover:bg-white/[0.05]"
+                    className="p-1 rounded-lg hover:bg-muted"
                   >
-                    <X className="w-4 h-4 text-white/40" />
+                    <X className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
               </div>
@@ -634,14 +629,14 @@ function PostPageContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl transition-colors",
               images.length >= 10
-                ? "text-white/20 cursor-not-allowed bg-white/[0.02]"
-                : "text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08]"
+                ? "text-muted-foreground cursor-not-allowed bg-card"
+                : "text-muted-foreground hover:text-foreground bg-muted hover:bg-muted"
             )}
           >
             <ImageIcon className="w-4 h-4" />
             <span className="text-sm">Photo</span>
             {images.length > 0 && (
-              <span className="text-xs text-white/40">({images.length}/10)</span>
+              <span className="text-xs text-muted-foreground">({images.length}/10)</span>
             )}
           </button>
 
@@ -651,8 +646,8 @@ function PostPageContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl transition-colors",
               selectedPlaylist
-                ? "text-orange-500 bg-orange-500/10"
-                : "text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08]"
+                ? "text-orange-500 bg-primary/10"
+                : "text-muted-foreground hover:text-foreground bg-muted hover:bg-muted"
             )}
           >
             <ListMusic className="w-4 h-4" />
@@ -665,14 +660,14 @@ function PostPageContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl transition-colors",
               selectedContent.length > 0
-                ? "text-orange-500 bg-orange-500/10"
-                : "text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08]"
+                ? "text-orange-500 bg-primary/10"
+                : "text-muted-foreground hover:text-foreground bg-muted hover:bg-muted"
             )}
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm">Content</span>
             {selectedContent.length > 0 && (
-              <span className="text-xs text-white/40">({selectedContent.length})</span>
+              <span className="text-xs text-muted-foreground">({selectedContent.length})</span>
             )}
           </button>
 
@@ -682,8 +677,8 @@ function PostPageContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl transition-colors",
               showPollCreator
-                ? "text-orange-500 bg-orange-500/10"
-                : "text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08]"
+                ? "text-orange-500 bg-primary/10"
+                : "text-muted-foreground hover:text-foreground bg-muted hover:bg-muted"
             )}
           >
             <BarChart3 className="w-4 h-4" />
@@ -693,9 +688,9 @@ function PostPageContent() {
 
         {/* Poll Creator */}
         {showPollCreator && (
-          <div className="mt-6 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="mt-6 p-4 rounded-xl bg-muted border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-white">Create Poll</h3>
+              <h3 className="text-sm font-semibold text-foreground">Create Poll</h3>
               <button
                 onClick={() => {
                   setShowPollCreator(false)
@@ -703,9 +698,9 @@ function PostPageContent() {
                   setPollOptions(['', ''])
                   setPollDuration(1)
                 }}
-                className="p-1 rounded-lg hover:bg-white/[0.05]"
+                className="p-1 rounded-lg hover:bg-muted"
               >
-                <X className="w-4 h-4 text-white/40" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
             
@@ -717,7 +712,7 @@ function PostPageContent() {
                   value={pollQuestion}
                   onChange={(e) => setPollQuestion(e.target.value)}
                   placeholder="Ask a question..."
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.06] rounded-xl text-white placeholder:text-white/30 outline-none focus:border-orange-500/50"
+                  className="w-full px-4 py-2 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-orange-500/50"
                   maxLength={200}
                 />
               </div>
@@ -731,13 +726,13 @@ function PostPageContent() {
                       value={option}
                       onChange={(e) => updatePollOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="flex-1 px-4 py-2 bg-white/[0.05] border border-white/[0.06] rounded-xl text-white placeholder:text-white/30 outline-none focus:border-orange-500/50"
+                      className="flex-1 px-4 py-2 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-orange-500/50"
                       maxLength={100}
                     />
                     {pollOptions.length > 2 && (
                       <button
                         onClick={() => removePollOption(index)}
-                        className="p-2 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white"
+                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -750,7 +745,7 @@ function PostPageContent() {
               {pollOptions.length < 4 && (
                 <button
                   onClick={addPollOption}
-                  className="w-full px-4 py-2 text-sm text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08] rounded-xl transition-colors"
+                  className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-muted hover:bg-muted rounded-xl transition-colors"
                 >
                   + Add Option
                 </button>
@@ -758,11 +753,11 @@ function PostPageContent() {
 
               {/* Poll Duration */}
               <div>
-                <label className="block text-xs text-white/50 mb-2">Poll Duration</label>
+                <label className="block text-xs text-muted-foreground mb-2">Poll Duration</label>
                 <select
                   value={pollDuration}
                   onChange={(e) => setPollDuration(Number(e.target.value))}
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.06] rounded-xl text-white outline-none focus:border-orange-500/50"
+                  className="w-full px-4 py-2 bg-muted border border-border rounded-xl text-foreground outline-none focus:border-orange-500/50"
                 >
                   <option value={1}>1 day</option>
                   <option value={3}>3 days</option>
@@ -778,28 +773,28 @@ function PostPageContent() {
       {/* Playlist Picker Modal */}
       {showPlaylistPicker && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-end lg:items-center justify-center">
-          <div className="w-full max-w-md max-h-[80vh] bg-[#0a0a0a] border-t lg:border border-white/[0.06] rounded-t-3xl lg:rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Select Playlist</h2>
+          <div className="w-full max-w-md max-h-[80vh] bg-page border-t lg:border border-border rounded-t-3xl lg:rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Select Playlist</h2>
               <button
                 onClick={() => {
                   setShowPlaylistPicker(false)
                   setPlaylistSearchQuery('')
                 }}
-                className="p-2 rounded-lg hover:bg-white/[0.05]"
+                className="p-2 rounded-lg hover:bg-muted"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-foreground" />
               </button>
             </div>
-            <div className="p-4 border-b border-white/[0.06]">
+            <div className="p-4 border-b border-border">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={playlistSearchQuery}
                   onChange={(e) => setPlaylistSearchQuery(e.target.value)}
                   placeholder="Search playlists..."
-                  className="w-full pl-10 pr-4 py-2 bg-white/[0.05] border border-white/[0.06] rounded-xl text-white placeholder:text-white/30 outline-none focus:border-orange-500/50"
+                  className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-orange-500/50"
                 />
               </div>
             </div>
@@ -811,8 +806,8 @@ function PostPageContent() {
                 if (!hasAnyPlaylists) {
                   return (
                     <div className="text-center py-12">
-                      <ListMusic className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                      <p className="text-white/50">
+                      <ListMusic className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">
                         {playlistSearchQuery.trim() 
                           ? 'No playlists found' 
                           : 'No public playlists available'}
@@ -826,7 +821,7 @@ function PostPageContent() {
                     {/* My Playlists Section */}
                     {myPlaylists.length > 0 && (
                       <div>
-                        <h3 className="text-sm font-semibold text-white/70 mb-3 px-1">My Playlists</h3>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-1">My Playlists</h3>
                         <div className="space-y-2">
                           {myPlaylists.map((playlist) => (
                             <button
@@ -839,20 +834,20 @@ function PostPageContent() {
                               className={cn(
                                 "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                                 selectedPlaylist?._id === playlist._id
-                                  ? "bg-orange-500/10 border-orange-500/30"
-                                  : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]"
+                                  ? "bg-primary/10 border-orange-500/30"
+                                  : "bg-card border-border hover:bg-muted"
                               )}
                             >
                               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
                                 <ListMusic className="w-5 h-5 text-orange-500" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white truncate">{playlist.name}</p>
-                                <p className="text-xs text-white/40">{playlist.itemCount || 0} items</p>
+                                <p className="font-medium text-foreground truncate">{playlist.name}</p>
+                                <p className="text-xs text-muted-foreground">{playlist.itemCount || 0} items</p>
                               </div>
                               {selectedPlaylist?._id === playlist._id && (
-                                <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
-                                  <X className="w-3 h-3 text-white" />
+                                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                  <X className="w-3 h-3 text-foreground" />
                                 </div>
                               )}
                             </button>
@@ -864,7 +859,7 @@ function PostPageContent() {
                     {/* Discover/Other Playlists Section */}
                     {otherPlaylists.length > 0 && (
                       <div>
-                        <h3 className="text-sm font-semibold text-white/70 mb-3 px-1">
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
                           {playlistSearchQuery.trim() ? 'Search Results' : 'Discover Playlists'}
                         </h3>
                         <div className="space-y-2">
@@ -879,21 +874,21 @@ function PostPageContent() {
                               className={cn(
                                 "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                                 selectedPlaylist?._id === playlist._id
-                                  ? "bg-orange-500/10 border-orange-500/30"
-                                  : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]"
+                                  ? "bg-primary/10 border-orange-500/30"
+                                  : "bg-card border-border hover:bg-muted"
                               )}
                             >
                               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
                                 <ListMusic className="w-5 h-5 text-orange-500" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white truncate">{playlist.name}</p>
+                                <p className="font-medium text-foreground truncate">{playlist.name}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <p className="text-xs text-white/40">{playlist.itemCount || 0} items</p>
+                                  <p className="text-xs text-muted-foreground">{playlist.itemCount || 0} items</p>
                                   {playlist.createdBy?.firstName && (
                                     <>
-                                      <span className="text-white/20">•</span>
-                                      <p className="text-xs text-white/40 truncate">
+                                      <span className="text-muted-foreground">•</span>
+                                      <p className="text-xs text-muted-foreground truncate">
                                         by {playlist.createdBy.firstName}
                                       </p>
                                     </>
@@ -901,8 +896,8 @@ function PostPageContent() {
                                 </div>
                               </div>
                               {selectedPlaylist?._id === playlist._id && (
-                                <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
-                                  <X className="w-3 h-3 text-white" />
+                                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                  <X className="w-3 h-3 text-foreground" />
                                 </div>
                               )}
                             </button>
@@ -915,8 +910,8 @@ function PostPageContent() {
               })()}
             </div>
             {/* Disclaimer */}
-            <div className="p-4 border-t border-white/[0.06] bg-white/[0.02]">
-              <p className="text-xs text-white/40 text-center">
+            <div className="p-4 border-t border-border bg-card">
+              <p className="text-xs text-muted-foreground text-center">
                 <Lock className="w-3 h-3 inline mr-1" />
                 Private playlists won't show up here
               </p>
@@ -928,41 +923,43 @@ function PostPageContent() {
       {/* Content Picker Modal */}
       {showContentPicker && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-end lg:items-center justify-center">
-          <div className="w-full max-w-md max-h-[80vh] bg-[#0a0a0a] border-t lg:border border-white/[0.06] rounded-t-3xl lg:rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-white/[0.06]">
+          <div className="w-full max-w-md max-h-[80vh] bg-page border-t lg:border border-border rounded-t-3xl lg:rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">Add Content</h2>
+                <h2 className="text-lg font-semibold text-foreground">Add Content</h2>
                 <button
                   onClick={() => {
                     setShowContentPicker(false)
                     setContentSearchQuery('')
                     setContentSearchResults([])
                   }}
-                  className="p-2 rounded-lg hover:bg-white/[0.05]"
+                  className="p-2 rounded-lg hover:bg-muted"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="w-5 h-5 text-foreground" />
                 </button>
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={contentSearchQuery}
                   onChange={(e) => setContentSearchQuery(e.target.value)}
                   placeholder="Search opportunities, jobs, events, resources..."
-                  className="w-full pl-10 pr-4 py-2 bg-white/[0.05] border border-white/[0.06] rounded-xl text-white placeholder:text-white/30 outline-none focus:border-orange-500/50"
+                  className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-orange-500/50"
                 />
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {isSearchingContent ? (
-                <div className="text-center py-12">
-                  <Loader2 className="w-8 h-8 text-white/40 mx-auto animate-spin" />
+                <div className="space-y-2 py-4 animate-pulse">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-14 rounded-xl bg-muted border border-border" />
+                  ))}
                 </div>
               ) : contentSearchResults.length === 0 ? (
                 <div className="text-center py-12">
-                  <Search className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/50">Search for content to add</p>
+                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Search for content to add</p>
                 </div>
               ) : (
                 contentSearchResults.map((item) => {
@@ -981,20 +978,20 @@ function PostPageContent() {
                       className={cn(
                         "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                         isSelected
-                          ? "bg-orange-500/10 border-orange-500/30"
-                          : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]"
+                          ? "bg-primary/10 border-orange-500/30"
+                          : "bg-card border-border hover:bg-muted"
                       )}
                     >
                       <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", contentTypeColors[item.type])}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{item.title}</p>
-                        <p className="text-xs text-white/40 capitalize">{item.type}</p>
+                        <p className="font-medium text-foreground truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
-                          <X className="w-3 h-3 text-white" />
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <X className="w-3 h-3 text-foreground" />
                         </div>
                       )}
                     </button>

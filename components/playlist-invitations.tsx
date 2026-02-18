@@ -11,16 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Mail,
-  X,
-  Check,
-  ListMusic,
-  Edit,
-  Eye,
-  Loader2,
-  Bell
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 
 interface PlaylistInvitationsProps {
   isOpen: boolean
@@ -60,23 +51,23 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[400px] bg-[#0a0a0a] border-white/[0.08] p-0">
+      <SheetContent side="right" className="w-full sm:w-[400px] bg-page border-border p-0">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FlaticonIcon name="envelope" className="w-5 h-5 text-orange-500" aria-hidden />
               </div>
               <div>
-                <SheetTitle className="text-white">Invitations</SheetTitle>
-                <SheetDescription className="text-white/40 text-xs">
+                <SheetTitle className="text-foreground">Invitations</SheetTitle>
+                <SheetDescription className="text-muted-foreground text-xs">
                   {invitations.length} pending invitation{invitations.length !== 1 ? 's' : ''}
                 </SheetDescription>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-              <X className="w-5 h-5 text-white/60" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
             </button>
           </div>
         </div>
@@ -85,11 +76,11 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
         <div className="p-6">
           {invitations.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-7 h-7 text-white/30" />
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <FlaticonIcon name="bell" className="w-7 h-7 text-muted-foreground" aria-hidden />
               </div>
-              <h3 className="font-medium text-white mb-1">No Invitations</h3>
-              <p className="text-sm text-white/50">You don't have any pending invitations</p>
+              <h3 className="font-medium text-foreground mb-1">No Invitations</h3>
+              <p className="text-sm text-muted-foreground">You don't have any pending invitations</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -98,18 +89,18 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
                   key={invitation._id}
                   className={cn(
                     "p-4 rounded-xl border transition-all",
-                    "bg-white/[0.02] border-white/[0.06]",
+                    "bg-card border-border",
                     processingId === invitation._id && "opacity-50"
                   )}
                 >
                   {/* Playlist Info */}
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
-                      <ListMusic className="w-5 h-5 text-orange-500" />
+                      <FlaticonIcon name="music" className="w-5 h-5 text-orange-500" aria-hidden />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-white truncate">{invitation.playlistName}</h4>
-                      <p className="text-xs text-white/40 mt-0.5">
+                      <h4 className="font-medium text-foreground truncate">{invitation.playlistName}</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         From {invitation.invitedBy.firstName || invitation.invitedBy.email}
                       </p>
                     </div>
@@ -118,17 +109,17 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
                   {/* Role Badge */}
                   <div className="flex items-center gap-2 mb-3">
                     {invitation.role === 'editor' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-400 text-xs">
-                        <Edit className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-orange-400 text-xs">
+                        <FlaticonIcon name="pen" className="w-3 h-3" aria-hidden />
                         Editor Access
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-xs">
-                        <Eye className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs">
+                        <FlaticonIcon name="eye" className="w-3 h-3" aria-hidden />
                         Viewer Access
                       </span>
                     )}
-                    <span className="text-xs text-white/30">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(invitation.invitedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -139,13 +130,13 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
                       onClick={() => handleAccept(invitation)}
                       disabled={processingId === invitation._id}
                       size="sm"
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
+                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-foreground rounded-lg"
                     >
                       {processingId === invitation._id && action === 'accept' ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                       ) : (
                         <>
-                          <Check className="w-4 h-4 mr-1" />
+                          <FlaticonIcon name="check" className="w-4 h-4 mr-1" aria-hidden />
                           Accept
                         </>
                       )}
@@ -155,13 +146,13 @@ export default function PlaylistInvitations({ isOpen, onClose }: PlaylistInvitat
                       disabled={processingId === invitation._id}
                       size="sm"
                       variant="outline"
-                      className="flex-1 border-white/10 text-white/70 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 rounded-lg"
+                      className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 rounded-lg"
                     >
                       {processingId === invitation._id && action === 'decline' ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                       ) : (
                         <>
-                          <X className="w-4 h-4 mr-1" />
+                          <FlaticonIcon name="cross" className="w-4 h-4 mr-1" aria-hidden />
                           Decline
                         </>
                       )}
@@ -186,10 +177,10 @@ export function InvitationsBadge({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="relative p-2 rounded-lg hover:bg-white/[0.05] transition-colors"
+      className="relative p-2 rounded-lg hover:bg-muted transition-colors"
     >
-      <Mail className="w-5 h-5 text-white/60" />
-      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+      <FlaticonIcon name="envelope" className="w-5 h-5 text-muted-foreground" aria-hidden />
+      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full text-[10px] font-bold text-foreground flex items-center justify-center">
         {invitations.length > 9 ? '9+' : invitations.length}
       </span>
     </button>

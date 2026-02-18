@@ -5,7 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, Star, TrendingUp, Users, Calendar, DollarSign, Zap, Crown, Target, Settings, CheckCircle, Clock, Eye, BarChart3, BookOpen, Plane, Briefcase } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { Users } from "lucide-react"
+import { RiStarLine, RiCheckboxCircleLine } from "react-icons/ri"
 import { toast } from "sonner"
 
 interface PromotionModalProps {
@@ -37,8 +39,8 @@ const packages = {
     isHero: false,
     isFeatured: false,
     priority: 1,
-    color: 'from-blue-500 to-blue-600',
-    icon: Target
+    color: 'from-primary to-primary',
+    iconName: 'target'
   },
   feature: {
     id: 'feature',
@@ -57,7 +59,7 @@ const packages = {
     isFeatured: true,
     priority: 2,
     color: 'from-green-500 to-green-600',
-    icon: Star
+    icon: RiStarLine
   },
   launch: {
     id: 'launch',
@@ -76,7 +78,7 @@ const packages = {
     isFeatured: true,
     priority: 3,
     color: 'from-purple-500 to-purple-600',
-    icon: Crown
+    iconName: 'crown'
   }
 }
 
@@ -161,25 +163,25 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
     const features = []
     
     if (packageType === 'spotlight') {
-      if (duration >= 1) features.push({ day: 1, feature: 'Priority placement in search results', icon: Target })
-      if (duration >= 3) features.push({ day: 3, feature: 'Visual enhancement with bold border', icon: Star })
-      if (duration >= 7) features.push({ day: 7, feature: 'Basic analytics tracking', icon: BarChart3 })
-      if (duration >= 14) features.push({ day: 14, feature: 'Featured in category section', icon: TrendingUp })
-      if (duration >= 21) features.push({ day: 21, feature: 'Advanced performance metrics', icon: Eye })
-      if (duration >= 30) features.push({ day: 30, feature: 'Maximum visibility boost', icon: Zap })
+      if (duration >= 1) features.push({ day: 1, feature: 'Priority placement in search results', iconName: 'target' })
+      if (duration >= 3) features.push({ day: 3, feature: 'Visual enhancement with bold border', iconName: 'star' })
+      if (duration >= 7) features.push({ day: 7, feature: 'Basic analytics tracking', iconName: 'chart' })
+      if (duration >= 14) features.push({ day: 14, feature: 'Featured in category section', iconName: 'trending-up' })
+      if (duration >= 21) features.push({ day: 21, feature: 'Advanced performance metrics', iconName: 'eye' })
+      if (duration >= 30) features.push({ day: 30, feature: 'Maximum visibility boost', iconName: 'bolt' })
     } else if (packageType === 'feature') {
-      if (duration >= 1) features.push({ day: 1, feature: 'All Spotlight features activated', icon: CheckCircle })
-      if (duration >= 3) features.push({ day: 3, feature: 'Homepage featured section', icon: Star })
-      if (duration >= 7) features.push({ day: 7, feature: 'Newsletter inclusion', icon: BookOpen })
-      if (duration >= 10) features.push({ day: 10, feature: 'Social media promotion', icon: TrendingUp })
-      if (duration >= 14) features.push({ day: 14, feature: 'Advanced analytics dashboard', icon: BarChart3 })
+      if (duration >= 1) features.push({ day: 1, feature: 'All Spotlight features activated', iconName: 'check-circle' })
+      if (duration >= 3) features.push({ day: 3, feature: 'Homepage featured section', iconName: 'star' })
+      if (duration >= 7) features.push({ day: 7, feature: 'Newsletter inclusion', iconName: 'book' })
+      if (duration >= 10) features.push({ day: 10, feature: 'Social media promotion', iconName: 'trending-up' })
+      if (duration >= 14) features.push({ day: 14, feature: 'Advanced analytics dashboard', iconName: 'chart' })
     } else if (packageType === 'launch') {
-      if (duration >= 1) features.push({ day: 1, feature: 'All Feature features activated', icon: CheckCircle })
-      if (duration >= 2) features.push({ day: 2, feature: 'Hero carousel placement', icon: Crown })
-      if (duration >= 5) features.push({ day: 5, feature: 'Dedicated social media posts', icon: TrendingUp })
-      if (duration >= 7) features.push({ day: 7, feature: 'Newsletter deep dive', icon: BookOpen })
-      if (duration >= 10) features.push({ day: 10, feature: 'WhatsApp community promotion', icon: Users })
-      if (duration >= 14) features.push({ day: 14, feature: 'Maximum brand exposure', icon: Zap })
+      if (duration >= 1) features.push({ day: 1, feature: 'All Feature features activated', iconName: 'check-circle' })
+      if (duration >= 2) features.push({ day: 2, feature: 'Hero carousel placement', iconName: 'crown' })
+      if (duration >= 5) features.push({ day: 5, feature: 'Dedicated social media posts', iconName: 'trending-up' })
+      if (duration >= 7) features.push({ day: 7, feature: 'Newsletter deep dive', iconName: 'book' })
+      if (duration >= 10) features.push({ day: 10, feature: 'WhatsApp community promotion', iconName: 'users' })
+      if (duration >= 14) features.push({ day: 14, feature: 'Maximum brand exposure', iconName: 'bolt' })
     }
     
     return features
@@ -190,7 +192,7 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-2xl">
-            <Zap className="h-6 w-6 text-orange-500" />
+            <FlaticonIcon name="bolt" className="h-6 w-6 text-orange-500" aria-hidden />
             <span>Promote Your Content</span>
           </DialogTitle>
         </DialogHeader>
@@ -198,34 +200,34 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
         <div className="space-y-8">
           {/* Package Selection */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Your Promotion Package</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Choose Your Promotion Package</h3>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {Object.values(packages).map((pkg) => {
-                const Icon = pkg.icon
                 const isSelected = selectedPackage === pkg.id
                 const displayPrice = getDisplayPrice(pkg)
                 const displayDuration = getDisplayDuration(pkg)
+                const Icon = ('icon' in pkg && pkg.icon) ? pkg.icon : (() => <FlaticonIcon name={('iconName' in pkg && pkg.iconName) ? pkg.iconName : 'target'} className="h-8 w-8 text-foreground" aria-hidden />)
                 
                 return (
                   <Card 
                     key={pkg.id} 
                     className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden cursor-pointer ${
                       pkg.id === 'feature' ? 'ring-2 ring-green-500' : ''
-                    } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                    } ${isSelected ? 'ring-2 ring-primary' : ''}`}
                     onClick={() => handleSelectPackage(pkg.id)}
                   >
                     {pkg.id === 'feature' && (
-                      <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-2 text-sm font-medium">
-                        <Star className="h-4 w-4 inline mr-2" />
+                      <div className="bg-gradient-to-r from-green-500 to-green-600 text-foreground text-center py-2 text-sm font-medium">
+                        <FlaticonIcon name="star" className="h-4 w-4 inline mr-2" aria-hidden />
                         Most Popular
                       </div>
                     )}
                     <CardHeader className="text-center p-6">
                       <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${pkg.color} flex items-center justify-center mb-4`}>
-                        <Icon className="h-8 w-8 text-white" />
+                        <Icon className="h-8 w-8 text-foreground" />
                       </div>
-                      <CardTitle className="text-xl text-gray-900 mb-2">{pkg.name}</CardTitle>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                      <CardTitle className="text-xl text-foreground mb-2">{pkg.name}</CardTitle>
+                      <div className="text-3xl font-bold text-foreground mb-1">
                         {formatPrice(displayPrice)}
                         <span className="text-sm font-normal text-gray-500">/{displayDuration} days</span>
                       </div>
@@ -235,20 +237,20 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                       <ul className="space-y-3 mb-6">
                         {pkg.features.map((feature, index) => (
                           <li key={index} className="flex items-center space-x-3">
-                            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                            <FlaticonIcon name="check-circle" className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden />
                             <span className="text-sm text-gray-700">{feature}</span>
                           </li>
                         ))}
                       </ul>
                       <Button
                         onClick={() => handleSelectPackage(pkg.id)}
-                        className={`w-full bg-gradient-to-r ${pkg.color} hover:from-${pkg.color.split('-')[1]}-600 hover:to-${pkg.color.split('-')[1]}-700 text-white rounded-xl py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
+                        className={`w-full bg-gradient-to-r ${pkg.color} hover:from-${pkg.color.split('-')[1]}-600 hover:to-${pkg.color.split('-')[1]}-700 text-foreground rounded-xl py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
                           isSelected ? 'ring-2 ring-white' : ''
                         }`}
                       >
                         {isSelected ? (
                           <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <RiCheckboxCircleLine className="h-4 w-4 mr-2" />
                             Selected
                           </>
                         ) : (
@@ -264,10 +266,10 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
 
           {/* Custom Duration for Spotlight Package */}
           {selectedPackage === 'spotlight' && showCustomDuration && (
-            <Card className="border-2 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-200">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Settings className="h-5 w-5 text-blue-600" />
+            <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/10 border-b border-primary/20">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <FlaticonIcon name="settings" className="h-5 w-5 text-primary" aria-hidden />
                   Custom Duration Options
                 </CardTitle>
                 <p className="text-sm text-gray-600">Customize your promotion duration for better value</p>
@@ -284,7 +286,7 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                           max={packages.spotlight.customDuration.maxDays}
                           value={customDuration}
                           onChange={(e) => setCustomDuration(parseInt(e.target.value) || 7)}
-                          className="h-11 w-24 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 px-3"
+                          className="h-11 w-24 rounded-xl border-gray-200 focus:border-primary focus:ring-primary px-3"
                         />
                         <span className="text-sm text-gray-600">days</span>
                       </div>
@@ -298,10 +300,10 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                       <div className="space-y-2">
                         {getDayByDayFeatures('spotlight', customDuration).map((item, index) => (
                           <div key={index} className="flex items-center space-x-2">
-                            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">
+                            <div className="w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-medium">
                               {item.day}
                             </div>
-                            <item.icon className="h-4 w-4 text-blue-600" />
+                            <FlaticonIcon name={item.iconName} className="h-4 w-4 text-primary" aria-hidden />
                             <span className="text-sm text-gray-700">{item.feature}</span>
                           </div>
                         ))}
@@ -310,14 +312,14 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                   </div>
 
                   <div className="space-y-4">
-                    <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-2xl border border-blue-200">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">
+                    <div className="text-center p-6 bg-gradient-to-r from-primary/10 to-primary/10 rounded-2xl border border-primary/20">
+                      <div className="text-3xl font-bold text-primary mb-2">
                         {formatPrice(calculateCustomPrice(packages.spotlight, customDuration))}
                       </div>
                       <div className="text-sm text-gray-600 mb-4">
                         for {customDuration} day{customDuration !== 1 ? 's' : ''}
                       </div>
-                      <div className="text-lg font-semibold text-gray-900 mb-2">
+                      <div className="text-lg font-semibold text-foreground mb-2">
                         {formatPrice(calculateCustomPrice(packages.spotlight, customDuration) / customDuration)}/day
                       </div>
                       <p className="text-xs text-gray-500">
@@ -330,7 +332,7 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                     {customDuration > 7 && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <FlaticonIcon name="check-circle" className="h-4 w-4 text-green-600" aria-hidden />
                           <span className="text-sm text-green-800 font-medium">
                             Save {formatPrice(packages.spotlight.price - calculateCustomPrice(packages.spotlight, customDuration))} 
                             with custom duration!
@@ -348,8 +350,8 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
           {selectedPackage && (
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-b border-purple-200">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Calendar className="h-5 w-5 text-purple-600" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <FlaticonIcon name="calendar" className="h-5 w-5 text-purple-600" aria-hidden />
                   Your Promotion Timeline
                 </CardTitle>
                 <p className="text-sm text-gray-600">See what happens each day of your promotion</p>
@@ -358,12 +360,12 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
                 <div className="space-y-4">
                   {getDayByDayFeatures(selectedPackage, getDisplayDuration(packages[selectedPackage as keyof typeof packages])).map((item, index) => (
                     <div key={index} className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-300">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 text-foreground rounded-xl flex items-center justify-center font-bold text-lg">
                         {item.day}
                       </div>
                       <div className="flex items-center space-x-3 flex-1">
-                        <item.icon className="h-5 w-5 text-purple-600" />
-                        <span className="text-gray-900 font-medium">{item.feature}</span>
+                        <FlaticonIcon name={item.iconName} className="h-5 w-5 text-purple-600" aria-hidden />
+                        <span className="text-foreground font-medium">{item.feature}</span>
                       </div>
                       <div className="text-sm text-gray-500">
                         Day {item.day}
@@ -378,42 +380,42 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
           {/* Promotion Benefits */}
           <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 border-b border-orange-200">
-              <CardTitle className="flex items-center gap-2 text-gray-900">
-                <Crown className="h-5 w-5 text-orange-600" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <FlaticonIcon name="crown" className="h-5 w-5 text-orange-600" aria-hidden />
                 Why Promote Your Content?
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="text-center group">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Eye className="h-8 w-8 text-white" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FlaticonIcon name="eye" className="h-8 w-8 text-foreground" aria-hidden />
                   </div>
-                  <h4 className="font-medium text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Increased Visibility</h4>
+                  <h4 className="font-medium text-foreground mb-2 group-hover:text-primary transition-colors">Increased Visibility</h4>
                   <p className="text-sm text-gray-600">Get up to 5x more views on your content</p>
                 </div>
                 
                 <div className="text-center group">
                   <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Users className="h-8 w-8 text-white" />
+                    <Users className="h-8 w-8 text-foreground" />
                   </div>
-                  <h4 className="font-medium text-gray-900 mb-2 group-hover:text-green-600 transition-colors">Better Engagement</h4>
+                  <h4 className="font-medium text-foreground mb-2 group-hover:text-green-600 transition-colors">Better Engagement</h4>
                   <p className="text-sm text-gray-600">Attract higher quality interactions</p>
                 </div>
                 
                 <div className="text-center group">
                   <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <TrendingUp className="h-8 w-8 text-white" />
+                    <FlaticonIcon name="trending-up" className="h-8 w-8 text-foreground" aria-hidden />
                   </div>
-                  <h4 className="font-medium text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">Faster Results</h4>
+                  <h4 className="font-medium text-foreground mb-2 group-hover:text-orange-600 transition-colors">Faster Results</h4>
                   <p className="text-sm text-gray-600">Achieve your goals quicker with promoted content</p>
                 </div>
                 
                 <div className="text-center group">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Target className="h-8 w-8 text-white" />
+                    <FlaticonIcon name="target" className="h-8 w-8 text-foreground" aria-hidden />
                   </div>
-                  <h4 className="font-medium text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">Targeted Reach</h4>
+                  <h4 className="font-medium text-foreground mb-2 group-hover:text-purple-600 transition-colors">Targeted Reach</h4>
                   <p className="text-sm text-gray-600">Reach your ideal audience more effectively</p>
                 </div>
               </div>
@@ -428,16 +430,16 @@ export default function PromotionModal({ isOpen, onClose, onPromote, contentId }
             <Button 
               onClick={handlePromote}
               disabled={isSubmitting || !selectedPackage}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               {isSubmitting ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  <FlaticonIcon name="spinner" className="h-4 w-4 mr-2 animate-spin" aria-hidden />
                   Activating...
                 </>
               ) : (
                 <>
-                  <Zap className="h-4 w-4 mr-2" />
+                  <FlaticonIcon name="bolt" className="h-4 w-4 mr-2" aria-hidden />
                   Activate Promotion
                 </>
               )}

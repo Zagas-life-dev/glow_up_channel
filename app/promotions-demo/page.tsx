@@ -8,7 +8,7 @@ export default function PromotionsDemoPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Promotion Display Demo
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -19,7 +19,7 @@ export default function PromotionsDemoPage() {
 
         <div className="space-y-16">
           {/* Hero Section - Launch Packages */}
-          <section className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white">
+          <section className="bg-gradient-to-r from-primary to-primary rounded-2xl p-8 text-foreground">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Hero Banner</h2>
               <p className="text-purple-100 text-lg">
@@ -30,9 +30,9 @@ export default function PromotionsDemoPage() {
           </section>
 
           {/* Featured Section - Feature & Launch Packages */}
-          <section className="bg-white rounded-2xl p-8 shadow-lg">
+          <section className="bg-card rounded-2xl p-8 shadow-lg">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Section</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Featured Section</h2>
               <p className="text-gray-600 text-lg">
                 Feature and Launch packages appear in the featured section
               </p>
@@ -41,9 +41,9 @@ export default function PromotionsDemoPage() {
           </section>
 
           {/* Spotlight Enhanced Section - Spotlight Packages */}
-          <section className="bg-white rounded-2xl p-8 shadow-lg">
+          <section className="bg-card rounded-2xl p-8 shadow-lg">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Search Results (Spotlight Enhanced)</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Search Results (Spotlight Enhanced)</h2>
               <p className="text-gray-600 text-lg">
                 Spotlight packages get visual enhancements in search results with highlighted borders
               </p>
@@ -54,19 +54,19 @@ export default function PromotionsDemoPage() {
           {/* Package Comparison */}
           <section className="bg-gray-100 rounded-2xl p-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Package Comparison</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Package Comparison</h2>
               <p className="text-gray-600 text-lg">
                 Understanding the different promotion package levels
               </p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-card rounded-xl p-6 shadow-md">
                 <div className="text-center mb-4">
                   <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-2xl">⚡</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Spotlight Package</h3>
+                  <h3 className="text-xl font-bold text-foreground">Spotlight Package</h3>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li>• Priority placement in search results</li>
@@ -76,12 +76,12 @@ export default function PromotionsDemoPage() {
                 </ul>
               </div>
 
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-card rounded-xl p-6 shadow-md">
                 <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-2xl">⭐</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Feature Package</h3>
+                  <h3 className="text-xl font-bold text-foreground">Feature Package</h3>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li>• Everything in Spotlight package</li>
@@ -91,12 +91,12 @@ export default function PromotionsDemoPage() {
                 </ul>
               </div>
 
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-card rounded-xl p-6 shadow-md">
                 <div className="text-center mb-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-2xl">👑</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Launch Package</h3>
+                  <h3 className="text-xl font-bold text-foreground">Launch Package</h3>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li>• Everything in Feature package</li>

@@ -2,7 +2,8 @@
 
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import SkillsInput from '@/components/ui/skills-input'
-import { Star, Lightbulb } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { RiStarLine } from 'react-icons/ri'
 
 interface SkillsStepProps {
   onSubmit: (data: { skills: string[] }) => void
@@ -22,12 +23,12 @@ const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData }, 
     <div className="space-y-6">
       <div className="text-center">
         <div className="flex items-center justify-center mb-4">
-          <Star className="h-8 w-8 text-orange-500 mr-2" />
-          <h3 className="text-2xl font-semibold text-gray-900">What are your current skills?</h3>
+          <RiStarLine className="h-8 w-8 text-orange-500 mr-2" />
+          <h3 className="text-2xl font-semibold text-foreground">What are your current skills?</h3>
         </div>
         <p className="text-gray-600 mb-2">Type your skills and we'll help you find the right ones.</p>
         <div className="flex items-center justify-center text-sm text-gray-500">
-          <Lightbulb className="h-4 w-4 mr-1" />
+          <FlaticonIcon name="lightbulb" className="h-4 w-4 mr-1" aria-hidden />
           <span>Press Enter to add a skill, or click on suggestions</span>
         </div>
       </div>

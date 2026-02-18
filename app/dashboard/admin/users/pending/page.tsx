@@ -139,7 +139,7 @@ export default function PendingUsers() {
 
   const getRoleBadge = (role: string) => {
     const roleColors = {
-      'opportunity_seeker': 'bg-blue-100 text-blue-800',
+      'opportunity_seeker': 'bg-primary/10 text-foreground',
       'opportunity_poster': 'bg-purple-100 text-purple-800',
       'admin': 'bg-orange-100 text-orange-800',
       'super_admin': 'bg-red-100 text-red-800'
@@ -173,7 +173,7 @@ export default function PendingUsers() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-6">
             You need admin or super admin privileges to access this page.
           </p>
@@ -188,7 +188,7 @@ export default function PendingUsers() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -200,7 +200,7 @@ export default function PendingUsers() {
               </Button>
               <div className="flex items-center space-x-2">
                 <Clock className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Pending Users</h1>
+                <h1 className="text-2xl font-bold text-foreground">Pending Users</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -263,7 +263,7 @@ export default function PendingUsers() {
             {pendingUsers.length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No pending users</h3>
+                <h3 className="text-lg font-medium text-foreground mb-2">No pending users</h3>
                 <p className="text-gray-600">All users have been reviewed and processed.</p>
               </div>
             ) : (
@@ -285,12 +285,12 @@ export default function PendingUsers() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-gray-200">
                     {pendingUsers.map((pendingUser) => (
                       <tr key={pendingUser._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{pendingUser.email}</div>
+                            <div className="text-sm font-medium text-foreground">{pendingUser.email}</div>
                             <div className="text-sm text-gray-500">
                               ID: {pendingUser._id}
                             </div>
@@ -308,7 +308,7 @@ export default function PendingUsers() {
                               size="sm"
                               onClick={() => handleApprove(pendingUser._id)}
                               disabled={actionLoading === pendingUser._id}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                              className="bg-green-600 hover:bg-green-700 text-foreground"
                             >
                               <UserCheck className="h-4 w-4 mr-1" />
                               {actionLoading === pendingUser._id ? 'Approving...' : 'Approve'}

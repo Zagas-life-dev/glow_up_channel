@@ -3,20 +3,7 @@
 import { useState, useEffect, Suspense, useCallback, useMemo } from "react"
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { 
-  Search, 
-  ArrowRight, 
-  Filter, 
-  X, 
-  MapPin, 
-  Calendar, 
-  Briefcase, 
-  BookOpen, 
-  Target,
-  Loader2,
-  Sparkles,
-  SlidersHorizontal
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +13,7 @@ import { cn } from "@/lib/utils"
 import FeedCard from "@/components/feed-card"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
+import { X } from "lucide-react"
 
 function SearchContent() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -176,23 +164,23 @@ function SearchContent() {
   const activeFiltersCount = Object.values(filters).filter(v => v).length
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8">
+    <div className="min-h-screen bg-page pb-24 lg:pb-8">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.08]">
+      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-2xl border-b border-border">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           {/* Header */}
           <div className="py-4">
-            <h1 className="text-xl font-bold text-white mb-4">Search</h1>
+            <h1 className="text-xl font-bold text-foreground mb-4">Search</h1>
             
             {/* Search Input */}
             <div className="relative mb-4">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+              <FlaticonIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
                 placeholder="Search opportunities, events, jobs, and resources..."
-                className="pl-12 pr-4 h-12 text-base bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 rounded-xl"
+                className="pl-12 pr-4 h-12 text-base bg-muted border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 rounded-xl"
               />
               {searchQuery && (
                 <button
@@ -200,9 +188,9 @@ function SearchContent() {
                     setSearchQuery('')
                     resetSearch()
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-white/[0.05]"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-muted"
                 >
-                  <X className="w-4 h-4 text-white/40" />
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
@@ -210,26 +198,26 @@ function SearchContent() {
             {/* Active Filters */}
             {activeFiltersCount > 0 && (
               <div className="flex items-center gap-2 flex-wrap mb-3">
-                <span className="text-xs text-white/50">Filters:</span>
+                <span className="text-xs text-muted-foreground">Filters:</span>
                 {filters.type && (
-                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                  <Badge variant="secondary" className="bg-primary/20 text-orange-400 border-orange-500/30">
                     {filters.type}
                     <button
                       onClick={() => clearFilter('type')}
                       className="ml-1.5 hover:text-orange-300"
                     >
-                      <X className="w-3 h-3" />
+                      <FlaticonIcon name="cross" className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
                 {filters.location && (
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                  <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
                     {filters.location}
                     <button
                       onClick={() => clearFilter('location')}
-                      className="ml-1.5 hover:text-blue-300"
+                      className="ml-1.5 hover:text-primary"
                     >
-                      <X className="w-3 h-3" />
+                      <FlaticonIcon name="cross" className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
@@ -240,7 +228,7 @@ function SearchContent() {
                       onClick={() => clearFilter('industry')}
                       className="ml-1.5 hover:text-violet-300"
                     >
-                      <X className="w-3 h-3" />
+                      <FlaticonIcon name="cross" className="w-3 h-3" />
                     </button>
                   </Badge>
                 )}
@@ -248,7 +236,7 @@ function SearchContent() {
                   onClick={clearAllFilters}
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs text-white/50 hover:text-white"
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                 >
                   Clear all
                 </Button>
@@ -262,14 +250,14 @@ function SearchContent() {
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "h-9 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-lg",
-                  showFilters && "bg-white/[0.05] text-white border-white/20"
+                  "h-9 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg",
+                  showFilters && "bg-muted text-foreground border-border"
                 )}
               >
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                <FlaticonIcon name="sliders" className="w-4 h-4 mr-2" />
                 Filters
                 {activeFiltersCount > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500 text-white rounded-full">
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-foreground rounded-full">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -279,14 +267,14 @@ function SearchContent() {
 
           {/* Filters Panel */}
           {showFilters && (
-            <div className="pb-4 border-t border-white/[0.06] pt-4">
+            <div className="pb-4 border-t border-border pt-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-white/70 mb-2 block">Content Type</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Content Type</label>
                   <select
                     value={filters.type}
                     onChange={(e) => handleFilterChange('type', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                    className="w-full h-9 px-3 rounded-lg bg-muted border border-border text-foreground text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
                   >
                     <option value="">All Types</option>
                     <option value="opportunity">Opportunities</option>
@@ -296,11 +284,11 @@ function SearchContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-white/70 mb-2 block">Location</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Location</label>
                   <select
                     value={filters.location}
                     onChange={(e) => handleFilterChange('location', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                    className="w-full h-9 px-3 rounded-lg bg-muted border border-border text-foreground text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
                   >
                     <option value="">All Locations</option>
                     <option value="Remote">Remote</option>
@@ -311,11 +299,11 @@ function SearchContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-white/70 mb-2 block">Industry</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Industry</label>
                   <select
                     value={filters.industry}
                     onChange={(e) => handleFilterChange('industry', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg bg-white/[0.05] border border-white/[0.1] text-white text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
+                    className="w-full h-9 px-3 rounded-lg bg-muted border border-border text-foreground text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
                   >
                     <option value="">All Industries</option>
                     {industryOptions.map(industry => (
@@ -334,17 +322,17 @@ function SearchContent() {
         {isLoading && allResults.length === 0 ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
+              <div key={i} className="rounded-2xl bg-card border border-border p-5">
                 <div className="animate-pulse space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-white/[0.08]" />
+                    <div className="w-11 h-11 rounded-xl bg-muted" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-white/[0.08] rounded w-32" />
-                      <div className="h-3 bg-white/[0.08] rounded w-20" />
+                      <div className="h-4 bg-muted rounded w-32" />
+                      <div className="h-3 bg-muted rounded w-20" />
                     </div>
                   </div>
-                  <div className="h-4 bg-white/[0.08] rounded w-full" />
-                  <div className="h-4 bg-white/[0.08] rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-full" />
+                  <div className="h-4 bg-muted rounded w-3/4" />
                 </div>
               </div>
             ))}
@@ -352,11 +340,11 @@ function SearchContent() {
         ) : searchQuery && totalResults === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
-              <Search className="w-10 h-10 text-orange-500/50" />
+              <FlaticonIcon name="search" className="w-10 h-10 text-orange-500/50" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No results found</h3>
-            <p className="text-sm text-white/50 mb-6 max-w-md mx-auto">
-              No results match your search for <span className="font-medium text-white">"{searchQuery}"</span>. Try a different search term or adjust your filters.
+            <h3 className="text-lg font-semibold text-foreground mb-2">No results found</h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+              No results match your search for <span className="font-medium text-foreground">"{searchQuery}"</span>. Try a different search term or adjust your filters.
             </p>
             <Button
               onClick={() => {
@@ -365,7 +353,7 @@ function SearchContent() {
                 setFilters({ location: '', type: '', industry: '' })
               }}
               variant="outline"
-              className="border-white/10 text-white/70 hover:text-white rounded-full"
+              className="border-border text-muted-foreground hover:text-foreground rounded-full"
             >
               Clear Search
             </Button>
@@ -392,13 +380,13 @@ function SearchContent() {
             {/* Loading indicator */}
             {isLoading && allResults.length > 0 && (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                <FlaticonIcon name="spinner" className="w-6 h-6 text-orange-500 animate-spin" />
               </div>
             )}
 
             {/* End of feed message */}
             {!hasMore && allResults.length > 0 && (
-              <div className="text-center py-8 text-white/40 text-sm">
+              <div className="text-center py-8 text-muted-foreground text-sm">
                 You've reached the end of the search results
               </div>
             )}
@@ -406,10 +394,10 @@ function SearchContent() {
         ) : (
           <div className="text-center py-20">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-10 h-10 text-orange-500/50" />
+              <FlaticonIcon name="sparkles" className="w-10 h-10 text-orange-500/50" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Start your search</h3>
-            <p className="text-sm text-white/50 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Start your search</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Enter a search term above to find opportunities, events, jobs, and resources.
             </p>
           </div>
@@ -425,8 +413,8 @@ export default function SearchPage() {
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 text-orange-500 animate-spin mx-auto mb-4" />
-            <p className="text-lg text-white/60">Loading...</p>
+            <FlaticonIcon name="spinner" className="w-8 h-8 text-orange-500 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Loading...</p>
           </div>
         </div>
       }>

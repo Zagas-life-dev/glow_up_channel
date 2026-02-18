@@ -1,65 +1,48 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { AdminLayout } from "@/components/admin-sidebar"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RiEyeLine } from "react-icons/ri"
 import {
-  BarChart3,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  ChevronLeft,
-  AlertTriangle,
-  Activity,
-  Eye,
-  Heart,
-  Bookmark,
-  UserPlus,
-  Target,
-  Briefcase,
-  BookOpen,
-  Shield,
-  Settings,
-  Home,
-  LayoutDashboard,
-  FileText,
-  RefreshCw,
-  MoreVertical,
-  Menu,
-  X,
-  Clock,
-  DollarSign,
-  ArrowUp,
-  ArrowDown,
-  Zap,
-  MessageCircle,
-  Share2,
-  Download,
-  Filter
-} from "lucide-react"
+  RiBarChartBoxLine,
+  RiUserLine,
+  RiArrowUpLine,
+  RiArrowDownLine,
+  RiCalendarLine,
+  RiArrowLeftLine,
+  RiErrorWarningLine,
+  RiHeartLine,
+  RiBookmarkLine,
+  RiUserAddLine,
+  RiFocus3Line,
+  RiBriefcaseLine,
+  RiBookOpenLine,
+  RiFileLine,
+  RiRefreshLine,
+  RiTimeLine,
+  RiMoneyDollarCircleLine,
+  RiMessageLine,
+  RiShareLine,
+  RiDownloadLine,
+  RiFilterLine,
+} from "react-icons/ri"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import PageSkeleton from "@/components/skeletons/page-skeleton"
 import {
   LineChart,
   Line,
@@ -75,8 +58,35 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from "recharts"
+
+const BarChart3 = RiBarChartBoxLine
+const Users = RiUserLine
+const TrendingUp = RiArrowUpLine
+const TrendingDown = RiArrowDownLine
+const Calendar = RiCalendarLine
+const ChevronLeft = RiArrowLeftLine
+const AlertTriangle = RiErrorWarningLine
+const Activity = RiArrowUpLine
+const Eye = RiEyeLine
+const Heart = RiHeartLine
+const Bookmark = RiBookmarkLine
+const UserPlus = RiUserAddLine
+const Target = RiFocus3Line
+const Briefcase = RiBriefcaseLine
+const BookOpen = RiBookOpenLine
+const FileText = RiFileLine
+const RefreshCw = RiRefreshLine
+const Clock = RiTimeLine
+const DollarSign = RiMoneyDollarCircleLine
+const ArrowUp = RiArrowUpLine
+const ArrowDown = RiArrowDownLine
+const Zap = RiArrowUpLine
+const MessageCircle = RiMessageLine
+const Share2 = RiShareLine
+const Download = RiDownloadLine
+const Filter = RiFilterLine
 
 interface PlatformStats {
   totalUsers?: number
@@ -100,8 +110,6 @@ type TimeRange = '7d' | '30d' | '90d' | 'all'
 export default function AdminAnalytics() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
-  const router = useRouter()
-  const pathname = usePathname()
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -224,49 +232,27 @@ export default function AdminAnalytics() {
   const COLORS = ['#f97316', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b']
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading analytics...</p>
-        </div>
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'super_admin')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-page px-4">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
             <AlertTriangle className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
-          <p className="text-white/60 mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
             You need admin or super admin privileges to access this page.
           </p>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
             <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
         </div>
       </div>
     )
   }
-
-  const isSuperAdmin = user?.role === 'super_admin'
-
-  const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/admin' },
-    { id: 'users', label: 'Users', icon: Users, href: '/dashboard/admin/users' },
-    { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/admin/content' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/admin/analytics' },
-  ]
-
-  const quickLinks = [
-    { label: 'User Management', icon: Users, href: '/dashboard/admin/user-management', variant: 'default' as const },
-    { label: 'Settings', icon: Settings, href: '/dashboard/admin/settings', variant: 'outline' as const },
-    { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
-  ]
 
   // Calculate growth percentages
   const userGrowth = stats?.recentRegistrations && stats?.totalUsers 
@@ -282,181 +268,45 @@ export default function AdminAnalytics() {
     : '0'
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
-      {/* Desktop Sidebar - Fixed */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] fixed left-0 top-0 bottom-0 h-screen overflow-y-auto">
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-white/[0.06] flex-shrink-0">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-white">Admin Hub</h1>
-              <p className="text-xs text-white/50">Platform Management</p>
-            </div>
-          </div>
-          
-          {/* User Info */}
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-sm font-medium text-white truncate flex-1 min-w-0">
-                {user?.firstName || user?.email?.split('@')[0]}
-              </p>
-              <Badge 
-                variant={isSuperAdmin ? "destructive" : "secondary"} 
-                className="text-xs ml-2 flex-shrink-0"
-              >
-                {isSuperAdmin ? "Super" : "Admin"}
-              </Badge>
-            </div>
-            <p className="text-xs text-white/50 truncate">{user?.email}</p>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || (item.id === 'analytics' && pathname?.includes('/dashboard/admin/analytics'))
-            
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive 
-                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
-                )}
-              >
-                <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-orange-400")} />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-white/[0.06] space-y-2 flex-shrink-0">
-          {quickLinks.map((link) => {
-            const Icon = link.icon
-            return (
-              <Button
-                key={link.label}
-                asChild
-                variant={link.variant}
-                className={cn(
-                  "w-full justify-start",
-                  link.variant === 'default' 
-                    ? "bg-orange-500 hover:bg-orange-600" 
-                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
-                )}
-              >
-                <Link href={link.href}>
-                  <Icon className="w-4 h-4 mr-2" />
-                  {link.label}
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        {/* Mobile Header */}
-        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
-          <div className="flex items-center justify-between h-14 px-4">
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => router.push('/dashboard/admin')}
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0 text-white/60"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-orange-500" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-white">Analytics</h1>
-                <p className="text-xs text-white/50">Platform insights</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => fetchAnalytics()} 
-                variant="ghost" 
-                size="sm"
-                disabled={loading}
-                className="h-9 w-9 p-0 text-white/60"
-              >
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-9 w-9 p-0 text-white/60"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
-                >
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
-                    <Link href="/dashboard/admin" className="flex items-center gap-3 w-full">
-                      <Home className="h-4 w-4 text-orange-400" />
-                      <span>Back to Admin</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <AdminLayout
+      pageTitle="Analytics"
+      pageSubtitle="Platform insights"
+      PageIcon={RiBarChartBoxLine}
+      onRefresh={fetchAnalytics}
+      refreshLoading={loading}
+      backHref="/dashboard/admin"
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
             {/* Desktop Header */}
-            <div className="hidden lg:flex items-center justify-between mb-6">
+            <div className="hidden lg:flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <Button
                   asChild
                   variant="ghost"
                   size="sm"
-                  className="text-white/60 hover:text-white hover:bg-white/[0.05]"
+                  className="rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
-                  <Link href="/dashboard/admin">
-                    <ChevronLeft className="h-4 w-4 mr-2" />
-                    Back to Admin
+                  <Link href="/dashboard/admin" className="flex items-center gap-2">
+                    <ChevronLeft className="h-4 w-4" />
+                    Back
                   </Link>
                 </Button>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-md">
+                    <BarChart3 className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-white">Platform Analytics</h1>
-                    <p className="text-sm text-white/50">Comprehensive insights and metrics</p>
+                    <h1 className="text-2xl font-bold text-foreground">Platform Analytics</h1>
+                    <p className="text-sm text-muted-foreground">Comprehensive insights and metrics</p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-                  <SelectTrigger className="w-32 bg-white/[0.03] border-white/10 text-white">
+                  <SelectTrigger className="w-32 rounded-2xl bg-muted border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#141414] border-white/10">
+                  <SelectContent className="bg-surface border-border">
                     <SelectItem value="7d">Last 7 days</SelectItem>
                     <SelectItem value="30d">Last 30 days</SelectItem>
                     <SelectItem value="90d">Last 90 days</SelectItem>
@@ -468,7 +318,7 @@ export default function AdminAnalytics() {
                   size="sm"
                   onClick={() => fetchAnalytics()}
                   disabled={loading}
-                  className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                  className="rounded-2xl border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
                   <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
                   Refresh
@@ -479,10 +329,10 @@ export default function AdminAnalytics() {
             {/* Mobile Time Range Selector */}
             <div className="lg:hidden mb-4">
               <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-                <SelectTrigger className="w-full bg-white/[0.03] border-white/10 text-white">
+                <SelectTrigger className="w-full bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#141414] border-white/10">
+                <SelectContent className="bg-surface border-border">
                   <SelectItem value="7d">Last 7 days</SelectItem>
                   <SelectItem value="30d">Last 30 days</SelectItem>
                   <SelectItem value="90d">Last 90 days</SelectItem>
@@ -503,9 +353,13 @@ export default function AdminAnalytics() {
 
             {/* Loading State */}
             {loading && !stats && (
-              <div className="text-center py-12">
-                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-sm text-white/60">Loading analytics data...</p>
+              <div className="space-y-4 py-8 animate-pulse">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border p-5 bg-card h-24" />
+                  ))}
+                </div>
+                <div className="h-64 rounded-xl bg-muted border border-border" />
               </div>
             )}
 
@@ -514,13 +368,13 @@ export default function AdminAnalytics() {
               <>
                 {/* Key Metrics - Bento Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="rounded-xl border p-5 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30 hover:opacity-90 transition-opacity">
+                  <div className="rounded-xl border p-5 bg-gradient-to-br from-primary/20 to-primary/10 border-primary/30 hover:opacity-90 transition-opacity">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-white/70">Total Users</p>
-                      <Users className="w-5 h-5 text-blue-400/50" />
+                      <p className="text-xs font-medium text-muted-foreground">Total Users</p>
+                      <Users className="w-5 h-5 text-primary/50" />
                     </div>
-                    <p className="text-3xl font-bold text-blue-400 mb-1">{(stats?.totalUsers || 0).toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <p className="text-3xl font-bold text-primary mb-1">{(stats?.totalUsers || 0).toLocaleString()}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <TrendingUp className="w-3 h-3 text-emerald-400" />
                       <span>+{userGrowth}% growth</span>
                     </div>
@@ -528,33 +382,33 @@ export default function AdminAnalytics() {
 
                   <div className="rounded-xl border p-5 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 hover:opacity-90 transition-opacity">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-white/70">Daily Active Users</p>
+                      <p className="text-xs font-medium text-muted-foreground">Daily Active Users</p>
                       <Activity className="w-5 h-5 text-emerald-400/50" />
                     </div>
                     <p className="text-3xl font-bold text-emerald-400 mb-1">{(stats?.dailyActiveUsers || 0).toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span>Users who engaged today</span>
                     </div>
                   </div>
 
                   <div className="rounded-xl border p-5 bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30 hover:opacity-90 transition-opacity">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-white/70">Pending Users</p>
+                      <p className="text-xs font-medium text-muted-foreground">Pending Users</p>
                       <Clock className="w-5 h-5 text-yellow-400/50" />
                     </div>
                     <p className="text-3xl font-bold text-yellow-400 mb-1">{(stats?.pendingUsers || 0).toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span>{pendingRate}% of total</span>
                     </div>
                   </div>
 
                   <div className="rounded-xl border p-5 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/30 hover:opacity-90 transition-opacity">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-white/70">New Registrations</p>
+                      <p className="text-xs font-medium text-muted-foreground">New Registrations</p>
                       <UserPlus className="w-5 h-5 text-purple-400/50" />
                     </div>
                     <p className="text-3xl font-bold text-purple-400 mb-1">{(stats?.recentRegistrations || 0).toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span>Last 30 days</span>
                     </div>
                   </div>
@@ -564,11 +418,11 @@ export default function AdminAnalytics() {
                 <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
                   <div className="rounded-xl border p-5 bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border-indigo-500/30 hover:opacity-90 transition-opacity">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-white/70">Daily Visitors</p>
+                      <p className="text-xs font-medium text-muted-foreground">Daily Visitors</p>
                       <Eye className="w-5 h-5 text-indigo-400/50" />
                     </div>
                     <p className="text-3xl font-bold text-indigo-400 mb-1">{(stats?.dailyVisitors || 0).toLocaleString()}</p>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span>Total visits today</span>
                     </div>
                   </div>
@@ -576,14 +430,14 @@ export default function AdminAnalytics() {
 
                 {/* User Growth Chart - Large Bento */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                  <Card className="bg-white/[0.02] border-white/[0.06] lg:col-span-2">
+                  <Card className="bg-card border-border lg:col-span-2">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2 text-white">
+                        <CardTitle className="flex items-center gap-2 text-foreground">
                           <TrendingUp className="h-5 w-5 text-orange-400" />
                           <span>User Growth Trend</span>
                         </CardTitle>
-                        <Badge variant="outline" className="border-white/10 text-white/60">
+                        <Badge variant="outline" className="border-border text-muted-foreground">
                           {timeRange === '7d' ? '7 days' : timeRange === '30d' ? '30 days' : timeRange === '90d' ? '90 days' : 'All time'}
                         </Badge>
                       </div>
@@ -647,9 +501,9 @@ export default function AdminAnalytics() {
                 {/* Content & Engagement Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                   {/* Content Distribution */}
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
+                      <CardTitle className="flex items-center gap-2 text-foreground">
                         <Target className="h-5 w-5 text-orange-400" />
                         <span>Content Distribution</span>
                       </CardTitle>
@@ -685,8 +539,8 @@ export default function AdminAnalytics() {
                         {contentDistributionData.map((item, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span className="text-sm text-white/70">{item.name}</span>
-                            <span className="text-sm font-semibold text-white ml-auto">{item.value}</span>
+                            <span className="text-sm text-muted-foreground">{item.name}</span>
+                            <span className="text-sm font-semibold text-foreground ml-auto">{item.value}</span>
                           </div>
                         ))}
                       </div>
@@ -694,10 +548,10 @@ export default function AdminAnalytics() {
                   </Card>
 
                   {/* User Role Distribution */}
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Users className="h-5 w-5 text-blue-400" />
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <Users className="h-5 w-5 text-primary" />
                         <span>Users by Role</span>
                       </CardTitle>
                     </CardHeader>
@@ -731,9 +585,9 @@ export default function AdminAnalytics() {
                 {/* Engagement & Activity Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                   {/* Engagement Trend */}
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
+                      <CardTitle className="flex items-center gap-2 text-foreground">
                         <Zap className="h-5 w-5 text-yellow-400" />
                         <span>Engagement Trend</span>
                       </CardTitle>
@@ -782,9 +636,9 @@ export default function AdminAnalytics() {
                   </Card>
 
                   {/* User Status Distribution */}
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
+                      <CardTitle className="flex items-center gap-2 text-foreground">
                         <Activity className="h-5 w-5 text-emerald-400" />
                         <span>User Status Distribution</span>
                       </CardTitle>
@@ -820,8 +674,8 @@ export default function AdminAnalytics() {
                         {statusDistributionData.map((item, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                            <span className="text-xs text-white/70">{item.name}</span>
-                            <span className="text-xs font-semibold text-white ml-auto">{item.value}</span>
+                            <span className="text-xs text-muted-foreground">{item.name}</span>
+                            <span className="text-xs font-semibold text-foreground ml-auto">{item.value}</span>
                           </div>
                         ))}
                       </div>
@@ -830,9 +684,9 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Content Performance - Large Bento */}
-                <Card className="bg-white/[0.02] border-white/[0.06] mb-6">
+                <Card className="bg-card border-border mb-6">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
+                    <CardTitle className="flex items-center gap-2 text-foreground">
                       <BarChart3 className="h-5 w-5 text-orange-400" />
                       <span>Content Performance</span>
                     </CardTitle>
@@ -871,79 +725,51 @@ export default function AdminAnalytics() {
 
                 {/* Detailed Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-white/70">Opportunity Seekers</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Opportunity Seekers</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-white mb-1">{(stats?.totalOpportunitySeekers || 0).toLocaleString()}</div>
-                      <p className="text-xs text-white/50">Total seekers</p>
+                      <div className="text-2xl font-bold text-foreground mb-1">{(stats?.totalOpportunitySeekers || 0).toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">Total seekers</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-white/70">Posters</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Posters</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-white mb-1">{(stats?.totalPosters || 0).toLocaleString()}</div>
-                      <p className="text-xs text-white/50">Total posters</p>
+                      <div className="text-2xl font-bold text-foreground mb-1">{(stats?.totalPosters || 0).toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">Total posters</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-white/70">Total Content</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Content</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-white mb-1">
+                      <div className="text-2xl font-bold text-foreground mb-1">
                         {((stats?.totalOpportunities || 0) + (stats?.totalEvents || 0) + (stats?.totalJobs || 0) + (stats?.totalResources || 0)).toLocaleString()}
                       </div>
-                      <p className="text-xs text-white/50">All content types</p>
+                      <p className="text-xs text-muted-foreground">All content types</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-white/[0.02] border-white/[0.06]">
+                  <Card className="bg-card border-border">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-white/70">Platform Health</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Platform Health</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-emerald-400 mb-1">{activationRate}%</div>
-                      <p className="text-xs text-white/50">Activation rate</p>
+                      <p className="text-xs text-muted-foreground">Activation rate</p>
                     </CardContent>
                   </Card>
                 </div>
               </>
             )}
           </div>
-        </main>
-
-        {/* Mobile Bottom Navigation */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-white/[0.06] z-30">
-          <div className="flex items-center justify-around h-16 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || (item.id === 'analytics' && pathname?.includes('/dashboard/admin/analytics'))
-              
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-0 flex-1",
-                    isActive 
-                      ? "text-orange-400" 
-                      : "text-white/50"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-orange-400")} />
-                  <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        </nav>
-      </div>
-    </div>
+    </AdminLayout>
   )
 }

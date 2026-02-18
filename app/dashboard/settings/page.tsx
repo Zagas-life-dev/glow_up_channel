@@ -46,12 +46,14 @@ import {
   Sparkles,
   TrendingUp,
   Building2,
-  Lightbulb
+  Lightbulb,
+  QrCode
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import PageSkeleton from '@/components/skeletons/page-skeleton'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -112,6 +114,8 @@ const aspirationOptions = [
   'Entrepreneurship support'
 ]
 
+const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
+
 export default function SettingsPage() {
   const router = useRouter()
   const { user, profile, logout, refreshUser, isLoading } = useAuth()
@@ -123,6 +127,7 @@ export default function SettingsPage() {
   const [emailVerified, setEmailVerified] = useState<boolean>(false)
   const [isResendingCode, setIsResendingCode] = useState(false)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
 
   // Basic Info State
   const [firstName, setFirstName] = useState('')
@@ -172,6 +177,36 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+
+  const handleOpenQrDashboard = () => {
+    if (!user) {
+      toast.error('Please log in again to manage your QR profile.')
+      return
+    }
+
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('accessToken') || localStorage.getItem('authToken')
+      : null
+
+    if (!token) {
+      toast.error('No active session found. Please sign in again.')
+      return
+    }
+
+    if (!QR_APP_URL) {
+      toast.error('QR app URL is not configured.')
+      return
+    }
+
+    setIsOpeningQrDashboard(true)
+
+    try {
+      const url = `${QR_APP_URL.replace(/\/$/, '')}/dashboard?token=${encodeURIComponent(token)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } finally {
+      setTimeout(() => setIsOpeningQrDashboard(false), 500)
+    }
+  }
 
   // Load data from profile/user
   useEffect(() => {
@@ -444,26 +479,19 @@ export default function SettingsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading your settings...</p>
-        </div>
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center bg-page">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 border border-red-500/30">
             <User className="w-8 h-8 text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Profile Not Found</h2>
-          <p className="text-white/60 mb-4">Unable to load your profile data. Please try logging in again.</p>
-          <Button onClick={logout} className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Profile Not Found</h2>
+          <p className="text-muted-foreground mb-4">Unable to load your profile data. Please try logging in again.</p>
+          <Button onClick={logout} className="bg-primary hover:bg-primary/90 rounded-xl">
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
@@ -473,18 +501,18 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-20 md:pb-8">
+    <div className="min-h-screen bg-page pb-20 md:pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors">
-                <ArrowLeft className="h-5 w-5 text-white/60" />
+              <Link href="/dashboard" className="p-2 hover:bg-muted rounded-xl transition-colors">
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
               </Link>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">Settings</h1>
-                <p className="text-sm text-white/50 hidden sm:block">Manage your account and preferences</p>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">Settings</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">Manage your account and preferences</p>
               </div>
             </div>
             
@@ -493,7 +521,7 @@ export default function SettingsPage() {
                 onClick={logout}
                 variant="outline"
                 size="sm"
-                className="border-white/10 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl"
+                className="border-border text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl"
               >
                 <LogOut className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Sign Out</span>
@@ -505,7 +533,7 @@ export default function SettingsPage() {
                     onClick={() => setIsEditing(false)} 
                     variant="outline" 
                     size="sm"
-                    className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl"
+                    className="border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
                   >
                     Cancel
                   </Button>
@@ -513,7 +541,7 @@ export default function SettingsPage() {
                     onClick={handleSave} 
                     disabled={isSaving} 
                     size="sm"
-                    className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                    className="bg-primary hover:bg-primary/90 rounded-xl"
                   >
                     {isSaving ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -534,7 +562,7 @@ export default function SettingsPage() {
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="flex gap-1 p-1 bg-white/[0.03] rounded-xl overflow-x-auto">
+          <div className="flex gap-1 p-1 bg-muted rounded-xl overflow-x-auto">
             {[
               { id: 'basic', label: 'Basic Info', icon: User },
               { id: 'background', label: 'Background', icon: Target },
@@ -550,8 +578,8 @@ export default function SettingsPage() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                     activeTab === tab.id
-                      ? "bg-orange-500 text-white"
-                      : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
+                      ? "bg-primary text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -565,16 +593,39 @@ export default function SettingsPage() {
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+            {/* QR Profile quick access */}
+            <div className="bg-card border border-border rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-orange-500/40 flex items-center justify-center">
+                  <QrCode className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">QR Profile</p>
+                  <p className="text-xs text-muted-foreground">
+                    Generate and manage a QR code that shares your public contact card.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={handleOpenQrDashboard}
+                disabled={isOpeningQrDashboard}
+                className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
+              >
+                {isOpeningQrDashboard ? 'Opening…' : 'Manage QR Profile'}
+              </Button>
+            </div>
+
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               {/* Profile Image */}
               <div className="flex flex-col items-center">
                 <div className="relative">
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden bg-[#141414] border-2 border-white/[0.06]">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden bg-surface border-2 border-border">
                     {profileImage ? (
                       <Image src={profileImage} alt="Profile" width={128} height={128} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center">
-                        <span className="text-2xl md:text-3xl font-semibold text-white">
+                        <span className="text-2xl md:text-3xl font-semibold text-foreground">
                           {(firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase()}
                         </span>
                       </div>
@@ -583,7 +634,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingImage || !isEditing}
-                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-primary hover:bg-primary/90 text-foreground shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploadingImage ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -600,43 +651,43 @@ export default function SettingsPage() {
                   />
                 </div>
                 {isEditing && (
-                  <p className="text-xs text-white/40 mt-2">Tap to change photo</p>
+                  <p className="text-xs text-muted-foreground mt-2">Tap to change photo</p>
                 )}
               </div>
 
               {/* Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/60 text-sm mb-2 block">First Name</Label>
+                  <Label className="text-muted-foreground text-sm mb-2 block">First Name</Label>
                   <Input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     disabled={!isEditing}
                     placeholder="John"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                    className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                   />
                 </div>
                 <div>
-                  <Label className="text-white/60 text-sm mb-2 block">Last Name</Label>
+                  <Label className="text-muted-foreground text-sm mb-2 block">Last Name</Label>
                   <Input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     disabled={!isEditing}
                     placeholder="Doe"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                    className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                   />
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block">Email Address</Label>
+                <Label className="text-muted-foreground text-sm mb-2 block">Email Address</Label>
                 <Input
                   value={user?.email || ''}
                   disabled
-                  className="bg-white/[0.03] border-white/[0.08] text-white/50 rounded-xl h-11"
+                  className="bg-muted border-border text-muted-foreground rounded-xl h-11"
                 />
-                <div className="flex items-center justify-between mt-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-center justify-between mt-3 p-3 rounded-xl bg-card border border-border">
                   <div className="flex items-center gap-2">
                     {emailVerified ? (
                       <>
@@ -669,7 +720,7 @@ export default function SettingsPage() {
                         }
                       }}
                       disabled={isResendingCode}
-                      className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl"
+                      className="border-orange-500/30 text-orange-400 hover:bg-primary/10 rounded-xl"
                     >
                       {isResendingCode ? (
                         <>
@@ -689,20 +740,20 @@ export default function SettingsPage() {
 
               {/* Headline */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block">Headline</Label>
+                <Label className="text-muted-foreground text-sm mb-2 block">Headline</Label>
                 <Input
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   disabled={!isEditing}
                   placeholder="e.g. Software Engineer | Entrepreneur"
                   maxLength={100}
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Bio */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block">Bio</Label>
+                <Label className="text-muted-foreground text-sm mb-2 block">Bio</Label>
                 <Textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -710,27 +761,27 @@ export default function SettingsPage() {
                   placeholder="Tell people about yourself..."
                   maxLength={500}
                   rows={3}
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl focus:border-orange-500/50 resize-none disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl focus:border-orange-500/50 resize-none disabled:opacity-50"
                 />
-                <p className="text-xs text-white/30 mt-1 text-right">{bio.length}/500</p>
+                <p className="text-xs text-muted-foreground mt-1 text-right">{bio.length}/500</p>
               </div>
 
               {/* Phone Number */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block">Phone Number</Label>
+                <Label className="text-muted-foreground text-sm mb-2 block">Phone Number</Label>
                 <Input
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   disabled={!isEditing}
                   type="tel"
                   placeholder="+1234567890"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Work */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Briefcase className="w-4 h-4" />
                   <span>Work</span>
                 </div>
@@ -739,20 +790,20 @@ export default function SettingsPage() {
                   onChange={(e) => setWorkTitle(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Job Title"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
                 <Input
                   value={workCompany}
                   onChange={(e) => setWorkCompany(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Company"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Education */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <GraduationCap className="w-4 h-4" />
                   <span>Education</span>
                 </div>
@@ -761,27 +812,27 @@ export default function SettingsPage() {
                   onChange={(e) => setEducationSchool(e.target.value)}
                   disabled={!isEditing}
                   placeholder="School/University"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
                 <Input
                   value={educationDegree}
                   onChange={(e) => setEducationDegree(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Degree"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
                 <Input
                   value={educationField}
                   onChange={(e) => setEducationField(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Field of Study"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Skills */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm mb-2 block flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   Skills
                 </Label>
@@ -793,14 +844,14 @@ export default function SettingsPage() {
                         onChange={(e) => setNewSkill(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                         placeholder="Add a skill..."
-                        className="flex-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                        className="flex-1 bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                       />
                       <Button 
                         onClick={addSkill}
                         disabled={!newSkill.trim() || skills.length >= 20}
                         variant="outline"
                         size="icon"
-                        className="border-white/10 text-white/60 hover:text-white rounded-xl h-10 w-10"
+                        className="border-border text-muted-foreground hover:text-foreground rounded-xl h-10 w-10"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -810,7 +861,7 @@ export default function SettingsPage() {
                         {skills.map((skill, i) => (
                           <span 
                             key={i}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-orange-400 text-xs"
                           >
                             {skill}
                             <button onClick={() => removeSkill(skill)} className="opacity-60 hover:opacity-100">
@@ -827,13 +878,13 @@ export default function SettingsPage() {
                       skills.map((skill, i) => (
                         <span 
                           key={i}
-                          className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs"
+                          className="px-2.5 py-1 rounded-lg bg-primary/10 text-orange-400 text-xs"
                         >
                           {skill}
                         </span>
                       ))
                     ) : (
-                      <span className="text-white/40 text-sm">No skills added yet</span>
+                      <span className="text-muted-foreground text-sm">No skills added yet</span>
                     )}
                   </div>
                 )}
@@ -841,7 +892,7 @@ export default function SettingsPage() {
 
               {/* Website & Social Links */}
               <div className="space-y-3">
-                <Label className="text-white/60 text-sm block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm block flex items-center gap-1">
                   <LinkIcon className="w-3 h-3" />
                   Links
                 </Label>
@@ -850,7 +901,7 @@ export default function SettingsPage() {
                   onChange={(e) => setWebsite(e.target.value)}
                   disabled={!isEditing}
                   placeholder="https://yourwebsite.com"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
                 {socialPlatforms.map((platform) => (
                   <Input
@@ -859,7 +910,7 @@ export default function SettingsPage() {
                     onChange={(e) => updateSocialLink(platform.key, e.target.value)}
                     disabled={!isEditing}
                     placeholder={platform.placeholder}
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                    className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                   />
                 ))}
               </div>
@@ -867,7 +918,7 @@ export default function SettingsPage() {
               {!isEditing && (
                 <Button 
                   onClick={() => setIsEditing(true)} 
-                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                  className="w-full bg-primary hover:bg-primary/90 rounded-xl"
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
                   Edit Profile
@@ -880,10 +931,10 @@ export default function SettingsPage() {
         {/* Background Tab */}
         {activeTab === 'background' && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               {/* Location */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <MapPin className="w-4 h-4" />
                   <span>Location</span>
                 </div>
@@ -893,14 +944,14 @@ export default function SettingsPage() {
                     onChange={(e) => setCountry(e.target.value)}
                     disabled={!isEditing}
                     placeholder="Country"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                    className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                   />
                   <Input
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
                     disabled={!isEditing}
                     placeholder="Province/State"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                    className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                   />
                 </div>
                 <Input
@@ -908,23 +959,23 @@ export default function SettingsPage() {
                   onChange={(e) => setCity(e.target.value)}
                   disabled={!isEditing}
                   placeholder="City (optional)"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Career Stage */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm mb-2 block flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   Career Stage
                 </Label>
                 <Select value={careerStage} onValueChange={setCareerStage} disabled={!isEditing}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 disabled:opacity-50">
+                  <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-11 disabled:opacity-50">
                     <SelectValue placeholder="Select career stage" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                  <SelectContent className="bg-surface border-border">
                     {careerStages.map((stage) => (
-                      <SelectItem key={stage} value={stage} className="text-white focus:bg-white/[0.05]">
+                      <SelectItem key={stage} value={stage} className="text-foreground focus:bg-muted">
                         {stage}
                       </SelectItem>
                     ))}
@@ -933,18 +984,18 @@ export default function SettingsPage() {
               </div>
 
               {/* Education */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <GraduationCap className="w-4 h-4" />
                   <span>Education</span>
                 </div>
                 <Select value={educationLevel} onValueChange={setEducationLevel} disabled={!isEditing}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 disabled:opacity-50">
+                  <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-11 disabled:opacity-50">
                     <SelectValue placeholder="Education level" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                  <SelectContent className="bg-surface border-border">
                     {educationLevels.map((level) => (
-                      <SelectItem key={level} value={level} className="text-white focus:bg-white/[0.05]">
+                      <SelectItem key={level} value={level} className="text-foreground focus:bg-muted">
                         {level}
                       </SelectItem>
                     ))}
@@ -955,20 +1006,20 @@ export default function SettingsPage() {
                   onChange={(e) => setFieldOfStudy(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Field of Study"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
                 <Input
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                   disabled={!isEditing}
                   placeholder="Institution/University"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
+                  className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50 disabled:opacity-50"
                 />
               </div>
 
               {/* Interests */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm mb-2 block flex items-center gap-1">
                   <Target className="w-3 h-3" />
                   Interests
                 </Label>
@@ -981,8 +1032,8 @@ export default function SettingsPage() {
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         interests.includes(interest)
-                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "bg-muted text-muted-foreground border border-border hover:border-border",
                         !isEditing && "opacity-50 cursor-default"
                       )}
                     >
@@ -994,7 +1045,7 @@ export default function SettingsPage() {
 
               {/* Industry Sectors */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm mb-2 block flex items-center gap-1">
                   <Building2 className="w-3 h-3" />
                   Industry Sectors
                 </Label>
@@ -1008,7 +1059,7 @@ export default function SettingsPage() {
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         industrySectors.includes(sector)
                           ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                          : "bg-muted text-muted-foreground border border-border hover:border-border",
                         !isEditing && "opacity-50 cursor-default"
                       )}
                     >
@@ -1020,7 +1071,7 @@ export default function SettingsPage() {
 
               {/* Aspirations */}
               <div>
-                <Label className="text-white/60 text-sm mb-2 block flex items-center gap-1">
+                <Label className="text-muted-foreground text-sm mb-2 block flex items-center gap-1">
                   <Lightbulb className="w-3 h-3" />
                   What are you looking for?
                 </Label>
@@ -1034,7 +1085,7 @@ export default function SettingsPage() {
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         aspirations.includes(aspiration)
                           ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]",
+                          : "bg-muted text-muted-foreground border border-border hover:border-border",
                         !isEditing && "opacity-50 cursor-default"
                       )}
                     >
@@ -1047,7 +1098,7 @@ export default function SettingsPage() {
               {!isEditing && (
                 <Button 
                   onClick={() => setIsEditing(true)} 
-                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                  className="w-full bg-primary hover:bg-primary/90 rounded-xl"
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
                   Edit Background
@@ -1060,44 +1111,44 @@ export default function SettingsPage() {
         {/* Privacy Tab */}
         {activeTab === 'privacy' && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-4">
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-4">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {isPrivate ? <Lock className="w-5 h-5 text-white/40" /> : <Globe className="w-5 h-5 text-emerald-500" />}
+                    {isPrivate ? <Lock className="w-5 h-5 text-muted-foreground" /> : <Globe className="w-5 h-5 text-emerald-500" />}
                     <div>
-                      <p className="text-sm font-medium text-white">Private Account</p>
-                      <p className="text-xs text-white/40">New partners will need your approval</p>
+                      <p className="text-sm font-medium text-foreground">Private Account</p>
+                      <p className="text-xs text-muted-foreground">New partners will need your approval</p>
                     </div>
                   </div>
                   <Switch
                     checked={isPrivate}
                     onCheckedChange={setIsPrivate}
                     disabled={!isEditing}
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-white/40" />}
+                    {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-muted-foreground" />}
                     <div>
-                      <p className="text-sm font-medium text-white">Show Connections</p>
-                      <p className="text-xs text-white/40">Let others see your partner counts</p>
+                      <p className="text-sm font-medium text-foreground">Show Connections</p>
+                      <p className="text-xs text-muted-foreground">Let others see your partner counts</p>
                     </div>
                   </div>
                   <Switch
                     checked={showConnections}
                     onCheckedChange={setShowConnections}
                     disabled={!isEditing}
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+              <div className="p-4 rounded-xl bg-primary/5 border border-orange-500/20">
                 <p className="text-sm text-orange-400 font-medium mb-1">Privacy Tips</p>
-                <ul className="text-xs text-white/50 space-y-1">
+                <ul className="text-xs text-muted-foreground space-y-1">
                   <li>• Private accounts require approval for new partners</li>
                   <li>• Hidden connections only affect the count display</li>
                   <li>• Your posts visibility can be set individually</li>
@@ -1107,7 +1158,7 @@ export default function SettingsPage() {
               {!isEditing && (
                 <Button 
                   onClick={() => setIsEditing(true)} 
-                  className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+                  className="w-full bg-primary hover:bg-primary/90 rounded-xl"
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
                   Edit Privacy Settings
@@ -1120,64 +1171,64 @@ export default function SettingsPage() {
         {/* Security Tab */}
         {activeTab === 'security' && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">Change Password</h3>
+                <h3 className="text-lg font-semibold text-foreground">Change Password</h3>
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-white/60 text-sm mb-2 block">Current Password</Label>
+                    <Label className="text-muted-foreground text-sm mb-2 block">Current Password</Label>
                     <Input
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                      className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50"
                     />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-sm mb-2 block">New Password</Label>
+                    <Label className="text-muted-foreground text-sm mb-2 block">New Password</Label>
                     <Input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
-                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                      className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50"
                     />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-sm mb-2 block">Confirm New Password</Label>
+                    <Label className="text-muted-foreground text-sm mb-2 block">Confirm New Password</Label>
                     <Input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm new password"
-                      className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-11 focus:border-orange-500/50"
+                      className="bg-muted border-border text-foreground rounded-xl h-11 focus:border-orange-500/50"
                     />
                   </div>
-                  <Button className="bg-blue-500 hover:bg-blue-600 rounded-xl">
+                  <Button className="bg-primary hover:bg-primary/90 rounded-xl">
                     Update Password
                   </Button>
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.06] pt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Two-Factor Authentication</h3>
-                <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Two-Factor Authentication</h3>
+                <div className="flex items-center justify-between p-4 bg-card rounded-xl border border-border">
                   <div>
-                    <p className="font-medium text-white">Two-Factor Authentication</p>
-                    <p className="text-sm text-white/50">Add an extra layer of security to your account</p>
+                    <p className="font-medium text-foreground">Two-Factor Authentication</p>
+                    <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                   </div>
-                  <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl">
+                  <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-primary/10 rounded-xl">
                     Enable 2FA
                   </Button>
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.06] pt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Danger Zone</h3>
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Danger Zone</h3>
                 <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
                   <h4 className="font-medium text-red-400 mb-2">Delete Account</h4>
-                  <p className="text-sm text-white/50 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Once you delete your account, there is no going back. Please be certain.
                   </p>
                   <Button 
@@ -1207,59 +1258,59 @@ export default function SettingsPage() {
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">Email Notifications</h3>
+                <h3 className="text-lg font-semibold text-foreground">Email Notifications</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-white">Email Notifications</p>
-                      <p className="text-sm text-white/50">Receive notifications via email</p>
+                      <p className="font-medium text-foreground">Email Notifications</p>
+                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                     </div>
                     <Switch
                       checked={preferences.emailNotifications}
                       onCheckedChange={(checked) => setPreferences({...preferences, emailNotifications: checked})}
-                      className="data-[state=checked]:bg-orange-500"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-white">Marketing Emails</p>
-                      <p className="text-sm text-white/50">Receive promotional and marketing emails</p>
+                      <p className="font-medium text-foreground">Marketing Emails</p>
+                      <p className="text-sm text-muted-foreground">Receive promotional and marketing emails</p>
                     </div>
                     <Switch
                       checked={preferences.marketingEmails}
                       onCheckedChange={(checked) => setPreferences({...preferences, marketingEmails: checked})}
-                      className="data-[state=checked]:bg-orange-500"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-white">Weekly Digest</p>
-                      <p className="text-sm text-white/50">Receive a weekly summary of activities</p>
+                      <p className="font-medium text-foreground">Weekly Digest</p>
+                      <p className="text-sm text-muted-foreground">Receive a weekly summary of activities</p>
                     </div>
                     <Switch
                       checked={preferences.weeklyDigest}
                       onCheckedChange={(checked) => setPreferences({...preferences, weeklyDigest: checked})}
-                      className="data-[state=checked]:bg-orange-500"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.06] pt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Push Notifications</h3>
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Push Notifications</h3>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-white">Push Notifications</p>
-                    <p className="text-sm text-white/50">Receive notifications on your device</p>
+                    <p className="font-medium text-foreground">Push Notifications</p>
+                    <p className="text-sm text-muted-foreground">Receive notifications on your device</p>
                   </div>
                   <Switch
                     checked={preferences.pushNotifications}
                     onCheckedChange={(checked) => setPreferences({...preferences, pushNotifications: checked})}
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               </div>

@@ -1,61 +1,736 @@
 "use client"
 
-import { useEffect } from "react"
-import Image from "next/image"
-import { Sparkles } from "lucide-react"
-import { usePage } from "@/contexts/page-context"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import Link from "next/link"
+import { useAuth } from "@/lib/auth-context"
+import FeedContainer from "@/components/feed-container"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import PageSkeleton from "@/components/skeletons/page-skeleton"
+import {
+  RiStarLine,
+  RiFocus3Line,
+  RiBriefcaseLine,
+  RiCalendarLine,
+  RiBookLine,
+  RiGroupLine,
+  RiGlobalLine,
+  RiArrowUpLine,
+  RiArrowRightLine,
+  RiArrowLeftLine,
+  RiCheckboxCircleLine,
+  RiArrowRightLine as RiRightArrowAlt,
+} from "react-icons/ri"
+import { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
+import { cn } from "@/lib/utils"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 
-export default function Home() {
-  const { setHideNavbar, setHideFooter } = usePage()
+type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
 
-  useEffect(() => {
-    setHideNavbar(true)
-    setHideFooter(true)
-    
-    return () => {
-      setHideNavbar(false)
-      setHideFooter(false)
-    }
-  }, [setHideNavbar, setHideFooter])
+const tabIcons = {
+  all: RiStarLine,
+  opportunities: RiFocus3Line,
+  jobs: RiBriefcaseLine,
+  events: RiCalendarLine,
+  resources: RiBookLine,
+} as const
+const tabs: { id: TabType; label: string }[] = [
+  { id: 'all', label: 'For You' },
+  { id: 'opportunities', label: 'Opportunities' },
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'events', label: 'Events' },
+  { id: 'resources', label: 'Resources' },
+]
+
+const landingStats = [
+  { value: "10K+", label: "Youth Empowered", icon: RiGroupLine },
+  { value: "500+", label: "Opportunities Posted", icon: RiFocus3Line },
+  { value: "10+", label: "Partners", icon: RiGlobalLine },
+  { value: "1K+", label: "Growth Stories", icon: RiArrowUpLine },
+]
+
+const landingPillars = [
+  {
+    title: "Access Over Excuses",
+    description: "We remove barriers so talent can meet opportunity without friction.",
+  },
+  {
+    title: "Community First",
+    description: "We build pathways, not pipelines. Grow with mentors and peers.",
+  },
+  {
+    title: "Real Impact",
+    description: "Every listing, event, and resource is built to move you forward.",
+  },
+]
+
+const landingTracks = [
+  {
+    title: "Opportunities",
+    description: "Jobs, internships, freelance gigs, and scholarships.",
+    icon: RiFocus3Line,
+    accent: "from-orange-500/20 to-orange-600/10",
+    border: "border-orange-500/30",
+    text: "text-orange-400",
+  },
+  {
+    title: "Jobs",
+    description: "Curated roles from trusted companies and founders.",
+    icon: RiBriefcaseLine,
+    accent: "from-primary/20 to-primary/10",
+    border: "border-primary/30",
+    text: "text-primary",
+  },
+  {
+    title: "Events",
+    description: "Networking, workshops, and live learning experiences.",
+    icon: RiCalendarLine,
+    accent: "from-emerald-500/20 to-emerald-600/10",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
+  },
+  {
+    title: "Resources",
+    description: "Courses, templates, and toolkits to build your edge.",
+    icon: RiBookLine,
+    accent: "from-violet-500/20 to-violet-600/10",
+    border: "border-violet-500/30",
+    text: "text-violet-400",
+  },
+]
+
+const seekerSteps = [
+  "Create a standout profile that shows your goals and skills.",
+  "Discover opportunities tailored to your growth path.",
+  "Apply, connect, and track progress in one place.",
+]
+
+const providerSteps = [
+  "Verify your business and publish opportunities faster.",
+  "Reach a vetted audience ready to take action.",
+  "Track performance and build long-term brand trust.",
+]
+
+function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
-      <div className="text-center max-w-2xl mx-auto">
-        {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40">
-            <Image
-              src="/images/logo-icon-transparent.png"
-              alt="Glow Up Channel"
-              fill
-              className="object-contain"
-              priority
-            />
+    <div className="min-h-screen pb-24 md:pb-8 bg-page overflow-x-hidden">
+      {/* Hero */}
+      <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.15),_transparent_55%)]" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <Badge className="bg-primary/20 text-orange-300 border border-orange-500/30 mb-4">
+              GlowUp
+            </Badge>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
+              More than a platform.
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
+                A movement for access.
+              </span>
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8">
+              Brilliant African talent has always existed. What’s been missing is access.
+              GlowUp bridges the gap with opportunities, resources, and a community
+              that helps you grow with intention.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
+                <Link href="/opportunities">
+                  Explore Opportunities
+                  <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                <Link href="/submit">Become a Provider</Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-10 grid sm:grid-cols-3 gap-4">
+            {landingPillars.map((pillar) => (
+              <Card key={pillar.title} className="bg-card border-border">
+                <CardContent className="p-5">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{pillar.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{pillar.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Main Text */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
-          Under Construction
-        </h1>
-        
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <Sparkles className="w-6 h-6 text-orange-500 animate-pulse" />
-          <p className="text-xl sm:text-2xl lg:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500 font-semibold">
-            Prepare for v3
-          </p>
-          <Sparkles className="w-6 h-6 text-orange-500 animate-pulse" />
+      {/* Stats */}
+      <section className="py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {landingStats.map((stat) => {
+                const StatIcon = stat.icon
+                return (
+                <Card key={stat.label} className="bg-card border-border">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-orange-500/20 flex items-center justify-center">
+                        <StatIcon className="w-5 h-5 text-orange-400" aria-hidden />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  </CardContent>
+                </Card>
+                )
+              })}
+          </div>
         </div>
+      </section>
 
-        {/* Decorative Elements */}
-        <div className="mt-12 flex justify-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0s' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
+      {/* Story */}
+      <section className="py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">The Story</h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              We built GlowUp for the ambitious and overlooked. Talent should never be
+              limited by geography, access, or network. Our story is about removing those limits.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              If you are ready to build your career, launch a business, or find the right people
+              to grow with — this is your home base.
+            </p>
+          </div>
+          <Card className="bg-card border-border">
+            <CardContent className="p-6 space-y-4">
+              {[
+                { title: "Discover", text: "Get curated opportunities built for growth." },
+                { title: "Connect", text: "Meet the people and providers that matter." },
+                { title: "Glow Up", text: "Track progress and build real momentum." },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-orange-500/30 flex items-center justify-center">
+                    <RiStarLine className="w-4 h-4 text-orange-400" aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="text-foreground font-semibold">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Tracks */}
+      <section className="py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">What You’ll Find</h2>
+              <p className="text-muted-foreground mt-2">Everything you need to move forward, in one place.</p>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {landingTracks.map((track) => {
+                const TrackIcon = track.icon
+                return (
+                <Card key={track.title} className={cn("border bg-gradient-to-br", track.accent, track.border)}>
+                  <CardContent className="p-5">
+                    <div className={cn("w-10 h-10 rounded-xl border flex items-center justify-center mb-4", track.border)}>
+                      <TrackIcon className={cn("w-5 h-5", track.text)} aria-hidden />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{track.title}</h3>
+                    <p className="text-sm text-muted-foreground">{track.description}</p>
+                  </CardContent>
+                </Card>
+                )
+              })}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-8">
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <RiGroupLine className="w-6 h-6 text-orange-400" aria-hidden />
+                For Opportunity Seekers
+              </h3>
+              <div className="space-y-3 mb-6">
+                {seekerSteps.map((step) => (
+                  <div key={step} className="flex items-start gap-2">
+                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5" aria-hidden />
+                    <p className="text-sm text-muted-foreground">{step}</p>
+                  </div>
+                ))}
+              </div>
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full">
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <RiFocus3Line className="w-6 h-6 text-orange-400" aria-hidden />
+                For Providers
+              </h3>
+              <div className="space-y-3 mb-6">
+                {providerSteps.map((step) => (
+                  <div key={step} className="flex items-start gap-2">
+                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5" aria-hidden />
+                    <p className="text-sm text-muted-foreground">{step}</p>
+                  </div>
+                ))}
+              </div>
+              <Button asChild variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                <Link href="/submit">List an Opportunity</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-14 sm:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30">
+            <CardContent className="p-8 sm:p-10 text-center">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                Ready to start your glow up?
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Join a community built to connect you with the right people, tools, and opportunities.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
+                  <Link href="/signup">Join the Community</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                  <Link href="/contact">Talk to Us</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabType>('all')
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const tabNavRef = useRef<HTMLDivElement>(null)
+  const [showLeftScroll, setShowLeftScroll] = useState(false)
+  const [showRightScroll, setShowRightScroll] = useState(true)
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+
+  // Storage key based on active tab
+  const storageKey = useMemo(() => `home_${activeTab}`, [activeTab])
+
+  // Fetch function for "all" tab (combined promoted + recommended)
+  const fetchAllContent = useCallback(async (lastId: string | null) => {
+    if (!backendUrl) {
+      return { items: [], lastId: null, hasMore: false }
+    }
+
+    const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
+    const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {}
+
+    const fetchRecommended = async (type: string) => {
+      if (!isAuthenticated || !token) {
+        return { success: false, data: { [type]: [] } }
+      }
+      try {
+        let url = `${backendUrl}/api/recommended/${type}?limit=20`
+        if (lastId) {
+          // For recommendations, we need to track lastId per type
+          // For simplicity, we'll fetch all and filter client-side
+          url += `&lastId=${lastId}`
+        }
+        const response = await fetch(url, { headers })
+        
+        if (!response.ok) {
+          console.warn(`Failed to fetch recommended ${type}:`, response.status, response.statusText)
+          return { success: false, data: { [type]: [] } }
+        }
+        
+        return await response.json()
+      } catch (error) {
+        console.error(`Error fetching recommended ${type}:`, error)
+        return { success: false, data: { [type]: [] } }
+      }
+    }
+
+    const fetchPromoted = async (type: string) => {
+      try {
+        let url = `${backendUrl}/api/promoted/${type}?limit=20`
+        if (lastId) {
+          url += `&lastId=${lastId}`
+        }
+        const response = await fetch(url)
+        
+        if (!response.ok) {
+          console.warn(`Failed to fetch promoted ${type}:`, response.status, response.statusText)
+          return { success: false, data: { [type]: [] } }
+        }
+        
+        return await response.json()
+      } catch (error) {
+        console.error(`Error fetching promoted ${type}:`, error)
+        return { success: false, data: { [type]: [] } }
+      }
+    }
+
+    // Fallback: fetch regular content if both promoted and recommended fail
+    const fetchRegularContent = async (type: string) => {
+      try {
+        let url = `${backendUrl}/api/${type}?limit=20`
+        if (lastId) {
+          url += `&lastId=${lastId}`
+        }
+        const response = await fetch(url, { headers })
+        
+        if (!response.ok) {
+          return { success: false, data: { [type]: [] } }
+        }
+        
+        const data = await response.json()
+        if (data.success) {
+          return { success: true, data: { [type]: data.data?.[type] || [] } }
+        }
+        return { success: false, data: { [type]: [] } }
+      } catch (error) {
+        console.error(`Error fetching regular ${type}:`, error)
+        return { success: false, data: { [type]: [] } }
+      }
+    }
+
+    const [
+      promotedOpps, recommendedOpps,
+      promotedJobs, recommendedJobs,
+      promotedEvents, recommendedEvents,
+      promotedResources, recommendedResources
+    ] = await Promise.all([
+      fetchPromoted('opportunities'), fetchRecommended('opportunities'),
+      fetchPromoted('jobs'), fetchRecommended('jobs'),
+      fetchPromoted('events'), fetchRecommended('events'),
+      fetchPromoted('resources'), fetchRecommended('resources')
+    ])
+
+    // Helper to get items with fallback to regular content
+    const getItemsWithFallback = async (
+      type: string,
+      promoted: any,
+      recommended: any,
+      typeKey: string
+    ) => {
+      const promotedItems = promoted.success ? (promoted.data?.[typeKey] || []) : []
+      const recommendedItems = recommended.success ? (recommended.data?.[typeKey] || []) : []
+      
+      // If both promoted and recommended failed, try regular content as fallback
+      if (promotedItems.length === 0 && recommendedItems.length === 0) {
+        const regularContent = await fetchRegularContent(type)
+        if (regularContent.success) {
+          return regularContent.data?.[typeKey] || []
+        }
+      }
+      
+      // Combine promoted and recommended, removing duplicates
+      const combined = [
+        ...promotedItems,
+        ...recommendedItems.filter((item: any) => 
+          !promotedItems.some((p: any) => p._id === item._id)
+        )
+      ]
+      
+      return combined
+    }
+
+    // Fetch all items (with fallback if needed)
+    const [oppsRaw, jobsRaw, eventsRaw, resourcesRaw] = await Promise.all([
+      getItemsWithFallback('opportunities', promotedOpps, recommendedOpps, 'opportunities'),
+      getItemsWithFallback('jobs', promotedJobs, recommendedJobs, 'jobs'),
+      getItemsWithFallback('events', promotedEvents, recommendedEvents, 'events'),
+      getItemsWithFallback('resources', promotedResources, recommendedResources, 'resources')
+    ])
+
+    const opps = oppsRaw.map((item: any) => ({ ...item, type: 'opportunity' }))
+    const jobItems = jobsRaw.map((item: any) => ({ ...item, type: 'job' }))
+    const eventItems = eventsRaw.map((item: any) => ({ ...item, type: 'event' }))
+    const resourceItems = resourcesRaw.map((item: any) => ({ ...item, type: 'resource' }))
+
+    const combined = [...opps, ...jobItems, ...eventItems, ...resourceItems]
+      .sort((a, b) => {
+        const aPromoted = a.packageType ? 1 : 0
+        const bPromoted = b.packageType ? 1 : 0
+        if (aPromoted !== bPromoted) return bPromoted - aPromoted
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      })
+
+    // Get lastId from the last item
+    const lastItemId = combined.length > 0 ? combined[combined.length - 1]._id : null
+
+    return {
+      items: combined,
+      lastId: lastItemId,
+      hasMore: combined.length >= 20
+    }
+  }, [backendUrl, isAuthenticated, user])
+
+  // Fetch function for individual content types
+  const fetchContentByType = useCallback(async (type: string, lastId: string | null) => {
+    if (!backendUrl) {
+      console.warn('Backend URL not configured')
+      return { items: [], lastId: null, hasMore: false }
+    }
+
+    const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
+    const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {}
+
+    try {
+      let url = `${backendUrl}/api/${type}?limit=20`
+      if (lastId) {
+        url += `&lastId=${lastId}`
+      }
+
+      const response = await fetch(url, { headers })
+      
+      if (!response.ok) {
+        console.warn(`Failed to fetch ${type}:`, response.status, response.statusText)
+        return { items: [], lastId: null, hasMore: false }
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        const items = (data.data?.[type] || []).map((item: any) => ({ ...item, type: type.slice(0, -1) }))
+        return {
+          items,
+          lastId: data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null),
+          hasMore: data.data?.pagination?.hasMore || false
+        }
+      }
+      
+      console.warn(`API returned unsuccessful response for ${type}:`, data.message || 'Unknown error')
+      return { items: [], lastId: null, hasMore: false }
+    } catch (error) {
+      console.error(`Error fetching ${type}:`, error)
+      return { items: [], lastId: null, hasMore: false }
+    }
+  }, [backendUrl, isAuthenticated, user])
+
+  // Get fetch function based on active tab
+  const getFetchFunction = useCallback(() => {
+    if (activeTab === 'all') {
+      return fetchAllContent
+    }
+    const typeMap: Record<string, string> = {
+      'opportunities': 'opportunities',
+      'jobs': 'jobs',
+      'events': 'events',
+      'resources': 'resources'
+    }
+    return (lastId: string | null) => fetchContentByType(typeMap[activeTab], lastId)
+  }, [activeTab, fetchAllContent, fetchContentByType])
+
+  // Use cursor pagination hook
+  const {
+    items: allContent,
+    isLoading,
+    hasMore,
+    loadMore,
+    reset: resetContent
+  } = useCursorPagination<any>({
+    fetchFunction: getFetchFunction(),
+    storageKey,
+    resetOnMount: false,
+    limit: 20
+  })
+
+  // Use infinite scroll hook
+  const { sentinelRef, threshold } = useInfiniteScroll({
+    hasMore,
+    isLoading,
+    onLoadMore: loadMore,
+    itemsBeforeLoad: 5, // Start loading when 5 items from the end
+    estimatedItemHeight: 350 // Estimated height of each feed card
+  })
+
+  // Reset when tab changes (only depend on activeTab to avoid infinite loop: resetContent identity changes after state update)
+  useEffect(() => {
+    resetContent()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when tab changes
+  }, [activeTab])
+
+  // Also reset when auth state changes (user logs in/out)
+  useEffect(() => {
+    if (!authLoading) {
+      resetContent()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when auth changes
+  }, [isAuthenticated, authLoading])
+
+  // Check scroll position for scroll indicators
+  const checkScrollPosition = useCallback(() => {
+    if (!tabNavRef.current) return
+    
+    const { scrollLeft, scrollWidth, clientWidth } = tabNavRef.current
+    setShowLeftScroll(scrollLeft > 0)
+    setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 1)
+  }, [])
+
+  useEffect(() => {
+    const nav = tabNavRef.current
+    if (!nav) return
+
+    checkScrollPosition()
+    nav.addEventListener('scroll', checkScrollPosition)
+    window.addEventListener('resize', checkScrollPosition)
+
+    return () => {
+      nav.removeEventListener('scroll', checkScrollPosition)
+      window.removeEventListener('resize', checkScrollPosition)
+    }
+  }, [checkScrollPosition])
+
+  const getCurrentItems = () => {
+    return allContent
+  }
+
+  if (authLoading) {
+    return <PageSkeleton />
+  }
+
+  if (!isAuthenticated) {
+    return <LandingPage />
+  }
+
+  return (
+    <div className="min-h-screen pb-24 md:pb-8 overflow-x-hidden">
+      {/* Tab Navigation */}
+      <div className="sticky top-0 z-30 bg-page/95 backdrop-blur-xl border-b border-border">
+        <div className="max-w-2xl mx-auto relative">
+          {/* Left scroll gradient indicator */}
+          {showLeftScroll && (
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-page/95 to-transparent pointer-events-none z-10 flex items-center">
+              <RiArrowLeftLine className="w-4 h-4 text-muted-foreground ml-2" aria-hidden />
+            </div>
+          )}
+          
+          {/* Right scroll gradient indicator */}
+          {showRightScroll && (
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-page/95 to-transparent pointer-events-none z-10 flex items-center justify-end">
+              <RiArrowRightLine className="w-4 h-4 text-muted-foreground mr-2" aria-hidden />
+            </div>
+          )}
+
+          <nav 
+            ref={tabNavRef}
+            className="flex overflow-x-auto scrollbar-hide px-4 scroll-smooth"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id
+              const TabIcon = tabIcons[tab.id]
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-3.5 text-sm font-medium whitespace-nowrap relative transition-all flex-shrink-0",
+                    isActive 
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <TabIcon
+                    className={cn(
+                      "w-4 h-4 flex-shrink-0",
+                      isActive && tab.id === 'opportunities' && "text-orange-500",
+                      isActive && tab.id === 'jobs' && "text-primary",
+                      isActive && tab.id === 'events' && "text-emerald-500",
+                      isActive && tab.id === 'resources' && "text-violet-500",
+                      isActive && tab.id === 'all' && "text-orange-500"
+                    )}
+                    aria-hidden
+                  />
+                  <span>{tab.label}</span>
+                  
+                  {/* Active indicator */}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              )
+            })}
+          </nav>
         </div>
       </div>
 
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.1),_transparent_70%)] pointer-events-none -z-10" />
+      {/* Feed Content */}
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Welcome Section (only when not loading and has content) */}
+        {!isLoading && allContent.length > 0 && activeTab === 'all' && (
+          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {isAuthenticated ? `Hey${user?.firstName ? `, ${user.firstName}` : ''}!` : 'Discover Opportunities'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {isAuthenticated 
+                    ? "Here are picks to help you Glow Up" 
+                    : "Sign in to get personalized recommendations"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <FeedContainer 
+          items={getCurrentItems()} 
+          loading={isLoading}
+          emptyMessage={
+            activeTab === 'all' 
+              ? "No content available yet. Check back soon!" 
+              : `No ${activeTab} found. Try another category!`
+          }
+        />
+
+        {/* Infinite scroll sentinel */}
+        <div
+          ref={sentinelRef}
+          style={{
+            height: '1px',
+            width: '100%',
+            marginTop: `${threshold}px`
+          }}
+        />
+
+        {/* Loading more: show skeleton cards */}
+        {isLoading && allContent.length > 0 && (
+          <div className="space-y-4 pt-4">
+            <FeedCardSkeleton />
+            <FeedCardSkeleton />
+          </div>
+        )}
+
+        {/* End of feed message */}
+        {!hasMore && allContent.length > 0 && (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            You've reached the end
+          </div>
+        )}
+      </div>
     </div>
   )
 }

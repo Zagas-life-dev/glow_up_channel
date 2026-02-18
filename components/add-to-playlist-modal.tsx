@@ -12,16 +12,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  ListMusic,
-  X,
-  Plus,
-  Check,
-  Globe,
-  Lock,
-  Loader2,
-  Users
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { Globe, Lock } from 'lucide-react'
+import { RiPlayList2Fill } from "react-icons/ri"
 import PlaylistModal from './playlist-modal'
 
 interface AddToPlaylistItem {
@@ -88,23 +81,23 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
   return (
     <>
       <Sheet open={isOpen} onOpenChange={handleClose}>
-        <SheetContent side="bottom" className="h-[70vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0 overflow-hidden">
+        <SheetContent side="bottom" className="h-[70vh] bg-page border-border rounded-t-3xl p-0 overflow-hidden">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+          <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <ListMusic className="w-5 h-5 text-orange-500" />
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <RiPlayList2Fill className="w-5 h-5 text-orange-500" />
+              </div>
                 <div>
-                  <SheetTitle className="text-white">Add to Playlist</SheetTitle>
-                  <SheetDescription className="text-white/40 text-xs truncate max-w-[200px]">
+                  <SheetTitle className="text-foreground">Add to Playlist</SheetTitle>
+                  <SheetDescription className="text-muted-foreground text-xs truncate max-w-[200px]">
                     {item.title}
                   </SheetDescription>
                 </div>
               </div>
-              <button onClick={handleClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-                <X className="w-5 h-5 text-white/60" />
+              <button onClick={handleClose} className="p-2 rounded-lg hover:bg-muted">
+                <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
               </button>
             </div>
           </div>
@@ -114,14 +107,14 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
             {/* Create New Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full p-4 rounded-xl border-2 border-dashed border-white/[0.1] hover:border-orange-500/50 hover:bg-orange-500/5 transition-all flex items-center gap-4 mb-4"
+              className="w-full p-4 rounded-xl border-2 border-dashed border-border hover:border-orange-500/50 hover:bg-primary/5 transition-all flex items-center gap-4 mb-4"
             >
-              <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <Plus className="w-5 h-5 text-orange-500" />
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FlaticonIcon name="add" className="w-5 h-5 text-orange-500" aria-hidden />
               </div>
               <div className="text-left">
-                <p className="font-medium text-white">Create New Playlist</p>
-                <p className="text-sm text-white/40">Start a new collection</p>
+                <p className="font-medium text-foreground">Create New Playlist</p>
+                <p className="text-sm text-muted-foreground">Start a new collection</p>
               </div>
             </button>
 
@@ -135,18 +128,18 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
             {/* Playlists */}
             {playlists.length === 0 && editableSharedPlaylists.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mx-auto mb-4">
-                  <ListMusic className="w-7 h-7 text-white/30" />
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <RiPlayList2Fill className="w-7 h-7 text-muted-foreground" />
                 </div>
-                <h3 className="font-medium text-white mb-1">No Playlists Yet</h3>
-                <p className="text-sm text-white/50">Create your first playlist to get started</p>
+                <h3 className="font-medium text-foreground mb-1">No Playlists Yet</h3>
+                <p className="text-sm text-muted-foreground">Create your first playlist to get started</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {/* User's Own Playlists */}
                 {playlists.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Your Playlists</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Your Playlists</p>
                     {playlists.map((playlist) => {
                       const isAdded = addedTo.includes(playlist._id) || playlist.items.some(i => i.contentId === item._id)
                       const isAdding = addingTo === playlist._id
@@ -160,7 +153,7 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
                             "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                             isAdded
                               ? "bg-emerald-500/10 border-emerald-500/20"
-                              : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1]"
+                              : "bg-card border-border hover:bg-muted hover:border-border"
                           )}
                         >
                           <div className={cn(
@@ -168,22 +161,22 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
                             isAdded ? "bg-emerald-500/20" : "bg-gradient-to-br from-orange-500/20 to-violet-500/20"
                           )}>
                             {isAdding ? (
-                              <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+                              <FlaticonIcon name="spinner" className="w-5 h-5 text-orange-500 animate-spin" aria-hidden />
                             ) : isAdded ? (
-                              <Check className="w-5 h-5 text-emerald-500" />
+                              <FlaticonIcon name="check" className="w-5 h-5 text-emerald-500" aria-hidden />
                             ) : (
-                              <ListMusic className="w-5 h-5 text-orange-500" />
+                              <RiPlayList2Fill className="w-5 h-5 text-orange-500" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{playlist.name}</p>
+                            <p className="font-medium text-foreground truncate">{playlist.name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               {playlist.isPublic ? (
-                                <Globe className="w-3 h-3 text-white/30" />
+                                <Globe className="w-3 h-3 text-muted-foreground" />
                               ) : (
-                                <Lock className="w-3 h-3 text-white/30" />
+                                <Lock className="w-3 h-3 text-muted-foreground" />
                               )}
-                              <span className="text-xs text-white/40">{playlist.itemCount} items</span>
+                              <span className="text-xs text-muted-foreground">{playlist.itemCount} items</span>
                             </div>
                           </div>
                           {isAdded && (
@@ -199,7 +192,7 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
                 {editableSharedPlaylists.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-violet-400/70 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <Users className="w-3 h-3" />
+                      <FlaticonIcon name="users" className="w-3 h-3" aria-hidden />
                       Shared With You
                     </p>
                     {editableSharedPlaylists.map((playlist) => {
@@ -215,7 +208,7 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
                             "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                             isAdded
                               ? "bg-emerald-500/10 border-emerald-500/20"
-                              : "bg-white/[0.02] border-violet-500/10 hover:bg-violet-500/5 hover:border-violet-500/20"
+                              : "bg-card border-violet-500/10 hover:bg-violet-500/5 hover:border-violet-500/20"
                           )}
                         >
                           <div className={cn(
@@ -223,22 +216,22 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
                             isAdded ? "bg-emerald-500/20" : "bg-gradient-to-br from-violet-500/20 to-purple-500/20"
                           )}>
                             {isAdding ? (
-                              <Loader2 className="w-5 h-5 text-violet-500 animate-spin" />
+                              <FlaticonIcon name="spinner" className="w-5 h-5 text-violet-500 animate-spin" aria-hidden />
                             ) : isAdded ? (
-                              <Check className="w-5 h-5 text-emerald-500" />
+                              <FlaticonIcon name="check" className="w-5 h-5 text-emerald-500" aria-hidden />
                             ) : (
-                              <Users className="w-5 h-5 text-violet-500" />
+                              <FlaticonIcon name="users" className="w-5 h-5 text-violet-500" aria-hidden />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{playlist.name}</p>
+                            <p className="font-medium text-foreground truncate">{playlist.name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               {playlist.isPublic ? (
-                                <Globe className="w-3 h-3 text-white/30" />
+                                <FlaticonIcon name="globe" className="w-3 h-3 text-muted-foreground" aria-hidden />
                               ) : (
-                                <Lock className="w-3 h-3 text-white/30" />
+                                <FlaticonIcon name="lock" className="w-3 h-3 text-muted-foreground" aria-hidden />
                               )}
-                              <span className="text-xs text-white/40">{playlist.itemCount} items</span>
+                              <span className="text-xs text-muted-foreground">{playlist.itemCount} items</span>
                               <span className="text-xs text-violet-400/60">• by {playlist.createdBy?.firstName || playlist.createdBy?.email?.split('@')[0] || 'Unknown'}</span>
                             </div>
                           </div>

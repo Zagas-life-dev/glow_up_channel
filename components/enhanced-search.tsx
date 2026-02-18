@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, MapPin, Briefcase, Calendar, BookOpen, X } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { MapPin, BookOpen } from 'lucide-react'
 import { ApiClient } from '@/lib/api'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
@@ -123,7 +124,7 @@ export default function EnhancedSearch() {
             </span>
           )}
         </div>
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
+        <h3 className="font-semibold text-foreground mb-2 line-clamp-2">{item.title}</h3>
         <p className="text-sm text-gray-600 mb-3 line-clamp-3">
           {item.description?.slice(0, 150)}...
         </p>
@@ -149,7 +150,7 @@ export default function EnhancedSearch() {
     <div className="space-y-6">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <FlaticonIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" aria-hidden />
         <Input
           type="search"
           placeholder="Search opportunities, events, jobs, and resources..."
@@ -163,7 +164,7 @@ export default function EnhancedSearch() {
           size="sm"
           className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-orange-600"
         >
-          <Filter className="h-4 w-4 mr-1" />
+          <FlaticonIcon name="filter" className="h-4 w-4 mr-1" aria-hidden />
           Filters
         </Button>
       </div>
@@ -174,25 +175,25 @@ export default function EnhancedSearch() {
           {filters.type && (
             <Badge variant="secondary" className="bg-orange-100 text-orange-800">
               Type: {filters.type}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => removeFilter('type')} />
+              <button type="button" onClick={() => removeFilter('type')} className="ml-1 inline-flex rounded hover:bg-muted" aria-label="Remove type filter"><FlaticonIcon name="cross" className="h-3 w-3" aria-hidden /></button>
             </Badge>
           )}
           {filters.location && (
             <Badge variant="secondary" className="bg-orange-100 text-orange-800">
               Location: {filters.location}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => removeFilter('location')} />
+              <button type="button" onClick={() => removeFilter('location')} className="ml-1 inline-flex rounded hover:bg-muted" aria-label="Remove location filter"><FlaticonIcon name="cross" className="h-3 w-3" aria-hidden /></button>
             </Badge>
           )}
           {filters.industry?.map((ind: string) => (
             <Badge key={ind} variant="secondary" className="bg-orange-100 text-orange-800">
               {ind}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => toggleArrayFilter('industry', ind)} />
+              <button type="button" onClick={() => toggleArrayFilter('industry', ind)} className="ml-1 inline-flex rounded hover:bg-muted" aria-label="Remove industry filter"><FlaticonIcon name="cross" className="h-3 w-3" aria-hidden /></button>
             </Badge>
           ))}
           {filters.skills?.map((skill: string) => (
             <Badge key={skill} variant="secondary" className="bg-orange-100 text-orange-800">
               {skill}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => toggleArrayFilter('skills', skill)} />
+              <button type="button" onClick={() => toggleArrayFilter('skills', skill)} className="ml-1 inline-flex rounded hover:bg-muted" aria-label="Remove skill filter"><FlaticonIcon name="cross" className="h-3 w-3" aria-hidden /></button>
             </Badge>
           ))}
         </div>
@@ -236,7 +237,7 @@ export default function EnhancedSearch() {
                     onClick={() => toggleArrayFilter('industry', industry)}
                     className={`px-2 py-1 text-xs rounded ${
                       filters.industry?.includes(industry)
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-primary text-foreground'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -255,7 +256,7 @@ export default function EnhancedSearch() {
                     onClick={() => toggleArrayFilter('skills', skill)}
                     className={`px-2 py-1 text-xs rounded ${
                       filters.skills?.includes(skill)
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-primary text-foreground'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -272,7 +273,7 @@ export default function EnhancedSearch() {
       {searchQuery && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Search Results {totalResults > 0 && `(${totalResults})`}
             </h3>
             {isLoading && (
@@ -294,15 +295,15 @@ export default function EnhancedSearch() {
             <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="all">All ({totalResults})</TabsTrigger>
               <TabsTrigger value="opportunities">
-                <Briefcase className="h-4 w-4 mr-1" />
+                <FlaticonIcon name="briefcase" className="h-4 w-4 mr-1" aria-hidden />
                 Opportunities ({results.opportunities.length})
               </TabsTrigger>
               <TabsTrigger value="jobs">
-                <Briefcase className="h-4 w-4 mr-1" />
+                <FlaticonIcon name="briefcase" className="h-4 w-4 mr-1" aria-hidden />
                 Jobs ({results.jobs.length})
               </TabsTrigger>
               <TabsTrigger value="events">
-                <Calendar className="h-4 w-4 mr-1" />
+                <FlaticonIcon name="calendar" className="h-4 w-4 mr-1" aria-hidden />
                 Events ({results.events.length})
               </TabsTrigger>
               <TabsTrigger value="resources">

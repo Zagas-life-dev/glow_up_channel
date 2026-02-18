@@ -3,8 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
-
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -278,7 +277,7 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <PanelLeft />
+      <FlaticonIcon name="menu" className="h-4 w-4" aria-hidden />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

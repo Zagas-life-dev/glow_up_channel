@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, CheckCircle2, XCircle, ArrowLeft, Loader2 } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { Mail } from 'lucide-react'
 import Link from 'next/link'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
@@ -104,12 +105,12 @@ function VerifyEmailContent() {
   if (isVerified) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
+              <FlaticonIcon name="check-circle" className="w-10 h-10 text-green-600" aria-hidden />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle className="text-2xl font-bold text-foreground">
               Email Verified!
             </CardTitle>
             <CardDescription className="text-gray-600">
@@ -131,7 +132,7 @@ function VerifyEmailContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <Mail className="w-10 h-10 text-orange-600" />
@@ -181,12 +182,12 @@ function VerifyEmailContent() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-foreground font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                   <span>Verifying...</span>
                 </div>
               ) : (
@@ -205,7 +206,7 @@ function VerifyEmailContent() {
             >
               {isResending ? (
                 <div className="flex items-center space-x-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                   <span>Sending...</span>
                 </div>
               ) : (
@@ -217,7 +218,7 @@ function VerifyEmailContent() {
               href="/dashboard"
               className="inline-flex items-center justify-center w-full text-sm text-gray-600 hover:text-orange-600 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <FlaticonIcon name="arrow-left" className="w-4 h-4 mr-2" aria-hidden />
               Back to Dashboard
             </Link>
           </div>

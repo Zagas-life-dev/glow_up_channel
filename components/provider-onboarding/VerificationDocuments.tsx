@@ -100,7 +100,7 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
         <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
           <Shield className="w-8 h-8 text-purple-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Registration & Verification</h3>
+        <h3 className="text-lg font-semibold text-foreground">Registration & Verification</h3>
         <p className="text-sm text-gray-600">Verify your organization's legitimacy</p>
       </div>
 
@@ -117,7 +117,7 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
           <div 
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 ${
               dragActive === 'verificationDocument' 
-                ? 'border-blue-400 bg-blue-50 scale-105 shadow-lg' 
+                ? 'border-primary bg-primary/10 scale-105 shadow-lg' 
                 : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
             }`}
             onDragEnter={(e) => handleDrag(e, 'verificationDocument')}
@@ -138,8 +138,8 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
             >
               {isUploading ? (
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-blue-600">Uploading...</p>
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-sm text-primary">Uploading...</p>
                 </div>
               ) : (data.verificationDocument || data.verificationDocumentUrl) ? (
                 <div className="flex items-center space-x-2 text-green-600">
@@ -177,7 +177,7 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
           <div 
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 ${
               dragActive === 'organizationLogo' 
-                ? 'border-blue-400 bg-blue-50 scale-105 shadow-lg' 
+                ? 'border-primary bg-primary/10 scale-105 shadow-lg' 
                 : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
             }`}
             onDragEnter={(e) => handleDrag(e, 'organizationLogo')}
@@ -198,8 +198,8 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
             >
               {isUploading ? (
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-blue-600">Uploading...</p>
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-sm text-primary">Uploading...</p>
                 </div>
               ) : (data.organizationLogo || data.organizationLogoUrl) ? (
                 <div className="flex items-center space-x-2 text-green-600">
@@ -230,7 +230,7 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
       {isComplete && (
         <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
           <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-xs">✓</span>
+            <span className="text-foreground text-xs">✓</span>
           </div>
           <span className="text-sm font-medium">Verification documents completed</span>
         </div>

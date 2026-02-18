@@ -390,13 +390,13 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-xl bg-[#0a0a0a] border-white/[0.08] p-0 overflow-hidden">
+      <SheetContent side="right" className="w-full sm:max-w-xl bg-page border-border p-0 overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <SheetTitle className="text-white">Edit Profile</SheetTitle>
-              <SheetDescription className="text-white/40 text-sm">
+              <SheetTitle className="text-foreground">Edit Profile</SheetTitle>
+              <SheetDescription className="text-muted-foreground text-sm">
                 Update your profile information
               </SheetDescription>
             </div>
@@ -405,7 +405,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                 onClick={onClose} 
                 variant="ghost" 
                 size="sm"
-                className="text-white/60 hover:text-white rounded-lg"
+                className="text-muted-foreground hover:text-foreground rounded-lg"
               >
                 Cancel
               </Button>
@@ -413,7 +413,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                 onClick={handleSave}
                 disabled={saving}
                 size="sm"
-                className="bg-orange-500 hover:bg-orange-600 rounded-lg"
+                className="bg-primary hover:bg-primary/90 rounded-lg"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
               </Button>
@@ -421,14 +421,14 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-4 p-1 bg-white/[0.03] rounded-lg">
+          <div className="flex gap-1 mt-4 p-1 bg-muted rounded-lg">
             <button
               onClick={() => setActiveTab('basic')}
               className={cn(
                 "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                 activeTab === 'basic' 
-                  ? "bg-orange-500 text-white" 
-                  : "text-white/50 hover:text-white"
+                  ? "bg-primary text-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Basic Info
@@ -438,8 +438,8 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
               className={cn(
                 "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                 activeTab === 'onboarding' 
-                  ? "bg-orange-500 text-white" 
-                  : "text-white/50 hover:text-white"
+                  ? "bg-primary text-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Background
@@ -449,8 +449,8 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
               className={cn(
                 "flex-1 py-2 text-sm font-medium rounded-md transition-colors",
                 activeTab === 'privacy' 
-                  ? "bg-orange-500 text-white" 
-                  : "text-white/50 hover:text-white"
+                  ? "bg-primary text-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Privacy
@@ -472,19 +472,19 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
               {/* Profile Image */}
               <div className="flex flex-col items-center">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-[#141414] border-2 border-white/[0.06]">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-surface border-2 border-border">
                     {profileImage ? (
                       <Image src={profileImage} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center">
-                        <User className="w-8 h-8 text-white" />
+                        <User className="w-8 h-8 text-foreground" />
                       </div>
                     )}
                   </div>
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingImage}
-                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition-colors"
+                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-primary hover:bg-primary/90 text-foreground shadow-lg transition-colors"
                   >
                     {uploadingImage ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -500,60 +500,60 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                     className="hidden"
                   />
                 </div>
-                <p className="text-xs text-white/40 mt-2">Tap to change photo</p>
+                <p className="text-xs text-muted-foreground mt-2">Tap to change photo</p>
               </div>
 
               {/* Name */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-white/60 text-xs">First Name</Label>
+                  <Label className="text-muted-foreground text-xs">First Name</Label>
                   <Input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="John"
-                    className="mt-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                    className="mt-1 bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                   />
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs">Last Name</Label>
+                  <Label className="text-muted-foreground text-xs">Last Name</Label>
                   <Input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Doe"
-                    className="mt-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                    className="mt-1 bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                   />
                 </div>
               </div>
 
               {/* Headline */}
               <div>
-                <Label className="text-white/60 text-xs">Headline</Label>
+                <Label className="text-muted-foreground text-xs">Headline</Label>
                 <Input
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   placeholder="e.g. Software Engineer | Entrepreneur"
                   maxLength={100}
-                  className="mt-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
               </div>
 
               {/* Bio */}
               <div>
-                <Label className="text-white/60 text-xs">Bio</Label>
+                <Label className="text-muted-foreground text-xs">Bio</Label>
                 <Textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell people about yourself..."
                   maxLength={500}
                   rows={3}
-                  className="mt-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl focus:border-orange-500/50 resize-none"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl focus:border-orange-500/50 resize-none"
                 />
-                <p className="text-xs text-white/30 mt-1 text-right">{bio.length}/500</p>
+                <p className="text-xs text-muted-foreground mt-1 text-right">{bio.length}/500</p>
               </div>
 
               {/* Work */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Briefcase className="w-4 h-4" />
                   <span>Work</span>
                 </div>
@@ -561,19 +561,19 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   value={workTitle}
                   onChange={(e) => setWorkTitle(e.target.value)}
                   placeholder="Job Title"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
                 <Input
                   value={workCompany}
                   onChange={(e) => setWorkCompany(e.target.value)}
                   placeholder="Company"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
               </div>
 
               {/* Skills */}
               <div>
-                <Label className="text-white/60 text-xs flex items-center gap-1 mb-2">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1 mb-2">
                   <Sparkles className="w-3 h-3" />
                   Skills
                 </Label>
@@ -582,13 +582,13 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   onChange={setSkills}
                   placeholder="Type a skill and press Enter..."
                   maxSkills={20}
-                  className="[&_input]:bg-white/[0.03] [&_input]:border-white/[0.08] [&_input]:text-white [&_input]:rounded-xl [&_input]:h-10 [&_input]:focus:border-orange-500/50 [&_.bg-white]:bg-gray-900 [&_.border-gray-200]:border-white/10 [&_.text-gray-700]:text-white [&_button]:hover:bg-orange-500/10 [&_button]:focus:bg-orange-500/10"
+                  className="[&_input]:bg-muted [&_input]:border-border [&_input]:text-foreground [&_input]:rounded-xl [&_input]:h-10 [&_input]:focus:border-orange-500/50 [&_.bg-card]:bg-card [&_.border-border]:border-border [&_.text-foreground]:text-foreground [&_button]:hover:bg-primary/10 [&_button]:focus:bg-primary/10"
                 />
               </div>
 
               {/* Website & Social Links */}
               <div className="space-y-3">
-                <Label className="text-white/60 text-xs flex items-center gap-1">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1">
                   <LinkIcon className="w-3 h-3" />
                   Links
                 </Label>
@@ -596,7 +596,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                   placeholder="https://yourwebsite.com"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
                 {socialPlatforms.map((platform) => (
                   <Input
@@ -604,7 +604,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                     value={socialLinks[platform.key] || ''}
                     onChange={(e) => updateSocialLink(platform.key, e.target.value)}
                     placeholder={platform.placeholder}
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                    className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                   />
                 ))}
               </div>
@@ -615,8 +615,8 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
           {activeTab === 'onboarding' && (
             <>
               {/* Location */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <MapPin className="w-4 h-4" />
                   <span>Location</span>
                 </div>
@@ -625,36 +625,36 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     placeholder="Country"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                    className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                   />
                   <Input
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
                     placeholder="Province/State"
-                    className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                    className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                   />
                 </div>
                 <Input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="City (optional)"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
               </div>
 
               {/* Career Stage */}
               <div>
-                <Label className="text-white/60 text-xs flex items-center gap-1">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   Career Stage
                 </Label>
                 <Select value={careerStage} onValueChange={setCareerStage}>
-                  <SelectTrigger className="mt-1 bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10">
+                  <SelectTrigger className="mt-1 bg-muted border-border text-foreground rounded-xl h-10">
                     <SelectValue placeholder="Select career stage" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                  <SelectContent className="bg-surface border-border">
                     {careerStages.map((stage) => (
-                      <SelectItem key={stage} value={stage} className="text-white focus:bg-white/[0.05]">
+                      <SelectItem key={stage} value={stage} className="text-foreground focus:bg-muted">
                         {stage}
                       </SelectItem>
                     ))}
@@ -663,18 +663,18 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
               </div>
 
               {/* Education */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <GraduationCap className="w-4 h-4" />
                   <span>Education</span>
                 </div>
                 <Select value={educationLevel} onValueChange={setEducationLevel}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10">
+                  <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-10">
                     <SelectValue placeholder="Education level" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/[0.08]">
+                  <SelectContent className="bg-surface border-border">
                     {educationLevels.map((level) => (
-                      <SelectItem key={level} value={level} className="text-white focus:bg-white/[0.05]">
+                      <SelectItem key={level} value={level} className="text-foreground focus:bg-muted">
                         {level}
                       </SelectItem>
                     ))}
@@ -684,19 +684,19 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   value={fieldOfStudy}
                   onChange={(e) => setFieldOfStudy(e.target.value)}
                   placeholder="Field of Study"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
                 <Input
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                   placeholder="Institution/University"
-                  className="bg-white/[0.03] border-white/[0.08] text-white rounded-xl h-10 focus:border-orange-500/50"
+                  className="bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
                 />
               </div>
 
               {/* Interests */}
               <div>
-                <Label className="text-white/60 text-xs flex items-center gap-1 mb-2">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1 mb-2">
                   <Target className="w-3 h-3" />
                   Interests
                 </Label>
@@ -708,8 +708,8 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         interests.includes(interest)
-                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]"
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "bg-muted text-muted-foreground border border-border hover:border-border"
                       )}
                     >
                       {interest}
@@ -720,7 +720,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
 
               {/* Industry Sectors */}
               <div>
-                <Label className="text-white/60 text-xs flex items-center gap-1 mb-2">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1 mb-2">
                   <Building2 className="w-3 h-3" />
                   Industry Sectors
                 </Label>
@@ -733,7 +733,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         industrySectors.includes(sector)
                           ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]"
+                          : "bg-muted text-muted-foreground border border-border hover:border-border"
                       )}
                     >
                       {sector}
@@ -744,7 +744,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
 
               {/* Aspirations */}
               <div>
-                <Label className="text-white/60 text-xs flex items-center gap-1 mb-2">
+                <Label className="text-muted-foreground text-xs flex items-center gap-1 mb-2">
                   <Lightbulb className="w-3 h-3" />
                   What are you looking for?
                 </Label>
@@ -757,7 +757,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                         aspirations.includes(aspiration)
                           ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-white/[0.03] text-white/50 border border-white/[0.06] hover:border-white/[0.1]"
+                          : "bg-muted text-muted-foreground border border-border hover:border-border"
                       )}
                     >
                       {aspiration}
@@ -771,41 +771,41 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
           {/* Privacy Tab */}
           {activeTab === 'privacy' && (
             <div className="space-y-4">
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-4">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {isPrivate ? <Lock className="w-5 h-5 text-white/40" /> : <Globe className="w-5 h-5 text-emerald-500" />}
+                    {isPrivate ? <Lock className="w-5 h-5 text-muted-foreground" /> : <Globe className="w-5 h-5 text-emerald-500" />}
                     <div>
-                      <p className="text-sm font-medium text-white">Private Account</p>
-                      <p className="text-xs text-white/40">New partners will need your approval</p>
+                      <p className="text-sm font-medium text-foreground">Private Account</p>
+                      <p className="text-xs text-muted-foreground">New partners will need your approval</p>
                     </div>
                   </div>
                   <Switch
                     checked={isPrivate}
                     onCheckedChange={setIsPrivate}
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-white/40" />}
+                    {showConnections ? <Eye className="w-5 h-5 text-emerald-500" /> : <EyeOff className="w-5 h-5 text-muted-foreground" />}
                     <div>
-                      <p className="text-sm font-medium text-white">Show Connections</p>
-                      <p className="text-xs text-white/40">Let others see your partner counts</p>
+                      <p className="text-sm font-medium text-foreground">Show Connections</p>
+                      <p className="text-xs text-muted-foreground">Let others see your partner counts</p>
                     </div>
                   </div>
                   <Switch
                     checked={showConnections}
                     onCheckedChange={setShowConnections}
-                    className="data-[state=checked]:bg-orange-500"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+              <div className="p-4 rounded-xl bg-primary/5 border border-orange-500/20">
                 <p className="text-sm text-orange-400 font-medium mb-1">Privacy Tips</p>
-                <ul className="text-xs text-white/50 space-y-1">
+                <ul className="text-xs text-muted-foreground space-y-1">
                   <li>• Private accounts require approval for new partners</li>
                   <li>• Hidden connections only affect the count display</li>
                   <li>• Your posts visibility can be set individually</li>

@@ -1,6 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
-
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { cn } from "@/lib/utils"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
@@ -69,7 +68,7 @@ const PaginationPrevious = ({
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
-    <ChevronLeft className="h-4 w-4" />
+    <FlaticonIcon name="angle-left" className="h-4 w-4" aria-hidden />
     <span>Previous</span>
   </PaginationLink>
 )
@@ -86,7 +85,7 @@ const PaginationNext = ({
     {...props}
   >
     <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
+    <FlaticonIcon name="angle-right" className="h-4 w-4" aria-hidden />
   </PaginationLink>
 )
 PaginationNext.displayName = "PaginationNext"
@@ -100,7 +99,7 @@ const PaginationEllipsis = ({
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
-    <MoreHorizontal className="h-4 w-4" />
+    <FlaticonIcon name="ellipsis" className="h-4 w-4" aria-label="More pages" />
     <span className="sr-only">More pages</span>
   </span>
 )

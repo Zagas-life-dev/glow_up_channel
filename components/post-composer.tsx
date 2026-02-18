@@ -11,26 +11,15 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  Image as ImageIcon,
-  ListMusic,
-  Globe,
-  Lock,
-  X,
-  Loader2,
-  Hash,
-  AtSign,
-  Smile,
-  Send,
-  BarChart3,
-  Trash2
-} from 'lucide-react'
+import { RiDeleteBinLine, RiSendPlaneLine, RiPlayList2Fill, RiCloseLine, RiImageLine, RiPieChart2Line, RiLock2Line, RiPlayFill, RiGlobalLine } from 'react-icons/ri'
 import { toast } from 'sonner'
 import HashtagAutocomplete from '@/components/ui/hashtag-autocomplete'
 import { trackPostCreated } from '@/lib/tracking'
 
 interface PostComposerProps {
   onPostCreated: (post: any) => void
+  /** Optional channel ID to associate the post with a channel */
+  channelId?: string
   replyToPostId?: string
   placeholder?: string
   compact?: boolean
@@ -40,6 +29,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:80
 
 export default function PostComposer({ 
   onPostCreated, 
+  channelId,
   replyToPostId,
   placeholder = "What's on your mind?",
   compact = false
@@ -162,9 +152,12 @@ export default function PostComposer({
       }
 
       const postData: any = {
+        // Core content
         text: text.trim(),
         images: uploadedImgs,
-        visibility
+        visibility,
+        // Optional context
+        channelId
       }
 
       if (selectedPlaylist) {
@@ -221,7 +214,7 @@ export default function PostComposer({
         throw new Error(data.message || 'Failed to create post')
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create post')
+      toast.error(error?.message || 'An error occurred')
     } finally {
       setIsPosting(false)
     }
@@ -252,14 +245,14 @@ export default function PostComposer({
   return (
     <>
       <div className={cn(
-        "rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden transition-all",
-        isExpanded && "ring-1 ring-orange-500/20"
+        "rounded-2xl bg-card border border-border overflow-hidden transition-all",
+        isExpanded && "ring-1 ring-primary/20"
       )}>
         {/* Main Input Area */}
         <div className="p-4">
           <div className="flex gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary flex items-center justify-center text-sm font-semibold text-primary-foreground flex-shrink-0">
               {user.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -280,7 +273,7 @@ export default function PostComposer({
                 onChange={handleTextChange}
                 onFocus={() => setIsExpanded(true)}
                 placeholder={placeholder}
-                className="w-full bg-transparent text-white placeholder:text-white/30 resize-none outline-none min-h-[60px] text-[15px] leading-relaxed"
+                className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none min-h-[60px] text-[15px] leading-relaxed"
                 rows={compact ? 1 : 2}
               />
               <HashtagAutocomplete
@@ -298,7 +291,7 @@ export default function PostComposer({
                   images.length >= 3 && "grid-cols-3"
                 )}>
                   {images.map((img, index) => (
-                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-white/[0.05]">
+                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-muted">
                       <Image
                         src={img.preview}
                         alt=""
@@ -310,7 +303,7 @@ export default function PostComposer({
                         onClick={() => removeImage(index)}
                         className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 transition-colors"
                       >
-                        <X className="w-4 h-4 text-white" />
+                        <RiCloseLine className="w-4 h-4 text-foreground" aria-hidden />
                       </button>
                     </div>
                   ))}
@@ -319,22 +312,22 @@ export default function PostComposer({
 
               {/* Playlist Preview */}
               {selectedPlaylist && (
-                <div className="mt-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="mt-3 p-3 rounded-xl bg-muted border border-border">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
-                        <ListMusic className="w-5 h-5 text-orange-500" />
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <RiPlayFill className="w-5 h-5 text-primary" aria-hidden />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">{selectedPlaylist.name}</p>
-                        <p className="text-xs text-white/40">{selectedPlaylist.itemCount || 0} items</p>
+                        <p className="text-sm font-medium text-foreground">{selectedPlaylist.name}</p>
+                        <p className="text-xs text-muted-foreground">{selectedPlaylist.itemCount || 0} items</p>
                       </div>
                     </div>
                     <button
                       onClick={() => setSelectedPlaylist(null)}
-                      className="p-1 rounded-lg hover:bg-white/[0.05]"
+                      className="p-1 rounded-lg hover:bg-muted"
                     >
-                      <X className="w-4 h-4 text-white/40" />
+                      <RiCloseLine className="w-4 h-4 text-muted-foreground" aria-hidden />
                     </button>
                   </div>
                 </div>
@@ -342,9 +335,9 @@ export default function PostComposer({
 
               {/* Poll Creator */}
               {showPollCreator && (
-                <div className="mt-3 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="mt-3 p-4 rounded-xl bg-muted border border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-white">Create Poll</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Create Poll</h3>
                     <button
                       onClick={() => {
                         setShowPollCreator(false)
@@ -352,9 +345,9 @@ export default function PostComposer({
                         setPollOptions(['', ''])
                         setPollDuration(1)
                       }}
-                      className="p-1 rounded-lg hover:bg-white/[0.05]"
+                      className="p-1 rounded-lg hover:bg-muted"
                     >
-                      <X className="w-4 h-4 text-white/40" />
+                      <RiCloseLine className="w-4 h-4 text-muted-foreground" aria-hidden />
                     </button>
                   </div>
                   
@@ -366,7 +359,7 @@ export default function PostComposer({
                         value={pollQuestion}
                         onChange={(e) => setPollQuestion(e.target.value)}
                         placeholder="Ask a question..."
-                        className="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.06] rounded-lg text-white placeholder:text-white/30 outline-none focus:border-orange-500/50 text-sm"
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground outline-none focus:border-primary text-sm"
                         maxLength={200}
                       />
                     </div>
@@ -384,7 +377,7 @@ export default function PostComposer({
                               setPollOptions(updated)
                             }}
                             placeholder={`Option ${index + 1}`}
-                            className="flex-1 px-3 py-2 bg-white/[0.05] border border-white/[0.06] rounded-lg text-white placeholder:text-white/30 outline-none focus:border-orange-500/50 text-sm"
+                            className="flex-1 px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground outline-none focus:border-primary text-sm"
                             maxLength={100}
                           />
                           {pollOptions.length > 2 && (
@@ -394,9 +387,9 @@ export default function PostComposer({
                                   setPollOptions(pollOptions.filter((_, i) => i !== index))
                                 }
                               }}
-                              className="p-2 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white"
+                              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <RiDeleteBinLine className="w-4 h-4" />
                             </button>
                           )}
                         </div>
@@ -411,7 +404,7 @@ export default function PostComposer({
                             setPollOptions([...pollOptions, ''])
                           }
                         }}
-                        className="w-full px-3 py-2 text-sm text-white/70 hover:text-white bg-white/[0.05] hover:bg-white/[0.08] rounded-lg transition-colors"
+                        className="w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                       >
                         + Add Option
                       </button>
@@ -419,11 +412,11 @@ export default function PostComposer({
 
                     {/* Poll Duration */}
                     <div>
-                      <label className="block text-xs text-white/50 mb-1.5">Poll Duration</label>
+                      <label className="block text-xs text-muted-foreground mb-1.5">Poll Duration</label>
                       <select
                         value={pollDuration}
                         onChange={(e) => setPollDuration(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.06] rounded-lg text-white outline-none focus:border-orange-500/50 text-sm"
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground outline-none focus:border-primary text-sm"
                       >
                         <option value={1}>1 day</option>
                         <option value={3}>3 days</option>
@@ -457,11 +450,11 @@ export default function PostComposer({
                 className={cn(
                   "p-2 rounded-lg transition-colors",
                   images.length >= 5
-                    ? "text-white/20 cursor-not-allowed"
-                    : "text-white/50 hover:text-orange-500 hover:bg-orange-500/10"
+                    ? "text-foreground/20 cursor-not-allowed"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
                 )}
               >
-                <ImageIcon className="w-5 h-5" />
+                <RiImageLine className="w-5 h-5" aria-hidden />
               </button>
 
               {/* Playlist */}
@@ -470,11 +463,11 @@ export default function PostComposer({
                 className={cn(
                   "p-2 rounded-lg transition-colors",
                   selectedPlaylist
-                    ? "text-orange-500 bg-orange-500/10"
-                    : "text-white/50 hover:text-violet-500 hover:bg-violet-500/10"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10"
                 )}
               >
-                <ListMusic className="w-5 h-5" />
+                <RiPlayList2Fill className="w-5 h-5" />
               </button>
 
               {/* Poll */}
@@ -483,11 +476,11 @@ export default function PostComposer({
                 className={cn(
                   "p-2 rounded-lg transition-colors",
                   showPollCreator
-                    ? "text-orange-500 bg-orange-500/10"
-                    : "text-white/50 hover:text-orange-500 hover:bg-orange-500/10"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
                 )}
               >
-                <BarChart3 className="w-5 h-5" />
+                <RiPieChart2Line className="w-5 h-5" aria-hidden />
               </button>
 
               {/* Visibility Toggle */}
@@ -497,13 +490,13 @@ export default function PostComposer({
                   "p-2 rounded-lg transition-colors flex items-center gap-1.5",
                   visibility === 'private'
                     ? "text-yellow-500 bg-yellow-500/10"
-                    : "text-white/50 hover:text-white/70"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {visibility === 'public' ? (
-                  <Globe className="w-5 h-5" />
+                  <RiGlobalLine className="w-5 h-5" />
                 ) : (
-                  <Lock className="w-5 h-5" />
+                  <RiLock2Line className="w-5 h-5" aria-hidden />
                 )}
               </button>
             </div>
@@ -512,16 +505,10 @@ export default function PostComposer({
             <Button
               onClick={handleSubmit}
               disabled={isPosting || isUploading || (!text.trim() && images.length === 0 && !selectedPlaylist && !(showPollCreator && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2))}
-              className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-5"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-5"
             >
-              {isPosting || isUploading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Post
-                </>
-              )}
+              <RiSendPlaneLine className="w-4 h-4 mr-2" />
+              Post
             </Button>
           </div>
         )}
@@ -529,15 +516,15 @@ export default function PostComposer({
 
       {/* Playlist Picker Sheet */}
       <Sheet open={showPlaylistPicker} onOpenChange={setShowPlaylistPicker}>
-        <SheetContent side="bottom" className="h-[60vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0">
-          <div className="sticky top-0 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
-            <SheetTitle className="text-white">Attach a Playlist</SheetTitle>
+        <SheetContent side="bottom" className="h-[60vh] bg-page border-border rounded-t-3xl p-0">
+          <div className="sticky top-0 bg-page border-b border-border px-6 py-4">
+            <SheetTitle className="text-foreground">Attach a Playlist</SheetTitle>
           </div>
           <div className="overflow-y-auto h-[calc(60vh-60px)] p-6 space-y-2">
             {availablePlaylists.length === 0 ? (
               <div className="text-center py-12">
-                <ListMusic className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                <p className="text-white/50">No playlists available</p>
+                <RiPlayFill className="w-12 h-12 text-foreground/20 mx-auto mb-3" aria-hidden />
+                <p className="text-muted-foreground">No playlists available</p>
               </div>
             ) : (
               availablePlaylists.map((playlist) => (
@@ -550,22 +537,22 @@ export default function PostComposer({
                   className={cn(
                     "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
                     selectedPlaylist?._id === playlist._id
-                      ? "bg-orange-500/10 border-orange-500/30"
-                      : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]"
+                      ? "bg-primary/10 border-primary/30"
+                      : "bg-card border-border hover:bg-muted"
                   )}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
-                    <ListMusic className="w-5 h-5 text-orange-500" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <RiPlayFill className="w-5 h-5 text-primary" aria-hidden />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">{playlist.name}</p>
+                    <p className="font-medium text-foreground truncate">{playlist.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       {playlist.isPublic ? (
-                        <Globe className="w-3 h-3 text-white/30" />
+                        <RiGlobalLine className="w-3 h-3 text-muted-foreground" aria-hidden />
                       ) : (
-                        <Lock className="w-3 h-3 text-white/30" />
+                        <RiLock2Line className="w-3 h-3 text-muted-foreground" aria-hidden />
                       )}
-                      <span className="text-xs text-white/40">{playlist.itemCount || 0} items</span>
+                      <span className="text-xs text-muted-foreground">{playlist.itemCount || 0} items</span>
                     </div>
                   </div>
                 </button>

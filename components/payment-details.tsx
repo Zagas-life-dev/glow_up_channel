@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Copy, Upload, CheckCircle, Clock, XCircle, DollarSign, Building2, CreditCard } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { RiUpload2Line, RiCheckboxCircleLine, RiCloseCircleLine } from "react-icons/ri"
 import { toast } from "sonner"
 import ApiClient from "@/lib/api-client"
 
@@ -47,13 +48,13 @@ export default function PaymentDetails({
   const getStatusBadge = () => {
     switch (paymentStatus) {
       case 'awaiting_payment':
-        return <Badge variant="outline" className="bg-orange-100 text-orange-800"><Clock className="h-3 w-3 mr-1" />Awaiting Payment</Badge>
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800"><FlaticonIcon name="clock" className="h-3 w-3 mr-1" aria-hidden />Awaiting Payment</Badge>
       case 'payment_uploaded':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800"><Upload className="h-3 w-3 mr-1" />Payment Uploaded</Badge>
+        return <Badge variant="outline" className="bg-primary/10 text-foreground"><RiUpload2Line className="h-3 w-3 mr-1" />Payment Uploaded</Badge>
       case 'verified':
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Payment Verified</Badge>
+        return <Badge variant="default" className="bg-green-100 text-green-800"><FlaticonIcon name="check-circle" className="h-3 w-3 mr-1" aria-hidden />Payment Verified</Badge>
       case 'failed':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Payment Failed</Badge>
+        return <Badge variant="destructive" className="bg-red-100 text-red-800"><FlaticonIcon name="times-circle" className="h-3 w-3 mr-1" aria-hidden />Payment Failed</Badge>
       default:
         return <Badge variant="secondary" className="bg-gray-100 text-gray-800">No Payment Required</Badge>
     }
@@ -93,7 +94,7 @@ export default function PaymentDetails({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5" />
+          <FlaticonIcon name="dollar" className="h-5 w-5" aria-hidden />
           Payment Details
         </CardTitle>
         <CardDescription>
@@ -132,7 +133,7 @@ export default function PaymentDetails({
                 variant="outline"
                 onClick={() => copyToClipboard(paymentReference, 'Payment Reference')}
               >
-                <Copy className="h-4 w-4" />
+                <FlaticonIcon name="copy" className="h-4 w-4" aria-hidden />
               </Button>
             </div>
             <p className="text-xs text-gray-500">
@@ -144,22 +145,22 @@ export default function PaymentDetails({
         {/* Bank Account Details */}
         {paymentStatus === 'awaiting_payment' && (
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
+            <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                <FlaticonIcon name="building" className="h-4 w-4" aria-hidden />
                 Bank Account Details
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Bank Name:</span>
+                  <span className="text-foreground">Bank Name:</span>
                   <span className="font-medium">{bankAccount.bankName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Account Name:</span>
+                  <span className="text-foreground">Account Name:</span>
                   <span className="font-medium">{bankAccount.accountName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Account Number:</span>
+                  <span className="text-foreground">Account Number:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-medium">{bankAccount.accountNumber}</span>
                     <Button
@@ -167,12 +168,12 @@ export default function PaymentDetails({
                       variant="outline"
                       onClick={() => copyToClipboard(bankAccount.accountNumber, 'Account Number')}
                     >
-                      <Copy className="h-3 w-3" />
+                      <FlaticonIcon name="copy" className="h-3 w-3" aria-hidden />
                     </Button>
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Account Type:</span>
+                  <span className="text-foreground">Account Type:</span>
                   <span className="font-medium">{bankAccount.accountType}</span>
                 </div>
               </div>
@@ -192,8 +193,8 @@ export default function PaymentDetails({
             {/* Upload Receipt Button */}
             <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
               <DialogTrigger asChild>
-                <Button className="w-full bg-orange-500 hover:bg-orange-600">
-                  <Upload className="h-4 w-4 mr-2" />
+                <Button className="w-full bg-primary hover:bg-primary/90">
+                  <RiUpload2Line className="h-4 w-4 mr-2" />
                   Upload Payment Receipt
                 </Button>
               </DialogTrigger>
@@ -224,7 +225,7 @@ export default function PaymentDetails({
                     <Button 
                       onClick={handleUploadReceipt}
                       disabled={uploading || !receiptUrl.trim()}
-                      className="bg-orange-500 hover:bg-orange-600"
+                      className="bg-primary hover:bg-primary/90"
                     >
                       {uploading ? 'Uploading...' : 'Upload Receipt'}
                     </Button>
@@ -237,12 +238,12 @@ export default function PaymentDetails({
 
         {/* Payment Uploaded Status */}
         {paymentStatus === 'payment_uploaded' && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 text-blue-800">
-              <Upload className="h-4 w-4" />
+          <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center gap-2 text-foreground">
+              <RiUpload2Line className="h-4 w-4" />
               <span className="font-medium">Payment Receipt Uploaded</span>
             </div>
-            <p className="text-sm text-blue-700 mt-1">
+            <p className="text-sm text-foreground mt-1">
               Your payment receipt has been uploaded and is awaiting admin verification.
             </p>
             {paymentReceipt && (
@@ -251,7 +252,7 @@ export default function PaymentDetails({
                   href={paymentReceipt}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  className="text-sm text-primary hover:text-foreground underline"
                 >
                   View uploaded receipt
                 </a>
@@ -264,7 +265,7 @@ export default function PaymentDetails({
         {paymentStatus === 'verified' && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-4 w-4" />
+              <RiCheckboxCircleLine className="h-4 w-4" />
               <span className="font-medium">Payment Verified</span>
             </div>
             <p className="text-sm text-green-700 mt-1">
@@ -277,7 +278,7 @@ export default function PaymentDetails({
         {paymentStatus === 'failed' && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2 text-red-800">
-              <XCircle className="h-4 w-4" />
+              <RiCloseCircleLine className="h-4 w-4" />
               <span className="font-medium">Payment Verification Failed</span>
             </div>
             <p className="text-sm text-red-700 mt-1">
@@ -289,7 +290,7 @@ export default function PaymentDetails({
         {/* Payment Notes */}
         {paymentNotes && paymentStatus !== 'failed' && (
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <h4 className="font-medium text-gray-900 mb-1">Admin Notes</h4>
+            <h4 className="font-medium text-foreground mb-1">Admin Notes</h4>
             <p className="text-sm text-gray-700">{paymentNotes}</p>
           </div>
         )}

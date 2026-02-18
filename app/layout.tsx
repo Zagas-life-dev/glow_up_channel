@@ -1,6 +1,5 @@
 import type React from "react"
 import type { Metadata } from "next/types"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import AppLayout from "@/components/app-layout"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -8,15 +7,8 @@ import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
+import { LockedInProvider } from "@/contexts/locked-in-context"
 import VisitTracker from "@/components/visit-tracker"
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-  fallback: ["system-ui", "arial"],
-  adjustFontFallback: true,
-})
 
 export const metadata: Metadata = {
   title: "GlowUp",
@@ -35,8 +27,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
+          crossOrigin="anonymous"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
@@ -48,17 +45,19 @@ export default function RootLayout({
         <meta name="google" content="notranslate" />
         <meta name="google" content="notranslate" />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+      <body className="font-sans" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <PlaylistProvider>
-              <PageProvider>
-                <AppLayout>
-                  <VisitTracker />
-                  {children}
-                  <Toaster position="bottom-center" />
-                </AppLayout>
-              </PageProvider>
+              <LockedInProvider>
+                <PageProvider>
+                  <AppLayout>
+                    <VisitTracker />
+                    {children}
+                    <Toaster position="bottom-center" />
+                  </AppLayout>
+                </PageProvider>
+              </LockedInProvider>
             </PlaylistProvider>
           </AuthProvider>
         </ThemeProvider>

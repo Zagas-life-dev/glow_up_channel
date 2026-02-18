@@ -9,16 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import ApiClient from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
-import { 
-  Briefcase, 
-  Calendar, 
-  BookOpen, 
-  FileText, 
-  Star,
-  Filter,
-  RefreshCw,
-  TrendingUp
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { RiBriefcaseLine, RiCalendarLine, RiFileLine, RiBookOpenLine, RiStarLine, RiFilterLine } from "react-icons/ri"
 
 interface RecommendationItem {
   _id: string
@@ -81,11 +73,11 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
 
   const getContentIcon = (contentType: string) => {
     switch (contentType) {
-      case 'opportunity': return <Briefcase className="h-4 w-4" />
-      case 'event': return <Calendar className="h-4 w-4" />
-      case 'job': return <FileText className="h-4 w-4" />
-      case 'resource': return <BookOpen className="h-4 w-4" />
-      default: return <Star className="h-4 w-4" />
+      case 'opportunity': return <RiBriefcaseLine className="h-4 w-4" />
+      case 'event': return <RiCalendarLine className="h-4 w-4" />
+      case 'job': return <RiFileLine className="h-4 w-4" />
+      case 'resource': return <RiBookOpenLine className="h-4 w-4" />
+      default: return <RiStarLine className="h-4 w-4" />
     }
   }
 
@@ -93,7 +85,7 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
     switch (contentType) {
       case 'opportunity': return 'bg-orange-100 text-orange-800'
       case 'event': return 'bg-green-100 text-green-800'
-      case 'job': return 'bg-blue-100 text-blue-800'
+      case 'job': return 'bg-primary/10 text-foreground'
       case 'resource': return 'bg-purple-100 text-purple-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -118,7 +110,7 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
+            <FlaticonIcon name="trending-up" className="h-5 w-5" aria-hidden />
             Personalized Recommendations
           </CardTitle>
         </CardHeader>
@@ -135,7 +127,7 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+            <RiFilterLine className="h-5 w-5" />
             Recommendation Filters
           </CardTitle>
         </CardHeader>
@@ -191,7 +183,7 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
               Showing {recommendations.length} of {total} recommendations
             </div>
             <Button onClick={loadRecommendations} disabled={loading} size="sm">
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <FlaticonIcon name="spinner" className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} aria-hidden />
               Refresh
             </Button>
           </div>
@@ -202,7 +194,7 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
       <div className="space-y-4">
         {loading ? (
           <div className="text-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <FlaticonIcon name="spinner" className="h-8 w-8 animate-spin mx-auto mb-4" aria-hidden />
             <p>Loading recommendations...</p>
           </div>
         ) : recommendations.length === 0 ? (

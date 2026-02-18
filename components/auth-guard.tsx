@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Lock, ArrowRight, UserPlus, LogIn } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { Lock } from 'lucide-react'
 import Link from 'next/link'
 
 interface AuthGuardProps {
@@ -58,7 +59,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-foreground mb-4">
               Authentication Required
             </h1>
 
@@ -73,11 +74,11 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
               <Link href="/signup" className="block">
                 <Button 
                   size="lg" 
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full bg-primary hover:bg-primary/90 text-foreground font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
                 >
-                  <UserPlus className="w-5 h-5 mr-2" />
+                  <FlaticonIcon name="user-plus" className="w-5 h-5 mr-2" aria-hidden />
                   Create Account
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <FlaticonIcon name="arrow-right" className="w-5 h-5 ml-2" aria-hidden />
                 </Button>
               </Link>
 
@@ -87,7 +88,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
                   size="lg" 
                   className="w-full border-2 border-orange-500 text-orange-500 hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-all duration-300"
                 >
-                  <LogIn className="w-5 h-5 mr-2" />
+                  <FlaticonIcon name="sign-in" className="w-5 h-5 mr-2" aria-hidden />
                   Sign In
                 </Button>
               </Link>
@@ -98,19 +99,19 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
               <p className="text-sm text-gray-500 mb-4">What you'll get:</p>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
                   Access to all content
                 </div>
                 <div className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
                   Save & like items
                 </div>
                 <div className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
                   Personalized recommendations
                 </div>
                 <div className="flex items-center text-gray-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
                   Track your progress
                 </div>
               </div>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipBack, SkipForward } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { RiSkipForwardLine } from 'react-icons/ri'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
@@ -241,7 +242,7 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
         {/* Top Controls */}
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-white text-sm font-medium">
+            <span className="text-foreground text-sm font-medium">
               {resource.title}
             </span>
           </div>
@@ -251,9 +252,9 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
                 variant="ghost"
                 size="sm"
                 onClick={toggleFullscreen}
-                className="text-white hover:bg-white/20 rounded-lg"
+                className="text-foreground hover:bg-muted rounded-lg"
               >
-                <Maximize className="h-4 w-4" />
+                <FlaticonIcon name="expand" className="h-4 w-4" aria-hidden />
               </Button>
             )}
           </div>
@@ -264,12 +265,12 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
           <Button
             onClick={togglePlayPause}
             size="lg"
-            className="w-16 h-16 bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-sm"
+            className="w-16 h-16 bg-muted hover:bg-card/30 text-foreground rounded-full backdrop-blur-sm"
           >
             {isPlaying ? (
-              <Pause className="h-8 w-8" />
+              <FlaticonIcon name="pause" className="h-8 w-8" aria-hidden />
             ) : (
-              <Play className="h-8 w-8 ml-1" />
+              <FlaticonIcon name="play" className="h-8 w-8 ml-1" aria-hidden />
             )}
           </Button>
         </div>
@@ -285,7 +286,7 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
               step={0.1}
               className="w-full"
             />
-            <div className="flex items-center justify-between text-white text-sm">
+            <div className="flex items-center justify-between text-foreground text-sm">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -299,21 +300,21 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
                 variant="ghost"
                 size="sm"
                 onClick={() => skipTime(-10)}
-                className="text-white hover:bg-white/20 rounded-lg"
+                className="text-foreground hover:bg-muted rounded-lg"
               >
-                <SkipBack className="h-4 w-4" />
+                <FlaticonIcon name="step-backward" className="h-4 w-4" aria-hidden />
               </Button>
 
               {/* Play/Pause */}
               <Button
                 onClick={togglePlayPause}
                 size="sm"
-                className="bg-white/20 hover:bg-white/30 text-white rounded-lg"
+                className="bg-muted hover:bg-card/30 text-foreground rounded-lg"
               >
                 {isPlaying ? (
-                  <Pause className="h-4 w-4" />
+                  <FlaticonIcon name="pause" className="h-4 w-4" aria-hidden />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <FlaticonIcon name="play" className="h-4 w-4" aria-hidden />
                 )}
               </Button>
 
@@ -322,9 +323,9 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
                 variant="ghost"
                 size="sm"
                 onClick={() => skipTime(10)}
-                className="text-white hover:bg-white/20 rounded-lg"
+                className="text-foreground hover:bg-muted rounded-lg"
               >
-                <SkipForward className="h-4 w-4" />
+                <RiSkipForwardLine className="h-4 w-4" />
               </Button>
             </div>
 
@@ -335,12 +336,12 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
                   variant="ghost"
                   size="sm"
                   onClick={toggleMute}
-                  className="text-white hover:bg-white/20 rounded-lg"
+                  className="text-foreground hover:bg-muted rounded-lg"
                 >
                   {isMuted ? (
-                    <VolumeX className="h-4 w-4" />
+                    <FlaticonIcon name="volume-mute" className="h-4 w-4" aria-hidden />
                   ) : (
-                    <Volume2 className="h-4 w-4" />
+                    <FlaticonIcon name="volume" className="h-4 w-4" aria-hidden />
                   )}
                 </Button>
                 <Slider
@@ -362,9 +363,9 @@ export default function ResourceMediaPlayer({ resource, className }: ResourceMed
           <Button
             onClick={togglePlayPause}
             size="lg"
-            className="w-16 h-16 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            className="w-16 h-16 bg-black/50 hover:bg-black/70 text-foreground rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <Play className="h-8 w-8 ml-1" />
+            <FlaticonIcon name="play" className="h-8 w-8 ml-1" aria-hidden />
           </Button>
         </div>
       )}

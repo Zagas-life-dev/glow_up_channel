@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Filter, X } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { cn } from "@/lib/utils"
 
 export interface FilterOption {
@@ -44,7 +44,7 @@ export function FilterMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
+          <FlaticonIcon name="filter" className="h-4 w-4" aria-hidden />
           Filters
           {selectedFilters.size > 0 && (
             <Badge variant="secondary" className="ml-1">
@@ -125,10 +125,14 @@ export function SelectedFilters({
             className="px-3 py-1 flex items-center gap-1"
           >
             {option.label}
-            <X
-              className="h-3 w-3 cursor-pointer"
+            <button
+              type="button"
               onClick={() => onFilterChange(filterId)}
-            />
+              className="rounded p-0.5 hover:bg-muted"
+              aria-label="Remove filter"
+            >
+              <FlaticonIcon name="cross" className="h-3 w-3" aria-hidden />
+            </button>
           </Badge>
         );
       })}

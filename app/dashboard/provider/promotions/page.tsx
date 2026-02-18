@@ -640,7 +640,7 @@ export default function PromotionsPage() {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800'
       case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'completed': return 'bg-blue-100 text-blue-800'
+      case 'completed': return 'bg-primary/10 text-foreground'
       case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -667,7 +667,7 @@ export default function PromotionsPage() {
 
   const getPackageColor = (packageType: string) => {
     switch (packageType) {
-      case 'spotlight': return 'from-blue-500 to-blue-600'
+      case 'spotlight': return 'from-primary to-primary'
       case 'feature': return 'from-green-500 to-green-600'
       case 'launch': return 'from-purple-500 to-purple-600'
       case 'custom': return 'from-orange-500 to-red-600'
@@ -739,7 +739,7 @@ export default function PromotionsPage() {
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Target className="w-8 h-8 text-orange-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-4">Please sign in to access your promotions.</p>
           <Button asChild>
             <Link href="/login">Sign In</Link>
@@ -752,18 +752,18 @@ export default function PromotionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="bg-card border-b border-gray-200 px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Link href="/dashboard/provider" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Link href="/dashboard/provider" className="p-2 hover:bg-muted rounded-lg transition-colors">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Promotions</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Promotions</h1>
               <p className="text-sm lg:text-base text-gray-600">Promote your content to reach more people</p>
             </div>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             Create Promotion
           </Button>
@@ -806,10 +806,10 @@ export default function PromotionsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-blue-600">{completedPromotions.length}</p>
+                  <p className="text-2xl font-bold text-primary">{completedPromotions.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -833,7 +833,7 @@ export default function PromotionsPage() {
         {/* Packages Section */}
         <Card className="border-0 shadow-lg mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <Star className="h-5 w-5 text-orange-600" />
               Available Packages
             </CardTitle>
@@ -859,13 +859,13 @@ export default function PromotionsPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-6 h-6 text-white" />
+                            <Icon className="w-6 h-6 text-foreground" />
                           </div>
                           <Badge className={`${
                             pkg.id === 'launch' ? 'bg-purple-100 text-purple-800' :
                             pkg.id === 'feature' ? 'bg-green-100 text-green-800' :
                             pkg.id === 'custom' ? 'bg-orange-100 text-orange-800' :
-                            'bg-blue-100 text-blue-800'
+                            'bg-primary/10 text-foreground'
                           }`}>
                             {pkg.id === 'launch' ? 'Most Popular' : 
                              pkg.id === 'feature' ? 'Popular' : 
@@ -873,19 +873,19 @@ export default function PromotionsPage() {
                           </Badge>
                         </div>
                         
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{pkg.name}</h3>
                         <p className="text-gray-600 text-sm mb-4">{pkg.description}</p>
                         
                         <div className="mb-4">
                           <div className="flex items-baseline gap-2">
                             {pkg.id === 'custom' ? (
                               <>
-                                <span className="text-3xl font-bold text-gray-900">Contact</span>
+                                <span className="text-3xl font-bold text-foreground">Contact</span>
                                 <span className="text-gray-500">for pricing</span>
                               </>
                             ) : (
                               <>
-                                <span className="text-3xl font-bold text-gray-900">{formatCurrency(pkg.price)}</span>
+                                <span className="text-3xl font-bold text-foreground">{formatCurrency(pkg.price)}</span>
                                 <span className="text-gray-500">for {pkg.duration} days</span>
                               </>
                             )}
@@ -934,9 +934,9 @@ export default function PromotionsPage() {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Promotions</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Active Promotions</h3>
                   <p className="text-gray-600 mb-4">Create your first promotion to get started</p>
-                  <Button onClick={() => setShowCreateDialog(true)} className="bg-orange-500 hover:bg-orange-600">
+                  <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Promotion
                   </Button>
@@ -953,14 +953,14 @@ export default function PromotionsPage() {
                       <CardHeader className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-5 h-5 text-white" />
+                            <Icon className="w-5 h-5 text-foreground" />
                           </div>
                           <Badge className={getStatusColor(promotion.status)}>
                             {promotion.status}
                           </Badge>
                         </div>
                         
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{promotion.packageName}</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.packageName}</h3>
                         {promotion.content && (
                           <div className="mb-4">
                             <p className="text-sm font-medium text-gray-700">{promotion.content.title}</p>
@@ -995,7 +995,7 @@ export default function PromotionsPage() {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Awaiting Payment</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Awaiting Payment</h3>
                   <p className="text-gray-600">All your approved promotions have been paid for</p>
                 </CardContent>
               </Card>
@@ -1011,31 +1011,31 @@ export default function PromotionsPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-6 h-6 text-white" />
+                            <Icon className="w-6 h-6 text-foreground" />
                           </div>
                           <Badge className="bg-yellow-100 text-yellow-800">
                             Awaiting Payment
                           </Badge>
                         </div>
                         
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{promotion.content?.title || 'Unknown Content'}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{promotion.content?.title || 'Unknown Content'}</h3>
                         <p className="text-gray-600 text-sm mb-4">{promotion.packageName}</p>
                         
                         <div className="space-y-2 mb-6">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Investment:</span>
-                            <span className="font-semibold text-gray-900">{formatCurrency(promotion.investment)}</span>
+                            <span className="font-semibold text-foreground">{formatCurrency(promotion.investment)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Duration:</span>
-                            <span className="font-semibold text-gray-900">{promotion.duration} days</span>
+                            <span className="font-semibold text-foreground">{promotion.duration} days</span>
                           </div>
                         </div>
                         
                         {/* Only show payment button if content is paid */}
                         {promotion.content?.isPaid !== false && promotion.content?.isPremium !== false && (
                           <Button 
-                            className="w-full bg-orange-500 hover:bg-orange-600"
+                            className="w-full bg-primary hover:bg-primary/90"
                             onClick={() => handleRequestPaymentDetails(promotion)}
                             disabled={paymentLoading}
                           >
@@ -1077,7 +1077,7 @@ export default function PromotionsPage() {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Awaiting Verification</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Awaiting Verification</h3>
                   <p className="text-gray-600">All your payments have been processed</p>
                 </CardContent>
               </Card>
@@ -1093,29 +1093,29 @@ export default function PromotionsPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-6 h-6 text-white" />
+                            <Icon className="w-6 h-6 text-foreground" />
                           </div>
-                          <Badge className="bg-blue-100 text-blue-800">
+                          <Badge className="bg-primary/10 text-foreground">
                             Awaiting Verification
                           </Badge>
                         </div>
                         
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{promotion.content?.title || 'Unknown Content'}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{promotion.content?.title || 'Unknown Content'}</h3>
                         <p className="text-gray-600 text-sm mb-4">{promotion.packageName}</p>
                         
                         <div className="space-y-2 mb-6">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Investment:</span>
-                            <span className="font-semibold text-gray-900">{formatCurrency(promotion.investment)}</span>
+                            <span className="font-semibold text-foreground">{formatCurrency(promotion.investment)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Duration:</span>
-                            <span className="font-semibold text-gray-900">{promotion.duration} days</span>
+                            <span className="font-semibold text-foreground">{promotion.duration} days</span>
                           </div>
                         </div>
                         
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <p className="text-sm text-blue-800 text-center">
+                        <div className="bg-primary/10 p-3 rounded-lg">
+                          <p className="text-sm text-foreground text-center">
                             Payment confirmed! Admin is verifying your payment. Your promotion will go live soon.
                           </p>
                         </div>
@@ -1132,7 +1132,7 @@ export default function PromotionsPage() {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pending Promotions</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Promotions</h3>
                   <p className="text-gray-600">All your promotions are either active or completed</p>
                 </CardContent>
               </Card>
@@ -1147,14 +1147,14 @@ export default function PromotionsPage() {
                       <CardHeader className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-5 h-5 text-white" />
+                            <Icon className="w-5 h-5 text-foreground" />
                           </div>
                           <Badge className={getStatusColor(promotion.status)}>
                             {promotion.status}
                           </Badge>
                         </div>
                         
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{promotion.packageName}</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.packageName}</h3>
                         {promotion.content && (
                           <div className="mb-4">
                             <p className="text-sm font-medium text-gray-700">{promotion.content.title}</p>
@@ -1191,7 +1191,7 @@ export default function PromotionsPage() {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Completed Promotions</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Completed Promotions</h3>
                   <p className="text-gray-600">Your completed promotions will appear here</p>
                 </CardContent>
               </Card>
@@ -1206,14 +1206,14 @@ export default function PromotionsPage() {
                       <CardHeader className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                            <Icon className="w-5 h-5 text-white" />
+                            <Icon className="w-5 h-5 text-foreground" />
                           </div>
                           <Badge className={getStatusColor(promotion.status)}>
                             {promotion.status}
                           </Badge>
                         </div>
                         
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{promotion.packageName}</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.packageName}</h3>
                         {promotion.content && (
                           <div className="mb-4">
                             <p className="text-sm font-medium text-gray-700">{promotion.content.title}</p>
@@ -1232,7 +1232,7 @@ export default function PromotionsPage() {
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Completed:</span>
-                            <span className="font-semibold text-blue-600">
+                            <span className="font-semibold text-primary">
                               {new Date(promotion.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -1316,7 +1316,7 @@ export default function PromotionsPage() {
                         <SelectItem key={pkg.id} value={pkg.id}>
                           <div className="flex items-center space-x-3">
                             <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                              <Icon className="w-4 h-4 text-white" />
+                              <Icon className="w-4 h-4 text-foreground" />
                             </div>
                             <div>
                               <p className="font-medium">{pkg.name}</p>
@@ -1373,7 +1373,7 @@ export default function PromotionsPage() {
                       disabled={createLoading || heroImageUploading}
                     />
                     {heroImageUploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-md">
+                      <div className="absolute inset-0 flex items-center justify-center bg-card bg-opacity-75 rounded-md">
                         <div className="flex items-center space-x-2 text-orange-600">
                           <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
                           <span className="text-sm font-medium">Uploading...</span>
@@ -1398,15 +1398,15 @@ export default function PromotionsPage() {
                       />
                       {heroImageUploading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-                          <div className="flex items-center space-x-2 text-white">
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="flex items-center space-x-2 text-foreground">
+                            <div className="w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin"></div>
                             <span className="text-sm font-medium">Uploading to Cloudinary...</span>
                           </div>
                         </div>
                       )}
                       <button
                         onClick={removeHeroImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        className="absolute -top-2 -right-2 bg-red-500 text-foreground rounded-full p-1 hover:bg-red-600"
                         disabled={heroImageUploading}
                       >
                         <X className="w-3 h-3" />
@@ -1422,9 +1422,9 @@ export default function PromotionsPage() {
                 )}
 
                 {/* Hero Image Requirements */}
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Hero Image Requirements:</h4>
-                  <ul className="text-xs text-blue-800 space-y-1">
+                <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-2">Hero Image Requirements:</h4>
+                  <ul className="text-xs text-foreground space-y-1">
                     <li>• High resolution (minimum 1920x1080px recommended)</li>
                     <li>• Landscape orientation preferred</li>
                     <li>• Clear, professional, and relevant to your content</li>
@@ -1450,7 +1450,7 @@ export default function PromotionsPage() {
             {/* Summary */}
             {selectedContent && selectedPackage && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Promotion Summary</h4>
+                <h4 className="font-semibold text-foreground mb-2">Promotion Summary</h4>
                 <div className="space-y-1 text-sm">
                   <p><span className="text-gray-600">Content:</span> {selectedContent.title}</p>
                   <p><span className="text-gray-600">Package:</span> {packages.find(p => p.id === selectedPackage)?.name}</p>
@@ -1495,11 +1495,11 @@ export default function PromotionsPage() {
               <Button 
                 onClick={handleCreatePromotion}
                 disabled={!selectedContent || !selectedPackage || createLoading || heroImageUploading || (selectedPackage === 'launch' && !heroImageFile)}
-                className="bg-orange-500 hover:bg-orange-600"
+                className="bg-primary hover:bg-primary/90"
               >
                 {createLoading ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin"></div>
                     <span>{heroImageUploading ? 'Uploading Image...' : 'Creating...'}</span>
                   </div>
                 ) : (
@@ -1528,7 +1528,7 @@ export default function PromotionsPage() {
             {/* Selected Content Display */}
             {selectedContent && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Selected Content</h4>
+                <h4 className="font-semibold text-foreground mb-2">Selected Content</h4>
                 <div className="flex items-center space-x-3">
                   {(() => {
                     const ContentIcon = getContentIcon(selectedContent.contentType || 'opportunity')
@@ -1636,7 +1636,7 @@ export default function PromotionsPage() {
                   window.open(mailtoLink, '_blank');
                   setShowCustomDialog(false);
                 }}
-                className="bg-orange-500 hover:bg-orange-600"
+                className="bg-primary hover:bg-primary/90"
               >
                 Open Email Client
               </Button>
@@ -1664,7 +1664,7 @@ export default function PromotionsPage() {
             <div className="space-y-6">
               {/* Promotion Info */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Promotion Details</h4>
+                <h4 className="font-semibold text-foreground mb-2">Promotion Details</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Package:</span>
@@ -1689,8 +1689,8 @@ export default function PromotionsPage() {
 
               {/* Bank Details */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Bank Transfer Details</h4>
-                <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-foreground">Bank Transfer Details</h4>
+                <div className="bg-primary/10 p-4 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <span className="text-sm text-gray-600">Bank Name:</span>
@@ -1706,7 +1706,7 @@ export default function PromotionsPage() {
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Transfer Reference:</span>
-                      <p className="font-medium text-lg text-blue-600 font-mono">{paymentDetails.payment.paymentReference}</p>
+                      <p className="font-medium text-lg text-primary font-mono">{paymentDetails.payment.paymentReference}</p>
                     </div>
                   </div>
                 </div>
@@ -1714,7 +1714,7 @@ export default function PromotionsPage() {
 
               {/* Instructions */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-gray-900">Payment Instructions</h4>
+                <h4 className="font-semibold text-foreground">Payment Instructions</h4>
                 <ol className="space-y-2 text-sm text-gray-700">
                   {paymentDetails.instructions.map((instruction: string, index: number) => (
                     <li key={index} className="flex items-start gap-2">
@@ -1729,7 +1729,7 @@ export default function PromotionsPage() {
 
               {/* Receipt Upload Section */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Upload Payment Receipt</h4>
+                <h4 className="font-semibold text-foreground">Upload Payment Receipt</h4>
                 <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
                   <p className="text-sm text-green-800 mb-4">
                     <strong>💡 Tip:</strong> Select your payment receipt below. It will be uploaded automatically when you click "Confirm Payment & Upload Receipt".
@@ -1766,7 +1766,7 @@ export default function PromotionsPage() {
                           />
                           <button
                             onClick={removeReceipt}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute -top-2 -right-2 bg-red-500 text-foreground rounded-full p-1 hover:bg-red-600"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -1825,7 +1825,7 @@ export default function PromotionsPage() {
                   >
                     {paymentLoading ? (
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin"></div>
                         <span>Processing...</span>
                       </div>
                     ) : (
@@ -1839,10 +1839,10 @@ export default function PromotionsPage() {
                   </Button>
                 )}
                 {selectedPromotion?.paymentStatus === 'awaiting_verification' && (
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                  <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-blue-800 text-sm font-medium">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-foreground text-sm font-medium">
                         Payment verification in progress...
                       </span>
                     </div>

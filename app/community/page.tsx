@@ -227,16 +227,16 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8 overflow-x-hidden">
+    <div className="min-h-screen bg-page pb-24 lg:pb-8 overflow-x-hidden">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4">
           {/* Main Header */}
           <div className="py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-white">Community</h1>
+              <h1 className="text-xl font-bold text-foreground">Community</h1>
               {isRefreshing && (
-                <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
+                <div className="h-4 w-4 rounded bg-muted animate-pulse" />
               )}
             </div>
             <Button
@@ -244,22 +244,22 @@ export default function CommunityPage() {
               disabled={isRefreshing}
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.05] rounded-full"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
             >
-              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+              <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
 
           {/* Tabs - Instagram Style */}
-          <div className="flex border-b border-white/[0.08]">
+          <div className="flex border-b border-border">
             {isAuthenticated && (
               <button
                 onClick={() => setActiveTab('connections')}
                 className={cn(
                   "flex-1 px-4 py-3 text-sm font-semibold relative transition-colors",
                   activeTab === 'connections'
-                    ? "text-white"
-                    : "text-white/50 hover:text-white/70"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-muted-foreground"
                 )}
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -267,7 +267,7 @@ export default function CommunityPage() {
                   Partnering
                 </span>
                 {activeTab === 'connections' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
             )}
@@ -276,8 +276,8 @@ export default function CommunityPage() {
               className={cn(
                 "flex-1 px-4 py-3 text-sm font-semibold relative transition-colors",
                 activeTab === 'explore'
-                  ? "text-white"
-                  : "text-white/50 hover:text-white/70"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-muted-foreground"
               )}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -285,7 +285,7 @@ export default function CommunityPage() {
                 Explore
               </span>
               {activeTab === 'explore' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
           </div>
@@ -298,8 +298,8 @@ export default function CommunityPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
                   sortBy === 'trending' && !filterHashtag
-                    ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                    : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white/80 border border-transparent"
+                    ? "bg-primary/20 text-orange-400 border border-orange-500/30"
+                    : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                 )}
               >
                 <Flame className="w-3 h-3" />
@@ -310,8 +310,8 @@ export default function CommunityPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
                   sortBy === 'recent' && !filterHashtag
-                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                    : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white/80 border border-transparent"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
                 )}
               >
                 <Sparkles className="w-3 h-3" />
@@ -326,17 +326,17 @@ export default function CommunityPage() {
       <div className="max-w-2xl mx-auto px-4">
         {/* Post Composer - At Top */}
         {isAuthenticated && (
-          <div className="pt-6 pb-4 border-b border-white/[0.06]">
+          <div className="pt-6 pb-4 border-b border-border">
             <PostComposer onPostCreated={handlePostCreated} />
           </div>
         )}
 
         {/* Trending Hashtags - Horizontal Scroll */}
         {trendingHashtags.length > 0 && activeTab === 'explore' && (
-          <div className="py-4 border-b border-white/[0.06]">
+          <div className="py-4 border-b border-border">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-orange-500" />
-              <h3 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Trending Now</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trending Now</h3>
             </div>
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
               {trendingHashtags.slice(0, 10).map((tag) => (
@@ -348,13 +348,13 @@ export default function CommunityPage() {
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
                     filterHashtag === tag.hashtag
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                      : "bg-white/[0.05] text-white/70 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]"
+                      ? "bg-primary text-foreground shadow-lg shadow-primary/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
                   )}
                 >
                   <Hash className="w-3 h-3 inline mr-1" />
                   {tag.hashtag}
-                  <span className="ml-1.5 text-white/60">({tag.count})</span>
+                  <span className="ml-1.5 text-muted-foreground">({tag.count})</span>
                 </button>
               ))}
             </div>
@@ -367,35 +367,35 @@ export default function CommunityPage() {
             // Loading Skeletons - Show when initial loading or refreshing with no posts
             <div className="space-y-4 w-full max-w-full">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-full max-w-full rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+                <div key={i} className="w-full max-w-full rounded-2xl bg-card border border-border overflow-hidden">
                   <div className="p-4 w-full max-w-full overflow-hidden">
                     <div className="animate-pulse space-y-3">
                       {/* Author Header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white/[0.08]" />
+                          <div className="w-10 h-10 rounded-full bg-muted" />
                           <div className="flex-1 min-w-0 space-y-2">
-                            <div className="h-4 bg-white/[0.08] rounded w-24" />
-                            <div className="h-3 bg-white/[0.08] rounded w-20" />
+                            <div className="h-4 bg-muted rounded w-24" />
+                            <div className="h-3 bg-muted rounded w-20" />
                           </div>
                         </div>
                       </div>
                       
                       {/* Content */}
                       <div className="space-y-2">
-                        <div className="h-4 bg-white/[0.08] rounded w-full" />
-                        <div className="h-4 bg-white/[0.08] rounded w-5/6" />
-                        <div className="h-4 bg-white/[0.08] rounded w-4/6" />
+                        <div className="h-4 bg-muted rounded w-full" />
+                        <div className="h-4 bg-muted rounded w-5/6" />
+                        <div className="h-4 bg-muted rounded w-4/6" />
                       </div>
                       
                       {/* Image Skeleton */}
-                      <div className="h-64 bg-white/[0.08] rounded-xl" />
+                      <div className="h-64 bg-muted rounded-xl" />
                       
                       {/* Actions */}
-                      <div className="flex items-center gap-0.5 sm:gap-1 pt-3 border-t border-white/[0.06]">
-                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
-                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
-                        <div className="h-8 w-16 bg-white/[0.08] rounded-lg" />
+                      <div className="flex items-center gap-0.5 sm:gap-1 pt-3 border-t border-border">
+                        <div className="h-8 w-16 bg-muted rounded-lg" />
+                        <div className="h-8 w-16 bg-muted rounded-lg" />
+                        <div className="h-8 w-16 bg-muted rounded-lg" />
                       </div>
                     </div>
                   </div>
@@ -408,12 +408,12 @@ export default function CommunityPage() {
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-10 h-10 text-orange-500/50" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 {activeTab === 'connections' 
                   ? 'No posts from people you partner with' 
                   : 'No posts found'}
               </h3>
-              <p className="text-sm text-white/50 mb-6 max-w-sm mx-auto">
+              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                 {activeTab === 'connections'
                   ? 'Start partnering with people to see their posts here, or explore trending content.'
                   : filterHashtag
@@ -424,7 +424,7 @@ export default function CommunityPage() {
                 <Button
                   onClick={() => setFilterHashtag(null)}
                   variant="outline"
-                  className="border-white/10 text-white/70 hover:text-white rounded-full"
+                  className="border-border text-muted-foreground hover:text-foreground rounded-full"
                 >
                   Clear Filter
                 </Button>
@@ -452,16 +452,29 @@ export default function CommunityPage() {
                 }}
               />
               
-              {/* Loading indicator */}
+              {/* Loading more: skeleton cards */}
               {isLoading && posts.length > 0 && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                <div className="space-y-4 pt-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="w-full rounded-2xl bg-card border border-border overflow-hidden animate-pulse">
+                      <div className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-muted" />
+                          <div className="h-4 bg-muted rounded w-24" />
+                          <div className="h-3 bg-muted rounded w-20" />
+                        </div>
+                        <div className="h-4 bg-muted rounded w-full mb-2" />
+                        <div className="h-4 bg-muted rounded w-5/6" />
+                        <div className="h-48 bg-muted rounded-xl mt-3" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               
               {/* End of feed message */}
               {!hasMore && posts.length > 0 && (
-                <div className="text-center py-8 text-white/40 text-sm">
+                <div className="text-center py-8 text-muted-foreground text-sm">
                   You've reached the end of the feed
                 </div>
               )}

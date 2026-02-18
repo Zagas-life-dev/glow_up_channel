@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils'
 import { trackComment } from '@/lib/tracking'
 import {
   ArrowLeft,
-  Loader2,
   MessageCircle
 } from 'lucide-react'
 
@@ -216,11 +215,11 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <MessageCircle className="w-16 h-16 text-white/20 mb-4" />
-        <h2 className="text-lg font-medium text-white mb-2">Post Not Found</h2>
-        <p className="text-white/50 mb-4">This post may have been deleted or is private.</p>
+        <MessageCircle className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-lg font-medium text-foreground mb-2">Post Not Found</h2>
+        <p className="text-muted-foreground mb-4">This post may have been deleted or is private.</p>
         <Link href="/community">
-          <Button variant="outline" className="border-white/10 text-white/70 rounded-xl">
+          <Button variant="outline" className="border-border text-muted-foreground rounded-xl">
             Back to Feed
           </Button>
         </Link>
@@ -232,10 +231,10 @@ export default function PostDetailPage() {
     <div className="min-h-screen pb-24 md:pb-8">
       <div className="max-w-3xl mx-auto">
         {/* Back Button */}
-        <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-white/[0.06] -mx-4 px-4 py-3 mb-4">
+        <div className="sticky top-0 z-20 bg-page/95 backdrop-blur-lg border-b border-border -mx-4 px-4 py-3 mb-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Post</span>
@@ -263,19 +262,28 @@ export default function PostDetailPage() {
 
         {/* Replies */}
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-orange-500" />
             Replies ({post.replyCount})
           </h3>
 
           {isLoadingReplies ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+            <div className="space-y-3 py-8 animate-pulse">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="rounded-2xl bg-card border border-border p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-muted" />
+                    <div className="h-4 bg-muted rounded w-24" />
+                  </div>
+                  <div className="h-4 bg-muted rounded w-full mb-2" />
+                  <div className="h-4 bg-muted rounded w-4/5" />
+                </div>
+              ))}
             </div>
           ) : replies.length === 0 ? (
-            <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-white/[0.06]">
-              <MessageCircle className="w-12 h-12 text-white/20 mx-auto mb-3" />
-              <p className="text-white/50">No replies yet. Be the first to reply!</p>
+            <div className="text-center py-12 bg-card rounded-2xl border border-border">
+              <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No replies yet. Be the first to reply!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -350,9 +358,9 @@ function ReplyComposer({
   if (!user) return null
 
   return (
-    <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+    <div className="rounded-xl bg-card border border-border p-4">
       <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-semibold text-foreground flex-shrink-0">
           {user.profileImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -369,7 +377,7 @@ function ReplyComposer({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={parentReplyId ? "Write a reply..." : "Write your reply..."}
-            className="w-full bg-transparent text-white placeholder:text-white/30 resize-none outline-none min-h-[60px] text-sm"
+            className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none min-h-[60px] text-sm"
             rows={2}
           />
           <div className="flex items-center justify-end gap-2 mt-2">
@@ -378,7 +386,7 @@ function ReplyComposer({
                 onClick={onCancel}
                 variant="ghost"
                 size="sm"
-                className="text-white/50"
+                className="text-muted-foreground"
               >
                 Cancel
               </Button>
@@ -387,9 +395,9 @@ function ReplyComposer({
               onClick={handleSubmit}
               disabled={isPosting || !text.trim()}
               size="sm"
-              className="bg-orange-500 hover:bg-orange-600 rounded-full"
+              className="bg-primary hover:bg-primary/90 rounded-full"
             >
-              {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reply'}
+              Reply
             </Button>
           </div>
         </div>
@@ -421,7 +429,7 @@ function ReplyThread({
   const maxDepth = 3
 
   return (
-    <div className={cn("relative", depth > 0 && "ml-8 pl-4 border-l border-white/[0.06]")}>
+    <div className={cn("relative", depth > 0 && "ml-8 pl-4 border-l border-border")}>
       <ReplyCard
         reply={reply}
         onUpdate={onUpdate}

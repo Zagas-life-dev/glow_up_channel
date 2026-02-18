@@ -13,13 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  UserPlus,
-  X,
-  Check,
-  Loader2,
-  Users
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -86,23 +80,23 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[400px] bg-[#0a0a0a] border-white/[0.08] p-0">
+      <SheetContent side="right" className="w-full sm:w-[400px] bg-page border-border p-0">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                <UserPlus className="w-5 h-5 text-violet-500" />
+                <FlaticonIcon name="user-plus" className="w-5 h-5 text-violet-500" aria-hidden />
               </div>
               <div>
-                <SheetTitle className="text-white">Connection Requests</SheetTitle>
-                <SheetDescription className="text-white/40 text-xs">
+                <SheetTitle className="text-foreground">Connection Requests</SheetTitle>
+                <SheetDescription className="text-muted-foreground text-xs">
                   {requests.length} pending request{requests.length !== 1 ? 's' : ''}
                 </SheetDescription>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-              <X className="w-5 h-5 text-white/60" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
             </button>
           </div>
         </div>
@@ -111,11 +105,11 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
         <div className="p-6">
           {requests.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mx-auto mb-4">
-                <Users className="w-7 h-7 text-white/30" />
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <FlaticonIcon name="users" className="w-7 h-7 text-muted-foreground" aria-hidden />
               </div>
-              <h3 className="font-medium text-white mb-1">No Pending Requests</h3>
-              <p className="text-sm text-white/50">You're all caught up!</p>
+              <h3 className="font-medium text-foreground mb-1">No Pending Requests</h3>
+              <p className="text-sm text-muted-foreground">You're all caught up!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -130,14 +124,14 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
                     key={request.requestId}
                     className={cn(
                       "p-4 rounded-xl border transition-all",
-                      "bg-white/[0.02] border-white/[0.06]",
+                      "bg-card border-border",
                       isProcessing && "opacity-50"
                     )}
                   >
                     {/* User Info */}
                     <div className="flex items-start gap-3 mb-3">
                       <Link href={`/profile/${request.user._id}`} onClick={onClose}>
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-white/[0.05] flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
                           {request.user.profileImage ? (
                             <Image
                               src={request.user.profileImage}
@@ -148,7 +142,7 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
-                              <span className="text-lg font-bold text-white">
+                              <span className="text-lg font-bold text-foreground">
                                 {displayName.charAt(0).toUpperCase()}
                               </span>
                             </div>
@@ -159,16 +153,16 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
                         <Link 
                           href={`/profile/${request.user._id}`} 
                           onClick={onClose}
-                          className="font-medium text-white hover:text-orange-400 truncate block transition-colors"
+                          className="font-medium text-foreground hover:text-orange-400 truncate block transition-colors"
                         >
                           {displayName}
                         </Link>
                         {request.user.headline && (
-                          <p className="text-xs text-white/50 truncate mt-0.5">
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
                             {request.user.headline}
                           </p>
                         )}
-                        <p className="text-xs text-white/30 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {new Date(request.requestedAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -180,13 +174,13 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
                         onClick={() => handleRespond(request, 'accept')}
                         disabled={isProcessing}
                         size="sm"
-                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-foreground rounded-lg"
                       >
                         {isProcessing && action === 'accept' ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                         ) : (
                           <>
-                            <Check className="w-4 h-4 mr-1" />
+                            <FlaticonIcon name="check" className="w-4 h-4 mr-1" aria-hidden />
                             Accept
                           </>
                         )}
@@ -196,13 +190,13 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
                         disabled={isProcessing}
                         size="sm"
                         variant="outline"
-                        className="flex-1 border-white/10 text-white/70 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 rounded-lg"
+                        className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 rounded-lg"
                       >
                         {isProcessing && action === 'decline' ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                         ) : (
                           <>
-                            <X className="w-4 h-4 mr-1" />
+                            <FlaticonIcon name="cross" className="w-4 h-4 mr-1" aria-hidden />
                             Decline
                           </>
                         )}
@@ -226,10 +220,10 @@ export function ConnectionRequestsBadge({ count, onClick }: { count: number; onC
   return (
     <button
       onClick={onClick}
-      className="relative p-2 rounded-lg hover:bg-white/[0.05] transition-colors"
+      className="relative p-2 rounded-lg hover:bg-muted transition-colors"
     >
-      <UserPlus className="w-5 h-5 text-white/60" />
-      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-violet-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+      <FlaticonIcon name="user-plus" className="w-5 h-5 text-muted-foreground" aria-hidden />
+      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-violet-500 rounded-full text-[10px] font-bold text-foreground flex items-center justify-center">
         {count > 9 ? '9+' : count}
       </span>
     </button>

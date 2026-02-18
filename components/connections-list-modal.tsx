@@ -11,15 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  User,
-  Users,
-  UserPlus,
-  UserCheck,
-  X,
-  Loader2,
-  Search
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { Input } from "@/components/ui/input"
 
 interface ConnectionUser {
@@ -114,29 +106,29 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[80vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent side="bottom" className="h-[80vh] bg-page border-border rounded-t-3xl p-0 overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <Users className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FlaticonIcon name="users" className="w-5 h-5 text-orange-500" aria-hidden />
               </div>
-              <SheetTitle className="text-white">{typeLabel}</SheetTitle>
+              <SheetTitle className="text-foreground">{typeLabel}</SheetTitle>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-              <X className="w-5 h-5 text-white/60" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
             </button>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <FlaticonIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
-              className="pl-10 bg-white/[0.03] border-white/[0.08] text-white rounded-xl focus:border-orange-500/50"
+              className="pl-10 bg-muted border-border text-foreground rounded-xl focus:border-orange-500/50"
             />
           </div>
         </div>
@@ -145,15 +137,15 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
         <div className="overflow-y-auto h-[calc(80vh-140px)] p-4">
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+              <FlaticonIcon name="spinner" className="w-6 h-6 text-orange-500 animate-spin" aria-hidden />
             </div>
           ) : filteredConnections.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-              <h3 className="font-medium text-white mb-1">
+              <FlaticonIcon name="users" className="w-12 h-12 text-muted-foreground mx-auto mb-3" aria-hidden />
+              <h3 className="font-medium text-foreground mb-1">
                 {searchQuery ? 'No Results' : type === 'followers' ? 'No Partners' : 'No Partnering Yet'}
               </h3>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-muted-foreground">
                 {searchQuery 
                   ? 'Try a different search term'
                   : type === 'followers' 
@@ -174,10 +166,10 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
                     key={connection.user._id}
                     href={`/profile/${connection.user._id}`}
                     onClick={onClose}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-colors"
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors"
                   >
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-[#141414] flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-surface flex-shrink-0">
                       {connection.user.profileImage ? (
                         <Image 
                           src={connection.user.profileImage} 
@@ -188,7 +180,7 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-white">
+                          <span className="text-sm font-semibold text-foreground">
                             {displayName.charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -197,13 +189,13 @@ export default function ConnectionsListModal({ isOpen, onClose, userId, type }: 
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white truncate">{displayName}</p>
+                      <p className="font-medium text-foreground truncate">{displayName}</p>
                       {connection.user.headline ? (
-                        <p className="text-sm text-white/50 truncate">{connection.user.headline}</p>
+                        <p className="text-sm text-muted-foreground truncate">{connection.user.headline}</p>
                       ) : connection.user.bio ? (
-                        <p className="text-sm text-white/50 truncate">{connection.user.bio}</p>
+                        <p className="text-sm text-muted-foreground truncate">{connection.user.bio}</p>
                       ) : (
-                        <p className="text-sm text-white/30 truncate">{connection.user.email}</p>
+                        <p className="text-sm text-muted-foreground truncate">{connection.user.email}</p>
                       )}
                     </div>
                   </Link>

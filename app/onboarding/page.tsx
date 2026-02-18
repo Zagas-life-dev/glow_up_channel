@@ -7,7 +7,7 @@ import ApiClient from '@/lib/api-client'
 import { transformOnboardingData, validateOnboardingData } from '@/lib/onboarding-utils'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 
 import LocationStep from '@/components/onboarding/location-step'
 import InterestsStep from '@/components/onboarding/interests-step'
@@ -163,7 +163,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-200/50 p-6 sm:p-8">
+      <div className="w-full max-w-2xl bg-card rounded-2xl shadow-xl border border-gray-200/50 p-6 sm:p-8">
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
@@ -191,28 +191,28 @@ export default function OnboardingPage() {
             disabled={currentStep === 0}
             className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
           >
-            <ChevronLeft className="mr-2 h-4 w-4" />
+            <FlaticonIcon name="angle-left" className="mr-2 h-4 w-4" aria-hidden />
             Previous
           </Button>
           <Button 
             onClick={handleNext} 
             disabled={isCompleting}
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-foreground shadow-lg hover:shadow-xl transition-all duration-200"
           >
             {isCompleting ? (
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
                 <span>Completing...</span>
               </div>
             ) : currentStep === steps.length - 1 ? (
               <>
                 Finish Onboarding
-                <Check className="ml-2 h-4 w-4" />
+                <FlaticonIcon name="check" className="ml-2 h-4 w-4" aria-hidden />
               </>
             ) : (
               <>
                 Next
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <FlaticonIcon name="angle-right" className="ml-2 h-4 w-4" aria-hidden />
               </>
             )}
           </Button>

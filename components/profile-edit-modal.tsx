@@ -15,21 +15,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  User,
-  Camera,
-  X,
-  Loader2,
-  Plus,
-  Briefcase,
-  GraduationCap,
-  Link as LinkIcon,
-  Globe,
-  Lock,
-  Users,
-  Save
-} from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import { FaLinkedin, FaTwitter, FaInstagram, FaGithub } from 'react-icons/fa'
+import { RiLink } from 'react-icons/ri'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -184,18 +172,18 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[500px] bg-[#0a0a0a] border-white/[0.08] p-0 overflow-hidden">
+      <SheetContent side="right" className="w-full sm:w-[500px] bg-page border-border p-0 overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <SheetTitle className="text-white">Edit Profile</SheetTitle>
-              <SheetDescription className="text-white/40 text-xs">
+              <SheetTitle className="text-foreground">Edit Profile</SheetTitle>
+              <SheetDescription className="text-muted-foreground text-xs">
                 Update your profile information
               </SheetDescription>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-              <X className="w-5 h-5 text-white/60" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
             </button>
           </div>
         </div>
@@ -205,7 +193,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
           {/* Profile Image */}
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/[0.05]">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-muted">
                 {previewImage ? (
                   <Image
                     src={previewImage}
@@ -216,22 +204,22 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                    <User className="w-10 h-10 text-white" />
+                    <FlaticonIcon name="user" className="w-10 h-10 text-foreground" aria-hidden />
                   </div>
                 )}
                 
                 {isUploading && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <FlaticonIcon name="spinner" className="w-6 h-6 text-foreground animate-spin" aria-hidden />
                   </div>
                 )}
               </div>
               
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-orange-500 hover:bg-orange-600 flex items-center justify-center transition-colors"
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-primary hover:bg-primary/90 flex items-center justify-center transition-colors"
               >
-                <Camera className="w-4 h-4 text-white" />
+                <FlaticonIcon name="camera" className="w-4 h-4 text-foreground" aria-hidden />
               </button>
               
               <input
@@ -242,7 +230,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                 className="hidden"
               />
             </div>
-            <p className="text-xs text-white/40 mt-2">Click to upload new photo</p>
+            <p className="text-xs text-muted-foreground mt-2">Click to upload new photo</p>
           </div>
 
           {/* Error */}
@@ -254,63 +242,63 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Basic Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">Basic Info</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Basic Info</h3>
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-white/60 text-xs">First Name</Label>
+                <Label className="text-muted-foreground text-xs">First Name</Label>
                 <Input
                   value={formData.firstName}
                   onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                   placeholder="John"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               <div>
-                <Label className="text-white/60 text-xs">Last Name</Label>
+                <Label className="text-muted-foreground text-xs">Last Name</Label>
                 <Input
                   value={formData.lastName}
                   onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                   placeholder="Doe"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-white/60 text-xs">Headline</Label>
+              <Label className="text-muted-foreground text-xs">Headline</Label>
               <Input
                 value={formData.headline}
                 onChange={(e) => setFormData(prev => ({ ...prev, headline: e.target.value }))}
                 placeholder="Software Engineer | Tech Enthusiast"
                 maxLength={100}
-                className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                className="mt-1 bg-muted border-border text-foreground rounded-xl"
               />
-              <p className="text-xs text-white/30 mt-1">{formData.headline.length}/100</p>
+              <p className="text-xs text-muted-foreground mt-1">{formData.headline.length}/100</p>
             </div>
 
             <div>
-              <Label className="text-white/60 text-xs">Bio</Label>
+              <Label className="text-muted-foreground text-xs">Bio</Label>
               <Textarea
                 value={formData.bio}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                 placeholder="Tell people about yourself..."
                 maxLength={500}
                 rows={4}
-                className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl resize-none"
+                className="mt-1 bg-muted border-border text-foreground rounded-xl resize-none"
               />
-              <p className="text-xs text-white/30 mt-1">{formData.bio.length}/500</p>
+              <p className="text-xs text-muted-foreground mt-1">{formData.bio.length}/500</p>
             </div>
 
             <div>
-              <Label className="text-white/60 text-xs">Website</Label>
+              <Label className="text-muted-foreground text-xs">Website</Label>
               <div className="relative mt-1">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <RiLink className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={formData.website}
                   onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                   placeholder="https://yourwebsite.com"
-                  className="pl-10 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="pl-10 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
             </div>
@@ -318,14 +306,14 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Work */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <FlaticonIcon name="briefcase" className="w-4 h-4" aria-hidden />
               Work
             </h3>
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-white/60 text-xs">Job Title</Label>
+                <Label className="text-muted-foreground text-xs">Job Title</Label>
                 <Input
                   value={formData.work.title || ''}
                   onChange={(e) => setFormData(prev => ({ 
@@ -333,11 +321,11 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     work: { ...prev.work, title: e.target.value }
                   }))}
                   placeholder="Software Engineer"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               <div>
-                <Label className="text-white/60 text-xs">Company</Label>
+                <Label className="text-muted-foreground text-xs">Company</Label>
                 <Input
                   value={formData.work.company || ''}
                   onChange={(e) => setFormData(prev => ({ 
@@ -345,7 +333,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     work: { ...prev.work, company: e.target.value }
                   }))}
                   placeholder="Google"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
             </div>
@@ -353,13 +341,13 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Education */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider flex items-center gap-2">
-              <GraduationCap className="w-4 h-4" />
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <FlaticonIcon name="graduation-cap" className="w-4 h-4" aria-hidden />
               Education
             </h3>
             
             <div>
-              <Label className="text-white/60 text-xs">School/University</Label>
+              <Label className="text-muted-foreground text-xs">School/University</Label>
               <Input
                 value={formData.education.school || ''}
                 onChange={(e) => setFormData(prev => ({ 
@@ -367,13 +355,13 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                   education: { ...prev.education, school: e.target.value }
                 }))}
                 placeholder="Stanford University"
-                className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                className="mt-1 bg-muted border-border text-foreground rounded-xl"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-white/60 text-xs">Degree</Label>
+                <Label className="text-muted-foreground text-xs">Degree</Label>
                 <Input
                   value={formData.education.degree || ''}
                   onChange={(e) => setFormData(prev => ({ 
@@ -381,11 +369,11 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     education: { ...prev.education, degree: e.target.value }
                   }))}
                   placeholder="Bachelor's"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               <div>
-                <Label className="text-white/60 text-xs">Field of Study</Label>
+                <Label className="text-muted-foreground text-xs">Field of Study</Label>
                 <Input
                   value={formData.education.field || ''}
                   onChange={(e) => setFormData(prev => ({ 
@@ -393,7 +381,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     education: { ...prev.education, field: e.target.value }
                   }))}
                   placeholder="Computer Science"
-                  className="mt-1 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
             </div>
@@ -401,7 +389,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Skills */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Skills & Interests ({formData.skills.length}/20)
             </h3>
             
@@ -411,15 +399,15 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
                 placeholder="Add a skill..."
-                className="bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                className="bg-muted border-border text-foreground rounded-xl"
               />
               <Button
                 onClick={handleAddSkill}
                 disabled={!newSkill.trim() || formData.skills.length >= 20}
                 size="icon"
-                className="bg-orange-500 hover:bg-orange-600 rounded-xl flex-shrink-0"
+                className="bg-primary hover:bg-primary/90 rounded-xl flex-shrink-0"
               >
-                <Plus className="w-4 h-4" />
+                <FlaticonIcon name="add" className="w-4 h-4" aria-hidden />
               </Button>
             </div>
 
@@ -428,14 +416,14 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                 {formData.skills.map((skill, index) => (
                   <span 
                     key={index}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 text-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-orange-400 text-sm"
                   >
                     {skill}
                     <button 
                       onClick={() => handleRemoveSkill(skill)}
                       className="hover:text-orange-300"
                     >
-                      <X className="w-3 h-3" />
+                      <FlaticonIcon name="cross" className="w-3 h-3" aria-hidden />
                     </button>
                   </span>
                 ))}
@@ -445,7 +433,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Social Links */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">Social Links</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Social Links</h3>
             
             <div className="space-y-3">
               <div className="relative">
@@ -457,7 +445,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
                   }))}
                   placeholder="https://linkedin.com/in/username"
-                  className="pl-10 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="pl-10 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               
@@ -470,7 +458,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     socialLinks: { ...prev.socialLinks, twitter: e.target.value }
                   }))}
                   placeholder="https://twitter.com/username"
-                  className="pl-10 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="pl-10 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               
@@ -483,12 +471,12 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     socialLinks: { ...prev.socialLinks, instagram: e.target.value }
                   }))}
                   placeholder="https://instagram.com/username"
-                  className="pl-10 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="pl-10 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
               
               <div className="relative">
-                <FaGithub className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+                <FaGithub className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={formData.socialLinks.github || ''}
                   onChange={(e) => setFormData(prev => ({ 
@@ -496,7 +484,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                     socialLinks: { ...prev.socialLinks, github: e.target.value }
                   }))}
                   placeholder="https://github.com/username"
-                  className="pl-10 bg-white/[0.05] border-white/[0.08] text-white rounded-xl"
+                  className="pl-10 bg-muted border-border text-foreground rounded-xl"
                 />
               </div>
             </div>
@@ -504,19 +492,19 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
 
           {/* Privacy Settings */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">Privacy</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Privacy</h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
                 <div className="flex items-center gap-3">
                   {formData.isPrivate ? (
-                    <Lock className="w-5 h-5 text-orange-500" />
+                    <FlaticonIcon name="lock" className="w-5 h-5 text-primary" aria-hidden />
                   ) : (
-                    <Globe className="w-5 h-5 text-emerald-500" />
+                    <FlaticonIcon name="globe" className="w-5 h-5 text-emerald-500" aria-hidden />
                   )}
                   <div>
-                    <p className="font-medium text-white">Private Account</p>
-                    <p className="text-xs text-white/50">
+                    <p className="font-medium text-foreground">Private Account</p>
+                    <p className="text-xs text-muted-foreground">
                       {formData.isPrivate 
                         ? "People must request to partner with you"
                         : "Anyone can partner with you"}
@@ -529,12 +517,12 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
                 />
               </div>
               
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
                 <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-violet-500" />
+                  <FlaticonIcon name="users" className="w-5 h-5 text-violet-500" aria-hidden />
                   <div>
-                    <p className="font-medium text-white">Show Connections</p>
-                    <p className="text-xs text-white/50">
+                    <p className="font-medium text-foreground">Show Connections</p>
+                    <p className="text-xs text-muted-foreground">
                       {formData.showConnections 
                         ? "Your partners/partnering are visible"
                         : "Your connections are hidden"}
@@ -551,17 +539,17 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }:
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[#0a0a0a] border-t border-white/[0.06] px-6 py-4">
+        <div className="sticky bottom-0 bg-page border-t border-border px-6 py-4">
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full bg-orange-500 hover:bg-orange-600 rounded-xl"
+            className="w-full bg-primary hover:bg-primary/90 rounded-xl"
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
             ) : (
               <>
-                <Save className="w-4 h-4 mr-2" />
+                <FlaticonIcon name="save" className="w-4 h-4 mr-2" aria-hidden />
                 Save Changes
               </>
             )}

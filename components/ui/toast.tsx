@@ -3,9 +3,8 @@
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "lucide-react"
-
 import { cn } from "@/lib/utils"
+import { RiCloseLine } from "react-icons/ri"
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -33,7 +32,7 @@ const toastVariants = cva(
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
         success:
-          "success group border-green-500 bg-green-500 text-white",
+          "success group border-green-500 bg-green-500 text-foreground",
       },
     },
     defaultVariants: {
@@ -85,7 +84,7 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
+    <RiCloseLine className="h-4 w-4" aria-label="Close" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName

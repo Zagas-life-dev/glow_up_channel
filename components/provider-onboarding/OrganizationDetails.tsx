@@ -37,7 +37,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Organization Name */}
         <div className="md:col-span-2">
-          <Label htmlFor="organizationName" className="text-sm font-medium text-white/70 mb-2 block">
+          <Label htmlFor="organizationName" className="text-sm font-medium text-muted-foreground mb-2 block">
             Organization/Provider Name *
           </Label>
           <Input
@@ -45,13 +45,13 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.organizationName || ''}
             onChange={(e) => updateData({ organizationName: e.target.value })}
             placeholder="Enter your organization name"
-            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
           />
         </div>
 
         {/* Provider Type */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-medium text-white/70 mb-3 block">
+          <Label className="text-sm font-medium text-muted-foreground mb-3 block">
             Provider Type *
           </Label>
           <RadioGroup
@@ -60,9 +60,9 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             className="grid grid-cols-1 sm:grid-cols-2 gap-3"
           >
             {PROVIDER_TYPES.map((type) => (
-              <div key={type.value} className="flex items-center space-x-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
-                <RadioGroupItem value={type.value} id={type.value} className="border-white/30 data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500" />
-                <Label htmlFor={type.value} className="text-sm text-white/70 cursor-pointer flex-1">
+              <div key={type.value} className="flex items-center space-x-3 p-3 rounded-xl bg-muted border border-border hover:bg-muted transition-colors">
+                <RadioGroupItem value={type.value} id={type.value} className="border-border data-[state=checked]:border-orange-500 data-[state=checked]:bg-primary" />
+                <Label htmlFor={type.value} className="text-sm text-muted-foreground cursor-pointer flex-1">
                   {type.label}
                 </Label>
               </div>
@@ -74,14 +74,14 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
               value={data.otherProviderType || ''}
               onChange={(e) => updateData({ otherProviderType: e.target.value })}
               placeholder="Please specify"
-              className="mt-3 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+              className="mt-3 bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
             />
           )}
         </div>
 
         {/* Contact Person */}
         <div>
-          <Label htmlFor="contactPersonName" className="text-sm font-medium text-white/70 mb-2 block">
+          <Label htmlFor="contactPersonName" className="text-sm font-medium text-muted-foreground mb-2 block">
             Contact Person Name *
           </Label>
           <Input
@@ -89,12 +89,12 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonName || ''}
             onChange={(e) => updateData({ contactPersonName: e.target.value })}
             placeholder="Full name"
-            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
           />
         </div>
 
         <div>
-          <Label htmlFor="contactPersonRole" className="text-sm font-medium text-white/70 mb-2 block">
+          <Label htmlFor="contactPersonRole" className="text-sm font-medium text-muted-foreground mb-2 block">
             Contact Person Role *
           </Label>
           <Input
@@ -102,13 +102,13 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonRole || ''}
             onChange={(e) => updateData({ contactPersonRole: e.target.value })}
             placeholder="e.g., HR Manager, CEO"
-            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
           />
         </div>
 
         {/* Provider Address */}
         <div className="md:col-span-2">
-          <Label htmlFor="providerAddress" className="text-sm font-medium text-white/70 mb-2 block">
+          <Label htmlFor="providerAddress" className="text-sm font-medium text-muted-foreground mb-2 block">
             Provider's Address *
           </Label>
           <Textarea
@@ -117,13 +117,13 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ providerAddress: e.target.value })}
             placeholder="Enter complete address"
             rows={3}
-            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
           />
         </div>
 
         {/* About Organization */}
         <div className="md:col-span-2">
-          <Label htmlFor="aboutOrganization" className="text-sm font-medium text-white/70 mb-2 block">
+          <Label htmlFor="aboutOrganization" className="text-sm font-medium text-muted-foreground mb-2 block">
             About the organization/provider *
           </Label>
           <Textarea
@@ -132,7 +132,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ aboutOrganization: e.target.value })}
             placeholder="Describe your organization, mission, and what you do"
             rows={4}
-            className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
           />
         </div>
       </div>

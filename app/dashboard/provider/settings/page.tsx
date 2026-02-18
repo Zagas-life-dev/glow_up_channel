@@ -363,10 +363,10 @@ export default function ProviderSettings() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center bg-page">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading provider settings...</p>
+          <p className="text-muted-foreground">Loading provider settings...</p>
         </div>
       </div>
     )
@@ -374,12 +374,12 @@ export default function ProviderSettings() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-page px-4">
         <div className="text-center max-w-md">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Authentication Required</h2>
-          <p className="text-white/60 mb-4">Please log in to access provider settings.</p>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">Please log in to access provider settings.</p>
+          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
             <Link href="/login">Go to Login</Link>
           </Button>
         </div>
@@ -403,27 +403,27 @@ export default function ProviderSettings() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-page flex">
       {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-white/[0.06]">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <Settings className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-white">Settings</h1>
-              <p className="text-xs text-white/50">Provider</p>
+              <h1 className="text-base font-bold text-foreground">Settings</h1>
+              <p className="text-xs text-muted-foreground">Provider</p>
             </div>
           </div>
           
           {/* User Info */}
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-sm font-medium text-white truncate">
+          <div className="p-3 rounded-xl bg-muted border border-border">
+            <p className="text-sm font-medium text-foreground truncate">
               {user?.firstName || user?.email?.split('@')[0]}
             </p>
-            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
 
@@ -440,8 +440,8 @@ export default function ProviderSettings() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive 
-                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -452,7 +452,7 @@ export default function ProviderSettings() {
         </nav>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-white/[0.06] space-y-2">
+        <div className="p-4 border-t border-border space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
             return (
@@ -463,8 +463,8 @@ export default function ProviderSettings() {
                 className={cn(
                   "w-full justify-start",
                   link.variant === 'default' 
-                    ? "bg-orange-500 hover:bg-orange-600" 
-                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary hover:bg-primary/90" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Link href={link.href}>
@@ -478,10 +478,10 @@ export default function ProviderSettings() {
 
         {/* Onboarding Status */}
         {onboardingData && (
-          <div className="p-4 border-t border-white/[0.06]">
+          <div className="p-4 border-t border-border">
             <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-white/50">Onboarding</span>
+                <span className="text-xs text-muted-foreground">Onboarding</span>
                 <Badge className={cn(
                   "text-xs",
                   onboardingData.isCompleted 
@@ -491,12 +491,12 @@ export default function ProviderSettings() {
                   {onboardingData.isCompleted ? 'Complete' : 'In Progress'}
                 </Badge>
               </div>
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 {(() => {
                   const percentage = onboardingData.completionPercentage || 0
                   return (
                     <div 
-                      className="h-full bg-orange-500 rounded-full transition-all"
+                      className="h-full bg-primary rounded-full transition-all"
                       style={{ width: `${percentage}%` }}
                     />
                   )
@@ -510,14 +510,14 @@ export default function ProviderSettings() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Settings className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-white">Settings</h1>
+                <h1 className="text-sm font-bold text-foreground">Settings</h1>
               </div>
             </div>
             
@@ -527,7 +527,7 @@ export default function ProviderSettings() {
                 variant="ghost" 
                 size="sm"
                 disabled={loading}
-                className="h-9 w-9 p-0 text-white/60"
+                className="h-9 w-9 p-0 text-muted-foreground"
               >
                 <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
               </Button>
@@ -538,35 +538,35 @@ export default function ProviderSettings() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="h-9 w-9 p-0 text-white/60"
+                    className="h-9 w-9 p-0 text-muted-foreground"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
                 >
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
                       <LayoutDashboard className="h-4 w-4 text-orange-400" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
                       <Plus className="h-4 w-4 text-orange-400" />
                       <span>Post Content</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
                       <Zap className="h-4 w-4 text-orange-400" />
                       <span>Promotions</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuSeparator className="bg-muted my-1" />
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/" className="flex items-center gap-3 w-full">
                       <Home className="h-4 w-4 text-orange-400" />
                       <span>Home</span>
@@ -579,7 +579,7 @@ export default function ProviderSettings() {
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 variant="ghost" 
                 size="sm"
-                className="h-9 w-9 p-0 text-white/60"
+                className="h-9 w-9 p-0 text-muted-foreground"
               >
                 {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </Button> */}
@@ -593,7 +593,7 @@ export default function ProviderSettings() {
                 className="fixed inset-0 bg-black/50 z-30 lg:hidden"
                 onClick={() => setSidebarOpen(false)}
               />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
                 <div className="p-4 space-y-1">
                   {navItems.map((item) => {
                     const Icon = item.icon
@@ -609,8 +609,8 @@ export default function ProviderSettings() {
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                           isActive 
-                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         )}
                       >
                         <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -619,7 +619,7 @@ export default function ProviderSettings() {
                     )
                   })}
                   
-                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                  <div className="pt-4 mt-4 border-t border-border space-y-2">
                     {quickLinks.map((link) => {
                       const Icon = link.icon
                       return (
@@ -630,8 +630,8 @@ export default function ProviderSettings() {
                           className={cn(
                             "w-full justify-start",
                             link.variant === 'default' 
-                              ? "bg-orange-500 hover:bg-orange-600" 
-                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                              ? "bg-primary hover:bg-primary/90" 
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                           onClick={() => setSidebarOpen(false)}
                         >
@@ -668,9 +668,9 @@ export default function ProviderSettings() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                   {/* Progress Card */}
                   <div className="lg:col-span-1">
-                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                    <Card className="border border-border bg-card">
                       <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                           <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                           Onboarding Progress
                         </CardTitle>
@@ -680,12 +680,12 @@ export default function ProviderSettings() {
                           <>
                             <div>
                               <div className="flex items-center justify-between text-sm mb-2">
-                                <span className="text-white/60">Completion</span>
-                                <span className="font-medium text-white">{onboardingData.completionPercentage}%</span>
+                                <span className="text-muted-foreground">Completion</span>
+                                <span className="font-medium text-foreground">{onboardingData.completionPercentage}%</span>
                               </div>
-                              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
                                 <div 
-                                  className="h-full bg-orange-500 rounded-full transition-all"
+                                  className="h-full bg-primary rounded-full transition-all"
                                   style={{ width: `${onboardingData.completionPercentage}%` }}
                                 />
                               </div>
@@ -693,7 +693,7 @@ export default function ProviderSettings() {
                             
                             <div className="space-y-2 text-sm">
                               <div className="flex items-center justify-between">
-                                <span className="text-white/60">Status</span>
+                                <span className="text-muted-foreground">Status</span>
                                 <Badge className={cn(
                                   "text-xs",
                                   onboardingData.isCompleted 
@@ -706,21 +706,21 @@ export default function ProviderSettings() {
                               
                               {onboardingData.completedAt && (
                                 <div className="flex items-center justify-between">
-                                  <span className="text-white/60">Completed</span>
-                                  <span className="font-medium text-white text-xs">{formatDate(onboardingData.completedAt)}</span>
+                                  <span className="text-muted-foreground">Completed</span>
+                                  <span className="font-medium text-foreground text-xs">{formatDate(onboardingData.completedAt)}</span>
                                 </div>
                               )}
                               
                               <div className="flex items-center justify-between">
-                                <span className="text-white/60">Last Updated</span>
-                                <span className="font-medium text-white text-xs">{formatDate(onboardingData.updatedAt)}</span>
+                                <span className="text-muted-foreground">Last Updated</span>
+                                <span className="font-medium text-foreground text-xs">{formatDate(onboardingData.updatedAt)}</span>
                               </div>
                             </div>
 
                             <Button 
                               asChild 
                               variant="outline" 
-                              className="w-full border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                              className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                             >
                               <Link href="/dashboard/provider/onboarding">
                                 <Edit className="h-4 w-4 mr-2" />
@@ -730,11 +730,11 @@ export default function ProviderSettings() {
                           </>
                         ) : (
                           <div className="text-center py-4">
-                            <AlertCircle className="w-8 h-8 text-white/40 mx-auto mb-2" />
-                            <p className="text-sm text-white/50 mb-4">No onboarding data found</p>
+                            <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground mb-4">No onboarding data found</p>
                             <Button 
                               asChild 
-                              className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                              className="bg-primary hover:bg-primary/90 rounded-xl"
                             >
                               <Link href="/dashboard/provider/onboarding">
                                 Start Onboarding
@@ -748,9 +748,9 @@ export default function ProviderSettings() {
 
                   {/* Organization Summary */}
                   <div className="lg:col-span-2">
-                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                    <Card className="border border-border bg-card">
                       <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                           <Building2 className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                           Organization Summary
                         </CardTitle>
@@ -760,38 +760,38 @@ export default function ProviderSettings() {
                           <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-xs md:text-sm font-medium text-white/60">Organization Name</label>
-                                <p className="text-white font-medium mt-1">{onboardingData.organizationName}</p>
+                                <label className="text-xs md:text-sm font-medium text-muted-foreground">Organization Name</label>
+                                <p className="text-foreground font-medium mt-1">{onboardingData.organizationName}</p>
                               </div>
                               <div>
-                                <label className="text-xs md:text-sm font-medium text-white/60">Provider Type</label>
-                                <p className="text-white font-medium mt-1">
+                                <label className="text-xs md:text-sm font-medium text-muted-foreground">Provider Type</label>
+                                <p className="text-foreground font-medium mt-1">
                                   {getProviderTypeLabel(onboardingData.providerType)}
                                   {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
                                 </p>
                               </div>
                               <div>
-                                <label className="text-xs md:text-sm font-medium text-white/60">Contact Person</label>
-                                <p className="text-white font-medium mt-1">{onboardingData.contactPersonName}</p>
+                                <label className="text-xs md:text-sm font-medium text-muted-foreground">Contact Person</label>
+                                <p className="text-foreground font-medium mt-1">{onboardingData.contactPersonName}</p>
                               </div>
                               <div>
-                                <label className="text-xs md:text-sm font-medium text-white/60">Email</label>
-                                <p className="text-white font-medium mt-1">{onboardingData.officialEmail}</p>
+                                <label className="text-xs md:text-sm font-medium text-muted-foreground">Email</label>
+                                <p className="text-foreground font-medium mt-1">{onboardingData.officialEmail}</p>
                               </div>
                             </div>
                             
                             <div>
-                              <label className="text-xs md:text-sm font-medium text-white/60">About Organization</label>
-                              <p className="text-white mt-1 text-sm md:text-base">{onboardingData.aboutOrganization}</p>
+                              <label className="text-xs md:text-sm font-medium text-muted-foreground">About Organization</label>
+                              <p className="text-foreground mt-1 text-sm md:text-base">{onboardingData.aboutOrganization}</p>
                             </div>
                           </div>
                         ) : (
                           <div className="text-center py-8 md:py-12">
-                            <Building2 className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                            <p className="text-white/60 mb-4">No organization data available</p>
+                            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground mb-4">No organization data available</p>
                             <Button 
                               asChild 
-                              className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                              className="bg-primary hover:bg-primary/90 rounded-xl"
                             >
                               <Link href="/dashboard/provider/onboarding">
                                 Complete Onboarding
@@ -809,9 +809,9 @@ export default function ProviderSettings() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                       <User className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                       Profile Information
                     </CardTitle>
@@ -821,24 +821,24 @@ export default function ProviderSettings() {
                       {/* Personal Information */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="firstName" className="text-white/70">First Name</Label>
+                          <Label htmlFor="firstName" className="text-muted-foreground">First Name</Label>
                           <Input
                             id="firstName"
                             value={userData.firstName}
                             onChange={(e) => setUserData({...userData, firstName: e.target.value})}
                             disabled={!isEditing}
-                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                             placeholder="Enter your first name"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName" className="text-white/70">Last Name</Label>
+                          <Label htmlFor="lastName" className="text-muted-foreground">Last Name</Label>
                           <Input
                             id="lastName"
                             value={userData.lastName}
                             onChange={(e) => setUserData({...userData, lastName: e.target.value})}
                             disabled={!isEditing}
-                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                            className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                             placeholder="Enter your last name"
                           />
                         </div>
@@ -846,63 +846,63 @@ export default function ProviderSettings() {
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="email" className="text-white/70">Email Address</Label>
+                          <Label htmlFor="email" className="text-muted-foreground">Email Address</Label>
                           <Input
                             id="email"
                             type="email"
                             value={userData.email}
                             disabled
-                            className="h-11 bg-white/[0.03] border-white/[0.06] text-white/60"
+                            className="h-11 bg-muted border-border text-muted-foreground"
                           />
-                          <p className="text-xs text-white/40">Email cannot be changed</p>
+                          <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="dateOfBirth" className="text-white/70">Date of Birth</Label>
+                          <Label htmlFor="dateOfBirth" className="text-muted-foreground">Date of Birth</Label>
                           <Input
                             id="dateOfBirth"
                             type="date"
                             value={userData.dateOfBirth}
                             onChange={(e) => setUserData({...userData, dateOfBirth: e.target.value})}
                             disabled={!isEditing}
-                            className="h-11 bg-white/[0.05] border-white/[0.08] text-white"
+                            className="h-11 bg-muted border-border text-foreground"
                           />
                         </div>
                       </div>
 
                       {/* Location Information */}
                       <div className="space-y-4">
-                        <h4 className="font-medium text-white">Location Information</h4>
+                        <h4 className="font-medium text-foreground">Location Information</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="country" className="text-white/70">Country</Label>
+                            <Label htmlFor="country" className="text-muted-foreground">Country</Label>
                             <Input
                               id="country"
                               value={profileData.country}
                               onChange={(e) => setProfileData({...profileData, country: e.target.value})}
                               disabled={!isEditing}
-                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                               placeholder="e.g., Nigeria"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="province" className="text-white/70">Province/State</Label>
+                            <Label htmlFor="province" className="text-muted-foreground">Province/State</Label>
                             <Input
                               id="province"
                               value={profileData.province}
                               onChange={(e) => setProfileData({...profileData, province: e.target.value})}
                               disabled={!isEditing}
-                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                               placeholder="e.g., Lagos"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="city" className="text-white/70">City/Town</Label>
+                            <Label htmlFor="city" className="text-muted-foreground">City/Town</Label>
                             <Input
                               id="city"
                               value={profileData.city}
                               onChange={(e) => setProfileData({...profileData, city: e.target.value})}
                               disabled={!isEditing}
-                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                               placeholder="e.g., Ikeja"
                             />
                           </div>
@@ -910,18 +910,18 @@ export default function ProviderSettings() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/[0.06]">
+                      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-border">
                         {!isEditing ? (
-                          <Button onClick={() => setIsEditing(true)} className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                          <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90 rounded-xl w-full sm:w-auto">
                             <Edit3 className="h-4 w-4 mr-2" />
                             Edit Profile
                           </Button>
                         ) : (
                           <>
-                            <Button onClick={handleCancel} variant="outline" className="border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05] rounded-xl w-full sm:w-auto">
+                            <Button onClick={handleCancel} variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl w-full sm:w-auto">
                               Cancel
                             </Button>
-                            <Button onClick={handleSave} disabled={isSaving} className="bg-orange-500 hover:bg-orange-600 rounded-xl w-full sm:w-auto">
+                            <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/90 rounded-xl w-full sm:w-auto">
                               {isSaving ? (
                                 <div className="flex items-center space-x-2">
                                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -949,9 +949,9 @@ export default function ProviderSettings() {
                 {onboardingData ? (
                   <>
                     {/* Organization Information */}
-                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                    <Card className="border border-border bg-card">
                       <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                           <Building2 className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                           Organization Information
                         </CardTitle>
@@ -959,42 +959,42 @@ export default function ProviderSettings() {
                       <CardContent className="p-4 md:p-6 pt-0 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Organization Name</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.organizationName}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Organization Name</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.organizationName}</p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Provider Type</label>
-                            <p className="text-white font-medium mt-1">
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Provider Type</label>
+                            <p className="text-foreground font-medium mt-1">
                               {getProviderTypeLabel(onboardingData.providerType)}
                               {onboardingData.otherProviderType && ` - ${onboardingData.otherProviderType}`}
                             </p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Contact Person</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.contactPersonName}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Contact Person</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.contactPersonName}</p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Role</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.contactPersonRole}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Role</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.contactPersonRole}</p>
                           </div>
                         </div>
                         
                         <div>
-                          <label className="text-xs md:text-sm font-medium text-white/60">Address</label>
-                          <p className="text-white mt-1">{onboardingData.providerAddress}</p>
+                          <label className="text-xs md:text-sm font-medium text-muted-foreground">Address</label>
+                          <p className="text-foreground mt-1">{onboardingData.providerAddress}</p>
                         </div>
                         
                         <div>
-                          <label className="text-xs md:text-sm font-medium text-white/60">About Organization</label>
-                          <p className="text-white mt-1">{onboardingData.aboutOrganization}</p>
+                          <label className="text-xs md:text-sm font-medium text-muted-foreground">About Organization</label>
+                          <p className="text-foreground mt-1">{onboardingData.aboutOrganization}</p>
                         </div>
                       </CardContent>
                     </Card>
 
                     {/* Contact Information */}
-                    <Card className="border border-white/[0.06] bg-white/[0.02]">
+                    <Card className="border border-border bg-card">
                       <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                        <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                           <Mail className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                           Contact Information
                         </CardTitle>
@@ -1002,37 +1002,37 @@ export default function ProviderSettings() {
                       <CardContent className="p-4 md:p-6 pt-0 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Official Email</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.officialEmail}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Official Email</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.officialEmail}</p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Phone Number</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.phoneNumber}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Phone Number</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.phoneNumber}</p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">State of Operation</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.stateOfOperation}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">State of Operation</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.stateOfOperation}</p>
                           </div>
                           <div>
-                            <label className="text-xs md:text-sm font-medium text-white/60">Year Established</label>
-                            <p className="text-white font-medium mt-1">{onboardingData.yearEstablished}</p>
+                            <label className="text-xs md:text-sm font-medium text-muted-foreground">Year Established</label>
+                            <p className="text-foreground font-medium mt-1">{onboardingData.yearEstablished}</p>
                           </div>
                         </div>
                         
                         {(onboardingData.website || onboardingData.socialMediaHandles) && (
                           <>
-                            <Separator className="bg-white/[0.06]" />
+                            <Separator className="bg-muted" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {onboardingData.website && (
                                 <div>
-                                  <label className="text-xs md:text-sm font-medium text-white/60">Website</label>
-                                  <p className="text-white font-medium mt-1">{onboardingData.website}</p>
+                                  <label className="text-xs md:text-sm font-medium text-muted-foreground">Website</label>
+                                  <p className="text-foreground font-medium mt-1">{onboardingData.website}</p>
                                 </div>
                               )}
                               {onboardingData.socialMediaHandles && (
                                 <div>
-                                  <label className="text-xs md:text-sm font-medium text-white/60">Social Media</label>
-                                  <p className="text-white font-medium mt-1">{onboardingData.socialMediaHandles}</p>
+                                  <label className="text-xs md:text-sm font-medium text-muted-foreground">Social Media</label>
+                                  <p className="text-foreground font-medium mt-1">{onboardingData.socialMediaHandles}</p>
                                 </div>
                               )}
                             </div>
@@ -1042,14 +1042,14 @@ export default function ProviderSettings() {
                     </Card>
                   </>
                 ) : (
-                  <Card className="border border-white/[0.06] bg-white/[0.02]">
+                  <Card className="border border-border bg-card">
                     <CardContent className="p-4 md:p-6 text-center py-12">
-                      <Building2 className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                      <h3 className="text-base md:text-lg font-semibold text-white mb-2">No Organization Data</h3>
-                      <p className="text-sm text-white/60 mb-6">Complete your provider onboarding to see organization details.</p>
+                      <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Organization Data</h3>
+                      <p className="text-sm text-muted-foreground mb-6">Complete your provider onboarding to see organization details.</p>
                       <Button 
                         asChild 
-                        className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                        className="bg-primary hover:bg-primary/90 rounded-xl"
                       >
                         <Link href="/dashboard/provider/onboarding">
                           Complete Onboarding
@@ -1064,9 +1064,9 @@ export default function ProviderSettings() {
             {/* Preferences Tab */}
             {activeTab === 'preferences' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                       <Palette className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                       Account Preferences
                     </CardTitle>
@@ -1075,57 +1075,57 @@ export default function ProviderSettings() {
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="language" className="text-white/70">Language</Label>
+                          <Label htmlFor="language" className="text-muted-foreground">Language</Label>
                           <Select value={preferences.language} onValueChange={(value) => setPreferences({...preferences, language: value})}>
-                            <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                            <SelectTrigger className="h-11 bg-muted border-border text-foreground">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-white/[0.08]">
-                              <SelectItem value="en" className="text-white">English</SelectItem>
-                              <SelectItem value="fr" className="text-white">French</SelectItem>
-                              <SelectItem value="es" className="text-white">Spanish</SelectItem>
-                              <SelectItem value="ar" className="text-white">Arabic</SelectItem>
+                            <SelectContent className="bg-surface border-border">
+                              <SelectItem value="en" className="text-foreground">English</SelectItem>
+                              <SelectItem value="fr" className="text-foreground">French</SelectItem>
+                              <SelectItem value="es" className="text-foreground">Spanish</SelectItem>
+                              <SelectItem value="ar" className="text-foreground">Arabic</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="timezone" className="text-white/70">Timezone</Label>
+                          <Label htmlFor="timezone" className="text-muted-foreground">Timezone</Label>
                           <Select value={preferences.timezone} onValueChange={(value) => setPreferences({...preferences, timezone: value})}>
-                            <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                            <SelectTrigger className="h-11 bg-muted border-border text-foreground">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-white/[0.08]">
-                              <SelectItem value="Africa/Lagos" className="text-white">Africa/Lagos (GMT+1)</SelectItem>
-                              <SelectItem value="Africa/Cairo" className="text-white">Africa/Cairo (GMT+2)</SelectItem>
-                              <SelectItem value="Africa/Johannesburg" className="text-white">Africa/Johannesburg (GMT+2)</SelectItem>
-                              <SelectItem value="UTC" className="text-white">UTC (GMT+0)</SelectItem>
+                            <SelectContent className="bg-surface border-border">
+                              <SelectItem value="Africa/Lagos" className="text-foreground">Africa/Lagos (GMT+1)</SelectItem>
+                              <SelectItem value="Africa/Cairo" className="text-foreground">Africa/Cairo (GMT+2)</SelectItem>
+                              <SelectItem value="Africa/Johannesburg" className="text-foreground">Africa/Johannesburg (GMT+2)</SelectItem>
+                              <SelectItem value="UTC" className="text-foreground">UTC (GMT+0)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="theme" className="text-white/70">Theme</Label>
+                        <Label htmlFor="theme" className="text-muted-foreground">Theme</Label>
                         <Select value={preferences.theme} onValueChange={(value) => setPreferences({...preferences, theme: value})}>
-                          <SelectTrigger className="h-11 bg-white/[0.05] border-white/[0.08] text-white">
+                          <SelectTrigger className="h-11 bg-muted border-border text-foreground">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#141414] border-white/[0.08]">
-                            <SelectItem value="light" className="text-white">Light</SelectItem>
-                            <SelectItem value="dark" className="text-white">Dark</SelectItem>
-                            <SelectItem value="auto" className="text-white">Auto (System)</SelectItem>
+                          <SelectContent className="bg-surface border-border">
+                            <SelectItem value="light" className="text-foreground">Light</SelectItem>
+                            <SelectItem value="dark" className="text-foreground">Dark</SelectItem>
+                            <SelectItem value="auto" className="text-foreground">Auto (System)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-4 pt-4 border-t border-white/[0.06]">
-                        <h4 className="font-medium text-white">Notification Preferences</h4>
+                      <div className="space-y-4 pt-4 border-t border-border">
+                        <h4 className="font-medium text-foreground">Notification Preferences</h4>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-white">Email Notifications</p>
-                              <p className="text-sm text-white/60">Receive notifications via email</p>
+                              <p className="font-medium text-foreground">Email Notifications</p>
+                              <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                             </div>
                             <Switch
                               checked={preferences.emailNotifications}
@@ -1135,8 +1135,8 @@ export default function ProviderSettings() {
                           
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-white">Marketing Emails</p>
-                              <p className="text-sm text-white/60">Receive promotional and marketing emails</p>
+                              <p className="font-medium text-foreground">Marketing Emails</p>
+                              <p className="text-sm text-muted-foreground">Receive promotional and marketing emails</p>
                             </div>
                             <Switch
                               checked={preferences.marketingEmails}
@@ -1146,8 +1146,8 @@ export default function ProviderSettings() {
                           
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-white">Weekly Digest</p>
-                              <p className="text-sm text-white/60">Receive a weekly summary of activities</p>
+                              <p className="font-medium text-foreground">Weekly Digest</p>
+                              <p className="text-sm text-muted-foreground">Receive a weekly summary of activities</p>
                             </div>
                             <Switch
                               checked={preferences.weeklyDigest}
@@ -1165,9 +1165,9 @@ export default function ProviderSettings() {
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-white/[0.06] bg-white/[0.02]">
+                <Card className="border border-border bg-card">
                   <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center gap-2 text-white text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
                       <Shield className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                       Security Settings
                     </CardTitle>
@@ -1175,47 +1175,47 @@ export default function ProviderSettings() {
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="space-y-6">
                       <div className="space-y-4">
-                        <h4 className="font-medium text-white">Change Password</h4>
+                        <h4 className="font-medium text-foreground">Change Password</h4>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                           <div className="space-y-2">
-                            <Label htmlFor="currentPassword" className="text-white/70">Current Password</Label>
+                            <Label htmlFor="currentPassword" className="text-muted-foreground">Current Password</Label>
                             <Input
                               id="currentPassword"
                               type="password"
                               placeholder="Enter current password"
-                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="newPassword" className="text-white/70">New Password</Label>
+                            <Label htmlFor="newPassword" className="text-muted-foreground">New Password</Label>
                             <Input
                               id="newPassword"
                               type="password"
                               placeholder="Enter new password"
-                              className="h-11 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40"
+                              className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                             />
                           </div>
                         </div>
-                        <Button className="bg-blue-500 hover:bg-blue-600 rounded-xl">
+                        <Button className="bg-primary hover:bg-primary/90 rounded-xl">
                           Update Password
                         </Button>
                       </div>
 
-                      <div className="border-t border-white/[0.06] pt-6">
-                        <h4 className="font-medium text-white mb-4">Two-Factor Authentication</h4>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                      <div className="border-t border-border pt-6">
+                        <h4 className="font-medium text-foreground mb-4">Two-Factor Authentication</h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted rounded-xl border border-border">
                           <div>
-                            <p className="font-medium text-white">Two-Factor Authentication</p>
-                            <p className="text-sm text-white/60">Add an extra layer of security to your account</p>
+                            <p className="font-medium text-foreground">Two-Factor Authentication</p>
+                            <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                           </div>
-                          <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 rounded-xl w-full sm:w-auto">
+                          <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-primary/10 rounded-xl w-full sm:w-auto">
                             Enable 2FA
                           </Button>
                         </div>
                       </div>
 
-                      <div className="border-t border-white/[0.06] pt-6">
-                        <h4 className="font-medium text-white mb-4">Danger Zone</h4>
+                      <div className="border-t border-border pt-6">
+                        <h4 className="font-medium text-foreground mb-4">Danger Zone</h4>
                         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                           <h5 className="font-medium text-red-400 mb-2">Delete Account</h5>
                           <p className="text-sm text-red-400/80 mb-4">
@@ -1250,7 +1250,7 @@ export default function ProviderSettings() {
         </main>
 
         {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around h-16 px-2">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -1264,7 +1264,7 @@ export default function ProviderSettings() {
                     "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
                     isActive 
                       ? "text-orange-400" 
-                      : "text-white/50"
+                      : "text-muted-foreground"
                   )}
                 >
                   <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />

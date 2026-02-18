@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Play, ArrowRight, Star, Calendar, Briefcase, BookOpen, Plane, Heart, Bookmark, Eye } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from '@/lib/auth-context'
@@ -15,8 +15,8 @@ const fallbackData = [
     id: 'opportunities',
     title: 'Discover Amazing Opportunities',
     description: 'Find scholarships, internships, grants, and programs that match your goals. Connect with opportunities that can transform your future.',
-    icon: Plane,
-    color: 'from-blue-500 to-blue-700',
+    iconName: 'plane',
+    color: 'from-primary to-primary',
     href: '/opportunities',
     benefits: ['Scholarships & Grants', 'Internships', 'Programs', 'Networking']
   },
@@ -24,7 +24,7 @@ const fallbackData = [
     id: 'events',
     title: 'Join Inspiring Events',
     description: 'Attend workshops, conferences, meetups, and networking events. Learn from experts and connect with like-minded individuals.',
-    icon: Calendar,
+    iconName: 'calendar',
     color: 'from-green-500 to-green-700',
     href: '/events',
     benefits: ['Workshops', 'Conferences', 'Networking', 'Learning']
@@ -33,7 +33,7 @@ const fallbackData = [
     id: 'jobs',
     title: 'Find Your Dream Job',
     description: 'Explore job opportunities from top companies. Find positions that match your skills and career aspirations.',
-    icon: Briefcase,
+    iconName: 'briefcase',
     color: 'from-purple-500 to-purple-700',
     href: '/jobs',
     benefits: ['Remote Work', 'Full-time', 'Part-time', 'Internships']
@@ -42,7 +42,7 @@ const fallbackData = [
     id: 'resources',
     title: 'Access Valuable Resources',
     description: 'Download guides, templates, courses, and tools to accelerate your growth. Get free and premium resources from experts.',
-    icon: BookOpen,
+    iconName: 'book',
     color: 'from-orange-500 to-orange-700',
     href: '/resources',
     benefits: ['Free Guides', 'Templates', 'Courses', 'Tools']
@@ -172,7 +172,7 @@ function FallbackCarousel() {
   }
 
   const currentItem = fallbackData[currentSlide]
-  const { icon: ContentIcon, color } = currentItem
+  const { iconName, color } = currentItem
 
   return (
     <>
@@ -302,7 +302,7 @@ function FallbackCarousel() {
             <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
               <div 
                 key={currentSlide} 
-                className={`space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform ${
+                className={`space-y-6 sm:space-y-8 md:space-y-10 text-foreground transition-all duration-1000 ease-in-out transform ${
                   isTransitioning 
                     ? swipeDirection === 'left' 
                       ? 'animate-slide-in-right' 
@@ -314,8 +314,8 @@ function FallbackCarousel() {
               >
                   {/* Content Type Badge */}
                   <div className="flex items-center gap-3 flex-wrap">
-                    <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
-                      <ContentIcon className="w-4 h-4 mr-2" />
+                    <div className="inline-flex items-center px-4 py-2 bg-muted backdrop-blur-sm rounded-full text-sm font-medium">
+                      <FlaticonIcon name={iconName} className="w-4 h-4 mr-2" aria-hidden />
                       {currentItem.id.charAt(0).toUpperCase() + currentItem.id.slice(1)}
                     </div>
                   </div>
@@ -333,7 +333,7 @@ function FallbackCarousel() {
                   {/* Benefits */}
                   <div className="flex flex-wrap gap-3">
                     {currentItem.benefits.map((benefit, index) => (
-                      <div key={index} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full text-sm">
+                      <div key={index} className="flex items-center gap-2 bg-muted backdrop-blur-sm px-3 py-2 rounded-full text-sm">
                         <span className="text-green-300">✓</span>
                         <span>{benefit}</span>
                       </div>
@@ -345,10 +345,10 @@ function FallbackCarousel() {
                     <Link href={currentItem.href}>
                       <Button
                         size="lg"
-                        className="w-full sm:w-auto bg-white hover:bg-gray-100 text-gray-900 px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        className="w-full sm:w-auto bg-card hover:bg-muted text-foreground px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                       >
                         Explore {currentItem.id.charAt(0).toUpperCase() + currentItem.id.slice(1)}
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        <FlaticonIcon name="arrow-right" className="ml-2 h-5 w-5" aria-hidden />
                       </Button>
                     </Link>
                     
@@ -362,32 +362,32 @@ function FallbackCarousel() {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-1 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300 hidden xs:flex"
+            className="absolute left-1 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-muted backdrop-blur-sm rounded-full text-foreground hover:bg-muted transition-all duration-300 hidden xs:flex"
             disabled={isTransitioning}
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <FlaticonIcon name="angle-left" className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden />
           </button>
           
           <button
             onClick={nextSlide}
-            className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300 hidden xs:flex"
+            className="absolute right-1 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-muted backdrop-blur-sm rounded-full text-foreground hover:bg-muted transition-all duration-300 hidden xs:flex"
             disabled={isTransitioning}
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <FlaticonIcon name="angle-right" className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden />
           </button>
 
           {/* Play/Pause Button */}
           <button
             onClick={togglePlayPause}
-            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-all duration-300"
+            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 p-2 sm:p-3 bg-muted backdrop-blur-sm rounded-full text-foreground hover:bg-muted transition-all duration-300"
           >
             {isPlaying ? (
               <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-sm"></div>
-                <div className="w-2 h-2 bg-white rounded-sm ml-1"></div>
+                <div className="w-2 h-2 bg-card rounded-sm"></div>
+                <div className="w-2 h-2 bg-card rounded-sm ml-1"></div>
               </div>
             ) : (
-              <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5" />
+              <FlaticonIcon name="play" className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5" aria-hidden />
             )}
           </button>
 
@@ -398,7 +398,7 @@ function FallbackCarousel() {
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? 'bg-white' : 'bg-white/50'
+                  index === currentSlide ? 'bg-card' : 'bg-muted'
                 }`}
                 disabled={isTransitioning}
               />
@@ -406,7 +406,7 @@ function FallbackCarousel() {
           </div>
 
           {/* Mobile Swipe Hint */}
-          <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-20 text-white/60 text-sm hidden xs:block">
+          <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-20 text-muted-foreground text-sm hidden xs:block">
             ← Swipe to navigate →
           </div>
         </div>
@@ -759,14 +759,14 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const getContentTypeInfo = (contentType: string) => {
     switch (contentType) {
       case 'event':
-        return { icon: Calendar, color: 'from-green-500 to-green-700', label: 'Event' }
+        return { iconName: 'calendar', color: 'from-green-500 to-green-700', label: 'Event' }
       case 'job':
-        return { icon: Briefcase, color: 'from-blue-500 to-blue-700', label: 'Job' }
+        return { iconName: 'briefcase', color: 'from-primary to-primary', label: 'Job' }
       case 'resource':
-        return { icon: BookOpen, color: 'from-purple-500 to-purple-700', label: 'Resource' }
+        return { iconName: 'book', color: 'from-purple-500 to-purple-700', label: 'Resource' }
       case 'opportunity':
       default:
-        return { icon: Plane, color: 'from-orange-500 to-orange-700', label: 'Opportunity' }
+        return { iconName: 'plane', color: 'from-orange-500 to-orange-700', label: 'Opportunity' }
     }
   }
 
@@ -798,7 +798,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
     return (
       <section className="relative h-[100svh] min-h-[500px] max-h-[800px] overflow-hidden bg-black">
         <div className="relative h-full flex items-center justify-center">
-          <div className="text-center text-white">
+          <div className="text-center text-foreground">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
               <div className="w-8 h-8 text-orange-600 animate-spin">⏳</div>
             </div>
@@ -822,7 +822,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
     return null
   }
   
-  const { icon: ContentIcon, color, label } = getContentTypeInfo(currentPromotion.contentType)
+  const { iconName: contentIconName, color, label } = getContentTypeInfo(currentPromotion.contentType)
   const href = `/${currentPromotion.contentType}s/${currentPromotion.content?._id || currentPromotion.contentId}`
   
   // Handle image URL - use image from original post, fallback to heroImageUrl, then placeholder
@@ -1046,7 +1046,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
                 backgroundRepeat: 'no-repeat'
               }}
             >
-              <div className="text-white/50 text-center">
+              <div className="text-muted-foreground text-center">
                 <div className="text-4xl mb-2">🖼️</div>
                 <div className="text-sm">Image unavailable</div>
               </div>
@@ -1069,7 +1069,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
             <div className="max-w-4xl mx-4 sm:mx-8 md:mx-12 lg:mx-16">
               <div 
                 key={currentSlide} 
-                className={`space-y-6 sm:space-y-8 md:space-y-10 text-white transition-all duration-1000 ease-in-out transform ${
+                className={`space-y-6 sm:space-y-8 md:space-y-10 text-foreground transition-all duration-1000 ease-in-out transform ${
                   isTransitioning 
                     ? swipeDirection === 'left' 
                       ? 'animate-slide-in-right' 
@@ -1081,8 +1081,8 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
               >
                 {/* Content Type Badge */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
-                    <ContentIcon className="w-4 h-4 mr-2" />
+                  <div className="inline-flex items-center px-4 py-2 bg-muted backdrop-blur-sm rounded-full text-sm font-medium">
+                    <FlaticonIcon name={contentIconName} className="w-4 h-4 mr-2" aria-hidden />
                     {label}
                   </div>
                 </div>
@@ -1101,7 +1101,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
                 {/* Location Details */}
                 {currentPromotion.content.location?.city && (
                   <div className="flex flex-wrap gap-4 text-sm sm:text-base">
-                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full">
+                    <div className="flex items-center gap-2 bg-muted backdrop-blur-sm px-3 py-2 rounded-full">
                       <span className="text-green-300">📍</span>
                       <span>{currentPromotion.content.location.city}</span>
                     </div>
@@ -1114,19 +1114,19 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
                   <Link href={href}>
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-foreground px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     >
                       View Details
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <FlaticonIcon name="arrow-right" className="ml-2 h-5 w-5" aria-hidden />
                     </Button>
                   </Link>
                   
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto border-2 border-white/30 text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 group"
+                    className="w-full sm:w-auto border-2 border-border text-foreground hover:bg-card hover:text-foreground px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 group"
                   >
-                    <span className="text-black group-hover:text-black transition-colors duration-300">Read More</span>
+                    <span className="text-black group-hover:text-foreground transition-colors duration-300">Read More</span>
                   </Button>
                 </div>
 
@@ -1143,13 +1143,13 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
             className={`w-12 h-12 rounded-full border-2 backdrop-blur-sm transition-all duration-300 ${
               engagementStatus.isLiked 
                 ? 'border-red-400 bg-red-500/20 text-red-300 hover:bg-red-500/30' 
-                : 'border-white/60 bg-white/10 text-white hover:bg-white hover:text-black'
+                : 'border-border bg-muted text-foreground hover:bg-card hover:text-foreground'
             }`}
             title={engagementStatus.isLiked ? 'Unlike' : 'Like'}
             onClick={handleLike}
             disabled={isEngagementLoading}
           >
-            <Heart className={`h-5 w-5 ${engagementStatus.isLiked ? 'fill-current' : ''}`} />
+            <FlaticonIcon name="heart" className={`h-5 w-5 ${engagementStatus.isLiked ? 'text-current' : ''}`} aria-hidden />
           </Button>
           
           <Button
@@ -1157,24 +1157,24 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
             variant="outline"
             className={`w-12 h-12 rounded-full border-2 backdrop-blur-sm transition-all duration-300 ${
               engagementStatus.isSaved 
-                ? 'border-blue-400 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' 
-                : 'border-white/60 bg-white/10 text-white hover:bg-white hover:text-black'
+                ? 'border-primary bg-primary/20 text-primary hover:bg-primary/20' 
+                : 'border-border bg-muted text-foreground hover:bg-card hover:text-foreground'
             }`}
             title={engagementStatus.isSaved ? 'Unsave' : 'Save'}
             onClick={handleSave}
             disabled={isEngagementLoading}
           >
-            <Bookmark className={`h-5 w-5 ${engagementStatus.isSaved ? 'fill-current' : ''}`} />
+            <FlaticonIcon name="bookmark" className={`h-5 w-5 ${engagementStatus.isSaved ? 'text-current' : ''}`} aria-hidden />
           </Button>
           
           <Button
             size="sm"
             variant="outline"
-            className="w-12 h-12 rounded-full border-2 border-white/60 bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
+            className="w-12 h-12 rounded-full border-2 border-border bg-muted backdrop-blur-sm text-foreground hover:bg-card hover:text-foreground transition-all duration-300"
             title="View Details"
             onClick={handleView}
           >
-            <Eye className="h-5 w-5" />
+            <FlaticonIcon name="eye" className="h-5 w-5" aria-hidden />
           </Button>
         </div>
       </div>
@@ -1184,7 +1184,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
         <div className="flex items-center space-x-2 sm:space-x-4 bg-black/20 backdrop-blur-md p-2 sm:p-2.5 rounded-full">
           <button
             onClick={togglePlayPause}
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-all duration-300"
             aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
           >
             {isPlaying ? (
@@ -1192,7 +1192,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
                 <path fill="currentColor" d="M14 19h4V5h-4M6 19h4V5H6v14Z"></path>
               </svg>
             ) : (
-              <Play className="h-3 w-3 sm:h-4 sm:w-4 ml-0.5" />
+              <FlaticonIcon name="play" className="h-3 w-3 sm:h-4 sm:w-4 ml-0.5" aria-hidden />
             )}
           </button>
 
@@ -1203,8 +1203,8 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
                 onClick={() => goToSlide(index)}
                 className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                   index === currentSlide
-                    ? "bg-orange-500 w-4 sm:w-6"
-                    : "bg-white/50 hover:bg-white/75 w-1.5 sm:w-2"
+                    ? "bg-primary w-4 sm:w-6"
+                    : "bg-muted0 hover:bg-muted w-1.5 sm:w-2"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -1216,18 +1216,18 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
       {/* Navigation arrows - Only visible on larger screens to avoid content overlap */}
       <button
         onClick={prevSlide}
-        className="absolute left-2 sm:left-4 md:left-6 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hidden sm:flex"
+        className="absolute left-2 sm:left-4 md:left-6 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-all duration-300 hidden sm:flex"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+        <FlaticonIcon name="angle-left" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden />
       </button>
 
       <button
         onClick={nextSlide}
-        className="absolute right-2 sm:right-4 md:right-6 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hidden sm:flex"
+        className="absolute right-2 sm:right-4 md:right-6 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-foreground hover:bg-muted transition-all duration-300 hidden sm:flex"
         aria-label="Next slide"
       >
-        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+        <FlaticonIcon name="angle-right" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden />
       </button>
 
       {/* Swipe indicators for mobile */}
@@ -1235,7 +1235,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
       
       {/* Mobile swipe hint */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 sm:hidden">
-        <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs">
+        <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1 text-foreground text-xs">
           ← Swipe to navigate →
         </div>
       </div>

@@ -12,15 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  ListMusic,
-  ExternalLink
-} from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { RiMore2Line, RiPlayList2Fill } from 'react-icons/ri'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 
@@ -127,12 +120,12 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
   }
 
   return (
-    <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 hover:bg-white/[0.03] transition-colors">
+    <div className="rounded-xl bg-card border border-border p-4 hover:bg-muted transition-colors">
       {/* Author Header */}
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           <Link href={`/profile/${localReply.author._id}`}>
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-xs font-semibold text-white">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary flex items-center justify-center text-xs font-semibold text-foreground">
               {localReply.author.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -146,10 +139,10 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
             </div>
           </Link>
           <div>
-            <Link href={`/profile/${localReply.author._id}`} className="text-sm font-medium text-white hover:underline">
+            <Link href={`/profile/${localReply.author._id}`} className="text-sm font-medium text-foreground hover:underline">
               {localReply.author.firstName || localReply.author.email.split('@')[0]}
             </Link>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/40">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span>{formatDistanceToNow(new Date(localReply.createdAt), { addSuffix: true })}</span>
               {localReply.isEdited && <span>• edited</span>}
             </div>
@@ -159,13 +152,13 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
         {isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/60">
-                <MoreHorizontal className="w-4 h-4" />
+              <button className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-muted-foreground">
+                <RiMore2Line className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#141414] border-white/[0.08] rounded-xl">
+            <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl">
               <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:text-red-400 cursor-pointer">
-                <Trash2 className="w-4 h-4 mr-2" />
+                <FlaticonIcon name="trash" className="w-4 h-4 mr-2" aria-hidden />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -177,7 +170,7 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
       <div className="ml-10">
         {/* Text */}
         {localReply.content.text && (
-          <p className="text-sm text-white/80 whitespace-pre-wrap mb-2">
+          <p className="text-sm text-foreground whitespace-pre-wrap mb-2">
             {localReply.content.text}
           </p>
         )}
@@ -190,7 +183,7 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
             localReply.content.images.length >= 2 && "grid-cols-2"
           )}>
             {localReply.content.images.slice(0, 4).map((img, index) => (
-              <div key={index} className="relative aspect-square bg-white/[0.05] overflow-hidden">
+              <div key={index} className="relative aspect-square bg-muted overflow-hidden">
                 <Image
                   src={img.url}
                   alt=""
@@ -206,15 +199,15 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
         {/* Playlist */}
         {localReply.content.playlist && (
           <Link href={`/playlists/${localReply.content.playlist._id}`}>
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-colors mb-2">
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted border border-border hover:bg-muted transition-colors mb-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
-                <ListMusic className="w-4 h-4 text-orange-500" />
+                <RiPlayList2Fill className="w-4 h-4 text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-white truncate">{localReply.content.playlist.name}</p>
-                <p className="text-[10px] text-white/40">{localReply.content.playlist.itemCount} items</p>
+                <p className="text-xs font-medium text-foreground truncate">{localReply.content.playlist.name}</p>
+                <p className="text-[10px] text-muted-foreground">{localReply.content.playlist.itemCount} items</p>
               </div>
-              <ExternalLink className="w-3 h-3 text-white/30" />
+              <FlaticonIcon name="external-link" className="w-3 h-3 text-muted-foreground" aria-hidden />
             </div>
           </Link>
         )}
@@ -229,10 +222,10 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
               "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors",
               localReply.hasLiked
                 ? "text-red-500 bg-red-500/10"
-                : "text-white/40 hover:text-red-500 hover:bg-red-500/10"
+                : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
             )}
           >
-            <Heart className={cn("w-3.5 h-3.5", localReply.hasLiked && "fill-current")} />
+            <FlaticonIcon name="heart" className={cn("w-3.5 h-3.5", localReply.hasLiked && "text-current")} aria-hidden />
             {localReply.likeCount > 0 && <span>{localReply.likeCount}</span>}
           </button>
 
@@ -240,9 +233,9 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
           {onReply && (
             <button
               onClick={onReply}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/40 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
+              <FlaticonIcon name="comment" className="w-3.5 h-3.5" aria-hidden />
               Reply
             </button>
           )}

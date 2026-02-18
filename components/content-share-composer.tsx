@@ -12,23 +12,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Image as ImageIcon,
-  Globe,
-  Lock,
-  X,
-  Loader2,
-  Send,
-  Target,
-  Briefcase,
-  Calendar,
-  BookOpen,
-  MapPin,
-  Clock,
-  DollarSign
-} from 'lucide-react'
+import { Image as ImageIcon, Lock, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackPostCreated } from '@/lib/tracking'
+import {
+  RiCloseLine,
+  RiGlobalLine,
+  RiLoader4Line,
+  RiSendPlaneLine,
+  RiFocus3Line,
+  RiBriefcaseLine,
+  RiCalendarLine,
+  RiBook2Line,
+  RiTimeLine,
+  RiMoneyDollarCircleLine,
+} from "react-icons/ri"
 
 interface ContentItem {
   _id: string
@@ -82,23 +80,23 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:80
 
 const typeConfig = {
   opportunity: { 
-    icon: Target, 
+    iconName: 'target', 
     color: 'orange',
     label: 'Opportunity',
-    bg: 'bg-orange-500/10',
+    bg: 'bg-primary/10',
     border: 'border-orange-500/20',
     accent: 'text-orange-500'
   },
   job: { 
-    icon: Briefcase, 
-    color: 'blue',
+    iconName: 'briefcase', 
+    color: 'primary',
     label: 'Job',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-    accent: 'text-blue-500'
+    bg: 'bg-primary/10',
+    border: 'border-primary/20',
+    accent: 'text-primary'
   },
   event: { 
-    icon: Calendar, 
+    iconName: 'calendar', 
     color: 'emerald',
     label: 'Event',
     bg: 'bg-emerald-500/10',
@@ -106,7 +104,7 @@ const typeConfig = {
     accent: 'text-emerald-500'
   },
   resource: { 
-    icon: BookOpen, 
+    iconName: 'book', 
     color: 'violet',
     label: 'Resource',
     bg: 'bg-violet-500/10',
@@ -132,7 +130,6 @@ export default function ContentShareComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const config = typeConfig[content.type] || typeConfig.opportunity
-  const TypeIcon = config.icon
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -287,17 +284,17 @@ export default function ContentShareComposer({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-white/[0.06]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-page border-border">
         <DialogHeader>
-          <DialogTitle className="text-white">Share {config.label}</DialogTitle>
+          <DialogTitle className="text-foreground">Share {config.label}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* User Input Area */}
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4">
+          <div className="rounded-2xl bg-card border border-border p-4">
             <div className="flex gap-3">
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-foreground flex-shrink-0">
                 {user.profileImage ? (
                   <Image
                     src={user.profileImage}
@@ -318,7 +315,7 @@ export default function ContentShareComposer({
                   value={text}
                   onChange={handleTextChange}
                   placeholder="Add your thoughts about this..."
-                  className="w-full bg-transparent text-white placeholder:text-white/30 resize-none outline-none min-h-[100px] text-[15px] leading-relaxed"
+                  className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none min-h-[100px] text-[15px] leading-relaxed"
                   rows={4}
                 />
 
@@ -331,7 +328,7 @@ export default function ContentShareComposer({
                     images.length >= 3 && "grid-cols-3"
                   )}>
                     {images.map((img, index) => (
-                      <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-white/[0.05]">
+                      <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-muted">
                         <Image
                           src={img.preview}
                           alt=""
@@ -343,7 +340,7 @@ export default function ContentShareComposer({
                           onClick={() => removeImage(index)}
                           className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 transition-colors"
                         >
-                          <X className="w-4 h-4 text-white" />
+                          <RiCloseLine className="w-4 h-4 text-foreground" aria-hidden />
                         </button>
                       </div>
                     ))}
@@ -353,7 +350,7 @@ export default function ContentShareComposer({
             </div>
 
             {/* Actions Bar */}
-            <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-2">
               <div className="flex items-center gap-1">
                 {/* Image Upload */}
                 <input
@@ -370,8 +367,8 @@ export default function ContentShareComposer({
                   className={cn(
                     "p-2 rounded-lg transition-colors",
                     images.length >= 5
-                      ? "text-white/20 cursor-not-allowed"
-                      : "text-white/50 hover:text-orange-500 hover:bg-orange-500/10"
+                      ? "text-muted-foreground cursor-not-allowed"
+                      : "text-muted-foreground hover:text-orange-500 hover:bg-primary/10"
                   )}
                 >
                   <ImageIcon className="w-5 h-5" />
@@ -384,11 +381,11 @@ export default function ContentShareComposer({
                     "p-2 rounded-lg transition-colors flex items-center gap-1.5",
                     visibility === 'private'
                       ? "text-yellow-500 bg-yellow-500/10"
-                      : "text-white/50 hover:text-white/70"
+                      : "text-muted-foreground hover:text-muted-foreground"
                   )}
                 >
                   {visibility === 'public' ? (
-                    <Globe className="w-5 h-5" />
+                    <RiGlobalLine className="w-5 h-5" aria-hidden />
                   ) : (
                     <Lock className="w-5 h-5" />
                   )}
@@ -399,13 +396,13 @@ export default function ContentShareComposer({
               <Button
                 onClick={handleSubmit}
                 disabled={isPosting || isUploading || (!text.trim() && images.length === 0)}
-                className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-5"
+                className="bg-primary hover:bg-primary/90 text-foreground rounded-full px-5"
               >
                 {isPosting || isUploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <RiLoader4Line className="w-4 h-4 animate-spin" aria-hidden />
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
+                    <RiSendPlaneLine className="w-4 h-4 mr-2" aria-hidden />
                     Post
                   </>
                 )}
@@ -424,7 +421,18 @@ export default function ContentShareComposer({
                 "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
                 config.bg
               )}>
-                <TypeIcon className={cn("w-5 h-5", config.accent)} />
+                {content.type === 'opportunity' && (
+                  <RiFocus3Line className={cn("w-5 h-5", config.accent)} aria-hidden />
+                )}
+                {content.type === 'job' && (
+                  <RiBriefcaseLine className={cn("w-5 h-5", config.accent)} aria-hidden />
+                )}
+                {content.type === 'event' && (
+                  <RiCalendarLine className={cn("w-5 h-5", config.accent)} aria-hidden />
+                )}
+                {content.type === 'resource' && (
+                  <RiBook2Line className={cn("w-5 h-5", config.accent)} aria-hidden />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -433,22 +441,22 @@ export default function ContentShareComposer({
                   </span>
                   {(content.organization || content.company || content.author) && (
                     <>
-                      <span className="text-white/20">•</span>
-                      <span className="text-xs text-white/50 truncate">
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground truncate">
                         {content.organization || content.company || content.author}
                       </span>
                     </>
                   )}
                 </div>
-                <h4 className="text-sm font-semibold text-white mb-2 line-clamp-2">
+                <h4 className="text-sm font-semibold text-foreground mb-2 line-clamp-2">
                   {content.title}
                 </h4>
                 {content.description && (
-                  <p className="text-xs text-white/60 line-clamp-2 mb-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                     {content.description}
                   </p>
                 )}
-                <div className="flex flex-wrap items-center gap-2 text-xs text-white/50">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {getLocationString() && (
                     <div className="inline-flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
@@ -457,13 +465,13 @@ export default function ContentShareComposer({
                   )}
                   {getDateString() && (
                     <div className="inline-flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <RiTimeLine className="w-3 h-3" aria-hidden />
                       <span>{getDateString()}</span>
                     </div>
                   )}
                   {(content.financial?.isPaid || content.isPaid) && (
                     <div className="inline-flex items-center gap-1">
-                      <DollarSign className="w-3 h-3" />
+                      <RiMoneyDollarCircleLine className="w-3 h-3" aria-hidden />
                       <span>{content.financial?.amount || content.price || 'Paid'}</span>
                     </div>
                   )}

@@ -11,17 +11,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  X,
-  Loader2,
-  Globe,
-  Lock,
-  ListMusic
-} from 'lucide-react'
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { X } from 'lucide-react'
+import { RiPlayList2Fill } from "react-icons/ri"
 
 interface PlaylistModalProps {
   isOpen: boolean
@@ -114,25 +110,25 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[85vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent side="bottom" className="h-[85vh] bg-page border-border rounded-t-3xl p-0 overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <ListMusic className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <RiPlayList2Fill className="w-5 h-5 text-orange-500" />
               </div>
               <div>
-                <SheetTitle className="text-white">
+                <SheetTitle className="text-foreground">
                   {editPlaylist ? 'Edit Playlist' : 'Create Playlist'}
                 </SheetTitle>
-                <SheetDescription className="text-white/40 text-xs">
+                <SheetDescription className="text-muted-foreground text-xs">
                   {editPlaylist ? 'Update your playlist details' : 'Start a new collection'}
                 </SheetDescription>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/[0.05]">
-              <X className="w-5 h-5 text-white/60" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
             </button>
           </div>
         </div>
@@ -148,7 +144,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
 
           {/* Name */}
           <div className="mb-4">
-            <Label htmlFor="name" className="text-white/70 mb-2 block">
+            <Label htmlFor="name" className="text-muted-foreground mb-2 block">
               Playlist Name *
             </Label>
             <Input
@@ -156,14 +152,14 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Awesome Playlist"
-              className="bg-white/[0.02] border-white/[0.06] text-white placeholder:text-white/30"
+              className="bg-card border-border text-foreground placeholder:text-muted-foreground"
               required
             />
           </div>
 
           {/* Description */}
           <div className="mb-4">
-            <Label htmlFor="description" className="text-white/70 mb-2 block">
+            <Label htmlFor="description" className="text-muted-foreground mb-2 block">
               Description
             </Label>
             <Textarea
@@ -172,27 +168,27 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this playlist about?"
               rows={3}
-              className="bg-white/[0.02] border-white/[0.06] text-white placeholder:text-white/30 resize-none"
+              className="bg-card border-border text-foreground placeholder:text-muted-foreground resize-none"
             />
           </div>
 
           {/* Hashtags */}
           <div className="mb-4">
-            <Label htmlFor="hashtags" className="text-white/70 mb-2 block">
+            <Label htmlFor="hashtags" className="text-muted-foreground mb-2 block">
               Hashtags
             </Label>
             <Input
               id="hashtags"
               onKeyDown={handleHashtagInput}
               placeholder="Type and press Enter or comma to add"
-              className="bg-white/[0.02] border-white/[0.06] text-white placeholder:text-white/30"
+              className="bg-card border-border text-foreground placeholder:text-muted-foreground"
             />
             {hashtags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {hashtags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-orange-400 text-xs"
                   >
                     #{tag}
                     <button
@@ -209,18 +205,18 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           </div>
 
           {/* Public/Private Toggle */}
-          <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+          <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3">
               {isPublic ? (
-                <Globe className="w-5 h-5 text-orange-500" />
+                <FlaticonIcon name="globe" className="w-5 h-5 text-orange-500" aria-hidden />
               ) : (
-                <Lock className="w-5 h-5 text-white/40" />
+                <FlaticonIcon name="lock" className="w-5 h-5 text-muted-foreground" aria-hidden />
               )}
               <div>
-                <p className="font-medium text-white">
+                <p className="font-medium text-foreground">
                   {isPublic ? 'Public Playlist' : 'Private Playlist'}
                 </p>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-muted-foreground">
                   {isPublic ? 'Anyone can view this playlist' : 'Only you can see this playlist'}
                 </p>
               </div>
@@ -235,11 +231,11 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           <Button
             type="submit"
             disabled={isSubmitting || !name.trim()}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-foreground"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <FlaticonIcon name="spinner" className="w-4 h-4 mr-2 animate-spin" aria-hidden />
                 {editPlaylist ? 'Updating...' : 'Creating...'}
               </>
             ) : (

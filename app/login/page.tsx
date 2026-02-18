@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { FlaticonIcon } from '@/components/ui/flaticon-icon';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -38,12 +38,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+      <Card className="w-full max-w-md border border-border bg-card backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-muted-foreground">
             Sign in to your GlowUp account
           </CardDescription>
         </CardHeader>
@@ -52,7 +52,7 @@ export default function LoginPage() {
           {/* Error Message */}
           {error && (
             <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-              <AlertCircle className="w-4 h-4" />
+              <FlaticonIcon name="exclamation" className="w-4 h-4" aria-hidden />
               <span className="text-sm">{error}</span>
             </div>
           )}
@@ -60,18 +60,18 @@ export default function LoginPage() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/80 font-medium">
+              <Label htmlFor="email" className="text-foreground font-medium">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
+                <FlaticonIcon name="envelope" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                  className="pl-10 h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                   required
                   disabled={isLoading}
                 />
@@ -79,45 +79,38 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80 font-medium">
+              <Label htmlFor="password" className="text-foreground font-medium">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
+                <FlaticonIcon name="lock" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                  className="pl-10 pr-10 h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                   required
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <FlaticonIcon name="eye-off" className="w-4 h-4" aria-hidden /> : <FlaticonIcon name="eye" className="w-4 h-4" aria-hidden />}
                 </button>
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-200"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground font-semibold rounded-xl transition-all duration-200"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                'Sign In'
-              )}
+              Sign In
             </Button>
           </form>
 
@@ -129,7 +122,7 @@ export default function LoginPage() {
             >
               Forgot your password?
             </Link>
-            <div className="text-sm text-white/60">
+            <div className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link
                 href="/signup"

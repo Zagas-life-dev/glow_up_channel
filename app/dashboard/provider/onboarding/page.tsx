@@ -295,14 +295,14 @@ export default function ProviderOnboarding() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
             <Shield className="w-8 h-8 text-orange-500" />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Authentication Required</h2>
-          <p className="text-white/60 mb-4">Please log in to access provider onboarding</p>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">Please log in to access provider onboarding</p>
+          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
             <Link href="/login">Sign In</Link>
           </Button>
         </div>
@@ -313,29 +313,29 @@ export default function ProviderOnboarding() {
   const CurrentStepComponent = STEPS[currentStep].component
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div className="min-h-screen bg-page flex flex-col">
       {/* Mobile Header - Compact */}
-      <header className="sticky top-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06] lg:hidden">
+      <header className="sticky top-0 z-30 bg-page/95 backdrop-blur-xl border-b border-border lg:hidden">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push('/dashboard/provider')}
-              className="h-9 w-9 p-0 text-white/60"
+              className="h-9 w-9 p-0 text-muted-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-sm font-bold text-white">Provider Setup</h1>
-              <p className="text-[10px] text-white/50">Step {currentStep + 1} of {STEPS.length}</p>
+              <h1 className="text-sm font-bold text-foreground">Provider Setup</h1>
+              <p className="text-[10px] text-muted-foreground">Step {currentStep + 1} of {STEPS.length}</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             asChild
-            className="h-9 w-9 p-0 text-white/60"
+            className="h-9 w-9 p-0 text-muted-foreground"
           >
             <Link href="/dashboard/provider">
               <X className="h-4 w-4" />
@@ -346,10 +346,10 @@ export default function ProviderOnboarding() {
         {/* Progress Bar */}
         <div className="px-4 pb-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">Progress</span>
-            <span className="text-white/70 font-medium">{completionPercentage}%</span>
+            <span className="text-muted-foreground">Progress</span>
+            <span className="text-muted-foreground font-medium">{completionPercentage}%</span>
           </div>
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
               style={{ width: `${completionPercentage}%` }}
@@ -359,7 +359,7 @@ export default function ProviderOnboarding() {
       </header>
 
       {/* Desktop Header */}
-      <header className="hidden lg:block border-b border-white/[0.06] bg-[#0a0a0a]">
+      <header className="hidden lg:block border-b border-border bg-page">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -367,21 +367,21 @@ export default function ProviderOnboarding() {
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/dashboard/provider')}
-                className="text-white/60 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
               <div>
-                <h1 className="text-xl font-bold text-white">Provider Onboarding</h1>
-                <p className="text-sm text-white/50">Complete your registration to start posting opportunities</p>
+                <h1 className="text-xl font-bold text-foreground">Provider Onboarding</h1>
+                <p className="text-sm text-muted-foreground">Complete your registration to start posting opportunities</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               asChild
-              className="text-white/60 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               <Link href="/dashboard/provider">
                 <X className="h-4 w-4" />
@@ -392,10 +392,10 @@ export default function ProviderOnboarding() {
           {/* Desktop Progress */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-white/60">Step {currentStep + 1} of {STEPS.length}</span>
-              <span className="text-white/70 font-medium">{completionPercentage}% Complete</span>
+              <span className="text-muted-foreground">Step {currentStep + 1} of {STEPS.length}</span>
+              <span className="text-muted-foreground font-medium">{completionPercentage}% Complete</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
                 style={{ width: `${completionPercentage}%` }}
@@ -409,7 +409,7 @@ export default function ProviderOnboarding() {
       <div className="flex-1 flex flex-col lg:flex-row max-w-6xl mx-auto w-full px-4 lg:px-6 py-4 lg:py-8 gap-6">
         {/* Step Indicator - Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 flex-shrink-0">
-          <Card className="bg-white/[0.02] border-white/[0.06] sticky top-24">
+          <Card className="bg-card border-border sticky top-24">
             <CardContent className="p-4 space-y-2">
               {STEPS.map((step, index) => {
                 const Icon = step.icon
@@ -425,12 +425,12 @@ export default function ProviderOnboarding() {
                     className={cn(
                       "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all",
                       isCurrent
-                        ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                        ? "bg-primary/10 text-orange-400 border border-orange-500/20"
                         : isCompleted
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                         : canAccess
-                        ? "text-white/60 hover:text-white hover:bg-white/[0.05] border border-transparent"
-                        : "text-white/30 cursor-not-allowed border border-transparent"
+                        ? "text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent"
+                        : "text-muted-foreground cursor-not-allowed border border-transparent"
                     )}
                   >
                     <div className={cn(
@@ -438,8 +438,8 @@ export default function ProviderOnboarding() {
                       isCompleted
                         ? "bg-emerald-500/20 text-emerald-400"
                         : isCurrent
-                        ? "bg-orange-500/20 text-orange-400"
-                        : "bg-white/5 text-white/30"
+                        ? "bg-primary/20 text-orange-400"
+                        : "bg-muted text-muted-foreground"
                     )}>
                       {isCompleted ? (
                         <Check className="w-4 h-4" />
@@ -449,7 +449,7 @@ export default function ProviderOnboarding() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{step.title}</p>
-                      <p className="text-xs text-white/40 truncate">{step.description}</p>
+                      <p className="text-xs text-muted-foreground truncate">{step.description}</p>
                     </div>
                     {isCurrent && (
                       <ChevronRight className="w-4 h-4 text-orange-400 flex-shrink-0" />
@@ -463,18 +463,18 @@ export default function ProviderOnboarding() {
 
         {/* Step Content */}
         <main className="flex-1 min-w-0">
-          <Card className="bg-white/[0.02] border-white/[0.06]">
+          <Card className="bg-card border-border">
             <CardContent className="p-4 md:p-6 lg:p-8">
               {/* Step Header */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {React.createElement(STEPS[currentStep].icon, { className: "w-6 h-6 text-orange-400" })}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
                     {STEPS[currentStep].title}
                   </h2>
-                  <p className="text-sm text-white/50">{STEPS[currentStep].description}</p>
+                  <p className="text-sm text-muted-foreground">{STEPS[currentStep].description}</p>
                 </div>
                 {/* Mobile Step Indicator */}
                 <div className="lg:hidden flex items-center gap-1">
@@ -484,10 +484,10 @@ export default function ProviderOnboarding() {
                       className={cn(
                         "w-1.5 h-1.5 rounded-full transition-all",
                         index === currentStep
-                          ? "w-6 bg-orange-500"
+                          ? "w-6 bg-primary"
                           : index < currentStep
                           ? "bg-emerald-500"
-                          : "bg-white/20"
+                          : "bg-muted"
                       )}
                     />
                   ))}
@@ -504,13 +504,13 @@ export default function ProviderOnboarding() {
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between gap-3 pt-6 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between gap-3 pt-6 border-t border-border">
                 <Button
                   variant="outline"
                   onClick={prevStep}
                   disabled={currentStep === 0}
                   className={cn(
-                    "flex items-center gap-2 border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]",
+                    "flex items-center gap-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted",
                     currentStep === 0 && "opacity-50 cursor-not-allowed"
                   )}
                 >
@@ -522,11 +522,11 @@ export default function ProviderOnboarding() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!canProceed || isSubmitting}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 md:px-8 flex items-center gap-2"
+                    className="bg-primary hover:bg-primary/90 text-foreground px-6 md:px-8 flex items-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
                         <span>Completing...</span>
                       </>
                     ) : (
@@ -541,7 +541,7 @@ export default function ProviderOnboarding() {
                     onClick={nextStep}
                     disabled={!canProceed}
                     className={cn(
-                      "bg-orange-500 hover:bg-orange-600 text-white px-6 md:px-8 flex items-center gap-2",
+                      "bg-primary hover:bg-primary/90 text-foreground px-6 md:px-8 flex items-center gap-2",
                       !canProceed && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -556,7 +556,7 @@ export default function ProviderOnboarding() {
       </div>
 
       {/* Mobile Step Pills - Bottom */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
         <div className="flex items-center justify-around h-16 px-2">
           {STEPS.map((step, index) => {
             const Icon = step.icon
@@ -574,16 +574,16 @@ export default function ProviderOnboarding() {
                     ? "text-orange-400"
                     : isCompleted
                     ? "text-emerald-400"
-                    : "text-white/30"
+                    : "text-muted-foreground"
                 )}
               >
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center",
                   isCurrent
-                    ? "bg-orange-500/20"
+                    ? "bg-primary/20"
                     : isCompleted
                     ? "bg-emerald-500/20"
-                    : "bg-white/5"
+                    : "bg-muted"
                 )}>
                   {isCompleted ? (
                     <Check className="w-4 h-4" />

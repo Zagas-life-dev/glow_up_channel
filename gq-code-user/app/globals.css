@@ -10,8 +10,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96%;
@@ -22,8 +22,27 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --ring: 24 95% 53%;
+    --radius: 0.75rem;
+    /* QR dashboard dark theme */
+    --qr-bg: 222 47% 11%;
+    --qr-surface: 222 47% 14%;
+    --qr-surface-hover: 222 47% 18%;
+    --qr-border: 222 20% 22%;
+    --qr-text: 210 40% 98%;
+    --qr-muted: 215 20% 55%;
+  }
+
+  .qr-dashboard {
+    --background: var(--qr-bg);
+    --foreground: var(--qr-text);
+    --card: var(--qr-surface);
+    --card-foreground: var(--qr-text);
+    --muted: var(--qr-surface-hover);
+    --muted-foreground: var(--qr-muted);
+    --border: var(--qr-border);
+    --input: var(--qr-border);
+    --ring: 24 95% 53%;
   }
 }
 
@@ -60,6 +79,146 @@
   
   .card-modern:hover {
     @apply transform -translate-y-2;
+  }
+
+  /* Profile page: animated gradient background */
+  .profile-page-bg {
+    background: linear-gradient(145deg, hsl(222 47% 8%) 0%, hsl(230 45% 12%) 40%, hsl(222 50% 10%) 70%, hsl(25 80% 15%) 100%);
+    background-size: 400% 400%;
+    animation: profile-bg-shift 18s ease infinite;
+  }
+
+  .profile-page-bg::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(25 90% 40% / 0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 60%, hsl(35 80% 45% / 0.08), transparent),
+      radial-gradient(ellipse 50% 30% at 10% 80%, hsl(20 70% 40% / 0.06), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .profile-page-bg .profile-page-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes profile-bg-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Glass card */
+  .profile-glass {
+    background: linear-gradient(135deg, hsl(222 40% 14% / 0.85) 0%, hsl(222 35% 12% / 0.9) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(222 25% 30% / 0.6);
+    box-shadow: 
+      0 0 0 1px hsl(25 80% 50% / 0.08),
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      0 0 80px -20px hsl(25 90% 50% / 0.15);
+  }
+
+  /* Gradient text */
+  .text-gradient-glow {
+    background: linear-gradient(135deg, #fbbf24 0%, #f97316 50%, #ea580c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Scroll-in animation (use with data-visible) */
+  .animate-in-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .animate-in-up[data-visible='true'] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger children */
+  .stagger-1 { transition-delay: 0.05s; }
+  .stagger-2 { transition-delay: 0.1s; }
+  .stagger-3 { transition-delay: 0.15s; }
+  .stagger-4 { transition-delay: 0.2s; }
+  .stagger-5 { transition-delay: 0.25s; }
+  .stagger-6 { transition-delay: 0.3s; }
+
+  /* Public profile – GlowUp brand + dark mode (device) */
+  .profile-page-wrap {
+    background: #faf8f5;
+    transition: background-color 0.3s ease;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-page-wrap {
+      background: #0f0f0f;
+    }
+  }
+  .profile-card-bg {
+    background: #ffffff;
+    border-color: #ebe6df;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-card-bg {
+      background: #1a1a1a;
+      border-color: #2d2d2d;
+    }
+  }
+  .profile-accent {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: white;
+  }
+  .profile-accent:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  }
+  .profile-accent-icon {
+    color: #f97316;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-accent-icon {
+      color: #fb923c;
+    }
+  }
+  .profile-text-primary {
+    color: #1c1917;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-text-primary {
+      color: #fafaf9;
+    }
+  }
+  .profile-text-muted {
+    color: #57534e;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-text-muted {
+      color: #a8a29e;
+    }
+  }
+  .profile-border {
+    border-color: #ebe6df;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-border {
+      border-color: #2d2d2d;
+    }
+  }
+  .profile-surface {
+    background: #f5f3f0;
+    border-color: #ebe6df;
+  }
+  @media (prefers-color-scheme: dark) {
+    .profile-surface {
+      background: #262626;
+      border-color: #404040;
+    }
   }
 }
 

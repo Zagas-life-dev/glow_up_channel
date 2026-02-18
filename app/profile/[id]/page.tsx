@@ -14,40 +14,6 @@ import ConnectionRequestsModal from '@/components/connection-requests-modal'
 import ConnectionsListModal from '@/components/connections-list-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
 import {
-  User,
-  Link as LinkIcon,
-  Briefcase,
-  GraduationCap,
-  Calendar,
-  Edit3,
-  Settings,
-  MoreHorizontal,
-  UserPlus,
-  UserCheck,
-  Clock,
-  Lock,
-  Globe,
-  ListMusic,
-  Bookmark,
-  FileText,
-  ExternalLink,
-  Loader2,
-  ArrowLeft,
-  Shield,
-  Sparkles,
-  Check,
-  X,
-  ChevronRight,
-  MapPin,
-  Target,
-  Building2,
-  Lightbulb,
-  TrendingUp,
-  Crown,
-  BookOpen,
-  AlertCircle
-} from 'lucide-react'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -71,6 +37,35 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import {
+  RiUserLine,
+  RiArrowLeftLine,
+  RiLoader4Line,
+  RiQrCodeLine,
+  RiMoreLine,
+  RiLockLine,
+  RiShieldLine,
+  RiMapPinLine,
+  RiBriefcaseLine,
+  RiArrowUpLine,
+  RiCalendarLine,
+  RiLink,
+  RiBuildingLine,
+  RiLightbulbLine,
+  RiSettingsLine,
+  RiErrorWarningLine,
+  RiTimeLine,
+  RiUserAddLine,
+  RiFileLine,
+  RiBookmarkLine,
+  RiGlobalLine,
+  RiArrowRightLine,
+  RiFocus3Line,
+  RiSparkling2Line,
+  RiVipCrownLine,
+  RiGraduationCapLine,
+  RiPlayList2Fill,
+} from "react-icons/ri"
 
 interface OnboardingData {
   country: string
@@ -96,6 +91,7 @@ interface ProfileData {
   headline: string | null
   profileImage: string | null
   website: string | null
+  phoneNumber: string | null
   skills: string[]
   work: { company?: string; title?: string } | null
   education: { school?: string; degree?: string; field?: string } | null
@@ -165,6 +161,7 @@ interface Playlist {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
 
 // Social link config
 const socialConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
@@ -175,7 +172,7 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
   },
   twitter: { 
     icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
-    color: 'hover:text-white',
+    color: 'hover:text-foreground',
     label: 'X'
   },
   instagram: { 
@@ -185,7 +182,7 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
   },
   github: { 
     icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>,
-    color: 'hover:text-white',
+    color: 'hover:text-foreground',
     label: 'GitHub'
   },
   youtube: { 
@@ -195,7 +192,7 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
   },
   tiktok: { 
     icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>,
-    color: 'hover:text-white',
+    color: 'hover:text-foreground',
     label: 'TikTok'
   },
 }
@@ -238,6 +235,9 @@ export default function ProfilePage() {
   // Connection action
   const [connectLoading, setConnectLoading] = useState(false)
 
+  // QR dashboard (open mini-app with session)
+  const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
+
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('accessToken')
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -246,6 +246,31 @@ export default function ProfilePage() {
     }
     return headers
   }, [])
+
+  const handleOpenQrDashboard = () => {
+    if (!currentUser) {
+      toast.error('Please log in to manage your QR profile.')
+      return
+    }
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('accessToken') || localStorage.getItem('authToken')
+      : null
+    if (!token) {
+      toast.error('No active session. Please sign in again.')
+      return
+    }
+    if (!QR_APP_URL) {
+      toast.error('QR app is not configured.')
+      return
+    }
+    setIsOpeningQrDashboard(true)
+    try {
+      const url = `${QR_APP_URL.replace(/\/$/, '')}/dashboard?token=${encodeURIComponent(token)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } finally {
+      setTimeout(() => setIsOpeningQrDashboard(false), 500)
+    }
+  }
 
   // Fetch profile
   const fetchProfile = useCallback(async () => {
@@ -329,7 +354,7 @@ export default function ProfilePage() {
     }
   }, [isOwner, getAuthHeaders])
 
-  // Calculate profile completion percentage
+  // Calculate profile completion percentage (mobile number is required for a complete profile)
   const calculateProfileCompletion = useCallback((profileData: ProfileData | null): number => {
     if (!profileData) return 0
     
@@ -337,6 +362,7 @@ export default function ProfilePage() {
       profileData.firstName,
       profileData.bio,
       profileData.headline,
+      profileData.phoneNumber,
       profileData.onboarding?.country,
       profileData.onboarding?.province,
       profileData.onboarding?.careerStage,
@@ -464,13 +490,13 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-white/20" />
+          <div className="w-20 h-20 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+            <RiUserLine className="w-8 h-8 text-muted-foreground" aria-hidden />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Profile Not Found</h2>
-          <p className="text-white/50 text-sm mb-6">{error || 'This profile doesn\'t exist or has been removed.'}</p>
-          <Button onClick={() => router.back()} variant="outline" className="border-white/10 text-white rounded-full px-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Profile Not Found</h2>
+          <p className="text-muted-foreground text-sm mb-6">{error || 'This profile doesn\'t exist or has been removed.'}</p>
+          <Button onClick={() => router.back()} variant="outline" className="border-border text-foreground rounded-full px-6">
+            <RiArrowLeftLine className="w-4 h-4 mr-2" aria-hidden />
             Go Back
           </Button>
         </div>
@@ -492,43 +518,61 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="sticky top-0 z-40 bg-page/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <button 
             onClick={() => router.back()} 
-            className="p-2 -ml-2 rounded-full hover:bg-white/[0.05] transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-white/70" />
+            <RiArrowLeftLine className="w-5 h-5 text-muted-foreground" aria-hidden />
           </button>
           
           <div className="text-center">
-            <h1 className="text-sm font-semibold text-white truncate max-w-[200px]">{displayName}</h1>
-            <p className="text-[11px] text-white/40">{profile.postCount} posts</p>
+            <h1 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{displayName}</h1>
+            <p className="text-[11px] text-muted-foreground">{profile.postCount} posts</p>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 -mr-2 rounded-full hover:bg-white/[0.05] transition-colors">
-                <MoreHorizontal className="w-5 h-5 text-white/70" />
+          <div className="flex items-center gap-0.5 -mr-1">
+            {isOwner && (
+              <button
+                type="button"
+                onClick={handleOpenQrDashboard}
+                disabled={isOpeningQrDashboard}
+                className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+                title="Manage QR Profile"
+                aria-label="Manage QR Profile"
+              >
+                {isOpeningQrDashboard ? (
+                  <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
+                ) : (
+                  <RiQrCodeLine className="w-5 h-5" aria-hidden />
+                )}
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-white/[0.08] rounded-xl min-w-[180px]">
-              <DropdownMenuItem className="text-white/70 focus:bg-white/[0.05] focus:text-white cursor-pointer rounded-lg">
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-muted transition-colors">
+                  <RiMoreLine className="w-5 h-5 text-muted-foreground" aria-hidden />
+                </button>
+              </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl min-w-[180px]">
+              <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
                 Share Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-white/70 focus:bg-white/[0.05] focus:text-white cursor-pointer rounded-lg">
+              <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
                 Copy Link
               </DropdownMenuItem>
               {!isOwner && (
                 <>
-                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuSeparator className="bg-muted" />
                   <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-lg">
                     Block User
                   </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
@@ -549,15 +593,15 @@ export default function ProfilePage() {
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-rose-500 flex items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-bold text-white">
+                  <span className="text-2xl sm:text-3xl font-bold text-foreground">
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
             </div>
             {profile.isPrivate && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#0a0a0a] border-2 border-[#0a0a0a] flex items-center justify-center">
-                <Lock className="w-3 h-3 text-white/60" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-page border-2 border-[#0a0a0a] flex items-center justify-center">
+                <RiLockLine className="w-3 h-3 text-muted-foreground" aria-hidden />
               </div>
             )}
           </div>
@@ -566,22 +610,22 @@ export default function ProfilePage() {
           {profile.showConnections && (
             <div className="flex-1 flex items-center justify-around pt-2">
               <div className="text-center">
-                <p className="text-lg sm:text-xl font-bold text-white">{profile.postCount}</p>
-                <p className="text-xs text-white/40">Posts</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.postCount}</p>
+                <p className="text-xs text-muted-foreground">Posts</p>
               </div>
               <button 
                 onClick={() => setShowConnectionsList('followers')}
                 className="text-center hover:opacity-70 transition-opacity"
               >
-                <p className="text-lg sm:text-xl font-bold text-white">{profile.followersCount ?? 0}</p>
-                <p className="text-xs text-white/40">Partners</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.followersCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Partners</p>
               </button>
               <button 
                 onClick={() => setShowConnectionsList('following')}
                 className="text-center hover:opacity-70 transition-opacity"
               >
-                <p className="text-lg sm:text-xl font-bold text-white">{profile.followingCount ?? 0}</p>
-                <p className="text-xs text-white/40">Partnering</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.followingCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Partnering</p>
               </button>
             </div>
           )}
@@ -590,60 +634,60 @@ export default function ProfilePage() {
         {/* Name & Bio */}
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-lg font-bold text-white">{displayName}</h2>
+            <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
             {profile.role === 'opportunity_poster' && (
-              <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 text-[10px] font-medium">
+              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-orange-400 text-[10px] font-medium">
                 Provider
               </span>
             )}
             {(profile.role === 'admin' || profile.role === 'super_admin') && (
               <span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px] font-medium flex items-center gap-0.5">
-                <Shield className="w-2.5 h-2.5" />
+                <RiShieldLine className="w-2.5 h-2.5" aria-hidden />
                 Admin
               </span>
             )}
           </div>
           
           {profile.headline && (
-            <p className="text-sm text-white/60 mb-2">{profile.headline}</p>
+            <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
           )}
           
           {profile.bio && (
-            <p className="text-sm text-white/80 whitespace-pre-line leading-relaxed">{profile.bio}</p>
+            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{profile.bio}</p>
           )}
 
           {/* Quick Info */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs text-white/40">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs text-muted-foreground">
             {/* Location from onboarding */}
             {profile.onboarding?.country && (
               <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
+                <RiMapPinLine className="w-3 h-3" aria-hidden />
                 {[profile.onboarding.city, profile.onboarding.province, profile.onboarding.country].filter(Boolean).join(', ')}
               </span>
             )}
             {/* Work info */}
             {profile.work?.company && (
               <span className="flex items-center gap-1">
-                <Briefcase className="w-3 h-3" />
+                <RiBriefcaseLine className="w-3 h-3" aria-hidden />
                 {profile.work.title ? `${profile.work.title} @ ${profile.work.company}` : profile.work.company}
               </span>
             )}
             {/* Education from onboarding or profile */}
             {(profile.onboarding?.institution || profile.education?.school) && (
               <span className="flex items-center gap-1">
-                <GraduationCap className="w-3 h-3" />
+                <RiGraduationCapLine className="w-3 h-3" aria-hidden />
                 {profile.onboarding?.institution || profile.education?.school}
               </span>
             )}
             {/* Career Stage from onboarding */}
             {profile.onboarding?.careerStage && (
               <span className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
+                <RiArrowUpLine className="w-3 h-3" aria-hidden />
                 {profile.onboarding.careerStage}
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <RiCalendarLine className="w-3 h-3" aria-hidden />
               Joined {memberSince}
             </span>
           </div>
@@ -658,7 +702,7 @@ export default function ProfilePage() {
                   rel="noopener noreferrer"
                   className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
                 >
-                  <LinkIcon className="w-3 h-3" />
+                  <RiLink className="w-3 h-3" aria-hidden />
                   {new URL(profile.website).hostname.replace('www.', '')}
                 </a>
               )}
@@ -671,7 +715,7 @@ export default function ProfilePage() {
                     href={url as string}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn("text-white/40 transition-colors", config.color)}
+                    className={cn("text-muted-foreground transition-colors", config.color)}
                     title={config.label}
                   >
                     {config.icon}
@@ -687,21 +731,21 @@ export default function ProfilePage() {
           const skills = profile.skills?.length > 0 ? profile.skills : profile.onboarding?.onboardingSkills || []
           return skills.length > 0 && (
             <div className="mb-5">
-              <div className="flex items-center gap-1.5 text-xs text-white/40 mb-2">
-                <Sparkles className="w-3 h-3" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                <RiSparkling2Line className="w-3 h-3" aria-hidden />
                 <span>Skills</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {skills.slice(0, 8).map((skill, i) => (
                   <span 
                     key={i}
-                    className="px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs border border-orange-500/20"
+                    className="px-2.5 py-1 rounded-full bg-primary/10 text-orange-400 text-xs border border-orange-500/20"
                   >
                     {skill}
                   </span>
                 ))}
                 {skills.length > 8 && (
-                  <span className="px-2.5 py-1 text-white/30 text-xs">
+                  <span className="px-2.5 py-1 text-muted-foreground text-xs">
                     +{skills.length - 8} more
                   </span>
                 )}
@@ -713,21 +757,21 @@ export default function ProfilePage() {
         {/* Interests from onboarding */}
         {profile.onboarding?.interests && profile.onboarding.interests.length > 0 && (
           <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-white/40 mb-2">
-              <Target className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <RiFocus3Line className="w-3 h-3" aria-hidden />
               <span>Interests</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {profile.onboarding.interests.slice(0, 6).map((interest, i) => (
                 <span 
                   key={i}
-                  className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20"
+                  className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs border border-primary/20"
                 >
                   {interest}
                 </span>
               ))}
               {profile.onboarding.interests.length > 6 && (
-                <span className="px-2.5 py-1 text-white/30 text-xs">
+                <span className="px-2.5 py-1 text-muted-foreground text-xs">
                   +{profile.onboarding.interests.length - 6} more
                 </span>
               )}
@@ -738,8 +782,8 @@ export default function ProfilePage() {
         {/* Industry Sectors from onboarding */}
         {profile.onboarding?.industrySectors && profile.onboarding.industrySectors.length > 0 && (
           <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-white/40 mb-2">
-              <Building2 className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <RiBuildingLine className="w-3 h-3" aria-hidden />
               <span>Industries</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -752,7 +796,7 @@ export default function ProfilePage() {
                 </span>
               ))}
               {profile.onboarding.industrySectors.length > 5 && (
-                <span className="px-2.5 py-1 text-white/30 text-xs">
+                <span className="px-2.5 py-1 text-muted-foreground text-xs">
                   +{profile.onboarding.industrySectors.length - 5} more
                 </span>
               )}
@@ -762,17 +806,17 @@ export default function ProfilePage() {
 
         {/* Education Details from onboarding */}
         {profile.onboarding && (profile.onboarding.educationLevel || profile.onboarding.fieldOfStudy) && (
-          <div className="mb-5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-            <div className="flex items-center gap-1.5 text-xs text-white/40 mb-2">
-              <GraduationCap className="w-3 h-3" />
+          <div className="mb-5 p-3 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <RiGraduationCapLine className="w-3 h-3" aria-hidden />
               <span>Education</span>
             </div>
             <div className="space-y-1">
               {profile.onboarding.educationLevel && (
-                <p className="text-sm text-white">{profile.onboarding.educationLevel}</p>
+                <p className="text-sm text-foreground">{profile.onboarding.educationLevel}</p>
               )}
               {profile.onboarding.fieldOfStudy && (
-                <p className="text-xs text-white/50">
+                <p className="text-xs text-muted-foreground">
                   {profile.onboarding.fieldOfStudy}
                   {profile.onboarding.institution && ` at ${profile.onboarding.institution}`}
                 </p>
@@ -784,8 +828,8 @@ export default function ProfilePage() {
         {/* Aspirations from onboarding */}
         {profile.onboarding?.aspirations && profile.onboarding.aspirations.length > 0 && (
           <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-white/40 mb-2">
-              <Lightbulb className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+              <RiLightbulbLine className="w-3 h-3" aria-hidden />
               <span>Looking for</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -806,25 +850,25 @@ export default function ProfilePage() {
           <div className="mb-5 p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-600/5 border border-orange-500/20">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-medium text-white">Profile Completion</span>
+                <RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />
+                <span className="text-sm font-medium text-foreground">Profile Completion</span>
               </div>
               <span className="text-sm font-bold text-orange-400">{completionPercentage}%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+            <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
               <div 
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>
             <Link href="/onboarding">
-              <Button 
-                size="sm" 
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-8 text-xs"
-              >
-                Complete Your Profile
-                <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
+                <Button 
+                  size="sm" 
+                  className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-xl h-8 text-xs"
+                >
+                  Complete Your Profile
+                  <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
+                </Button>
             </Link>
           </div>
         )}
@@ -836,16 +880,16 @@ export default function ProfilePage() {
               <Button 
                 onClick={() => setShowEditModal(true)}
                 variant="outline" 
-                className="flex-1 border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06] rounded-xl h-9 text-sm font-medium"
+                className="flex-1 border-border bg-muted text-foreground hover:bg-muted rounded-xl h-9 text-sm font-medium"
               >
                 Edit Profile
               </Button>
               <Link href="/dashboard/settings" className="flex-1">
                 <Button 
                   variant="outline" 
-                  className="w-full border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.06] rounded-xl h-9 text-sm font-medium"
+                  className="w-full border-border bg-muted text-foreground hover:bg-muted rounded-xl h-9 text-sm font-medium"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
+                  <RiSettingsLine className="w-4 h-4 mr-2" aria-hidden />
                   Settings
                 </Button>
               </Link>
@@ -853,9 +897,9 @@ export default function ProfilePage() {
                 <Link href="/dashboard/provider" className="flex-1">
                   <Button 
                     variant="outline" 
-                    className="w-full border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl h-9 text-sm font-medium"
+                    className="w-full border-orange-500/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-9 text-sm font-medium"
                   >
-                    <Crown className="w-4 h-4 mr-2" />
+                    <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
                     Provider
                   </Button>
                 </Link>
@@ -868,21 +912,21 @@ export default function ProfilePage() {
                       setShowUpgradeModal(true)
                     }}
                     variant="outline" 
-                    className="flex-1 border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl h-9 text-sm font-medium"
+                    className="flex-1 border-orange-500/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-9 text-sm font-medium"
                   >
-                    <Crown className="w-4 h-4 mr-2" />
+                    <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
                     Become Provider
                   </Button>
                   
                   {/* Upgrade Modal */}
                   <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-                    <DialogContent className="bg-[#141414] border-white/[0.08] rounded-2xl">
+                    <DialogContent className="bg-surface border-border rounded-2xl">
                       <DialogHeader>
-                        <DialogTitle className="text-white flex items-center gap-2">
-                          <Crown className="w-5 h-5 text-orange-500" />
+                    <DialogTitle className="text-foreground flex items-center gap-2">
+                      <RiVipCrownLine className="w-5 h-5 text-orange-500" aria-hidden />
                           Upgrade to Provider
                         </DialogTitle>
-                        <DialogDescription className="text-white/50">
+                        <DialogDescription className="text-muted-foreground">
                           Confirm your password to upgrade your account to provider status
                         </DialogDescription>
                       </DialogHeader>
@@ -909,20 +953,20 @@ export default function ProfilePage() {
                         }
                       }} className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="upgrade-email" className="text-white/70">Email</Label>
+                          <Label htmlFor="upgrade-email" className="text-muted-foreground">Email</Label>
                           <Input
                             id="upgrade-email"
                             type="email"
                             value={upgradeForm.email}
                             onChange={(e) => setUpgradeForm(prev => ({ ...prev, email: e.target.value }))}
-                            className="bg-white/[0.05] border-white/[0.08] text-white"
+                            className="bg-muted border-border text-foreground"
                             required
                             disabled
                           />
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="upgrade-password" className="text-white/70">Password</Label>
+                          <Label htmlFor="upgrade-password" className="text-muted-foreground">Password</Label>
                           <Input
                             id="upgrade-password"
                             type="password"
@@ -932,7 +976,7 @@ export default function ProfilePage() {
                               setUpgradeError(null)
                             }}
                             placeholder="Enter your password to confirm"
-                            className="bg-white/[0.05] border-white/[0.08] text-white"
+                            className="bg-muted border-border text-foreground"
                             required
                             autoFocus
                           />
@@ -940,7 +984,7 @@ export default function ProfilePage() {
                         
                         {upgradeError && (
                           <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                            <RiErrorWarningLine className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" aria-hidden />
                             <span className="text-sm text-red-400">{upgradeError}</span>
                           </div>
                         )}
@@ -954,26 +998,17 @@ export default function ProfilePage() {
                               setUpgradeError(null)
                             }} 
                             disabled={isUpgrading} 
-                            className="text-white/60 hover:text-white"
+                            className="text-muted-foreground hover:text-foreground"
                           >
                             Cancel
                           </Button>
                           <Button 
                             type="submit" 
-                            className="bg-orange-500 hover:bg-orange-600" 
+                            className="bg-primary hover:bg-primary/90" 
                             disabled={isUpgrading}
                           >
-                            {isUpgrading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Upgrading...
-                              </>
-                            ) : (
-                              <>
-                                <Crown className="w-4 h-4 mr-2" />
-                                Upgrade
-                              </>
-                            )}
+                            <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
+                            Upgrade
                           </Button>
                         </DialogFooter>
                       </form>
@@ -990,24 +1025,22 @@ export default function ProfilePage() {
                 className={cn(
                   "flex-1 rounded-xl h-9 text-sm font-medium transition-all",
                   connectionStatus?.isFollowing 
-                    ? "bg-white/[0.08] text-white hover:bg-red-500/20 hover:text-red-400 border border-white/[0.08]"
+                    ? "bg-muted text-foreground hover:bg-red-500/20 hover:text-red-400 border border-border"
                     : connectionStatus?.isPending
-                    ? "bg-white/[0.08] text-white/60 border border-white/[0.08]"
-                    : "bg-orange-500 hover:bg-orange-600 text-white"
+                    ? "bg-muted text-muted-foreground border border-border"
+                    : "bg-primary hover:bg-primary/90 text-foreground"
                 )}
               >
-                {connectLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : connectionStatus?.isFollowing ? (
+                {connectionStatus?.isFollowing ? (
                   'Partnering'
                 ) : connectionStatus?.isPending ? (
                   <>
-                    <Clock className="w-4 h-4 mr-1.5" />
+                    <RiTimeLine className="w-4 h-4 mr-1.5" aria-hidden />
                     Requested
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4 mr-1.5" />
+                    <RiUserAddLine className="w-4 h-4 mr-1.5" aria-hidden />
                     Partner
                   </>
                 )}
@@ -1015,7 +1048,7 @@ export default function ProfilePage() {
               <Button 
                 variant="outline"
                 disabled={true}
-                className="flex-1 border-white/[0.08] bg-white/[0.03] text-white/10  rounded-xl h-9 text-sm font-medium"
+                className="flex-1 border-border bg-muted text-muted-foreground  rounded-xl h-9 text-sm font-medium"
               >
                 Message (coming soon)
               </Button>
@@ -1025,34 +1058,34 @@ export default function ProfilePage() {
 
         {/* Follows You Badge */}
         {!isOwner && connectionStatus?.followsYou && (
-          <div className="mb-5 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-center">
-            <span className="text-xs text-white/50">Partners you</span>
+          <div className="mb-5 px-3 py-2 rounded-lg bg-muted border border-border text-center">
+            <span className="text-xs text-muted-foreground">Partners you</span>
           </div>
         )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full bg-transparent border-b border-white/[0.06] rounded-none p-0 h-auto">
+          <TabsList className="w-full bg-transparent border-b border-border rounded-none p-0 h-auto">
             <TabsTrigger 
               value="posts" 
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white text-white/40 pb-3 pt-2 text-sm font-medium"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
             >
-              <FileText className="w-4 h-4 mr-2" />
+              <RiFileLine className="w-4 h-4 mr-2" aria-hidden />
               Posts
             </TabsTrigger>
             <TabsTrigger 
               value="playlists"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white text-white/40 pb-3 pt-2 text-sm font-medium"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
             >
-              <ListMusic className="w-4 h-4 mr-2" />
+              <RiPlayList2Fill className="w-4 h-4 mr-2" aria-hidden />
               Playlists
             </TabsTrigger>
             {isOwner && (
               <TabsTrigger 
                 value="bookmarks"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white text-white/40 pb-3 pt-2 text-sm font-medium"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
               >
-                <Bookmark className="w-4 h-4 mr-2" />
+                <RiBookmarkLine className="w-4 h-4 mr-2" aria-hidden />
                 Saved
               </TabsTrigger>
             )}
@@ -1061,21 +1094,31 @@ export default function ProfilePage() {
           {/* Posts Tab */}
           <TabsContent value="posts" className="mt-4">
             {loadingPosts ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+              <div className="space-y-4 py-8 animate-pulse">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="rounded-2xl bg-card border border-border p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-muted" />
+                      <div className="h-4 bg-muted rounded w-32" />
+                    </div>
+                    <div className="h-4 bg-muted rounded w-full mb-2" />
+                    <div className="h-4 bg-muted rounded w-5/6" />
+                    <div className="h-48 bg-muted rounded-xl mt-3" />
+                  </div>
+                ))}
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-6 h-6 text-white/20" />
+                <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+                  <RiFileLine className="w-6 h-6 text-muted-foreground" aria-hidden />
                 </div>
-                <p className="font-medium text-white mb-1">No Posts Yet</p>
-                <p className="text-sm text-white/40 max-w-xs mx-auto">
+                <p className="font-medium text-foreground mb-1">No Posts Yet</p>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   {isOwner ? "Share your first post and start connecting!" : "This user hasn't shared any posts yet."}
                 </p>
                 {isOwner && (
                   <Link href="/community">
-                    <Button size="sm" className="mt-4 bg-orange-500 hover:bg-orange-600 rounded-full px-6">
+                    <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
                       Create Post
                     </Button>
                   </Link>
@@ -1093,8 +1136,12 @@ export default function ProfilePage() {
           {/* Playlists Tab */}
           <TabsContent value="playlists" className="mt-4">
             {loadingPlaylists ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+              <div className="space-y-4 py-8 animate-pulse">
+                <div className="grid grid-cols-2 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="rounded-2xl bg-card border border-border h-32" />
+                  ))}
+                </div>
               </div>
             ) : (() => {
               const hasOwnPlaylists = playlists.length > 0
@@ -1104,18 +1151,18 @@ export default function ProfilePage() {
               if (!hasAnyPlaylists) {
                 return (
                   <div className="text-center py-16">
-                    <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                      <ListMusic className="w-6 h-6 text-white/20" />
+                    <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+                      <RiPlayList2Fill className="w-6 h-6 text-muted-foreground" aria-hidden />
                     </div>
-                    <p className="font-medium text-white mb-1">No Playlists</p>
-                    <p className="text-sm text-white/40 max-w-xs mx-auto">
+                    <p className="font-medium text-foreground mb-1">No Playlists</p>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                       {isOwner 
                         ? "Create or save playlists to see them here." 
                         : "This user hasn't created any public playlists."}
                     </p>
                     {isOwner && (
                       <Link href="/playlists">
-                        <Button size="sm" className="mt-4 bg-orange-500 hover:bg-orange-600 rounded-full px-6">
+                        <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
                           Create Playlist
                         </Button>
                       </Link>
@@ -1129,13 +1176,13 @@ export default function ProfilePage() {
                   {hasOwnPlaylists && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-white/80 flex items-center gap-2">
-                          <ListMusic className="w-4 h-4 text-orange-400" />
+                        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <RiPlayList2Fill className="w-4 h-4 text-orange-400" aria-hidden />
                           Your Playlists
                         </h3>
                         {isOwner && (
                           <Link href="/playlists">
-                            <button className="text-xs text-white/50 hover:text-white/80 transition-colors">
+                            <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                               Manage all
                             </button>
                           </Link>
@@ -1146,32 +1193,32 @@ export default function ProfilePage() {
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-colors"
+                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors"
                           >
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/80 to-rose-500/80 flex items-center justify-center flex-shrink-0">
-                              <ListMusic className="w-5 h-5 text-white" />
+                              <RiPlayList2Fill className="w-5 h-5 text-foreground" aria-hidden />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-white truncate group-hover:text-orange-400 transition-colors">
+                              <h4 className="font-medium text-foreground truncate group-hover:text-orange-400 transition-colors">
                                 {playlist.name}
                               </h4>
-                              <div className="flex items-center gap-2 text-xs text-white/40">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <span>{playlist.itemCount} items</span>
                                 <span>•</span>
                                 {playlist.isPublic ? (
                                   <span className="flex items-center gap-0.5">
-                                    <Globe className="w-3 h-3" />
+                                    <RiGlobalLine className="w-3 h-3" aria-hidden />
                                     Public
                                   </span>
                                 ) : (
                                   <span className="flex items-center gap-0.5">
-                                    <Lock className="w-3 h-3" />
+                                    <RiLockLine className="w-3 h-3" aria-hidden />
                                     Private
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                            <RiArrowRightLine className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" aria-hidden />
                           </Link>
                         ))}
                       </div>
@@ -1181,12 +1228,12 @@ export default function ProfilePage() {
                   {hasSavedPlaylists && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-white/80 flex items-center gap-2">
-                          <Bookmark className="w-4 h-4 text-orange-400" />
+                        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <RiPlayList2Fill className="w-4 h-4 text-orange-400" aria-hidden />
                           Saved Playlists
                         </h3>
                         <Link href="/playlists">
-                          <button className="text-xs text-white/50 hover:text-white/80 transition-colors">
+                          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                             View all
                           </button>
                         </Link>
@@ -1196,29 +1243,29 @@ export default function ProfilePage() {
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-colors"
+                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors"
                           >
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/40 to-rose-500/40 flex items-center justify-center flex-shrink-0">
-                              <ListMusic className="w-5 h-5 text-white" />
+                              <RiPlayList2Fill className="w-5 h-5 text-foreground" aria-hidden />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-white truncate group-hover:text-orange-400 transition-colors">
+                              <h4 className="font-medium text-foreground truncate group-hover:text-orange-400 transition-colors">
                                 {playlist.name}
                               </h4>
-                              <div className="flex items-center gap-2 text-xs text-white/40">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <span>{playlist.itemCount} items</span>
                                 {playlist.isPublic ? (
                                   <>
                                     <span>•</span>
                                     <span className="flex items-center gap-0.5">
-                                      <Globe className="w-3 h-3" />
+                                      <RiGlobalLine className="w-3 h-3" aria-hidden />
                                       Public
                                     </span>
                                   </>
                                 ) : null}
                               </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                            <RiArrowRightLine className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" aria-hidden />
                           </Link>
                         ))}
                       </div>
@@ -1233,20 +1280,29 @@ export default function ProfilePage() {
           {isOwner && (
             <TabsContent value="bookmarks" className="mt-4">
               {loadingBookmarks ? (
-                <div className="flex justify-center py-16">
-                  <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                <div className="space-y-4 py-8 animate-pulse">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="rounded-2xl bg-card border border-border p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-muted" />
+                        <div className="h-4 bg-muted rounded w-32" />
+                      </div>
+                      <div className="h-4 bg-muted rounded w-full mb-2" />
+                      <div className="h-4 bg-muted rounded w-5/6" />
+                    </div>
+                  ))}
                 </div>
               ) : bookmarks.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                    <Bookmark className="w-6 h-6 text-white/20" />
+                  <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+                    <RiBookmarkLine className="w-6 h-6 text-muted-foreground" aria-hidden />
                   </div>
-                  <p className="font-medium text-white mb-1">No Saved Posts</p>
-                  <p className="text-sm text-white/40 max-w-xs mx-auto">
+                  <p className="font-medium text-foreground mb-1">No Saved Posts</p>
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                     Posts you bookmark will appear here for easy access.
                   </p>
                   <Link href="/community">
-                    <Button size="sm" className="mt-4 bg-orange-500 hover:bg-orange-600 rounded-full px-6">
+                    <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
                       Explore Feed
                     </Button>
                   </Link>

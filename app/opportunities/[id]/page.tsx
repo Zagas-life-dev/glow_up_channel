@@ -1,115 +1,76 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { notFound, useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  Calendar, 
-  MapPin, 
-  Target, 
-  Clock, 
-  Heart,
-  Bookmark,
-  Share2,
-  Building,
-  DollarSign,
-  GraduationCap,
-  Briefcase,
-  CheckCircle2,
-  Loader2,
-  Users,
-  FileText
-} from 'lucide-react'
+import {
+  RiArrowLeftLine,
+  RiExternalLinkLine,
+  RiCalendarLine,
+  RiMapPinLine,
+  RiFocus3Line,
+  RiTimeLine,
+  RiMoneyDollarCircleLine,
+  RiBookLine,
+  RiBriefcaseLine,
+  RiCheckboxCircleLine,
+  RiGroupLine,
+  RiFileLine,
+} from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
+import ErrorState from '@/components/error-state'
 import AuthGuard from '@/components/auth-guard'
 import { cleanUrl } from '@/lib/url-utils'
-import { cn } from '@/lib/utils'
-import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 import { trackContentView } from '@/lib/tracking'
 
-type OpportunityPageProps = {
-  params: Promise<{
-    id: string
-  }>
-}
+type OpportunityPageProps = { params: Promise<{ id: string }> }
 
 function OpportunityPageContent({ params }: OpportunityPageProps) {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [opportunity, setOpportunity] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
 
   useEffect(() => {
-    const loadParams = async () => {
-      const resolvedParams = await params
-      setId(resolvedParams.id)
-    }
+    const loadParams = async () => { const r = await params; setId(r.id) }
     loadParams()
   }, [params])
 
-  useEffect(() => {
+  const getOpportunity = useCallback(async () => {
     if (!id) return
+    setLoading(true)
+    setError(false)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/${id}`, { cache: 'no-store' })
+      if (!response.ok) { setError(true); return }
+      const result = await response.json()
+      if (!result.success) { setError(true); return }
+      setOpportunity(result.data.opportunity)
+      if (isAuthenticated) trackContentView('opportunity', id)
+    } catch { setError(true) } finally { setLoading(false) }
+  }, [id, isAuthenticated])
 
-    const getOpportunity = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/${id}`, {
-          cache: 'no-store'
-        })
-        
-        if (!response.ok) {
-          notFound()
-        }
-        
-        const result = await response.json()
-        
-        if (!result.success) {
-          notFound()
-        }
-        
-        setOpportunity(result.data.opportunity)
-        
-        // Track content view for active user activity (fire-and-forget, won't throw errors)
-        if (isAuthenticated) {
-          trackContentView('opportunity', id)
-        }
-      } catch (error) {
-        console.error('Error fetching opportunity:', error)
-        notFound()
-      } finally {
-        setLoading(false)
-      }
-    }
+  useEffect(() => { if (id) getOpportunity() }, [id, getOpportunity])
 
-    getOpportunity()
-  }, [id])
-
-  // Show skeleton immediately while loading
-  if (loading) {
-    return <ContentDetailSkeleton />
+  if (loading) return <ContentDetailSkeleton />
+  if (error || !opportunity) {
+    return (
+      <div className="min-h-screen bg-page pb-20">
+        <ErrorState isNetworkError onRetry={getOpportunity} />
+      </div>
+    )
   }
 
-  if (!opportunity) {
-    notFound()
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   const getLocationString = () => {
     if (!opportunity.location) return 'Location TBD'
@@ -118,349 +79,187 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
     return parts.join(', ') || 'Location TBD'
   }
 
+  const metaParts = []
+  if (opportunity.dates?.applicationDeadline) metaParts.push(`Due ${formatDate(opportunity.dates.applicationDeadline)}`)
+  if (opportunity.location) metaParts.push(getLocationString())
+  if (opportunity.financial?.isPaid) metaParts.push(opportunity.financial.amount ? `${opportunity.financial.currency || 'NGN'} ${opportunity.financial.amount}` : 'Paid')
+  const metaLine = metaParts.join(' · ')
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-20 md:pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 text-white/60" />
-            </button>
-            <h1 className="text-lg font-semibold text-white">Opportunity</h1>
-            <div className="w-9" />
+    <div className="min-h-screen bg-page pb-28">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 bg-page/95 backdrop-blur-md border-b border-border">
+        <div className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 h-14 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="p-2 -ml-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <RiArrowLeftLine className="h-5 w-5" />
+          </button>
+          <span className="text-[15px] font-semibold text-foreground">Opportunity</span>
+          <div className="w-9" />
+        </div>
+      </header>
+
+      {/* Content: narrow on mobile, wider + optional sidebar on xl */}
+      <main className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 border-x border-border min-h-screen xl:grid xl:grid-cols-[1fr_320px] xl:gap-12 2xl:gap-16">
+        <div className="min-w-0">
+        {/* Author row – Instagram/Twitter */}
+        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center flex-shrink-0">
+            <RiFocus3Line className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-foreground truncate">
+                {opportunity.organization || opportunity.provider || 'Organization'}
+              </span>
+              {opportunity.promotion?.packageType === 'spotlight' && (
+                <Badge className="bg-primary/20 text-primary border-0 text-[10px] px-1.5 py-0">Spotlight</Badge>
+              )}
+            </div>
+            <p className="text-[13px] text-muted-foreground">Opportunity</p>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        {/* Main Card */}
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
-          {/* Header */}
-          <div className="p-4 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-violet-500 flex items-center justify-center flex-shrink-0">
-                <Target className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-semibold text-white truncate">{opportunity.organization || opportunity.provider || 'Organization'}</h2>
-                  {opportunity.promotion?.packageType === 'spotlight' && (
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs px-2 py-0.5">
-                      SPOTLIGHT
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-white/50">Opportunity</p>
-              </div>
+        {/* Title + meta – like tweet body */}
+        <div className="px-4 pb-4">
+          <h1 className="text-xl font-bold text-foreground leading-snug break-words">
+            {opportunity.title}
+          </h1>
+          {metaLine && (
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {metaLine}
+            </p>
+          )}
+          {opportunity.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {opportunity.tags.map((tag: string, i: number) => (
+                <span key={i} className="text-[12px] text-primary font-medium">#{tag}</span>
+              ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {/* Title */}
-            <h3 className="text-2xl font-bold text-white leading-tight">
-              {opportunity.title}
-            </h3>
+        {/* Engagement bar – Instagram/Twitter/Threads */}
+        <div className="px-4 py-3 flex items-center gap-1 border-y border-border">
+          {id && (
+            <EngagementActions
+              type="opportunities"
+              id={id}
+              className="flex-shrink-0"
+              likeCount={opportunity.metrics?.likeCount ?? 0}
+              onPostClick={() => setShowShareComposer(true)}
+            />
+          )}
+        </div>
 
-            {/* Meta Info Row */}
-            <div className="flex flex-wrap items-center gap-3 text-sm text-white/60">
-              {opportunity.dates?.applicationDeadline && (
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  <span>Due {formatDate(opportunity.dates.applicationDeadline)}</span>
-                </div>
-              )}
-              {opportunity.location && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
-                  <span>{getLocationString()}</span>
-                </div>
-              )}
-              {opportunity.financial?.isPaid && (
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4" />
-                  <span>{opportunity.financial.amount ? `${opportunity.financial.currency || 'NGN'} ${opportunity.financial.amount}` : 'Paid'}</span>
-                </div>
+        {/* Body – plain sections, no heavy cards */}
+        <div className="px-4 py-5 space-y-6 text-[15px]">
+          {opportunity.description && (
+            <div>
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">{opportunity.description}</p>
+            </div>
+          )}
+
+          {opportunity.requirements && (
+            <div className="pt-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requirements</p>
+              <ul className="space-y-2 text-muted-foreground">
+                {opportunity.requirements.educationLevel && (
+                  <li className="flex gap-2"><RiBookLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Education:</strong> {opportunity.requirements.educationLevel}</span></li>
+                )}
+                {opportunity.requirements.careerStage && (
+                  <li className="flex gap-2"><RiBriefcaseLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Career:</strong> {opportunity.requirements.careerStage}</span></li>
+                )}
+                {opportunity.requirements.skills?.length > 0 && (
+                  <li className="flex gap-2"><RiCheckboxCircleLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Skills:</strong> {opportunity.requirements.skills.join(', ')}</span></li>
+                )}
+                {opportunity.requirements.experience && (
+                  <li className="flex gap-2"><RiBriefcaseLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Experience:</strong> {opportunity.requirements.experience}</span></li>
+                )}
+                {opportunity.requirements.ageRange && (
+                  <li className="flex gap-2"><RiGroupLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Age:</strong> {opportunity.requirements.ageRange}</span></li>
+                )}
+                {opportunity.requirements.citizenship && (
+                  <li className="flex gap-2"><RiMapPinLine className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span><strong className="text-foreground">Citizenship:</strong> {opportunity.requirements.citizenship}</span></li>
+                )}
+                {opportunity.requirements.other && (
+                  <li className="pt-2 border-t border-border"><span className="font-medium text-foreground/90">Other</span><p className="text-muted-foreground mt-1 whitespace-pre-wrap">{opportunity.requirements.other}</p></li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {opportunity.financial && (
+            <div className="pt-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Financial</p>
+              <p className="text-muted-foreground">Paid: {opportunity.financial.isPaid ? 'Yes' : 'No'}{opportunity.financial.amount && ` · ${opportunity.financial.currency || 'NGN'} ${opportunity.financial.amount}`}</p>
+              {opportunity.financial.benefits?.length > 0 && (
+                <ul className="list-disc list-inside mt-1.5 text-muted-foreground text-sm space-y-0.5">
+                  {opportunity.financial.benefits.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                </ul>
               )}
             </div>
+          )}
 
-            {/* Tags */}
-            {opportunity.tags && opportunity.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {opportunity.tags.map((tag: string, index: number) => (
-                  <Badge 
-                    key={index} 
-                    variant="outline"
-                    className="bg-orange-500/10 text-orange-400 border-orange-500/20 text-xs px-2 py-0.5"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
+          {opportunity.dates && (
+            <div className="pt-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Important dates</p>
+              <ul className="text-muted-foreground text-sm space-y-1">
+                {opportunity.dates.applicationDeadline && <li className="flex items-center gap-2"><RiTimeLine className="w-4 h-4 text-primary" /> Deadline: {formatDate(opportunity.dates.applicationDeadline)}</li>}
+                {opportunity.dates.startDate && <li className="flex items-center gap-2"><RiCalendarLine className="w-4 h-4 text-primary" /> Start: {formatDate(opportunity.dates.startDate)}</li>}
+                {opportunity.dates.endDate && <li className="flex items-center gap-2"><RiCalendarLine className="w-4 h-4 text-primary" /> End: {formatDate(opportunity.dates.endDate)}</li>}
+                {opportunity.dates.duration && <li className="flex items-center gap-2"><RiTimeLine className="w-4 h-4 text-primary" /> Duration: {opportunity.dates.duration}</li>}
+              </ul>
+            </div>
+          )}
 
-            {/* Description */}
-            {opportunity.description && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Description
-                </h4>
-                <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">
-                  {opportunity.description}
-                </p>
-              </div>
-            )}
+          {opportunity.location && (
+            <div className="pt-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Location</p>
+              <p className="text-muted-foreground">
+                {opportunity.location.isRemote ? 'Remote' : [opportunity.location.city, opportunity.location.country].filter(Boolean).join(', ') || '—'}
+                {opportunity.location.address && <span className="block mt-1">{opportunity.location.address}</span>}
+              </p>
+            </div>
+          )}
+        </div>
+        </div>
 
-            {/* Requirements */}
-            {opportunity.requirements && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Requirements
-                </h4>
-                <div className="space-y-3 text-sm text-white/70 pl-6">
-                  {opportunity.requirements.educationLevel && (
-                    <div className="flex items-start gap-2">
-                      <GraduationCap className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Education Level: </span>
-                        <span>{opportunity.requirements.educationLevel}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.careerStage && (
-                    <div className="flex items-start gap-2">
-                      <Briefcase className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Career Stage: </span>
-                        <span>{opportunity.requirements.careerStage}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.skills && opportunity.requirements.skills.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Skills: </span>
-                        <span>{opportunity.requirements.skills.join(', ')}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.experience && (
-                    <div className="flex items-start gap-2">
-                      <Briefcase className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Experience: </span>
-                        <span>{opportunity.requirements.experience}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.ageRange && (
-                    <div className="flex items-start gap-2">
-                      <Users className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Age Range: </span>
-                        <span>{opportunity.requirements.ageRange}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.citizenship && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-white/90">Citizenship: </span>
-                        <span>{opportunity.requirements.citizenship}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.requirements.other && (
-                    <div className="mt-4 pt-3 border-t border-white/[0.06]">
-                      <div className="flex items-start gap-2">
-                        <FileText className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <span className="font-medium text-white/90 block mb-1">Other: </span>
-                          <p className="text-white/70 leading-relaxed whitespace-pre-wrap">
-                            {opportunity.requirements.other}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Financial Details */}
-            {opportunity.financial && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Financial Information
-                </h4>
-                <div className="space-y-1.5 text-sm text-white/70 pl-6">
-                  <div>
-                    <span className="font-medium text-white/90">Paid Opportunity: </span>
-                    <span>{opportunity.financial.isPaid ? 'Yes' : 'No'}</span>
-                  </div>
-                  {opportunity.financial.amount && (
-                    <div>
-                      <span className="font-medium text-white/90">Amount: </span>
-                      <span>{opportunity.financial.currency || 'NGN'} {opportunity.financial.amount}</span>
-                    </div>
-                  )}
-                  {opportunity.financial.benefits && opportunity.financial.benefits.length > 0 && (
-                    <div className="mt-2">
-                      <span className="font-medium text-white/90 block mb-1">Benefits: </span>
-                      <ul className="list-disc list-inside space-y-0.5">
-                        {opportunity.financial.benefits.map((benefit: string, index: number) => (
-                          <li key={index}>{benefit}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Dates */}
-            {opportunity.dates && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Important Dates
-                </h4>
-                <div className="space-y-1.5 text-sm text-white/70 pl-6">
-                  {opportunity.dates.applicationDeadline && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-white/40" />
-                      <div>
-                        <span className="font-medium text-white/90">Application Deadline: </span>
-                        <span>{formatDate(opportunity.dates.applicationDeadline)}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.dates.startDate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-white/40" />
-                      <div>
-                        <span className="font-medium text-white/90">Start Date: </span>
-                        <span>{formatDate(opportunity.dates.startDate)}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.dates.endDate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-white/40" />
-                      <div>
-                        <span className="font-medium text-white/90">End Date: </span>
-                        <span>{formatDate(opportunity.dates.endDate)}</span>
-                      </div>
-                    </div>
-                  )}
-                  {opportunity.dates.duration && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-white/40" />
-                      <div>
-                        <span className="font-medium text-white/90">Duration: </span>
-                        <span>{opportunity.dates.duration}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Location */}
-            {opportunity.location && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Location
-                </h4>
-                <div className="space-y-1.5 text-sm text-white/70 pl-6">
-                  {opportunity.location.isRemote ? (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-white/40" />
-                      <span className="font-medium text-white/90">Remote Opportunity</span>
-                    </div>
-                  ) : (
-                    <>
-                      {opportunity.location.city && (
-                        <div>
-                          <span className="font-medium text-white/90">City: </span>
-                          <span>{opportunity.location.city}</span>
-                        </div>
-                      )}
-                      {opportunity.location.province && (
-                        <div>
-                          <span className="font-medium text-white/90">Province/State: </span>
-                          <span>{opportunity.location.province}</span>
-                        </div>
-                      )}
-                      {opportunity.location.country && (
-                        <div>
-                          <span className="font-medium text-white/90">Country: </span>
-                          <span>{opportunity.location.country}</span>
-                        </div>
-                      )}
-                      {opportunity.location.address && (
-                        <div className="mt-2 pt-2 border-t border-white/[0.06]">
-                          <span className="font-medium text-white/90">Address: </span>
-                          <span>{opportunity.location.address}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="pt-4 border-t border-white/[0.06]">
-              <div className="flex items-center justify-between mb-4">
-                {id && (
-                  <EngagementActions 
-                    type="opportunities" 
-                    id={id} 
-                    externalUrl={opportunity.url}
-                    className="flex-shrink-0"
-                  />
-                )}
-                {isAuthenticated && (
-                  <Button
-                    onClick={() => setShowShareComposer(true)}
-                    variant="outline"
-                    size="sm"
-                    className="border-white/10 text-white/70 hover:text-orange-500 hover:bg-orange-500/10 rounded-xl"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Post About This
-                  </Button>
-                )}
-              </div>
-              {opportunity.url && (
+        {/* CTA: sticky bottom on mobile/tablet, sticky sidebar on xl */}
+        {opportunity.url && (
+          <>
+            <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
+              <Button
+                asChild
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]"
+              >
+                <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                  Apply now
+                  <RiExternalLinkLine className="w-4 h-4" />
+                </a>
+              </Button>
+            </div>
+            <aside className="hidden xl:block pt-4">
+              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <Button
                   asChild
                   size="lg"
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold"
                 >
                   <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                    Apply Now
-                    <ExternalLink className="w-4 h-4" />
+                    Apply now
+                    <RiExternalLinkLine className="w-4 h-4" />
                   </a>
                 </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+              </div>
+            </aside>
+          </>
+        )}
+      </main>
 
-      {/* Content Share Composer */}
       {showShareComposer && opportunity && (
         <ContentShareComposer
           content={{
@@ -473,10 +272,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
             dates: opportunity.dates,
             financial: opportunity.financial
           }}
-          onPostCreated={() => {
-            setShowShareComposer(false)
-            toast.success('Post created!')
-          }}
+          onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
           onClose={() => setShowShareComposer(false)}
         />
       )}
@@ -485,9 +281,5 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
 }
 
 export default function OpportunityPage({ params }: OpportunityPageProps) {
-  return (
-    <AuthGuard>
-      <OpportunityPageContent params={params} />
-    </AuthGuard>
-  )
+  return <AuthGuard><OpportunityPageContent params={params} /></AuthGuard>
 }

@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header Skeleton */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -16,7 +16,7 @@ export default function Loading() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters Skeleton */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <div className="h-12 w-80 bg-gray-200 rounded-xl animate-pulse"></div>
             <div className="flex items-center gap-3">
@@ -34,7 +34,7 @@ export default function Loading() {
         {/* Resources Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-white rounded-2xl shadow-lg p-6 animate-pulse">
+            <div key={index} className="bg-card rounded-2xl shadow-lg p-6 animate-pulse">
               <div className="flex items-start justify-between mb-3">
                 <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
                 <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>

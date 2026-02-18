@@ -8,9 +8,9 @@ import {
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
-    <NextThemesProvider 
-      {...props} 
-      enableSystem={false}
+    <NextThemesProvider
+      {...props}
+      enableSystem={props.enableSystem ?? true}
       disableTransitionOnChange
     >
       {children}

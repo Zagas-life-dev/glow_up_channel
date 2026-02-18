@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
-import { Dot } from "lucide-react"
-
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { cn } from "@/lib/utils"
 
 const InputOTP = React.forwardRef<
@@ -63,7 +62,7 @@ const InputOTPSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
   <div ref={ref} role="separator" {...props}>
-    <Dot />
+    <FlaticonIcon name="circle" className="h-2 w-2" aria-hidden />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"

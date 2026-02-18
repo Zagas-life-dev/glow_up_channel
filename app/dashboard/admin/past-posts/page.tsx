@@ -164,7 +164,7 @@ export default function PastPostsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-6">
             You need admin or super admin privileges to access this page.
           </p>
@@ -210,13 +210,13 @@ export default function PastPostsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Archive className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Past Posts</h1>
+                <h1 className="text-2xl font-bold text-foreground">Past Posts</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -355,7 +355,7 @@ export default function PastPostsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-lg font-semibold text-gray-900 mb-2">Error</p>
+              <p className="text-lg font-semibold text-foreground mb-2">Error</p>
               <p className="text-gray-600 mb-4">{error}</p>
               <Button onClick={fetchPosts}>Try Again</Button>
             </CardContent>
@@ -373,7 +373,7 @@ export default function PastPostsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-semibold text-gray-900 mb-2">No Past Posts Found</p>
+              <p className="text-lg font-semibold text-foreground mb-2">No Past Posts Found</p>
               <p className="text-gray-600">
                 {searchQuery
                   ? `No ${getCollectionName(activeTab).toLowerCase()} match your search criteria.`
@@ -390,7 +390,7 @@ export default function PastPostsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{post.title || 'Untitled'}</h3>
+                          <h3 className="text-lg font-semibold text-foreground">{post.title || 'Untitled'}</h3>
                           <Badge variant={post.pastStatus === 'expired' ? 'destructive' : 'secondary'}>
                             {post.pastStatus === 'expired' ? 'Expired' : 'Moved'}
                           </Badge>

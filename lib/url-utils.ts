@@ -36,6 +36,9 @@ export function isValidObjectId(id: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(id)
 }
 
+/** Hostnames that are not real sites (browser flags, placeholders, etc.) - never use as links */
+const BOGUS_HOSTNAMES = ['automationcontrolled', 'automationcontrolled.']
+
 /**
  * Cleans URLs that have been incorrectly prefixed with route paths
  * Examples: 
@@ -49,6 +52,17 @@ export function isValidObjectId(id: string): boolean {
  */
 export function cleanUrl(url: string): string {
   if (!url) return url
+
+  // Reject known bogus hostnames (e.g. from browser automation flags mistaken as URLs)
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`)
+    const host = parsed.hostname?.toLowerCase() ?? ''
+    if (BOGUS_HOSTNAMES.some((b) => host === b || host.endsWith('.' + b))) {
+      return ''
+    }
+  } catch {
+    // ignore
+  }
   
   // If it already has a protocol, return as is
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {

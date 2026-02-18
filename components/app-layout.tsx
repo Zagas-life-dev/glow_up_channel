@@ -1,39 +1,73 @@
 "use client"
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { usePage } from '@/contexts/page-context'
 import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
+import LockedInIndicator from './locked-in-indicator'
 
 interface AppLayoutProps {
   children: ReactNode
 }
 
+const SIDEBAR_WIDTH_EXPANDED = 280
+const SIDEBAR_WIDTH_COLLAPSED = 72
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
   const { hideNavbar, hideFooter } = usePage()
-  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    setIsDesktop(mq.matches)
+    const fn = () => setIsDesktop(mq.matches)
+    mq.addEventListener('change', fn)
+    return () => mq.removeEventListener('change', fn)
+  }, [])
+
   const shouldShowNav = !hideNavbar && !hideFooter
   const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/signup') || 
                      pathname?.startsWith('/forgot-password') || pathname?.startsWith('/reset-password') ||
                      pathname?.startsWith('/verify-email') || pathname?.startsWith('/onboarding')
 
+  const sidebarWidth = sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED
+  // When collapsed, add a tiny extra gap between the sidebar rail and content
+  const contentMarginLeft = isDesktop
+    ? sidebarWidth + (sidebarCollapsed ? 8 : 0)
+    : 0
+
   // Full screen pages (no nav)
   if (!shouldShowNav || isAuthPage) {
-    return <div className="min-h-screen bg-[#0a0a0a] overflow-x-hidden w-full max-w-full">{children}</div>
+    return (
+      <div className="min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full">
+        {children}
+        <LockedInIndicator />
+      </div>
+    )
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden w-full max-w-full">
+    <div className="flex min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-[280px] flex-shrink-0 fixed left-0 top-0 bottom-0 z-40">
-        <AppSidebar />
+      <aside
+        className="hidden lg:block flex-shrink-0 fixed left-0 top-0 bottom-0 z-40 transition-[width] duration-300 ease-in-out"
+        style={{ width: sidebarWidth }}
+      >
+        <AppSidebar
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
+        />
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-[280px] min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
+      <div
+        className="flex-1 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden transition-[margin-left] duration-300 ease-in-out"
+        style={{ marginLeft: contentMarginLeft }}
+      >
         {/* Top Bar */}
         <AppTopBar />
         
@@ -45,6 +79,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <AppBottomNav />
+      <LockedInIndicator />
     </div>
   )
 }

@@ -253,7 +253,7 @@ export default function UserManagementPage() {
       case 'super_admin':
         return <Badge className="bg-purple-100 text-purple-800"><Crown className="w-3 h-3 mr-1" />Super Admin</Badge>
       case 'admin':
-        return <Badge className="bg-blue-100 text-blue-800"><Shield className="w-3 h-3 mr-1" />Admin</Badge>
+        return <Badge className="bg-primary/10 text-foreground"><Shield className="w-3 h-3 mr-1" />Admin</Badge>
       case 'opportunity_poster':
         return <Badge className="bg-green-100 text-green-800">Provider</Badge>
       default:
@@ -303,8 +303,8 @@ export default function UserManagementPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
           <p className="text-lg text-gray-600">Loading users...</p>
         </div>
@@ -323,7 +323,7 @@ export default function UserManagementPage() {
                 <Users className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+                <h1 className="text-2xl font-bold text-foreground">User Management</h1>
                 <p className="text-gray-600">Manage users, admins, and super admins</p>
               </div>
             </div>
@@ -452,7 +452,7 @@ export default function UserManagementPage() {
                         <Users className="w-6 h-6 text-gray-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-foreground">
                           {user.firstName} {user.lastName}
                         </h3>
                         <p className="text-sm text-gray-600 flex items-center">

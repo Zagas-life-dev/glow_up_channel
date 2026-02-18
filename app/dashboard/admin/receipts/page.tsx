@@ -107,7 +107,7 @@ export default function AdminReceiptsPage() {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800'
       case 'awaiting_verification': return 'bg-yellow-100 text-yellow-800'
-      case 'payment_uploaded': return 'bg-blue-100 text-blue-800'
+      case 'payment_uploaded': return 'bg-primary/10 text-foreground'
       case 'failed': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -116,7 +116,7 @@ export default function AdminReceiptsPage() {
   const getPackageColor = (packageType: string) => {
     switch (packageType) {
       case 'spotlight': return 'bg-purple-100 text-purple-800'
-      case 'feature': return 'bg-blue-100 text-blue-800'
+      case 'feature': return 'bg-primary/10 text-foreground'
       case 'launch': return 'bg-orange-100 text-orange-800'
       case 'custom': return 'bg-pink-100 text-pink-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -186,7 +186,7 @@ export default function AdminReceiptsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-6">
             You need admin or super admin privileges to access this page.
           </p>
@@ -205,7 +205,7 @@ export default function AdminReceiptsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Error</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <Button asChild>
             <Link href="/dashboard">Go to Dashboard</Link>
@@ -219,7 +219,7 @@ export default function AdminReceiptsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading receipts...</p>
         </div>
       </div>
@@ -229,10 +229,10 @@ export default function AdminReceiptsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="bg-card border-b border-gray-200 px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Payment Receipts</h1>
+            <h1 className="text-2xl font-bold text-foreground">Payment Receipts</h1>
             <p className="text-gray-600">View and manage payment receipts from providers</p>
           </div>
           <div className="flex items-center space-x-4">
@@ -258,7 +258,7 @@ export default function AdminReceiptsPage() {
           <Card>
             <CardContent className="text-center py-12">
               <FileImage className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No receipts found</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">No receipts found</h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'No receipts match your search criteria.' : 'No payment receipts have been uploaded yet.'}
               </p>
@@ -276,7 +276,7 @@ export default function AdminReceiptsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                      <CardTitle className="text-lg font-semibold text-foreground mb-2">
                         {receipt.promotion?.title || 'Untitled Promotion'}
                       </CardTitle>
                       <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -341,23 +341,23 @@ export default function AdminReceiptsPage() {
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Promotion Title</label>
-                                <p className="text-sm text-gray-900">{receipt.promotion?.title || 'Untitled Promotion'}</p>
+                                <p className="text-sm text-foreground">{receipt.promotion?.title || 'Untitled Promotion'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Payment Reference</label>
-                                <p className="text-sm text-gray-900 font-mono">{receipt.paymentReference || 'N/A'}</p>
+                                <p className="text-sm text-foreground font-mono">{receipt.paymentReference || 'N/A'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Payment Amount</label>
-                                <p className="text-sm text-gray-900 font-semibold text-green-600">{formatCurrency(receipt.amount, receipt.currency)}</p>
+                                <p className="text-sm text-foreground font-semibold text-green-600">{formatCurrency(receipt.amount, receipt.currency)}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Provider</label>
-                                <p className="text-sm text-gray-900">{receipt.promotion?.user?.firstName || ''} {receipt.promotion?.user?.lastName || ''}</p>
+                                <p className="text-sm text-foreground">{receipt.promotion?.user?.firstName || ''} {receipt.promotion?.user?.lastName || ''}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Email</label>
-                                <p className="text-sm text-gray-900">{receipt.promotion?.user?.email || 'N/A'}</p>
+                                <p className="text-sm text-foreground">{receipt.promotion?.user?.email || 'N/A'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Package Type</label>

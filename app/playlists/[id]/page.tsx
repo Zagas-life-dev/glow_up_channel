@@ -13,36 +13,36 @@ import PlaylistModal from '@/components/playlist-modal'
 import InviteCollaboratorModal from '@/components/invite-collaborator-modal'
 import PlaylistDetailSkeleton from '@/components/skeletons/playlist-detail-skeleton'
 import {
-  ListMusic,
-  ArrowLeft,
-  Globe,
-  Lock,
-  Hash,
-  Edit,
-  Trash2,
-  Target,
-  Briefcase,
-  Calendar,
-  BookOpen,
-  MoreVertical,
-  Share2,
-  Clock,
-  Users,
-  UserPlus,
-  Crown,
-  Bookmark,
-  BookmarkCheck,
-  Loader2,
-  MapPin,
-  Building,
-  ExternalLink,
-  X,
-  RefreshCw,
-  Grid3x3,
-  List,
-  Play,
-  Sparkles
-} from 'lucide-react'
+  RiArrowLeftLine,
+  RiGlobalLine,
+  RiLockLine,
+  RiHashtag,
+  RiPencilLine,
+  RiDeleteBinLine,
+  RiFocus3Line,
+  RiBriefcaseLine,
+  RiCalendarLine,
+  RiBookLine,
+  RiMore2Line,
+  RiShareLine,
+  RiTimeLine,
+  RiGroupLine,
+  RiUserAddLine,
+  RiVipCrownLine,
+  RiBookmarkLine,
+  RiBookmarkFill,
+  RiLoader4Line,
+  RiMapPinLine,
+  RiBuildingLine,
+  RiExternalLinkLine,
+  RiCloseLine,
+  RiRefreshLine,
+  RiDashboardLine,
+  RiListUnordered,
+  RiPlayLine,
+  RiStarLine,
+  RiPlayList2Fill,
+} from 'react-icons/ri'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,10 +53,10 @@ import {
 import { toast } from 'sonner'
 
 const typeConfig = {
-  opportunity: { icon: Target, color: 'orange', label: 'Opportunity', path: 'opportunities', gradient: 'from-orange-500/20 to-orange-600/10' },
-  job: { icon: Briefcase, color: 'blue', label: 'Job', path: 'jobs', gradient: 'from-blue-500/20 to-blue-600/10' },
-  event: { icon: Calendar, color: 'emerald', label: 'Event', path: 'events', gradient: 'from-emerald-500/20 to-emerald-600/10' },
-  resource: { icon: BookOpen, color: 'violet', label: 'Resource', path: 'resources', gradient: 'from-violet-500/20 to-violet-600/10' }
+  opportunity: { icon: RiFocus3Line, color: 'orange', label: 'Opportunity', path: 'opportunities', gradient: 'from-orange-500/20 to-orange-600/10' },
+  job: { icon: RiBriefcaseLine, color: 'primary', label: 'Job', path: 'jobs', gradient: 'from-primary/20 to-primary/10' },
+  event: { icon: RiCalendarLine, color: 'emerald', label: 'Event', path: 'events', gradient: 'from-emerald-500/20 to-emerald-600/10' },
+  resource: { icon: RiBookLine, color: 'violet', label: 'Resource', path: 'resources', gradient: 'from-violet-500/20 to-violet-600/10' }
 }
 
 type ViewMode = 'grid' | 'list'
@@ -203,16 +203,16 @@ export default function PlaylistDetailPage() {
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-            <ListMusic className="w-10 h-10 text-white/20" />
+          <div className="w-20 h-20 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+            <RiPlayList2Fill className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Playlist Not Found</h2>
-          <p className="text-white/50 text-sm mb-6">This playlist may have been deleted or is private.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Playlist Not Found</h2>
+          <p className="text-muted-foreground text-sm mb-6">This playlist may have been deleted or is private.</p>
           <Link href="/playlists">
-            <Button variant="outline" className="border-white/10 text-white rounded-full px-6">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <Button variant="outline" className="border-border text-foreground rounded-full px-6">
+              <RiArrowLeftLine className="w-4 h-4 mr-2" />
               Back to Playlists
             </Button>
           </Link>
@@ -230,7 +230,7 @@ export default function PlaylistDetailPage() {
   }, {} as Record<string, typeof playlist.items>)
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-24 lg:pb-8">
+    <div className="min-h-screen bg-page pb-24 lg:pb-8">
       {/* Hero Section with Gradient Background */}
       <div className="relative overflow-hidden">
         {/* Gradient Background */}
@@ -238,15 +238,15 @@ export default function PlaylistDetailPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
         
         {/* Sticky Header */}
-        <div className="sticky top-0 z-50 bg-[#0a0a0a]/60 backdrop-blur-2xl border-b border-white/[0.08]">
+        <div className="sticky top-0 z-50 bg-page/60 backdrop-blur-2xl border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
             <div className="flex items-center justify-between py-4">
               <Link 
                 href="/playlists" 
-                className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors group"
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
               >
-                <div className="p-1.5 rounded-lg bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors">
-                  <ArrowLeft className="w-4 h-4" />
+                <div className="p-1.5 rounded-lg bg-muted group-hover:bg-card/[0.1] transition-colors">
+                  <RiArrowLeftLine className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-medium hidden sm:inline">Back</span>
               </Link>
@@ -257,9 +257,9 @@ export default function PlaylistDetailPage() {
                   disabled={isRefreshing}
                   variant="ghost"
                   size="sm"
-                  className="text-white/60 hover:text-white hover:bg-white/[0.05] rounded-full"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
                 >
-                  <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                  <RiRefreshLine className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
                 </Button>
 
                 {isOwner && (
@@ -268,32 +268,32 @@ export default function PlaylistDetailPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-white/60 hover:text-white hover:bg-white/[0.05] rounded-full"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
                       >
-                        <MoreVertical className="w-5 h-5" />
+                        <RiMore2Line className="w-5 h-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#141414] border-white/[0.08] rounded-xl p-1">
+                    <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl p-1">
                       <DropdownMenuItem
                         onClick={() => setShowEditModal(true)}
-                        className="text-white hover:bg-white/[0.05] cursor-pointer rounded-lg"
+                        className="text-foreground hover:bg-muted cursor-pointer rounded-lg"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
+                        <RiPencilLine className="w-4 h-4 mr-2" />
                         Edit Playlist
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setShowInviteModal(true)}
-                        className="text-white hover:bg-white/[0.05] cursor-pointer rounded-lg"
+                        className="text-foreground hover:bg-muted cursor-pointer rounded-lg"
                       >
-                        <UserPlus className="w-4 h-4 mr-2" />
+                        <RiUserAddLine className="w-4 h-4 mr-2" />
                         Invite Collaborators
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-white/[0.06]" />
+                      <DropdownMenuSeparator className="bg-muted" />
                       <DropdownMenuItem
                         onClick={handleDelete}
                         className="text-red-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer rounded-lg"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <RiDeleteBinLine className="w-4 h-4 mr-2" />
                         Delete Playlist
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -309,13 +309,13 @@ export default function PlaylistDetailPage() {
           <div className="flex flex-col md:flex-row items-start md:items-end gap-6 md:gap-8">
             {/* Cover Art */}
             <div className="relative group">
-              <div className="w-48 h-48 md:w-64 md:h-64 rounded-3xl bg-gradient-to-br from-orange-500/30 via-violet-500/20 to-orange-500/30 border border-white/[0.1] flex items-center justify-center shadow-2xl shadow-orange-500/20 transition-transform group-hover:scale-[1.02]">
+              <div className="w-48 h-48 md:w-64 md:h-64 rounded-3xl bg-gradient-to-br from-orange-500/30 via-violet-500/20 to-orange-500/30 border border-border flex items-center justify-center shadow-2xl shadow-primary/20 transition-transform group-hover:scale-[1.02]">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-violet-500/20 rounded-3xl" />
-                <ListMusic className="w-24 h-24 md:w-32 md:h-32 text-orange-400 relative z-10" />
+                <RiPlayList2Fill className="w-24 h-24 md:w-32 md:h-32 text-orange-400 relative z-10" />
               </div>
               {playlist.items.length > 0 && (
-                <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center shadow-lg border-4 border-[#0a0a0a]">
-                  <Play className="w-5 h-5 text-white ml-0.5" />
+                <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-[#0a0a0a]">
+                  <RiPlayLine className="w-5 h-5 text-foreground ml-0.5" />
                 </div>
               )}
             </div>
@@ -325,54 +325,54 @@ export default function PlaylistDetailPage() {
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 {playlist.isPublic ? (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 backdrop-blur-sm">
-                    <Globe className="w-3 h-3 mr-1.5" />
+                    <RiGlobalLine className="w-3 h-3 mr-1.5" />
                     Public
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="border-white/30 text-white/70 bg-white/[0.05] backdrop-blur-sm">
-                    <Lock className="w-3 h-3 mr-1.5" />
+                  <Badge variant="outline" className="border-border text-muted-foreground bg-muted backdrop-blur-sm">
+                    <RiLockLine className="w-3 h-3 mr-1.5" />
                     Private
                   </Badge>
                 )}
                 {acceptedCollaborators.length > 0 && (
                   <Badge variant="outline" className="border-violet-500/40 text-violet-400 bg-violet-500/10 backdrop-blur-sm">
-                    <Users className="w-3 h-3 mr-1.5" />
+                    <RiGroupLine className="w-3 h-3 mr-1.5" />
                     {acceptedCollaborators.length + 1} Creators
                   </Badge>
                 )}
                 {(playlist.saveCount ?? 0) > 0 && (
-                  <Badge variant="outline" className="border-orange-500/40 text-orange-400 bg-orange-500/10 backdrop-blur-sm">
-                    <Bookmark className="w-3 h-3 mr-1.5" />
+                  <Badge variant="outline" className="border-orange-500/40 text-orange-400 bg-primary/10 backdrop-blur-sm">
+                    <RiBookmarkLine className="w-3 h-3 mr-1.5" />
                     {playlist.saveCount} saved
                   </Badge>
                 )}
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-3 leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-3 leading-tight">
                 {playlist.name}
               </h1>
               
               {playlist.description && (
-                <p className="text-white/70 mb-4 text-base md:text-lg leading-relaxed max-w-2xl">
+                <p className="text-muted-foreground mb-4 text-base md:text-lg leading-relaxed max-w-2xl">
                   {playlist.description}
                 </p>
               )}
 
-              <div className="flex items-center gap-4 text-sm text-white/50 mb-6 flex-wrap">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-foreground">
                     {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || '?').toUpperCase()}
                   </div>
                   <span className="font-medium">{playlist.createdBy.firstName || playlist.createdBy.email.split('@')[0]}</span>
                 </div>
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" />
+                  <RiStarLine className="w-4 h-4" />
                   {playlist.itemCount} items
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
+                  <RiTimeLine className="w-4 h-4" />
                   Updated {new Date(playlist.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
@@ -384,9 +384,9 @@ export default function PlaylistDetailPage() {
                     <Link
                       key={tag}
                       href={`/community?hashtag=${tag}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-orange-400 text-xs font-medium transition-colors border border-white/[0.08]"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted hover:bg-card/[0.1] text-orange-400 text-xs font-medium transition-colors border border-border"
                     >
-                      <Hash className="w-3 h-3" />
+                      <RiHashtag className="w-3 h-3" />
                       {tag}
                     </Link>
                   ))}
@@ -399,9 +399,9 @@ export default function PlaylistDetailPage() {
                   <Button 
                     onClick={handleShare} 
                     size="lg" 
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-full px-6 backdrop-blur-sm"
+                    className="bg-muted hover:bg-muted text-foreground border border-border rounded-full px-6 backdrop-blur-sm"
                   >
-                    <Share2 className="w-4 h-4 mr-2" />
+                    <RiShareLine className="w-4 h-4 mr-2" />
                     Share
                   </Button>
                 )}
@@ -413,16 +413,16 @@ export default function PlaylistDetailPage() {
                     className={cn(
                       "rounded-full px-6 transition-all backdrop-blur-sm",
                       isSaved 
-                        ? "bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/30" 
-                        : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        ? "bg-primary/20 hover:bg-primary/30 text-orange-400 border border-orange-500/30" 
+                        : "bg-muted hover:bg-muted text-foreground border border-border"
                     )}
                   >
                     {isSaving ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <RiLoader4Line className="w-4 h-4 mr-2 animate-spin" />
                     ) : isSaved ? (
-                      <BookmarkCheck className="w-4 h-4 mr-2" />
+                      <RiBookmarkFill className="w-4 h-4 mr-2" />
                     ) : (
-                      <Bookmark className="w-4 h-4 mr-2" />
+                      <RiBookmarkLine className="w-4 h-4 mr-2" />
                     )}
                     {isSaved ? 'Saved' : 'Save'}
                   </Button>
@@ -434,15 +434,15 @@ export default function PlaylistDetailPage() {
                       size="lg" 
                       className="bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30 rounded-full px-6 backdrop-blur-sm"
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
+                      <RiUserAddLine className="w-4 h-4 mr-2" />
                       Invite
                     </Button>
                     <Button 
                       onClick={() => setShowEditModal(true)} 
                       size="lg" 
-                      className="bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-full px-6 backdrop-blur-sm"
+                      className="bg-muted hover:bg-muted text-foreground border border-border rounded-full px-6 backdrop-blur-sm"
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <RiPencilLine className="w-4 h-4 mr-2" />
                       Edit
                     </Button>
                   </>
@@ -457,10 +457,10 @@ export default function PlaylistDetailPage() {
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
         {/* Collaborators Section */}
         {(acceptedCollaborators.length > 0 || isOwner) && (
-          <div className="mb-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 backdrop-blur-sm">
+          <div className="mb-8 rounded-2xl bg-card border border-border p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-violet-400" />
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <RiGroupLine className="w-5 h-5 text-violet-400" />
                 Creators
               </h2>
               {isOwner && (
@@ -470,7 +470,7 @@ export default function PlaylistDetailPage() {
                   size="sm"
                   className="text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-full"
                 >
-                  <UserPlus className="w-4 h-4 mr-2" />
+                  <RiUserAddLine className="w-4 h-4 mr-2" />
                   Invite
                 </Button>
               )}
@@ -479,15 +479,15 @@ export default function PlaylistDetailPage() {
             <div className="flex flex-wrap gap-3">
               {/* Owner */}
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-500/5 border border-orange-500/20 hover:border-orange-500/30 transition-colors">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-bold text-foreground shadow-lg">
                   {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || '?').toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-foreground">
                     {playlist.createdBy.firstName || playlist.createdBy.email.split('@')[0]}
                   </p>
                   <p className="text-xs text-orange-400 flex items-center gap-1">
-                    <Crown className="w-3 h-3" />
+                    <RiVipCrownLine className="w-3 h-3" />
                     Owner
                   </p>
                 </div>
@@ -495,23 +495,23 @@ export default function PlaylistDetailPage() {
               
               {/* Collaborators */}
               {acceptedCollaborators.map((collab) => (
-                <div key={collab._id} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.1] transition-colors">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500/30 to-violet-600/20 flex items-center justify-center text-sm font-bold text-white border border-violet-500/20">
+                <div key={collab._id} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted border border-border hover:bg-muted hover:border-border transition-colors">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500/30 to-violet-600/20 flex items-center justify-center text-sm font-bold text-foreground border border-violet-500/20">
                     {(collab.firstName?.charAt(0) || collab.email?.charAt(0) || '?').toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-foreground">
                       {collab.firstName || collab.email.split('@')[0]}
                     </p>
                     <p className="text-xs text-violet-400 flex items-center gap-1">
                       {collab.role === 'editor' ? (
                         <>
-                          <Edit className="w-3 h-3" />
+                          <RiPencilLine className="w-3 h-3" />
                           Editor
                         </>
                       ) : (
                         <>
-                          <Users className="w-3 h-3" />
+                          <RiGroupLine className="w-3 h-3" />
                           Viewer
                         </>
                       )}
@@ -526,47 +526,47 @@ export default function PlaylistDetailPage() {
         {/* Items Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Items ({playlist.items.length})</h2>
+            <h2 className="text-2xl font-bold text-foreground">Items ({playlist.items.length})</h2>
             
             {playlist.items.length > 0 && (
-              <div className="flex items-center gap-2 p-1 rounded-full bg-white/[0.05] border border-white/[0.08]">
+              <div className="flex items-center gap-2 p-1 rounded-full bg-muted border border-border">
                 <button
                   onClick={() => setViewMode('list')}
                   className={cn(
                     "p-2 rounded-full transition-colors",
                     viewMode === 'list' 
-                      ? "bg-orange-500/20 text-orange-400" 
-                      : "text-white/50 hover:text-white/70"
+                      ? "bg-primary/20 text-orange-400" 
+                      : "text-muted-foreground hover:text-muted-foreground"
                   )}
                 >
-                  <List className="w-4 h-4" />
+                  <RiListUnordered className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('grid')}
                   className={cn(
                     "p-2 rounded-full transition-colors",
                     viewMode === 'grid' 
-                      ? "bg-orange-500/20 text-orange-400" 
-                      : "text-white/50 hover:text-white/70"
+                      ? "bg-primary/20 text-orange-400" 
+                      : "text-muted-foreground hover:text-muted-foreground"
                   )}
                 >
-                  <Grid3x3 className="w-4 h-4" />
+                  <RiDashboardLine className="w-4 h-4" />
                 </button>
               </div>
             )}
           </div>
 
           {playlist.items.length === 0 ? (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-16 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center mx-auto mb-6 border border-white/[0.08]">
-                <ListMusic className="w-10 h-10 text-orange-400" />
+            <div className="rounded-2xl bg-card border border-border p-16 text-center">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center mx-auto mb-6 border border-border">
+                <RiPlayList2Fill className="w-10 h-10 text-orange-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">No Items Yet</h3>
-              <p className="text-sm text-white/50 mb-8 max-w-sm mx-auto">
+              <h3 className="text-xl font-bold text-foreground mb-2">No Items Yet</h3>
+              <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
                 Start adding opportunities, jobs, events, or resources to this playlist.
               </p>
               <Link href="/">
-                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 rounded-full px-8">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 rounded-full px-8">
                   Browse Content
                 </Button>
               </Link>
@@ -584,7 +584,7 @@ export default function PlaylistDetailPage() {
                     key={item._id}
                     href={detailUrl}
                     className={cn(
-                      "group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:border-white/[0.12] transition-all",
+                      "group relative rounded-2xl bg-card border border-border overflow-hidden hover:border-border transition-all",
                       removingItemId === item._id && "opacity-50 pointer-events-none"
                     )}
                   >
@@ -597,7 +597,7 @@ export default function PlaylistDetailPage() {
                         <Icon className={cn(
                           "w-12 h-12",
                           config.color === 'orange' && "text-orange-400",
-                          config.color === 'blue' && "text-blue-400",
+                          config.color === 'primary' && "text-primary",
                           config.color === 'emerald' && "text-emerald-400",
                           config.color === 'violet' && "text-violet-400"
                         )} />
@@ -607,8 +607,8 @@ export default function PlaylistDetailPage() {
                           variant="outline" 
                           className={cn(
                             "text-xs font-medium backdrop-blur-sm",
-                            config.color === 'orange' && "border-orange-500/30 text-orange-400 bg-orange-500/10",
-                            config.color === 'blue' && "border-blue-500/30 text-blue-400 bg-blue-500/10",
+                            config.color === 'orange' && "border-orange-500/30 text-orange-400 bg-primary/10",
+                            config.color === 'primary' && "border-primary/30 text-primary bg-primary/10",
                             config.color === 'emerald' && "border-emerald-500/30 text-emerald-400 bg-emerald-500/10",
                             config.color === 'violet' && "border-violet-500/30 text-violet-400 bg-violet-500/10"
                           )}
@@ -620,16 +620,16 @@ export default function PlaylistDetailPage() {
 
                     {/* Content */}
                     <div className="p-4">
-                      <h3 className="font-semibold text-white mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
                         {item.title}
                       </h3>
                       {item.description && (
-                        <p className="text-sm text-white/60 line-clamp-2 mb-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                           {item.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-2 text-xs text-white/40">
-                        <Clock className="w-3 h-3" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <RiTimeLine className="w-3 h-3" />
                         <span>Added {new Date(item.addedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -644,7 +644,7 @@ export default function PlaylistDetailPage() {
                         }}
                         className="absolute top-2 left-2 p-2 rounded-full bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="w-4 h-4 text-white" />
+                        <RiCloseLine className="w-4 h-4 text-foreground" />
                       </button>
                     )}
                   </Link>
@@ -664,13 +664,13 @@ export default function PlaylistDetailPage() {
                     key={item._id}
                     href={detailUrl}
                     className={cn(
-                      "group relative flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-200",
+                      "group relative flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted hover:border-border transition-all duration-200",
                       removingItemId === item._id && "opacity-50 pointer-events-none"
                     )}
                   >
                     {/* Number Badge */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center">
-                      <span className="text-xs font-bold text-white/40 group-hover:text-white/60 transition-colors">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center">
+                      <span className="text-xs font-bold text-muted-foreground group-hover:text-muted-foreground transition-colors">
                         {index + 1}
                       </span>
                     </div>
@@ -680,13 +680,13 @@ export default function PlaylistDetailPage() {
                       "relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden",
                       "bg-gradient-to-br",
                       config.gradient,
-                      "border border-white/[0.08] group-hover:scale-105 transition-transform duration-200"
+                      "border border-border group-hover:scale-105 transition-transform duration-200"
                     )}>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Icon className={cn(
                           "w-7 h-7",
                           config.color === 'orange' && "text-orange-400",
-                          config.color === 'blue' && "text-blue-400",
+                          config.color === 'primary' && "text-primary",
                           config.color === 'emerald' && "text-emerald-400",
                           config.color === 'violet' && "text-violet-400"
                         )} />
@@ -703,8 +703,8 @@ export default function PlaylistDetailPage() {
                               variant="outline" 
                               className={cn(
                                 "text-[10px] font-semibold px-2 py-0.5",
-                                config.color === 'orange' && "border-orange-500/40 text-orange-400 bg-orange-500/10",
-                                config.color === 'blue' && "border-blue-500/40 text-blue-400 bg-blue-500/10",
+                                config.color === 'orange' && "border-orange-500/40 text-orange-400 bg-primary/10",
+                                config.color === 'primary' && "border-primary/30 text-primary bg-primary/10",
                                 config.color === 'emerald' && "border-emerald-500/40 text-emerald-400 bg-emerald-500/10",
                                 config.color === 'violet' && "border-violet-500/40 text-violet-400 bg-violet-500/10"
                               )}
@@ -713,9 +713,9 @@ export default function PlaylistDetailPage() {
                             </Badge>
                             {(item.company || item.organization || item.author) && (
                               <>
-                                <span className="text-white/20 text-xs">•</span>
-                                <span className="text-xs text-white/50 truncate flex items-center gap-1">
-                                  <Building className="w-3 h-3 flex-shrink-0" />
+                                <span className="text-muted-foreground text-xs">•</span>
+                                <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                  <RiBuildingLine className="w-3 h-3 flex-shrink-0" />
                                   <span className="truncate">{item.company || item.organization || item.author}</span>
                                 </span>
                               </>
@@ -723,28 +723,28 @@ export default function PlaylistDetailPage() {
                           </div>
 
                           {/* Title */}
-                          <h3 className="text-base font-semibold text-white group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
+                          <h3 className="text-base font-semibold text-foreground group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
                             {item.title}
                           </h3>
 
                           {/* Description */}
                           {item.description && (
-                            <p className="text-sm text-white/60 line-clamp-1 mb-1.5">
+                            <p className="text-sm text-muted-foreground line-clamp-1 mb-1.5">
                               {item.description}
                             </p>
                           )}
 
                           {/* Metadata */}
-                          <div className="flex items-center gap-2.5 text-xs text-white/40 flex-wrap">
+                          <div className="flex items-center gap-2.5 text-xs text-muted-foreground flex-wrap">
                             {item.location && (
                               <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
+                                <RiMapPinLine className="w-3 h-3" />
                                 <span className="truncate">{item.location}</span>
                               </span>
                             )}
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              Added {new Date(item.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+<RiTimeLine className="w-3 h-3" />
+                        Added {new Date(item.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
                             {item.addedBy && (
                               <>
@@ -762,28 +762,28 @@ export default function PlaylistDetailPage() {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-8 w-8 p-0 text-white/60 hover:text-white hover:bg-white/[0.08] rounded-lg"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
                               window.open(detailUrl, '_blank')
                             }}
                           >
-                            <ExternalLink className="w-4 h-4" />
+                            <RiExternalLinkLine className="w-4 h-4" />
                           </Button>
 
                           {canEdit && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 handleRemoveItem(item._id)
                               }}
                             >
-                              <X className="w-4 h-4" />
+                              <RiCloseLine className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -791,7 +791,7 @@ export default function PlaylistDetailPage() {
                     </div>
 
                     {/* Hover Indicator */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-orange-500 rounded-l-full group-hover:h-8 transition-all duration-200 opacity-0 group-hover:opacity-100" />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary rounded-l-full group-hover:h-8 transition-all duration-200 opacity-0 group-hover:opacity-100" />
                   </Link>
                 )
               })}

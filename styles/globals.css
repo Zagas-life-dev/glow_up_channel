@@ -2,93 +2,198 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+/*
+  THEME-ONLY COLORS – Do not set colors locally in components.
+  Use only these Tailwind/utility classes so light/dark and brand stay consistent.
+
+  Text:   text-foreground (main), text-muted-foreground (secondary), text-primary (orange accent), text-destructive
+  Backgrounds: bg-page, bg-surface, bg-card, bg-muted, bg-primary, bg-destructive
+  Borders: border-border, border-primary
+  Ring/focus: ring-primary
+
+  Light: page/surface = white shades (#f8f8f8), text = #333333. Dark: page/surface = black shades (#333333), text = #f8f8f8.
+  Main accent: orange #ff6700 only – use text-primary, bg-primary, border-primary. Do not use blue/cyan/black as accent.
+
+  Do not use locally: text-white, bg-white, border-white, bg-[#hex], blue-*, cyan-*, or raw gray-* – use the tokens above.
+*/
+
+@layer base {
+  :root {
+    /* Inter loaded via link in layout.tsx (avoids build-time fetch) */
+    --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+    /* Light mode: base #f8f8f8, text #333333 */
+    --background: 0 0% 97%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 24 100% 50%;
+    --radius: 0.5rem;
+
+    /* Semantic – light (shades of white #f8f8f8) */
+    --page: 0 0% 97%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 0 0% 99%;
+    --surface-overlay: 0 0% 100%;
+    --text-primary: 0 0% 20%;
+    --text-secondary: 0 0% 38%;
+    --text-muted: 0 0% 52%;
+    --border-default: 0 0% 90%;
+    --border-subtle: 0 0% 93%;
+
+    /* Brand: orange #ff6700 only (main accent) */
+    --orange: 24 100% 50%;
+    --orange-light: 24 100% 55%;
+    --orange-dark: 24 100% 45%;
+    --orange-muted: 24 80% 92%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 24 100% 50%;
+
+    --chart-1: 24 100% 50%;
+    --chart-2: 24 100% 55%;
+    --chart-3: 0 0% 40%;
+    --chart-4: 0 0% 55%;
+    --chart-5: 0 0% 70%;
+  }
+
+  .dark {
+    /* Dark mode: base #333333 shades, text #f8f8f8 */
+    --background: 0 0% 18%;
+    --foreground: 0 0% 97%;
+    --card: 0 0% 22%;
+    --card-foreground: 0 0% 97%;
+    --popover: 0 0% 22%;
+    --popover-foreground: 0 0% 97%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 26%;
+    --secondary-foreground: 0 0% 97%;
+    --muted: 0 0% 26%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 28%;
+    --input: 0 0% 28%;
+    --ring: 24 100% 50%;
+    --radius: 0.5rem;
+
+    /* Semantic – dark (shades of black #333333) */
+    --page: 0 0% 15%;
+    --surface: 0 0% 20%;
+    --surface-elevated: 0 0% 24%;
+    --surface-overlay: 0 0% 22%;
+    --text-primary: 0 0% 97%;
+    --text-secondary: 0 0% 85%;
+    --text-muted: 0 0% 65%;
+    --border-default: 0 0% 28%;
+    --border-subtle: 0 0% 24%;
+
+    /* Brand: orange only */
+    --orange: 24 100% 50%;
+    --orange-light: 24 100% 55%;
+    --orange-dark: 24 100% 45%;
+    --orange-muted: 24 50% 22%;
+
+    --sidebar-background: 0 0% 14%;
+    --sidebar-foreground: 0 0% 97%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 24%;
+    --sidebar-accent-foreground: 0 0% 97%;
+    --sidebar-border: 0 0% 26%;
+    --sidebar-ring: 24 100% 50%;
+
+    --chart-1: 24 100% 50%;
+    --chart-2: 24 100% 55%;
+    --chart-3: 0 0% 70%;
+    --chart-4: 0 0% 80%;
+    --chart-5: 0 0% 90%;
+  }
+}
+
+/* Typography */
+@layer base {
+  html {
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.125rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.875rem; }
+
+  p {
+    line-height: 1.65;
+  }
+
+  small, .text-muted {
+    color: hsl(var(--muted-foreground));
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-}
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  /* Semantic theme utilities */
+  .bg-page { background-color: hsl(var(--page)); }
+  .bg-surface { background-color: hsl(var(--surface)); }
+  .bg-surface-elevated { background-color: hsl(var(--surface-elevated)); }
+  .bg-surface-overlay { background-color: hsl(var(--surface-overlay)); }
+  .text-content-primary { color: hsl(var(--text-primary)); }
+  .text-content-secondary { color: hsl(var(--text-secondary)); }
+  .text-content-muted { color: hsl(var(--text-muted)); }
+  .border-default { border-color: hsl(var(--border-default)); }
+  .border-subtle { border-color: hsl(var(--border-subtle)); }
+
+  /* Orange (primary #ff6700 – main accent only) */
+  .text-orange-primary { color: hsl(var(--orange)); }
+  .bg-orange-muted { background-color: hsl(var(--orange-muted)); }
 }
 
 @layer base {
   * {
     @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }

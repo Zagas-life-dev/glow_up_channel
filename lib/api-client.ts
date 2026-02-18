@@ -100,6 +100,26 @@ interface RegisterResponse {
   needsApproval: boolean;
 }
 
+// Channels
+export interface Channel {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  type: 'public' | 'private';
+  ownerId: string | null;
+  moderatorIds: string[];
+  memberCount: number;
+  createdAt: string;
+  updatedAt: string;
+  isOwner?: boolean;
+}
+
+export interface ChannelMembership {
+  role: 'owner' | 'moderator' | 'member';
+  joinedAt: string;
+}
+
 // API Client Class
 export class ApiClient {
   private static getAuthHeaders(): HeadersInit {
@@ -129,18 +149,18 @@ export class ApiClient {
 
   private static async handleResponse<T>(response: Response): Promise<T> {
     const data: ApiResponse<T> = await response.json();
-    
+
     if (!response.ok) {
       // Handle rate limiting specifically
       if (response.status === 429) {
         throw new Error('Too many requests from this IP, please try again later.');
       }
-      
+
       // Handle authentication errors specifically
       if (response.status === 401) {
         throw new Error('Authentication required. Please sign in to perform this action.');
       }
-      
+
       // Handle validation errors with more detail
       if (data.errors && Array.isArray(data.errors)) {
         const errorMessages = data.errors.map((err: any) => err.message || err.field).join(', ');
@@ -148,7 +168,7 @@ export class ApiClient {
       }
       throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
-    
+
     if (!data.success) {
       // Handle validation errors with more detail
       if (data.errors && Array.isArray(data.errors)) {
@@ -157,7 +177,7 @@ export class ApiClient {
       }
       throw new Error(data.message || data.error || 'Request failed');
     }
-    
+
     // Handle different response formats:
     // 1. Responses with data property (most API endpoints)
     // 2. Responses without data property (engagement actions)
@@ -295,7 +315,7 @@ export class ApiClient {
   static async updateUser(data: Partial<User>): Promise<User> {
     console.log('API Client - Updating user with data:', data);
     console.log('API Client - Request URL:', `${API_BASE_URL}/api/auth/update-user`);
-    
+
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/update-user`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -303,7 +323,7 @@ export class ApiClient {
 
     console.log('API Client - Response status:', response.status);
     console.log('API Client - Response ok:', response.ok);
-    
+
     return this.handleResponse<User>(response);
   }
 
@@ -389,6 +409,140 @@ export class ApiClient {
       body: JSON.stringify(data),
     });
 
+    return this.handleResponse(response);
+  }
+
+  // Channels
+  static async getChannels(params?: {
+    page?: number;
+    limit?: number;
+    type?: 'public' | 'private';
+    search?: string;
+  }): Promise<{ channels: Channel[]; total: number; page: number; limit: number; totalPages: number }> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          searchParams.append(key, String(value));
+        }
+      });
+    }
+    const url = `${API_BASE_URL}/api/channels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    const response = await fetch(url, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getChannelBySlug(slug: string): Promise<{ channel: Channel; membership: ChannelMembership | null }> {
+    const response = await fetch(`${API_BASE_URL}/api/channels/${encodeURIComponent(slug)}`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async createChannel(payload: { name: string; description?: string; type?: 'public' | 'private' }): Promise<Channel> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async updateChannel(id: string, payload: { name?: string; description?: string; type?: 'public' | 'private' }): Promise<Channel> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async joinChannel(id: string, options?: { viaInvite?: boolean }): Promise<{ status: 'joined' | 'pending'; viaInvite?: boolean }> {
+    const searchParams = new URLSearchParams();
+    if (options?.viaInvite) {
+      searchParams.append('invite', '1');
+    }
+    const qs = searchParams.toString();
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join${qs ? `?${qs}` : ''}`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async leaveChannel(id: string): Promise<{ status: 'left' }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/leave`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getChannelMembers(id: string): Promise<{ members: Array<{ userId: string; role: string; joinedAt: string; user: any | null }> }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members`);
+    return this.handleResponse(response);
+  }
+
+  static async getChannelJoinRequests(id: string): Promise<{ requests: Array<{ userId: string; status: string; createdAt: string; user: any | null }> }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests`);
+    return this.handleResponse(response);
+  }
+
+  static async approveChannelJoinRequest(id: string, userId: string): Promise<{ status: 'approved' }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests/${userId}/approve`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async rejectChannelJoinRequest(id: string, userId: string): Promise<{ status: 'rejected' }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests/${userId}/reject`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async promoteChannelMember(id: string, userId: string): Promise<{ status: 'updated'; role: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/promote`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async demoteChannelMember(id: string, userId: string): Promise<{ status: 'updated'; role: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/demote`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async removeChannelMember(id: string, userId: string): Promise<{ status: 'removed' }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/remove`, {
+      method: 'POST',
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getChannelPosts(id: string, params?: { page?: number; limit?: number }): Promise<{
+    posts: any[];
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', String(params.page));
+    if (params?.limit) searchParams.append('limit', String(params.limit));
+    const qs = searchParams.toString();
+    const response = await fetch(`${API_BASE_URL}/api/channels/${id}/posts${qs ? `?${qs}` : ''}`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async createChannelPost(id: string, payload: { text?: string; images?: any[]; visibility?: string }): Promise<any> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/posts`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
     return this.handleResponse(response);
   }
 
@@ -710,7 +864,7 @@ export class ApiClient {
     userProfile: any;
   }> {
     const searchParams = new URLSearchParams();
-    
+
     if (options?.includeOpportunities !== undefined) {
       searchParams.append('includeOpportunities', options.includeOpportunities.toString());
     }
@@ -826,9 +980,9 @@ export class ApiClient {
       // If it's a 404 or "not found" error, return default values instead of throwing
       // Backend returns messages like "Opportunity not found", "Content not found", etc.
       const errorMessage = error?.message?.toLowerCase() || '';
-      if (errorMessage.includes('not found') || 
-          errorMessage.includes('404') ||
-          errorMessage.includes('resource not found')) {
+      if (errorMessage.includes('not found') ||
+        errorMessage.includes('404') ||
+        errorMessage.includes('resource not found')) {
         return {
           isSaved: false,
           isLiked: false,
@@ -925,7 +1079,7 @@ export class ApiClient {
       const searchParams = new URLSearchParams();
       searchParams.append('search', query);
       searchParams.append('limit', '20'); // Limit results per type
-      
+
       // Add filters
       if (filters?.location) {
         searchParams.append('location', filters.location);
@@ -1130,6 +1284,7 @@ export class ApiClient {
       hasNext: boolean;
       hasPrev: boolean;
     };
+    counts?: { live: number; pending: number; drafts: number; inactive: number };
   }> {
     try {
       // Use the proper admin endpoint that returns ALL content regardless of approval status
@@ -1182,25 +1337,25 @@ export class ApiClient {
       notes,
       url: `${API_BASE_URL}/api/payments/${contentType}/${contentId}/request`
     });
-    
+
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/request`, {
       method: 'POST',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         amount,
         notes: notes || null
       }),
     });
-    
+
     console.log('API Client - Payment response status:', response.status);
     console.log('API Client - Payment response ok:', response.ok);
-    
+
     return this.handleResponse(response);
   }
 
   static async verifyPayment(contentId: string, contentType: string, verified: boolean, notes?: string): Promise<any> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/verify`, {
       method: 'POST',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         verified,
         notes: notes || null
       }),
@@ -1211,7 +1366,7 @@ export class ApiClient {
   static async uploadPaymentReceipt(contentId: string, contentType: string, receiptUrl: string, paymentCode?: string): Promise<any> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/upload-receipt`, {
       method: 'POST',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         receiptUrl,
         paymentCode: paymentCode || null
       }),
@@ -1221,6 +1376,48 @@ export class ApiClient {
 
   static async getPaymentDetails(contentId: string, contentType: string): Promise<any> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/details`);
+    return this.handleResponse(response);
+  }
+
+  /** Admin: update content fields (title, description, status, urls, location, payment, benefits, dates). Backend may accept PATCH/PUT. */
+  static async updateContentByAdmin(
+    contentId: string,
+    contentType: string,
+    payload: {
+      title?: string
+      description?: string
+      status?: string
+      applicationLink?: string
+      externalLink?: string
+      eventLink?: string
+      url?: string
+      location?: { city?: string; country?: string; province?: string; address?: string; isRemote?: boolean }
+      paymentAmount?: number
+      paymentNotes?: string
+      price?: number
+      currency?: string
+      benefits?: string[]
+      dates?: {
+        applicationDeadline?: string
+        startDate?: string
+        endDate?: string
+        registrationDeadline?: string
+        duration?: string
+      }
+      [key: string]: unknown
+    }
+  ): Promise<any> {
+    const endpointMap: { [key: string]: string } = {
+      opportunity: 'opportunities',
+      event: 'events',
+      job: 'jobs',
+      resource: 'resources'
+    };
+    const apiPath = endpointMap[contentType] || `${contentType}s`;
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/${apiPath}/${contentId}`,
+      { method: 'PATCH', body: JSON.stringify(payload) }
+    );
     return this.handleResponse(response);
   }
 
@@ -1253,7 +1450,7 @@ export class ApiClient {
       'job': 'jobs',
       'resource': 'resources'
     };
-    
+
     const apiPath = endpointMap[contentType] || `${contentType}s`;
     const baseUrl = `${API_BASE_URL}/api/${apiPath}/${contentId}/${action}`;
     return baseUrl;
@@ -1300,7 +1497,11 @@ export class ApiClient {
   }
 
   // Fetch poster information for content items
-  static async getPosterInfo(providerId: string): Promise<any> {
+  static async getPosterInfo(providerId: string | null | undefined): Promise<any> {
+    // If we don't have an ID (e.g. ingested/scraper content), don't spam the API
+    if (!providerId) {
+      return null;
+    }
     try {
       const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/${providerId}`);
       const result = await response.json();
@@ -1314,25 +1515,25 @@ export class ApiClient {
   // User role upgrade API methods
   static async upgradeToProvider(email: string, password: string, userData?: { firstName?: string; lastName?: string; dateOfBirth?: string }): Promise<{ user: any; tokens: { accessToken: string; refreshToken: string }; needsApproval: boolean }> {
     const requestBody: any = { email, password };
-    
+
     // Include user profile data if provided to ensure data portability
     if (userData) {
       if (userData.firstName) requestBody.firstName = userData.firstName;
       if (userData.lastName) requestBody.lastName = userData.lastName;
       if (userData.dateOfBirth) requestBody.dateOfBirth = userData.dateOfBirth;
     }
-    
+
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/upgrade-to-provider`, {
       method: 'POST',
       body: JSON.stringify(requestBody),
     });
     const result = await this.handleResponse<{ user: any; tokens: { accessToken: string; refreshToken: string }; needsApproval: boolean }>(response);
-    
+
     // Update tokens if provided
     if (result.tokens) {
       this.setTokens(result.tokens);
     }
-    
+
     // Return in expected format
     return {
       user: result.user,
@@ -1440,6 +1641,152 @@ export class ApiClient {
       },
     });
     return this.handleResponse(response);
+  }
+
+  // Locked In (focus session) methods. Pass signal for timeout (e.g. 10s AbortController).
+  static async createLockedInSession(options?: {
+    startedAt?: string;
+    intention?: string;
+    todoList?: Array<{ id?: string; text: string; done?: boolean }>;
+    signal?: AbortSignal;
+  }): Promise<{
+    sessionId: string;
+    startedAt: string;
+    intention?: string | null;
+    todoList?: Array<{ id: string; text: string; done: boolean }>;
+    existing?: boolean;
+  }> {
+    const startedAt = options?.startedAt ?? new Date().toISOString();
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        startedAt,
+        intention: options?.intention,
+        todoList: options?.todoList,
+      }),
+      signal: options?.signal,
+    });
+    const result = (await response.json()) as {
+      success?: boolean;
+      data?: { sessionId: string; startedAt: string; intention?: string | null; todoList?: Array<{ id: string; text: string; done: boolean }> };
+      message?: string;
+      error?: string;
+    };
+    if (response.status === 409 && result?.data) {
+      const d = result.data as { sessionId: string; startedAt: string; intention?: string | null; todoList?: Array<{ id: string; text: string; done: boolean }> };
+      return {
+        sessionId: d.sessionId,
+        startedAt: typeof d.startedAt === 'string' ? d.startedAt : new Date(d.startedAt).toISOString(),
+        intention: d.intention ?? null,
+        todoList: Array.isArray(d.todoList) ? d.todoList : [],
+        existing: true,
+      };
+    }
+    if (!response.ok) {
+      throw new Error(result?.message || result?.error || `HTTP ${response.status}`);
+    }
+    const data = result?.data;
+    if (!data?.sessionId) {
+      throw new Error('Invalid response: missing session data');
+    }
+    return {
+      sessionId: data.sessionId,
+      startedAt: typeof data.startedAt === 'string' ? data.startedAt : new Date(data.startedAt).toISOString(),
+      intention: data.intention ?? null,
+      todoList: Array.isArray(data.todoList) ? data.todoList : [],
+    };
+  }
+
+  static async updateLockedInSession(sessionId: string, payload: { intention?: string; todoList?: Array<{ id?: string; text: string; done?: boolean }> }): Promise<{ intention: string | null; todoList: Array<{ id: string; text: string; done: boolean }> }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    const result = await this.handleResponse<{ intention: string | null; todoList: Array<{ id: string; text: string; done: boolean }> }>(response);
+    return result;
+  }
+
+  static async getLockedInDailyStats(date?: string): Promise<{ date: string; liveCount: number; totalToday: number }> {
+    const url = date ? `${API_BASE_URL}/api/locked-in/stats?date=${encodeURIComponent(date)}` : `${API_BASE_URL}/api/locked-in/stats`;
+    const response = await fetch(url);
+    const result = (await response.json()) as { success?: boolean; data?: { date: string; liveCount: number; totalToday: number } };
+    if (!response.ok || !result?.data) {
+      return { date: date || new Date().toISOString().slice(0, 10), liveCount: 0, totalToday: 0 };
+    }
+    return result.data;
+  }
+
+  static async endLockedInSession(sessionId: string, payload: { endedAt: string; durationSeconds: number; endReason?: 'user_ended' | 'tab_closed' }): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/end`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    await this.handleResponse(response);
+  }
+
+  static async getLockedInSessions(params?: { page?: number; limit?: number }): Promise<{
+    sessions: Array<{ _id: string; durationSeconds: number; startedAt: string; endedAt: string; endReason?: string }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const searchParams = new URLSearchParams();
+    if (params?.page != null) searchParams.append('page', String(params.page));
+    if (params?.limit != null) searchParams.append('limit', String(params.limit));
+    const qs = searchParams.toString();
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions${qs ? `?${qs}` : ''}`);
+    const result = await this.handleResponse<{ sessions: any[]; total: number; page: number; limit: number; totalPages: number }>(response);
+    return result;
+  }
+
+  static async getActiveLockedInSession(): Promise<{
+    sessionId: string;
+    startedAt: string;
+    elapsedSeconds: number | null;
+    intention: string | null;
+    todoList: Array<{ id: string; text: string; done: boolean }>;
+  } | null> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/active`);
+    const result = await this.handleResponse<{
+      sessionId: string;
+      startedAt: string;
+      elapsedSeconds?: number | null;
+      intention?: string | null;
+      todoList?: Array<{ id: string; text: string; done: boolean }>;
+    } | null>(response);
+    if (!result) return null;
+    return {
+      ...result,
+      elapsedSeconds: typeof result.elapsedSeconds === 'number' ? result.elapsedSeconds : null,
+      intention: result.intention ?? null,
+      todoList: Array.isArray(result.todoList) ? result.todoList : [],
+    };
+  }
+
+  /** Call when page is unloading (visibility hidden / beforeunload). Uses keepalive so request can complete after navigation. */
+  static endLockedInSessionOnUnload(sessionId: string, durationSeconds: number, endReason: 'user_ended' | 'tab_closed' = 'tab_closed'): void {
+    const token = this.getAccessToken();
+    if (!token || typeof fetch === 'undefined') return;
+    const payload = { endedAt: new Date().toISOString(), durationSeconds, endReason };
+    fetch(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/end`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => { });
+  }
+
+  static pauseLockedInSession(sessionId: string, elapsedSeconds: number, options?: { keepalive?: boolean }): void {
+    const token = this.getAccessToken();
+    if (!token || typeof fetch === 'undefined') return;
+    const payload = { elapsedSeconds };
+    fetch(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/pause`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+      keepalive: options?.keepalive ?? false,
+    }).catch(() => { });
   }
 }
 

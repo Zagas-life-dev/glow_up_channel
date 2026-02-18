@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { ApiClient } from "@/lib/api-client"
+import { RiCalendarLine } from "react-icons/ri"
 
 interface OpportunityFormData {
   submitter_name: string
@@ -224,7 +224,7 @@ export default function OpportunitySubmissionForm() {
                       !selectedDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <RiCalendarLine className="mr-2 h-4 w-4" aria-hidden />
                     {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
@@ -295,11 +295,11 @@ export default function OpportunitySubmissionForm() {
       <CardFooter className="flex flex-col items-start text-sm text-muted-foreground">
         <p>
           By submitting, you agree to our{" "}
-          <a href="/terms" className="text-blue-500 hover:underline">
+          <a href="/terms" className="text-primary hover:underline">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="text-blue-500 hover:underline">
+          <a href="/privacy" className="text-primary hover:underline">
             Privacy Policy
           </a>.
         </p>

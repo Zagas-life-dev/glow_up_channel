@@ -16,7 +16,7 @@ export default function NewsletterPopup() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full relative">
+      <div className="bg-card rounded-lg shadow-xl p-6 max-w-lg w-full relative">
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
           onClick={() => setOpen(false)}

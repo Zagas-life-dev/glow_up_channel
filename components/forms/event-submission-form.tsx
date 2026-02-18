@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { toast } from "sonner"
 import { ApiClient } from "@/lib/api-client"
 
@@ -183,7 +183,7 @@ export default function EventSubmissionForm() {
       <CardContent>
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
+            <FlaticonIcon name="exclamation" className="h-4 w-4" aria-hidden />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -344,11 +344,11 @@ export default function EventSubmissionForm() {
       <CardFooter className="flex flex-col items-start text-sm text-muted-foreground">
         <p>
           By submitting, you agree to our{" "}
-          <a href="/terms" className="text-blue-500 hover:underline">
+          <a href="/terms" className="text-primary hover:underline">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="text-blue-500 hover:underline">
+          <a href="/privacy" className="text-primary hover:underline">
             Privacy Policy
           </a>.
         </p>

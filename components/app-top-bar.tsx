@@ -5,7 +5,15 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist } from '@/contexts/playlist-context'
-import { Search, Bell, X, Sparkles, Mail, UserPlus } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  RiSearchLine,
+  RiCloseLine,
+  RiStarLine,
+  RiUserAddLine,
+  RiMailLine,
+  RiNotificationLine,
+} from 'react-icons/ri'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -94,20 +102,20 @@ export default function AppTopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.06]">
+      <header className="sticky top-0 z-40 bg-page/95 dark:bg-page/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6 max-w-[1600px] mx-auto">
           {/* Mobile: Logo or Search */}
           <div className="lg:hidden flex items-center gap-3 flex-1">
             {showMobileSearch ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                  <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
                   <Input
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40 rounded-xl focus:ring-orange-500/50"
+                    className="pl-9 h-9 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground rounded-xl focus:ring-primary focus:border-primary"
                     autoFocus
                   />
                 </div>
@@ -116,18 +124,18 @@ export default function AppTopBar() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowMobileSearch(false)}
-                  className="text-white/60 hover:text-white px-2"
+                  className="text-muted-foreground hover:text-foreground px-2"
                 >
-                  <X className="w-5 h-5" />
+                  <RiCloseLine className="w-5 h-5" aria-label="Close search" />
                 </Button>
               </form>
             ) : (
               <>
                 <Link href="/" className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
+                    <RiStarLine className="w-4 h-4 text-primary-foreground" aria-hidden />
                   </div>
-                  <span className="text-lg font-bold text-white">Glow Up</span>
+                  <span className="text-lg font-bold text-foreground">Glow Up</span>
                 </Link>
               </>
             )}
@@ -137,13 +145,13 @@ export default function AppTopBar() {
           <div className="hidden lg:flex items-center flex-1 max-w-md">
             <form onSubmit={handleSearch} className="w-full">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
                 <Input
                   type="text"
                   placeholder="Search opportunities, jobs, events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 h-10 bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/40 rounded-xl focus:ring-orange-500/50 focus:border-orange-500/50"
+                  className="w-full pl-10 h-10 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground rounded-xl focus:ring-primary focus:border-primary"
                 />
               </div>
             </form>
@@ -151,15 +159,16 @@ export default function AppTopBar() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            <ThemeToggle className="shrink-0" />
             {/* Mobile Search Toggle */}
             {!showMobileSearch && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowMobileSearch(true)}
-                className="lg:hidden text-white/60 hover:text-white hover:bg-white/[0.05] px-2"
+                className="lg:hidden text-muted-foreground hover:text-foreground hover:bg-accent px-2"
               >
-                <Search className="w-5 h-5" />
+                <RiSearchLine className="w-5 h-5" aria-hidden />
               </Button>
             )}
 
@@ -169,10 +178,10 @@ export default function AppTopBar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowConnectionRequests(true)}
-                className="text-white/60 hover:text-white hover:bg-white/[0.05] px-2 relative"
+                className="text-muted-foreground hover:text-foreground hover:bg-accent px-2 relative"
               >
-                <UserPlus className="w-5 h-5" />
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-violet-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                <RiUserAddLine className="w-5 h-5" aria-hidden />
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-violet-500 rounded-full text-[10px] font-bold text-primary-foreground flex items-center justify-center">
                   {connectionRequests.length > 9 ? '9+' : connectionRequests.length}
                 </span>
               </Button>
@@ -184,10 +193,10 @@ export default function AppTopBar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowInvitations(true)}
-                className="text-white/60 hover:text-white hover:bg-white/[0.05] px-2 relative"
+                className="text-muted-foreground hover:text-foreground hover:bg-accent px-2 relative"
               >
-                <Mail className="w-5 h-5" />
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                <RiMailLine className="w-5 h-5" aria-hidden />
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full text-[10px] font-bold text-primary-foreground flex items-center justify-center">
                   {invitations.length > 9 ? '9+' : invitations.length}
                 </span>
               </Button>
@@ -197,10 +206,10 @@ export default function AppTopBar() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white/60 hover:text-white hover:bg-white/[0.05] px-2 relative"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent px-2 relative"
             >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full ring-2 ring-[#0a0a0a]" />
+              <RiNotificationLine className="w-5 h-5" aria-hidden />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-page" />
             </Button>
 
             {/* User Menu */}
@@ -210,7 +219,7 @@ export default function AppTopBar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="hover:bg-white/[0.05] px-2"
+                    className="hover:bg-accent px-2"
                   >
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
                       {user.profileImage ? (
@@ -221,29 +230,29 @@ export default function AppTopBar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-white text-xs font-semibold">
+                        <span className="text-primary-foreground text-xs font-semibold">
                           {(user.firstName?.charAt(0) || user.email?.charAt(0) || '?').toUpperCase()}
                         </span>
                       )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl shadow-2xl"
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-popover border-border rounded-xl shadow-2xl text-popover-foreground"
                 >
                   <div className="px-3 py-2">
-                    <p className="text-sm font-medium text-white">{user.firstName || user.email?.split('@')[0]}</p>
-                    <p className="text-xs text-white/40">{user.email}</p>
+                    <p className="text-sm font-medium text-foreground">{user.firstName || user.email?.split('@')[0]}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <DropdownMenuSeparator className="bg-white/[0.06]" />
-                  <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white focus:bg-white/[0.05] cursor-pointer">
+                  <DropdownMenuSeparator className="bg-border" />
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
                     <Link href={`/profile/${user._id}`}>My Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white focus:bg-white/[0.05] cursor-pointer">
+                  <DropdownMenuItem asChild className="text-muted-foreground hover:text-foreground focus:text-foreground focus:bg-muted cursor-pointer">
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white focus:bg-white/[0.05] cursor-pointer">
+                  <DropdownMenuItem asChild className="text-muted-foreground hover:text-foreground focus:text-foreground focus:bg-muted cursor-pointer">
                     <Link href="/playlists">My Playlists</Link>
                   </DropdownMenuItem>
                   {connectionRequests.length > 0 && (
@@ -251,31 +260,31 @@ export default function AppTopBar() {
                       onClick={() => setShowConnectionRequests(true)}
                       className="text-violet-400 hover:text-violet-300 focus:text-violet-400 focus:bg-violet-500/10 cursor-pointer"
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
+                      <RiUserAddLine className="w-4 h-4 mr-2" aria-hidden />
                       Connection Requests ({connectionRequests.length})
                     </DropdownMenuItem>
                   )}
                   {invitations.length > 0 && (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => setShowInvitations(true)}
-                      className="text-orange-400 hover:text-orange-300 focus:text-orange-400 focus:bg-orange-500/10 cursor-pointer"
+                      className="text-orange-600 dark:text-orange-400 hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
                     >
-                      <Mail className="w-4 h-4 mr-2" />
+                      <RiMailLine className="w-4 h-4 mr-2" aria-hidden />
                       Playlist Invitations ({invitations.length})
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white focus:bg-white/[0.05] cursor-pointer">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
                     <Link href="/dashboard/settings">Settings</Link>
                   </DropdownMenuItem>
                   {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
-                    <DropdownMenuItem asChild className="text-white/70 hover:text-white focus:text-white focus:bg-white/[0.05] cursor-pointer">
+                    <DropdownMenuItem asChild className="text-foreground hover:bg-accent focus:bg-accent cursor-pointer">
                       <Link href="/dashboard/provider">Provider Hub</Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator className="bg-white/[0.06]" />
-                  <DropdownMenuItem 
+                  <DropdownMenuSeparator className="bg-border" />
+                  <DropdownMenuItem
                     onClick={logout}
-                    className="text-red-400 hover:text-red-400 focus:text-red-400 focus:bg-red-500/10 cursor-pointer"
+                    className="text-destructive hover:bg-destructive/10 focus:bg-destructive/10 cursor-pointer"
                   >
                     Logout
                   </DropdownMenuItem>
@@ -283,10 +292,10 @@ export default function AppTopBar() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
-                <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/[0.05]">
+                <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-foreground hover:bg-accent">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl">
+                <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
                   <Link href="/signup">Get Started</Link>
                 </Button>
               </div>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Lock, ArrowLeft, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import Link from 'next/link'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -117,12 +117,12 @@ function ResetPasswordContent() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
+              <FlaticonIcon name="check-circle" className="w-10 h-10 text-green-600" aria-hidden />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle className="text-2xl font-bold text-foreground">
               Password Reset Successful!
             </CardTitle>
             <CardDescription className="text-gray-600">
@@ -144,10 +144,10 @@ function ResetPasswordContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-10 h-10 text-orange-600" />
+            <FlaticonIcon name="lock" className="w-10 h-10 text-primary" aria-hidden />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
             Reset Your Password
@@ -211,7 +211,7 @@ function ResetPasswordContent() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <FlaticonIcon name="eye-off" className="w-4 h-4" aria-hidden /> : <FlaticonIcon name="eye" className="w-4 h-4" aria-hidden />}
                     </button>
                   </div>
                 )}
@@ -243,7 +243,7 @@ function ResetPasswordContent() {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? <FlaticonIcon name="eye-off" className="w-4 h-4" aria-hidden /> : <FlaticonIcon name="eye" className="w-4 h-4" aria-hidden />}
                     </button>
                   </div>
                 )}
@@ -255,12 +255,12 @@ function ResetPasswordContent() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-foreground font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                   <span>Resetting...</span>
                 </div>
               ) : (
@@ -279,7 +279,7 @@ function ResetPasswordContent() {
             >
               {isResending ? (
                 <div className="flex items-center space-x-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
                   <span>Sending...</span>
                 </div>
               ) : (
@@ -291,7 +291,7 @@ function ResetPasswordContent() {
               href="/login"
               className="inline-flex items-center justify-center w-full text-sm text-gray-600 hover:text-orange-600 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <FlaticonIcon name="arrow-left" className="w-4 h-4 mr-2" aria-hidden />
               Back to Login
             </Link>
           </div>
@@ -305,10 +305,10 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+              <FlaticonIcon name="spinner" className="w-8 h-8 animate-spin text-primary" aria-hidden />
             </div>
           </CardContent>
         </Card>

@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Eye, EyeOff, UserPlus, AlertCircle, Target, Users } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { Target } from 'lucide-react'
 import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
 
 const signupSchema = z.object({
@@ -85,12 +86,12 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
+      <Card className="w-full max-w-md border border-border bg-card backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
             Join GlowUp
           </CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-muted-foreground">
             Create your account to get started
           </CardDescription>
         </CardHeader>
@@ -99,7 +100,7 @@ export default function SignupPage() {
           {/* Error Message */}
           {error && (
             <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-              <AlertCircle className="w-4 h-4" />
+              <FlaticonIcon name="exclamation" className="w-4 h-4" aria-hidden />
               <span className="text-sm">{error}</span>
             </div>
           )}
@@ -108,7 +109,7 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-white/80 font-medium">
+                <Label htmlFor="firstName" className="text-foreground font-medium">
                   First Name <span className="text-red-400">*</span>
                 </Label>
                 <Controller
@@ -119,7 +120,7 @@ export default function SignupPage() {
                       {...field}
                       id="firstName"
                       placeholder="First name"
-                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                      className="h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
                       required
                     />
@@ -131,7 +132,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-white/80 font-medium">
+                <Label htmlFor="lastName" className="text-foreground font-medium">
                   Last Name <span className="text-red-400">*</span>
                 </Label>
                 <Controller
@@ -142,7 +143,7 @@ export default function SignupPage() {
                       {...field}
                       id="lastName"
                       placeholder="Last name"
-                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                      className="h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
                       required
                     />
@@ -155,7 +156,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/80 font-medium">
+              <Label htmlFor="email" className="text-foreground font-medium">
                 Email
               </Label>
               <Controller
@@ -167,7 +168,7 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                    className="h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                     disabled={isLoading}
                   />
                 )}
@@ -178,7 +179,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="text-white/80 font-medium">
+              <Label htmlFor="dateOfBirth" className="text-foreground font-medium">
                 Date of Birth
               </Label>
               <Controller
@@ -194,14 +195,14 @@ export default function SignupPage() {
                       type="date"
                       min={min}
                       max={max}
-                      className="h-12 bg-white/[0.05] border-white/[0.1] text-white focus:border-orange-500/50 focus:ring-orange-500/50"
+                      className="h-12 bg-muted border-border text-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
                       required
                     />
                   )
                 }}
               />
-              <p className="text-xs text-white/50">
+              <p className="text-xs text-muted-foreground">
                 You must be at least 5 years old to create an account
               </p>
               {errors.dateOfBirth && (
@@ -210,7 +211,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80 font-medium">
+              <Label htmlFor="password" className="text-foreground font-medium">
                 Password
               </Label>
               <div className="relative">
@@ -223,7 +224,7 @@ export default function SignupPage() {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Create a password"
-                      className="pr-10 h-12 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/40 focus:border-orange-500/50 focus:ring-orange-500/50"
+                      className="pr-10 h-12 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:ring-orange-500/50"
                       disabled={isLoading}
                     />
                   )}
@@ -231,13 +232,13 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white/40 hover:text-white/60"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-muted-foreground"
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <FlaticonIcon name="eye-off" className="h-5 w-5" aria-hidden /> : <FlaticonIcon name="eye" className="h-5 w-5" aria-hidden />}
                 </button>
               </div>
-              <div className="text-xs text-white/50 space-y-1">
+              <div className="text-xs text-muted-foreground space-y-1">
                 <p>Password must contain:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   <li>At least 8 characters</li>
@@ -253,7 +254,7 @@ export default function SignupPage() {
 
             {/* Role Selection */}
             <div className="space-y-3">
-              <Label className="text-white/80 font-medium">I want to join as a:</Label>
+              <Label className="text-foreground font-medium">I want to join as a:</Label>
               <Controller
                 name="role"
                 control={control}
@@ -263,31 +264,31 @@ export default function SignupPage() {
                     onValueChange={field.onChange}
                     className="space-y-3"
                   >
-                    <div className="flex items-center space-x-3 p-4 border border-white/[0.1] rounded-lg hover:border-orange-500/30 hover:bg-orange-500/5 transition-colors bg-white/[0.02]">
+                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-orange-500/30 hover:bg-primary/5 transition-colors bg-card">
                       <RadioGroupItem value="seeker" id="seeker" />
                       <Label htmlFor="seeker" className="flex-1 cursor-pointer">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Users className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                            <FlaticonIcon name="users" className="w-5 h-5 text-primary" aria-hidden />
                           </div>
                           <div>
-                            <div className="font-medium text-white">Opportunity Seeker</div>
-                            <div className="text-sm text-white/60">Find and apply for opportunities</div>
+                            <div className="font-medium text-foreground">Opportunity Seeker</div>
+                            <div className="text-sm text-muted-foreground">Find and apply for opportunities</div>
                           </div>
                         </div>
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-3 p-4 border border-white/[0.1] rounded-lg hover:border-orange-500/30 hover:bg-orange-500/5 transition-colors bg-white/[0.02]">
+                    <div className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:border-orange-500/30 hover:bg-primary/5 transition-colors bg-card">
                       <RadioGroupItem value="provider" id="provider" />
                       <Label htmlFor="provider" className="flex-1 cursor-pointer">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                          <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                             <Target className="w-5 h-5 text-orange-400" />
                           </div>
                           <div>
-                            <div className="font-medium text-white">Opportunity Provider</div>
-                            <div className="text-sm text-white/60">Post opportunities and events</div>
+                            <div className="font-medium text-foreground">Opportunity Provider</div>
+                            <div className="text-sm text-muted-foreground">Post opportunities and events</div>
                           </div>
                         </div>
                       </Label>
@@ -302,24 +303,15 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-200"
+              className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground font-semibold rounded-xl transition-all duration-200"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Creating account...</span>
-                </div>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Create Account
-                </>
-              )}
+              <FlaticonIcon name="user-plus" className="w-4 h-4 mr-2" aria-hidden />
+              Create Account
             </Button>
           </form>
 
-          <div className="text-center text-sm text-white/60">
+          <div className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link
               href="/login"

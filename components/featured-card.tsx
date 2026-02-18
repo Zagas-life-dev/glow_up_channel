@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, MapPin, Clock, Users } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 
 interface FeaturedCardProps {
   type: "Event" | "Opportunity" | "Resources" | "Jobs"
@@ -32,7 +32,7 @@ export default function FeaturedCard({
         <div className="flex justify-between items-start">
           <Badge
             variant={type === "Event" ? "secondary" : "default"}
-            className={type === "Event" ? "bg-gray-200 text-gray-800" : "bg-brand-orange text-white"}
+            className={type === "Event" ? "bg-gray-200 text-gray-800" : "bg-brand-orange text-foreground"}
           >
             {type}
           </Badge>
@@ -58,13 +58,13 @@ export default function FeaturedCard({
             <>
               {date && (
                 <div className="flex items-center text-sm">
-                  <Calendar className="mr-2 h-4 w-4 text-brand-orange" />
+                  <FlaticonIcon name="calendar" className="mr-2 h-4 w-4 text-primary" aria-hidden />
                   <span>{date}</span>
                 </div>
               )}
               {location && (
                 <div className="flex items-center text-sm">
-                  <MapPin className="mr-2 h-4 w-4 text-brand-orange" />
+                  <FlaticonIcon name="map-marker" className="mr-2 h-4 w-4 text-primary" aria-hidden />
                   <span>{location}</span>
                 </div>
               )}
@@ -74,13 +74,13 @@ export default function FeaturedCard({
             <>
               {deadline && (
                 <div className="flex items-center text-sm">
-                  <Clock className="mr-2 h-4 w-4 text-brand-orange" />
+                  <FlaticonIcon name="clock" className="mr-2 h-4 w-4 text-primary" aria-hidden />
                   <span>{deadline}</span>
                 </div>
               )}
               {eligibility && (
                 <div className="flex items-center text-sm">
-                  <Users className="mr-2 h-4 w-4 text-brand-orange" />
+                  <FlaticonIcon name="users" className="mr-2 h-4 w-4 text-primary" aria-hidden />
                   <span>{eligibility}</span>
                 </div>
               )}

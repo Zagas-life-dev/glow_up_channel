@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { DayPicker } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -56,12 +56,12 @@ function Calendar({
       components={{
         PreviousMonthButton: ({ ...props }: React.ComponentProps<'button'>) => (
           <button {...props} type="button">
-            <ChevronLeft className="h-4 w-4" />
+            <FlaticonIcon name="angle-left" className="h-4 w-4" aria-hidden />
           </button>
         ),
         NextMonthButton: ({ ...props }: React.ComponentProps<'button'>) => (
           <button {...props} type="button">
-            <ChevronRight className="h-4 w-4" />
+            <FlaticonIcon name="angle-right" className="h-4 w-4" aria-hidden />
           </button>
         ),
       }}

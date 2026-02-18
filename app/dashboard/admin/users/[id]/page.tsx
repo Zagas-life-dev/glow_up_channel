@@ -151,7 +151,7 @@ export default function UserDetailsPage() {
 
   const getRoleBadge = (role: string) => {
     const roleColors = {
-      'opportunity_seeker': 'bg-blue-100 text-blue-800',
+      'opportunity_seeker': 'bg-primary/10 text-foreground',
       'opportunity_poster': 'bg-purple-100 text-purple-800',
       'admin': 'bg-orange-100 text-orange-800',
       'super_admin': 'bg-red-100 text-red-800'
@@ -185,7 +185,7 @@ export default function UserDetailsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-6">
             You need admin or super admin privileges to access this page.
           </p>
@@ -204,7 +204,7 @@ export default function UserDetailsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Error</h1>
           <p className="text-gray-600 mb-6">{error || 'User not found'}</p>
           <div className="flex space-x-4">
             <Button onClick={fetchUserDetails}>Try Again</Button>
@@ -222,7 +222,7 @@ export default function UserDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -234,7 +234,7 @@ export default function UserDetailsPage() {
               </Button>
               <div className="flex items-center space-x-2">
                 <User className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
+                <h1 className="text-2xl font-bold text-foreground">User Details</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -265,7 +265,7 @@ export default function UserDetailsPage() {
                     <label className="text-sm font-medium text-gray-700">Email</label>
                     <div className="flex items-center space-x-2 mt-1">
                       <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{user.email}</span>
+                      <span className="text-sm text-foreground">{user.email}</span>
                     </div>
                   </div>
                   
@@ -291,7 +291,7 @@ export default function UserDetailsPage() {
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />
                       )}
-                      <span className="text-sm text-gray-900">
+                      <span className="text-sm text-foreground">
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -305,7 +305,7 @@ export default function UserDetailsPage() {
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />
                       )}
-                      <span className="text-sm text-gray-900">
+                      <span className="text-sm text-foreground">
                         {user.emailVerified ? 'Verified' : 'Not Verified'}
                       </span>
                     </div>
@@ -315,7 +315,7 @@ export default function UserDetailsPage() {
                     <label className="text-sm font-medium text-gray-700">Last Login</label>
                     <div className="flex items-center space-x-2 mt-1">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">
+                      <span className="text-sm text-foreground">
                         {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                       </span>
                     </div>
@@ -335,56 +335,56 @@ export default function UserDetailsPage() {
                     {profile.country && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Country</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.country}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.country}</p>
                       </div>
                     )}
                     
                     {profile.province && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Province</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.province}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.province}</p>
                       </div>
                     )}
                     
                     {profile.city && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">City</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.city}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.city}</p>
                       </div>
                     )}
                     
                     {profile.careerStage && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Career Stage</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.careerStage}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.careerStage}</p>
                       </div>
                     )}
                     
                     {profile.educationLevel && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Education Level</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.educationLevel}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.educationLevel}</p>
                       </div>
                     )}
                     
                     {profile.fieldOfStudy && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Field of Study</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.fieldOfStudy}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.fieldOfStudy}</p>
                       </div>
                     )}
                     
                     {profile.institution && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Institution</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.institution}</p>
+                        <p className="text-sm text-foreground mt-1">{profile.institution}</p>
                       </div>
                     )}
                     
                     {profile.completionPercentage !== undefined && (
                       <div>
                         <label className="text-sm font-medium text-gray-700">Profile Completion</label>
-                        <p className="text-sm text-gray-900 mt-1">{profile.completionPercentage}%</p>
+                        <p className="text-sm text-foreground mt-1">{profile.completionPercentage}%</p>
                       </div>
                     )}
                   </div>
@@ -462,9 +462,9 @@ export default function UserDetailsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary/100 rounded-full"></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Account Created</p>
+                    <p className="text-sm font-medium text-foreground">Account Created</p>
                     <p className="text-xs text-gray-500">{new Date(user.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
@@ -473,7 +473,7 @@ export default function UserDetailsPage() {
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Account Approved</p>
+                      <p className="text-sm font-medium text-foreground">Account Approved</p>
                       <p className="text-xs text-gray-500">{new Date(user.approvedAt).toLocaleString()}</p>
                     </div>
                   </div>
@@ -481,9 +481,9 @@ export default function UserDetailsPage() {
                 
                 {user.lastLogin && (
                   <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Last Login</p>
+                      <p className="text-sm font-medium text-foreground">Last Login</p>
                       <p className="text-xs text-gray-500">{new Date(user.lastLogin).toLocaleString()}</p>
                     </div>
                   </div>
@@ -492,7 +492,7 @@ export default function UserDetailsPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Last Updated</p>
+                    <p className="text-sm font-medium text-foreground">Last Updated</p>
                     <p className="text-xs text-gray-500">{new Date(user.updatedAt).toLocaleString()}</p>
                   </div>
                 </div>

@@ -67,6 +67,8 @@ export function useCursorPagination<T extends { _id: string }>({
   // Fetch items
   const fetchItems = useCallback(async (reset = false) => {
     if (reset) {
+      setItems([])
+      setIsLoading(true)
       setIsRefreshing(true)
       clearCache()
       lastIdRef.current = null

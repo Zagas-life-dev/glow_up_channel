@@ -13,35 +13,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Heart,
-  MessageCircle,
-  Repeat2,
-  Bookmark,
-  Share2,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Globe,
-  Lock,
-  ListMusic,
-  Target,
-  Briefcase,
-  Calendar,
-  BookOpen,
-  ExternalLink,
-  Hash,
-  MapPin,
-  Clock,
-  DollarSign,
-  ChevronLeft,
-  ChevronRight,
-  BarChart3,
-  CheckCircle2
-} from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { trackLike, trackRepost, trackSave, trackShare, trackVote, trackCommunityEngagement } from '@/lib/tracking'
+import { Globe, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  RiRepeatLine,
+  RiMore2Line,
+  RiShareLine,
+  RiEditLine,
+  RiDeleteBinLine,
+  RiPlayFill,
+  RiExternalLinkLine,
+  RiFocus3Line,
+  RiBriefcaseLine,
+  RiCalendarLine,
+  RiBook2Line,
+  RiMapPinLine,
+  RiTimeLine,
+  RiMoneyDollarCircleLine,
+  RiBarChart2Line,
+  RiCheckLine,
+  RiHashtag,
+  RiHeartLine,
+  RiHeartFill,
+  RiChat1Line,
+  RiBookmarkLine,
+  RiBookmarkFill,
+} from "react-icons/ri"
 
 interface Post {
   _id: string
@@ -120,11 +119,11 @@ interface PostCardProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-const contentTypeIcons: Record<string, any> = {
-  opportunity: Target,
-  job: Briefcase,
-  event: Calendar,
-  resource: BookOpen
+const contentTypeIconNames: Record<string, string> = {
+  opportunity: "opportunity",
+  job: "job",
+  event: "event",
+  resource: "resource"
 }
 
 export default function PostCard({ post, onUpdate, onDelete, showActions = true }: PostCardProps) {
@@ -411,8 +410,41 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         )
       }
       if (part.startsWith('@')) {
+        const slug = part.substring(1)
+        const lowerSlug = slug.toLowerCase()
+
+        // 1) Try to resolve as a user mention using the mentions array from backend
+        const mention = localPost.mentions?.find((m) =>
+          (m.username || '').toLowerCase() === lowerSlug
+        )
+        if (mention) {
+          return (
+            <Link
+              key={i}
+              href={`/profile/${mention.userId}`}
+              className="text-primary hover:underline"
+            >
+              {part}
+            </Link>
+          )
+        }
+
+        // 2) Otherwise, if it looks like a channel slug (lowercase with ._-), link to channel
+        if (/^[a-z0-9._-]+$/.test(slug)) {
+          return (
+            <Link
+              key={i}
+              href={`/channels/${slug}`}
+              className="text-primary hover:underline"
+            >
+              {part}
+            </Link>
+          )
+        }
+
+        // 3) Fallback: just styled text
         return (
-          <span key={i} className="text-blue-400 hover:underline cursor-pointer">
+          <span key={i} className="text-primary">
             {part}
           </span>
         )
@@ -422,11 +454,11 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
   }
 
   return (
-    <article className="w-full max-w-full rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:bg-white/[0.03] transition-colors">
+    <article className="w-full max-w-full rounded-2xl bg-card border border-border overflow-hidden hover:bg-muted transition-colors">
       {/* Repost Header */}
       {localPost.isRepost && localPost.repostedBy && (
-        <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-white/40">
-          <Repeat2 className="w-3.5 h-3.5" />
+        <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <RiRepeatLine className="w-3.5 h-3.5" aria-hidden />
           <span>
             {localPost.repostedBy.firstName || localPost.repostedBy.email.split('@')[0]} reposted
           </span>
@@ -438,7 +470,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <Link href={`/profile/${localPost.author._id}`}>
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-white">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-foreground">
                 {localPost.author.profileImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -452,10 +484,10 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
               </div>
             </Link>
             <div>
-              <Link href={`/profile/${localPost.author._id}`} className="font-medium text-white hover:underline">
+              <Link href={`/profile/${localPost.author._id}`} className="font-medium text-foreground hover:underline">
                 {localPost.author.firstName || localPost.author.email.split('@')[0]}
               </Link>
-              <div className="flex items-center gap-2 text-xs text-white/40">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{formatDistanceToNow(new Date(localPost.createdAt), { addSuffix: true })}</span>
                 {localPost.isEdited && <span>• edited</span>}
                 {localPost.visibility === 'private' ? (
@@ -470,26 +502,26 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {showActions && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1.5 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/60">
-                  <MoreHorizontal className="w-5 h-5" />
+                <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-muted-foreground">
+                  <RiMore2Line className="w-5 h-5" aria-hidden />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-[#141414] border-white/[0.08] rounded-xl">
+              <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl">
                 <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
-                  <Share2 className="w-4 h-4 mr-2" />
+                  <RiShareLine className="w-4 h-4 mr-2" aria-hidden />
                   Share
                 </DropdownMenuItem>
                 {isOwner && (
                   <>
-                    <DropdownMenuSeparator className="bg-white/[0.06]" />
+                    <DropdownMenuSeparator className="bg-muted" />
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href={`/posts/${post._id}/edit`}>
-                        <Edit className="w-4 h-4 mr-2" />
+                        <RiEditLine className="w-4 h-4 mr-2" aria-hidden />
                         Edit
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:text-red-400 cursor-pointer">
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <RiDeleteBinLine className="w-4 h-4 mr-2" aria-hidden />
                       Delete
                     </DropdownMenuItem>
                   </>
@@ -503,7 +535,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         <div className="mb-3">
           {/* Text */}
           {localPost.content.text && (
-            <p className="text-base text-white/90 leading-relaxed whitespace-pre-wrap break-words mb-3">
+            <p className="text-base text-foreground/90 leading-relaxed whitespace-pre-wrap break-words mb-3">
               {renderText(localPost.content.text)}
             </p>
           )}
@@ -556,7 +588,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         }}
                         className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors z-10"
                       >
-                        <ChevronLeft className="w-5 h-5 text-white" />
+                        <ChevronLeft className="w-5 h-5 text-foreground" />
                       </button>
                     )}
                     {currentImageIndex < localPost.content.images.length - 1 && (
@@ -568,7 +600,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors z-10"
                       >
-                        <ChevronRight className="w-5 h-5 text-white" />
+                        <ChevronRight className="w-5 h-5 text-foreground" aria-hidden />
                       </button>
                     )}
                   </>
@@ -588,8 +620,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         className={cn(
                           "h-1.5 rounded-full transition-all",
                           index === currentImageIndex
-                            ? "w-6 bg-white"
-                            : "w-1.5 bg-white/40 hover:bg-white/60"
+                            ? "w-6 bg-card"
+                            : "w-1.5 bg-muted hover:bg-card/60"
                         )}
                       />
                     ))}
@@ -598,7 +630,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
                 {/* Image Counter */}
                 {localPost.content.images.length > 1 && (
-                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 text-xs text-white z-10">
+                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 text-xs text-foreground z-10">
                     {currentImageIndex + 1} / {localPost.content.images.length}
                   </div>
                 )}
@@ -609,31 +641,34 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {/* Playlist Preview */}
           {localPost.content.playlist && (
             <Link href={`/playlists/${localPost.content.playlist._id}`}>
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 hover:bg-white/[0.05] transition-colors">
+              <div className="rounded-xl bg-muted border border-border p-4 hover:bg-muted transition-colors">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
-                    <ListMusic className="w-6 h-6 text-orange-500" />
+                    <RiPlayFill className="w-6 h-6 text-orange-500" aria-hidden />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-white truncate">{localPost.content.playlist.name}</h4>
-                    <p className="text-xs text-white/40">{localPost.content.playlist.itemCount} items</p>
+                    <h4 className="font-medium text-foreground truncate">{localPost.content.playlist.name}</h4>
+                    <p className="text-xs text-muted-foreground">{localPost.content.playlist.itemCount} items</p>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-white/30" />
+                  <RiExternalLinkLine className="w-4 h-4 text-muted-foreground" aria-hidden />
                 </div>
                 
                 {localPost.content.playlist.items && localPost.content.playlist.items.length > 0 && (
                   <div className="space-y-1.5">
                     {localPost.content.playlist.items.slice(0, 3).map((item, index) => {
-                      const Icon = contentTypeIcons[item.contentType] || Target
+                      const iconName = contentTypeIconNames[item.contentType] || "opportunity"
                       return (
-                        <div key={item._id || index} className="flex items-center gap-2 text-xs text-white/50">
-                          <Icon className="w-3 h-3" />
+                        <div key={item._id || index} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {iconName === "opportunity" && <RiFocus3Line className="w-3 h-3" aria-hidden />}
+                          {iconName === "job" && <RiBriefcaseLine className="w-3 h-3" aria-hidden />}
+                          {iconName === "event" && <RiCalendarLine className="w-3 h-3" aria-hidden />}
+                          {iconName === "resource" && <RiBook2Line className="w-3 h-3" aria-hidden />}
                           <span className="truncate">{item.title}</span>
                         </div>
                       )
                     })}
                     {localPost.content.playlist.itemCount > 3 && (
-                      <p className="text-xs text-white/30">+{localPost.content.playlist.itemCount - 3} more</p>
+                      <p className="text-xs text-muted-foreground">+{localPost.content.playlist.itemCount - 3} more</p>
                     )}
                   </div>
                 )}
@@ -646,38 +681,38 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
             <Link href={`/${localPost.content.contentReference.type === 'opportunity' ? 'opportunities' : localPost.content.contentReference.type === 'job' ? 'jobs' : localPost.content.contentReference.type === 'event' ? 'events' : 'resources'}/${localPost.content.contentReference.contentId}`}>
               <div className={cn(
                 "rounded-xl border p-4 hover:opacity-90 transition-opacity cursor-pointer",
-                localPost.content.contentReference.type === 'opportunity' && "bg-orange-500/10 border-orange-500/20",
-                localPost.content.contentReference.type === 'job' && "bg-blue-500/10 border-blue-500/20",
+                localPost.content.contentReference.type === 'opportunity' && "bg-primary/10 border-orange-500/20",
+                localPost.content.contentReference.type === 'job' && "bg-primary/10 border-primary/20",
                 localPost.content.contentReference.type === 'event' && "bg-emerald-500/10 border-emerald-500/20",
                 localPost.content.contentReference.type === 'resource' && "bg-violet-500/10 border-violet-500/20"
               )}>
                 <div className="flex items-start gap-3">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    localPost.content.contentReference.type === 'opportunity' && "bg-orange-500/20",
-                    localPost.content.contentReference.type === 'job' && "bg-blue-500/20",
+                    localPost.content.contentReference.type === 'opportunity' && "bg-primary/20",
+                    localPost.content.contentReference.type === 'job' && "bg-primary/20",
                     localPost.content.contentReference.type === 'event' && "bg-emerald-500/20",
                     localPost.content.contentReference.type === 'resource' && "bg-violet-500/20"
                   )}>
-                    {(() => {
-                      const Icon = contentTypeIcons[localPost.content.contentReference.type] || Target
-                      return (
-                        <Icon className={cn(
-                          "w-5 h-5",
-                          localPost.content.contentReference.type === 'opportunity' && "text-orange-500",
-                          localPost.content.contentReference.type === 'job' && "text-blue-500",
-                          localPost.content.contentReference.type === 'event' && "text-emerald-500",
-                          localPost.content.contentReference.type === 'resource' && "text-violet-500"
-                        )} />
-                      )
-                    })()}
+                    {localPost.content.contentReference.type === 'opportunity' && (
+                      <RiFocus3Line className="w-5 h-5 text-orange-500" aria-hidden />
+                    )}
+                    {localPost.content.contentReference.type === 'job' && (
+                      <RiBriefcaseLine className="w-5 h-5 text-primary" aria-hidden />
+                    )}
+                    {localPost.content.contentReference.type === 'event' && (
+                      <RiCalendarLine className="w-5 h-5 text-emerald-500" aria-hidden />
+                    )}
+                    {localPost.content.contentReference.type === 'resource' && (
+                      <RiBook2Line className="w-5 h-5 text-violet-500" aria-hidden />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={cn(
                         "text-xs font-medium",
                         localPost.content.contentReference.type === 'opportunity' && "text-orange-500",
-                        localPost.content.contentReference.type === 'job' && "text-blue-500",
+                        localPost.content.contentReference.type === 'job' && "text-primary",
                         localPost.content.contentReference.type === 'event' && "text-emerald-500",
                         localPost.content.contentReference.type === 'resource' && "text-violet-500"
                       )}>
@@ -687,25 +722,25 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                       </span>
                       {localPost.content.contentReference.organization && (
                         <>
-                          <span className="text-white/20">•</span>
-                          <span className="text-xs text-white/50 truncate">
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-xs text-muted-foreground truncate">
                             {localPost.content.contentReference.organization}
                           </span>
                         </>
                       )}
                     </div>
-                    <h4 className="text-sm font-semibold text-white mb-1 line-clamp-2 break-words">
+                    <h4 className="text-sm font-semibold text-foreground mb-1 line-clamp-2 break-words">
                       {localPost.content.contentReference.title}
                     </h4>
                     {localPost.content.contentReference.description && (
-                      <p className="text-xs text-white/60 line-clamp-2 mb-2 break-words">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2 break-words">
                         {localPost.content.contentReference.description}
                       </p>
                     )}
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-white/50">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       {localPost.content.contentReference.location && (
                         <div className="inline-flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
+                          <RiMapPinLine className="w-3 h-3" aria-hidden />
                           <span>
                             {localPost.content.contentReference.location.isRemote 
                               ? 'Remote' 
@@ -717,13 +752,13 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         <>
                           {localPost.content.contentReference.dates.applicationDeadline && (
                             <div className="inline-flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
+                              <RiTimeLine className="w-3 h-3" aria-hidden />
                               <span>Due {new Date(localPost.content.contentReference.dates.applicationDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             </div>
                           )}
                           {localPost.content.contentReference.dates.startDate && !localPost.content.contentReference.dates.applicationDeadline && (
                             <div className="inline-flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
+                              <RiTimeLine className="w-3 h-3" aria-hidden />
                               <span>{new Date(localPost.content.contentReference.dates.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             </div>
                           )}
@@ -731,13 +766,13 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                       )}
                       {localPost.content.contentReference.financial?.isPaid && (
                         <div className="inline-flex items-center gap-1">
-                          <DollarSign className="w-3 h-3" />
+                          <RiMoneyDollarCircleLine className="w-3 h-3" aria-hidden />
                           <span>{localPost.content.contentReference.financial.amount || 'Paid'}</span>
                         </div>
                       )}
                     </div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-white/30 flex-shrink-0" />
+                  <RiExternalLinkLine className="w-4 h-4 text-muted-foreground flex-shrink-0" aria-hidden />
                 </div>
               </div>
             </Link>
@@ -752,10 +787,10 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
             const totalVotes = poll.totalVotes || poll.options.reduce((sum: number, opt: any) => sum + (opt.votes || 0), 0)
             
             return (
-              <div className="mb-3 rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
+              <div className="mb-3 rounded-xl bg-muted border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <BarChart3 className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                  <h4 className="text-sm font-semibold text-white break-words">{poll.question}</h4>
+                  <RiBarChart2Line className="w-4 h-4 text-orange-500 flex-shrink-0" aria-hidden />
+                  <h4 className="text-sm font-semibold text-foreground break-words">{poll.question}</h4>
                 </div>
                 
                 <div className="space-y-2">
@@ -775,33 +810,33 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         className={cn(
                           "w-full relative rounded-lg border transition-all text-left overflow-hidden",
                           isSelected
-                            ? "border-orange-500/50 bg-orange-500/10"
+                            ? "border-orange-500/50 bg-primary/10"
                             : hasVoted || isPollEnded
-                            ? "border-white/[0.06] bg-white/[0.02] cursor-default"
-                            : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04] cursor-pointer"
+                            ? "border-border bg-card cursor-default"
+                            : "border-border bg-card hover:border-border hover:bg-muted cursor-pointer"
                         )}
                       >
                         <div className="relative z-10 p-3 flex items-center justify-between gap-2">
                           <span className={cn(
                             "text-sm break-words flex-1 min-w-0",
-                            isSelected ? "text-orange-500 font-medium" : "text-white"
+                            isSelected ? "text-orange-500 font-medium" : "text-foreground"
                           )}>
                             {option.text}
                           </span>
                           <div className="flex items-center gap-2">
                             {(hasVoted || isPollEnded) && (
-                              <span className="text-xs text-white/50">
+                              <span className="text-xs text-muted-foreground">
                                 {percentage.toFixed(1)}%
                               </span>
                             )}
                             {isSelected && (
-                              <CheckCircle2 className="w-4 h-4 text-orange-500" />
+                              <RiCheckLine className="w-4 h-4 text-orange-500" aria-hidden />
                             )}
                           </div>
                         </div>
                         {(hasVoted || isPollEnded) && (
                           <div
-                            className="absolute inset-0 bg-orange-500/20"
+                            className="absolute inset-0 bg-primary/20"
                             style={{ width: `${percentage}%` }}
                           />
                         )}
@@ -810,7 +845,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   })}
                 </div>
                 
-                <div className="mt-3 flex items-center justify-between text-xs text-white/40">
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                   <span>{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</span>
                   {!isPollEnded && (
                     <span>
@@ -818,7 +853,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                     </span>
                   )}
                   {isPollEnded && (
-                    <span className="text-white/30">Poll ended</span>
+                    <span className="text-muted-foreground">Poll ended</span>
                   )}
                 </div>
               </div>
@@ -832,9 +867,9 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                 <Link
                   key={tag}
                   href={`/community?hashtag=${tag}`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-400 text-xs hover:bg-orange-500/20 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-orange-400 text-xs hover:bg-primary/20 transition-colors"
                 >
-                  <Hash className="w-3 h-3" />
+                  <RiHashtag className="w-3 h-3" aria-hidden />
                   {tag}
                 </Link>
               ))}
@@ -844,7 +879,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
         {/* Actions */}
         {showActions && (
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between pt-2 border-t border-border">
             <div className="flex items-center gap-1">
               {/* Like */}
               <button
@@ -854,17 +889,21 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
                   localPost.hasLiked
                     ? "text-red-500 bg-red-500/10"
-                    : "text-white/50 hover:text-red-500 hover:bg-red-500/10"
+                    : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                 )}
               >
-                <Heart className={cn("w-4 h-4", localPost.hasLiked && "fill-current")} />
+                {localPost.hasLiked ? (
+                  <RiHeartFill className="w-4 h-4" aria-hidden />
+                ) : (
+                  <RiHeartLine className="w-4 h-4" aria-hidden />
+                )}
                 <span className="text-sm">{localPost.likeCount || ''}</span>
               </button>
 
               {/* Reply */}
               <Link href={`/posts/${post._id}`}>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/50 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
-                  <MessageCircle className="w-4 h-4" />
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                  <RiChat1Line className="w-4 h-4" aria-hidden />
                   <span className="text-sm">{localPost.replyCount || ''}</span>
                 </button>
               </Link>
@@ -877,10 +916,10 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
                   localPost.hasReposted
                     ? "text-emerald-500 bg-emerald-500/10"
-                    : "text-white/50 hover:text-emerald-500 hover:bg-emerald-500/10"
+                    : "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10"
                 )}
               >
-                <Repeat2 className="w-4 h-4" />
+                <RiRepeatLine className="w-4 h-4" aria-hidden />
                 <span className="text-sm">{localPost.repostCount || ''}</span>
               </button>
             </div>
@@ -893,10 +932,14 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                 "p-2 rounded-lg transition-colors",
                 localPost.hasBookmarked
                   ? "text-yellow-500 bg-yellow-500/10"
-                  : "text-white/50 hover:text-yellow-500 hover:bg-yellow-500/10"
+                  : "text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
               )}
             >
-              <Bookmark className={cn("w-4 h-4", localPost.hasBookmarked && "fill-current")} />
+              {localPost.hasBookmarked ? (
+                <RiBookmarkFill className="w-4 h-4" aria-hidden />
+              ) : (
+                <RiBookmarkLine className="w-4 h-4" aria-hidden />
+              )}
             </button>
           </div>
         )}

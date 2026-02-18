@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: "media",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -36,6 +36,14 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
         "brand-orange": "#FF6B00",
+        qr: {
+          bg: "hsl(var(--qr-bg))",
+          surface: "hsl(var(--qr-surface))",
+          "surface-hover": "hsl(var(--qr-surface-hover))",
+          border: "hsl(var(--qr-border))",
+          text: "hsl(var(--qr-text))",
+          muted: "hsl(var(--qr-muted))",
+        },
         orange: {
           50: "#fff7ed",
           100: "#ffedd5",

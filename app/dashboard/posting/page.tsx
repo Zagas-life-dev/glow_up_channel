@@ -60,7 +60,7 @@ type PostType = 'opportunity' | 'event' | 'job' | 'resource'
 
 const postTypes = [
   { id: 'opportunity' as PostType, title: 'Opportunity', icon: Target, color: 'orange', desc: 'Internships, scholarships, grants' },
-  { id: 'job' as PostType, title: 'Job', icon: Briefcase, color: 'blue', desc: 'Full-time, part-time positions' },
+  { id: 'job' as PostType, title: 'Job', icon: Briefcase, color: 'primary', desc: 'Full-time, part-time positions' },
   { id: 'event' as PostType, title: 'Event', icon: Calendar, color: 'emerald', desc: 'Workshops, conferences, meetups' },
   { id: 'resource' as PostType, title: 'Resource', icon: BookOpen, color: 'violet', desc: 'Courses, guides, tools' },
 ]
@@ -321,27 +321,27 @@ function PostingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-page flex">
       {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/[0.06] bg-[#0a0a0a] sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-white/[0.06]">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <Plus className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-white">Post Content</h1>
-              <p className="text-xs text-white/50">Create & Share</p>
+              <h1 className="text-base font-bold text-foreground">Post Content</h1>
+              <p className="text-xs text-muted-foreground">Create & Share</p>
             </div>
           </div>
           
           {/* User Info */}
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-sm font-medium text-white truncate">
+          <div className="p-3 rounded-xl bg-muted border border-border">
+            <p className="text-sm font-medium text-foreground truncate">
               {user?.firstName || user?.email?.split('@')[0]}
             </p>
-            <p className="text-xs text-white/50 truncate">{user?.email}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
 
@@ -358,8 +358,8 @@ function PostingContent() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive 
-                    ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                    : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -370,7 +370,7 @@ function PostingContent() {
         </nav>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-white/[0.06] space-y-2">
+        <div className="p-4 border-t border-border space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
             return (
@@ -381,8 +381,8 @@ function PostingContent() {
                 className={cn(
                   "w-full justify-start",
                   link.variant === 'default' 
-                    ? "bg-orange-500 hover:bg-orange-600" 
-                    : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                    ? "bg-primary hover:bg-primary/90" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Link href={link.href}>
@@ -398,14 +398,14 @@ function PostingContent() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Plus className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-white">Post Content</h1>
+                <h1 className="text-sm font-bold text-foreground">Post Content</h1>
               </div>
             </div>
             
@@ -415,7 +415,7 @@ function PostingContent() {
                 variant="ghost" 
                 size="sm"
                 disabled={loading}
-                className="h-9 w-9 p-0 text-white/60"
+                className="h-9 w-9 p-0 text-muted-foreground"
               >
                 <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
               </Button>
@@ -426,35 +426,35 @@ function PostingContent() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="h-9 w-9 p-0 text-white/60"
+                    className="h-9 w-9 p-0 text-muted-foreground"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-[#141414] border-white/[0.08] rounded-xl p-2 shadow-xl"
+                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
                 >
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
                       <LayoutDashboard className="h-4 w-4 text-orange-400" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  {/* <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
                       <Zap className="h-4 w-4 text-orange-400" />
                       <span>Promotions</span>
                     </Link>
                   </DropdownMenuItem> */}
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
                       <Settings className="h-4 w-4 text-orange-400" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
-                  <DropdownMenuItem asChild className="text-white hover:bg-white/[0.08] rounded-lg cursor-pointer focus:bg-white/[0.08] focus:text-white">
+                  <DropdownMenuSeparator className="bg-muted my-1" />
+                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/" className="flex items-center gap-3 w-full">
                       <Home className="h-4 w-4 text-orange-400" />
                       <span>Home</span>
@@ -472,7 +472,7 @@ function PostingContent() {
                 className="fixed inset-0 bg-black/50 z-30 lg:hidden"
                 onClick={() => setSidebarOpen(false)}
               />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-[#0a0a0a] border-r border-white/[0.06] z-40 overflow-y-auto lg:hidden">
+              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
                 <div className="p-4 space-y-1">
                   {navItems.map((item) => {
                     const Icon = item.icon
@@ -486,8 +486,8 @@ function PostingContent() {
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                           isActive 
-                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                            : "text-white/60 hover:text-white hover:bg-white/[0.05]"
+                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         )}
                       >
                         <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -496,7 +496,7 @@ function PostingContent() {
                     )
                   })}
                   
-                  <div className="pt-4 mt-4 border-t border-white/[0.06] space-y-2">
+                  <div className="pt-4 mt-4 border-t border-border space-y-2">
                     {quickLinks.map((link) => {
                       const Icon = link.icon
                       return (
@@ -507,8 +507,8 @@ function PostingContent() {
                           className={cn(
                             "w-full justify-start",
                             link.variant === 'default' 
-                              ? "bg-orange-500 hover:bg-orange-600" 
-                              : "border-white/10 text-white/70 hover:text-white hover:bg-white/[0.05]"
+                              ? "bg-primary hover:bg-primary/90" 
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                           onClick={() => setSidebarOpen(false)}
                         >
@@ -532,24 +532,24 @@ function PostingContent() {
 
       {/* Onboarding Warning */}
         {!canPost && onboardingStatus && (
-        <div className="mb-8 p-5 rounded-2xl bg-orange-500/10 border border-orange-500/20">
+        <div className="mb-8 p-5 rounded-2xl bg-primary/10 border border-orange-500/20">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="flex-1">
-              <h3 className="font-semibold text-white mb-1">Complete Onboarding</h3>
-              <p className="text-sm text-white/60 mb-4">{onboardingStatus.reason}</p>
+              <h3 className="font-semibold text-foreground mb-1">Complete Onboarding</h3>
+              <p className="text-sm text-muted-foreground mb-4">{onboardingStatus.reason}</p>
                   
                   {onboardingStatus.completionPercentage > 0 && (
                     <div className="mb-4">
-                  <div className="flex justify-between text-xs text-white/50 mb-1">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
                     <span>Progress</span>
                     <span>{onboardingStatus.completionPercentage}%</span>
                       </div>
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                         <div 
-                      className="h-full bg-orange-500 rounded-full transition-all"
+                      className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${onboardingStatus.completionPercentage}%` }}
                     />
                       </div>
@@ -557,7 +557,7 @@ function PostingContent() {
                   )}
                   
                       <Link href="/dashboard/provider/onboarding">
-                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-xl">
                         Complete Onboarding
                     </Button>
                       </Link>
@@ -568,7 +568,7 @@ function PostingContent() {
 
       {/* Post Type Selection */}
         <div className="mb-8">
-        <h2 className="text-sm font-medium text-white/40 uppercase tracking-wider mb-4">What would you like to post?</h2>
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">What would you like to post?</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {postTypes.map((type) => {
             const Icon = type.icon
@@ -579,30 +579,30 @@ function PostingContent() {
                 disabled={!canPost}
                 className={cn(
                   "p-4 rounded-2xl border text-left transition-all duration-200 group",
-                  "bg-white/[0.02] border-white/[0.06]",
-                  "hover:bg-white/[0.05] hover:border-white/[0.1]",
+                  "bg-card border-border",
+                  "hover:bg-muted hover:border-border",
                   !canPost && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <div className={cn(
                   "w-11 h-11 rounded-xl flex items-center justify-center mb-3",
-                  type.color === 'orange' && "bg-orange-500/10",
-                  type.color === 'blue' && "bg-blue-500/10",
+                  type.color === 'orange' && "bg-primary/10",
+                  type.color === 'primary' && "bg-primary/10",
                   type.color === 'emerald' && "bg-emerald-500/10",
                   type.color === 'violet' && "bg-violet-500/10"
                 )}>
                   <Icon className={cn(
                     "w-5 h-5",
                     type.color === 'orange' && "text-orange-500",
-                    type.color === 'blue' && "text-blue-500",
+                    type.color === 'primary' && "text-primary",
                     type.color === 'emerald' && "text-emerald-500",
                     type.color === 'violet' && "text-violet-500"
                   )} />
                     </div>
-                <h3 className="font-semibold text-white mb-1 group-hover:text-orange-400 transition-colors">
+                <h3 className="font-semibold text-foreground mb-1 group-hover:text-orange-400 transition-colors">
                   {type.title}
                     </h3>
-                <p className="text-xs text-white/40">{type.desc}</p>
+                <p className="text-xs text-muted-foreground">{type.desc}</p>
                 </button>
               )
             })}
@@ -610,12 +610,12 @@ function PostingContent() {
         </div>
 
       {/* Recent Posts Section */}
-      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
+      <div className="rounded-2xl bg-card border border-border p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-orange-500" />
                     </div>
-          <h3 className="font-semibold text-white">Quick Start Guide</h3>
+          <h3 className="font-semibold text-foreground">Quick Start Guide</h3>
                     </div>
         <div className="space-y-3">
           {[
@@ -625,10 +625,10 @@ function PostingContent() {
             { step: 4, text: 'Submit for review' },
           ].map((item) => (
             <div key={item.step} className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-white/[0.05] flex items-center justify-center text-xs font-medium text-white/50">
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
                 {item.step}
                   </div>
-              <span className="text-sm text-white/60">{item.text}</span>
+              <span className="text-sm text-muted-foreground">{item.text}</span>
                               </div>
                             ))}
                           </div>
@@ -636,17 +636,17 @@ function PostingContent() {
                       
       {/* Bottom Sheet Form */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="bottom" className="h-[90vh] bg-[#0a0a0a] border-white/[0.08] rounded-t-3xl p-0 overflow-hidden">
+        <SheetContent side="bottom" className="h-[90vh] bg-page border-border rounded-t-3xl p-0 overflow-hidden">
           {selectedType && (
             <>
               {/* Sheet Header */}
-              <div className="sticky top-0 z-10 bg-[#0a0a0a] border-b border-white/[0.06] px-6 py-4">
+              <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
                     <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center",
-                      getTypeConfig(selectedType).color === 'orange' && "bg-orange-500/10",
-                      getTypeConfig(selectedType).color === 'blue' && "bg-blue-500/10",
+                      getTypeConfig(selectedType).color === 'orange' && "bg-primary/10",
+                      getTypeConfig(selectedType).color === 'primary' && "bg-primary/10",
                       getTypeConfig(selectedType).color === 'emerald' && "bg-emerald-500/10",
                       getTypeConfig(selectedType).color === 'violet' && "bg-violet-500/10"
                     )}>
@@ -655,19 +655,19 @@ function PostingContent() {
                         return <Icon className={cn(
                           "w-5 h-5",
                           getTypeConfig(selectedType).color === 'orange' && "text-orange-500",
-                          getTypeConfig(selectedType).color === 'blue' && "text-blue-500",
+                          getTypeConfig(selectedType).color === 'primary' && "text-primary",
                           getTypeConfig(selectedType).color === 'emerald' && "text-emerald-500",
                           getTypeConfig(selectedType).color === 'violet' && "text-violet-500"
                         )} />
                       })()}
                     </div>
                       <div>
-                      <SheetTitle className="text-white">New {getTypeConfig(selectedType).title}</SheetTitle>
-                      <SheetDescription className="text-white/40 text-xs">Fill in the details below</SheetDescription>
+                      <SheetTitle className="text-foreground">New {getTypeConfig(selectedType).title}</SheetTitle>
+                      <SheetDescription className="text-muted-foreground text-xs">Fill in the details below</SheetDescription>
                       </div>
                     </div>
-                  <button onClick={() => setIsSheetOpen(false)} className="p-2 rounded-lg hover:bg-white/[0.05]">
-                    <X className="w-5 h-5 text-white/60" />
+                  <button onClick={() => setIsSheetOpen(false)} className="p-2 rounded-lg hover:bg-muted">
+                    <X className="w-5 h-5 text-muted-foreground" />
                   </button>
                       </div>
                   </div>
@@ -679,8 +679,8 @@ function PostingContent() {
                     <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                       <CheckCircle className="w-8 h-8 text-emerald-500" />
                   </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Posted Successfully!</h3>
-                    <p className="text-white/50">Your {selectedType} has been submitted for review.</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Posted Successfully!</h3>
+                    <p className="text-muted-foreground">Your {selectedType} has been submitted for review.</p>
                   </div>
                            </div>
                          )}
@@ -704,41 +704,41 @@ function PostingContent() {
                     {/* Common Fields - Title & Company/Organizer */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label className="text-white/70">Title *</Label>
+                        <Label className="text-muted-foreground">Title *</Label>
                       <Input
                           name="title"
                           placeholder={`${getTypeConfig(selectedType).title} title`}
                         required
-                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-white/70">
+                        <Label className="text-muted-foreground">
                           {selectedType === 'event' ? 'Organizer' : selectedType === 'resource' ? 'Creator' : 'Company'} 
                         </Label>
                       <Input
                           name={selectedType === 'event' ? 'organizer' : selectedType === 'resource' ? 'author' : 'company'}
                           placeholder={selectedType === 'event' ? 'Organizer name' : selectedType === 'resource' ? 'Creator name' : 'Company name'}
                         
-                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
                       />
                     </div>
                   </div>
 
                     {/* Type Selection */}
                     <div className="space-y-2">
-                      <Label className="text-white/70">Type *</Label>
+                      <Label className="text-muted-foreground">Type *</Label>
                       <Select name="type" required>
-                        <SelectTrigger className="bg-white/[0.05] border-white/[0.08] text-white h-11 rounded-xl">
+                        <SelectTrigger className="bg-muted border-border text-foreground h-11 rounded-xl">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#141414] border-white/[0.08]">
+                        <SelectContent className="bg-surface border-border">
                           {(selectedType === 'opportunity' ? opportunityTypes :
                             selectedType === 'job' ? jobTypes :
                             selectedType === 'event' ? eventTypes :
                             resourceCategories
                           ).map((t) => (
-                            <SelectItem key={t} value={t} className="text-white hover:bg-white/[0.05]">{t}</SelectItem>
+                            <SelectItem key={t} value={t} className="text-foreground hover:bg-muted">{t}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -746,50 +746,50 @@ function PostingContent() {
 
                     {/* Description */}
                         <div className="space-y-2">
-                      <Label className="text-white/70">Description *</Label>
+                      <Label className="text-muted-foreground">Description *</Label>
                     <Textarea
                         name="description"
                         placeholder="Describe in detail..."
                       required
                         rows={4}
-                        className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
+                        className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
                       />
                   </div>
 
                     {/* URL */}
                   <div className="space-y-2">
-                      <Label className="text-white/70">External Link *</Label>
+                      <Label className="text-muted-foreground">External Link *</Label>
                       <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                           name="url"
                           type="url"
                           placeholder="https://..."
                           required
-                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl pl-10"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl pl-10"
                         />
                               </div>
                           </div>
 
                     {/* Location (not for resource) */}
                     {selectedType !== 'resource' && (
-                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                      <div className="space-y-4 p-4 rounded-xl bg-card border border-border">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-white/40" />
-                            <span className="text-sm font-medium text-white/70">Location</span>
+                            <MapPin className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">Location</span>
                       </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-white/40">Virtual</span>
+                            <span className="text-xs text-muted-foreground">Virtual</span>
                             <Switch checked={isRemote} onCheckedChange={setIsRemote} />
                     </div>
                   </div>
 
                         {!isRemote && (
                           <div className="grid grid-cols-3 gap-3">
-                            <Input name="country" placeholder="Country" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
-                            <Input name="province" placeholder="State/Province" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
-                            <Input name="city" placeholder="City" className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm" />
+                            <Input name="country" placeholder="Country" className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
+                            <Input name="province" placeholder="State/Province" className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
+                            <Input name="city" placeholder="City" className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
                         </div>
                       )}
                   </div>
@@ -797,16 +797,16 @@ function PostingContent() {
 
                     {/* Financial (for opportunity, job) or Price (for event) */}
                     {(selectedType === 'opportunity' || selectedType === 'job' || selectedType === 'event') && (
-                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                      <div className="space-y-4 p-4 rounded-xl bg-card border border-border">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-white/40" />
-                            <span className="text-sm font-medium text-white/70">
+                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">
                               {selectedType === 'event' ? 'Ticket Price' : 'Compensation'}
                             </span>
                 </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-white/40">{selectedType === 'event' ? 'Paid Event' : 'Paid'}</span>
+                            <span className="text-xs text-muted-foreground">{selectedType === 'event' ? 'Paid Event' : 'Paid'}</span>
                             <Switch checked={isPaid} onCheckedChange={setIsPaid} />
                     </div>
                   </div>
@@ -816,17 +816,17 @@ function PostingContent() {
                       <Input
                               name={selectedType === 'event' ? 'price' : selectedType === 'job' ? 'salary' : 'amount'}
                               placeholder="Amount"
-                              className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/30 h-10 rounded-lg text-sm flex-1"
+                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm flex-1"
                             />
                             {selectedType === 'job' && (
                               <Select name="period">
-                                <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg w-32">
+                                <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg w-32">
                                   <SelectValue placeholder="Period" />
                         </SelectTrigger>
-                                <SelectContent className="bg-[#141414] border-white/[0.08]">
-                                  <SelectItem value="hourly" className="text-white">Hourly</SelectItem>
-                                  <SelectItem value="monthly" className="text-white">Monthly</SelectItem>
-                                  <SelectItem value="yearly" className="text-white">Yearly</SelectItem>
+                                <SelectContent className="bg-surface border-border">
+                                  <SelectItem value="hourly" className="text-foreground">Hourly</SelectItem>
+                                  <SelectItem value="monthly" className="text-foreground">Monthly</SelectItem>
+                                  <SelectItem value="yearly" className="text-foreground">Yearly</SelectItem>
                         </SelectContent>
                       </Select>
                             )}
@@ -837,28 +837,28 @@ function PostingContent() {
 
                     {/* Dates */}
                     {selectedType !== 'resource' && (
-                      <div className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                      <div className="space-y-4 p-4 rounded-xl bg-card border border-border">
                         <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-white/40" />
-                          <span className="text-sm font-medium text-white/70">Dates</span>
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">Dates</span>
                     </div>
                     
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {selectedType === 'event' ? (
                             <>
                               <div className="space-y-1">
-                                <Label className="text-xs text-white/40">Start Date *</Label>
-                                <Input name="startDate" type="date" required className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
+                                <Label className="text-xs text-muted-foreground">Start Date *</Label>
+                                <Input name="startDate" type="date" required className="bg-muted border-border text-foreground h-10 rounded-lg text-sm" />
                             </div>
                               <div className="space-y-1">
-                                <Label className="text-xs text-white/40">End Date</Label>
-                                <Input name="endDate" type="date" className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
+                                <Label className="text-xs text-muted-foreground">End Date</Label>
+                                <Input name="endDate" type="date" className="bg-muted border-border text-foreground h-10 rounded-lg text-sm" />
                           </div>
                             </>
                           ) : (
                             <div className="space-y-1">
-                              <Label className="text-xs text-white/40">Application Deadline</Label>
-                              <Input name="deadline" type="date" className="bg-white/[0.03] border-white/[0.06] text-white h-10 rounded-lg text-sm" />
+                              <Label className="text-xs text-muted-foreground">Application Deadline</Label>
+                              <Input name="deadline" type="date" className="bg-muted border-border text-foreground h-10 rounded-lg text-sm" />
                           </div>
                           )}
                         </div>
@@ -867,12 +867,12 @@ function PostingContent() {
 
                     {/* Tags */}
                     <div className="space-y-3">
-                      <Label className="text-white/70">Tags</Label>
+                      <Label className="text-muted-foreground">Tags</Label>
                       <div className="flex flex-wrap gap-2 mb-2">
                         {tags.map((tag) => (
-                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] text-white/70 text-sm">
+                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-sm">
                               {tag}
-                            <button type="button" onClick={() => removeTag(tag)} className="hover:text-white">
+                            <button type="button" onClick={() => removeTag(tag)} className="hover:text-foreground">
                               <X className="w-3 h-3" />
                               </button>
                             </span>
@@ -883,20 +883,20 @@ function PostingContent() {
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={handleAddTag}
                         placeholder="Type and press Enter to add tags"
-                        className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-10 rounded-xl"
+                        className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-xl"
                       />
-                      <p className="text-xs text-white/30">Add up to 10 tags for better discovery</p>
+                      <p className="text-xs text-muted-foreground">Add up to 10 tags for better discovery</p>
                   </div>
 
                     {/* Requirements (for opportunity) */}
                     {selectedType === 'opportunity' && (
                     <div className="space-y-2">
-                        <Label className="text-white/70">Requirements</Label>
+                        <Label className="text-muted-foreground">Requirements</Label>
                     <Textarea
                           name="requirements"
                           placeholder="List the requirements..."
                           rows={3}
-                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 rounded-xl resize-none"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
                         />
                       </div>
                     )}
@@ -904,12 +904,12 @@ function PostingContent() {
                     {/* Capacity (for event) */}
                     {selectedType === 'event' && (
                   <div className="space-y-2">
-                        <Label className="text-white/70">Capacity</Label>
+                        <Label className="text-muted-foreground">Capacity</Label>
                          <Input
                           name="capacity"
                           type="number"
                           placeholder="Maximum attendees (optional)"
-                          className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/30 h-11 rounded-xl"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
                         />
                            </div>
                          )}
@@ -919,7 +919,7 @@ function PostingContent() {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl"
+                        className="w-full h-12 bg-primary hover:bg-primary/90 text-foreground font-semibold rounded-xl"
                       >
                       {isSubmitting ? (
                           <>
@@ -945,7 +945,7 @@ function PostingContent() {
         </main>
 
         {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around h-16 px-2">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -959,7 +959,7 @@ function PostingContent() {
                     "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
                     isActive 
                       ? "text-orange-400" 
-                      : "text-white/50"
+                      : "text-muted-foreground"
                   )}
                 >
                   <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />

@@ -7,21 +7,19 @@ import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
-import { 
-  Menu, 
-  X, 
-  ChevronDown, 
-  User, 
-  Briefcase, 
-  Calendar, 
-  BookOpen, 
-  Lightbulb,
-  Users,
-  Home,
-  LogOut,
-  Settings,
-  Search
-} from 'lucide-react'
+import {
+  RiArrowDownSLine,
+  RiSearchLine,
+  RiUserLine,
+  RiBriefcaseLine,
+  RiSettings3Line,
+  RiLogoutBoxRLine,
+  RiMenuLine,
+  RiCloseLine,
+  RiCalendarLine,
+  RiBook2Line,
+  RiGroupLine,
+} from "react-icons/ri"
 
 const routes = [
   { name: "Home", path: "/", description: "Welcome to GlowUp" },
@@ -30,10 +28,10 @@ const routes = [
     path: "/opportunities", 
     description: "Find your next opportunity",
     dropdown: [
-      { name: "All Opportunities", path: "/opportunities", description: "Browse all opportunities", icon: Lightbulb },
-      { name: "Internships", path: "/opportunities?type=internship", description: "Find internship positions", icon: BookOpen },
-      { name: "Freelance", path: "/opportunities?type=freelance", description: "Freelance projects", icon: Briefcase },
-      { name: "Scholarships", path: "/opportunities?type=scholarship", description: "Educational funding", icon: BookOpen },
+      { name: "All Opportunities", path: "/opportunities", description: "Browse all opportunities", iconName: "lightbulb" },
+      { name: "Internships", path: "/opportunities?type=internship", description: "Find internship positions", iconName: "book" },
+      { name: "Freelance", path: "/opportunities?type=freelance", description: "Freelance projects", iconName: "briefcase" },
+      { name: "Scholarships", path: "/opportunities?type=scholarship", description: "Educational funding", iconName: "book" },
     ]
   },
   { 
@@ -41,10 +39,10 @@ const routes = [
     path: "/jobs", 
     description: "Find your dream job",
     dropdown: [
-      { name: "All Jobs", path: "/jobs", description: "Browse all job listings", icon: Briefcase },
-      { name: "Full Time", path: "/jobs?type=full-time", description: "Full-time positions", icon: Briefcase },
-      { name: "Part Time", path: "/jobs?type=part-time", description: "Part-time positions", icon: Briefcase },
-      { name: "Remote", path: "/jobs?type=remote", description: "Remote work opportunities", icon: Briefcase },
+      { name: "All Jobs", path: "/jobs", description: "Browse all job listings", iconName: "briefcase" },
+      { name: "Full Time", path: "/jobs?type=full-time", description: "Full-time positions", iconName: "briefcase" },
+      { name: "Part Time", path: "/jobs?type=part-time", description: "Part-time positions", iconName: "briefcase" },
+      { name: "Remote", path: "/jobs?type=remote", description: "Remote work opportunities", iconName: "briefcase" },
     ]
   },
   { 
@@ -52,10 +50,10 @@ const routes = [
     path: "/events", 
     description: "Connect and learn",
     dropdown: [
-      { name: "All Events", path: "/events", description: "Browse all events", icon: Calendar },
-      { name: "Workshops", path: "/events?type=workshop", description: "Skill-building workshops", icon: Users },
-      { name: "Networking", path: "/events?type=networking", description: "Professional networking", icon: Users },
-      { name: "Webinars", path: "/events?type=webinar", description: "Online learning sessions", icon: Calendar },
+      { name: "All Events", path: "/events", description: "Browse all events", iconName: "calendar" },
+      { name: "Workshops", path: "/events?type=workshop", description: "Skill-building workshops", iconName: "users" },
+      { name: "Networking", path: "/events?type=networking", description: "Professional networking", iconName: "users" },
+      { name: "Webinars", path: "/events?type=webinar", description: "Online learning sessions", iconName: "calendar" },
     ]
   },
   { 
@@ -63,10 +61,10 @@ const routes = [
     path: "/resources", 
     description: "Free learning materials",
     dropdown: [
-      { name: "All Resources", path: "/resources", description: "Browse all resources", icon: BookOpen },
-      { name: "Career Guides", path: "/resources?type=career-guide", description: "Professional development", icon: BookOpen },
-      { name: "Skill Development", path: "/resources?type=skill-development", description: "Learn new skills", icon: BookOpen },
-      { name: "Industry Insights", path: "/resources?type=industry-insight", description: "Market knowledge", icon: BookOpen },
+      { name: "All Resources", path: "/resources", description: "Browse all resources", iconName: "book" },
+      { name: "Career Guides", path: "/resources?type=career-guide", description: "Professional development", iconName: "book" },
+      { name: "Skill Development", path: "/resources?type=skill-development", description: "Learn new skills", iconName: "book" },
+      { name: "Industry Insights", path: "/resources?type=industry-insight", description: "Market knowledge", iconName: "book" },
     ]
   },
 ]
@@ -106,7 +104,7 @@ export default function Navbar() {
   return (
     <div className="w-full">
     <header className="fixed top-4 left-4 right-4 z-50" data-navbar>
-        <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-gray-200/50 shadow-lg shadow-black/5 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto bg-card/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-border shadow-lg shadow-black/5 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
@@ -142,18 +140,19 @@ export default function Navbar() {
                         }`}
                       >
                         {route.name}
-                        <ChevronDown className={`ml-1 lg:ml-2 h-3 w-3 lg:h-4 lg:w-4 transition-transform duration-200 ${
-                          openDropdown === route.name ? 'rotate-180' : ''
-                        }`} />
+                        <RiArrowDownSLine
+                          className={`ml-1 lg:ml-2 h-3 w-3 lg:h-4 lg:w-4 transition-transform duration-200 ${
+                            openDropdown === route.name ? 'rotate-180' : ''
+                          }`}
+                          aria-hidden
+                        />
                       </button>
 
                       {/* Dropdown */}
                       {openDropdown === route.name && (
-                        <div className="absolute top-full left-0 mt-2 w-64 lg:w-72 bg-white rounded-2xl border border-gray-200 shadow-xl z-50" data-dropdown-content>
+                        <div className="absolute top-full left-0 mt-2 w-64 lg:w-72 bg-card rounded-2xl border border-gray-200 shadow-xl z-50" data-dropdown-content>
                           <div className="p-2">
-                            {route.dropdown?.map((item) => {
-                              const Icon = item.icon
-                              return (
+                            {route.dropdown?.map((item) => (
                                 <Link
                                   key={item.path}
                                   href={item.path}
@@ -163,9 +162,23 @@ export default function Navbar() {
                                     setIsMenuOpen(false)
                                   }}
                                 >
-                                  <Icon className="h-5 w-5 text-orange-500 mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" />
+                                  {item.iconName === "lightbulb" && (
+                                    <RiBook2Line className="h-5 w-5 text-primary mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "book" && (
+                                    <RiBook2Line className="h-5 w-5 text-primary mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "briefcase" && (
+                                    <RiBriefcaseLine className="h-5 w-5 text-primary mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "calendar" && (
+                                    <RiCalendarLine className="h-5 w-5 text-primary mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "users" && (
+                                    <RiGroupLine className="h-5 w-5 text-primary mt-0.5 mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
                                   <div>
-                                    <div className="font-medium text-gray-900 group-hover:text-orange-600 transition-colors duration-200">
+                                    <div className="font-medium text-foreground group-hover:text-orange-600 transition-colors duration-200">
                                       {item.name}
                                     </div>
                                     <div className="text-sm text-gray-500 mt-0.5">
@@ -173,8 +186,7 @@ export default function Navbar() {
                                     </div>
                                   </div>
                                 </Link>
-                              )
-                            })}
+                              ))}
                           </div>
                         </div>
                       )}
@@ -199,8 +211,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center">
               <Button asChild variant="ghost" className="px-3 lg:px-4 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200">
                 <Link href="/search">
-                  <Search className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
-           
+                  <RiSearchLine className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                 </Link>
               </Button>
             </div>
@@ -208,40 +219,39 @@ export default function Navbar() {
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
               {isLoading ? (
-                // Loading state
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-gray-600">Loading...</span>
+                <div className="flex items-center space-x-2 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-gray-200" />
+                  <div className="h-4 w-20 bg-gray-200 rounded" />
                 </div>
               ) : user ? (
                 // Logged in user actions
                 <div className="flex items-center space-x-2">
                   {/* <div className="flex items-center space-x-2 px-3 py-2 bg-orange-50 rounded-full">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <FlaticonIcon name="user" className="h-4 w-4 text-foreground" aria-hidden />
                     </div>
                     <div className="text-sm">
-                      <div className="font-medium text-gray-900">{user.email}</div>
+                      <div className="font-medium text-foreground">{user.email}</div>
                       <div className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ')}</div>
                     </div>
                   </div> */}
                   <Button asChild variant="ghost" className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-orange-600 hover:text-orange-400 hover:bg-orange-50 transition-all duration-200">
                     <Link href="/dashboard">
-                      <User className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+                      <RiUserLine className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                       Dashboard
                     </Link>
                   </Button>
               {/* {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
                 <Button asChild variant="ghost" className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200">
                   <Link href="/dashboard/provider">
-                    <Briefcase className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+                    <FlaticonIcon name="briefcase" className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                     Provider
                   </Link>
                 </Button>
               )} */}
                   {/* <Button asChild variant="ghost" className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200">
                     <Link href="/dashboard/settings">
-                      <Settings className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+                      <FlaticonIcon name="settings" className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                       Settings
                     </Link>
                   </Button>
@@ -250,7 +260,7 @@ export default function Navbar() {
                     variant="ghost" 
                     className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                   >
-                    <LogOut className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+                    <FlaticonIcon name="sign-out" className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                     Sign Out
                   </Button> */}
                 </div>
@@ -260,7 +270,7 @@ export default function Navbar() {
                   <Button asChild variant="ghost" className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200">
                     <Link href="/login">Sign In</Link>
                   </Button>
-                  <Button asChild className="px-4 lg:px-6 py-2 lg:py-3 rounded-full text-sm lg:text-base font-semibold bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-200">
+                  <Button asChild className="px-4 lg:px-6 py-2 lg:py-3 rounded-full text-sm lg:text-base font-semibold bg-primary hover:bg-primary/90 text-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-200">
                     <Link href="/signup">Get Started</Link>
                   </Button>
                 </div>
@@ -273,16 +283,20 @@ export default function Navbar() {
                 e.stopPropagation()
                 setIsMenuOpen(!isMenuOpen)
               }}
-              className="md:hidden p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200 touch-manipulation"
+              className="md:hidden p-2 rounded-full text-gray-600 hover:bg-muted hover:text-gray-800 transition-all duration-200 touch-manipulation"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
+              {isMenuOpen ? (
+                <RiCloseLine className="h-5 w-5 sm:h-6 sm:w-6" aria-label="Close menu" />
+              ) : (
+                <RiMenuLine className="h-5 w-5 sm:h-6 sm:w-6" aria-label="Open menu" />
+              )}
             </button>
           </div>
 
           {/* Mobile Menu */}
       {isMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg rounded-b-2xl sm:rounded-b-3xl border-t border-gray-100 shadow-lg px-3 sm:px-4 pb-4 sm:pb-6 pt-2 max-h-[80vh] overflow-y-auto z-40">
+            <div className="md:hidden absolute top-full left-0 right-0 bg-card/95 backdrop-blur-lg rounded-b-2xl sm:rounded-b-3xl border-t border-border shadow-lg px-3 sm:px-4 pb-4 sm:pb-6 pt-2 max-h-[80vh] overflow-y-auto z-40">
               <nav className="space-y-1 sm:space-y-2">
             {routes.map((route) => (
                   <div key={route.path}>
@@ -296,25 +310,40 @@ export default function Navbar() {
                           className="w-full flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 text-left text-base sm:text-lg font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 touch-manipulation"
                         >
                           {route.name}
-                          <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 ${
-                            openDropdown === route.name ? 'rotate-180' : ''
-                          }`} />
+                          <RiArrowDownSLine
+                            className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 ${
+                              openDropdown === route.name ? 'rotate-180' : ''
+                            }`}
+                            aria-hidden
+                          />
                         </button>
                         
                         {openDropdown === route.name && (
                           <div className="mt-2 ml-4 space-y-1" data-dropdown-content>
-                            {route.dropdown?.map((item) => {
-                              const Icon = item.icon
-                              return (
+                            {route.dropdown?.map((item) => (
                                 <Link
                                   key={item.path}
                                   href={item.path}
                                   className="flex items-center p-3 rounded-lg hover:bg-orange-50 transition-all duration-200 group"
                                   onClick={() => setIsMenuOpen(false)}
                                 >
-                                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500 mr-3 group-hover:scale-110 transition-transform duration-200" />
+                                  {item.iconName === "lightbulb" && (
+                                    <RiBook2Line className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "book" && (
+                                    <RiBook2Line className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "briefcase" && (
+                                    <RiBriefcaseLine className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "calendar" && (
+                                    <RiCalendarLine className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
+                                  {item.iconName === "users" && (
+                                    <RiGroupLine className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-3 group-hover:scale-110 transition-transform duration-200" aria-hidden />
+                                  )}
                                   <div>
-                                    <div className="font-medium text-gray-900 group-hover:text-orange-600 text-sm sm:text-base">
+                                    <div className="font-medium text-foreground group-hover:text-orange-600 text-sm sm:text-base">
                                       {item.name}
                                     </div>
                                     <div className="text-xs sm:text-sm text-gray-500">
@@ -322,8 +351,7 @@ export default function Navbar() {
                                     </div>
                                   </div>
                                 </Link>
-                              )
-                            })}
+                              ))}
                           </div>
                         )}
                       </div>
@@ -345,52 +373,54 @@ export default function Navbar() {
               </nav>
               
               {/* Mobile Search */}
-              <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-gray-100">
+              <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-border">
                 <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                   <Link href="/search" onClick={() => setIsMenuOpen(false)}>
-                    <Search className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                    <RiSearchLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                     Search
                   </Link>
                 </Button>
               </div>
               
               {/* Mobile Actions */}
-              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100 space-y-2 sm:space-y-3">
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border space-y-2 sm:space-y-3">
                 {isLoading ? (
-                  // Loading state
-                  <div className="flex items-center justify-center py-4">
-                    <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mr-3" />
-                    <span className="text-gray-600">Loading...</span>
+                  <div className="flex items-center space-x-3 p-3 animate-pulse">
+                    <div className="w-10 h-10 rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-24 bg-gray-200 rounded" />
+                      <div className="h-3 w-16 bg-gray-200 rounded" />
+                    </div>
                   </div>
                 ) : user ? (
                   // Logged in user mobile actions
                   <>
                     <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-xl mb-2">
-                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
+                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <RiUserLine className="h-5 w-5 text-foreground" aria-hidden />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">{user.email}</div>
+                        <div className="font-medium text-foreground truncate">{user.email}</div>
                         <div className="text-sm text-gray-500 capitalize">{user.role.replace('_', ' ')}</div>
                       </div>
                     </div>
                     <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                       <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                        <User className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                        <RiUserLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                         Dashboard
                       </Link>
                     </Button>
                     {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
                       <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                         <Link href="/dashboard/provider" onClick={() => setIsMenuOpen(false)}>
-                          <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                          <RiBriefcaseLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                           Provider Dashboard
                         </Link>
                       </Button>
                     )}
                     <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                       <Link href="/dashboard/settings" onClick={() => setIsMenuOpen(false)}>
-                        <Settings className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                        <RiSettings3Line className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                         Settings
                       </Link>
                     </Button>
@@ -402,7 +432,7 @@ export default function Navbar() {
                       variant="ghost" 
                       className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation"
                     >
-                      <LogOut className="h-5 w-5 sm:h-6 sm:w-6 mr-3" />
+                      <RiLogoutBoxRLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                       Sign Out
                     </Button>
                   </>
@@ -412,7 +442,7 @@ export default function Navbar() {
                     <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                       <Link href="/login" onClick={() => setIsMenuOpen(false)}>Sign In</Link>
                     </Button>
-                    <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-full py-3 sm:py-4 text-base sm:text-lg font-semibold touch-manipulation">
+                    <Button asChild className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-full py-3 sm:py-4 text-base sm:text-lg font-semibold touch-manipulation">
                       <Link href="/signup" onClick={() => setIsMenuOpen(false)}>Get Started</Link>
                     </Button>
                   </>

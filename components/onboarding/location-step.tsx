@@ -39,7 +39,7 @@ const LocationStep = forwardRef<any, LocationStepProps>(({ onSubmit, initialData
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-semibold text-gray-900">Where are you located?</h3>
+        <h3 className="text-2xl font-semibold text-foreground">Where are you located?</h3>
         <p className="mt-2 text-gray-600">This helps us find opportunities near you.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

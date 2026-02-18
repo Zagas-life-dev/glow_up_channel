@@ -178,7 +178,7 @@ export default function AdminPromotionsPage() {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800'
       case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'completed': return 'bg-blue-100 text-blue-800'
+      case 'completed': return 'bg-primary/10 text-foreground'
       case 'cancelled': return 'bg-red-100 text-red-800'
       case 'expired': return 'bg-gray-100 text-gray-800'
       case 'rejected': return 'bg-red-100 text-red-800'
@@ -192,7 +192,7 @@ export default function AdminPromotionsPage() {
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       case 'failed': return 'bg-red-100 text-red-800'
       case 'awaiting_payment': return 'bg-orange-100 text-orange-800'
-      case 'awaiting_verification': return 'bg-blue-100 text-blue-800'
+      case 'awaiting_verification': return 'bg-primary/10 text-foreground'
       case 'verified': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -209,7 +209,7 @@ export default function AdminPromotionsPage() {
 
   const getPackageColor = (packageType: string) => {
     switch (packageType) {
-      case 'spotlight': return 'from-blue-500 to-blue-600'
+      case 'spotlight': return 'from-primary to-primary'
       case 'feature': return 'from-green-500 to-green-600'
       case 'launch': return 'from-purple-500 to-purple-600'
       default: return 'from-gray-500 to-gray-600'
@@ -270,14 +270,14 @@ export default function AdminPromotionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="bg-card border-b border-gray-200 px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Link href="/dashboard/admin" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Link href="/dashboard/admin" className="p-2 hover:bg-muted rounded-lg transition-colors">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Promotion Management</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Promotion Management</h1>
               <p className="text-sm lg:text-base text-gray-600">Manage all promotion requests and active promotions</p>
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function AdminPromotionsPage() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{totalAwaitingVerification}</div>
+              <div className="text-2xl font-bold text-primary">{totalAwaitingVerification}</div>
               <p className="text-xs text-muted-foreground">
                 Payment uploaded
               </p>
@@ -458,9 +458,9 @@ export default function AdminPromotionsPage() {
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center mb-6">
-                    <Clock className="h-10 w-10 text-white" />
+                    <Clock className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Promotions</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Pending Promotions</h3>
                   <p className="text-gray-500 text-center">
                     All promotion requests have been reviewed
                   </p>
@@ -478,7 +478,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -539,7 +539,7 @@ export default function AdminPromotionsPage() {
                           <Button 
                             onClick={() => handlePromotionAction(promotion._id, 'approve')}
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-foreground"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
@@ -564,9 +564,9 @@ export default function AdminPromotionsPage() {
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6">
-                    <AlertTriangle className="h-10 w-10 text-white" />
+                    <AlertTriangle className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Awaiting Payment</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Awaiting Payment</h3>
                   <p className="text-gray-500 text-center">
                     No promotions are awaiting payment
                   </p>
@@ -584,7 +584,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -653,10 +653,10 @@ export default function AdminPromotionsPage() {
             {awaitingVerificationPromotions.length === 0 ? (
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                    <CheckCircle className="h-10 w-10 text-white" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary rounded-2xl flex items-center justify-center mb-6">
+                    <CheckCircle className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Awaiting Verification</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Awaiting Verification</h3>
                   <p className="text-gray-500 text-center">
                     No promotions are awaiting payment verification
                   </p>
@@ -674,7 +674,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -711,8 +711,8 @@ export default function AdminPromotionsPage() {
                           <span className="font-medium">{formatDate(promotion.createdAt)}</span>
                         </div>
 
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <p className="text-sm text-blue-800">
+                        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                          <p className="text-sm text-foreground">
                             <strong>Status:</strong> Payment uploaded, awaiting admin verification
                           </p>
                         </div>
@@ -733,7 +733,7 @@ export default function AdminPromotionsPage() {
                           <Button 
                             onClick={() => handlePromotionAction(promotion._id, 'verify-payment')}
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-foreground"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
@@ -751,9 +751,9 @@ export default function AdminPromotionsPage() {
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6">
-                    <Play className="h-10 w-10 text-white" />
+                    <Play className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Promotions</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Active Promotions</h3>
                   <p className="text-gray-500 text-center">
                     No promotions are currently running
                   </p>
@@ -771,7 +771,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -806,7 +806,7 @@ export default function AdminPromotionsPage() {
 
                         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                           <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">{promotion.analytics.views}</div>
+                            <div className="text-lg font-bold text-primary">{promotion.analytics.views}</div>
                             <div className="text-xs text-gray-500">Views</div>
                           </div>
                           <div className="text-center">
@@ -848,10 +848,10 @@ export default function AdminPromotionsPage() {
             {completedPromotions.length === 0 ? (
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                    <CheckCircle className="h-10 w-10 text-white" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary rounded-2xl flex items-center justify-center mb-6">
+                    <CheckCircle className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Completed Promotions</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Completed Promotions</h3>
                   <p className="text-gray-500 text-center">
                     Completed promotions will appear here
                   </p>
@@ -869,7 +869,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -904,7 +904,7 @@ export default function AdminPromotionsPage() {
 
                         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                           <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">{promotion.analytics.views}</div>
+                            <div className="text-lg font-bold text-primary">{promotion.analytics.views}</div>
                             <div className="text-xs text-gray-500">Views</div>
                           </div>
                           <div className="text-center">
@@ -940,9 +940,9 @@ export default function AdminPromotionsPage() {
               <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mb-6">
-                    <XCircle className="h-10 w-10 text-white" />
+                    <XCircle className="h-10 w-10 text-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Rejected Promotions</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Rejected Promotions</h3>
                   <p className="text-gray-500 text-center">
                     Rejected promotions will appear here
                   </p>
@@ -960,7 +960,7 @@ export default function AdminPromotionsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
-                                <Icon className="w-3 h-3 text-white" />
+                                <Icon className="w-3 h-3 text-foreground" />
                               </div>
                               <CardTitle className="text-lg line-clamp-2">
                                 {promotion.content?.title || 'Unknown Content'}
@@ -1034,16 +1034,16 @@ export default function AdminPromotionsPage() {
             <div className="space-y-6">
               {/* Content Information */}
               <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-200">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
-                    <Target className="h-5 w-5 text-blue-600" />
+                <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/10 border-b border-primary/20">
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <Target className="h-5 w-5 text-primary" />
                     Content Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">{selectedPromotion.content?.title}</h4>
+                      <h4 className="font-medium text-foreground mb-2">{selectedPromotion.content?.title}</h4>
                       <p className="text-sm text-gray-600 mb-4">{selectedPromotion.content?.description}</p>
                       <div className="flex items-center space-x-2">
                         <Badge className="capitalize">{selectedPromotion.contentType}</Badge>
@@ -1053,7 +1053,7 @@ export default function AdminPromotionsPage() {
                       </div>
                     </div>
                     <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Provider Information</h5>
+                      <h5 className="font-medium text-foreground mb-2">Provider Information</h5>
                       <p className="text-sm text-gray-600">{selectedPromotion.provider?.email}</p>
                       <p className="text-sm text-gray-600">
                         {selectedPromotion.provider?.firstName} {selectedPromotion.provider?.lastName}
@@ -1066,7 +1066,7 @@ export default function AdminPromotionsPage() {
               {/* Promotion Details */}
               <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-green-50 to-green-100/50 border-b border-green-200">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <CardTitle className="flex items-center gap-2 text-foreground">
                     <Star className="h-5 w-5 text-green-600" />
                     Promotion Details
                   </CardTitle>
@@ -1120,7 +1120,7 @@ export default function AdminPromotionsPage() {
               {/* Analytics */}
               <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-b border-purple-200">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <CardTitle className="flex items-center gap-2 text-foreground">
                     <BarChart3 className="h-5 w-5 text-purple-600" />
                     Analytics
                   </CardTitle>
@@ -1128,7 +1128,7 @@ export default function AdminPromotionsPage() {
                 <CardContent className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{selectedPromotion.analytics.views}</div>
+                      <div className="text-2xl font-bold text-primary">{selectedPromotion.analytics.views}</div>
                       <div className="text-sm text-gray-500">Views</div>
                     </div>
                     <div className="text-center">
@@ -1151,7 +1151,7 @@ export default function AdminPromotionsPage() {
               {(selectedPromotion.paymentStatus === 'awaiting_verification' || selectedPromotion.paymentStatus === 'paid') && (
                 <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-green-50 to-green-100/50 border-b border-green-200">
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <CardTitle className="flex items-center gap-2 text-foreground">
                       <DollarSign className="h-5 w-5 text-green-600" />
                       Payment Information
                     </CardTitle>
@@ -1184,7 +1184,7 @@ export default function AdminPromotionsPage() {
                               href={selectedPromotion.paymentReceipt} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline"
+                              className="text-primary hover:text-foreground underline"
                             >
                               View Receipt
                             </a>
@@ -1206,7 +1206,7 @@ export default function AdminPromotionsPage() {
               {selectedPromotion.notes && (
                 <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <CardTitle className="flex items-center gap-2 text-foreground">
                       <Settings className="h-5 w-5 text-gray-600" />
                       Notes
                     </CardTitle>
@@ -1233,7 +1233,7 @@ export default function AdminPromotionsPage() {
                     </Button>
                     <Button 
                       onClick={() => handlePromotionAction(selectedPromotion._id, 'approve')}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-foreground"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       Approve
@@ -1251,7 +1251,7 @@ export default function AdminPromotionsPage() {
                     </Button>
                     <Button 
                       onClick={() => handlePromotionAction(selectedPromotion._id, 'verify-payment')}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-foreground"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       Verify Payment

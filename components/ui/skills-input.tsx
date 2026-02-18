@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { X, Plus, Search } from 'lucide-react'
+import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import { cn } from "@/lib/utils"
 import ApiClient from "@/lib/api-client"
 
@@ -225,7 +225,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
                 className="ml-2 h-4 w-4 p-0 hover:bg-orange-300"
                 onClick={() => removeSkill(skill)}
               >
-                <X className="h-3 w-3" />
+                <FlaticonIcon name="cross" className="h-3 w-3" aria-hidden />
               </Button>
             </Badge>
           ))}
@@ -235,7 +235,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
       {/* Input Field */}
       <div className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <FlaticonIcon name="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
           <Input
             ref={inputRef}
             value={inputValue}
@@ -258,7 +258,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div
             ref={suggestionRef}
-            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+            className="absolute z-50 w-full mt-1 bg-card border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
           >
             {filteredSuggestions.map((suggestion, index) => (
               <button
@@ -268,7 +268,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
                 onClick={() => handleSuggestionClick(suggestion)}
               >
                 <span className="text-sm text-gray-700">{suggestion}</span>
-                <Plus className="h-4 w-4 text-orange-500" />
+                <FlaticonIcon name="add" className="h-4 w-4 text-primary" aria-hidden />
               </button>
             ))}
           </div>
@@ -276,7 +276,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
         {/* No suggestions message */}
         {showSuggestions && filteredSuggestions.length === 0 && inputValue.trim() && !isLoading && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-4">
+          <div className="absolute z-50 w-full mt-1 bg-card border border-gray-200 rounded-md shadow-lg p-4">
             <p className="text-sm text-gray-500 text-center">
               Press Enter to add "{inputValue.trim()}"
             </p>

@@ -65,7 +65,7 @@ export default function NewsletterSignupForm({ onSuccess }: NewsletterSignupForm
           </div>
           <div className="flex items-center space-x-2">
             <input type="checkbox" id="agree" name="agree" checked={form.agree} onChange={handleChange} required />
-            <Label htmlFor="agree" className="text-sm">I agree to the <a href="/terms" className="text-blue-500 underline" target="_blank">Terms & Conditions</a></Label>
+            <Label htmlFor="agree" className="text-sm">I agree to the <a href="/terms" className="text-primary underline" target="_blank">Terms & Conditions</a></Label>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Submitting..." : "Subscribe"}</Button>
         </form>

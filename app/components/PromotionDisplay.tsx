@@ -147,7 +147,7 @@ export default function PromotionDisplay({ type, limit = 10, contentType = 'all'
       case 'spotlight':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'feature':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-primary/10 text-foreground border-primary/20';
       case 'launch':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
@@ -186,14 +186,14 @@ export default function PromotionDisplay({ type, limit = 10, contentType = 'all'
     <div className="space-y-4">
       {type === 'hero' && (
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Featured Opportunities</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Featured Opportunities</h2>
           <p className="text-gray-600">Exclusive top banner placements</p>
         </div>
       )}
       
       {type === 'featured' && (
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Featured Content</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Featured Content</h2>
           <p className="text-gray-600">Promoted opportunities and events</p>
         </div>
       )}
@@ -209,7 +209,7 @@ export default function PromotionDisplay({ type, limit = 10, contentType = 'all'
             }`}
           >
             {promotion.visualEnhancement?.highlighted && (
-              <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+              <div className="absolute -top-2 -right-2 bg-primary text-foreground text-xs px-2 py-1 rounded-full font-semibold">
                 SPOTLIGHT
               </div>
             )}

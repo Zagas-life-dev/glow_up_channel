@@ -127,7 +127,7 @@ export default function DashboardResourcesPage() {
   const getResourceTypeColor = (type: string) => {
     switch (type) {
       case 'video':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-primary/10 text-foreground'
       case 'audio':
         return 'bg-purple-100 text-purple-800'
       case 'document':
@@ -148,13 +148,13 @@ export default function DashboardResourcesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-white" />
+                  <BookOpen className="h-6 w-6 text-foreground" />
                 </div>
                 My Resources
               </h1>
@@ -162,7 +162,7 @@ export default function DashboardResourcesPage() {
                 Access and manage your learning resources
               </p>
             </div>
-            <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-6 py-3">
+            <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl px-6 py-3">
               <Link href="/resources">
                 Browse All Resources
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -174,7 +174,7 @@ export default function DashboardResourcesPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             {/* Search */}
             <div className="flex-1 max-w-md">
@@ -226,12 +226,12 @@ export default function DashboardResourcesPage() {
                     onClick={() => setSelectedType(type.value)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                       selectedType === type.value
-                        ? 'bg-orange-500 text-white shadow-lg'
+                        ? 'bg-primary text-foreground shadow-lg'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {type.label}
-                    <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs">
+                    <span className="ml-2 px-2 py-1 bg-muted rounded-full text-xs">
                       {type.count}
                     </span>
                   </button>
@@ -260,21 +260,21 @@ export default function DashboardResourcesPage() {
         {loading ? (
           <div className="text-center py-16">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl mb-4">
-              <BookOpen className="h-8 w-8 text-white animate-pulse" />
+              <BookOpen className="h-8 w-8 text-foreground animate-pulse" />
             </div>
             <p className="text-lg text-gray-600">Loading your resources...</p>
           </div>
         ) : filteredResources.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.map((resource) => (
-              <Card key={resource.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+              <Card key={resource.id} className="group bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between mb-3">
                     <Badge 
                       variant={isResourcePaid(resource) ? "default" : "secondary"}
                       className={`${
                         isResourcePaid(resource)
-                          ? 'bg-orange-500 hover:bg-orange-600' 
+                          ? 'bg-primary hover:bg-primary/90' 
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
@@ -284,7 +284,7 @@ export default function DashboardResourcesPage() {
                       {getResourceTypeIcon(resource.resource_type)}
                     </div>
                   </div>
-                  <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2">
+                  <CardTitle className="text-lg font-semibold text-foreground group-hover:text-orange-600 transition-colors line-clamp-2">
                     {resource.title}
                   </CardTitle>
                 </CardHeader>
@@ -342,7 +342,7 @@ export default function DashboardResourcesPage() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <Button asChild className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl">
+                    <Button asChild className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-foreground rounded-xl">
                       <Link href={`/resources/${resource.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
                         View
@@ -363,7 +363,7 @@ export default function DashboardResourcesPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-2xl mb-6">
               <BookOpen className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               No resources found
             </h3>
             <p className="text-gray-600 mb-6">

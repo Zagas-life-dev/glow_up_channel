@@ -142,7 +142,7 @@ export default function PromotionExpiryPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading promotion expiry data...</p>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function PromotionExpiryPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
           <p className="text-gray-600">You don't have permission to access this page.</p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function PromotionExpiryPage() {
       case 'active':
         return 'bg-green-100 text-green-800'
       case 'completed':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-primary/10 text-foreground'
       case 'cancelled':
         return 'bg-red-100 text-red-800'
       case 'pending':
@@ -205,7 +205,7 @@ export default function PromotionExpiryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Promotion Expiry Management</h1>
+          <h1 className="text-3xl font-bold text-foreground">Promotion Expiry Management</h1>
           <p className="mt-2 text-gray-600">
             Monitor and manage promotion expiry status and statistics
           </p>
@@ -243,7 +243,7 @@ export default function PromotionExpiryPage() {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Active Promotions</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.activeCount}</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.activeCount}</p>
                   </div>
                 </div>
               </CardContent>
@@ -257,7 +257,7 @@ export default function PromotionExpiryPage() {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Expiring Today</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.expiringToday}</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.expiringToday}</p>
                   </div>
                 </div>
               </CardContent>
@@ -271,7 +271,7 @@ export default function PromotionExpiryPage() {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Expiring This Week</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.expiringThisWeek}</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.expiringThisWeek}</p>
                   </div>
                 </div>
               </CardContent>
@@ -280,12 +280,12 @@ export default function PromotionExpiryPage() {
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <DollarSign className="w-6 h-6 text-blue-600" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <DollarSign className="w-6 h-6 text-primary" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Active Investment</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-foreground">
                       {formatCurrency(stats.totalActiveInvestment)}
                     </p>
                   </div>
@@ -312,7 +312,7 @@ export default function PromotionExpiryPage() {
                       <Badge className={getStatusColor(status._id)}>
                         {status._id.charAt(0).toUpperCase() + status._id.slice(1)}
                       </Badge>
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-2xl font-bold text-foreground">
                         {status.count}
                       </span>
                     </div>
@@ -358,7 +358,7 @@ export default function PromotionExpiryPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Automatic Expiry</h4>
+                <h4 className="font-semibold text-foreground mb-2">Automatic Expiry</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Promotions automatically expire after their duration period</li>
                   <li>• System checks every hour for expired promotions</li>
@@ -368,7 +368,7 @@ export default function PromotionExpiryPage() {
               </div>
               
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Manual Management</h4>
+                <h4 className="font-semibold text-foreground mb-2">Manual Management</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Use "Check & Expire Now" for immediate processing</li>
                   <li>• Monitor expiring promotions in the dashboard</li>
