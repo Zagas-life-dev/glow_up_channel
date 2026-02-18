@@ -1,12 +1,10 @@
 "use client"
 
-<<<<<<< HEAD
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from "@/components/ui/button"
@@ -17,26 +15,73 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import { Target } from 'lucide-react'
 import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
-=======
-import { useEffect } from "react"
-import Image from "next/image"
-import { Sparkles, ArrowRight } from "lucide-react"
->>>>>>> cbec9f4b7df93a7bf0e86ccf74af4dc65c2b65a6
 
-const REDIRECT_URL = "https://www.glowupchannel.com"
+const signupSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  dateOfBirth: z.string().refine((date) => {
+    return !!date; 
+  }, "Date of birth is required"),
+  password: z.string().min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Must contain at least one number"),
+  role: z.enum(['seeker', 'provider'], { required_error: "Please select a role" })
+})
 
-export default function RedirectPage() {
-  useEffect(() => {
-    // Redirect after a brief delay to show the message
-    const timer = setTimeout(() => {
-      window.location.href = REDIRECT_URL
-    }, 2000) // 2 second delay
+type SignupFormValues = z.infer<typeof signupSchema>
 
-    return () => clearTimeout(timer)
-  }, [])
+export default function SignupPage() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const { registerOpportunitySeeker, registerOpportunityPoster } = useAuth()
+  const router = useRouter()
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      dateOfBirth: '',
+      password: '',
+      role: undefined
+    }
+  })
+
+  const onSubmit = async (data: SignupFormValues) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      // Validate age
+      const age = calculateAge(data.dateOfBirth)
+      if (age < 5) {
+        setError('You must be at least 5 years old to create an account')
+        setIsLoading(false)
+        return
+      }
+
+      if (data.role === 'seeker') {
+        await registerOpportunitySeeker(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
+      } else if (data.role === 'provider') {
+        await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
+      }
+      
+      router.push('/onboarding')
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md border border-border bg-card backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
@@ -271,65 +316,9 @@ export default function RedirectPage() {
             >
               Sign in
             </Link>
-=======
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
-      <div className="text-center max-w-2xl mx-auto">
-        {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40">
-            <Image
-              src="/images/logo-icon-transparent.png"
-              alt="Glow Up Channel"
-              fill
-              className="object-contain"
-              priority
-            />
->>>>>>> cbec9f4b7df93a7bf0e86ccf74af4dc65c2b65a6
           </div>
-        </div>
-
-        {/* Main Text */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
-          Redirecting...
-        </h1>
-        
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <p className="text-xl sm:text-2xl text-white/70">
-            Taking you to
-          </p>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Sparkles className="w-5 h-5 text-orange-500 animate-pulse" />
-          <a 
-            href={REDIRECT_URL}
-            className="text-xl sm:text-2xl lg:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500 font-semibold hover:from-orange-300 hover:to-orange-400 transition-colors"
-          >
-            app.studybetterai.com
-          </a>
-          <ArrowRight className="w-5 h-5 text-orange-500 animate-pulse" />
-        </div>
-
-        <p className="text-sm text-white/50 mb-8">
-          If you are not redirected automatically,{" "}
-          <a 
-            href={REDIRECT_URL}
-            className="text-orange-500 hover:text-orange-400 underline"
-          >
-            click here
-          </a>
-        </p>
-
-        {/* Loading indicator */}
-        <div className="flex justify-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0s' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
-        </div>
-      </div>
-
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.1),_transparent_70%)] pointer-events-none -z-10" />
+        </CardContent>
+      </Card>
     </div>
   )
 }
