@@ -40,10 +40,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
     ? sidebarWidth + (sidebarCollapsed ? 8 : 0)
     : 0
 
-  // Full screen pages (no nav)
+  // Full screen pages (no nav) — top padding + safe area for notch
   if (!shouldShowNav || isAuthPage) {
     return (
-      <div className="min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full">
+      <div className="min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full pt-4 pt-safe">
         {children}
         <LockedInIndicator />
       </div>
@@ -68,11 +68,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className="flex-1 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden transition-[margin-left] duration-300 ease-in-out"
         style={{ marginLeft: contentMarginLeft }}
       >
-        {/* Top Bar */}
-        <AppTopBar />
-        
-        {/* Scrollable Content */}
-        <main className="flex-1 pb-24 lg:pb-8 w-full max-w-full overflow-x-hidden">
+        {/* Mobile only: empty top bar for spacing / safe area */}
+        <div className="lg:hidden">
+          <AppTopBar />
+        </div>
+        {/* Scrollable Content — top padding + safe area for notch */}
+        <main className="flex-1 pb-24 lg:pb-8 pt-4 pt-safe w-full max-w-full overflow-x-hidden">
           {children}
         </main>
       </div>

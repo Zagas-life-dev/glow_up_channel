@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   description?: React.ReactNode;
   /** Optional leading icon or badge element. */
@@ -36,7 +36,7 @@ export function PageHeader({
     >
       <div className="flex items-start gap-3 min-w-0">
         {icon && (
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 border border-orange-500/20 flex items-center justify-center">
+          <div className="flex-shrink-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center">
             {icon}
           </div>
         )}
@@ -73,7 +73,7 @@ export function PageHeader({
   }
 
   return (
-    <div className="sticky top-0 z-30 bg-page/95 backdrop-blur-xl border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-3">
+    <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border/60 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-3">
       {wrapped}
     </div>
   );

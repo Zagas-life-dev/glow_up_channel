@@ -82,8 +82,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
+    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-rose-500/6 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
         {/* Left: Story / benefits */}
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
@@ -138,9 +140,9 @@ export default function SignupPage() {
         </div>
 
         {/* Right: Signup card */}
-        <Card className="w-full border border-border bg-card/90 backdrop-blur-sm shadow-xl">
-          <CardHeader className="space-y-1 text-left">
-            <CardTitle className="text-2xl font-semibold">
+        <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
+          <CardHeader className="space-y-1 text-left pb-4">
+            <CardTitle className="text-2xl font-bold tracking-tight">
               Create your GlowUp account
             </CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -151,7 +153,7 @@ export default function SignupPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
+              <div className="flex items-center gap-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
                 <FlaticonIcon name="exclamation" className="w-4 h-4" aria-hidden />
                 <span className="text-sm">{error}</span>
               </div>
@@ -161,7 +163,7 @@ export default function SignupPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-foreground font-medium">
+                  <Label htmlFor="firstName" className="text-foreground font-semibold text-sm">
                     First Name <span className="text-red-400">*</span>
                   </Label>
                   <Controller
@@ -172,7 +174,7 @@ export default function SignupPage() {
                         {...field}
                         id="firstName"
                         placeholder="First name"
-                        className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/40"
+                        className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
                         disabled={isLoading}
                         required
                       />
@@ -184,7 +186,7 @@ export default function SignupPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-foreground font-medium">
+                  <Label htmlFor="lastName" className="text-foreground font-semibold text-sm">
                     Last Name <span className="text-red-400">*</span>
                   </Label>
                   <Controller
@@ -195,7 +197,7 @@ export default function SignupPage() {
                         {...field}
                         id="lastName"
                         placeholder="Last name"
-                        className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/40"
+                        className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
                         disabled={isLoading}
                         required
                       />
@@ -208,7 +210,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium">
+                <Label htmlFor="email" className="text-foreground font-semibold text-sm">
                   Email
                 </Label>
                 <Controller
@@ -220,7 +222,7 @@ export default function SignupPage() {
                       id="email"
                       type="email"
                       placeholder="you@example.com"
-                      className="h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/40"
+                      className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
                       disabled={isLoading}
                     />
                   )}
@@ -231,7 +233,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="text-foreground font-medium">
+                <Label htmlFor="dateOfBirth" className="text-foreground font-semibold text-sm">
                   Date of Birth
                 </Label>
                 <Controller
@@ -247,7 +249,7 @@ export default function SignupPage() {
                         type="date"
                         min={min}
                         max={max}
-                        className="h-11 bg-muted border-border text-foreground focus:border-orange-500/60 focus:ring-orange-500/40"
+                        className="h-11 bg-muted/60 border-border/60 text-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
                         disabled={isLoading}
                         required
                       />
@@ -263,7 +265,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium">
+                <Label htmlFor="password" className="text-foreground font-semibold text-sm">
                   Password
                 </Label>
                 <div className="relative">
@@ -276,7 +278,7 @@ export default function SignupPage() {
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Create a password"
-                        className="pr-10 h-11 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/40"
+                        className="pr-10 h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
                         disabled={isLoading}
                       />
                     )}
@@ -284,7 +286,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground"
                     disabled={isLoading}
                   >
                     {showPassword ? <FlaticonIcon name="eye-off" className="h-5 w-5" aria-hidden /> : <FlaticonIcon name="eye" className="h-5 w-5" aria-hidden />}
@@ -306,7 +308,7 @@ export default function SignupPage() {
 
               {/* Role Selection */}
               <div className="space-y-3">
-                <Label className="text-foreground font-medium">I want to join as a:</Label>
+                <Label className="text-foreground font-semibold text-sm">I want to join as a:</Label>
                 <Controller
                   name="role"
                   control={control}
@@ -314,33 +316,33 @@ export default function SignupPage() {
                     <RadioGroup
                       value={field.value}
                       onValueChange={field.onChange}
-                      className="space-y-3"
+                      className="space-y-2.5"
                     >
-                      <div className="flex items-center space-x-3 p-4 border border-border rounded-xl hover:border-orange-500/40 hover:bg-primary/5 transition-colors bg-card">
+                      <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
                         <RadioGroupItem value="seeker" id="seeker" />
                         <Label htmlFor="seeker" className="flex-1 cursor-pointer">
                           <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                              <FlaticonIcon name="users" className="w-5 h-5 text-primary" aria-hidden />
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 rounded-2xl flex items-center justify-center">
+                              <FlaticonIcon name="users" className="w-5 h-5 text-orange-400" aria-hidden />
                             </div>
                             <div>
-                              <div className="font-medium text-foreground">Opportunity Seeker</div>
-                              <div className="text-sm text-muted-foreground">Find and apply for opportunities</div>
+                              <div className="font-semibold text-foreground text-sm">Opportunity Seeker</div>
+                              <div className="text-xs text-muted-foreground">Find and apply for opportunities</div>
                             </div>
                           </div>
                         </Label>
                       </div>
                       
-                      <div className="flex items-center space-x-3 p-4 border border-border rounded-xl hover:border-orange-500/40 hover:bg-primary/5 transition-colors bg-card">
+                      <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
                         <RadioGroupItem value="provider" id="provider" />
                         <Label htmlFor="provider" className="flex-1 cursor-pointer">
                           <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 rounded-2xl flex items-center justify-center">
                               <Target className="w-5 h-5 text-orange-400" />
                             </div>
                             <div>
-                              <div className="font-medium text-foreground">Opportunity Provider</div>
-                              <div className="text-sm text-muted-foreground">Post opportunities and events</div>
+                              <div className="font-semibold text-foreground text-sm">Opportunity Provider</div>
+                              <div className="text-xs text-muted-foreground">Post opportunities and events</div>
                             </div>
                           </div>
                         </Label>
@@ -355,7 +357,7 @@ export default function SignupPage() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground font-semibold rounded-xl transition-all duration-200"
+                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200"
                 disabled={isLoading}
               >
                 <FlaticonIcon name="user-plus" className="w-4 h-4 mr-2" aria-hidden />
@@ -390,3 +392,4 @@ export default function SignupPage() {
     </div>
   )
 }
+

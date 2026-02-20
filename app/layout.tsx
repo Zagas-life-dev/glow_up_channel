@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
 import { LockedInProvider } from "@/contexts/locked-in-context"
 import VisitTracker from "@/components/visit-tracker"
+import PwaInstallBanner from "@/components/pwa-install-banner"
 import Script from "next/script"
 
 export const metadata: Metadata = {
@@ -31,16 +32,43 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-slot" content="3194443159" />
-        <Script async src="//www.ezojs.com/ezoic/sa.min.js" strategy="beforeInteractive"></Script>
-        <Script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></Script>
-        <Script data-cfasync="false" src="https://thegatekeeperconsent.com/cmp.min.js" strategy="beforeInteractive"></Script>
-        <Script strategy="beforeInteractive">
-          {`window.ezstandalone = window.ezstandalone || {};
-          ezstandalone.cmd = ezstandalone.cmd || [];`}
-        </Script>
         <meta name="google-adsense-account" content="ca-pub-4275585712096268"></meta>
-        <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268" crossOrigin="anonymous"></Script>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* Third-party ad/CMP scripts: only in production and loaded after page is ready to avoid "identity bridging" timeout errors in dev */}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <Script
+              async
+              src="//www.ezojs.com/ezoic/sa.min.js"
+              strategy="lazyOnload"
+            />
+            <Script
+              data-cfasync="false"
+              src="https://cmp.gatekeeperconsent.com/min.js"
+              strategy="lazyOnload"
+            />
+            <Script
+              data-cfasync="false"
+              src="https://thegatekeeperconsent.com/cmp.min.js"
+              strategy="lazyOnload"
+            />
+            <Script strategy="lazyOnload">
+              {`window.ezstandalone = window.ezstandalone || {};
+          ezstandalone.cmd = ezstandalone.cmd || [];`}
+            </Script>
+            <Script
+              async
+              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
+              crossOrigin="anonymous"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="theme-color" content="#f96008" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="GlowUp" />
+        <link rel="apple-touch-icon" href="/images/logo-icon-transparent.png" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
         <meta name="author" content="GlowUp" />
@@ -59,6 +87,7 @@ export default function RootLayout({
                 <PageProvider>
                   <AppLayout>
                     <VisitTracker />
+                    <PwaInstallBanner />
                     {children}
                     <Toaster position="bottom-center" />
                   </AppLayout>

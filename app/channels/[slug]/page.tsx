@@ -12,6 +12,7 @@ import PostComposer from "@/components/post-composer"
 import PostCard from "@/components/post-card"
 import FeedAd from "@/components/feed-ad"
 import { buildFeedWithAds } from "@/lib/feed-ads"
+import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageHeader } from "@/components/layout/page-header"
 import { SectionCard } from "@/components/layout/section-card"
@@ -147,9 +148,9 @@ export default function ChannelDetailPage() {
           setState((prev) =>
             prev.channel
               ? {
-                  channel: { ...prev.channel, memberCount: prev.channel.memberCount + 1 },
-                  membership: { role: "member", joinedAt: new Date().toISOString() },
-                }
+                channel: { ...prev.channel, memberCount: prev.channel.memberCount + 1 },
+                membership: { role: "member", joinedAt: new Date().toISOString() },
+              }
               : prev
           )
           setJoinStatus("joined")
@@ -198,9 +199,9 @@ export default function ChannelDetailPage() {
         setState((prev) =>
           prev.channel
             ? {
-                channel: { ...prev.channel, memberCount: prev.channel.memberCount + 1 },
-                membership: { role: "member", joinedAt: new Date().toISOString() },
-              }
+              channel: { ...prev.channel, memberCount: prev.channel.memberCount + 1 },
+              membership: { role: "member", joinedAt: new Date().toISOString() },
+            }
             : prev
         )
         setJoinStatus("joined")
@@ -253,25 +254,25 @@ export default function ChannelDetailPage() {
   const headerActions = (
     <div className="flex gap-2 flex-wrap">
       {!state.membership && isAuthenticated && state.channel.type === "public" && (
-        <Button size="sm" onClick={handleJoin} disabled={joinLoading}>
+        <Button size="sm" onClick={handleJoin} disabled={joinLoading} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold">
           {joinLoading ? "Joining…" : "Join channel"}
         </Button>
       )}
       {!state.membership && isAuthenticated && state.channel.type === "private" && (
-        <Button size="sm" onClick={handleJoin} disabled={joinLoading || joinStatus === "pending"}>
+        <Button size="sm" onClick={handleJoin} disabled={joinLoading || joinStatus === "pending"} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold">
           {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
         </Button>
       )}
       {!isAuthenticated && state.channel.type === "public" && (
         <Link href="/login">
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" className="rounded-full border-border/70">
             Sign in to join
           </Button>
         </Link>
       )}
       {!isAuthenticated && state.channel.type === "private" && (
         <Link href="/login">
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" className="rounded-full border-border/70">
             Sign in to request access
           </Button>
         </Link>
@@ -282,7 +283,7 @@ export default function ChannelDetailPage() {
   const feedSection = canViewFeed ? (
     <div className="space-y-4 mt-4">
       {isAuthenticated && state.membership && state.channel && (
-        <div className="pt-2 pb-4 border-b border-border">
+        <div className="pt-2 pb-4 border-b border-border/50">
           <PostComposer
             onPostCreated={handlePostCreated}
             channelId={state.channel._id}
@@ -296,7 +297,7 @@ export default function ChannelDetailPage() {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="w-full rounded-2xl bg-card border border-border overflow-hidden animate-pulse"
+                className="w-full rounded-2xl bg-card/80 border border-border/70 overflow-hidden animate-pulse"
               >
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -355,37 +356,39 @@ export default function ChannelDetailPage() {
           actions={headerActions}
         />
 
-        <SectionCard
-          title={
-            <span className="flex items-center gap-2">
-              {state.channel.name}
-              <Badge
-                variant={state.channel.type === "public" ? "outline" : "secondary"}
-                className="text-[10px] uppercase"
-              >
-                {state.channel.type}
-              </Badge>
-              {state.membership && (
-                <Badge variant="secondary" className="text-[10px] uppercase">
-                  {state.membership.role}
-                </Badge>
+        <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-orange-400 text-xl font-bold">#</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h2 className="font-bold text-base text-foreground">{state.channel.name}</h2>
+                <span className={cn(
+                  "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full",
+                  state.channel.type === "public"
+                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                    : "bg-muted text-muted-foreground border border-border/60"
+                )}>
+                  {state.channel.type}
+                </span>
+                {state.membership && (
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    {state.membership.role}
+                  </span>
+                )}
+              </div>
+              {state.channel.description && (
+                <p className="text-xs text-muted-foreground">{state.channel.description}</p>
               )}
-            </span>
-          }
-          description={
-            state.channel.description && (
-              <span className="text-xs text-muted-foreground block">
-                {state.channel.description}
-              </span>
-            )
-          }
-        >
-          <p className="text-xs text-muted-foreground mb-2">
-            {state.channel.memberCount} member{state.channel.memberCount === 1 ? "" : "s"}
-          </p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {state.channel.memberCount} member{state.channel.memberCount === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
 
           {state.channel.isOwner && (
-            <div className="mt-4 rounded-xl border bg-card p-4 space-y-3">
+            <div className="mt-4 rounded-2xl border border-border/60 bg-muted/40 p-4 space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="text-sm font-semibold">Members & requests</h2>
                 <div className="flex items-center gap-2">
@@ -425,7 +428,7 @@ export default function ChannelDetailPage() {
               </div>
 
               {showInvitePanel && state.channel && (
-                <div className="rounded-lg border bg-background p-3 text-xs space-y-2">
+                <div className="rounded-2xl border border-border/60 bg-muted/40 backdrop-blur-sm p-4 text-xs space-y-3">
                   <p className="text-muted-foreground">
                     Share this link with people you want to add to the channel. When they open it while signed in, they&apos;ll be added automatically.
                   </p>
@@ -438,13 +441,13 @@ export default function ChannelDetailPage() {
                           ? `${window.location.origin}/channels/${state.channel.slug}?invite=1`
                           : `/channels/${state.channel.slug}?invite=1`
                       }
-                      className="flex-1 px-2 py-1 rounded border border-border bg-background text-[11px] truncate"
+                      className="flex-1 px-3 py-2 rounded-xl border border-border/60 bg-muted/60 text-[11px] truncate focus:outline-none focus:border-orange-500/60"
                     />
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="h-8 text-xs whitespace-nowrap"
+                      className="h-8 text-xs whitespace-nowrap rounded-full border-border/60 hover:bg-muted/60"
                       onClick={() => {
                         if (typeof window === "undefined" || !navigator?.clipboard || !state.channel) return
                         const url = `${window.location.origin}/channels/${state.channel.slug}?invite=1`
@@ -531,7 +534,7 @@ export default function ChannelDetailPage() {
           )}
 
           {feedSection}
-        </SectionCard>
+        </div>
       </div>
     </PageShell>
   )

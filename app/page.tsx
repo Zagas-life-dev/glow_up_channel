@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import FeedContainer from "@/components/feed-container"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import PageSkeleton from "@/components/skeletons/page-skeleton"
 import {
@@ -120,16 +119,18 @@ function LandingPage() {
     <PageShell>
       {/* Hero */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.15),_transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.12),_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(249,115,22,0.06),_transparent_50%)]" />
         <div className="relative">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] items-center">
             <div className="max-w-3xl">
-              <Badge className="bg-primary/20 text-orange-300 border border-orange-500/30 mb-4">
-                GlowUp
-              </Badge>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/70 shadow-sm mb-5">
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">GlowUp</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight mb-5">
                 More than a platform.
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-500">
                   A movement for access.
                 </span>
               </h1>
@@ -139,39 +140,39 @@ function LandingPage() {
                 like Locked In sessions to keep you moving.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
+                <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold">
                   <Link href="/signup">
                     Get Started
                     <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                <Button asChild size="lg" variant="outline" className="border-border/70 hover:bg-muted/60 rounded-full backdrop-blur-sm">
                   <Link href="/submit">Become a Provider</Link>
                 </Button>
               </div>
             </div>
 
-            {/* Hero preview card, aligned with dashboard/QR card style */}
-            <Card className="bg-card/90 border border-border/70 shadow-xl rounded-2xl">
+            {/* Hero preview card */}
+            <Card className="bg-card/80 backdrop-blur-sm border border-border/70 shadow-2xl rounded-2xl">
               <CardContent className="p-5 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                       GlowUp session
                     </p>
-                    <p className="text-sm text-foreground mt-1">
+                    <p className="text-sm text-foreground mt-1 font-medium">
                       Stay locked in on one goal at a time.
                     </p>
                   </div>
-                  <div className="rounded-full px-3 py-1 bg-primary/10 border border-primary/30 text-[11px] text-primary">
+                  <div className="rounded-full px-3 py-1 bg-primary/10 border border-primary/30 text-[11px] text-primary font-medium">
                     In beta
                   </div>
                 </div>
-                <div className="rounded-2xl bg-background/70 border border-border/70 px-4 py-5 flex flex-col items-center gap-2">
-                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <div className="rounded-2xl bg-muted/50 border border-border/60 px-4 py-5 flex flex-col items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
                     Example timer
                   </span>
-                  <div className="text-4xl sm:text-5xl font-mono tabular-nums text-foreground">
+                  <div className="text-4xl sm:text-5xl font-mono tabular-nums text-foreground font-bold">
                     25:00
                   </div>
                 </div>
@@ -190,9 +191,9 @@ function LandingPage() {
 
           <div className="mt-10 grid sm:grid-cols-3 gap-4">
             {landingPillars.map((pillar) => (
-              <Card key={pillar.title} className="bg-card border-border">
+              <Card key={pillar.title} className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border hover:shadow-sm transition-all duration-200">
                 <CardContent className="p-5">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{pillar.title}</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-2">{pillar.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{pillar.description}</p>
                 </CardContent>
               </Card>
@@ -203,25 +204,21 @@ function LandingPage() {
 
       {/* Stats */}
       <section className="py-12">
-        <div className="">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {landingStats.map((stat) => {
-                const StatIcon = stat.icon
-                return (
-                <Card key={stat.label} className="bg-card border-border">
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-orange-500/20 flex items-center justify-center">
-                        <StatIcon className="w-5 h-5 text-orange-400" aria-hidden />
-                      </div>
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  </CardContent>
-                </Card>
-                )
-              })}
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {landingStats.map((stat) => {
+            const StatIcon = stat.icon
+            return (
+              <Card key={stat.label} className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border transition-all duration-200">
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/15 to-rose-500/10 border border-orange-500/20 flex items-center justify-center mb-3">
+                    <StatIcon className="w-5 h-5 text-orange-400" aria-hidden />
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       </section>
 
@@ -229,7 +226,8 @@ function LandingPage() {
       <section className="py-12 sm:py-16">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
           <div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">The Story</h2>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Our story</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">The Story</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We built GlowUp for the ambitious and overlooked. Talent should never be
               limited by geography, access, or network. Our story is about removing those limits.
@@ -239,7 +237,7 @@ function LandingPage() {
               to grow with — this is your home base.
             </p>
           </div>
-          <Card className="bg-card border-border rounded-2xl">
+          <Card className="bg-card/80 backdrop-blur-sm border border-border/70 rounded-2xl">
             <CardContent className="p-6 space-y-4">
               {[
                 { title: "Discover", text: "Get curated opportunities built for growth." },
@@ -247,7 +245,7 @@ function LandingPage() {
                 { title: "Glow Up", text: "Track progress and build real momentum." },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-orange-500/30 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500/20 to-rose-500/10 border border-orange-500/25 flex items-center justify-center flex-shrink-0">
                     <RiStarLine className="w-4 h-4 text-orange-400" aria-hidden />
                   </div>
                   <div>
@@ -272,61 +270,65 @@ function LandingPage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {landingTracks.map((track) => {
-                const TrackIcon = track.icon
-                return (
-                <Card key={track.title} className={cn("border bg-gradient-to-br", track.accent, track.border)}>
+              const TrackIcon = track.icon
+              return (
+                <Card key={track.title} className={cn("border bg-gradient-to-br backdrop-blur-sm hover:shadow-sm transition-all duration-200", track.accent, track.border)}>
                   <CardContent className="p-5">
-                    <div className={cn("w-10 h-10 rounded-xl border flex items-center justify-center mb-4", track.border)}>
+                    <div className={cn("w-10 h-10 rounded-2xl border flex items-center justify-center mb-4", track.border)}>
                       <TrackIcon className={cn("w-5 h-5", track.text)} aria-hidden />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{track.title}</h3>
+                    <h3 className="text-base font-semibold text-foreground mb-1.5">{track.title}</h3>
                     <p className="text-sm text-muted-foreground">{track.description}</p>
                   </CardContent>
                 </Card>
-                )
-              })}
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* How It Works */}
       <section className="py-12 sm:py-16">
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="bg-card border-border rounded-2xl">
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Card className="bg-card/80 backdrop-blur-sm border border-border/70 rounded-2xl hover:border-border transition-all duration-200">
             <CardContent className="p-6">
-              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <RiGroupLine className="w-6 h-6 text-orange-400" aria-hidden />
-                For Opportunity Seekers
-              </h3>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/10 border border-orange-500/25 flex items-center justify-center">
+                  <RiGroupLine className="w-5 h-5 text-orange-400" aria-hidden />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">For Opportunity Seekers</h3>
+              </div>
               <div className="space-y-3 mb-6">
                 {seekerSteps.map((step) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5" aria-hidden />
+                  <div key={step} className="flex items-start gap-2.5">
+                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" aria-hidden />
                     <p className="text-sm text-muted-foreground">{step}</p>
                   </div>
                 ))}
               </div>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full">
+              <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20">
                 <Link href="/signup">Get Started</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border rounded-2xl">
+          <Card className="bg-card/80 backdrop-blur-sm border border-border/70 rounded-2xl hover:border-border transition-all duration-200">
             <CardContent className="p-6">
-              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <RiFocus3Line className="w-6 h-6 text-orange-400" aria-hidden />
-                For Providers
-              </h3>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/10 border border-orange-500/25 flex items-center justify-center">
+                  <RiFocus3Line className="w-5 h-5 text-orange-400" aria-hidden />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">For Providers</h3>
+              </div>
               <div className="space-y-3 mb-6">
                 {providerSteps.map((step) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5" aria-hidden />
+                  <div key={step} className="flex items-start gap-2.5">
+                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" aria-hidden />
                     <p className="text-sm text-muted-foreground">{step}</p>
                   </div>
                 ))}
               </div>
-              <Button asChild variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+              <Button asChild variant="outline" className="border-border/70 hover:bg-muted/60 rounded-full">
                 <Link href="/submit">List an Opportunity</Link>
               </Button>
             </CardContent>
@@ -337,19 +339,23 @@ function LandingPage() {
       {/* CTA */}
       <section className="py-14 sm:py-20">
         <div className="max-w-5xl mx-auto">
-          <Card className="bg-gradient-to-r from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl">
+          <Card className="bg-gradient-to-br from-orange-500/15 via-card/80 to-rose-500/10 backdrop-blur-sm border border-orange-500/25 rounded-2xl shadow-xl">
             <CardContent className="p-8 sm:p-10 text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/60 shadow-sm mb-5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Join Now</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
                 Ready to start your glow up?
               </h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm">
                 Join a community built to connect you with the right people, tools, and opportunities.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-foreground rounded-full">
+                <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold">
                   <Link href="/signup">Join the Community</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-orange-500/40 text-orange-300 hover:bg-primary/10 rounded-full">
+                <Button asChild size="lg" variant="outline" className="border-border/70 hover:bg-muted/60 rounded-full">
                   <Link href="/contact">Talk to Us</Link>
                 </Button>
               </div>
@@ -391,12 +397,12 @@ export default function Home() {
           url += `&lastId=${lastId}`
         }
         const response = await fetch(url, { headers })
-        
+
         if (!response.ok) {
           console.warn(`Failed to fetch recommended ${type}:`, response.status, response.statusText)
           return { success: false, data: { [type]: [] } }
         }
-        
+
         return await response.json()
       } catch (error) {
         console.error(`Error fetching recommended ${type}:`, error)
@@ -411,12 +417,12 @@ export default function Home() {
           url += `&lastId=${lastId}`
         }
         const response = await fetch(url)
-        
+
         if (!response.ok) {
           console.warn(`Failed to fetch promoted ${type}:`, response.status, response.statusText)
           return { success: false, data: { [type]: [] } }
         }
-        
+
         return await response.json()
       } catch (error) {
         console.error(`Error fetching promoted ${type}:`, error)
@@ -432,11 +438,11 @@ export default function Home() {
           url += `&lastId=${lastId}`
         }
         const response = await fetch(url, { headers })
-        
+
         if (!response.ok) {
           return { success: false, data: { [type]: [] } }
         }
-        
+
         const data = await response.json()
         if (data.success) {
           return { success: true, data: { [type]: data.data?.[type] || [] } }
@@ -469,7 +475,7 @@ export default function Home() {
     ) => {
       const promotedItems = promoted.success ? (promoted.data?.[typeKey] || []) : []
       const recommendedItems = recommended.success ? (recommended.data?.[typeKey] || []) : []
-      
+
       // If both promoted and recommended failed, try regular content as fallback
       if (promotedItems.length === 0 && recommendedItems.length === 0) {
         const regularContent = await fetchRegularContent(type)
@@ -477,15 +483,15 @@ export default function Home() {
           return regularContent.data?.[typeKey] || []
         }
       }
-      
+
       // Combine promoted and recommended, removing duplicates
       const combined = [
         ...promotedItems,
-        ...recommendedItems.filter((item: any) => 
+        ...recommendedItems.filter((item: any) =>
           !promotedItems.some((p: any) => p._id === item._id)
         )
       ]
-      
+
       return combined
     }
 
@@ -537,7 +543,7 @@ export default function Home() {
       }
 
       const response = await fetch(url, { headers })
-      
+
       if (!response.ok) {
         console.warn(`Failed to fetch ${type}:`, response.status, response.statusText)
         return { items: [], lastId: null, hasMore: false }
@@ -553,7 +559,7 @@ export default function Home() {
           hasMore: data.data?.pagination?.hasMore || false
         }
       }
-      
+
       console.warn(`API returned unsuccessful response for ${type}:`, data.message || 'Unknown error')
       return { items: [], lastId: null, hasMore: false }
     } catch (error) {
@@ -627,8 +633,8 @@ export default function Home() {
 
   return (
     <PageShell>
-      {/* Tab Navigation */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 bg-page/95 backdrop-blur-xl border-b border-border px-4 sm:px-6 lg:px-8 pt-1 pb-1">
+      {/* Tab bar: sticky, page bg, glass tab buttons */}
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 bg-page px-4 sm:px-6 lg:px-8 pt-3 pb-2">
         <div className="max-w-2xl mx-auto">
           <TabStrip
             tabs={tabs.map((tab) => ({

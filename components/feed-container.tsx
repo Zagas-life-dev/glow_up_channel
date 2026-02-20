@@ -27,38 +27,38 @@ export default function FeedContainer({
     return (
       <div className="space-y-5 w-full max-w-full">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="w-full max-w-full relative rounded-2xl border transition-all duration-300 bg-card/50 border-border overflow-hidden backdrop-blur-sm">
+          <div key={i} className="w-full max-w-full relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden animate-pulse">
             <div className="p-6 w-full max-w-full overflow-hidden">
-              <div className="animate-pulse">
+              <div>
                 {/* Header Row - matches FeedCard structure */}
                 <div className="flex items-start gap-4 mb-5">
                   {/* Type Icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-muted/70 flex-shrink-0" />
+                  <div className="w-12 h-12 rounded-2xl bg-muted/60 flex-shrink-0" />
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     {/* Type & Provider */}
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-3 bg-muted/70 rounded-full w-20" />
-                      <div className="h-3 bg-muted/70 rounded-full w-24" />
+                      <div className="h-3 bg-muted/60 rounded-full w-20" />
+                      <div className="h-3 bg-muted/60 rounded-full w-24" />
                     </div>
 
                     {/* Title */}
-                    <div className="h-5 bg-muted/70 rounded-lg w-4/5" />
+                    <div className="h-5 bg-muted/60 rounded-full w-4/5" />
                   </div>
                 </div>
 
                 {/* Description */}
                 <div className="mb-5 space-y-2">
-                  <div className="h-3 bg-muted/70 rounded-lg w-full" />
-                  <div className="h-3 bg-muted/70 rounded-lg w-5/6" />
+                  <div className="h-3 bg-muted/60 rounded-full w-full" />
+                  <div className="h-3 bg-muted/60 rounded-full w-5/6" />
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <div className="h-8 bg-muted/70 rounded-xl w-24" />
-                  <div className="h-8 bg-muted/70 rounded-xl w-20" />
-                  <div className="h-8 bg-muted/70 rounded-xl w-20" />
+                  <div className="h-8 bg-muted/60 rounded-full w-24" />
+                  <div className="h-8 bg-muted/60 rounded-full w-20" />
+                  <div className="h-8 bg-muted/60 rounded-full w-20" />
                 </div>
               </div>
             </div>
@@ -72,8 +72,8 @@ export default function FeedContainer({
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         {emptyIcon || (
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-6 shadow-lg">
-            <RiInboxLine className="w-9 h-9 text-muted-foreground/40" aria-hidden />
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/15 to-rose-500/10 border border-orange-500/20 flex items-center justify-center mb-6">
+            <RiInboxLine className="w-9 h-9 text-orange-400/60" aria-hidden />
           </div>
         )}
         <h3 className="text-xl font-bold text-foreground mb-2">Nothing here yet</h3>

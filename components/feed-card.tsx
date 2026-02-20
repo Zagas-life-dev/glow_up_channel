@@ -556,9 +556,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
     <>
       <article className={cn(
         "w-full max-w-full relative p-4 rounded-2xl border transition-all duration-300",
-        "bg-card border-border",
-        "hover:bg-muted hover:border-border",
-        "hover:shadow-lg hover:shadow-black/20",
+        "bg-card/80 backdrop-blur-sm border-border/70",
+        "hover:bg-card hover:border-border/90 hover:shadow-sm",
         // Hot card effects for events/opportunities/jobs approaching deadline
         deadlineInfo?.isHot && "shadow-[0_0_20px_rgba(234,179,8,0.4)] border-yellow-500/40",
         deadlineInfo?.isUrgent && "shadow-[0_0_30px_rgba(239,68,68,0.5)] border-red-500/50 bg-red-500/5"
@@ -629,8 +628,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         <div className="flex items-start gap-4 mb-4">
           {/* Type Icon */}
           <div className={cn(
-            "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0",
-            config.bg
+            "w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border",
+            config.bg, config.border
           )}>
             {(() => { const Icon = config.icon; return <Icon className={cn("w-5 h-5", config.accent)} aria-hidden /> })()}
           </div>
@@ -696,19 +695,19 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         {/* Meta Pills */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
           {getLocationString() && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[11px]">
               <RiMapPinLine className="w-3 h-3" aria-hidden />
               <span>{getLocationString()}</span>
             </div>
           )}
           {getDateString() && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[11px]">
               <RiTimeLine className="w-3 h-3" aria-hidden />
               <span>{getDateString()}</span>
             </div>
           )}
           {(item.financial?.isPaid || item.isPaid) && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
               <RiMoneyDollarCircleLine className="w-3 h-3" aria-hidden />
               <span>{item.financial?.amount || item.price || 'Paid'}</span>
             </div>
@@ -721,13 +720,13 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
             {item.tags.slice(0, 4).map((tag, index) => (
               <span
                 key={index}
-                className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-muted text-muted-foreground"
+                className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-muted/60 border border-border/60 text-muted-foreground"
               >
                 {tag}
               </span>
             ))}
             {item.tags.length > 4 && (
-              <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-muted text-muted-foreground">
+              <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-muted/60 border border-border/60 text-muted-foreground">
                 +{item.tags.length - 4}
               </span>
             )}
@@ -736,14 +735,14 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
 
         {/* Expanded Details */}
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-border space-y-6">
+          <div className="mt-4 pt-4 border-t border-border/50 space-y-6">
             {loadingDetails ? (
               // Skeleton Loading
               <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-full" />
-                <div className="h-4 bg-muted rounded w-5/6" />
-                <div className="h-20 bg-muted rounded" />
+                <div className="h-4 bg-muted/60 rounded-full w-3/4" />
+                <div className="h-4 bg-muted/60 rounded-full w-full" />
+                <div className="h-4 bg-muted/60 rounded-full w-5/6" />
+                <div className="h-20 bg-muted/60 rounded-2xl" />
               </div>
             ) : details ? (
               <>
@@ -823,7 +822,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                         </div>
                       )}
                       {details.requirements.other && (
-                        <div className="mt-4 pt-3 border-t border-border">
+                        <div className="mt-4 pt-3 border-t border-border/50">
                           <div className="flex items-start gap-2">
                             <RiFileLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
                             <div className="flex-1">
@@ -1239,7 +1238,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                     <Button
                       asChild
                       size="sm"
-                      className={cn("w-full rounded-xl text-foreground", config.buttonColor)}
+                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                     >
                       <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                         Apply Now
@@ -1251,7 +1250,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                     <Button
                       asChild
                       size="sm"
-                      className={cn("w-full rounded-xl text-foreground", config.buttonColor)}
+                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                     >
                       <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                         Register
@@ -1263,7 +1262,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                     <Button
                       asChild
                       size="sm"
-                      className={cn("w-full rounded-xl text-foreground", config.buttonColor)}
+                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                     >
                       <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                         Apply
@@ -1277,7 +1276,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                         <Button
                           asChild
                           size="sm"
-                          className="w-full bg-yellow-500 hover:bg-yellow-600 text-foreground rounded-xl"
+                          className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-full shadow-md font-semibold"
                         >
                           <a href={cleanUrl(details.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                             <RiVipCrownLine className="w-4 h-4" aria-hidden />
@@ -1288,7 +1287,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                         <Button
                           asChild
                           size="sm"
-                          className={cn("w-full rounded-xl text-foreground", config.buttonColor)}
+                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                         >
                           <a href={cleanUrl(details.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                             Access Resource
@@ -1301,7 +1300,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                           asChild
                           variant="outline"
                           size="sm"
-                          className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
+                          className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
                         >
                           <a href={details.fileUrl} download className="flex items-center justify-center gap-2">
                             <RiDownloadLine className="w-4 h-4" aria-hidden />
@@ -1318,13 +1317,13 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         )}
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <div className="flex items-center gap-1">
             {/* Like */}
             <button
               onClick={handleLike}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
                 isLiked
                   ? "text-red-500 bg-red-500/10"
                   : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
@@ -1342,7 +1341,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
             <button
               onClick={handleSave}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
                 isSaved
                   ? "text-orange-500 bg-primary/10"
                   : "text-muted-foreground hover:text-orange-500 hover:bg-primary/10"
@@ -1359,7 +1358,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
             {isAuthenticated && (
               <button
                 onClick={handleAddToPlaylist}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
               >
                 <RiListOrdered className="w-5 h-5" aria-hidden />
               </button>
@@ -1369,8 +1368,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
             <button
               onClick={handleShare}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                justShared ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+                justShared ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
               )}
             >
               {justShared ? (
@@ -1388,7 +1387,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
                   e.stopPropagation()
                   setShowShareComposer(true)
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-orange-500 hover:bg-primary/10 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-orange-400 hover:bg-primary/10 transition-all duration-200"
               >
                 <RiChat1Line className="w-4 h-4" aria-hidden />
                 <span className="hidden sm:inline">Post</span>

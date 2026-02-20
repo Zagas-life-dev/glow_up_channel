@@ -6,11 +6,8 @@ import { useAuth } from "@/lib/auth-context"
 import ApiClient, { Channel } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
-import { PageHeader } from "@/components/layout/page-header"
-import { SectionCard } from "@/components/layout/section-card"
 import { Hash, AlertTriangle } from "lucide-react"
 
 type FilterTab = "all" | "public" | "private" | "mine"
@@ -63,116 +60,121 @@ export default function ChannelsPage() {
   return (
     <PageShell fullWidth>
       <div className="max-w-5xl mx-auto">
-        <PageHeader
-          title="Channels"
-          description="Join sub-communities focused on specific topics and conversations."
-          icon={<Hash className="w-5 h-5 text-orange-400" />}
-          variant="gradient"
-          actions={
-            isAuthenticated ? (
-              <Link href="/channels/create">
-                <Button className="bg-primary hover:bg-primary/90 text-foreground rounded-full h-9 px-4">
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 sm:p-5 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                <Hash className="w-5 h-5 text-orange-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Channels</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">Join sub-communities focused on specific topics and conversations.</p>
+              </div>
+            </div>
+            {isAuthenticated && (
+              <Link href="/channels/create" className="shrink-0">
+                <Button className="w-full sm:w-auto rounded-xl h-10 px-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/20 font-medium border-0">
                   Create channel
                 </Button>
               </Link>
-            ) : null
-          }
-        />
+            )}
+          </div>
+        </div>
 
-        <SectionCard className="mt-4" description={null}>
+        <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
-            <div className="inline-flex rounded-full bg-muted p-1">
+            <div className="flex flex-wrap gap-1.5">
               {(["all", "public", "private", "mine"] as FilterTab[]).map((tab) => (
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => {
-                    setFilter(tab)
-                    setPage(1)
-                  }}
+                  onClick={() => { setFilter(tab); setPage(1) }}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-full transition-colors",
+                    "px-3 py-2 text-xs font-medium rounded-xl transition-all border",
                     filter === tab
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm"
+                      : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
-                  {tab === "all"
-                    ? "All"
-                    : tab === "public"
-                    ? "Public"
-                    : tab === "private"
-                    ? "Private"
-                    : "My channels"}
+                  {tab === "all" ? "All" : tab === "public" ? "Public" : tab === "private" ? "Private" : "My channels"}
                 </button>
               ))}
             </div>
             <form onSubmit={onSearchSubmit} className="w-full md:w-64">
               <Input
-                placeholder="Search channels"
+                placeholder="Search channels..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 text-sm"
+                className="h-10 text-sm rounded-xl bg-card/80 border-border/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
               />
             </form>
           </div>
-        </SectionCard>
+        </div>
 
         <div className="mt-6">
           {loading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-20 rounded-2xl border bg-card animate-pulse" />
+                <div key={i} className="h-20 rounded-2xl border border-border/70 bg-card/80 animate-pulse" />
               ))}
             </div>
           ) : error ? (
-            <SectionCard
-              className="text-center"
-              icon={<AlertTriangle className="w-5 h-5 text-orange-500" aria-hidden />}
-              title="Unable to load channels"
-              description={error}
-            />
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-8 text-center">
+              <div className="w-12 h-12 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-6 h-6 text-destructive" aria-hidden />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">Unable to load channels</h3>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
           ) : channels.length === 0 ? (
-            <SectionCard
-              className="text-center"
-              icon={<Hash className="w-5 h-5 text-orange-500" aria-hidden />}
-              title="No channels found"
-              description={
-                isAuthenticated
-                  ? "Be the first to create a channel for a topic you care about."
-                  : "Sign in or refine your search to discover channels."
-              }
-            >
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-8 text-center">
+              <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                <Hash className="w-6 h-6 text-orange-500" aria-hidden />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">No channels found</h3>
+              <p className="text-sm text-muted-foreground">
+                {isAuthenticated ? "Be the first to create a channel for a topic you care about." : "Sign in or refine your search to discover channels."}
+              </p>
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-3">
                   Be the first to{" "}
-                  <Link href="/channels/create" className="text-primary underline">
+                  <Link href="/channels/create" className="text-primary hover:underline">
                     create a channel
                   </Link>
                   .
                 </p>
               )}
-            </SectionCard>
+            </div>
           ) : (
             <div className="space-y-3">
               {channels.map((channel) => (
                 <Link
                   key={channel._id}
                   href={`/channels/${encodeURIComponent(channel.slug)}`}
-                  className="flex items-start justify-between gap-4 rounded-2xl border bg-card px-4 py-3 hover:bg-accent/40 transition-colors"
+                  className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-5 py-4 hover:border-border hover:shadow-sm hover:bg-card transition-all duration-200"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className="font-semibold text-sm md:text-base">{channel.name}</h2>
-                      <Badge
-                        variant={channel.type === "public" ? "outline" : "secondary"}
-                        className="text-[10px] uppercase"
-                      >
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Hash className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="font-semibold text-sm md:text-base text-foreground group-hover:text-primary transition-colors">{channel.name}</h2>
+                      <span className={cn(
+                        "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full",
+                        channel.type === "public"
+                          ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border border-border/60"
+                      )}>
                         {channel.type}
-                      </Badge>
+                      </span>
+                      {channel.isOwner && (
+                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                          Owner
+                        </span>
+                      )}
                     </div>
                     {channel.description && (
-                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
                         {channel.description}
                       </p>
                     )}
@@ -180,25 +182,21 @@ export default function ChannelsPage() {
                       {channel.memberCount} member{channel.memberCount === 1 ? "" : "s"}
                     </p>
                   </div>
-                  {channel.isOwner && (
-                    <Badge variant="secondary" className="text-[10px] uppercase mt-1">
-                      Owner
-                    </Badge>
-                  )}
                 </Link>
               ))}
 
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 pt-4">
+                <div className="flex justify-center items-center gap-3 pt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
+                    className="rounded-xl border-border/60 bg-card/80 hover:bg-card h-9 px-4"
                   >
                     Previous
                   </Button>
-                  <span className="text-xs text-muted-foreground flex items-center">
+                  <span className="text-xs text-muted-foreground">
                     Page {page} of {totalPages}
                   </span>
                   <Button
@@ -206,6 +204,7 @@ export default function ChannelsPage() {
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => p + 1)}
+                    className="rounded-xl border-border/60 bg-card/80 hover:bg-card h-9 px-4"
                   >
                     Next
                   </Button>

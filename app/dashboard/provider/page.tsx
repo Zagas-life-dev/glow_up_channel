@@ -439,7 +439,7 @@ export default function ProviderDashboard() {
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
             <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
-              <Link href="/dashboard/settings">Upgrade Account</Link>
+              <Link href="/profile/settings">Upgrade Account</Link>
             </Button>
           </div>
         </div>

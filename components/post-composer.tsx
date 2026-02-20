@@ -27,8 +27,8 @@ interface PostComposerProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-export default function PostComposer({ 
-  onPostCreated, 
+export default function PostComposer({
+  onPostCreated,
   channelId,
   replyToPostId,
   placeholder = "What's on your mind?",
@@ -36,7 +36,7 @@ export default function PostComposer({
 }: PostComposerProps) {
   const { user } = useAuth()
   const { playlists, sharedPlaylists, publicPlaylists } = usePlaylist()
-  
+
   const [text, setText] = useState('')
   const [images, setImages] = useState<{ file: File; preview: string }[]>([])
   const [uploadedImages, setUploadedImages] = useState<{ url: string; publicId: string }[]>([])
@@ -46,13 +46,13 @@ export default function PostComposer({
   const [isUploading, setIsUploading] = useState(false)
   const [isPosting, setIsPosting] = useState(false)
   const [showPlaylistPicker, setShowPlaylistPicker] = useState(false)
-  
+
   // Poll state
   const [showPollCreator, setShowPollCreator] = useState(false)
   const [pollQuestion, setPollQuestion] = useState('')
   const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
   const [pollDuration, setPollDuration] = useState<number>(1) // days
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -120,7 +120,7 @@ export default function PostComposer({
 
   const handleSubmit = async () => {
     const hasPoll = showPollCreator && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2
-    
+
     if (!text.trim() && images.length === 0 && !selectedPlaylist && !hasPoll) {
       toast.error('Please add some content to your post')
       return
@@ -169,7 +169,7 @@ export default function PostComposer({
         const validOptions = pollOptions.filter(o => o.trim())
         const endDate = new Date()
         endDate.setDate(endDate.getDate() + pollDuration)
-        
+
         postData.poll = {
           question: pollQuestion.trim(),
           options: validOptions.map(option => ({
@@ -193,13 +193,13 @@ export default function PostComposer({
       const data = await response.json()
       if (data.success) {
         toast.success('Post created!')
-        
+
         // Track active user activity (fire-and-forget, won't throw errors)
         if (data.data.post?._id) {
           trackPostCreated(data.data.post._id)
         }
         onPostCreated(data.data.post)
-        
+
         // Reset form
         setText('')
         setImages([])
@@ -222,7 +222,7 @@ export default function PostComposer({
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
-    
+
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
@@ -234,8 +234,8 @@ export default function PostComposer({
   const availablePlaylists = [
     ...playlists,
     ...sharedPlaylists,
-    ...publicPlaylists.filter(p => 
-      !playlists.some(own => own._id === p._id) && 
+    ...publicPlaylists.filter(p =>
+      !playlists.some(own => own._id === p._id) &&
       !sharedPlaylists.some(shared => shared._id === p._id)
     )
   ]
@@ -245,14 +245,14 @@ export default function PostComposer({
   return (
     <>
       <div className={cn(
-        "rounded-2xl bg-card border border-border overflow-hidden transition-all",
-        isExpanded && "ring-1 ring-primary/20"
+        "rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 overflow-hidden transition-all duration-200",
+        isExpanded && "ring-1 ring-primary/30 border-border shadow-sm"
       )}>
         {/* Main Input Area */}
         <div className="p-4">
           <div className="flex gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary flex items-center justify-center text-sm font-semibold text-primary-foreground flex-shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/20 bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
               {user.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -312,10 +312,10 @@ export default function PostComposer({
 
               {/* Playlist Preview */}
               {selectedPlaylist && (
-                <div className="mt-3 p-3 rounded-xl bg-muted border border-border">
+                <div className="mt-3 p-3 rounded-2xl bg-muted/60 border border-border/60">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
                         <RiPlayFill className="w-5 h-5 text-primary" aria-hidden />
                       </div>
                       <div>
@@ -335,7 +335,7 @@ export default function PostComposer({
 
               {/* Poll Creator */}
               {showPollCreator && (
-                <div className="mt-3 p-4 rounded-xl bg-muted border border-border">
+                <div className="mt-3 p-4 rounded-2xl bg-muted/60 border border-border/60">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-foreground">Create Poll</h3>
                     <button
@@ -350,7 +350,7 @@ export default function PostComposer({
                       <RiCloseLine className="w-4 h-4 text-muted-foreground" aria-hidden />
                     </button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* Poll Question */}
                     <div>
@@ -359,7 +359,7 @@ export default function PostComposer({
                         value={pollQuestion}
                         onChange={(e) => setPollQuestion(e.target.value)}
                         placeholder="Ask a question..."
-                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground outline-none focus:border-primary text-sm"
+                        className="w-full px-3 py-2 bg-muted/60 border border-border/60 rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/60 text-sm"
                         maxLength={200}
                       />
                     </div>
@@ -377,7 +377,7 @@ export default function PostComposer({
                               setPollOptions(updated)
                             }}
                             placeholder={`Option ${index + 1}`}
-                            className="flex-1 px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground outline-none focus:border-primary text-sm"
+                            className="flex-1 px-3 py-2 bg-muted/60 border border-border/60 rounded-xl text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/60 text-sm"
                             maxLength={100}
                           />
                           {pollOptions.length > 2 && (
@@ -416,7 +416,7 @@ export default function PostComposer({
                       <select
                         value={pollDuration}
                         onChange={(e) => setPollDuration(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground outline-none focus:border-primary text-sm"
+                        className="w-full px-3 py-2 bg-muted/60 border border-border/60 rounded-xl text-foreground outline-none focus:border-primary/60 text-sm"
                       >
                         <option value={1}>1 day</option>
                         <option value={3}>3 days</option>
@@ -433,8 +433,8 @@ export default function PostComposer({
 
         {/* Actions Bar */}
         {isExpanded && (
-          <div className="px-4 pb-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
+          <div className="px-4 pb-4 flex items-center justify-between gap-2 border-t border-border/40 pt-3 mt-1">
+            <div className="flex items-center gap-0.5">
               {/* Image Upload */}
               <input
                 ref={fileInputRef}
@@ -448,7 +448,7 @@ export default function PostComposer({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={images.length >= 5}
                 className={cn(
-                  "p-2 rounded-lg transition-colors",
+                  "w-9 h-9 flex items-center justify-center rounded-xl transition-colors",
                   images.length >= 5
                     ? "text-foreground/20 cursor-not-allowed"
                     : "text-muted-foreground hover:text-primary hover:bg-primary/10"
@@ -461,7 +461,7 @@ export default function PostComposer({
               <button
                 onClick={() => setShowPlaylistPicker(true)}
                 className={cn(
-                  "p-2 rounded-lg transition-colors",
+                  "w-9 h-9 flex items-center justify-center rounded-xl transition-colors",
                   selectedPlaylist
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10"
@@ -474,7 +474,7 @@ export default function PostComposer({
               <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
                 className={cn(
-                  "p-2 rounded-lg transition-colors",
+                  "w-9 h-9 flex items-center justify-center rounded-xl transition-colors",
                   showPollCreator
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-primary hover:bg-primary/10"
@@ -487,10 +487,10 @@ export default function PostComposer({
               <button
                 onClick={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
                 className={cn(
-                  "p-2 rounded-lg transition-colors flex items-center gap-1.5",
+                  "w-9 h-9 flex items-center justify-center rounded-xl transition-colors",
                   visibility === 'private'
                     ? "text-yellow-500 bg-yellow-500/10"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
                 )}
               >
                 {visibility === 'public' ? (
@@ -505,7 +505,7 @@ export default function PostComposer({
             <Button
               onClick={handleSubmit}
               disabled={isPosting || isUploading || (!text.trim() && images.length === 0 && !selectedPlaylist && !(showPollCreator && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2))}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-5"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-5 shadow-md shadow-orange-500/20 font-semibold"
             >
               <RiSendPlaneLine className="w-4 h-4 mr-2" />
               Post
@@ -516,8 +516,8 @@ export default function PostComposer({
 
       {/* Playlist Picker Sheet */}
       <Sheet open={showPlaylistPicker} onOpenChange={setShowPlaylistPicker}>
-        <SheetContent side="bottom" className="h-[60vh] bg-page border-border rounded-t-3xl p-0">
-          <div className="sticky top-0 bg-page border-b border-border px-6 py-4">
+        <SheetContent side="bottom" className="h-[60vh] bg-card/95 backdrop-blur-xl border-border/70 rounded-t-3xl p-0">
+          <div className="sticky top-0 bg-card/95 backdrop-blur-xl border-b border-border/60 px-6 py-4">
             <SheetTitle className="text-foreground">Attach a Playlist</SheetTitle>
           </div>
           <div className="overflow-y-auto h-[calc(60vh-60px)] p-6 space-y-2">
@@ -535,13 +535,13 @@ export default function PostComposer({
                     setShowPlaylistPicker(false)
                   }}
                   className={cn(
-                    "w-full p-4 rounded-xl border transition-all flex items-center gap-4 text-left",
+                    "w-full p-4 rounded-2xl border transition-all flex items-center gap-4 text-left",
                     selectedPlaylist?._id === playlist._id
-                      ? "bg-primary/10 border-primary/30"
-                      : "bg-card border-border hover:bg-muted"
+                      ? "bg-primary/10 border-primary/30 shadow-sm"
+                      : "bg-muted/40 border-border/60 hover:bg-muted/70 hover:border-border"
                   )}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
                     <RiPlayFill className="w-5 h-5 text-primary" aria-hidden />
                   </div>
                   <div className="flex-1 min-w-0">

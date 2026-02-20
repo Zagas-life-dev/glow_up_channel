@@ -69,8 +69,6 @@ import {
   RiPlayList2Fill,
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
-import { PageHeader } from "@/components/layout/page-header"
-import { SectionCard } from "@/components/layout/section-card"
 
 interface OnboardingData {
   country: string
@@ -522,298 +520,272 @@ export default function ProfilePage() {
 
   return (
     <PageShell>
-      {/* Header */}
       <div className="max-w-2xl mx-auto">
-        <PageHeader
-          sticky
-          title={displayName}
-          description={`${profile.postCount} posts`}
-          icon={<RiUserLine className="w-5 h-5 text-orange-400" aria-hidden />}
-          actions={
-            <div className="flex items-center gap-1">
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={handleOpenQrDashboard}
-                  disabled={isOpeningQrDashboard}
-                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  title="Manage QR Profile"
-                  aria-label="Manage QR Profile"
-                >
-                  {isOpeningQrDashboard ? (
-                    <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
-                  ) : (
-                    <RiQrCodeLine className="w-5 h-5" aria-hidden />
-                  )}
+        {/* Minimal top row: back + actions (no sticky bar) */}
+        <div className="flex items-center justify-between gap-3 py-3 px-1">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors rounded-xl py-2 pr-3 pl-2 -ml-2 hover:bg-card/80 hover:backdrop-blur-sm hover:border border-transparent hover:border-border/50"
+            aria-label="Go back"
+          >
+            <RiArrowLeftLine className="w-5 h-5" aria-hidden />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+          <div className="flex items-center gap-1">
+            {isOwner && (
+              <button
+                type="button"
+                onClick={handleOpenQrDashboard}
+                disabled={isOpeningQrDashboard}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all disabled:opacity-50"
+                title="Manage QR Profile"
+                aria-label="Manage QR Profile"
+              >
+                {isOpeningQrDashboard ? (
+                  <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
+                ) : (
+                  <RiQrCodeLine className="w-5 h-5" aria-hidden />
+                )}
+              </button>
+            )}
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all">
+                  <RiMoreLine className="w-5 h-5" aria-hidden />
                 </button>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 rounded-full hover:bg-muted transition-colors">
-                    <RiMoreLine className="w-5 h-5 text-muted-foreground" aria-hidden />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl min-w-[180px]">
-                  <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
-                    Share Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-muted-foreground focus:bg-muted focus:text-foreground cursor-pointer rounded-lg">
-                    Copy Link
-                  </DropdownMenuItem>
-                  {!isOwner && (
-                    <>
-                      <DropdownMenuSeparator className="bg-muted" />
-                      <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-lg">
-                        Block User
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          }
-        />
-      </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl min-w-[180px] py-1.5 shadow-xl">
+                <DropdownMenuItem className="text-muted-foreground focus:bg-muted/70 focus:text-foreground cursor-pointer rounded-xl mx-2 py-2.5">
+                  Share Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-muted-foreground focus:bg-muted/70 focus:text-foreground cursor-pointer rounded-xl mx-2 py-2.5">
+                  Copy Link
+                </DropdownMenuItem>
+                {!isOwner && (
+                  <>
+                    <DropdownMenuSeparator className="bg-border/50 my-1" />
+                    <DropdownMenuItem className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-xl mx-2 py-2.5">
+                      Block User
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu> */}
+          </div>
+        </div>
 
-      {/* Profile Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Profile Header */}
-        <div className="flex items-start gap-5 mb-6">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-2 ring-white/[0.08] ring-offset-2 ring-offset-[#0a0a0a]">
-              {profile.profileImage ? (
-                <Image 
-                  src={profile.profileImage} 
-                  alt={displayName} 
-                  width={96} 
-                  height={96} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-orange-500 via-orange-600 to-rose-500 flex items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-bold text-foreground">
-                    {displayName.charAt(0).toUpperCase()}
-                  </span>
+        {/* Profile hero: glass card */}
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden mb-5">
+          <div className="p-5 sm:p-6">
+            <div className="flex items-start gap-5 mb-5">
+              <div className="relative flex-shrink-0">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden ring-2 ring-border/40">
+                  {profile.profileImage ? (
+                    <Image
+                      src={profile.profileImage}
+                      alt={displayName}
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-orange-500/90 to-rose-600/90 flex items-center justify-center">
+                      <span className="text-2xl sm:text-3xl font-bold text-white">
+                        {displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {profile.isPrivate && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-lg bg-card/95 backdrop-blur-sm border border-border/60 flex items-center justify-center">
+                    <RiLockLine className="w-3 h-3 text-muted-foreground" aria-hidden />
+                  </div>
+                )}
+              </div>
+              {profile.showConnections && (
+                <div className="flex-1 flex items-center justify-around pt-1 min-w-0">
+                  <div className="text-center">
+                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.postCount}</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Posts</p>
+                  </div>
+                  <button
+                    onClick={() => setShowConnectionsList('followers')}
+                    className="text-center hover:opacity-80 transition-opacity"
+                  >
+                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.followersCount ?? 0}</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partners</p>
+                  </button>
+                  <button
+                    onClick={() => setShowConnectionsList('following')}
+                    className="text-center hover:opacity-80 transition-opacity"
+                  >
+                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.followingCount ?? 0}</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partnering</p>
+                  </button>
                 </div>
               )}
             </div>
-            {profile.isPrivate && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-page border-2 border-[#0a0a0a] flex items-center justify-center">
-                <RiLockLine className="w-3 h-3 text-muted-foreground" aria-hidden />
-              </div>
-            )}
-          </div>
 
-          {/* Stats */}
-          {profile.showConnections && (
-            <div className="flex-1 flex items-center justify-around pt-2">
-              <div className="text-center">
-                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.postCount}</p>
-                <p className="text-xs text-muted-foreground">Posts</p>
-              </div>
-              <button 
-                onClick={() => setShowConnectionsList('followers')}
-                className="text-center hover:opacity-70 transition-opacity"
-              >
-                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.followersCount ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Partners</p>
-              </button>
-              <button 
-                onClick={() => setShowConnectionsList('following')}
-                className="text-center hover:opacity-70 transition-opacity"
-              >
-                <p className="text-lg sm:text-xl font-bold text-foreground">{profile.followingCount ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Partnering</p>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Name & Bio */}
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
-            {profile.role === 'opportunity_poster' && (
-              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-orange-400 text-[10px] font-medium">
-                Provider
-              </span>
-            )}
-            {(profile.role === 'admin' || profile.role === 'super_admin') && (
-              <span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px] font-medium flex items-center gap-0.5">
-                <RiShieldLine className="w-2.5 h-2.5" aria-hidden />
-                Admin
-              </span>
-            )}
-          </div>
-          
-          {profile.headline && (
-            <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
-          )}
-          
-          {profile.bio && (
-            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{profile.bio}</p>
-          )}
-
-          {/* Quick Info */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs text-muted-foreground">
-            {/* Location from onboarding */}
-            {profile.onboarding?.country && (
-              <span className="flex items-center gap-1">
-                <RiMapPinLine className="w-3 h-3" aria-hidden />
-                {[profile.onboarding.city, profile.onboarding.province, profile.onboarding.country].filter(Boolean).join(', ')}
-              </span>
-            )}
-            {/* Work info */}
-            {profile.work?.company && (
-              <span className="flex items-center gap-1">
-                <RiBriefcaseLine className="w-3 h-3" aria-hidden />
-                {profile.work.title ? `${profile.work.title} @ ${profile.work.company}` : profile.work.company}
-              </span>
-            )}
-            {/* Education from onboarding or profile */}
-            {(profile.onboarding?.institution || profile.education?.school) && (
-              <span className="flex items-center gap-1">
-                <RiGraduationCapLine className="w-3 h-3" aria-hidden />
-                {profile.onboarding?.institution || profile.education?.school}
-              </span>
-            )}
-            {/* Career Stage from onboarding */}
-            {profile.onboarding?.careerStage && (
-              <span className="flex items-center gap-1">
-                <RiArrowUpLine className="w-3 h-3" aria-hidden />
-                {profile.onboarding.careerStage}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <RiCalendarLine className="w-3 h-3" aria-hidden />
-              Joined {memberSince}
-            </span>
-          </div>
-
-          {/* Website & Social Links */}
-          {(profile.website || activeSocialLinks.length > 0) && (
-            <div className="flex items-center gap-3 mt-3">
-              {profile.website && (
-                <a 
-                  href={profile.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
-                >
-                  <RiLink className="w-3 h-3" aria-hidden />
-                  {new URL(profile.website).hostname.replace('www.', '')}
-                </a>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-lg font-bold text-foreground">{displayName}</h1>
+              {profile.role === 'opportunity_poster' && (
+                <span className="px-2 py-0.5 rounded-lg bg-primary/15 text-orange-400 text-[10px] font-medium border border-primary/20">
+                  Provider
+                </span>
               )}
-              {activeSocialLinks.map(([platform, url]) => {
-                const config = socialConfig[platform]
-                if (!config) return null
-                return (
-                  <a 
-                    key={platform}
-                    href={url as string}
+              {(profile.role === 'admin' || profile.role === 'super_admin') && (
+                <span className="px-2 py-0.5 rounded-lg bg-violet-500/15 text-violet-400 text-[10px] font-medium border border-violet-500/20 flex items-center gap-0.5">
+                  <RiShieldLine className="w-2.5 h-2.5" aria-hidden />
+                  Admin
+                </span>
+              )}
+            </div>
+            {profile.headline && (
+              <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
+            )}
+            {profile.bio && (
+              <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{profile.bio}</p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs text-muted-foreground">
+              {profile.onboarding?.country && (
+                <span className="flex items-center gap-1">
+                  <RiMapPinLine className="w-3 h-3 opacity-70" aria-hidden />
+                  {[profile.onboarding.city, profile.onboarding.province, profile.onboarding.country].filter(Boolean).join(', ')}
+                </span>
+              )}
+              {profile.work?.company && (
+                <span className="flex items-center gap-1">
+                  <RiBriefcaseLine className="w-3 h-3 opacity-70" aria-hidden />
+                  {profile.work.title ? `${profile.work.title} @ ${profile.work.company}` : profile.work.company}
+                </span>
+              )}
+              {(profile.onboarding?.institution || profile.education?.school) && (
+                <span className="flex items-center gap-1">
+                  <RiGraduationCapLine className="w-3 h-3 opacity-70" aria-hidden />
+                  {profile.onboarding?.institution || profile.education?.school}
+                </span>
+              )}
+              {profile.onboarding?.careerStage && (
+                <span className="flex items-center gap-1">
+                  <RiArrowUpLine className="w-3 h-3 opacity-70" aria-hidden />
+                  {profile.onboarding.careerStage}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <RiCalendarLine className="w-3 h-3 opacity-70" aria-hidden />
+                Joined {memberSince}
+              </span>
+            </div>
+
+            {(profile.website || activeSocialLinks.length > 0) && (
+              <div className="flex items-center gap-3 mt-3">
+                {profile.website && (
+                  <a
+                    href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn("text-muted-foreground transition-colors", config.color)}
-                    title={config.label}
+                    className="text-xs text-primary hover:text-orange-400 transition-colors flex items-center gap-1"
                   >
-                    {config.icon}
+                    <RiLink className="w-3 h-3" aria-hidden />
+                    {new URL(profile.website).hostname.replace('www.', '')}
                   </a>
-                )
-              })}
-            </div>
-          )}
+                )}
+                {activeSocialLinks.map(([platform, url]) => {
+                  const config = socialConfig[platform]
+                  if (!config) return null
+                  return (
+                    <a
+                      key={platform}
+                      href={url as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn("text-muted-foreground transition-colors", config.color)}
+                      title={config.label}
+                    >
+                      {config.icon}
+                    </a>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Skills (from profile or onboarding) */}
+        {/* Skills / Interests / Industries: soft glass block */}
         {(() => {
           const skills = profile.skills?.length > 0 ? profile.skills : profile.onboarding?.onboardingSkills || []
-          return skills.length > 0 && (
-            <div className="mb-5">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-                <RiSparkling2Line className="w-3 h-3" aria-hidden />
-                <span>Skills</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {skills.slice(0, 8).map((skill, i) => (
-                  <span 
-                    key={i}
-                    className="px-2.5 py-1 rounded-full bg-primary/10 text-orange-400 text-xs border border-orange-500/20"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {skills.length > 8 && (
-                  <span className="px-2.5 py-1 text-muted-foreground text-xs">
-                    +{skills.length - 8} more
-                  </span>
-                )}
-              </div>
+          const hasInterests = profile.onboarding?.interests?.length
+          const hasIndustries = profile.onboarding?.industrySectors?.length
+          if (skills.length === 0 && !hasInterests && !hasIndustries) return null
+          return (
+            <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 mb-5">
+              {skills.length > 0 && (
+                <div className="mb-4 last:mb-0">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                    <RiSparkling2Line className="w-3 h-3" aria-hidden />
+                    Skills
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skills.slice(0, 8).map((skill, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-xl bg-primary/10 text-orange-400 text-xs border border-primary/20">
+                        {skill}
+                      </span>
+                    ))}
+                    {skills.length > 8 && <span className="px-2.5 py-1 text-muted-foreground text-xs">+{skills.length - 8}</span>}
+                  </div>
+                </div>
+              )}
+              {hasInterests && (
+                <div className="mb-4 last:mb-0">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                    <RiFocus3Line className="w-3 h-3" aria-hidden />
+                    Interests
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.onboarding!.interests!.slice(0, 6).map((interest, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-xl bg-primary/10 text-primary text-xs border border-primary/20">
+                        {interest}
+                      </span>
+                    ))}
+                    {(profile.onboarding!.interests!.length ?? 0) > 6 && (
+                      <span className="px-2.5 py-1 text-muted-foreground text-xs">+{(profile.onboarding!.interests!.length ?? 0) - 6}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {hasIndustries && (
+                <div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                    <RiBuildingLine className="w-3 h-3" aria-hidden />
+                    Industries
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.onboarding!.industrySectors!.slice(0, 5).map((sector, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-xl bg-violet-500/10 text-violet-400 text-xs border border-violet-500/20">
+                        {sector}
+                      </span>
+                    ))}
+                    {(profile.onboarding!.industrySectors!.length ?? 0) > 5 && (
+                      <span className="px-2.5 py-1 text-muted-foreground text-xs">+{(profile.onboarding!.industrySectors!.length ?? 0) - 5}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })()}
 
-        {/* Interests from onboarding */}
-        {profile.onboarding?.interests && profile.onboarding.interests.length > 0 && (
-          <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-              <RiFocus3Line className="w-3 h-3" aria-hidden />
-              <span>Interests</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {profile.onboarding.interests.slice(0, 6).map((interest, i) => (
-                <span 
-                  key={i}
-                  className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs border border-primary/20"
-                >
-                  {interest}
-                </span>
-              ))}
-              {profile.onboarding.interests.length > 6 && (
-                <span className="px-2.5 py-1 text-muted-foreground text-xs">
-                  +{profile.onboarding.interests.length - 6} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Industry Sectors from onboarding */}
-        {profile.onboarding?.industrySectors && profile.onboarding.industrySectors.length > 0 && (
-          <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-              <RiBuildingLine className="w-3 h-3" aria-hidden />
-              <span>Industries</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {profile.onboarding.industrySectors.slice(0, 5).map((sector, i) => (
-                <span 
-                  key={i}
-                  className="px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs border border-violet-500/20"
-                >
-                  {sector}
-                </span>
-              ))}
-              {profile.onboarding.industrySectors.length > 5 && (
-                <span className="px-2.5 py-1 text-muted-foreground text-xs">
-                  +{profile.onboarding.industrySectors.length - 5} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Education Details from onboarding */}
+        {/* Education: glass card */}
         {profile.onboarding && (profile.onboarding.educationLevel || profile.onboarding.fieldOfStudy) && (
-          <div className="mb-5 p-3 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+          <div className="mb-5 p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
               <RiGraduationCapLine className="w-3 h-3" aria-hidden />
-              <span>Education</span>
+              Education
             </div>
-            <div className="space-y-1">
-              {profile.onboarding.educationLevel && (
-                <p className="text-sm text-foreground">{profile.onboarding.educationLevel}</p>
-              )}
+            <div className="space-y-0.5">
+              {profile.onboarding.educationLevel && <p className="text-sm text-foreground">{profile.onboarding.educationLevel}</p>}
               {profile.onboarding.fieldOfStudy && (
                 <p className="text-xs text-muted-foreground">
                   {profile.onboarding.fieldOfStudy}
@@ -824,19 +796,16 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Aspirations from onboarding */}
+        {/* Aspirations: glass card */}
         {profile.onboarding?.aspirations && profile.onboarding.aspirations.length > 0 && (
-          <div className="mb-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+          <div className="mb-5 p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
               <RiLightbulbLine className="w-3 h-3" aria-hidden />
-              <span>Looking for</span>
+              Looking for
             </div>
             <div className="flex flex-wrap gap-1.5">
               {profile.onboarding.aspirations.map((aspiration, i) => (
-                <span 
-                  key={i}
-                  className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs border border-emerald-500/20"
-                >
+                <span key={i} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs border border-emerald-500/20">
                   {aspiration}
                 </span>
               ))}
@@ -844,66 +813,59 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Profile Completion (only for own profile) */}
+        {/* Profile Completion: soft glass */}
         {isOwner && completionPercentage < 100 && (
-          <SectionCard
-            emphasized
-            className="mb-5"
-            title="Profile completion"
-            description="Complete a few more details to unlock better recommendations."
-            icon={<RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-muted-foreground">
-                Your profile is {completionPercentage}% complete
-              </span>
-              <span className="text-sm font-bold text-orange-400">
-                {completionPercentage}%
-              </span>
+          <div className="mb-5 rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-600/5 backdrop-blur-sm p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/20 flex items-center justify-center">
+                <RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Profile completion</h3>
+                <p className="text-xs text-muted-foreground">Unlock better recommendations</p>
+              </div>
             </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
-              <div
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500"
-                style={{ width: `${completionPercentage}%` }}
-              />
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">{completionPercentage}% complete</span>
+              <span className="text-sm font-bold text-orange-400">{completionPercentage}%</span>
+            </div>
+            <div className="h-1.5 bg-muted/80 rounded-full overflow-hidden mb-3">
+              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }} />
             </div>
             <Link href="/onboarding">
-              <Button
-                size="sm"
-                className="w-full bg-primary hover:bg-primary/90 text-foreground rounded-xl h-8 text-xs"
-              >
+              <Button size="sm" className="w-full bg-primary/90 hover:bg-primary text-white rounded-xl h-9 text-xs font-medium border border-orange-500/20">
                 Complete your profile
                 <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
               </Button>
             </Link>
-          </SectionCard>
+          </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 mb-6">
+        {/* Action Buttons: glass style */}
+        <div className="flex flex-wrap gap-2 mb-5">
           {isOwner ? (
             <>
-              <Button 
+              <Button
                 onClick={() => setShowEditModal(true)}
-                variant="outline" 
-                className="flex-1 border-border bg-muted text-foreground hover:bg-muted rounded-xl h-9 text-sm font-medium"
+                variant="outline"
+                className="flex-1 min-w-0 border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
               >
                 Edit Profile
               </Button>
-              <Link href="/dashboard/settings" className="flex-1">
-                <Button 
-                  variant="outline" 
-                  className="w-full border-border bg-muted text-foreground hover:bg-muted rounded-xl h-9 text-sm font-medium"
+              <Link href="/profile/settings" className="flex-1 min-w-0">
+                <Button
+                  variant="outline"
+                  className="w-full border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
                 >
                   <RiSettingsLine className="w-4 h-4 mr-2" aria-hidden />
                   Settings
                 </Button>
               </Link>
               {(currentUser?.role === 'opportunity_poster' || currentUser?.role === 'admin' || currentUser?.role === 'super_admin') ? (
-                <Link href="/dashboard/provider" className="flex-1">
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-orange-500/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-9 text-sm font-medium"
+                <Link href="/dashboard/provider" className="flex-1 min-w-0">
+                  <Button
+                    variant="outline"
+                    className="w-full border border-primary/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-10 text-sm font-medium transition-all"
                   >
                     <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
                     Provider
@@ -911,14 +873,14 @@ export default function ProfilePage() {
                 </Link>
               ) : (
                 <>
-                  <Button 
+                  <Button
                     onClick={() => {
                       setUpgradeForm({ email: currentUser?.email || '', password: '' })
                       setUpgradeError(null)
                       setShowUpgradeModal(true)
                     }}
-                    variant="outline" 
-                    className="flex-1 border-orange-500/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-9 text-sm font-medium"
+                    variant="outline"
+                    className="flex-1 min-w-0 border border-primary/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-10 text-sm font-medium transition-all"
                   >
                     <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
                     Become Provider
@@ -1025,20 +987,20 @@ export default function ProfilePage() {
             </>
           ) : (
             <>
-              <Button 
+              <Button
                 onClick={handleConnect}
                 disabled={connectLoading}
                 className={cn(
-                  "flex-1 rounded-xl h-9 text-sm font-medium transition-all",
-                  connectionStatus?.isFollowing 
-                    ? "bg-muted text-foreground hover:bg-red-500/20 hover:text-red-400 border border-border"
+                  "flex-1 min-w-0 rounded-xl h-10 text-sm font-medium transition-all border",
+                  connectionStatus?.isFollowing
+                    ? "bg-card/80 backdrop-blur-sm text-foreground hover:bg-red-500/10 hover:text-red-400 border-border/60 hover:border-red-500/30"
                     : connectionStatus?.isPending
-                    ? "bg-muted text-muted-foreground border border-border"
-                    : "bg-primary hover:bg-primary/90 text-foreground"
+                    ? "bg-card/80 backdrop-blur-sm text-muted-foreground border-border/60"
+                    : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-transparent shadow-lg shadow-orange-500/20"
                 )}
               >
                 {connectionStatus?.isFollowing ? (
-                  'Partnering'
+                  "Partnering"
                 ) : connectionStatus?.isPending ? (
                   <>
                     <RiTimeLine className="w-4 h-4 mr-1.5" aria-hidden />
@@ -1051,10 +1013,10 @@ export default function ProfilePage() {
                   </>
                 )}
               </Button>
-              <Button 
+              <Button
                 variant="outline"
-                disabled={true}
-                className="flex-1 border-border bg-muted text-muted-foreground  rounded-xl h-9 text-sm font-medium"
+                disabled
+                className="flex-1 min-w-0 border border-border/60 bg-card/60 text-muted-foreground rounded-xl h-10 text-sm font-medium"
               >
                 Message (coming soon)
               </Button>
@@ -1062,34 +1024,34 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Follows You Badge */}
+        {/* Follows You: soft pill */}
         {!isOwner && connectionStatus?.followsYou && (
-          <div className="mb-5 px-3 py-2 rounded-lg bg-muted border border-border text-center">
-            <span className="text-xs text-muted-foreground">Partners you</span>
+          <div className="mb-5 px-4 py-2.5 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 text-center">
+            <span className="text-xs text-muted-foreground font-medium">Partners you</span>
           </div>
         )}
 
-        {/* Tabs */}
+        {/* Tabs: glass pills */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full bg-transparent border-b border-border rounded-none p-0 h-auto">
-            <TabsTrigger 
-              value="posts" 
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
+          <TabsList className="w-full flex gap-1.5 p-0 h-auto mb-4 bg-transparent border-0">
+            <TabsTrigger
+              value="posts"
+              className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               <RiFileLine className="w-4 h-4 mr-2" aria-hidden />
               Posts
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="playlists"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
+              className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               <RiPlayList2Fill className="w-4 h-4 mr-2" aria-hidden />
               Playlists
             </TabsTrigger>
             {isOwner && (
-              <TabsTrigger 
+              <TabsTrigger
                 value="bookmarks"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-foreground text-muted-foreground pb-3 pt-2 text-sm font-medium"
+                className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
               >
                 <RiBookmarkLine className="w-4 h-4 mr-2" aria-hidden />
                 Saved
@@ -1102,14 +1064,14 @@ export default function ProfilePage() {
             {loadingPosts ? (
               <div className="space-y-4 py-8 animate-pulse">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-card border border-border p-5">
+                  <div key={i} className="rounded-2xl bg-card/80 border border-border/70 p-5">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-muted" />
                       <div className="h-4 bg-muted rounded w-32" />
                     </div>
                     <div className="h-4 bg-muted rounded w-full mb-2" />
                     <div className="h-4 bg-muted rounded w-5/6" />
-                    <div className="h-48 bg-muted rounded-xl mt-3" />
+                    <div className="h-48 bg-muted rounded-2xl mt-3" />
                   </div>
                 ))}
               </div>
@@ -1124,7 +1086,7 @@ export default function ProfilePage() {
                 </p>
                 {isOwner && (
                   <Link href="/community">
-                    <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
+                    <Button size="sm" className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6 shadow-md shadow-orange-500/20">
                       Create Post
                     </Button>
                   </Link>
@@ -1172,7 +1134,7 @@ export default function ProfilePage() {
                     </p>
                     {isOwner && (
                       <Link href="/playlists">
-                        <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
+                        <Button size="sm" className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6 shadow-md shadow-orange-500/20">
                           Create Playlist
                         </Button>
                       </Link>
@@ -1203,10 +1165,10 @@ export default function ProfilePage() {
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors"
+                            className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/70 border border-transparent hover:border-border/50 transition-all duration-200"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/80 to-rose-500/80 flex items-center justify-center flex-shrink-0">
-                              <RiPlayList2Fill className="w-5 h-5 text-foreground" aria-hidden />
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                              <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-foreground truncate group-hover:text-orange-400 transition-colors">

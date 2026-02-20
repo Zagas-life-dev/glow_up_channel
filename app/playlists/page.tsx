@@ -95,7 +95,7 @@ export default function PlaylistsPage() {
             isAuthenticated ? (
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-primary hover:bg-primary/90 text-foreground rounded-full h-9 px-4"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full h-9 px-4 shadow-md shadow-orange-500/20 font-semibold"
               >
                 <RiAddLine className="w-4 h-4 mr-2" />
                 New Playlist
@@ -105,24 +105,24 @@ export default function PlaylistsPage() {
         />
 
         {/* Tabs */}
-        <div className="mt-2 border-b border-border">
-          <div className="flex flex-wrap items-center gap-1">
+        <div className="mt-3 border-b border-border/50">
+          <div className="flex flex-wrap items-center gap-1 pb-2">
             {isAuthenticated && (
               <>
                 <button
                   onClick={() => setActiveTab("my")}
                   className={cn(
-                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    "px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all duration-200",
                     activeTab === "my"
-                      ? "bg-primary/20 text-foreground border border-primary/40"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                   )}
                 >
                   <span className="flex items-center gap-2">
                     <RiPlayList2Fill className="w-4 h-4" />
                     My Playlists
                     {playlists.length > 0 && (
-                      <span className="px-1.5 py-0.5 text-[10px] bg-muted rounded-full">
+                      <span className="px-1.5 py-0.5 text-[10px] bg-primary/15 text-primary rounded-full">
                         {playlists.length}
                       </span>
                     )}
@@ -131,10 +131,10 @@ export default function PlaylistsPage() {
                 <button
                   onClick={() => setActiveTab("shared")}
                   className={cn(
-                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    "px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all duration-200",
                     activeTab === "shared"
-                      ? "bg-violet-500/15 text-foreground border border-violet-500/40"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-violet-500/15 text-violet-400 border border-violet-500/30 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -150,17 +150,17 @@ export default function PlaylistsPage() {
                 <button
                   onClick={() => setActiveTab("saved")}
                   className={cn(
-                    "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                    "px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all duration-200",
                     activeTab === "saved"
-                      ? "bg-primary/20 text-foreground border border-primary/40"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                   )}
                 >
                   <span className="flex items-center gap-2">
                     <RiBookmarkLine className="w-4 h-4" />
                     Saved
                     {savedPlaylists.length > 0 && (
-                      <span className="px-1.5 py-0.5 text-[10px] bg-primary/20 text-orange-400 rounded-full">
+                      <span className="px-1.5 py-0.5 text-[10px] bg-primary/15 text-orange-400 rounded-full">
                         {savedPlaylists.length}
                       </span>
                     )}
@@ -171,10 +171,10 @@ export default function PlaylistsPage() {
             <button
               onClick={() => setActiveTab("public")}
               className={cn(
-                "px-3 py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors",
+                "px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all duration-200",
                 activeTab === "public"
-                  ? "bg-emerald-500/15 text-foreground border border-emerald-500/40"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
               )}
             >
               <span className="flex items-center gap-2">
@@ -191,15 +191,15 @@ export default function PlaylistsPage() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="rounded-2xl bg-card border border-border p-5">
+              <div key={i} className="rounded-2xl bg-card/80 border border-border/70 p-5 animate-pulse">
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-muted animate-pulse" />
+                  <div className="w-16 h-16 rounded-2xl bg-muted/60" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
-                    <div className="h-3 bg-muted rounded w-1/2 animate-pulse" />
+                    <div className="h-4 bg-muted/60 rounded-full w-3/4" />
+                    <div className="h-3 bg-muted/60 rounded-full w-1/2" />
                     <div className="flex gap-2 mt-2">
-                      <div className="h-5 w-16 bg-muted rounded animate-pulse" />
-                      <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                      <div className="h-5 w-16 bg-muted/60 rounded-full" />
+                      <div className="h-5 w-20 bg-muted/60 rounded-full" />
                     </div>
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function PlaylistsPage() {
             {isAuthenticated && activeTab !== "shared" && activeTab !== "saved" && (
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="mt-4 bg-primary hover:bg-primary/90 text-foreground rounded-full"
+                className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold"
               >
                 <RiAddLine className="w-4 h-4 mr-2" />
                 Create playlist
@@ -260,8 +260,8 @@ export default function PlaylistsPage() {
                   key={playlist._id}
                   className={cn(
                     "group rounded-2xl border transition-all duration-200",
-                    "bg-card border-border",
-                    "hover:bg-muted hover:border-border",
+                    "bg-card/80 backdrop-blur-sm border-border/60",
+                    "hover:bg-card hover:border-border hover:shadow-sm",
                     deletingId === playlist._id && "opacity-50"
                   )}
                 >
@@ -269,8 +269,8 @@ export default function PlaylistsPage() {
                     <div className="flex items-start gap-4">
                       {/* Cover */}
                       <Link href={`/playlists/${playlist._id}`} className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-violet-500/30 transition-all shadow-lg">
-                          <RiPlayList2Fill className="w-9 h-9 text-orange-500" />
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-rose-500/25 group-hover:border-orange-500/30 transition-all">
+                          <RiPlayList2Fill className="w-9 h-9 text-orange-400" />
                         </div>
                       </Link>
 
@@ -293,18 +293,18 @@ export default function PlaylistsPage() {
                             {/* Metadata */}
                             <div className="flex items-center flex-wrap gap-2">
                               {playlist.isPublic ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold uppercase border border-emerald-500/20">
                                   <RiGlobalLine className="w-3 h-3" />
                                   Public
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground text-[10px] font-semibold uppercase border border-border/60">
                                   <RiLockLine className="w-3 h-3" />
                                   Private
                                 </span>
                               )}
                               {acceptedCollaborators.length > 0 && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-violet-500/10 text-violet-400 text-xs font-medium">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 text-[10px] font-semibold uppercase border border-violet-500/20">
                                   <RiGroupLine className="w-3 h-3" />
                                   {acceptedCollaborators.length + 1} members
                                 </span>
@@ -330,12 +330,12 @@ export default function PlaylistsPage() {
                             {playlist.hashtags && playlist.hashtags.length > 0 && (
                               <div className="flex flex-wrap gap-1.5 mt-3">
                                 {playlist.hashtags.slice(0, 4).map((tag) => (
-                                  <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs">
+                                  <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[10px] font-medium">
                                     #{tag}
                                   </span>
                                 ))}
                                 {playlist.hashtags.length > 4 && (
-                                  <span className="text-xs text-muted-foreground">+{playlist.hashtags.length - 4}</span>
+                                  <span className="text-[10px] text-muted-foreground">+{playlist.hashtags.length - 4}</span>
                                 )}
                               </div>
                             )}
@@ -345,22 +345,22 @@ export default function PlaylistsPage() {
                           {canManage && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="p-2 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted/70 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0">
                                   <RiMore2Line className="w-4 h-4 text-muted-foreground" />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl">
+                              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/70 rounded-2xl shadow-xl">
                                 <DropdownMenuItem
                                   onClick={() => setEditingPlaylist(playlist)}
-                                  className="text-muted-foreground hover:text-foreground focus:text-foreground focus:bg-muted cursor-pointer"
+                                  className="rounded-xl mx-1 text-muted-foreground hover:text-foreground focus:text-foreground hover:bg-muted/70 focus:bg-muted/70 cursor-pointer"
                                 >
                                   <RiPencilLine className="w-4 h-4 mr-2" />
                                   Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-muted" />
+                                <DropdownMenuSeparator className="bg-border/50 mx-1" />
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(playlist)}
-                                  className="text-red-400 hover:text-red-400 focus:text-red-400 focus:bg-red-500/10 cursor-pointer"
+                                  className="rounded-xl mx-1 text-red-400 hover:text-red-400 focus:text-red-400 hover:bg-red-500/10 focus:bg-red-500/10 cursor-pointer"
                                 >
                                   <RiDeleteBinLine className="w-4 h-4 mr-2" />
                                   Delete
@@ -375,7 +375,7 @@ export default function PlaylistsPage() {
                     {/* View Link */}
                     <Link
                       href={`/playlists/${playlist._id}`}
-                      className="flex items-center justify-end gap-1 mt-4 pt-4 border-t border-border text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors"
+                      className="flex items-center justify-end gap-1 mt-4 pt-4 border-t border-border/50 text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors"
                     >
                       View Playlist
                       <RiArrowRightLine className="w-4 h-4" />

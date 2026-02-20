@@ -121,7 +121,7 @@ export default function CommunityPage() {
   const fetchPosts = useCallback(async (lastId: string | null) => {
     try {
       let url = ''
-      
+
       if (activeTab === 'connections' && isAuthenticated) {
         url = `${API_BASE_URL}/api/posts/feed?limit=20`
         if (lastId) url += `&lastId=${lastId}`
@@ -234,38 +234,36 @@ export default function CommunityPage() {
 
   return (
     <PageShell>
-      {/* Sticky Header + tabs */}
       <div className="max-w-2xl mx-auto">
-        <PageHeader
-          sticky
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 sm:p-5 mb-4">
+          <PageHeader
           title="Community"
           description="Share what you’re building and discover what others are working on."
           icon={<Users className="w-5 h-5 text-orange-400" />}
           actions={
-            <Button
+            <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all disabled:opacity-50 shrink-0"
+              aria-label="Refresh"
             >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
+              <RefreshCw className={cn("w-5 h-5", isRefreshing && "animate-spin")} />
+            </button>
           }
-          className="pt-2 pb-2"
-        />
+          />
+        </div>
 
-        <div className="border-b border-border pb-1">
+        <div className="mb-3">
           <TabStrip
             tabs={[
               ...(isAuthenticated
                 ? [
-                    {
-                      id: "connections",
-                      label: "Partnering",
-                      icon: Users,
-                    } as const,
-                  ]
+                  {
+                    id: "connections",
+                    label: "Partnering",
+                    icon: Users,
+                  } as const,
+                ]
                 : []),
               {
                 id: "explore",
@@ -278,34 +276,23 @@ export default function CommunityPage() {
           />
         </div>
 
-        {/* Sort Options - Only for Explore */}
         {activeTab === "explore" && (
-          <div className="py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide mb-4">
             <button
-              onClick={() => {
-                setSortBy("trending")
-                setFilterHashtag(null)
-              }}
+              onClick={() => { setSortBy("trending"); setFilterHashtag(null) }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
-                sortBy === "trending" && !filterHashtag
-                  ? "bg-primary/20 text-orange-400 border border-orange-500/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
+                sortBy === "trending" && !filterHashtag ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
               )}
             >
               <Flame className="w-3 h-3" />
               Trending
             </button>
             <button
-              onClick={() => {
-                setSortBy("recent")
-                setFilterHashtag(null)
-              }}
+              onClick={() => { setSortBy("recent"); setFilterHashtag(null) }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
-                sortBy === "recent" && !filterHashtag
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
+                sortBy === "recent" && !filterHashtag ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
               )}
             >
               <Sparkles className="w-3 h-3" />
@@ -317,21 +304,19 @@ export default function CommunityPage() {
 
       {/* Main Content */}
       <div className="max-w-2xl mx-auto">
-        {/* Post Composer - At Top */}
         {isAuthenticated && (
-          <div className="pt-6 pb-4 border-b border-border px-4">
+          <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 mb-4">
             <PostComposer onPostCreated={handlePostCreated} />
           </div>
         )}
 
-        {/* Trending Hashtags - Horizontal Scroll */}
-        {trendingHashtags.length > 0 && activeTab === 'explore' && (
-          <div className="px-4 py-4 border-b border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-orange-500" />
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trending Now</h3>
+        {trendingHashtags.length > 0 && activeTab === "explore" && (
+          <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2.5">
+              <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Trending Now</h3>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
               {trendingHashtags.slice(0, 10).map((tag) => (
                 <button
                   key={tag.hashtag}
@@ -339,15 +324,13 @@ export default function CommunityPage() {
                     setFilterHashtag(filterHashtag === tag.hashtag ? null : tag.hashtag)
                   }}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
-                    filterHashtag === tag.hashtag
-                      ? "bg-primary text-foreground shadow-lg shadow-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
+                    "px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
+                    filterHashtag === tag.hashtag ? "bg-primary/15 text-orange-400 border-primary/30 shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
-                  <Hash className="w-3 h-3 inline mr-1" />
+                  <Hash className="w-3 h-3 inline mr-0.5" />
                   {tag.hashtag}
-                  <span className="ml-1.5 text-muted-foreground">({tag.count})</span>
+                  <span className={cn("ml-1.5 text-[10px]", filterHashtag === tag.hashtag ? "text-orange-400/80" : "text-muted-foreground")}>({tag.count})</span>
                 </button>
               ))}
             </div>
@@ -360,7 +343,7 @@ export default function CommunityPage() {
             // Loading Skeletons - Show when initial loading or refreshing with no posts
             <div className="space-y-4 w-full max-w-full">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-full max-w-full rounded-2xl bg-card border border-border overflow-hidden">
+                <div key={i} className="w-full max-w-full rounded-2xl bg-card/80 border border-border/70 overflow-hidden">
                   <div className="p-4 w-full max-w-full overflow-hidden">
                     <div className="animate-pulse space-y-3">
                       {/* Author Header */}
@@ -373,17 +356,17 @@ export default function CommunityPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Content */}
                       <div className="space-y-2">
                         <div className="h-4 bg-muted rounded w-full" />
                         <div className="h-4 bg-muted rounded w-5/6" />
                         <div className="h-4 bg-muted rounded w-4/6" />
                       </div>
-                      
+
                       {/* Image Skeleton */}
                       <div className="h-64 bg-muted rounded-xl" />
-                      
+
                       {/* Actions */}
                       <div className="flex items-center gap-0.5 sm:gap-1 pt-3 border-t border-border">
                         <div className="h-8 w-16 bg-muted rounded-lg" />
@@ -411,8 +394,8 @@ export default function CommunityPage() {
                 activeTab === "connections"
                   ? "Start partnering with people to see their posts here, or explore trending content."
                   : filterHashtag
-                  ? `No posts found for #${filterHashtag}. Try another hashtag!`
-                  : "Be the first to share something with the community!"
+                    ? `No posts found for #${filterHashtag}. Try another hashtag!`
+                    : "Be the first to share something with the community!"
               }
             >
               {filterHashtag && (
@@ -440,7 +423,7 @@ export default function CommunityPage() {
                   <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''} />
                 )
               )}
-              
+
               {/* Infinite scroll sentinel */}
               <div
                 ref={sentinelRef}
@@ -450,12 +433,12 @@ export default function CommunityPage() {
                   marginTop: `${threshold}px`
                 }}
               />
-              
+
               {/* Loading more: skeleton cards */}
               {isLoading && posts.length > 0 && (
                 <div className="space-y-4 pt-4">
                   {[...Array(2)].map((_, i) => (
-                    <div key={i} className="w-full rounded-2xl bg-card border border-border overflow-hidden animate-pulse">
+                    <div key={i} className="w-full rounded-2xl bg-card/80 border border-border/70 overflow-hidden animate-pulse">
                       <div className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-10 h-10 rounded-full bg-muted" />
@@ -470,7 +453,7 @@ export default function CommunityPage() {
                   ))}
                 </div>
               )}
-              
+
               {/* End of feed message */}
               {!hasMore && posts.length > 0 && (
                 <p className="text-center py-8 text-muted-foreground text-sm">

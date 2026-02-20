@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist } from '@/contexts/playlist-context'
 import { cn } from '@/lib/utils'
+import { showPwaInstallPrompt } from '@/components/pwa-install-banner'
 import {
   RiHomeLine,
   RiGlobalLine,
@@ -20,6 +22,7 @@ import {
   RiPlayList2Fill,
   RiFocus3Line,
   RiHashtag,
+  RiDownloadLine,
 } from "react-icons/ri"
 
 const mainNavItems = [
@@ -35,10 +38,23 @@ interface AppSidebarProps {
   onToggleCollapse: () => void
 }
 
+function useIsStandalone() {
+  const [standalone, setStandalone] = useState(false)
+  useEffect(() => {
+    setStandalone(
+      (typeof window !== "undefined" && (window as Window & { standalone?: boolean }).standalone === true) ||
+      (typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches) ||
+      (typeof navigator !== "undefined" && (navigator as Navigator & { standalone?: boolean }).standalone === true)
+    )
+  }, [])
+  return standalone
+}
+
 export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const { playlists } = usePlaylist()
+  const isStandalone = useIsStandalone()
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -50,15 +66,15 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
   const linkExpanded = "gap-3 px-4 py-3"
 
   return (
-    <div className="h-full flex flex-col bg-page border-r border-border relative">
+    <div className="h-full flex flex-col bg-card/80 backdrop-blur-sm border-r border-border/60 relative">
       {/* Logo */}
-      <div className={cn("py-5 flex-shrink-0", isCollapsed ? "px-2 flex justify-center" : "px-6")}>
+      <div className={cn("py-5 flex-shrink-0", isCollapsed ? "px-2 flex justify-center" : "px-5")}>
         <Link href="/" className={cn("flex items-center group", isCollapsed ? "justify-center" : "gap-3")}>
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all duration-300 flex-shrink-0">
-            <RiStarLine className="w-5 h-5 text-primary-foreground" />
+          <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 group-hover:scale-105 transition-all duration-300 flex-shrink-0">
+            <RiStarLine className="w-5 h-5 text-white" />
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold text-foreground whitespace-nowrap overflow-hidden">
+            <span className="text-xl font-bold tracking-tight text-foreground whitespace-nowrap overflow-hidden">
               Glow Up
             </span>
           )}
@@ -66,9 +82,9 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
       </div>
 
       {/* Main Navigation */}
-      <nav className={cn("flex-1 overflow-y-auto", isCollapsed ? "px-2" : "px-3")}>
+      <nav className={cn("flex-1 overflow-y-auto scrollbar-hide", isCollapsed ? "px-2" : "px-3")}>
         {/* Primary Nav */}
-        <div className="space-y-1 mb-6">
+        <div className="space-y-0.5 mb-6">
           {mainNavItems.map((item) => {
             const active = isActive(item.path)
             const isPost = item.path === '/post'
@@ -83,14 +99,14 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                   isCollapsed ? linkCollapsed : linkExpanded,
                   isPost
                     ? active
-                      ? "bg-primary/20 text-primary border border-primary/30"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
                       : "text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20"
                     : active
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                 )}
               >
-                <Icon className={cn("w-5 h-5 flex-shrink-0", active && "text-primary")} />
+                <Icon className={cn("w-5 h-5 flex-shrink-0", active ? "text-primary" : "")} />
                 {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{item.name}</span>}
               </Link>
             )
@@ -103,8 +119,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
             href="/dashboard/posting"
             title="Create Post"
             className={cn(
-              "flex rounded-xl bg-gradient-to-r from-primary to-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300",
-              isCollapsed ? "justify-center p-3 mx-2 mb-6" : "items-center gap-3 mx-3 mb-6 px-4 py-3"
+              "flex rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/35 hover:from-orange-600 hover:to-orange-700 transition-all duration-300",
+              isCollapsed ? "justify-center p-3 mx-2 mb-6" : "items-center gap-3 mx-1 mb-6 px-4 py-3"
             )}
           >
             <RiAddLine className="w-5 h-5 flex-shrink-0" />
@@ -115,8 +131,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
         {/* Playlists Section */}
         <div className="mb-6">
           {!isCollapsed && (
-            <div className="flex items-center justify-between px-4 mb-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="flex items-center justify-between px-3 mb-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                 Playlists
               </p>
               {user && (
@@ -129,7 +145,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               )}
             </div>
           )}
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <Link
               href="/playlists"
               title={isCollapsed ? "My Playlists" : undefined}
@@ -137,8 +153,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                 linkBase,
                 isCollapsed ? linkCollapsed : linkExpanded,
                 isActive('/playlists')
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
               )}
             >
               <RiPlayList2Fill className={cn("w-5 h-5 flex-shrink-0", isActive('/playlists') && "text-primary")} />
@@ -146,7 +162,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                 <>
                   <span className="whitespace-nowrap overflow-hidden">My Playlists</span>
                   {user && playlists.length > 0 && (
-                    <span className="ml-auto text-xs text-muted-foreground">{playlists.length}</span>
+                    <span className="ml-auto text-[10px] bg-primary/15 text-primary rounded-full px-1.5 py-0.5">{playlists.length}</span>
                   )}
                 </>
               )}
@@ -157,7 +173,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               className={cn(
                 linkBase,
                 isCollapsed ? linkCollapsed : linkExpanded,
-                "text-muted-foreground hover:text-foreground hover:bg-muted"
+                "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
               )}
             >
               <RiGlobalLine className="w-5 h-5 flex-shrink-0" />
@@ -170,11 +186,11 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
         {user && (
           <div className="mb-6">
             {!isCollapsed && (
-              <p className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="px-3 mb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                 Library
               </p>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <Link
                 href={`/profile/${user._id}`}
                 title={isCollapsed ? "My Profile" : undefined}
@@ -182,8 +198,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                   linkBase,
                   isCollapsed ? linkCollapsed : linkExpanded,
                   pathname?.startsWith('/profile')
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                 )}
               >
                 <RiUserLine className={cn("w-5 h-5 flex-shrink-0", pathname?.startsWith('/profile') && "text-primary")} />
@@ -196,8 +212,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                   linkBase,
                   isCollapsed ? linkCollapsed : linkExpanded,
                   pathname?.startsWith('/locked-in')
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                 )}
               >
                 <RiFocus3Line className={cn("w-5 h-5 flex-shrink-0", pathname?.startsWith('/locked-in') && "text-primary")} />
@@ -211,8 +227,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                     linkBase,
                     isCollapsed ? linkCollapsed : linkExpanded,
                     isActive('/dashboard/provider')
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
                   )}
                 >
                   <RiVipCrownLine className="w-5 h-5 flex-shrink-0" />
@@ -222,19 +238,38 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
             </div>
           </div>
         )}
+
+        {/* Install app (browser only) */}
+        {!isStandalone && (
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={showPwaInstallPrompt}
+              title={isCollapsed ? "Install app" : undefined}
+              className={cn(
+                linkBase,
+                isCollapsed ? linkCollapsed : linkExpanded,
+                "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent w-full"
+              )}
+            >
+              <RiDownloadLine className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Install app</span>}
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* User Section */}
-      <div className={cn("py-4 border-t border-border flex-shrink-0", isCollapsed ? "px-2" : "px-3")}>
+      <div className={cn("py-4 border-t border-border/60 flex-shrink-0", isCollapsed ? "px-2" : "px-3")}>
         {user ? (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <Link
-              href="/dashboard/settings"
+              href="/profile/settings"
               title={isCollapsed ? "Settings" : undefined}
               className={cn(
                 linkBase,
                 isCollapsed ? linkCollapsed : linkExpanded,
-                "text-muted-foreground hover:text-foreground hover:bg-muted"
+                "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
               )}
             >
               <RiSettingsLine className="w-5 h-5 flex-shrink-0" />
@@ -244,7 +279,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               onClick={logout}
               title={isCollapsed ? "Logout" : undefined}
               className={cn(
-                "w-full rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all duration-200",
+                "w-full rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all duration-200 border border-transparent",
                 linkBase,
                 isCollapsed ? linkCollapsed : linkExpanded
               )}
@@ -255,10 +290,10 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
             {!isCollapsed && (
               <Link
                 href={`/profile/${user._id}`}
-                className="mt-3 px-4 py-3 rounded-xl bg-muted border border-border hover:bg-muted hover:border-border transition-all block"
+                className="mt-2 px-3 py-3 rounded-2xl bg-muted/60 border border-border/60 hover:bg-muted hover:border-border transition-all block"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary flex items-center justify-center text-sm font-semibold text-primary-foreground flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-primary/30 ring-offset-1 ring-offset-card bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
                     {user.profileImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -271,7 +306,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {user.firstName || user.email?.split('@')[0]}
                     </p>
                     <p className="text-xs text-muted-foreground capitalize">
@@ -285,9 +320,9 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               <Link
                 href={`/profile/${user._id}`}
                 title="Profile"
-                className={cn(linkBase, linkCollapsed, "text-muted-foreground hover:text-foreground hover:bg-muted")}
+                className={cn(linkBase, linkCollapsed, "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent")}
               >
-                <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-primary/30 ring-offset-1 ring-offset-card bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white">
                   {user.profileImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -308,7 +343,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               href="/login"
               title={isCollapsed ? "Sign In" : undefined}
               className={cn(
-                "block rounded-xl border border-border text-foreground hover:text-foreground hover:border-border font-medium transition-all duration-200",
+                "block rounded-xl border border-border/60 text-foreground hover:text-foreground hover:border-border hover:bg-muted/60 font-medium transition-all duration-200",
                 isCollapsed ? "p-3 flex justify-center" : "w-full py-2.5 px-4 text-center"
               )}
             >
@@ -318,7 +353,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               href="/signup"
               title={isCollapsed ? "Get Started" : undefined}
               className={cn(
-                "block rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200",
+                "block rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold shadow-lg shadow-orange-500/20 transition-all duration-200",
                 isCollapsed ? "p-3 flex justify-center" : "w-full py-2.5 px-4 text-center"
               )}
             >
@@ -328,12 +363,12 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
         )}
       </div>
 
-      {/* Collapse toggle: right side, vertically centered, circular button */}
+      {/* Collapse toggle */}
       <button
         type="button"
         onClick={onToggleCollapse}
         title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-page/95 border border-border shadow-md hover:bg-muted/90 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-page transition-all w-9 h-9 lg:w-10 lg:h-10"
+        className="absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-card border border-border/70 shadow-md hover:bg-muted hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-all w-9 h-9 lg:w-10 lg:h-10"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? (

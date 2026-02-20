@@ -175,11 +175,11 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           errorMessage = errorData.message || errorMessage
         } catch {
           // If we can't parse error, use default message
-          errorMessage = response.status === 401 
+          errorMessage = response.status === 401
             ? 'Please log in to like posts'
             : response.status === 404
-            ? 'Post not found'
-            : 'Failed to like post'
+              ? 'Post not found'
+              : 'Failed to like post'
         }
         toast.error(errorMessage)
         return
@@ -202,7 +202,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         }
         setLocalPost(updated)
         onUpdate?.(updated)
-        
+
         // Track active user activity (fire-and-forget, won't throw errors)
         // Only track if it was a like (not an unlike)
         if (data.data?.liked) {
@@ -243,7 +243,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         setLocalPost(updated)
         onUpdate?.(updated)
         toast.success(data.data.bookmarked ? 'Saved to bookmarks' : 'Removed from bookmarks')
-        
+
         // Track active user activity (fire-and-forget, won't throw errors)
         if (data.data.bookmarked) {
           trackSave('post', post._id)
@@ -278,7 +278,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           onUpdate(data.data.post)
         }
         toast.success('Vote recorded!')
-        
+
         // Track active user activity (fire-and-forget, won't throw errors)
         trackVote(post._id)
         trackCommunityEngagement('vote', post._id)
@@ -316,7 +316,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           const errorData = await response.json()
           errorMessage = errorData.message || errorMessage
         } catch {
-          errorMessage = response.status === 401 
+          errorMessage = response.status === 401
             ? 'Please log in to repost'
             : 'Failed to repost'
         }
@@ -334,7 +334,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         setLocalPost(updated)
         onUpdate?.(updated)
         toast.success('Reposted!')
-        
+
         // Track active user activity (fire-and-forget, won't throw errors)
         trackRepost(post._id)
       } else {
@@ -454,13 +454,13 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
   }
 
   return (
-    <article className="w-full max-w-full rounded-2xl bg-card border border-border overflow-hidden hover:bg-muted transition-colors">
+    <article className="w-full max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 overflow-hidden hover:border-border hover:shadow-sm transition-all duration-200">
       {/* Repost Header */}
       {localPost.isRepost && localPost.repostedBy && (
-        <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
-          <RiRepeatLine className="w-3.5 h-3.5" aria-hidden />
+        <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-muted-foreground border-b border-border/40">
+          <RiRepeatLine className="w-3.5 h-3.5 text-emerald-500" aria-hidden />
           <span>
-            {localPost.repostedBy.firstName || localPost.repostedBy.email.split('@')[0]} reposted
+            <span className="text-emerald-500 font-medium">{localPost.repostedBy.firstName || localPost.repostedBy.email.split('@')[0]}</span> reposted
           </span>
         </div>
       )}
@@ -470,7 +470,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <Link href={`/profile/${localPost.author._id}`}>
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-foreground">
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-border/60 bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
                 {localPost.author.profileImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -484,12 +484,13 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
               </div>
             </Link>
             <div>
-              <Link href={`/profile/${localPost.author._id}`} className="font-medium text-foreground hover:underline">
+              <Link href={`/profile/${localPost.author._id}`} className="font-semibold text-foreground hover:text-primary transition-colors">
                 {localPost.author.firstName || localPost.author.email.split('@')[0]}
               </Link>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                 <span>{formatDistanceToNow(new Date(localPost.createdAt), { addSuffix: true })}</span>
-                {localPost.isEdited && <span>• edited</span>}
+                {localPost.isEdited && <span>· edited</span>}
+                <span>·</span>
                 {localPost.visibility === 'private' ? (
                   <Lock className="w-3 h-3" />
                 ) : (
@@ -502,25 +503,25 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {showActions && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-muted-foreground">
-                  <RiMore2Line className="w-5 h-5" aria-hidden />
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-colors">
+                  <RiMore2Line className="w-4 h-4" aria-hidden />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl">
-                <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/70 rounded-2xl shadow-xl">
+                <DropdownMenuItem onClick={handleShare} className="cursor-pointer rounded-xl mx-1">
                   <RiShareLine className="w-4 h-4 mr-2" aria-hidden />
                   Share
                 </DropdownMenuItem>
                 {isOwner && (
                   <>
-                    <DropdownMenuSeparator className="bg-muted" />
-                    <DropdownMenuItem asChild className="cursor-pointer">
+                    <DropdownMenuSeparator className="bg-border/60" />
+                    <DropdownMenuItem asChild className="cursor-pointer rounded-xl mx-1">
                       <Link href={`/posts/${post._id}/edit`}>
                         <RiEditLine className="w-4 h-4 mr-2" aria-hidden />
                         Edit
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:text-red-400 cursor-pointer">
+                    <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:text-red-400 cursor-pointer rounded-xl mx-1 mb-1">
                       <RiDeleteBinLine className="w-4 h-4 mr-2" aria-hidden />
                       Delete
                     </DropdownMenuItem>
@@ -543,8 +544,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {/* Images Carousel */}
           {localPost.content.images && localPost.content.images.length > 0 && (
             <div className="mb-3 relative -mx-4 md:mx-0">
-              <div 
-                className="relative w-[calc(100%+2rem)] md:w-full aspect-square bg-black rounded-none md:rounded-xl overflow-hidden select-none"
+              <div
+                className="relative w-[calc(100%+2rem)] md:w-full aspect-square bg-black rounded-none md:rounded-2xl overflow-hidden select-none"
                 onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
                 onTouchMove={(e) => setTouchEnd(e.targetTouches[0].clientX)}
                 onTouchEnd={() => {
@@ -556,7 +557,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   const distance = touchStart - touchEnd
                   const isLeftSwipe = distance > 50
                   const isRightSwipe = distance < -50
-                  
+
                   if (isLeftSwipe && currentImageIndex < localPost.content.images.length - 1) {
                     setCurrentImageIndex(prev => prev + 1)
                   }
@@ -641,7 +642,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {/* Playlist Preview */}
           {localPost.content.playlist && (
             <Link href={`/playlists/${localPost.content.playlist._id}`}>
-              <div className="rounded-xl bg-muted border border-border p-4 hover:bg-muted transition-colors">
+              <div className="rounded-2xl bg-muted/60 border border-border/60 p-4 hover:bg-muted hover:border-border transition-all duration-200">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center">
                     <RiPlayFill className="w-6 h-6 text-orange-500" aria-hidden />
@@ -652,7 +653,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   </div>
                   <RiExternalLinkLine className="w-4 h-4 text-muted-foreground" aria-hidden />
                 </div>
-                
+
                 {localPost.content.playlist.items && localPost.content.playlist.items.length > 0 && (
                   <div className="space-y-1.5">
                     {localPost.content.playlist.items.slice(0, 3).map((item, index) => {
@@ -680,7 +681,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
           {localPost.content.contentReference && (
             <Link href={`/${localPost.content.contentReference.type === 'opportunity' ? 'opportunities' : localPost.content.contentReference.type === 'job' ? 'jobs' : localPost.content.contentReference.type === 'event' ? 'events' : 'resources'}/${localPost.content.contentReference.contentId}`}>
               <div className={cn(
-                "rounded-xl border p-4 hover:opacity-90 transition-opacity cursor-pointer",
+                "rounded-2xl border p-4 hover:opacity-90 transition-opacity cursor-pointer",
                 localPost.content.contentReference.type === 'opportunity' && "bg-primary/10 border-orange-500/20",
                 localPost.content.contentReference.type === 'job' && "bg-primary/10 border-primary/20",
                 localPost.content.contentReference.type === 'event' && "bg-emerald-500/10 border-emerald-500/20",
@@ -717,8 +718,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         localPost.content.contentReference.type === 'resource' && "text-violet-500"
                       )}>
                         {localPost.content.contentReference.type === 'opportunity' ? 'Opportunity' :
-                         localPost.content.contentReference.type === 'job' ? 'Job' :
-                         localPost.content.contentReference.type === 'event' ? 'Event' : 'Resource'}
+                          localPost.content.contentReference.type === 'job' ? 'Job' :
+                            localPost.content.contentReference.type === 'event' ? 'Event' : 'Resource'}
                       </span>
                       {localPost.content.contentReference.organization && (
                         <>
@@ -742,8 +743,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                         <div className="inline-flex items-center gap-1">
                           <RiMapPinLine className="w-3 h-3" aria-hidden />
                           <span>
-                            {localPost.content.contentReference.location.isRemote 
-                              ? 'Remote' 
+                            {localPost.content.contentReference.location.isRemote
+                              ? 'Remote'
                               : [localPost.content.contentReference.location.city, localPost.content.contentReference.location.country].filter(Boolean).join(', ') || 'Location TBD'}
                           </span>
                         </div>
@@ -785,20 +786,20 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
             const userVote = user ? poll.votes?.find((v: any) => v.userId === user._id || v.userId === (user as any).id) : null
             const hasVoted = !!userVote
             const totalVotes = poll.totalVotes || poll.options.reduce((sum: number, opt: any) => sum + (opt.votes || 0), 0)
-            
+
             return (
-              <div className="mb-3 rounded-xl bg-muted border border-border p-4">
+              <div className="mb-3 rounded-2xl bg-muted/60 border border-border/60 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <RiBarChart2Line className="w-4 h-4 text-orange-500 flex-shrink-0" aria-hidden />
                   <h4 className="text-sm font-semibold text-foreground break-words">{poll.question}</h4>
                 </div>
-                
+
                 <div className="space-y-2">
                   {poll.options.map((option: any, index: number) => {
                     const optionVotes = option.votes || 0
                     const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0
                     const isSelected = userVote?.optionIndex === index
-                    
+
                     return (
                       <button
                         key={index}
@@ -812,8 +813,8 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                           isSelected
                             ? "border-orange-500/50 bg-primary/10"
                             : hasVoted || isPollEnded
-                            ? "border-border bg-card cursor-default"
-                            : "border-border bg-card hover:border-border hover:bg-muted cursor-pointer"
+                              ? "border-border bg-card cursor-default"
+                              : "border-border bg-card hover:border-border hover:bg-muted cursor-pointer"
                         )}
                       >
                         <div className="relative z-10 p-3 flex items-center justify-between gap-2">
@@ -844,7 +845,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                     )
                   })}
                 </div>
-                
+
                 <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                   <span>{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</span>
                   {!isPollEnded && (
@@ -879,14 +880,14 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
         {/* Actions */}
         {showActions && (
-          <div className="flex items-center justify-between pt-2 border-t border-border">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <div className="flex items-center gap-0.5">
               {/* Like */}
               <button
                 onClick={handleLike}
                 disabled={isLiking}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 text-sm font-medium",
                   localPost.hasLiked
                     ? "text-red-500 bg-red-500/10"
                     : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
@@ -897,14 +898,14 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                 ) : (
                   <RiHeartLine className="w-4 h-4" aria-hidden />
                 )}
-                <span className="text-sm">{localPost.likeCount || ''}</span>
+                {!!localPost.likeCount && <span className="text-xs">{localPost.likeCount}</span>}
               </button>
 
               {/* Reply */}
               <Link href={`/posts/${post._id}`}>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200 text-sm font-medium">
                   <RiChat1Line className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">{localPost.replyCount || ''}</span>
+                  {!!localPost.replyCount && <span className="text-xs">{localPost.replyCount}</span>}
                 </button>
               </Link>
 
@@ -913,14 +914,14 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                 onClick={handleRepost}
                 disabled={isReposting || localPost.hasReposted}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 text-sm font-medium",
                   localPost.hasReposted
                     ? "text-emerald-500 bg-emerald-500/10"
                     : "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10"
                 )}
               >
                 <RiRepeatLine className="w-4 h-4" aria-hidden />
-                <span className="text-sm">{localPost.repostCount || ''}</span>
+                {!!localPost.repostCount && <span className="text-xs">{localPost.repostCount}</span>}
               </button>
             </div>
 
@@ -929,7 +930,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
               onClick={handleBookmark}
               disabled={isBookmarking}
               className={cn(
-                "p-2 rounded-lg transition-colors",
+                "w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200",
                 localPost.hasBookmarked
                   ? "text-yellow-500 bg-yellow-500/10"
                   : "text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
