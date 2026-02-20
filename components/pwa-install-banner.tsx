@@ -39,27 +39,27 @@ export function showPwaInstallPrompt() {
   }
 }
 
+function isStandalone() {
+  if (typeof window === "undefined") return false
+  return (
+    (window as Window & { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  )
+}
+
+function isIos() {
+  if (typeof window === "undefined") return false
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+}
+
 export default function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [showBanner, setShowBanner] = useState(false)
-  const [showIosHint, setShowIosHint] = useState(false)
+  const [showCenterPrompt, setShowCenterPrompt] = useState(false)
+  const [showIosSteps, setShowIosSteps] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
 
-  const isStandalone = () => {
-    if (typeof window === "undefined") return false
-    return (
-      (window as Window & { standalone?: boolean }).standalone === true ||
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-    )
-  }
-
-  const isIos = () => {
-    if (typeof window === "undefined") return false
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  }
-
-  const shouldShow = useCallback(() => {
+  const canShow = useCallback(() => {
     if (isStandalone() || isInstalled) return false
     const until = getDismissedUntil()
     if (until != null && Date.now() < until) return false
@@ -76,12 +76,14 @@ export default function PwaInstallBanner() {
       const ev = e as BeforeInstallPromptEvent
       ev.preventDefault()
       setDeferredPrompt(ev)
-      if (shouldShow()) setShowBanner(true)
+      if (canShow()) setShowCenterPrompt(true)
     }
 
     const handleShowPrompt = () => {
-      if (deferredPrompt) setShowBanner(true)
-      if (isIos()) setShowIosHint(true)
+      if (canShow()) {
+        setShowCenterPrompt(true)
+        if (isIos()) setShowIosSteps(false)
+      }
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
@@ -90,22 +92,25 @@ export default function PwaInstallBanner() {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
       window.removeEventListener(PWA_PROMPT_EVENT, handleShowPrompt)
     }
-  }, [shouldShow, deferredPrompt])
+  }, [canShow])
 
-  // Show iOS "Add to Home Screen" hint when on iOS and not standalone
+  // On iOS (no beforeinstallprompt), show centered prompt so user can tap to see instructions
   useEffect(() => {
-    if (!isIos() || isStandalone() || !shouldShow()) return
-    setShowIosHint(true)
-  }, [shouldShow])
+    if (!isIos() || isStandalone() || !canShow()) return
+    setShowCenterPrompt(true)
+  }, [canShow])
 
   const handleInstall = async () => {
+    if (isIos()) {
+      setShowIosSteps(true)
+      return
+    }
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === "accepted") {
       setIsInstalled(true)
-      setShowBanner(false)
-      // Open the app immediately in this tab (and on some browsers the PWA may open in standalone)
+      setShowCenterPrompt(false)
       const startUrl = typeof window !== "undefined" ? `${window.location.origin}/` : "/"
       window.location.href = startUrl
     }
@@ -113,98 +118,86 @@ export default function PwaInstallBanner() {
   }
 
   const handleDismiss = () => {
-    setShowBanner(false)
-    setShowIosHint(false)
+    setShowCenterPrompt(false)
+    setShowIosSteps(false)
     setDismissedUntil()
   }
 
-  const openIosInstructions = () => {
-    setShowIosHint(true)
-  }
+  if (!showCenterPrompt || !canShow()) return null
 
-  if (!showBanner && !showIosHint) return null
+  // Centered popup: one main "Download app" button, user-initiated install
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        aria-hidden
+        onClick={handleDismiss}
+      />
+      {/* Card at center */}
+      <div
+        className="relative w-full max-w-sm rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md p-6 shadow-xl animate-in zoom-in-95 duration-200"
+        role="dialog"
+        aria-labelledby="pwa-install-title"
+        aria-describedby="pwa-install-desc"
+      >
+        <Button
+          size="icon"
+          variant="ghost"
+          className="absolute right-3 top-3 h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
+          onClick={handleDismiss}
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4" />
+        </Button>
 
-  // Android / desktop Chrome: install button + dismiss
-  if (showBanner && deferredPrompt) {
-    return (
-      <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-300">
-        <div className="rounded-xl border border-border bg-card p-4 shadow-lg">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-              <img
-                src="/images/logo-icon-transparent.png"
-                alt=""
-                className="h-8 w-8"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-foreground">Install GlowUp</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Add to your home screen for quick access and a better experience.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button size="sm" onClick={handleInstall} className="gap-1.5">
-                  <Download className="h-4 w-4" />
-                  Install app
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleDismiss}>
-                  Not now
-                </Button>
-              </div>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={handleDismiss}
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
+            <img
+              src="/images/logo-icon-transparent.svg"
+              alt=""
+              className="h-10 w-10"
+            />
           </div>
+          <h2 id="pwa-install-title" className="mt-4 text-xl font-bold text-foreground">
+            Get the GlowUp app
+          </h2>
+          <p id="pwa-install-desc" className="mt-1 text-sm text-muted-foreground">
+            {isIos()
+              ? "Add to your home screen for quick access."
+              : "Download to your device and use it like an app."}
+          </p>
+
+          {showIosSteps ? (
+            <div className="mt-4 w-full rounded-xl border border-border/60 bg-muted/50 p-4 text-left">
+              <p className="text-sm font-medium text-foreground">On iPhone / iPad:</p>
+              <ol className="mt-2 list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                <li>Tap the <Share className="inline h-3.5 w-3.5" /> Share button (bottom of Safari)</li>
+                <li>Scroll and tap &quot;Add to Home Screen&quot;</li>
+                <li>Tap &quot;Add&quot;</li>
+              </ol>
+            </div>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleInstall}
+              className="mt-6 w-full gap-2 rounded-xl bg-primary hover:bg-primary/90 font-semibold"
+            >
+              <Download className="h-5 w-5" />
+              {isIos() ? "Add to Home Screen" : "Download app"}
+            </Button>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 text-muted-foreground hover:text-foreground"
+            onClick={handleDismiss}
+          >
+            Not now
+          </Button>
         </div>
       </div>
-    )
-  }
-
-  // iOS: show instructions (Share → Add to Home Screen)
-  if (showIosHint) {
-    return (
-      <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-300">
-        <div className="rounded-xl border border-border bg-card p-4 shadow-lg">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-              <img
-                src="/images/logo-icon-transparent.png"
-                alt=""
-                className="h-8 w-8"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-foreground">Add GlowUp to Home Screen</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Tap <Share className="inline h-3.5 w-3.5" /> Share, then &quot;Add to Home Screen&quot; to install the app.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={handleDismiss}>
-                  Got it
-                </Button>
-              </div>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={handleDismiss}
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return null
+    </div>
+  )
 }
