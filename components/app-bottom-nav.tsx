@@ -38,12 +38,12 @@ export default function AppBottomNav() {
   }
 
   return (
-    <nav className="lg:hidden fixed bottom-10 left-0 right-0 z-50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
       {/* Gradient fade: white in light mode, dark in dark mode */}
-      <div className="absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0  -top-3 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
       <div className="bg-page/95 backdrop-blur-xl border-t border-border px-2 pb-4 pb-safe">
-        <div className="flex items-center justify-around h-16">
+        <div className="flex items-center justify-around h-17">
           {items.map((item) => {
             const active = isActive(item.path)
             const Icon = item.icon
@@ -51,7 +51,7 @@ export default function AppBottomNav() {
               <Link
                 key={item.path + item.name}
                 href={item.path}
-                className="flex flex-col items-center justify-center flex-1 py-2"
+                className="flex flex-col items-center justify-center flex-1 pb-6 pt-2"
               >
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-200",
@@ -59,14 +59,14 @@ export default function AppBottomNav() {
                 )}>
                   <Icon
                     className={cn(
-                      "w-5 h-5 transition-colors duration-200",
+                      "w-6 h-6 transition-colors duration-200",
                       active ? "text-primary" : "text-muted-foreground"
                     )}
                     aria-hidden
                   />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium mt-0.5 transition-colors duration-200",
+                  "text-[12px] font-medium mt-0.5 transition-colors duration-200",
                   active ? "text-primary" : "text-muted-foreground"
                 )}>
                   {item.name}
