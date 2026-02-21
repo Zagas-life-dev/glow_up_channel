@@ -17,30 +17,58 @@ const BROWSER_LABELS: Record<PwaBrowserKind, string> = {
   desktop: "your browser",
 }
 
-/** Arrow pointing down to the browser's Share / menu bar. */
-function ShareArrowPointer({ browserKind }: { browserKind: PwaBrowserKind }) {
+/** Arrow pointing to where the Share icon is: bottom (Safari) or top right (Chrome). */
+function ShareArrowPointer({
+  browserKind,
+  position,
+}: {
+  browserKind: PwaBrowserKind
+  position: "bottom" | "topRight"
+}) {
   const label = BROWSER_LABELS[browserKind]
+  const isBottom = position === "bottom"
   return (
     <div className="relative flex flex-col items-center">
-      <p className="text-sm font-medium text-foreground mb-1">
-        Tap here in {label}
+      <p className="text-sm font-medium text-foreground mb-1 text-center">
+        {isBottom
+          ? `In ${label}, the Share icon is at the bottom of the screen`
+          : `In ${label}, the Share icon is in the top right of the screen`}
       </p>
-      <svg
-        width="48"
-        height="56"
-        viewBox="0 0 48 56"
-        fill="none"
-        className="text-primary shrink-0"
-        aria-hidden
-      >
-        <path
-          d="M24 0 L24 44 M14 34 L24 44 L34 34"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      {isBottom ? (
+        <svg
+          width="48"
+          height="56"
+          viewBox="0 0 48 56"
+          fill="none"
+          className="text-primary shrink-0"
+          aria-hidden
+        >
+          <path
+            d="M24 0 L24 44 M14 34 L24 44 L34 34"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        <svg
+          width="56"
+          height="48"
+          viewBox="0 0 56 48"
+          fill="none"
+          className="text-primary shrink-0"
+          aria-hidden
+        >
+          <path
+            d="M12 24 L44 24 M34 14 L44 24 L34 34"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
       <div className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-muted/80 px-4 py-3 border border-border/60">
         <Share className="h-8 w-8 text-foreground shrink-0" aria-hidden />
         <span className="text-sm font-medium text-foreground">Share icon</span>
@@ -141,18 +169,18 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
   switch (browserKind) {
     case "safari_ios":
       return {
-        intro: `Look at the bottom of ${label} and follow the arrow:`,
+        intro: "In Safari, the Share icon is at the bottom of the screen. Follow the arrow:",
         steps: [
-          "Tap the Share icon (shown above)",
+          "Tap the Share icon at the bottom of Safari",
           'Scroll down and tap "Add to Home Screen"',
           'Tap "Add" in the top right',
         ],
       }
     case "chrome_ios":
       return {
-        intro: `Look at the bottom of ${label} and follow the arrow:`,
+        intro: "In Chrome, the Share icon is in the top right of the screen. Follow the arrow:",
         steps: [
-          "Tap the Share icon (shown above)",
+          "Tap the Share icon in the top right of Chrome",
           'Tap "Add to Home Screen" (or "Add to Home screen")',
           'Tap "Add"',
         ],
@@ -161,20 +189,20 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
     case "edge_ios":
     case "samsung_ios":
       return {
-        intro: `In ${label}, open the Share or menu:`,
+        intro: `In ${label}, look for the Share button:`,
         steps: [
-          "Tap the Share or menu icon (usually at the bottom)",
-          'Find and tap "Add to Home Screen" or "Add page to"',
+          "Look for the Share button (often at the bottom or in the menu bar)",
+          'Tap it, then find and tap "Add to Home Screen" or "Add page to"',
           'Tap "Add" to confirm',
         ],
       }
     case "other_ios":
       return {
-        intro: `In ${label}:`,
+        intro: `In ${label}, look for the Share button:`,
         steps: [
-          "Open the Share or menu (often at the bottom of the screen)",
-          'Look for "Add to Home Screen" or "Add to Home screen"',
-          'Tap it, then confirm with "Add"',
+          "Look for the Share or menu button (often at the bottom or top of the screen)",
+          'Tap it, then find "Add to Home Screen" or "Add to Home screen"',
+          'Tap "Add" to confirm',
         ],
       }
     case "chrome_android":
@@ -192,17 +220,19 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
       return {
         intro: "To install this app:",
         steps: [
-          "Use your browser's menu (e.g. ⋮ or File)",
-          'Look for "Install GlowUp", "Add to Home screen", or "Create shortcut"',
+          "Use your browser's menu (e.g. ⋮ or File) and look for the Share or Install option",
+          'Find "Install GlowUp", "Add to Home screen", or "Create shortcut"',
           "Follow the prompts to add the app",
         ],
       }
   }
 }
 
-/** Whether this browser shows Share at the bottom (so we show the arrow). */
-function hasBottomShareBar(kind: PwaBrowserKind): boolean {
-  return ["safari_ios", "chrome_ios"].includes(kind)
+/** Safari: Share at bottom. Chrome iOS: Share top right. Others: no arrow. */
+function getSharePointerPosition(kind: PwaBrowserKind): "bottom" | "topRight" | null {
+  if (kind === "safari_ios") return "bottom"
+  if (kind === "chrome_ios") return "topRight"
+  return null
 }
 
 export default function PwaInstallBanner() {
@@ -328,18 +358,24 @@ export default function PwaInstallBanner() {
               : "Download to your device and use it like an app."}
           </p>
 
-          {showIosSteps ? (
+          {showIosSteps ? (() => {
+              const steps = getInstallSteps(browserKind)
+              const sharePosition = getSharePointerPosition(browserKind)
+              return (
             <>
               <p className="mt-2 text-sm text-muted-foreground">
-                {getInstallSteps(browserKind).intro}
+                {steps.intro}
               </p>
-              {hasBottomShareBar(browserKind) && (
+              {sharePosition !== null && (
                 <div className="mt-4 w-full flex justify-center">
-                  <ShareArrowPointer browserKind={browserKind} />
+                  <ShareArrowPointer
+                    browserKind={browserKind}
+                    position={sharePosition}
+                  />
                 </div>
               )}
               <ol className="mt-4 w-full list-decimal list-inside space-y-1 rounded-xl border border-border/60 bg-muted/50 p-4 text-left text-sm text-muted-foreground">
-                {getInstallSteps(browserKind).steps.map((step, i) => (
+                {steps.steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}
               </ol>
@@ -352,7 +388,8 @@ export default function PwaInstallBanner() {
                 Got it
               </Button>
             </>
-          ) : (
+              );
+            })() : (
             <Button
               size="lg"
               onClick={handleInstall}
