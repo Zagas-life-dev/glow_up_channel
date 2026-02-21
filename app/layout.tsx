@@ -70,6 +70,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="GlowUp" />
         <link rel="apple-touch-icon" href="/images/logo-icon-transparent.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
         <meta name="author" content="GlowUp" />

@@ -4,6 +4,35 @@ import { useState, useEffect, useCallback } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+/** Arrow pointing down to Safari's bottom bar (Share icon). */
+function ShareArrowPointer() {
+  return (
+    <div className="relative flex flex-col items-center">
+      <p className="text-sm font-medium text-foreground mb-1">Tap here in Safari</p>
+      <svg
+        width="48"
+        height="56"
+        viewBox="0 0 48 56"
+        fill="none"
+        className="text-primary shrink-0"
+        aria-hidden
+      >
+        <path
+          d="M24 0 L24 44 M14 34 L24 44 L34 34"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-muted/80 px-4 py-3 border border-border/60">
+        <Share className="h-8 w-8 text-foreground shrink-0" aria-hidden />
+        <span className="text-sm font-medium text-foreground">Share icon</span>
+      </div>
+    </div>
+  )
+}
+
 const STORAGE_KEY = "glowup-pwa-install-dismissed"
 const DISMISS_DAYS = 7
 
@@ -99,24 +128,8 @@ export default function PwaInstallBanner() {
 
   const handleInstall = async () => {
     if (isIos()) {
-      // Open the native share sheet; on Safari iOS "Add to Home Screen" is in the share menu
-      try {
-        if (typeof navigator !== "undefined" && navigator.share) {
-          await navigator.share({
-            title: "GlowUp",
-            url: window.location.href,
-            text: "GlowUp – opportunities, events, and resources.",
-          })
-          // User completed share flow; they may have chosen Add to Home Screen
-          setShowCenterPrompt(false)
-          setDismissedUntil()
-        } else {
-          setShowIosSteps(true)
-        }
-      } catch (err) {
-        // User cancelled or share failed: show manual steps as fallback
-        setShowIosSteps(true)
-      }
+      // Pseudo-install: show tooltip with arrow pointing to Safari Share icon (no beforeinstallprompt on iOS)
+      setShowIosSteps(true)
       return
     }
     if (!deferredPrompt) return
@@ -184,14 +197,17 @@ export default function PwaInstallBanner() {
 
           {showIosSteps ? (
             <>
-              <div className="mt-4 w-full rounded-xl border border-border/60 bg-muted/50 p-4 text-left">
-                <p className="text-sm font-medium text-foreground">On iPhone / iPad:</p>
-                <ol className="mt-2 list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>Tap the <Share className="inline h-3.5 w-3.5" /> Share button (bottom of Safari)</li>
-                  <li>Scroll and tap &quot;Add to Home Screen&quot;</li>
-                  <li>Tap &quot;Add&quot;</li>
-                </ol>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Look at the <strong className="text-foreground">bottom of Safari</strong> and follow the arrow:
+              </p>
+              <div className="mt-4 w-full flex justify-center">
+                <ShareArrowPointer />
               </div>
+              <ol className="mt-4 w-full list-decimal list-inside space-y-1 rounded-xl border border-border/60 bg-muted/50 p-4 text-left text-sm text-muted-foreground">
+                <li>Tap the <strong className="text-foreground">Share</strong> icon (shown above)</li>
+                <li>Scroll down and tap &quot;Add to Home Screen&quot;</li>
+                <li>Tap &quot;Add&quot; in the top right</li>
+              </ol>
               <Button
                 size="lg"
                 variant="outline"
