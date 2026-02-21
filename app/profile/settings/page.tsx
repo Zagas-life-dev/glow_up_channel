@@ -11,6 +11,14 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import SkillsInput from "@/components/ui/skills-input"
 import { 
   ArrowLeft,
@@ -47,7 +55,8 @@ import {
   TrendingUp,
   Building2,
   Lightbulb,
-  QrCode
+  QrCode,
+  Crown
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 import ApiClient from '@/lib/api-client'
@@ -55,6 +64,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
 import { PageShell } from '@/components/layout/page-shell'
+import { usePushNotifications } from '@/hooks/use-push-notifications'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -119,7 +129,11 @@ const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { user, profile, logout, refreshUser, isLoading } = useAuth()
+  const { user, profile, logout, refreshUser, isLoading, upgradeToProvider } = useAuth()
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' })
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
+  const [isUpgrading, setIsUpgrading] = useState(false)
   const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'privacy' | 'security' | 'notifications'>('basic')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -173,6 +187,15 @@ export default function SettingsPage() {
     timezone: "Africa/Lagos",
     theme: "dark"
   })
+
+  const push = usePushNotifications()
+
+  // Sync push preference from actual subscription state
+  useEffect(() => {
+    if (!push.isLoading && push.isSubscribed) {
+      setPreferences((p) => (p.pushNotifications ? p : { ...p, pushNotifications: true }))
+    }
+  }, [push.isSubscribed, push.isLoading])
 
   // Security State
   const [currentPassword, setCurrentPassword] = useState('')
@@ -1225,6 +1248,44 @@ export default function SettingsPage() {
               </div>
 
               <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Become a provider</h3>
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin'
+                        ? 'You have provider access'
+                        : 'Post opportunities and reach seekers'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin'
+                        ? 'Manage your content and promotions in Provider Hub.'
+                        : 'Upgrade your account to post opportunities and events.'}
+                    </p>
+                  </div>
+                  {(user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin') ? (
+                    <Link href="/dashboard/provider">
+                      <Button className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2">
+                        <Crown className="h-4 w-4" />
+                        Provider Hub
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        setUpgradeForm({ email: user?.email || '', password: '' })
+                        setUpgradeError(null)
+                        setShowUpgradeModal(true)
+                      }}
+                      className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2"
+                    >
+                      <Crown className="h-4 w-4" />
+                      Become provider
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Sign Out</h3>
                 <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
                   <div>
@@ -1320,14 +1381,33 @@ export default function SettingsPage() {
 
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Push Notifications</h3>
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
                     <p className="font-medium text-foreground">Push Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive notifications on your device</p>
+                    <p className="text-sm text-muted-foreground">
+                      {push.isSupported
+                        ? "Receive notifications on your device (works when app is installed or in browser)"
+                        : "Not supported in this browser. Use a modern browser or install the app."}
+                    </p>
+                    {push.error && (
+                      <p className="text-sm text-destructive mt-1">{push.error}</p>
+                    )}
                   </div>
                   <Switch
-                    checked={preferences.pushNotifications}
-                    onCheckedChange={(checked) => setPreferences({...preferences, pushNotifications: checked})}
+                    disabled={!push.isSupported || push.isLoading}
+                    checked={preferences.pushNotifications || push.isSubscribed}
+                    onCheckedChange={async (checked) => {
+                      if (!push.isSupported) return
+                      setPreferences((p) => ({ ...p, pushNotifications: checked }))
+                      if (checked) {
+                        const ok = await push.subscribe()
+                        if (ok) toast.success("Push notifications enabled")
+                        else toast.error(push.error || "Could not enable push notifications")
+                      } else {
+                        await push.unsubscribe()
+                        toast.success("Push notifications disabled")
+                      }
+                    }}
                     className="data-[state=checked]:bg-primary"
                   />
                 </div>
@@ -1336,6 +1416,90 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* Upgrade to provider modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="bg-card border-border rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary" />
+              Upgrade to provider
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Confirm your password to upgrade your account to provider status.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!upgradeForm.password) {
+                setUpgradeError('Password is required')
+                return
+              }
+              setIsUpgrading(true)
+              setUpgradeError(null)
+              try {
+                await upgradeToProvider(upgradeForm.email, upgradeForm.password)
+                toast.success('Successfully upgraded to provider!')
+                setShowUpgradeModal(false)
+                router.push('/dashboard/provider')
+              } catch (err: unknown) {
+                setUpgradeError(err instanceof Error ? err.message : 'Failed to upgrade. Please check your password and try again.')
+              } finally {
+                setIsUpgrading(false)
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <Label className="text-muted-foreground text-sm mb-2 block">Email</Label>
+              <Input
+                type="email"
+                value={upgradeForm.email}
+                onChange={(e) => setUpgradeForm((prev) => ({ ...prev, email: e.target.value }))}
+                className="bg-muted border-border rounded-xl"
+                required
+                disabled
+              />
+            </div>
+            <div>
+              <Label className="text-muted-foreground text-sm mb-2 block">Password</Label>
+              <Input
+                type="password"
+                value={upgradeForm.password}
+                onChange={(e) => {
+                  setUpgradeForm((prev) => ({ ...prev, password: e.target.value }))
+                  setUpgradeError(null)
+                }}
+                placeholder="Enter your password to confirm"
+                className="bg-muted border-border rounded-xl"
+                required
+              />
+            </div>
+            {upgradeError && (
+              <p className="text-sm text-red-400">{upgradeError}</p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setShowUpgradeModal(false)
+                  setUpgradeError(null)
+                }}
+                disabled={isUpgrading}
+                className="rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUpgrading} className="bg-primary hover:bg-primary/90 rounded-xl gap-2">
+                {isUpgrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                Upgrade
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   )
 }

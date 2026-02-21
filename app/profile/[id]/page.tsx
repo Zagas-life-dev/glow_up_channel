@@ -28,16 +28,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import {
   RiUserLine,
@@ -55,7 +45,6 @@ import {
   RiBuildingLine,
   RiLightbulbLine,
   RiSettingsLine,
-  RiErrorWarningLine,
   RiTimeLine,
   RiUserAddLine,
   RiFileLine,
@@ -64,7 +53,6 @@ import {
   RiArrowRightLine,
   RiFocus3Line,
   RiSparkling2Line,
-  RiVipCrownLine,
   RiGraduationCapLine,
   RiPlayList2Fill,
 } from "react-icons/ri"
@@ -203,13 +191,9 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
 export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const { user: currentUser, isAuthenticated, upgradeToProvider } = useAuth()
+  const { user: currentUser, isAuthenticated } = useAuth()
   const { savedPlaylists, fetchSavedPlaylists } = usePlaylist()
   const userId = params.id as string
-  const [isUpgrading, setIsUpgrading] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' })
-  const [upgradeError, setUpgradeError] = useState<string | null>(null)
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null)
@@ -861,129 +845,6 @@ export default function ProfilePage() {
                   Settings
                 </Button>
               </Link>
-              {(currentUser?.role === 'opportunity_poster' || currentUser?.role === 'admin' || currentUser?.role === 'super_admin') ? (
-                <Link href="/dashboard/provider" className="flex-1 min-w-0">
-                  <Button
-                    variant="outline"
-                    className="w-full border border-primary/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-10 text-sm font-medium transition-all"
-                  >
-                    <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
-                    Provider
-                  </Button>
-                </Link>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => {
-                      setUpgradeForm({ email: currentUser?.email || '', password: '' })
-                      setUpgradeError(null)
-                      setShowUpgradeModal(true)
-                    }}
-                    variant="outline"
-                    className="flex-1 min-w-0 border border-primary/30 bg-primary/10 text-orange-400 hover:bg-primary/20 rounded-xl h-10 text-sm font-medium transition-all"
-                  >
-                    <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
-                    Become Provider
-                  </Button>
-                  
-                  {/* Upgrade Modal */}
-                  <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-                    <DialogContent className="bg-surface border-border rounded-2xl">
-                      <DialogHeader>
-                    <DialogTitle className="text-foreground flex items-center gap-2">
-                      <RiVipCrownLine className="w-5 h-5 text-orange-500" aria-hidden />
-                          Upgrade to Provider
-                        </DialogTitle>
-                        <DialogDescription className="text-muted-foreground">
-                          Confirm your password to upgrade your account to provider status
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <form onSubmit={async (e) => {
-                        e.preventDefault()
-                        if (!upgradeForm.password) {
-                          setUpgradeError('Password is required')
-                          return
-                        }
-                        
-                        setIsUpgrading(true)
-                        setUpgradeError(null)
-                        
-                        try {
-                          await upgradeToProvider(upgradeForm.email, upgradeForm.password)
-                          toast.success('Successfully upgraded to provider!')
-                          setShowUpgradeModal(false)
-                          router.push('/dashboard/provider')
-                        } catch (error: any) {
-                          setUpgradeError(error.message || 'Failed to upgrade. Please check your password and try again.')
-                        } finally {
-                          setIsUpgrading(false)
-                        }
-                      }} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="upgrade-email" className="text-muted-foreground">Email</Label>
-                          <Input
-                            id="upgrade-email"
-                            type="email"
-                            value={upgradeForm.email}
-                            onChange={(e) => setUpgradeForm(prev => ({ ...prev, email: e.target.value }))}
-                            className="bg-muted border-border text-foreground"
-                            required
-                            disabled
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="upgrade-password" className="text-muted-foreground">Password</Label>
-                          <Input
-                            id="upgrade-password"
-                            type="password"
-                            value={upgradeForm.password}
-                            onChange={(e) => {
-                              setUpgradeForm(prev => ({ ...prev, password: e.target.value }))
-                              setUpgradeError(null)
-                            }}
-                            placeholder="Enter your password to confirm"
-                            className="bg-muted border-border text-foreground"
-                            required
-                            autoFocus
-                          />
-                        </div>
-                        
-                        {upgradeError && (
-                          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                            <RiErrorWarningLine className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" aria-hidden />
-                            <span className="text-sm text-red-400">{upgradeError}</span>
-                          </div>
-                        )}
-                        
-                        <DialogFooter>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            onClick={() => {
-                              setShowUpgradeModal(false)
-                              setUpgradeError(null)
-                            }} 
-                            disabled={isUpgrading} 
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            type="submit" 
-                            className="bg-primary hover:bg-primary/90" 
-                            disabled={isUpgrading}
-                          >
-                            <RiVipCrownLine className="w-4 h-4 mr-2" aria-hidden />
-                            Upgrade
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </>
-              )}
             </>
           ) : (
             <>

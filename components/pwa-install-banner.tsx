@@ -80,10 +80,7 @@ export default function PwaInstallBanner() {
     }
 
     const handleShowPrompt = () => {
-      if (canShow()) {
-        setShowCenterPrompt(true)
-        if (isIos()) setShowIosSteps(false)
-      }
+      if (canShow()) setShowCenterPrompt(true)
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
@@ -102,7 +99,24 @@ export default function PwaInstallBanner() {
 
   const handleInstall = async () => {
     if (isIos()) {
-      setShowIosSteps(true)
+      // Open the native share sheet; on Safari iOS "Add to Home Screen" is in the share menu
+      try {
+        if (typeof navigator !== "undefined" && navigator.share) {
+          await navigator.share({
+            title: "GlowUp",
+            url: window.location.href,
+            text: "GlowUp – opportunities, events, and resources.",
+          })
+          // User completed share flow; they may have chosen Add to Home Screen
+          setShowCenterPrompt(false)
+          setDismissedUntil()
+        } else {
+          setShowIosSteps(true)
+        }
+      } catch (err) {
+        // User cancelled or share failed: show manual steps as fallback
+        setShowIosSteps(true)
+      }
       return
     }
     if (!deferredPrompt) return
@@ -169,14 +183,24 @@ export default function PwaInstallBanner() {
           </p>
 
           {showIosSteps ? (
-            <div className="mt-4 w-full rounded-xl border border-border/60 bg-muted/50 p-4 text-left">
-              <p className="text-sm font-medium text-foreground">On iPhone / iPad:</p>
-              <ol className="mt-2 list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Tap the <Share className="inline h-3.5 w-3.5" /> Share button (bottom of Safari)</li>
-                <li>Scroll and tap &quot;Add to Home Screen&quot;</li>
-                <li>Tap &quot;Add&quot;</li>
-              </ol>
-            </div>
+            <>
+              <div className="mt-4 w-full rounded-xl border border-border/60 bg-muted/50 p-4 text-left">
+                <p className="text-sm font-medium text-foreground">On iPhone / iPad:</p>
+                <ol className="mt-2 list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Tap the <Share className="inline h-3.5 w-3.5" /> Share button (bottom of Safari)</li>
+                  <li>Scroll and tap &quot;Add to Home Screen&quot;</li>
+                  <li>Tap &quot;Add&quot;</li>
+                </ol>
+              </div>
+              <Button
+                size="lg"
+                variant="outline"
+                className="mt-4 w-full rounded-xl"
+                onClick={handleDismiss}
+              >
+                Got it
+              </Button>
+            </>
           ) : (
             <Button
               size="lg"

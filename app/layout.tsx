@@ -10,6 +10,7 @@ import { PlaylistProvider } from "@/contexts/playlist-context"
 import { LockedInProvider } from "@/contexts/locked-in-context"
 import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
+import RegisterSw from "@/components/register-sw"
 import Script from "next/script"
 
 export const metadata: Metadata = {
@@ -87,6 +88,7 @@ export default function RootLayout({
                 <PageProvider>
                   <AppLayout>
                     <VisitTracker />
+                    <RegisterSw />
                     <PwaInstallBanner />
                     {children}
                     <Toaster position="bottom-center" />

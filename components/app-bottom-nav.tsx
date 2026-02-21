@@ -42,7 +42,7 @@ export default function AppBottomNav() {
       {/* Gradient fade: white in light mode, dark in dark mode */}
       <div className="absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
-      <div className="bg-page/95 backdrop-blur-xl border-t border-border px-2 pb-safe">
+      <div className="bg-page/95 backdrop-blur-xl border-t border-border px-2 pb-4 pb-safe">
         <div className="flex items-center justify-around h-16">
           {items.map((item) => {
             const active = isActive(item.path)
