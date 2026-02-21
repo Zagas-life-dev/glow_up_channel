@@ -38,7 +38,7 @@ export default function AppBottomNav() {
   }
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+    <nav className="lg:hidden fixed bottom-10 left-0 right-0 z-50">
       {/* Gradient fade: white in light mode, dark in dark mode */}
       <div className="absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
