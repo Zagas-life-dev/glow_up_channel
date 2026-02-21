@@ -4,11 +4,27 @@ import { useState, useEffect, useCallback } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-/** Arrow pointing down to Safari's bottom bar (Share icon). */
-function ShareArrowPointer() {
+const BROWSER_LABELS: Record<PwaBrowserKind, string> = {
+  safari_ios: "Safari",
+  chrome_ios: "Chrome",
+  firefox_ios: "Firefox",
+  edge_ios: "Edge",
+  samsung_ios: "Samsung Internet",
+  other_ios: "your browser",
+  chrome_android: "Chrome",
+  samsung_android: "Samsung Internet",
+  other_android: "your browser",
+  desktop: "your browser",
+}
+
+/** Arrow pointing down to the browser's Share / menu bar. */
+function ShareArrowPointer({ browserKind }: { browserKind: PwaBrowserKind }) {
+  const label = BROWSER_LABELS[browserKind]
   return (
     <div className="relative flex flex-col items-center">
-      <p className="text-sm font-medium text-foreground mb-1">Tap here in Safari</p>
+      <p className="text-sm font-medium text-foreground mb-1">
+        Tap here in {label}
+      </p>
       <svg
         width="48"
         height="56"
@@ -82,11 +98,119 @@ function isIos() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
 }
 
+export type PwaBrowserKind =
+  | "safari_ios"
+  | "chrome_ios"
+  | "firefox_ios"
+  | "edge_ios"
+  | "samsung_ios"
+  | "other_ios"
+  | "chrome_android"
+  | "samsung_android"
+  | "other_android"
+  | "desktop"
+
+function getBrowserKind(): PwaBrowserKind {
+  if (typeof window === "undefined" || !navigator?.userAgent) return "desktop"
+  const ua = navigator.userAgent
+  const isIpad = /iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  const isIphone = /iPhone|iPod/.test(ua)
+  const isAndroid = /Android/.test(ua)
+
+  if (isIpad || isIphone) {
+    if (/Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|SamsungBrowser/.test(ua)) return "safari_ios"
+    if (/CriOS|Chrome/.test(ua)) return "chrome_ios"
+    if (/FxiOS|Firefox/.test(ua)) return "firefox_ios"
+    if (/EdgiOS|Edge/.test(ua)) return "edge_ios"
+    if (/SamsungBrowser/.test(ua)) return "samsung_ios"
+    return "other_ios"
+  }
+
+  if (isAndroid) {
+    if (/SamsungBrowser/.test(ua)) return "samsung_android"
+    if (/Chrome/.test(ua)) return "chrome_android"
+    return "other_android"
+  }
+
+  return "desktop"
+}
+
+/** Returns browser-specific install steps (for manual Add to Home Screen). */
+function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: string[] } {
+  const label = BROWSER_LABELS[browserKind]
+  switch (browserKind) {
+    case "safari_ios":
+      return {
+        intro: `Look at the bottom of ${label} and follow the arrow:`,
+        steps: [
+          "Tap the Share icon (shown above)",
+          'Scroll down and tap "Add to Home Screen"',
+          'Tap "Add" in the top right',
+        ],
+      }
+    case "chrome_ios":
+      return {
+        intro: `Look at the bottom of ${label} and follow the arrow:`,
+        steps: [
+          "Tap the Share icon (shown above)",
+          'Tap "Add to Home Screen" (or "Add to Home screen")',
+          'Tap "Add"',
+        ],
+      }
+    case "firefox_ios":
+    case "edge_ios":
+    case "samsung_ios":
+      return {
+        intro: `In ${label}, open the Share or menu:`,
+        steps: [
+          "Tap the Share or menu icon (usually at the bottom)",
+          'Find and tap "Add to Home Screen" or "Add page to"',
+          'Tap "Add" to confirm',
+        ],
+      }
+    case "other_ios":
+      return {
+        intro: `In ${label}:`,
+        steps: [
+          "Open the Share or menu (often at the bottom of the screen)",
+          'Look for "Add to Home Screen" or "Add to Home screen"',
+          'Tap it, then confirm with "Add"',
+        ],
+      }
+    case "chrome_android":
+    case "samsung_android":
+    case "other_android":
+      return {
+        intro: `In ${label}:`,
+        steps: [
+          "Tap the menu (⋮) in the top right",
+          'Tap "Add to Home screen" or "Install app"',
+          "Confirm if prompted",
+        ],
+      }
+    default:
+      return {
+        intro: "To install this app:",
+        steps: [
+          "Use your browser's menu (e.g. ⋮ or File)",
+          'Look for "Install GlowUp", "Add to Home screen", or "Create shortcut"',
+          "Follow the prompts to add the app",
+        ],
+      }
+  }
+}
+
+/** Whether this browser shows Share at the bottom (so we show the arrow). */
+function hasBottomShareBar(kind: PwaBrowserKind): boolean {
+  return ["safari_ios", "chrome_ios"].includes(kind)
+}
+
 export default function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showCenterPrompt, setShowCenterPrompt] = useState(false)
   const [showIosSteps, setShowIosSteps] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [browserKind, setBrowserKind] = useState<PwaBrowserKind>("desktop")
 
   const canShow = useCallback(() => {
     if (isStandalone() || isInstalled) return false
@@ -120,6 +244,11 @@ export default function PwaInstallBanner() {
     }
   }, [canShow])
 
+  // Detect browser once on client (avoids hydration mismatch)
+  useEffect(() => {
+    setBrowserKind(getBrowserKind())
+  }, [])
+
   // On iOS (no beforeinstallprompt), show centered prompt so user can tap to see instructions
   useEffect(() => {
     if (!isIos() || isStandalone() || !canShow()) return
@@ -128,11 +257,15 @@ export default function PwaInstallBanner() {
 
   const handleInstall = async () => {
     if (isIos()) {
-      // Pseudo-install: show tooltip with arrow pointing to Safari Share icon (no beforeinstallprompt on iOS)
+      // Pseudo-install: show tooltip with arrow pointing to Share icon (no beforeinstallprompt on iOS)
       setShowIosSteps(true)
       return
     }
-    if (!deferredPrompt) return
+    if (!deferredPrompt) {
+      // No native prompt (e.g. desktop Safari): show browser-specific manual steps
+      setShowIosSteps(true)
+      return
+    }
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === "accepted") {
@@ -198,15 +331,17 @@ export default function PwaInstallBanner() {
           {showIosSteps ? (
             <>
               <p className="mt-2 text-sm text-muted-foreground">
-                Look at the <strong className="text-foreground">bottom of Safari</strong> and follow the arrow:
+                {getInstallSteps(browserKind).intro}
               </p>
-              <div className="mt-4 w-full flex justify-center">
-                <ShareArrowPointer />
-              </div>
+              {hasBottomShareBar(browserKind) && (
+                <div className="mt-4 w-full flex justify-center">
+                  <ShareArrowPointer browserKind={browserKind} />
+                </div>
+              )}
               <ol className="mt-4 w-full list-decimal list-inside space-y-1 rounded-xl border border-border/60 bg-muted/50 p-4 text-left text-sm text-muted-foreground">
-                <li>Tap the <strong className="text-foreground">Share</strong> icon (shown above)</li>
-                <li>Scroll down and tap &quot;Add to Home Screen&quot;</li>
-                <li>Tap &quot;Add&quot; in the top right</li>
+                {getInstallSteps(browserKind).steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
               </ol>
               <Button
                 size="lg"
