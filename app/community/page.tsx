@@ -5,9 +5,9 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from "@/components/ui/button"
 import PostCard from '@/components/post-card'
 import PostComposer from '@/components/post-composer'
-import FeedAd from '@/components/feed-ad'
+import FeedSponsoredSlot from '@/components/feed-sponsored-slot'
 import { cn } from '@/lib/utils'
-import { buildFeedWithAds } from '@/lib/feed-ads'
+import { buildFeedWithSponsored } from '@/lib/feed-ads'
 import { useCursorPagination } from '@/hooks/use-cursor-pagination'
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll'
 import { trackCommunityEngagement } from '@/lib/tracking'
@@ -94,12 +94,20 @@ interface TrendingHashtag {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
+type PromotedFeedItem = {
+  _id: string
+  title: string
+  type: 'opportunity' | 'job' | 'event' | 'resource'
+  [key: string]: unknown
+}
+
 export default function CommunityPage() {
   const { user, isAuthenticated } = useAuth()
   const [activeTab, setActiveTab] = useState<'connections' | 'explore'>('explore')
   const [trendingHashtags, setTrendingHashtags] = useState<TrendingHashtag[]>([])
   const [sortBy, setSortBy] = useState<'trending' | 'recent'>('trending')
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null)
+  const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -210,6 +218,18 @@ export default function CommunityPage() {
     resetPosts()
     fetchTrendingHashtags()
   }, [activeTab, sortBy, filterHashtag])
+
+  useEffect(() => {
+    const url = `${API_BASE_URL}/api/promoted/feed?limit=20`
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : { success: false }))
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data?.feed)) {
+          setPromotedFeed(data.data.feed)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handlePostCreated = (newPost: Post) => {
     // Reset to show new post at top
@@ -409,9 +429,9 @@ export default function CommunityPage() {
               )}
             </SectionCard>
           ) : (
-            // Posts List with spacing like home page (ads every 5 posts)
+            // Posts list with sponsored slots (promoted + ads) every 4 posts, 3-slot cycle
             <div className="space-y-4">
-              {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+              {buildFeedWithSponsored(posts, promotedFeed, { postsBetween: 4 }).map((item) =>
                 item.type === 'post' ? (
                   <PostCard
                     key={item.post._id}
@@ -420,7 +440,13 @@ export default function CommunityPage() {
                     onDelete={handlePostDelete}
                   />
                 ) : (
-                  <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''} />
+                  <FeedSponsoredSlot
+                    key={item.key}
+                    kind={item.kind}
+                    content={item.kind === 'promoted' ? item.content : undefined}
+                    adKey={item.key}
+                    slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''}
+                  />
                 )
               )}
 

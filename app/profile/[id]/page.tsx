@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
 import EditProfileModal from '@/components/edit-profile-modal'
 import PostCard from '@/components/post-card'
-import FeedAd from '@/components/feed-ad'
-import { buildFeedWithAds } from '@/lib/feed-ads'
+import FeedSponsoredSlot from '@/components/feed-sponsored-slot'
+import { buildFeedWithSponsored } from '@/lib/feed-ads'
 import ConnectionRequestsModal from '@/components/connection-requests-modal'
 import ConnectionsListModal from '@/components/connections-list-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
@@ -209,6 +209,7 @@ export default function ProfilePage() {
   const [loadingPosts, setLoadingPosts] = useState(false)
   const [loadingPlaylists, setLoadingPlaylists] = useState(false)
   const [loadingBookmarks, setLoadingBookmarks] = useState(false)
+  const [promotedFeed, setPromotedFeed] = useState<{ _id: string; title: string; type: 'opportunity' | 'job' | 'event' | 'resource'; [key: string]: unknown }[]>([])
 
   // Profile completion (only for own profile)
   const [completionPercentage, setCompletionPercentage] = useState(0)
@@ -433,6 +434,19 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchProfile()
   }, [fetchProfile])
+
+  useEffect(() => {
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/promoted/feed?limit=20`
+    if (!url.startsWith('http')) return
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : { success: false }))
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data?.feed)) {
+          setPromotedFeed(data.data.feed)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Fetch profile completion when profile is loaded and user is owner
   useEffect(() => {
@@ -955,11 +969,17 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+                {buildFeedWithSponsored(posts, promotedFeed, { postsBetween: 4 }).map((item) =>
                   item.type === 'post' ? (
                     <PostCard key={item.post._id} post={item.post} onUpdate={fetchPosts} />
                   ) : (
-                    <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''} />
+                    <FeedSponsoredSlot
+                      key={item.key}
+                      kind={item.kind}
+                      content={item.kind === 'promoted' ? item.content : undefined}
+                      adKey={item.key}
+                      slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ''}
+                    />
                   )
                 )}
               </div>

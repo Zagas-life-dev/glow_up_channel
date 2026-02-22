@@ -10,8 +10,8 @@ import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
 import PostComposer from "@/components/post-composer"
 import PostCard from "@/components/post-card"
-import FeedAd from "@/components/feed-ad"
-import { buildFeedWithAds } from "@/lib/feed-ads"
+import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
+import { buildFeedWithSponsored } from "@/lib/feed-ads"
 import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageHeader } from "@/components/layout/page-header"
@@ -98,6 +98,7 @@ export default function ChannelDetailPage() {
   const [membersOpen, setMembersOpen] = useState(false)
   const [members, setMembers] = useState<any[]>([])
   const [requests, setRequests] = useState<any[]>([])
+  const [promotedFeed, setPromotedFeed] = useState<{ _id: string; title: string; type: "opportunity" | "job" | "event" | "resource"; [key: string]: unknown }[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
   const [joinStatus, setJoinStatus] = useState<"idle" | "pending" | "joined">("idle")
   const [showInvitePanel, setShowInvitePanel] = useState(false)
@@ -131,6 +132,19 @@ export default function ChannelDetailPage() {
       cancelled = true
     }
   }, [slug])
+
+  useEffect(() => {
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/api/promoted/feed?limit=20`
+    if (!url.startsWith("http")) return
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : { success: false }))
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data?.feed)) {
+          setPromotedFeed(data.data.feed)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Auto-join flow when visiting with invite=1
   useEffect(() => {
@@ -320,7 +334,7 @@ export default function ChannelDetailPage() {
           />
         ) : (
           <div className="space-y-4">
-            {buildFeedWithAds(posts, { adEvery: 5 }).map((item) =>
+            {buildFeedWithSponsored(posts, promotedFeed, { postsBetween: 4 }).map((item) =>
               item.type === "post" ? (
                 <PostCard
                   key={item.post._id}
@@ -329,7 +343,13 @@ export default function ChannelDetailPage() {
                   onDelete={handlePostDelete}
                 />
               ) : (
-                <FeedAd key={item.key} slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""} />
+                <FeedSponsoredSlot
+                  key={item.key}
+                  kind={item.kind}
+                  content={item.kind === "promoted" ? item.content : undefined}
+                  adKey={item.key}
+                  slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""}
+                />
               )
             )}
           </div>

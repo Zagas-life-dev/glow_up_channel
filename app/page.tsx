@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import FeedContainer from "@/components/feed-container"
+import FeedCard from "@/components/feed-card"
+import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
+import { buildFeedWithSponsored } from "@/lib/feed-ads"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import PageSkeleton from "@/components/skeletons/page-skeleton"
@@ -367,8 +370,16 @@ function LandingPage() {
   )
 }
 
+type PromotedFeedItem = {
+  _id: string
+  title: string
+  type: "opportunity" | "job" | "event" | "resource"
+  [key: string]: unknown
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
+  const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
@@ -619,6 +630,18 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when auth changes
   }, [isAuthenticated, authLoading])
 
+  useEffect(() => {
+    if (!backendUrl) return
+    fetch(`${backendUrl}/api/promoted/feed?limit=20`)
+      .then((res) => (res.ok ? res.json() : { success: false }))
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data?.feed)) {
+          setPromotedFeed(data.data.feed)
+        }
+      })
+      .catch(() => {})
+  }, [backendUrl])
+
   const getCurrentItems = () => {
     return allContent
   }
@@ -668,15 +691,33 @@ export default function Home() {
           />
         )}
 
-        <FeedContainer
-          items={getCurrentItems()}
-          loading={isLoading}
-          emptyMessage={
-            activeTab === "all"
-              ? "No content available yet. Check back soon!"
-              : `No ${activeTab} found. Try another category!`
-          }
-        />
+        {activeTab === "all" && !isLoading && allContent.length > 0 ? (
+          <div className="space-y-5 w-full max-w-full">
+            {buildFeedWithSponsored(allContent, promotedFeed, { postsBetween: 4 }).map((item) =>
+              item.type === "post" ? (
+                <FeedCard key={item.post._id} item={item.post} />
+              ) : (
+                <FeedSponsoredSlot
+                  key={item.key}
+                  kind={item.kind}
+                  content={item.kind === "promoted" ? item.content : undefined}
+                  adKey={item.key}
+                  slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""}
+                />
+              )
+            )}
+          </div>
+        ) : (
+          <FeedContainer
+            items={getCurrentItems()}
+            loading={isLoading}
+            emptyMessage={
+              activeTab === "all"
+                ? "No content available yet. Check back soon!"
+                : `No ${activeTab} found. Try another category!`
+            }
+          />
+        )}
 
         {/* Infinite scroll sentinel */}
         <div
