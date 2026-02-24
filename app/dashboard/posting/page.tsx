@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -90,6 +90,14 @@ function PostingContent() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
+  const [isTagLoading, setIsTagLoading] = useState(false)
+  const [tagSelectedIndex, setTagSelectedIndex] = useState(0)
+  const tagDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const tagInputContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
   
   // Permission state
   const [canPost, setCanPost] = useState(false)
@@ -149,13 +157,53 @@ function PostingContent() {
     setIsPaid(false)
     setIsRemote(false)
   }
+  const handleSelectTagSuggestion = (tag: string) => {
+    const cleanTag = tag.trim()
+    if (!cleanTag) return
+    if (tags.includes(cleanTag) || tags.length >= 10) {
+      setShowTagSuggestions(false)
+      return
+    }
+    setTags([...tags, cleanTag])
+    setTagInput('')
+    setShowTagSuggestions(false)
+  }
 
-  const handleAddTag = (e: React.KeyboardEvent) => {
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // When suggestions are visible, use keyboard to navigate/select them
+    if (showTagSuggestions && tagSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setTagSelectedIndex((prev) => (prev + 1) % tagSuggestions.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setTagSelectedIndex((prev) => (prev - 1 + tagSuggestions.length) % tagSuggestions.length)
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        const selected = tagSuggestions[tagSelectedIndex] || tagSuggestions[0]
+        if (selected) {
+          handleSelectTagSuggestion(selected)
+        }
+        return
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setShowTagSuggestions(false)
+        return
+      }
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 10) {
-        setTags([...tags, tagInput.trim()])
+      const cleanTag = tagInput.trim()
+      if (cleanTag && !tags.includes(cleanTag) && tags.length < 10) {
+        setTags([...tags, cleanTag])
         setTagInput('')
+        setShowTagSuggestions(false)
       }
     }
   }
@@ -163,6 +211,89 @@ function PostingContent() {
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(t => t !== tagToRemove))
   }
+
+  // Fetch tag suggestions from the backend based on current input
+  useEffect(() => {
+    const query = tagInput.trim()
+
+    if (!query) {
+      setTagSuggestions([])
+      setShowTagSuggestions(false)
+      setIsTagLoading(false)
+      if (tagDebounceRef.current) {
+        clearTimeout(tagDebounceRef.current)
+      }
+      return
+    }
+
+    if (tagDebounceRef.current) {
+      clearTimeout(tagDebounceRef.current)
+    }
+
+    tagDebounceRef.current = setTimeout(async () => {
+      try {
+        setIsTagLoading(true)
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+        const headers: HeadersInit = { 'Content-Type': 'application/json' }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        // Use existing hashtag + skills suggestion endpoints as tag source
+        const [hashtagResponse, skillsResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/hashtags/suggestions?q=${encodeURIComponent(query)}`, { headers }).catch(() => null),
+          fetch(`${API_BASE_URL}/api/skills/suggestions?q=${encodeURIComponent(query)}`, { headers }).catch(() => null),
+        ])
+
+        let hashtagSuggestions: string[] = []
+        if (hashtagResponse && hashtagResponse.ok) {
+          const hashtagData = await hashtagResponse.json()
+          if (hashtagData?.success && Array.isArray(hashtagData.suggestions)) {
+            hashtagSuggestions = hashtagData.suggestions
+          }
+        }
+
+        let skillSuggestions: string[] = []
+        if (skillsResponse && skillsResponse.ok) {
+          const skillsData = await skillsResponse.json()
+          if (skillsData?.success && Array.isArray(skillsData.suggestions)) {
+            skillSuggestions = skillsData.suggestions
+          }
+        }
+
+        const allSuggestions = new Set<string>([
+          ...hashtagSuggestions,
+          ...skillSuggestions,
+        ])
+
+        const combined = Array.from(allSuggestions)
+          .map((s) => s.trim())
+          .filter((s) => {
+            if (!s) return false
+            const normalized = s.toLowerCase()
+            return normalized.includes(query.toLowerCase()) && !tags.includes(s)
+          })
+          .slice(0, 8)
+
+        setTagSuggestions(combined)
+        setShowTagSuggestions(combined.length > 0)
+        setTagSelectedIndex(0)
+      } catch (err) {
+        console.error('Failed to fetch tag suggestions', err)
+        setTagSuggestions([])
+        setShowTagSuggestions(false)
+      } finally {
+        setIsTagLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      if (tagDebounceRef.current) {
+        clearTimeout(tagDebounceRef.current)
+      }
+    }
+  }, [tagInput, API_BASE_URL, tags])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,37 +344,47 @@ function PostingContent() {
           dates: { applicationDeadline: data.deadline }
         }
       } else if (selectedType === 'event') {
+        const eventPrice = data.price ? Number(data.price) : undefined
+        const capacityNum = data.capacity ? parseInt(String(data.capacity), 10) : undefined
+        const startDate = data.startDate ? (data.startDate as string) : undefined
+        const endDate = data.endDate ? (data.endDate as string) : undefined
+        const regDeadline = data.deadline ? (data.deadline as string) : undefined
+
         submissionData = {
           title: data.title,
-          organizer: data.organizer,
-          type: data.type,
+          organizer: data.organizer || undefined,
+          eventType: data.type,
           description: data.description,
-          url: data.url,
+          url: data.url || undefined,
           tags: tags,
           isPaid: isPaid,
-          price: data.price,
+          ...(isPaid && eventPrice != null && !Number.isNaN(eventPrice) && { price: eventPrice }),
           currency: 'NGN',
           location: {
-            country: data.country,
-            province: data.province,
-            city: data.city,
+            ...(data.country && { country: data.country }),
+            ...(data.province && { province: data.province }),
+            ...(data.city && { city: data.city }),
             isRemote: isRemote
           },
           dates: {
-            startDate: data.startDate,
-            endDate: data.endDate || null,
-            registrationDeadline: data.deadline || null
+            ...(startDate && { startDate }),
+            ...(endDate && { endDate }),
+            ...(regDeadline && { registrationDeadline: regDeadline })
           },
-          capacity: data.capacity
+          ...(capacityNum != null && !Number.isNaN(capacityNum) && capacityNum >= 1 && { capacity: { maxAttendees: capacityNum } })
         }
       } else if (selectedType === 'resource') {
+        const rawType = data.type ?? data.category ?? ''
+        const rawUrl = data.url ?? ''
+        const resourceCategory = typeof rawType === 'string' ? rawType.trim() : ''
+        const resourceUrl = typeof rawUrl === 'string' ? rawUrl.trim() : ''
         submissionData = {
-          title: data.title,
-          author: data.author,
-          description: data.description,
-          category: data.category,
-          paymentLink: data.url,
-          tags: tags
+          title: typeof data.title === 'string' ? data.title : '',
+          description: typeof data.description === 'string' ? data.description : '',
+          // Reuse the same tag/hashtag selection so resources can be ranked by tags too
+          tags,
+          category: resourceCategory,
+          ...(resourceUrl && { paymentLink: resourceUrl })
         }
       }
       
@@ -433,7 +574,7 @@ function PostingContent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
+                  className="w-56 p-2"
                 >
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
@@ -878,13 +1019,42 @@ function PostingContent() {
                             </span>
                           ))}
                         </div>
-                      <Input
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={handleAddTag}
-                        placeholder="Type and press Enter to add tags"
-                        className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-xl"
-                      />
+                      <div ref={tagInputContainerRef} className="relative">
+                        <Input
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleAddTag}
+                          placeholder="Type to search tags (press Enter to add)"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-xl"
+                        />
+                        {showTagSuggestions && (isTagLoading || tagSuggestions.length > 0) && (
+                          <div
+                            className="absolute z-50 top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-border bg-card/90 backdrop-blur-sm shadow-md shadow-black/20"
+                          >
+                            {isTagLoading && tagSuggestions.length === 0 && (
+                              <div className="px-3 py-2 text-xs text-muted-foreground">
+                                Searching tags...
+                              </div>
+                            )}
+                            {tagSuggestions.map((suggestion, index) => (
+                              <button
+                                key={`${suggestion}-${index}`}
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  handleSelectTagSuggestion(suggestion)
+                                }}
+                                className={cn(
+                                  "w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/10 focus:bg-white/10 focus:outline-none rounded-lg",
+                                  index === tagSelectedIndex && "bg-white/10"
+                                )}
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">Add up to 10 tags for better discovery</p>
                   </div>
 

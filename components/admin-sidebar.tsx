@@ -206,7 +206,7 @@ export function AdminLayout({
                     <RiMore2Line className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl border-border shadow-xl">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild className="rounded-xl">
                     <Link href="/dashboard/admin" className="flex items-center gap-3 w-full">
                       <RiHomeLine className="h-4 w-4 text-orange-500" />

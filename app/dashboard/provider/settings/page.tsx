@@ -545,7 +545,7 @@ export default function ProviderSettings() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
+                  className="w-56 p-2"
                 >
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">

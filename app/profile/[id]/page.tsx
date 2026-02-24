@@ -81,6 +81,7 @@ interface ProfileData {
   bio: string | null
   headline: string | null
   profileImage: string | null
+  isPremium: boolean
   website: string | null
   phoneNumber: string | null
   skills: string[]
@@ -191,7 +192,7 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
 export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const { user: currentUser, isAuthenticated } = useAuth()
+  const { normalizedUser: currentUser, isAuthenticated } = useAuth()
   const { savedPlaylists, fetchSavedPlaylists } = usePlaylist()
   const userId = params.id as string
 
@@ -532,20 +533,30 @@ export default function ProfilePage() {
           </button>
           <div className="flex items-center gap-1">
             {isOwner && (
-              <button
-                type="button"
-                onClick={handleOpenQrDashboard}
-                disabled={isOpeningQrDashboard}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all disabled:opacity-50"
-                title="Manage QR Profile"
-                aria-label="Manage QR Profile"
-              >
-                {isOpeningQrDashboard ? (
-                  <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
-                ) : (
-                  <RiQrCodeLine className="w-5 h-5" aria-hidden />
-                )}
-              </button>
+              currentUser?.isPremium ? (
+                <button
+                  type="button"
+                  onClick={handleOpenQrDashboard}
+                  disabled={isOpeningQrDashboard}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all disabled:opacity-50"
+                  title="Manage QR Profile"
+                  aria-label="Manage QR Profile"
+                >
+                  {isOpeningQrDashboard ? (
+                    <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
+                  ) : (
+                    <RiQrCodeLine className="w-5 h-5" aria-hidden />
+                  )}
+                </button>
+              ) : (
+                <Link
+                  href="/premium"
+                  className="inline-flex items-center justify-center px-3 h-10 rounded-xl text-xs font-medium bg-primary text-foreground hover:bg-primary/90 transition-colors border border-primary/40"
+                  aria-label="Subscribe to unlock QR profile"
+                >
+                  Subscribe
+                </Link>
+              )
             )}
             {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>

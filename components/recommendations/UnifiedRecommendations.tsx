@@ -224,10 +224,10 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
                   </div>
                   <div className="text-right">
                     <div className={`text-2xl font-bold ${getScoreColor(item.score)}`}>
-                      {Math.round(item.score)}
+                      {Math.round(item.score)}%
                     </div>
                     <div className="text-xs text-gray-500">{getScoreLabel(item.score)}</div>
-                    <div className="text-xs text-gray-400">hybrid score</div>
+                    <div className="text-xs text-gray-400">match score</div>
                   </div>
                 </div>
               </CardHeader>

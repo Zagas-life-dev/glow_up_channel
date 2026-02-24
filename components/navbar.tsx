@@ -74,7 +74,7 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const pathname = usePathname()
   const { hideNavbar } = usePage()
-  const { user, isLoading, logout } = useAuth()
+  const { normalizedUser, isLoading, logout } = useAuth()
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -223,7 +223,7 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-gray-200" />
                   <div className="h-4 w-20 bg-gray-200 rounded" />
                 </div>
-              ) : user ? (
+              ) : normalizedUser ? (
                 // Logged in user actions
                 <div className="flex items-center space-x-2">
                   {/* <div className="flex items-center space-x-2 px-3 py-2 bg-orange-50 rounded-full">
@@ -392,16 +392,16 @@ export default function Navbar() {
                       <div className="h-3 w-16 bg-gray-200 rounded" />
                     </div>
                   </div>
-                ) : user ? (
+              ) : normalizedUser ? (
                   // Logged in user mobile actions
                   <>
                     <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-xl mb-2">
                       <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                         <RiUserLine className="h-5 w-5 text-foreground" aria-hidden />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground truncate">{user.email}</div>
-                        <div className="text-sm text-gray-500 capitalize">{user.role.replace('_', ' ')}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-foreground truncate">{normalizedUser.email}</div>
+                          <div className="text-sm text-gray-500 capitalize">{normalizedUser.role.replace('_', ' ')}</div>
                       </div>
                     </div>
                     <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">

@@ -15,7 +15,7 @@ interface ApiResponse<T = any> {
   errors?: any[];
 }
 
-interface User {
+export interface User {
   _id: string;
   id?: string; // Alias for _id for compatibility
   email: string;
@@ -26,6 +26,10 @@ interface User {
   status: string;
   isActive: boolean;
   emailVerified: boolean;
+  // Premium membership (optional fields; may be absent for non-premium users)
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
+  premiumPlanId?: string;
   createdAt: string;
   approvedAt?: string;
   profileImage?: string;
@@ -33,7 +37,7 @@ interface User {
   name?: string;
 }
 
-interface UserProfile {
+export interface UserProfile {
   _id: string;
   userId: string;
   firstName?: string;
@@ -1439,6 +1443,207 @@ export class ApiClient {
 
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/uploaded-payments?${searchParams.toString()}`);
     return this.handleResponse(response);
+  }
+
+  // Premium subscription methods
+
+  /**
+   * Start a premium subscription payment via Paystack.
+   * Returns authorizationUrl + reference so the client can redirect to Paystack.
+   */
+  static async startPremiumSubscription(
+    amountNg: number,
+    options?: { planId?: string; callbackUrl?: string }
+  ): Promise<{ authorizationUrl: string; reference: string; accessCode: string }> {
+    const body: any = {
+      amountNg,
+    };
+    if (options?.planId) body.planId = options.planId;
+    if (options?.callbackUrl) body.callbackUrl = options.callbackUrl;
+
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/initialize`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+
+    const data = await this.handleResponse<{
+      authorizationUrl: string;
+      reference: string;
+      accessCode: string;
+    }>(response);
+
+    // Some backends wrap in data, others may return flat; normalize
+    if ((data as any)?.authorizationUrl) {
+      return data as any;
+    }
+
+    const wrapped = data as any;
+    return wrapped.data ?? wrapped;
+  }
+
+  /**
+   * Verify a completed Paystack transaction and activate/renew the premium subscription.
+   */
+  static async verifyPremiumSubscription(
+    reference: string
+  ): Promise<{ isPremium: boolean; premiumExpiresAt: string | null }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ reference }),
+    });
+    // Be defensive here because this endpoint is only used in a very specific context
+    let json: any = null;
+    try {
+      json = await response.json();
+    } catch {
+      // ignore JSON parse errors; we'll handle below
+    }
+
+    if (!response.ok || !json) {
+      throw new Error(json?.message || `Failed to verify premium subscription (HTTP ${response.status})`);
+    }
+
+    // Standard { success, data } envelope
+    if (json.success === false) {
+      throw new Error(json.message || 'Failed to verify premium subscription');
+    }
+
+    const payload = json.data ?? json;
+    return {
+      isPremium: !!payload.isPremium,
+      premiumExpiresAt: payload.premiumExpiresAt ?? null,
+    };
+  }
+
+  /**
+   * Get current premium subscription status for the authenticated user.
+   */
+  static async getPremiumStatus(): Promise<{ isPremium: boolean; premiumExpiresAt: string | null }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/status`, {
+      method: 'GET',
+    });
+    const result = await this.handleResponse<{ isPremium: boolean; premiumExpiresAt: string | null }>(response);
+    if ((result as any)?.isPremium !== undefined) {
+      return result as any;
+    }
+    const wrapped = result as any;
+    return wrapped.data ?? wrapped;
+  }
+
+  /** Provider wallet: get balance (NGN). */
+  static async getWallet(): Promise<{ balanceNg: number; currency: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet`);
+    const result = await this.handleResponse<{ balanceNg: number; currency: string } | { data: { balanceNg: number; currency: string } }>(response);
+    const payload: any = (result as any)?.data ?? result;
+    return {
+      balanceNg: typeof payload.balanceNg === 'number' ? payload.balanceNg : 0,
+      currency: typeof payload.currency === 'string' ? payload.currency : 'NGN',
+    };
+  }
+
+  /** Provider wallet: initiate top-up; returns authorizationUrl for Paystack redirect/popup. */
+  static async topUpWallet(amountNg: number, callbackUrl?: string): Promise<{ authorizationUrl: string; reference: string; accessCode: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet/top-up`, {
+      method: 'POST',
+      body: JSON.stringify({ amountNg, callbackUrl: callbackUrl || undefined }),
+    });
+    const result = await this.handleResponse<{ authorizationUrl?: string; reference?: string; accessCode?: string } | { data: { authorizationUrl: string; reference: string; accessCode: string } }>(response);
+    const payload: any = (result as any)?.data ?? result;
+    return {
+      authorizationUrl: typeof payload.authorizationUrl === 'string' ? payload.authorizationUrl : '',
+      reference: typeof payload.reference === 'string' ? payload.reference : '',
+      accessCode: typeof payload.accessCode === 'string' ? payload.accessCode : '',
+    };
+  }
+
+  /** Provider wallet: verify inline Paystack top-up by reference and return new balance. */
+  static async verifyWalletTopUp(reference: string): Promise<{ balanceNg: number }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet/verify-topup`, {
+      method: 'POST',
+      body: JSON.stringify({ reference }),
+    });
+    let json: any = null;
+    try {
+      json = await response.json();
+    } catch {
+      // ignore, handled below
+    }
+    if (!response.ok || !json) {
+      throw new Error(json?.message || `Failed to verify wallet top-up (HTTP ${response.status})`);
+    }
+    if (json.success === false) {
+      throw new Error(json.message || 'Failed to verify wallet top-up');
+    }
+    const payload = json.data ?? json;
+    return { balanceNg: typeof payload.balanceNg === 'number' ? payload.balanceNg : 0 };
+  }
+
+  /** Provider wallet: recent transactions for the current provider. */
+  static async getWalletTransactions(limit = 50): Promise<{
+    transactions: {
+      _id: string;
+      amount: number;
+      type: 'topup' | 'deduction';
+      reference: string | null;
+      paystackReference: string | null;
+      status: string;
+      promotionId?: string | null;
+      contentId?: string | null;
+      contentType?: 'opportunity' | 'event' | 'job' | 'resource' | null;
+      matchPercent?: number | null;
+      costNg?: number | null;
+      createdAt: string;
+    }[];
+  }> {
+    const searchParams = new URLSearchParams();
+    if (limit) searchParams.append('limit', String(limit));
+    const url = `${API_BASE_URL}/api/wallet/transactions${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    const response = await this.makeAuthenticatedRequest(url);
+    const result = await this.handleResponse<{ transactions: any[] } | { data: { transactions: any[] } }>(response);
+    const payload: any = (result as any)?.data ?? result;
+    return {
+      transactions: Array.isArray(payload.transactions) ? payload.transactions : [],
+    };
+  }
+
+  /** Record a promoted click (signed-in user viewed promoted content). Call from detail pages once per load. */
+  static async recordPromotionClick(contentId: string, contentType: 'opportunity' | 'event' | 'job' | 'resource'): Promise<{ counted: boolean; reason?: string; costNg?: number; balanceNg?: number }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/click`, {
+      method: 'POST',
+      body: JSON.stringify({ contentId, contentType }),
+    });
+    const json = await this.handleResponse(response) as ApiResponse<{ counted: boolean; reason?: string; costNg?: number; balanceNg?: number }>;
+    return json?.data ?? { counted: false };
+  }
+
+  /** Start a promotion: N100/day upfront + optional per-click budget. Returns chargedNg (upfront) and balanceNg. */
+  static async startPromotionWithWallet(params: {
+    contentId: string;
+    contentType: 'opportunity' | 'event' | 'job' | 'resource';
+    durationDays: number;
+    spendLimitNg?: number | null;
+  }): Promise<{ promotion: any; spendLimitNg: number | null; duration: number; chargedNg: number; balanceNg: number }> {
+    const body: Record<string, unknown> = {
+      contentId: params.contentId,
+      contentType: params.contentType,
+      durationDays: params.durationDays,
+    };
+    if (params.spendLimitNg != null && params.spendLimitNg > 0) {
+      body.spendLimitNg = params.spendLimitNg;
+    }
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/start-with-wallet`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; spendLimitNg?: number | null; duration?: number; chargedNg?: number; balanceNg?: number }>;
+    if (!json?.data) throw new Error((json as any)?.message || 'Failed to start promotion');
+    return {
+      promotion: json.data.promotion,
+      spendLimitNg: json.data.spendLimitNg ?? null,
+      duration: json.data.duration ?? params.durationDays,
+      chargedNg: json.data.chargedNg ?? params.durationDays * 100,
+      balanceNg: json.data.balanceNg ?? 0,
+    };
   }
 
   // Helper method to get the correct endpoint for content type

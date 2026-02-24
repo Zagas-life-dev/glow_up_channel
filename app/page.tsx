@@ -387,153 +387,69 @@ export default function Home() {
   // Storage key based on active tab
   const storageKey = useMemo(() => `home_${activeTab}`, [activeTab])
 
-  // Fetch function for "all" tab (combined promoted + recommended)
+  // Fetch function for "all" tab (personalized unified recommendations only)
   const fetchAllContent = useCallback(async (lastId: string | null) => {
     if (!backendUrl) {
       return { items: [], lastId: null, hasMore: false }
     }
 
     const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
-    const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {}
-
-    const fetchRecommended = async (type: string) => {
-      if (!isAuthenticated || !token) {
-        return { success: false, data: { [type]: [] } }
-      }
-      try {
-        let url = `${backendUrl}/api/recommended/${type}?limit=20`
-        if (lastId) {
-          // For recommendations, we need to track lastId per type
-          // For simplicity, we'll fetch all and filter client-side
-          url += `&lastId=${lastId}`
-        }
-        const response = await fetch(url, { headers })
-
-        if (!response.ok) {
-          console.warn(`Failed to fetch recommended ${type}:`, response.status, response.statusText)
-          return { success: false, data: { [type]: [] } }
-        }
-
-        return await response.json()
-      } catch (error) {
-        console.error(`Error fetching recommended ${type}:`, error)
-        return { success: false, data: { [type]: [] } }
-      }
+    if (!isAuthenticated || !token) {
+      // Without an authenticated user we can't compute personalized recommendations
+      return { items: [], lastId: null, hasMore: false }
     }
 
-    const fetchPromoted = async (type: string) => {
-      try {
-        let url = `${backendUrl}/api/promoted/${type}?limit=20`
-        if (lastId) {
-          url += `&lastId=${lastId}`
-        }
-        const response = await fetch(url)
+    const headers: HeadersInit = { 'Authorization': `Bearer ${token}` }
 
-        if (!response.ok) {
-          console.warn(`Failed to fetch promoted ${type}:`, response.status, response.statusText)
-          return { success: false, data: { [type]: [] } }
-        }
+    try {
+      const url = new URL(`${backendUrl}/api/recommended/unified`)
+      url.searchParams.set('includeOpportunities', 'true')
+      url.searchParams.set('includeEvents', 'true')
+      url.searchParams.set('includeJobs', 'true')
+      url.searchParams.set('includeResources', 'true')
+      url.searchParams.set('minScore', '0')
+      url.searchParams.set('limit', '50')
 
-        return await response.json()
-      } catch (error) {
-        console.error(`Error fetching promoted ${type}:`, error)
-        return { success: false, data: { [type]: [] } }
-      }
-    }
+      const response = await fetch(url.toString(), { headers })
 
-    // Fallback: fetch regular content if both promoted and recommended fail
-    const fetchRegularContent = async (type: string) => {
-      try {
-        let url = `${backendUrl}/api/${type}?limit=20`
-        if (lastId) {
-          url += `&lastId=${lastId}`
-        }
-        const response = await fetch(url, { headers })
-
-        if (!response.ok) {
-          return { success: false, data: { [type]: [] } }
-        }
-
-        const data = await response.json()
-        if (data.success) {
-          return { success: true, data: { [type]: data.data?.[type] || [] } }
-        }
-        return { success: false, data: { [type]: [] } }
-      } catch (error) {
-        console.error(`Error fetching regular ${type}:`, error)
-        return { success: false, data: { [type]: [] } }
-      }
-    }
-
-    const [
-      promotedOpps, recommendedOpps,
-      promotedJobs, recommendedJobs,
-      promotedEvents, recommendedEvents,
-      promotedResources, recommendedResources
-    ] = await Promise.all([
-      fetchPromoted('opportunities'), fetchRecommended('opportunities'),
-      fetchPromoted('jobs'), fetchRecommended('jobs'),
-      fetchPromoted('events'), fetchRecommended('events'),
-      fetchPromoted('resources'), fetchRecommended('resources')
-    ])
-
-    // Helper to get items with fallback to regular content
-    const getItemsWithFallback = async (
-      type: string,
-      promoted: any,
-      recommended: any,
-      typeKey: string
-    ) => {
-      const promotedItems = promoted.success ? (promoted.data?.[typeKey] || []) : []
-      const recommendedItems = recommended.success ? (recommended.data?.[typeKey] || []) : []
-
-      // If both promoted and recommended failed, try regular content as fallback
-      if (promotedItems.length === 0 && recommendedItems.length === 0) {
-        const regularContent = await fetchRegularContent(type)
-        if (regularContent.success) {
-          return regularContent.data?.[typeKey] || []
-        }
+      if (!response.ok) {
+        console.warn('Failed to fetch unified recommendations:', response.status, response.statusText)
+        return { items: [], lastId: null, hasMore: false }
       }
 
-      // Combine promoted and recommended, removing duplicates
-      const combined = [
-        ...promotedItems,
-        ...recommendedItems.filter((item: any) =>
-          !promotedItems.some((p: any) => p._id === item._id)
-        )
-      ]
+      const data = await response.json()
+      if (!data?.success || !data?.data?.content) {
+        return { items: [], lastId: null, hasMore: false }
+      }
 
-      return combined
-    }
+      const unifiedItems = (data.data.content as any[]).map((item) => ({
+        ...item,
+        // Normalize type field for feed-card
+        type: item.contentType
+      }))
 
-    // Fetch all items (with fallback if needed)
-    const [oppsRaw, jobsRaw, eventsRaw, resourcesRaw] = await Promise.all([
-      getItemsWithFallback('opportunities', promotedOpps, recommendedOpps, 'opportunities'),
-      getItemsWithFallback('jobs', promotedJobs, recommendedJobs, 'jobs'),
-      getItemsWithFallback('events', promotedEvents, recommendedEvents, 'events'),
-      getItemsWithFallback('resources', promotedResources, recommendedResources, 'resources')
-    ])
-
-    const opps = oppsRaw.map((item: any) => ({ ...item, type: 'opportunity' }))
-    const jobItems = jobsRaw.map((item: any) => ({ ...item, type: 'job' }))
-    const eventItems = eventsRaw.map((item: any) => ({ ...item, type: 'event' }))
-    const resourceItems = resourcesRaw.map((item: any) => ({ ...item, type: 'resource' }))
-
-    const combined = [...opps, ...jobItems, ...eventItems, ...resourceItems]
-      .sort((a, b) => {
-        const aPromoted = a.packageType ? 1 : 0
-        const bPromoted = b.packageType ? 1 : 0
-        if (aPromoted !== bPromoted) return bPromoted - aPromoted
+      // Sort by personalized score (highest first), fallback to createdAt
+      const sorted = unifiedItems.sort((a, b) => {
+        const aHasScore = typeof a.score === 'number'
+        const bHasScore = typeof b.score === 'number'
+        if (aHasScore && bHasScore && b.score !== a.score) {
+          return b.score - a.score
+        } else if (aHasScore !== bHasScore) {
+          return bHasScore ? 1 : -1
+        }
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       })
 
-    // Get lastId from the last item
-    const lastItemId = combined.length > 0 ? combined[combined.length - 1]._id : null
+      const lastItemId = sorted.length > 0 ? sorted[sorted.length - 1]._id : null
 
-    return {
-      items: combined,
-      lastId: lastItemId,
-      hasMore: combined.length >= 20
+      return {
+        items: sorted,
+        lastId: lastItemId,
+        hasMore: data.data.total > sorted.length
+      }
+    } catch (error) {
+      console.error('Error fetching unified recommendations:', error)
+      return { items: [], lastId: null, hasMore: false }
     }
   }, [backendUrl, isAuthenticated, user])
 

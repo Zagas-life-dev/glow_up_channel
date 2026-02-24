@@ -326,7 +326,7 @@ export default function PwaInstallBanner() {
       />
       {/* Card at center */}
       <div
-        className="relative w-full max-w-sm rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md p-6 shadow-xl animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-sm glass-surface p-6 animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-labelledby="pwa-install-title"
         aria-describedby="pwa-install-desc"

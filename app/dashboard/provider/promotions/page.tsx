@@ -37,6 +37,8 @@ import {
   X
 } from 'lucide-react'
 import { toast } from "sonner"
+import { WalletBalanceCard } from "@/components/wallet/WalletBalanceCard"
+import { WalletTopUpModal } from "@/components/wallet/WalletTopUpModal"
 
 // Types matching backend exactly
 interface Promotion {
@@ -55,6 +57,9 @@ interface Promotion {
   isActive?: boolean
   isExpired?: boolean
   remainingDays?: number
+  // Wallet-budget specific fields (optional, only for wallet-based promotions)
+  spendLimitNg?: number | null
+  spentNg?: number | null
   content?: {
     _id: string
     title: string
@@ -132,6 +137,12 @@ export default function PromotionsPage() {
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null)
   const [heroImageUploading, setHeroImageUploading] = useState(false)
 
+  // Wallet state (promotion wallet, top-up via Paystack)
+  const [walletBalance, setWalletBalance] = useState<number>(0)
+  const [showTopUpModal, setShowTopUpModal] = useState(false)
+  const [topUpAmount, setTopUpAmount] = useState<string>('') // no longer used, kept for backward compatibility
+  const [topUpLoading, setTopUpLoading] = useState(false) // no longer used, kept for backward compatibility
+
   // Hide navbar when this page is active
   useEffect(() => {
     setHideNavbar(true)
@@ -141,6 +152,19 @@ export default function PromotionsPage() {
       setHideFooter(false)
     }
   }, [setHideNavbar, setHideFooter])
+
+  // Refetch wallet when returning from Paystack (e.g. ?paystack=success)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isAuthenticated) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('paystack') === 'success') {
+      ApiClient.getWallet().then((w) => {
+        setWalletBalance(w.balanceNg)
+        toast.success('Wallet topped up successfully')
+      }).catch(() => {})
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [isAuthenticated])
 
   // Fetch data when authenticated
   useEffect(() => {
@@ -218,6 +242,14 @@ export default function PromotionsPage() {
           toast.error('Failed to load promotions')
         }
         setPromotions([])
+      }
+
+      // Fetch provider wallet balance (for promotions)
+      try {
+        const wallet = await ApiClient.getWallet()
+        setWalletBalance(wallet.balanceNg)
+      } catch {
+        setWalletBalance(0)
       }
 
       // Fetch user content (authenticated)
@@ -570,6 +602,10 @@ export default function PromotionsPage() {
     setReceiptPreview(null)
   }
 
+  const handleTopUpSubmit = async () => {
+    // kept for backwards compatibility; WalletTopUpModal now handles top-up flow
+  }
+
   // Receipt upload functions
   const handleReceiptUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -721,6 +757,68 @@ export default function PromotionsPage() {
   const awaitingVerificationPromotions = promotions.filter(p => p.status === 'active' && p.paymentStatus === 'awaiting_verification')
   const completedPromotions = promotions.filter(p => p.status === 'completed' || p.status === 'expired')
 
+  // Promotion Manager derived data
+  const now = new Date()
+  const currentManagerPromotions = promotions.filter(p =>
+    p.status === 'active' ||
+    p.status === 'pending' ||
+    p.status === 'paused'
+  )
+
+  const pastManagerPromotions = promotions.filter(p => {
+    if (p.status === 'completed' || p.status === 'expired' || p.status === 'cancelled') return true
+    if (p.endDate) {
+      try {
+        const end = new Date(p.endDate)
+        if (!isNaN(end.getTime()) && end < now) return true
+      } catch {
+        // ignore parse errors
+      }
+    }
+    return false
+  })
+
+  const totalUpfrontSpentNg = promotions.reduce((sum, p) => {
+    if (p.packageType === 'wallet_daily') {
+      return sum + p.duration * 100
+    }
+    return sum
+  }, 0)
+
+  const totalRemainingBudgetNg = promotions.reduce((sum, p) => {
+    const limit = p.spendLimitNg ?? null
+    if (limit != null && limit > 0) {
+      const spent = p.spentNg ?? 0
+      const remaining = Math.max(0, limit - spent)
+      return sum + remaining
+    }
+    return sum
+  }, 0)
+
+  // Recommended content: no active promotion + good engagement / recency
+  const activeContentIds = new Set(
+    promotions
+      .filter(p => p.status === 'active' && p.paymentStatus === 'paid')
+      .map(p => p.contentId)
+  )
+
+  const recommendedContent: UserContent[] = userContent
+    .filter((c: any) => !activeContentIds.has(c._id))
+    .map((c: any) => {
+      const metrics = c.metrics || {}
+      const views = metrics.viewCount || 0
+      const likes = metrics.likeCount || 0
+      const saves = metrics.saveCount || 0
+      const createdAt = c.createdAt ? new Date(c.createdAt).getTime() : 0
+      const ageDays = createdAt ? (Date.now() - createdAt) / (1000 * 60 * 60 * 24) : 0
+      const recencyBoost = ageDays ? Math.max(0, 30 - ageDays) : 0
+      const score = views * 0.1 + likes * 3 + saves * 2 + recencyBoost
+      return { content: c as UserContent, score }
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10)
+    .map(r => r.content)
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30 flex items-center justify-center">
@@ -759,20 +857,39 @@ export default function PromotionsPage() {
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Promotions</h1>
-              <p className="text-sm lg:text-base text-gray-600">Promote your content to reach more people</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Promotion Manager</h1>
+              <p className="text-sm lg:text-base text-gray-600">Track all your promotions, budgets, and recommendations in one place.</p>
             </div>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Promotion
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link href="/dashboard/provider?tab=content">
+                <Target className="h-4 w-4 mr-1.5" />
+                Go to Content
+              </Link>
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Promotion
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <WalletBalanceCard
+            balanceNg={walletBalance}
+            onTopUpClick={() => setShowTopUpModal(true)}
+            onViewFullWalletClick={() => {
+              window.location.href = '/dashboard/provider?tab=wallet'
+            }}
+          />
           <Card className="border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -791,8 +908,8 @@ export default function PromotionsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">{pendingPromotions.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Upfront Spend (₦100/day)</p>
+                  <p className="text-2xl font-bold text-yellow-600">{formatCurrency(totalUpfrontSpentNg)}</p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                   <Clock className="w-6 h-6 text-yellow-600" />
@@ -805,8 +922,8 @@ export default function PromotionsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-primary">{completedPromotions.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Remaining Budget</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(totalRemainingBudgetNg)}</p>
                 </div>
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-primary" />
@@ -819,8 +936,8 @@ export default function PromotionsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Content</p>
-                  <p className="text-2xl font-bold text-purple-600">{userContent.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Past Promotions</p>
+                  <p className="text-2xl font-bold text-purple-600">{pastManagerPromotions.length}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <Target className="w-6 h-6 text-purple-600" />
@@ -829,6 +946,229 @@ export default function PromotionsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Promotion Manager Tabs */}
+        <Tabs defaultValue="current" className="space-y-6 mb-10">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="current">Current ({currentManagerPromotions.length})</TabsTrigger>
+            <TabsTrigger value="past">Past ({pastManagerPromotions.length})</TabsTrigger>
+            <TabsTrigger value="recommendations">Recommendations ({recommendedContent.length})</TabsTrigger>
+          </TabsList>
+
+          {/* Current promotions: active + pending + paused */}
+          <TabsContent value="current" className="space-y-4">
+            {currentManagerPromotions.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Current Promotions</h3>
+                  <p className="text-gray-600 mb-4">Start a promotion from your content or using the Create Promotion button above.</p>
+                  <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Promotion
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-0 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted/60">
+                      <tr className="text-left">
+                        <th className="px-4 py-3 font-semibold text-gray-700">Title</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Type</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Duration</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Budget (₦)</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Spent (₦)</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Remaining (₦)</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">End date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentManagerPromotions.map((promotion) => {
+                        const budget = promotion.spendLimitNg ?? null
+                        const spent = promotion.spentNg ?? 0
+                        const remaining = budget != null && budget > 0 ? Math.max(0, budget - spent) : null
+                        return (
+                          <tr key={promotion._id} className="border-b border-border last:border-0">
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-foreground line-clamp-1">
+                                  {promotion.content?.title || promotion.packageName}
+                                </span>
+                                <span className="text-xs text-muted-foreground line-clamp-1">
+                                  {promotion.packageName}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 capitalize text-gray-700">
+                              {promotion.contentType || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {promotion.duration} days
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge className={getStatusColor(promotion.status)}>
+                                {promotion.status}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3">
+                              {budget != null && budget > 0 ? formatCurrency(budget) : 'No limit'}
+                            </td>
+                            <td className="px-4 py-3">
+                              {spent > 0 ? formatCurrency(spent) : '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              {remaining != null ? formatCurrency(remaining) : '—'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Past promotions: completed / expired / cancelled / ended */}
+          <TabsContent value="past" className="space-y-4">
+            {pastManagerPromotions.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Past Promotions</h3>
+                  <p className="text-gray-600">Completed or expired promotions will appear here for your records.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-0 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-muted/60">
+                      <tr className="text-left">
+                        <th className="px-4 py-3 font-semibold text-gray-700">Title</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Type</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Duration</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Status</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Budget (₦)</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Spent (₦)</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">End date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pastManagerPromotions.map((promotion) => {
+                        const budget = promotion.spendLimitNg ?? null
+                        const spent = promotion.spentNg ?? 0
+                        return (
+                          <tr key={promotion._id} className="border-b border-border last:border-0">
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-foreground line-clamp-1">
+                                  {promotion.content?.title || promotion.packageName}
+                                </span>
+                                <span className="text-xs text-muted-foreground line-clamp-1">
+                                  {promotion.packageName}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 capitalize text-gray-700">
+                              {promotion.contentType || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {promotion.duration} days
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge className={getStatusColor(promotion.status)}>
+                                {promotion.status}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3">
+                              {budget != null && budget > 0 ? formatCurrency(budget) : 'No limit'}
+                            </td>
+                            <td className="px-4 py-3">
+                              {spent > 0 ? formatCurrency(spent) : '—'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+        {/* Recommendations tab */}
+          <TabsContent value="recommendations" className="space-y-4">
+            {recommendedContent.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Recommendations Yet</h3>
+                  <p className="text-gray-600">
+                    Once you post more content and start getting engagement, we’ll recommend what to promote here.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recommendedContent.map((content) => {
+                  const metrics: any = (content as any).metrics || {}
+                  const views = metrics.viewCount || 0
+                  const likes = metrics.likeCount || 0
+                  const saves = metrics.saveCount || 0
+                  const ContentIcon = getContentIcon(content.contentType || 'opportunity')
+                  return (
+                    <Card key={content._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
+                      <CardContent className="p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                              <ContentIcon className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground line-clamp-2">{content.title}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{content.contentType}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                          <div className="flex items-center gap-2">
+                            <span>{views} views</span>
+                            <span>•</span>
+                            <span>{likes} likes</span>
+                            <span>•</span>
+                            <span>{saves} saves</span>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full mt-2 bg-primary hover:bg-primary/90"
+                          onClick={() => {
+                            setSelectedContent(content as any)
+                            setSelectedPackage("")
+                            setShowCreateDialog(true)
+                          }}
+                        >
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Promote this content
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Packages Section */}
         <Card className="border-0 shadow-lg mb-8">
@@ -1247,7 +1587,13 @@ export default function PromotionsPage() {
         </Tabs>
       </div>
 
-      {/* Create Promotion Dialog */}
+      {/* Top-up wallet modal (Paystack) */}
+      <WalletTopUpModal
+        open={showTopUpModal}
+        onOpenChange={setShowTopUpModal}
+        onCompleted={fetchData}
+      />
+
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader className="flex-shrink-0">
@@ -1853,6 +2199,7 @@ export default function PromotionsPage() {
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   )
 }

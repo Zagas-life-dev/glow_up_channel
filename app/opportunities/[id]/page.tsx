@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,7 @@ import AuthGuard from '@/components/auth-guard'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
 import { trackContentView } from '@/lib/tracking'
+import ApiClient from '@/lib/api-client'
 
 type OpportunityPageProps = { params: Promise<{ id: string }> }
 
@@ -38,6 +39,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
   const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
+  const promotionClickSent = useRef(false)
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
@@ -59,6 +61,13 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
   }, [id, isAuthenticated])
 
   useEffect(() => { if (id) getOpportunity() }, [id, getOpportunity])
+
+  // Record promoted click once per page load when signed in (backend applies daily cap)
+  useEffect(() => {
+    if (!isAuthenticated || !id || !opportunity || promotionClickSent.current) return
+    promotionClickSent.current = true
+    ApiClient.recordPromotionClick(id, 'opportunity').catch(() => {})
+  }, [isAuthenticated, id, opportunity])
 
   if (loading) return <ContentDetailSkeleton />
   if (error || !opportunity) {

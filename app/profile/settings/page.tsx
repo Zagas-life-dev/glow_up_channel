@@ -144,6 +144,12 @@ export default function SettingsPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
 
+  // Premium membership state
+  const [isPremium, setIsPremium] = useState<boolean>(false)
+  const [premiumExpiresAt, setPremiumExpiresAt] = useState<string | null>(null)
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
+  const [isStartingPremium, setIsStartingPremium] = useState(false)
+
   // Basic Info State
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -238,6 +244,13 @@ export default function SettingsPage() {
       setFirstName(user.firstName || '')
       setLastName(user.lastName || '')
       setEmailVerified(user.emailVerified || false)
+      // Initialize premium state from user if available
+      if (typeof user.isPremium === 'boolean') {
+        setIsPremium(user.isPremium)
+      }
+      if ((user as any).premiumExpiresAt) {
+        setPremiumExpiresAt((user as any).premiumExpiresAt)
+      }
     }
   }, [user])
 
@@ -291,6 +304,38 @@ export default function SettingsPage() {
     }
     loadVerificationStatus()
   }, [user])
+
+  // Handle premium callback from Paystack (?premium=success&reference=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const premiumFlag = params.get('premium')
+    const reference = params.get('reference')
+
+    if (premiumFlag === 'success' && reference) {
+      ;(async () => {
+        try {
+          setIsStartingPremium(true)
+          const result = await ApiClient.verifyPremiumSubscription(reference)
+          setIsPremium(result.isPremium)
+          setPremiumExpiresAt(result.premiumExpiresAt)
+          await refreshUser()
+          toast.success('Premium subscription activated!')
+        } catch (error: any) {
+          console.error('Error verifying premium subscription:', error)
+          toast.error(error?.message || 'Failed to verify premium subscription')
+        } finally {
+          setIsStartingPremium(false)
+          // Clean up query params
+          const url = new URL(window.location.href)
+          url.searchParams.delete('premium')
+          url.searchParams.delete('reference')
+          window.history.replaceState({}, '', url.toString())
+        }
+      })()
+    }
+  }, [refreshUser])
 
   const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -616,30 +661,89 @@ export default function SettingsPage() {
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
           <div className="space-y-6">
-            {/* QR Profile quick access */}
+            {/* QR Profile quick access / Premium gate */}
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-orange-500/40 flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">QR Profile</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    QR Profile {isPremium && <span className="ml-1 text-[11px] text-primary/80">(Premium)</span>}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Generate and manage a QR code that shares your public contact card.
                   </p>
                 </div>
               </div>
-              <Button
-                type="button"
-                onClick={handleOpenQrDashboard}
-                disabled={isOpeningQrDashboard}
-                className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
-              >
-                {isOpeningQrDashboard ? 'Opening…' : 'Manage QR Profile'}
-              </Button>
+              {isPremium ? (
+                <Button
+                  type="button"
+                  onClick={handleOpenQrDashboard}
+                  disabled={isOpeningQrDashboard}
+                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
+                >
+                  {isOpeningQrDashboard ? 'Opening…' : 'Manage QR Profile'}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/premium'
+                  }}
+                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
+                >
+                  View premium plans
+                </Button>
+              )}
             </div>
 
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 space-y-6">
+              {/* Premium membership card */}
+              <div className="p-4 rounded-xl border border-yellow-500/40 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
+                    <Crown className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      Glow Up Premium
+                      {isPremium && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
+                          Premium
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Unlock extra power features:
+                    </p>
+                    <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                      <li>• Weekly premium newsletter</li>
+                      <li>• Ability to create channels</li>
+                      <li>• Ability to host a general Lock In</li>
+                      <li>• No ads (still see promoted content)</li>
+                      <li>• Special library with free premium guides</li>
+                    </ul>
+                    {isPremium && premiumExpiresAt && (
+                      <p className="text-[11px] text-yellow-300 mt-2">
+                        Premium active · renews by {new Date(premiumExpiresAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    window.location.href = '/premium'
+                  }}
+                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-xs font-medium"
+                >
+                  {isPremium ? 'Manage Premium' : 'See Premium Plans'}
+                </Button>
+              </div>
+
+              {/* Profile Image and basic fields */}
               {/* Profile Image */}
               <div className="flex flex-col items-center">
                 <div className="relative">
@@ -1498,6 +1602,97 @@ export default function SettingsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Premium subscription modal */}
+      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
+        <DialogContent className="bg-card border-border rounded-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary" />
+              {isPremium ? 'Manage Premium' : 'Upgrade to Premium'}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {isPremium
+                ? 'Your premium membership unlocks extra benefits on Glow Up Channel.'
+                : 'Get access to creator tools, special resources, and an ad‑light experience.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Glow Up Premium – Monthly</p>
+                  <p className="text-xs text-muted-foreground">
+                    Billed monthly via Paystack. You can cancel any time.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-foreground">₦2,500</p>
+                  <p className="text-[11px] text-muted-foreground">per month</p>
+                </div>
+              </div>
+              <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                <li>• Weekly premium newsletter and insights</li>
+                <li>• Create and manage your own channels</li>
+                <li>• Host general Lock In sessions</li>
+                <li>• Experience Glow Up with no ads (promoted content may still appear)</li>
+                <li>• Access a special library of premium guides and resources</li>
+              </ul>
+            </div>
+
+            {isPremium && premiumExpiresAt && (
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-foreground">
+                Premium is currently active. Your access runs until{' '}
+                <span className="font-semibold">
+                  {new Date(premiumExpiresAt).toLocaleDateString()}
+                </span>
+                .
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowPremiumModal(false)}
+              disabled={isStartingPremium}
+              className="rounded-xl"
+            >
+              Close
+            </Button>
+            <Button
+              type="button"
+              disabled={isStartingPremium}
+              className="bg-primary hover:bg-primary/90 rounded-xl"
+              onClick={async () => {
+                try {
+                  setIsStartingPremium(true)
+                  // For now, use a fixed monthly amount; adjust if needed
+                  const monthlyAmountNg = 2500
+                  const result = await ApiClient.startPremiumSubscription(monthlyAmountNg, {
+                    planId: 'premium_monthly',
+                  })
+                  if (result.authorizationUrl) {
+                    window.location.href = result.authorizationUrl
+                  } else {
+                    toast.error('Failed to start premium subscription')
+                  }
+                } catch (error: any) {
+                  console.error('Error starting premium subscription:', error)
+                  toast.error(error?.message || 'Failed to start premium subscription')
+                } finally {
+                  // do not reset isStartingPremium here; we are leaving page to Paystack
+                  setShowPremiumModal(false)
+                }
+              }}
+            >
+              {isStartingPremium ? 'Connecting to Paystack…' : isPremium ? 'Renew / Manage via Paystack' : 'Continue with Paystack'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </PageShell>

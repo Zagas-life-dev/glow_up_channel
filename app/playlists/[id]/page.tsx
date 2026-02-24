@@ -273,7 +273,7 @@ export default function PlaylistDetailPage() {
                         <RiMore2Line className="w-5 h-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl p-1">
+                    <DropdownMenuContent align="end" className="p-1">
                       <DropdownMenuItem
                         onClick={() => setShowEditModal(true)}
                         className="text-foreground hover:bg-muted cursor-pointer rounded-lg"

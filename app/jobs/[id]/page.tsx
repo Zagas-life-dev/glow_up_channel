@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,7 @@ import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import { trackContentView } from '@/lib/tracking'
+import ApiClient from '@/lib/api-client'
 
 type JobPageProps = { params: Promise<{ id: string }> }
 
@@ -34,6 +35,7 @@ function JobPageContent({ params }: JobPageProps) {
   const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
+  const promotionClickSent = useRef(false)
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
@@ -55,6 +57,12 @@ function JobPageContent({ params }: JobPageProps) {
   }, [id, isAuthenticated])
 
   useEffect(() => { if (id) getJob() }, [id, getJob])
+
+  useEffect(() => {
+    if (!isAuthenticated || !id || !job || promotionClickSent.current) return
+    promotionClickSent.current = true
+    ApiClient.recordPromotionClick(id, 'job').catch(() => {})
+  }, [isAuthenticated, id, job])
 
   if (loading) return <ContentDetailSkeleton />
   if (error || !job) {

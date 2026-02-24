@@ -573,7 +573,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
               {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {item.type === 'event' ? 'sign up' : item.type === 'opportunity' ? 'apply' : 'apply'}
             </div>
             {/* Match Score Badge - Below hot card tag */}
-            {item.score && item.score > 0 && (
+            {typeof item.score === 'number' && (
               <div className={cn(
                 "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
                 "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
@@ -599,7 +599,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
               </div>
             </div>
             {/* Match Score Badge - Below urgent timer */}
-            {item.score && item.score > 0 && (
+            {typeof item.score === 'number' && (
               <div className={cn(
                 "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
                 "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
@@ -612,7 +612,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         )}
 
         {/* Match Score Badge - Only show if not a hot card or urgent */}
-        {item.score && item.score > 0 && !deadlineInfo?.isHot && !deadlineInfo?.isUrgent && (
+        {typeof item.score === 'number' && !deadlineInfo?.isHot && !deadlineInfo?.isUrgent && (
           <div className="absolute -top-2 -right-2 z-10">
             <div className={cn(
               "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",

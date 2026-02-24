@@ -156,7 +156,7 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
                 <RiMore2Line className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-surface border-border rounded-xl">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:text-red-400 cursor-pointer">
                 <FlaticonIcon name="trash" className="w-4 h-4 mr-2" aria-hidden />
                 Delete

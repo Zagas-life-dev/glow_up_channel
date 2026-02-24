@@ -507,7 +507,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                   <RiMore2Line className="w-4 h-4" aria-hidden />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/70 rounded-2xl shadow-xl">
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleShare} className="cursor-pointer rounded-xl mx-1">
                   <RiShareLine className="w-4 h-4 mr-2" aria-hidden />
                   Share

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +21,8 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import PromotionButton from '@/components/promotion/PromotionButton'
 import PaymentDetails from '@/components/payment-details'
+import { EditContentModal } from '@/components/edit-content-modal'
+import { PromoteContentModal } from '@/components/promote-content-modal'
 import { 
   ArrowRight,
   TrendingUp,
@@ -53,7 +56,8 @@ import {
   ChevronRight,
   Sparkles,
   LayoutDashboard,
-  MoreVertical
+  MoreVertical,
+  DollarSign
 } from 'lucide-react'
 
 interface ProviderStats {
@@ -142,6 +146,10 @@ export default function ProviderDashboard() {
     isCompleted: boolean
     completionPercentage: number
   } | null>(null)
+  const   [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<PostedItem | null>(null)
+  const [promoteModalOpen, setPromoteModalOpen] = useState(false)
+  const [promotingItem, setPromotingItem] = useState<PostedItem | null>(null)
 
   // Hide navbar when this page is active
   useEffect(() => {
@@ -305,7 +313,7 @@ export default function ProviderDashboard() {
       
       setStats(stats)
       setPostedItems(allPostedItems.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()))
-      
+
     } catch (err: any) {
       console.error('Error loading provider dashboard data:', err)
       setError('Failed to load dashboard data')
@@ -355,8 +363,14 @@ export default function ProviderDashboard() {
     return 'Unknown'
   }
 
-  const handleEditContent = (item: any) => {
-    toast.info(`Edit functionality for ${item.type} "${item.title}" will be available soon!`)
+  const handleEditContent = (item: PostedItem) => {
+    setEditingItem(item)
+    setEditModalOpen(true)
+  }
+
+  const handlePromoteContent = (item: PostedItem) => {
+    setPromotingItem(item)
+    setPromoteModalOpen(true)
   }
 
   const handleViewContent = (item: any) => {
@@ -447,10 +461,16 @@ export default function ProviderDashboard() {
     )
   }
 
+  const avatarUrl =
+    (profile as any)?.profileImage ||
+    (user as any)?.profileImage ||
+    null
+
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider' },
     { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/provider' },
-    { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider' },
+    { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions' },
+    // Wallet is hidden from provider nav for now; page remains reachable via direct URL if needed
     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/provider' },
   ]
 
@@ -461,45 +481,71 @@ export default function ProviderDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Crown className="w-5 h-5 text-orange-500" />
+    <div className="relative min-h-screen bg-gradient-to-br from-[#020817] via-[#020817] to-black overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(147,51,234,0.16),_transparent_55%)]" />
+      <div className="relative flex">
+        {/* Desktop Sidebar - Hidden on mobile */}
+        <aside className="hidden lg:flex flex-col w-64 border-r border-border/60 bg-card/10 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.65)] sticky top-0 h-screen">
+          {/* Sidebar Header */}
+          <div className="p-6 border-b border-border/60 bg-card/10 backdrop-blur-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 flex items-center justify-center border border-orange-500/30 shadow-inner">
+                <Crown className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
+                <p className="text-xs text-muted-foreground">Dashboard</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
-              <p className="text-xs text-muted-foreground">Dashboard</p>
+          
+            {/* User Info */}
+            <div className="p-3 rounded-xl bg-card/70 backdrop-blur-sm border border-border/70 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500/30 to-rose-500/20 flex items-center justify-center overflow-hidden">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={user?.firstName || user?.email || 'Provider avatar'}
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-orange-400">
+                    {(user?.firstName || user?.email || '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user?.firstName || user?.email?.split('@')[0]}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              </div>
             </div>
           </div>
           
-          {/* User Info */}
-          <div className="p-3 rounded-xl bg-muted border border-border">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.firstName || user?.email?.split('@')[0]}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            {navItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
             
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
+                onClick={() => {
+                  if (item.id === 'wallet') {
+                    router.push(item.href)
+                    return
+                  }
+                  setActiveTab(item.id as any)
+                }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive 
-                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/70 hover:border hover:border-border/60"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -507,10 +553,10 @@ export default function ProviderDashboard() {
               </button>
             )
           })}
-        </nav>
+          </nav>
 
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-border space-y-2">
+          {/* Quick Actions */}
+          <div className="p-4 border-t border-border/60 space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
             return (
@@ -521,8 +567,8 @@ export default function ProviderDashboard() {
                 className={cn(
                   "w-full justify-start",
                   link.variant === 'default' 
-                    ? "bg-primary hover:bg-primary/90" 
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30" 
+                    : "border-border/70 text-muted-foreground hover:text-foreground hover:bg-card/60"
                 )}
               >
                 <Link href={link.href}>
@@ -535,8 +581,8 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Stats Summary */}
-        <div className="p-4 border-t border-border">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+        <div className="p-4 border-t border-border/60">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 shadow-inner">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">Active Postings</span>
               <span className="text-lg font-bold text-orange-400">{stats.activePostings}</span>
@@ -556,15 +602,15 @@ export default function ProviderDashboard() {
             </div>
           </div>
         </div>
-      </aside>
+        </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
+        <header className="lg:hidden sticky top-0 z-20 bg-card/10 backdrop-blur-xl border-b border-border/60">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 flex items-center justify-center border border-orange-500/30">
                 <Crown className="w-4 h-4 text-orange-500" />
               </div>
               <div>
@@ -596,7 +642,7 @@ export default function ProviderDashboard() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-56 bg-surface border-border rounded-xl p-2 shadow-xl"
+                  className="w-56 p-2"
                 >
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
@@ -1051,6 +1097,15 @@ export default function ProviderDashboard() {
                                       <Button 
                                         variant="ghost" 
                                         size="sm"
+                                        onClick={() => handlePromoteContent(item)}
+                                        className="h-8 w-8 p-0 text-primary/80 hover:text-primary hover:bg-primary/10"
+                                        title="Promote"
+                                      >
+                                        <TrendingUp className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
                                         onClick={() => handleEditContent(item)}
                                         className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                                         title="Edit"
@@ -1202,29 +1257,48 @@ export default function ProviderDashboard() {
           </div>
         </main>
 
+        <EditContentModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          item={editingItem}
+          onSaved={loadProviderData}
+        />
+        <PromoteContentModal
+          open={promoteModalOpen}
+          onOpenChange={setPromoteModalOpen}
+          item={promotingItem}
+          onSuccess={loadProviderData}
+        />
+
         {/* Mobile Bottom Navigation - Only visible on mobile */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around h-16 px-2">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = activeTab === item.id
-              
+
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
+                  onClick={() => {
+                    if (item.id === 'wallet') {
+                      router.push(item.href)
+                      return
+                    }
+                    setActiveTab(item.id as any)
+                  }}
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
-                    isActive 
-                      ? "text-orange-400" 
-                      : "text-muted-foreground"
+                    isActive ? "text-orange-400" : "text-muted-foreground"
                   )}
                 >
                   <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                  <span className={cn(
-                    "text-[10px] font-medium truncate w-full text-center",
-                    isActive && "text-orange-400"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[10px] font-medium truncate w-full text-center",
+                      isActive && "text-orange-400"
+                    )}
+                  >
                     {item.label}
                   </span>
                 </button>
@@ -1234,5 +1308,7 @@ export default function ProviderDashboard() {
         </nav>
       </div>
     </div>
+    </div>
   )
 }
+

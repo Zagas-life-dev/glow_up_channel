@@ -92,6 +92,10 @@
     text-wrap: balance;
   }
 
+  .glass-surface {
+    @apply rounded-xl border border-border/60 bg-popover/80 backdrop-blur-md shadow-lg;
+  }
+
   /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;

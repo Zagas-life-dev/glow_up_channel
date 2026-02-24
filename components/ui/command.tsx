@@ -4,7 +4,7 @@ import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
-import { cn } from "@/lib/utils"
+import { cn, glassSurfaceClass } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 const Command = React.forwardRef<
@@ -13,8 +13,8 @@ const Command = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive
     ref={ref}
-    className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+    className={glassSurfaceClass(
+      "flex h-full w-full flex-col overflow-hidden text-popover-foreground",
       className
     )}
     {...props}

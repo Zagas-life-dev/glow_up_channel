@@ -23,6 +23,7 @@ import {
   RiFocus3Line,
   RiHashtag,
   RiDownloadLine,
+  RiMoneyDollarCircleLine,
 } from "react-icons/ri"
 
 const mainNavItems = [
@@ -168,7 +169,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               )}
             </Link>
             <Link
-              href="/playlists?tab=public"
+              href="/playlists?tab=discover"
               title={isCollapsed ? "Discover" : undefined}
               className={cn(
                 linkBase,
@@ -191,6 +192,22 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               </p>
             )}
             <div className="space-y-0.5">
+              {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
+                <Link
+                  href="/dashboard/provider/wallet"
+                  title={isCollapsed ? "Wallet" : undefined}
+                  className={cn(
+                    linkBase,
+                    isCollapsed ? linkCollapsed : linkExpanded,
+                    isActive('/dashboard/provider/wallet')
+                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
+                  )}
+                >
+                  <RiMoneyDollarCircleLine className={cn("w-5 h-5 flex-shrink-0", isActive('/dashboard/provider/wallet') && "text-primary")} />
+                  {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Wallet</span>}
+                </Link>
+              )}
               <Link
                 href={`/profile/${user._id}`}
                 title={isCollapsed ? "My Profile" : undefined}
@@ -274,6 +291,25 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
             >
               <RiSettingsLine className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span className="font-medium">Settings</span>}
+            </Link>
+            {/* Premium entry */}
+            <Link
+              href="/premium"
+              title={isCollapsed ? (user.isPremium ? "Premium" : "Go Premium") : undefined}
+              className={cn(
+                linkBase,
+                isCollapsed ? linkCollapsed : linkExpanded,
+                user.isPremium
+                  ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+                  : "text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20"
+              )}
+            >
+              <RiVipCrownLine className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && (
+                <span className="font-medium">
+                  {user.isPremium ? "Premium" : "Go Premium"}
+                </span>
+              )}
             </Link>
             <button
               onClick={logout}

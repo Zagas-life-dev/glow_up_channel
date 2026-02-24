@@ -349,7 +349,7 @@ export default function PlaylistsPage() {
                                   <RiMore2Line className="w-4 h-4 text-muted-foreground" />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/70 rounded-2xl shadow-xl">
+                              <DropdownMenuContent align="end">
                                 <DropdownMenuItem
                                   onClick={() => setEditingPlaylist(playlist)}
                                   className="rounded-xl mx-1 text-muted-foreground hover:text-foreground focus:text-foreground hover:bg-muted/70 focus:bg-muted/70 cursor-pointer"

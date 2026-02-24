@@ -1,80 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import ApiClient from './api-client';
-
-interface User {
-  _id: string;
-  id?: string; // Alias for _id for compatibility
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  dateOfBirth?: string;
-  role: string;
-  status: string;
-  isActive: boolean;
-  emailVerified: boolean;
-  createdAt: string;
-  approvedAt?: string;
-  profileImage?: string;
-  phoneNumber?: string;
-  name?: string;
-}
-
-interface UserProfile {
-  _id: string;
-  userId: string;
-  firstName?: string;
-  lastName?: string;
-  country: string;
-  province: string;
-  city?: string;
-  careerStage: string;
-  interests: string[];
-  industrySectors: string[];
-  educationLevel: string;
-  fieldOfStudy?: string;
-  institution?: string;
-  skills: string[];
-  aspirations: string[];
-  onboardingCompleted: boolean;
-  completionPercentage: number;
-  createdAt: string;
-  updatedAt: string;
-  bio?: string;
-  headline?: string;
-  website?: string;
-  work?: {
-    company?: string;
-    title?: string;
-  };
-  education?: {
-    school?: string;
-    degree?: string;
-    field?: string;
-  };
-  socialLinks?: Record<string, string>;
-  profileImage?: string;
-  phoneNumber?: string;
-  isPrivate?: boolean;
-  showConnections?: boolean;
-  onboarding?: {
-    country?: string;
-    province?: string;
-    city?: string;
-    careerStage?: string;
-    interests?: string[];
-    industrySectors?: string[];
-    educationLevel?: string;
-    fieldOfStudy?: string;
-    institution?: string;
-    aspirations?: string[];
-  };
-}
+import ApiClient, { User, UserProfile } from './api-client';
+import { NormalizedUser, normalizeUser } from './user';
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
+  normalizedUser: NormalizedUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isOnboardingCompleted: boolean;
@@ -93,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [normalizedUser, setNormalizedUser] = useState<NormalizedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
@@ -102,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearUserState = () => {
     setUser(null);
     setProfile(null);
+    setNormalizedUser(null);
   };
 
   // Initialize auth state on mount
@@ -154,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await ApiClient.getCurrentUser();
         setUser(userData.user);
         setProfile(userData.profile);
+        setNormalizedUser(normalizeUser(userData.user, userData.profile));
       }
     } catch (error: any) {
       // Only log in development
@@ -201,9 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await ApiClient.getCurrentUser();
         setProfile(userData.profile);
+        setNormalizedUser(normalizeUser(response.user, userData.profile));
       } catch (profileError) {
         console.warn('Could not fetch user profile:', profileError);
         setProfile(null);
+        setNormalizedUser(normalizeUser(response.user, null));
         // Don't throw error for profile fetch failure, login was successful
       }
     } catch (error) {
@@ -222,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await ApiClient.registerOpportunitySeeker(email, password, firstName, lastName, dateOfBirth);
       setUser(response.user);
       setProfile(null); // New user won't have profile yet
+      setNormalizedUser(normalizeUser(response.user, null));
     } catch (error) {
       console.error('Registration failed:', error);
       // Clear any partial state on registration failure
@@ -238,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await ApiClient.registerOpportunityPoster(email, password, firstName, lastName, dateOfBirth);
       setUser(response.user);
       setProfile(null); // New user won't have profile yet
+      setNormalizedUser(normalizeUser(response.user, null));
     } catch (error) {
       console.error('Registration failed:', error);
       // Clear any partial state on registration failure
@@ -260,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await ApiClient.upgradeToProvider(email, password, userData);
       setUser(response.user);
       // Keep existing profile data
+      setNormalizedUser(normalizeUser(response.user, profile));
       return response;
     } catch (error) {
       console.error('Role upgrade failed:', error);
@@ -286,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await ApiClient.getCurrentUser();
         setUser(userData.user);
         setProfile(userData.profile);
+        setNormalizedUser(normalizeUser(userData.user, userData.profile));
       } else {
         // If not authenticated, clear user data
         clearUserState();
@@ -301,6 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const updatedProfile = await ApiClient.updateUserProfile(data);
       setProfile(updatedProfile);
+      setNormalizedUser(normalizeUser(user, updatedProfile));
     } catch (error) {
       console.error('Failed to update profile:', error);
       throw error;
@@ -314,6 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = await ApiClient.updateUser(data);
       console.log('Updated user response:', updatedUser);
       setUser(updatedUser);
+      setNormalizedUser(normalizeUser(updatedUser, profile));
     } catch (error) {
       console.error('Failed to update user:', error);
       console.error('Error details:', error instanceof Error ? error.message : String(error));
@@ -325,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     profile,
+    normalizedUser,
     isLoading,
     isAuthenticated,
     isOnboardingCompleted,
