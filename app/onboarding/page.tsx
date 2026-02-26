@@ -64,8 +64,8 @@ export default function OnboardingPage() {
     if (!isPending && !user) {
       router.push('/login')
     } else if (user && isOnboardingCompleted) {
-      // User has already completed onboarding, redirect to dashboard
-      router.push('/dashboard')
+      // User has already completed onboarding, redirect to home
+      router.push('/')
     }
   }, [user, isOnboardingCompleted, isPending, router])
 
@@ -111,13 +111,13 @@ export default function OnboardingPage() {
           localStorage.removeItem('tempUserData')
         }
         
-        // Redirect to dashboard
-        router.push('/dashboard')
+        // Redirect to home
+        router.push('/')
       } catch (error) {
         console.error('Failed to save onboarding data:', error)
         alert('Failed to save your profile. Please try again.')
-        // Still redirect to dashboard even if save fails
-        router.push('/dashboard')
+        // Still redirect to home even if save fails
+        router.push('/')
       } finally {
         setIsCompleting(false)
       }
@@ -144,10 +144,12 @@ export default function OnboardingPage() {
   // Show loading if checking auth
   if (isPending) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative text-center">
+          <div className="w-9 h-9 border-2 border-orange-500/80 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Preparing your GlowUp onboarding…</p>
         </div>
       </div>
     )
@@ -162,60 +164,84 @@ export default function OnboardingPage() {
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-2xl bg-card rounded-2xl shadow-xl border border-gray-200/50 p-6 sm:p-8">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-              Complete Your Profile
-            </h1>
-            <span className="text-sm font-medium text-gray-600 bg-orange-50 px-3 py-1 rounded-full">
-              Step {currentStep + 1} of {steps.length}
+    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/12 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-3xl">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/70 backdrop-blur-md border border-border/70 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              GlowUp onboarding
             </span>
           </div>
-          <Progress value={progress} className="w-full h-3 bg-gray-100 [&>div]:bg-gradient-to-r [&>div]:from-orange-500 [&>div]:to-orange-400" />
+          <span className="hidden sm:inline-flex text-xs font-medium text-muted-foreground px-3 py-1 rounded-full bg-muted/70 border border-border/60">
+            Step {currentStep + 1} of {steps.length}
+          </span>
         </div>
 
-        <div className="mb-8">
-          <CurrentStepComponent 
-            ref={stepComponentRef} 
-            onSubmit={onStepSubmit} 
-            initialData={formData}
-          />
-        </div>
-        
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
-          >
-            <FlaticonIcon name="angle-left" className="mr-2 h-4 w-4" aria-hidden />
-            Previous
-          </Button>
-          <Button 
-            onClick={handleNext} 
-            disabled={isCompleting}
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-foreground shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            {isCompleting ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                <span>Completing...</span>
+        <div className="bg-card/90 backdrop-blur-md border border-border/70 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-8">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
+                  Complete your GlowUp profile
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+                  We&apos;ll use this to personalize opportunities, events, and resources for you.
+                </p>
               </div>
-            ) : currentStep === steps.length - 1 ? (
-              <>
-                Finish Onboarding
-                <FlaticonIcon name="check" className="ml-2 h-4 w-4" aria-hidden />
-              </>
-            ) : (
-              <>
-                Next
-                <FlaticonIcon name="angle-right" className="ml-2 h-4 w-4" aria-hidden />
-              </>
-            )}
-          </Button>
+              <span className="inline-flex sm:hidden text-xs font-medium text-muted-foreground px-3 py-1 rounded-full bg-muted/70 border border-border/60 self-start">
+                Step {currentStep + 1} of {steps.length}
+              </span>
+            </div>
+            <Progress
+              value={progress}
+              className="w-full h-2 rounded-full bg-muted [&>div]:bg-gradient-to-r [&>div]:from-orange-500 [&>div]:to-rose-500"
+            />
+          </div>
+
+          <div className="mb-2">
+            <CurrentStepComponent
+              ref={stepComponentRef}
+              onSubmit={onStepSubmit}
+              initialData={formData}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-2 border-t border-border/60">
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className="border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-full"
+            >
+              <FlaticonIcon name="angle-left" className="mr-2 h-4 w-4" aria-hidden />
+              Previous
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={isCompleting}
+              className="rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 px-6"
+            >
+              {isCompleting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                  <span>Completing…</span>
+                </div>
+              ) : currentStep === steps.length - 1 ? (
+                <>
+                  Finish onboarding
+                  <FlaticonIcon name="check" className="ml-2 h-4 w-4" aria-hidden />
+                </>
+              ) : (
+                <>
+                  Next
+                  <FlaticonIcon name="angle-right" className="ml-2 h-4 w-4" aria-hidden />
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,15 +1,10 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
-import { useAuth } from "@/lib/auth-context"
-import FeedContainer from "@/components/feed-container"
-import FeedCard from "@/components/feed-card"
-import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
-import { buildFeedWithSponsored } from "@/lib/feed-ads"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import PageSkeleton from "@/components/skeletons/page-skeleton"
+import { PageShell } from "@/components/layout/page-shell"
+import { cn } from "@/lib/utils"
 import {
   RiStarLine,
   RiFocus3Line,
@@ -19,36 +14,9 @@ import {
   RiGroupLine,
   RiGlobalLine,
   RiArrowUpLine,
-  RiArrowRightLine,
   RiCheckboxCircleLine,
   RiArrowRightLine as RiRightArrowAlt,
 } from "react-icons/ri"
-import FeedListSkeleton, { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
-import { cn } from "@/lib/utils"
-import { Sparkles } from "lucide-react"
-import { useCursorPagination } from "@/hooks/use-cursor-pagination"
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
-import { PageShell } from "@/components/layout/page-shell"
-import { SectionCard } from "@/components/layout/section-card"
-import { TabStrip } from "@/components/layout/tab-strip"
-import { usePage } from "@/contexts/page-context"
-
-type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
-
-const tabIcons = {
-  all: RiStarLine,
-  opportunities: RiFocus3Line,
-  jobs: RiBriefcaseLine,
-  events: RiCalendarLine,
-  resources: RiBookLine,
-} as const
-const tabs: { id: TabType; label: string }[] = [
-  { id: 'all', label: 'For You' },
-  { id: 'opportunities', label: 'Opportunities' },
-  { id: 'jobs', label: 'Jobs' },
-  { id: 'events', label: 'Events' },
-  { id: 'resources', label: 'Resources' },
-]
 
 const landingStats = [
   { value: "10K+", label: "Youth Empowered", icon: RiGroupLine },
@@ -119,7 +87,7 @@ const providerSteps = [
   "Track performance and build long-term brand trust.",
 ]
 
-function LandingPage() {
+function WaitlistLandingPage() {
   return (
     <PageShell>
       {/* Hero */}
@@ -131,7 +99,9 @@ function LandingPage() {
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/70 shadow-sm mb-5">
                 <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">GlowUp</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  GlowUp
+                </span>
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight mb-5">
                 More than a platform.
@@ -145,11 +115,23 @@ function LandingPage() {
                 like Locked In sessions to keep you moving.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold">
-                  <Link href="/signup">
-                    Get Started
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold"
+                >
+                  <Link href="/waitlist-glowup/signup">
+                    Join now
                     <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
                   </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="border-border/70 hover:bg-muted/60 rounded-full backdrop-blur-sm"
+                >
+                  <Link href="/submit">Become a Provider</Link>
                 </Button>
               </div>
             </div>
@@ -193,10 +175,17 @@ function LandingPage() {
 
           <div className="mt-10 grid sm:grid-cols-3 gap-4">
             {landingPillars.map((pillar) => (
-              <Card key={pillar.title} className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border hover:shadow-sm transition-all duration-200">
+              <Card
+                key={pillar.title}
+                className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border hover:shadow-sm transition-all duration-200"
+              >
                 <CardContent className="p-5">
-                  <h3 className="text-base font-semibold text-foreground mb-2">{pillar.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{pillar.description}</p>
+                  <h3 className="text-base font-semibold text-foreground mb-2">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {pillar.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -210,7 +199,10 @@ function LandingPage() {
           {landingStats.map((stat) => {
             const StatIcon = stat.icon
             return (
-              <Card key={stat.label} className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border transition-all duration-200">
+              <Card
+                key={stat.label}
+                className="bg-card/80 backdrop-blur-sm border border-border/70 hover:border-border transition-all duration-200"
+              >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/15 to-rose-500/10 border border-orange-500/20 flex items-center justify-center mb-3">
                     <StatIcon className="w-5 h-5 text-orange-400" aria-hidden />
@@ -228,8 +220,12 @@ function LandingPage() {
       <section className="py-12 sm:py-16">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
           <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Our story</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">The Story</h2>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+              Our story
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
+              The Story
+            </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               We built GlowUp for the ambitious and overlooked. Talent should never be
               limited by geography, access, or network. Our story is about removing those limits.
@@ -263,23 +259,41 @@ function LandingPage() {
 
       {/* Tracks */}
       <section className="py-12 sm:py-16">
-        <div className="">
+        <div>
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">What You’ll Find</h2>
-              <p className="text-muted-foreground mt-2">Everything you need to move forward, in one place.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+                What You’ll Find
+              </h2>
+              <p className="text-muted-foreground mt-2">
+                Everything you need to move forward, in one place.
+              </p>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {landingTracks.map((track) => {
               const TrackIcon = track.icon
               return (
-                <Card key={track.title} className={cn("border bg-gradient-to-br backdrop-blur-sm hover:shadow-sm transition-all duration-200", track.accent, track.border)}>
+                <Card
+                  key={track.title}
+                  className={cn(
+                    "border bg-gradient-to-br backdrop-blur-sm hover:shadow-sm transition-all duration-200",
+                    track.accent,
+                    track.border,
+                  )}
+                >
                   <CardContent className="p-5">
-                    <div className={cn("w-10 h-10 rounded-2xl border flex items-center justify-center mb-4", track.border)}>
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-2xl border flex items-center justify-center mb-4",
+                        track.border,
+                      )}
+                    >
                       <TrackIcon className={cn("w-5 h-5", track.text)} aria-hidden />
                     </div>
-                    <h3 className="text-base font-semibold text-foreground mb-1.5">{track.title}</h3>
+                    <h3 className="text-base font-semibold text-foreground mb-1.5">
+                      {track.title}
+                    </h3>
                     <p className="text-sm text-muted-foreground">{track.description}</p>
                   </CardContent>
                 </Card>
@@ -303,11 +317,20 @@ function LandingPage() {
               <div className="space-y-3 mb-6">
                 {seekerSteps.map((step) => (
                   <div key={step} className="flex items-start gap-2.5">
-                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" aria-hidden />
+                    <RiCheckboxCircleLine
+                      className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0"
+                      aria-hidden
+                    />
                     <p className="text-sm text-muted-foreground">{step}</p>
                   </div>
                 ))}
               </div>
+              <Button
+                asChild
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20"
+              >
+                <Link href="/waitlist-glowup/signup">Get Started</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -322,11 +345,21 @@ function LandingPage() {
               <div className="space-y-3 mb-6">
                 {providerSteps.map((step) => (
                   <div key={step} className="flex items-start gap-2.5">
-                    <RiCheckboxCircleLine className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" aria-hidden />
+                    <RiCheckboxCircleLine
+                      className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0"
+                      aria-hidden
+                    />
                     <p className="text-sm text-muted-foreground">{step}</p>
                   </div>
                 ))}
               </div>
+              <Button
+                asChild
+                variant="outline"
+                className="border-border/70 hover:bg-muted/60 rounded-full"
+              >
+                <Link href="/submit">List an Opportunity</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -339,7 +372,9 @@ function LandingPage() {
             <CardContent className="p-8 sm:p-10 text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/60 shadow-sm mb-5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Join Now</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  Join Now
+                </span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
                 Ready to start your glow up?
@@ -348,8 +383,20 @@ function LandingPage() {
                 Join a community built to connect you with the right people, tools, and opportunities.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold">
-                  <Link href="/signup">Join the Community</Link>
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold"
+                >
+                  <Link href="/waitlist-glowup/signup">Join the Community</Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="border-border/70 hover:bg-muted/60 rounded-full"
+                >
+                  <Link href="/contact">Talk to Us</Link>
                 </Button>
               </div>
             </CardContent>
@@ -360,18 +407,5 @@ function LandingPage() {
   )
 }
 
-export default function Home() {
-  const { setHideNavbar, setHideFooter } = usePage()
+export default WaitlistLandingPage
 
-  useEffect(() => {
-    setHideNavbar(true)
-    setHideFooter(true)
-
-    return () => {
-      setHideNavbar(false)
-      setHideFooter(false)
-    }
-  }, [setHideNavbar, setHideFooter])
-
-  return <LandingPage />
-}

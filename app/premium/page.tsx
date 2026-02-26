@@ -46,7 +46,7 @@ export default function PremiumPage() {
             const result = await ApiClient.verifyPremiumSubscription(transaction.reference)
             if (result.isPremium) {
               toast.success("Premium subscription activated!")
-              router.push("/profile/settings")
+              router.push("/")
             } else {
               toast.error("Payment was successful but premium could not be activated.")
             }

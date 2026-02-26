@@ -236,7 +236,7 @@ export default function Navbar() {
                     </div>
                   </div> */}
                   <Button asChild variant="ghost" className="px-4 lg:px-5 py-2 lg:py-3 rounded-full text-sm lg:text-base font-medium text-orange-600 hover:text-orange-400 hover:bg-orange-50 transition-all duration-200">
-                    <Link href="/dashboard">
+                    <Link href="/">
                       <RiUserLine className="h-4 w-4 lg:h-5 lg:w-5 mr-2" aria-hidden />
                       Dashboard
                     </Link>
@@ -405,7 +405,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
-                      <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/" onClick={() => setIsMenuOpen(false)}>
                         <RiUserLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                         Dashboard
                       </Link>

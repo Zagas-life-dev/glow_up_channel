@@ -25,7 +25,7 @@ export default function LoginPage() {
     setError('')
     try {
       await login(email, password)
-      router.push('/dashboard')
+      router.push('/')
     } catch (err: any) {
       setError(err.message || 'Failed to login')
     } finally {
@@ -181,33 +181,14 @@ export default function LoginPage() {
 
             {/* Links */}
             <div className="space-y-3 text-left text-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center">
                 <Link
                   href="/forgot-password"
                   className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
                 >
                   Forgot your password?
                 </Link>
-                <span className="text-xs text-muted-foreground">
-                  New here?{" "}
-                  <Link
-                    href="/signup"
-                    className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                  >
-                    Create account
-                  </Link>
-                </span>
               </div>
-              <p className="text-xs text-muted-foreground max-w-sm">
-                By signing in, you agree to our{" "}
-                <Link
-                  href="/privacy-policy"
-                  className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline"
-                >
-                  Privacy Policy
-                </Link>
-                .
-              </p>
             </div>
           </CardContent>
         </Card>

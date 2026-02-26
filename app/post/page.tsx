@@ -302,7 +302,7 @@ function PostPageContent() {
           trackPostCreated(data.data.post._id)
         }
         
-        router.push('/community')
+        router.push('/')
       } else {
         throw new Error(data.message || 'Failed to create post')
       }

@@ -333,7 +333,7 @@ export default function SignupPage() {
                         </Label>
                       </div>
                       
-                      {/* <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
+                      <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
                         <RadioGroupItem value="provider" id="provider" />
                         <Label htmlFor="provider" className="flex-1 cursor-pointer">
                           <div className="flex items-center space-x-3">
@@ -346,7 +346,7 @@ export default function SignupPage() {
                             </div>
                           </div>
                         </Label>
-                      </div> */}
+                      </div>
                     </RadioGroup>
                   )}
                 />
@@ -366,7 +366,7 @@ export default function SignupPage() {
             </form>
 
             <div className="space-y-2 text-left text-sm text-muted-foreground">
-              {/* <div>
+              <div>
                 Already have an account?{' '}
                 <Link
                   href="/login"
@@ -374,7 +374,7 @@ export default function SignupPage() {
                 >
                   Sign in
                 </Link>
-              </div> */}
+              </div>
               <p className="text-xs max-w-sm">
                 By creating an account, you agree to our{' '}
                 <Link

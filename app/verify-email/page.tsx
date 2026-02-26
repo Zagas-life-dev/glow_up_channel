@@ -72,7 +72,7 @@ function VerifyEmailContent() {
       
       // Redirect after a short delay
       setTimeout(() => {
-        router.push('/dashboard')
+        router.push('/onboarding')
       }, 1500)
     } catch (error: any) {
       console.error('Verification error:', error)
@@ -104,126 +104,141 @@ function VerifyEmailContent() {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <FlaticonIcon name="check-circle" className="w-10 h-10 text-green-600" aria-hidden />
-            </div>
-            <CardTitle className="text-2xl font-bold text-foreground">
-              Email Verified!
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Your email address has been successfully verified.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => router.push('/dashboard')}
-              className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
-            >
-              Go to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative w-full max-w-md">
+          <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
+            <CardHeader className="space-y-2 text-center pb-4">
+              <div className="mx-auto w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center mb-2">
+                <FlaticonIcon name="check-circle" className="w-9 h-9 text-emerald-500" aria-hidden />
+              </div>
+              <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+                Email verified
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Your email has been confirmed. Let&apos;s finish setting up your GlowUp profile.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={() => router.push('/onboarding')}
+                className="w-full h-11 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40"
+              >
+                Continue to onboarding
+              </Button>
+              <p className="text-[11px] text-center text-muted-foreground">
+                You can always update your details later from your settings.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-            <Mail className="w-10 h-10 text-orange-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-            Verify Your Email
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            {email ? (
-              <span>We&apos;ve sent a 6-digit verification code to <strong>{email}</strong></span>
-            ) : (
-              'We\'ve sent a 6-digit verification code to your email address'
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="code" className="text-gray-700 font-medium text-center block">
-                Enter Verification Code
-              </Label>
-              <Controller
-                name="code"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id="code"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="000000"
-                    maxLength={6}
-                    onChange={(e) => handleCodeChange(e.target.value, field.onChange)}
-                    className="h-16 text-center text-3xl tracking-widest font-mono border-gray-200 focus:border-orange-500 focus:ring-orange-500"
-                    disabled={isLoading}
-                    autoFocus
-                  />
-                )}
-              />
-              {errors.code && (
-                <p className="text-sm text-red-600 text-center">{errors.code.message}</p>
-              )}
-              <p className="text-xs text-gray-500 text-center">
-                Enter the 6-digit code from your email
-              </p>
+    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/12 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-md">
+        <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
+          <CardHeader className="space-y-3 text-center pb-4">
+            <div className="mx-auto w-16 h-16 bg-orange-500/10 border border-orange-500/30 rounded-full flex items-center justify-center mb-1">
+              <Mail className="w-9 h-9 text-orange-500" />
             </div>
+            <div className="space-y-1">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
+                Verify your email
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
+                {email ? (
+                  <span>
+                    We&apos;ve sent a 6‑digit code to <strong>{email}</strong>
+                  </span>
+                ) : (
+                  "We’ve sent a 6‑digit verification code to your email address."
+                )}
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="code" className="text-foreground font-medium text-center block text-sm">
+                  Enter verification code
+                </Label>
+                <Controller
+                  name="code"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      id="code"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="000000"
+                      maxLength={6}
+                      onChange={(e) => handleCodeChange(e.target.value, field.onChange)}
+                      className="h-14 text-center text-2xl tracking-[0.5em] font-mono border-border/70 bg-muted/60 focus:border-orange-500/70 focus:ring-orange-500/30 rounded-2xl"
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                  )}
+                />
+                {errors.code && (
+                  <p className="text-sm text-red-500 text-center">{errors.code.message}</p>
+                )}
+                <p className="text-xs text-muted-foreground text-center">
+                  Enter the 6‑digit code from your inbox. Check spam or promotions if you don&apos;t see it.
+                </p>
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-foreground font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                  <span>Verifying...</span>
-                </div>
-              ) : (
-                'Verify Email'
-              )}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="w-full h-11 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
+                    <span>Verifying…</span>
+                  </div>
+                ) : (
+                  'Verify email'
+                )}
+              </Button>
+            </form>
 
-          <div className="space-y-3 pt-4 border-t border-gray-200">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResendCode}
-              disabled={isResending}
-              className="w-full"
-            >
-              {isResending ? (
-                <div className="flex items-center space-x-2">
-                  <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                  <span>Sending...</span>
-                </div>
-              ) : (
-                'Resend Code'
-              )}
-            </Button>
+            <div className="space-y-3 pt-4 border-t border-border/70">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResendCode}
+                disabled={isResending}
+                className="w-full h-11 rounded-full border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/70"
+              >
+                {isResending ? (
+                  <div className="flex items-center space-x-2">
+                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
+                    <span>Sending…</span>
+                  </div>
+                ) : (
+                  'Resend code'
+                )}
+              </Button>
 
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center w-full text-sm text-gray-600 hover:text-orange-600 transition-colors"
-            >
-              <FlaticonIcon name="arrow-left" className="w-4 h-4 mr-2" aria-hidden />
-              Back to Dashboard
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FlaticonIcon name="arrow-left" className="w-3 h-3 mr-1.5" aria-hidden />
+                Back to home
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

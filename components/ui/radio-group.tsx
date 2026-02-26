@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
-import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { cn } from "@/lib/utils"
 
 const RadioGroup = React.forwardRef<
@@ -27,13 +26,13 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center",
         className
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <FlaticonIcon name="circle" className="h-2.5 w-2.5 text-current" aria-hidden />
+      <RadioGroupPrimitive.Indicator className="flex size-full items-center justify-center">
+        <span className="size-2 rounded-full bg-current" aria-hidden />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )
