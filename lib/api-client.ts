@@ -84,6 +84,7 @@ export interface UserProfile {
     educationLevel?: string;
     fieldOfStudy?: string;
     institution?: string;
+    skills?: string[];
     aspirations?: string[];
   };
 }
