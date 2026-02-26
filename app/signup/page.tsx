@@ -75,7 +75,12 @@ export default function SignupPage() {
       
       router.push('/verify-email')
     } catch (err: any) {
-      setError(err.message || 'Failed to create account')
+      const message = err?.message || 'Failed to create account'
+      const isNetworkError = message.includes('Cannot reach the server') || message === 'Failed to fetch'
+      setError(isNetworkError
+        ? 'Unable to connect to the server. Please check your internet connection and try again.'
+        : message
+      )
     } finally {
       setIsLoading(false)
     }

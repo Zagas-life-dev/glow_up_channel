@@ -6,17 +6,10 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
-import { PlaylistProvider } from "@/contexts/playlist-context"
-import { LockedInProvider } from "@/contexts/locked-in-context"
-import VisitTracker from "@/components/visit-tracker"
-import PwaInstallBanner from "@/components/pwa-install-banner"
-import RegisterSw from "@/components/register-sw"
-import Script from "next/script"
 
 export const metadata: Metadata = {
   title: "GlowUp",
   description: "Connect young ambitious people to opportunities, events, and free resources.",
-  generator: 'v0.dev',
   icons: {
     icon: '/images/logo-icon-transparent.png',
     shortcut: '/images/logo-icon-transparent.png',
@@ -32,38 +25,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="google-adsense-slot" content="3194443159" />
-        <meta name="google-adsense-account" content="ca-pub-4275585712096268"></meta>
-        {/* Third-party ad/CMP scripts: only in production and loaded after page is ready to avoid "identity bridging" timeout errors in dev */}
-        {process.env.NODE_ENV === "production" && (
-          <>
-            <Script
-              async
-              src="//www.ezojs.com/ezoic/sa.min.js"
-              strategy="lazyOnload"
-            />
-            <Script
-              data-cfasync="false"
-              src="https://cmp.gatekeeperconsent.com/min.js"
-              strategy="lazyOnload"
-            />
-            <Script
-              data-cfasync="false"
-              src="https://thegatekeeperconsent.com/cmp.min.js"
-              strategy="lazyOnload"
-            />
-            <Script strategy="lazyOnload">
-              {`window.ezstandalone = window.ezstandalone || {};
-          ezstandalone.cmd = ezstandalone.cmd || [];`}
-            </Script>
-            <Script
-              async
-              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
-              crossOrigin="anonymous"
-              strategy="lazyOnload"
-            />
-          </>
-        )}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#f96008" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -75,28 +36,16 @@ export default function RootLayout({
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
         <meta name="author" content="GlowUp" />
         <meta name="robots" content="index, follow" />
-        <meta name="googlebot" content="index, follow" />
-        <meta name="bingbot" content="index, follow" />
-        <meta name="yandexbot" content="index, follow" />
-        <meta name="google" content="notranslate" />
-        <meta name="google" content="notranslate" />
       </head>
       <body className="font-sans" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <PlaylistProvider>
-              <LockedInProvider>
-                <PageProvider>
-                  <AppLayout>
-                    <VisitTracker />
-                    <RegisterSw />
-                    <PwaInstallBanner />
-                    {children}
-                    <Toaster position="bottom-center" />
-                  </AppLayout>
-                </PageProvider>
-              </LockedInProvider>
-            </PlaylistProvider>
+            <PageProvider>
+              <AppLayout>
+                {children}
+                <Toaster position="bottom-center" />
+              </AppLayout>
+            </PageProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

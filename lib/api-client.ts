@@ -265,24 +265,46 @@ export class ApiClient {
   }
 
   static async registerOpportunitySeeker(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-seeker`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
-    });
-
+    const url = `${API_BASE_URL}/api/auth/register/opportunity-seeker`;
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === 'Failed to fetch' || (err instanceof TypeError && msg.includes('fetch'))) {
+        throw new Error(
+          'Cannot reach the server.Try again later'
+        );
+      }
+      throw err;
+    }
     const data = await this.handleResponse<RegisterResponse>(response);
     this.setTokens(data.tokens);
     return data;
   }
 
   static async registerOpportunityPoster(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-poster`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
-    });
-
+    const url = `${API_BASE_URL}/api/auth/register/opportunity-poster`;
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === 'Failed to fetch' || (err instanceof TypeError && msg.includes('fetch'))) {
+        throw new Error(
+          'Cannot reach the server. Try again later'
+        );
+      }
+      throw err;
+    }
     const data = await this.handleResponse<RegisterResponse>(response);
     this.setTokens(data.tokens);
     return data;

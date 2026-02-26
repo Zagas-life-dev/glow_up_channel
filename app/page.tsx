@@ -1,15 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
-import { useAuth } from "@/lib/auth-context"
-import FeedContainer from "@/components/feed-container"
-import FeedCard from "@/components/feed-card"
-import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
-import { buildFeedWithSponsored } from "@/lib/feed-ads"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import PageSkeleton from "@/components/skeletons/page-skeleton"
 import {
   RiStarLine,
   RiFocus3Line,
@@ -19,36 +12,11 @@ import {
   RiGroupLine,
   RiGlobalLine,
   RiArrowUpLine,
-  RiArrowRightLine,
   RiCheckboxCircleLine,
   RiArrowRightLine as RiRightArrowAlt,
 } from "react-icons/ri"
-import FeedListSkeleton, { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
 import { cn } from "@/lib/utils"
-import { Sparkles } from "lucide-react"
-import { useCursorPagination } from "@/hooks/use-cursor-pagination"
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { PageShell } from "@/components/layout/page-shell"
-import { SectionCard } from "@/components/layout/section-card"
-import { TabStrip } from "@/components/layout/tab-strip"
-import { usePage } from "@/contexts/page-context"
-
-type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
-
-const tabIcons = {
-  all: RiStarLine,
-  opportunities: RiFocus3Line,
-  jobs: RiBriefcaseLine,
-  events: RiCalendarLine,
-  resources: RiBookLine,
-} as const
-const tabs: { id: TabType; label: string }[] = [
-  { id: 'all', label: 'For You' },
-  { id: 'opportunities', label: 'Opportunities' },
-  { id: 'jobs', label: 'Jobs' },
-  { id: 'events', label: 'Events' },
-  { id: 'resources', label: 'Resources' },
-]
 
 const landingStats = [
   { value: "10K+", label: "Youth Empowered", icon: RiGroupLine },
@@ -356,22 +324,16 @@ function LandingPage() {
           </Card>
         </div>
       </section>
+
+      <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border mt-12">
+        <Link href="/privacy-policy" className="hover:text-orange-600 underline underline-offset-2">
+          Privacy Policy
+        </Link>
+      </footer>
     </PageShell>
   )
 }
 
 export default function Home() {
-  const { setHideNavbar, setHideFooter } = usePage()
-
-  useEffect(() => {
-    setHideNavbar(true)
-    setHideFooter(true)
-
-    return () => {
-      setHideNavbar(false)
-      setHideFooter(false)
-    }
-  }, [setHideNavbar, setHideFooter])
-
   return <LandingPage />
 }
