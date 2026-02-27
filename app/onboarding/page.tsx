@@ -111,13 +111,13 @@ export default function OnboardingPage() {
           localStorage.removeItem('tempUserData')
         }
         
-        // Redirect to home
-        router.push('/')
+        // Redirect to home with param so we can show welcome popup
+        router.push('/?onboarded=1')
       } catch (error) {
         console.error('Failed to save onboarding data:', error)
         alert('Failed to save your profile. Please try again.')
         // Still redirect to home even if save fails
-        router.push('/')
+        router.push('/?onboarded=1')
       } finally {
         setIsCompleting(false)
       }

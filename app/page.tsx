@@ -18,6 +18,14 @@ import {
 } from "react-icons/ri"
 import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 const landingStats = [
   { value: "10K+", label: "Youth Empowered", icon: RiGroupLine },
@@ -89,17 +97,24 @@ const providerSteps = [
 ]
 
 const SIGNUP_BANNER_DISMISSED_KEY = "glowup-signedup-banner-dismissed"
+const WELCOME_POPUP_DISMISSED_KEY = "glowup-welcome-popup-dismissed"
 
 function LandingPage() {
   const [showSignedUpBanner, setShowSignedUpBanner] = useState(false)
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined") return
     const params = new URLSearchParams(window.location.search)
     const signedUp = params.get("signedup") === "1"
-    const dismissed = sessionStorage.getItem(SIGNUP_BANNER_DISMISSED_KEY)
-    if (signedUp && !dismissed) {
+    const onboarded = params.get("onboarded") === "1"
+    const bannerDismissed = sessionStorage.getItem(SIGNUP_BANNER_DISMISSED_KEY)
+    const popupDismissed = sessionStorage.getItem(WELCOME_POPUP_DISMISSED_KEY)
+    if (signedUp && !bannerDismissed) {
       setShowSignedUpBanner(true)
+    }
+    if ((signedUp || onboarded) && !popupDismissed) {
+      setShowWelcomePopup(true)
     }
   }, [])
 
@@ -110,8 +125,28 @@ function LandingPage() {
     }
   }
 
+  const dismissWelcomePopup = () => {
+    setShowWelcomePopup(false)
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(WELCOME_POPUP_DISMISSED_KEY, "1")
+    }
+  }
+
   return (
     <PageShell>
+      <Dialog open={showWelcomePopup} onOpenChange={(open) => !open && dismissWelcomePopup()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Thank you</DialogTitle>
+            <DialogDescription>
+              The full product will be available on 1st March 2026. We’ll notify you when it’s live.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={dismissWelcomePopup}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {showSignedUpBanner && (
         <div className="mb-6 rounded-2xl border border-orange-500/30 bg-orange-500/10 backdrop-blur-md px-4 py-4 sm:px-6 sm:py-5 flex items-start justify-between gap-4">
           <div>
