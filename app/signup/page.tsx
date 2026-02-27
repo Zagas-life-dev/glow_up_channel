@@ -73,7 +73,7 @@ export default function SignupPage() {
         await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
       }
       
-      router.push('/verify-email')
+      router.push('/?signedup=1')
     } catch (err: any) {
       const message = err?.message || 'Failed to create account'
       const isNetworkError = message.includes('Cannot reach the server') || message === 'Failed to fetch'

@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -87,9 +89,43 @@ const providerSteps = [
   "Track performance and build long-term brand trust.",
 ]
 
+const SIGNUP_BANNER_DISMISSED_KEY = "glowup-signedup-banner-dismissed"
+
 function LandingPage() {
+  const searchParams = useSearchParams()
+  const [showSignedUpBanner, setShowSignedUpBanner] = useState(false)
+
+  useEffect(() => {
+    const signedUp = searchParams.get("signedup") === "1"
+    const dismissed = typeof window !== "undefined" && sessionStorage.getItem(SIGNUP_BANNER_DISMISSED_KEY)
+    if (signedUp && !dismissed) setShowSignedUpBanner(true)
+  }, [searchParams])
+
+  const dismissBanner = () => {
+    setShowSignedUpBanner(false)
+    if (typeof window !== "undefined") sessionStorage.setItem(SIGNUP_BANNER_DISMISSED_KEY, "1")
+  }
+
   return (
     <PageShell>
+      {showSignedUpBanner && (
+        <div className="mb-6 rounded-2xl border border-orange-500/30 bg-orange-500/10 backdrop-blur-md px-4 py-4 sm:px-6 sm:py-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="font-semibold text-foreground">Thank you for signing up.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              The platform will be fully available by March 1st, 2026. We’ll be in touch.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissBanner}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-orange-500/10"
+            aria-label="Dismiss"
+          >
+            <span className="text-xl leading-none">×</span>
+          </button>
+        </div>
+      )}
       {/* Hero */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.12),_transparent_60%)]" />

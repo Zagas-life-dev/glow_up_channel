@@ -166,6 +166,12 @@ export class ApiClient {
         throw new Error('Authentication required. Please sign in to perform this action.');
       }
 
+      // Handle email already in use (registration conflict)
+      const msg = (data.message || data.error || '').toLowerCase();
+      if ((response.status === 400 || response.status === 409) && (msg.includes('email') && (msg.includes('already') || msg.includes('exists') || msg.includes('taken') || msg.includes('registered') || msg.includes('in use')))) {
+        throw new Error('This email is already in use. Please sign in or use a different email.');
+      }
+
       // Handle validation errors with more detail
       if (data.errors && Array.isArray(data.errors)) {
         const errorMessages = data.errors.map((err: any) => err.message || err.field).join(', ');
