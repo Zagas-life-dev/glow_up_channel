@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -92,18 +91,23 @@ const providerSteps = [
 const SIGNUP_BANNER_DISMISSED_KEY = "glowup-signedup-banner-dismissed"
 
 function LandingPage() {
-  const searchParams = useSearchParams()
   const [showSignedUpBanner, setShowSignedUpBanner] = useState(false)
 
   useEffect(() => {
-    const signedUp = searchParams.get("signedup") === "1"
-    const dismissed = typeof window !== "undefined" && sessionStorage.getItem(SIGNUP_BANNER_DISMISSED_KEY)
-    if (signedUp && !dismissed) setShowSignedUpBanner(true)
-  }, [searchParams])
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    const signedUp = params.get("signedup") === "1"
+    const dismissed = sessionStorage.getItem(SIGNUP_BANNER_DISMISSED_KEY)
+    if (signedUp && !dismissed) {
+      setShowSignedUpBanner(true)
+    }
+  }, [])
 
   const dismissBanner = () => {
     setShowSignedUpBanner(false)
-    if (typeof window !== "undefined") sessionStorage.setItem(SIGNUP_BANNER_DISMISSED_KEY, "1")
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(SIGNUP_BANNER_DISMISSED_KEY, "1")
+    }
   }
 
   return (
