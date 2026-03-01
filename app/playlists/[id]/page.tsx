@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { usePlaylist, Playlist, PlaylistItem } from '@/contexts/playlist-context'
 import { useAuth } from '@/lib/auth-context'
+import { canViewPremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import PlaylistModal from '@/components/playlist-modal'
 import InviteCollaboratorModal from '@/components/invite-collaborator-modal'
@@ -65,7 +66,7 @@ export default function PlaylistDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { getPlaylistById, removeFromPlaylist, deletePlaylist, fetchPublicPlaylists, fetchPlaylists, canEditPlaylist, savePlaylist, unsavePlaylist, isPlaylistSaved } = usePlaylist()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, normalizedUser } = useAuth()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -118,11 +119,14 @@ export default function PlaylistDetailPage() {
   }
 
   const isOwner = user && playlist && (
-    user._id === playlist.createdBy._id || 
+    user._id === playlist.createdBy._id ||
     user.email === playlist.createdBy.email
   )
 
   const canEdit = playlist ? canEditPlaylist(playlist) : false
+
+  const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
+  const isPremiumGated = playlist?.isPremiumPlaylist && !canViewPremium && !isOwner
 
   const handleRemoveItem = async (itemId: string) => {
     if (!playlist) return
@@ -216,6 +220,34 @@ export default function PlaylistDetailPage() {
               Back to Playlists
             </Button>
           </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Premium gate: only premium users (or playlist owner) can view premium playlists
+  if (isPremiumGated) {
+    return (
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="w-20 h-20 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
+            <RiStarLine className="w-10 h-10 text-amber-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Premium Playlist</h1>
+          <p className="text-muted-foreground mb-6">
+            This playlist is for premium members only. Upgrade to view and save premium playlists.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">
+              <Link href="/premium">Upgrade to Premium</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full border-border">
+              <Link href="/playlists">
+                <RiArrowLeftLine className="w-4 h-4 mr-2 inline" />
+                Back to Playlists
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -323,6 +355,12 @@ export default function PlaylistDetailPage() {
             {/* Info */}
             <div className="flex-1 min-w-0 w-full">
               <div className="flex items-center gap-2 mb-3 flex-wrap">
+                {playlist.isPremiumPlaylist && (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 backdrop-blur-sm">
+                    <RiStarLine className="w-3 h-3 mr-1.5" />
+                    Premium
+                  </Badge>
+                )}
                 {playlist.isPublic ? (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 backdrop-blur-sm">
                     <RiGlobalLine className="w-3 h-3 mr-1.5" />

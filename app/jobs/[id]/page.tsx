@@ -61,7 +61,7 @@ function JobPageContent({ params }: JobPageProps) {
   useEffect(() => {
     if (!isAuthenticated || !id || !job || promotionClickSent.current) return
     promotionClickSent.current = true
-    ApiClient.recordPromotionClick(id, 'job').catch(() => {})
+    ApiClient.recordPromotionClick(id, 'job', 'view').catch(() => {})
   }, [isAuthenticated, id, job])
 
   if (loading) return <ContentDetailSkeleton />
@@ -189,7 +189,7 @@ function JobPageContent({ params }: JobPageProps) {
           <>
             <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
               <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]">
-                <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})}>
                   Apply
                   <RiExternalLinkLine className="w-4 h-4" />
                 </a>
@@ -198,7 +198,7 @@ function JobPageContent({ params }: JobPageProps) {
             <aside className="hidden xl:block pt-4">
               <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold">
-                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})}>
                     Apply
                     <RiExternalLinkLine className="w-4 h-4" />
                   </a>

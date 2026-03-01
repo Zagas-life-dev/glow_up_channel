@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AdminLayout } from "@/components/admin-sidebar"
+import { AuthRequiredCard } from "@/components/auth-required-card"
 import {
   Select,
   SelectContent,
@@ -26,6 +27,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Lock } from "lucide-react"
 import { RiEyeLine } from "react-icons/ri"
 import {
   RiUserLine,
@@ -49,6 +52,7 @@ import {
   RiCloseLine,
   RiRefreshLine,
   RiTimeLine,
+  RiUserSettingsLine,
 } from "react-icons/ri"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -87,6 +91,14 @@ interface User {
   rejectionReason?: string
 }
 
+const ROLES = [
+  { value: "user", label: "User" },
+  { value: "opportunity_seeker", label: "Opportunity Seeker" },
+  { value: "opportunity_poster", label: "Opportunity Poster" },
+  { value: "admin", label: "Admin" },
+  { value: "super_admin", label: "Super Admin" },
+] as const
+
 export default function UserManagement() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
@@ -109,6 +121,12 @@ export default function UserManagement() {
   const [rejectionReason, setRejectionReason] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  // Role swap
+  const [roleSwapUser, setRoleSwapUser] = useState<User | null>(null)
+  const [roleSwapNewRole, setRoleSwapNewRole] = useState<string>("user")
+  const [isRoleSwapDialogOpen, setIsRoleSwapDialogOpen] = useState(false)
+  const [isRoleSwapSubmitting, setIsRoleSwapSubmitting] = useState(false)
+
   // Stats
   const [stats, setStats] = useState({
     total: 0,
@@ -129,8 +147,8 @@ export default function UserManagement() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && user) {
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        setError('Access denied. Admin privileges required.')
+      if (user.role !== 'super_admin') {
+        setError('Access denied. Super admin privileges required for user management.')
         setLoading(false)
         return
       }
@@ -268,6 +286,63 @@ export default function UserManagement() {
     }
   }
 
+  const openRoleSwapDialog = (userItem: User) => {
+    setRoleSwapUser(userItem)
+    setRoleSwapNewRole(userItem.role)
+    setIsRoleSwapDialogOpen(true)
+  }
+
+  const handleRoleSwap = async () => {
+    if (!roleSwapUser || roleSwapNewRole === roleSwapUser.role) {
+      if (roleSwapNewRole === roleSwapUser?.role) {
+        toast.info("Select a different role to change.")
+      }
+      return
+    }
+    if (!roleSwapUser.email?.trim()) {
+      toast.error("Cannot update role: user has no email.")
+      return
+    }
+
+    setIsRoleSwapSubmitting(true)
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken")
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
+      // Backend requires all four fields to be non-empty; some users may have missing firstName/lastName
+      const firstName = (roleSwapUser.firstName ?? "").trim() || roleSwapUser.email?.split("@")[0] || "User"
+      const lastName = (roleSwapUser.lastName ?? "").trim() || "—"
+      const response = await fetch(`${baseUrl}/api/admin/users/${roleSwapUser._id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: roleSwapUser.email,
+          role: roleSwapNewRole,
+        }),
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        const roleLabel = ROLES.find((r) => r.value === roleSwapNewRole)?.label ?? roleSwapNewRole
+        toast.success(`Role updated to ${roleLabel}`)
+        setIsRoleSwapDialogOpen(false)
+        setRoleSwapUser(null)
+        fetchUsers()
+      } else {
+        throw new Error(data.message || "Failed to update role")
+      }
+    } catch (error: any) {
+      console.error("Error updating role:", error)
+      toast.error(error?.message || "Failed to update role")
+    } finally {
+      setIsRoleSwapSubmitting(false)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -308,22 +383,27 @@ export default function UserManagement() {
     )
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'super_admin')) {
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-page px-4">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-            <AlertTriangle className="w-8 h-8 text-red-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
-          <p className="text-muted-foreground mb-6">
-            You need admin or super admin privileges to access this page.
-          </p>
-          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
-            <Link href="/dashboard">Go to Dashboard</Link>
-          </Button>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please log in to access this page."
+        icon={Lock}
+        signInLabel="Sign in"
+      />
+    )
+  }
+
+  if (user?.role !== 'super_admin') {
+    return (
+      <AuthRequiredCard
+        title="Access denied"
+        description="Super admin privileges required for user management."
+        icon={Lock}
+        iconVariant="neutral"
+        signInLabel="Sign in"
+        secondaryAction={{ label: "Back to Admin", href: "/dashboard/admin" }}
+      />
     )
   }
 
@@ -617,6 +697,17 @@ export default function UserManagement() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => openRoleSwapDialog(userItem)}
+                            disabled={actionLoading === userItem._id}
+                            className="border-border text-muted-foreground hover:text-foreground hover:bg-muted flex-1 sm:flex-initial"
+                            title="Change role"
+                          >
+                            <RiUserSettingsLine className="h-4 w-4 mr-1" />
+                            Change role
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleToggleStatus(userItem._id, !userItem.isActive)}
                             disabled={actionLoading === userItem._id}
                             className={cn(
@@ -684,6 +775,76 @@ export default function UserManagement() {
             )}
           </div>
     </AdminLayout>
+
+      {/* Role Swap Dialog */}
+      <Dialog
+        open={isRoleSwapDialogOpen}
+        onOpenChange={(open) => {
+          setIsRoleSwapDialogOpen(open)
+          if (!open) setRoleSwapUser(null)
+        }}
+      >
+        <DialogContent className="bg-surface border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <RiUserSettingsLine className="h-5 w-5" />
+              Change user role
+            </DialogTitle>
+          </DialogHeader>
+          {roleSwapUser && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Set role for{" "}
+                <span className="font-medium text-foreground">
+                  {roleSwapUser.firstName && roleSwapUser.lastName
+                    ? `${roleSwapUser.firstName} ${roleSwapUser.lastName}`
+                    : roleSwapUser.email}
+                </span>{" "}
+                ({roleSwapUser.email}).
+              </p>
+              <div className="space-y-2">
+                <Label className="text-foreground">Role</Label>
+                <Select
+                  value={roleSwapNewRole}
+                  onValueChange={(value) => setRoleSwapNewRole(value)}
+                >
+                  <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface border-border">
+                    {ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {roleSwapUser._id === user?._id && roleSwapNewRole !== "super_admin" && (
+                <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
+                  Changing your own role may lock you out. Only Super Admin can access this page.
+                </p>
+              )}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsRoleSwapDialogOpen(false)}
+                  className="border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRoleSwap}
+                  disabled={isRoleSwapSubmitting || roleSwapNewRole === roleSwapUser.role}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {isRoleSwapSubmitting ? "Updating…" : "Update role"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Reject User Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>

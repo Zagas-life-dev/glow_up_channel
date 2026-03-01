@@ -7,6 +7,7 @@ import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
 import LockedInIndicator from './locked-in-indicator'
+import PushPromptBanner from './push-prompt-banner'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -80,6 +81,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <AppBottomNav />
+      <PushPromptBanner />
       <LockedInIndicator />
     </div>
   )

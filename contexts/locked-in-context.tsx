@@ -1,5 +1,9 @@
 "use client"
 
+/**
+ * Locked In (focus sessions): available to all authenticated users.
+ * Not restricted to premium — any logged-in user can start and use sessions.
+ */
 import {
   createContext,
   useContext,

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import ApiClient from "@/lib/api-client"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -374,16 +376,12 @@ export default function ProviderSettings() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-page px-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
-          <p className="text-muted-foreground mb-4">Please log in to access provider settings.</p>
-          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please log in to access provider settings."
+        icon={AlertCircle}
+        signInLabel="Go to login"
+      />
     )
   }
 
@@ -397,7 +395,7 @@ export default function ProviderSettings() {
 
   const quickLinks = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider', variant: 'outline' as const },
-    { label: 'Post Content', icon: Plus, href: '/dashboard/posting', variant: 'default' as const },
+    { label: 'Post Content', icon: Plus, href: '/dashboard/provider/posting', variant: 'default' as const },
     { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
@@ -409,9 +407,14 @@ export default function ProviderSettings() {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Settings className="w-5 h-5 text-orange-500" />
-            </div>
+            <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
+              <NextImage
+                src="/images/Yellow and Black Modern Media Company Logo (14).png"
+                alt="GlowUp"
+                fill
+                className="object-contain"
+              />
+            </Link>
             <div>
               <h1 className="text-base font-bold text-foreground">Settings</h1>
               <p className="text-xs text-muted-foreground">Provider</p>
@@ -479,7 +482,7 @@ export default function ProviderSettings() {
         {/* Onboarding Status */}
         {onboardingData && (
           <div className="p-4 border-t border-border">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
+            <div className="p-3 rounded-xl bg-muted border border-border">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground">Onboarding</span>
                 <Badge className={cn(
@@ -554,7 +557,7 @@ export default function ProviderSettings() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
+                    <Link href="/dashboard/provider/posting" className="flex items-center gap-3 w-full">
                       <Plus className="h-4 w-4 text-orange-400" />
                       <span>Post Content</span>
                     </Link>

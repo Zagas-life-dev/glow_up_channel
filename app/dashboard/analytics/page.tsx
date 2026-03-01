@@ -349,7 +349,7 @@ export default function AnalyticsPage() {
         {/* Action Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <Link href="/dashboard/posting">
+            <Link href="/dashboard/provider/posting">
               <Plus className="h-4 w-4 mr-2" />
               Post New Opportunity
             </Link>

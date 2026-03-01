@@ -1,17 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import ApiClient from "@/lib/api-client"
 import AuthGuard from "@/components/auth-guard"
+import { useAuth } from "@/lib/auth-context"
+import { hasPremiumAccess } from "@/lib/roles"
 import { PageShell } from "@/components/layout/page-shell"
 import { PageHeader } from "@/components/layout/page-header"
 
 export default function CreateChannelPage() {
   const router = useRouter()
+  const { user } = useAuth()
+  const canCreate = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [type, setType] = useState<"public" | "private">("public")
@@ -46,6 +51,21 @@ export default function CreateChannelPage() {
           icon={<span className="text-lg font-bold">#</span>}
           variant="gradient"
         />
+        {!canCreate ? (
+          <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 p-6 text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Creating channels is a premium feature. Upgrade to Premium to create and manage your own channels.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild className="rounded-full bg-primary hover:bg-primary/90">
+                <Link href="/premium">Upgrade to Premium</Link>
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/channels")} className="rounded-full">
+                Back to channels
+              </Button>
+            </div>
+          </div>
+        ) : (
         <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -117,6 +137,7 @@ export default function CreateChannelPage() {
             </div>
           </form>
         </div>
+        )}
       </div>
     </PageShell>
   )

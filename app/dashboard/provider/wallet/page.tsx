@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import ApiClient from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import { WalletBalanceCard } from '@/components/wallet/WalletBalanceCard'
 import { WalletTopUpModal } from '@/components/wallet/WalletTopUpModal'
 import { cn } from '@/lib/utils'
@@ -66,22 +67,12 @@ export default function ProviderWalletPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#020817] via-[#020817] to-black px-4">
-        <div className="max-w-md w-full bg-card/80 backdrop-blur-xl border border-border/60 rounded-2xl p-6 shadow-xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center border border-red-500/30">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Access Denied</h2>
-              <p className="text-xs text-muted-foreground">Please sign in to view your wallet.</p>
-            </div>
-          </div>
-          <Button asChild className="w-full rounded-xl bg-primary hover:bg-primary/90">
-            <Link href="/login">Sign in</Link>
-          </Button>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Access denied"
+        description="Please sign in to view your wallet."
+        icon={AlertCircle}
+        signInLabel="Sign in"
+      />
     )
   }
 

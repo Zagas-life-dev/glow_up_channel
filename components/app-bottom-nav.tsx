@@ -32,7 +32,7 @@ export default function AppBottomNav() {
 
   // Hide on certain pages
   if (pathname?.startsWith('/login') || pathname?.startsWith('/signup') || 
-      pathname?.startsWith('/dashboard/posting') || pathname?.startsWith('/onboarding') ||
+      pathname?.startsWith('/dashboard/provider/posting') || pathname?.startsWith('/onboarding') ||
       pathname?.startsWith('/post')) {
     return null
   }

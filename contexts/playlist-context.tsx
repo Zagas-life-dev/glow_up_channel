@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { canCreatePremiumPlaylist } from '@/lib/roles'
 
 export interface PlaylistItem {
   _id: string
@@ -51,6 +52,8 @@ export interface Playlist {
   description: string
   hashtags: string[]
   isPublic: boolean
+  /** Premium playlists are only visible to premium users; only admin/super_admin can create them. */
+  isPremiumPlaylist?: boolean
   items: PlaylistItem[]
   createdBy: {
     _id: string
@@ -94,11 +97,13 @@ interface PlaylistContextType {
   canEditPlaylist: (playlist: Playlist) => boolean
 }
 
-interface CreatePlaylistData {
+export interface CreatePlaylistData {
   name: string
   description: string
   hashtags: string[]
   isPublic: boolean
+  /** Only admin/super_admin can set this to true. */
+  isPremiumPlaylist?: boolean
 }
 
 interface AddToPlaylistItem {
@@ -341,10 +346,17 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const createPlaylist = useCallback(async (data: CreatePlaylistData): Promise<Playlist> => {
     if (!isAuthenticated) throw new Error('Must be logged in to create a playlist')
 
+    // Only allow isPremiumPlaylist if user is admin or super_admin
+    const canPremium = user && canCreatePremiumPlaylist(user.role)
+    const payload = {
+      ...data,
+      isPremiumPlaylist: canPremium ? !!data.isPremiumPlaylist : false
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/playlists`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     })
     
     const result = await response.json()
@@ -357,14 +369,20 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     await fetchPlaylists()
     
     return result.data.playlist
-  }, [isAuthenticated, getAuthHeaders, fetchPlaylists])
+  }, [isAuthenticated, user, getAuthHeaders, fetchPlaylists])
 
   // Update a playlist
   const updatePlaylist = useCallback(async (id: string, data: Partial<CreatePlaylistData>): Promise<Playlist> => {
+    const canPremium = user && canCreatePremiumPlaylist(user.role)
+    const payload = { ...data }
+    if (!canPremium && data.isPremiumPlaylist === true) {
+      payload.isPremiumPlaylist = false
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/playlists/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     })
     
     const result = await response.json()
@@ -377,7 +395,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     await fetchPlaylists()
     
     return result.data.playlist
-  }, [getAuthHeaders, fetchPlaylists])
+  }, [user, getAuthHeaders, fetchPlaylists])
 
   // Delete a playlist
   const deletePlaylist = useCallback(async (id: string): Promise<void> => {

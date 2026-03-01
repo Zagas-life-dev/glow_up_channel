@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import ApiClient from "@/lib/api-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -129,12 +130,12 @@ export default function PostersDetailsPage() {
     }
   }, [setHideNavbar, setHideFooter])
 
-  // Redirect if not authenticated or not admin
+  // Redirect if not authenticated or not super admin (poster details is super_admin only)
   useEffect(() => {
     if (!isAuthenticated) {
       window.location.href = '/login'
-    } else if (user?.role !== 'admin' && user?.role !== 'super_admin') {
-      window.location.href = '/dashboard'
+    } else if (user?.role !== 'super_admin') {
+      window.location.href = '/dashboard/admin'
     }
   }, [isAuthenticated, user])
 
@@ -363,27 +364,25 @@ export default function PostersDetailsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-lg text-gray-600">Please log in to access this page</p>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please log in to access this page."
+        icon={XCircle}
+        signInLabel="Sign in"
+      />
     )
   }
 
   if (user?.role !== 'admin' && user?.role !== 'super_admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-lg text-gray-600">Access denied. Admin privileges required.</p>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Access denied"
+        description="Admin privileges required to access business upload."
+        icon={XCircle}
+        iconVariant="neutral"
+        signInLabel="Sign in"
+        secondaryAction={{ label: "Back to dashboard", href: "/dashboard" }}
+      />
     )
   }
 

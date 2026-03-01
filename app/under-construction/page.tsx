@@ -11,7 +11,7 @@ export default function UnderConstructionPage() {
         <div className="mb-8 flex justify-center">
           <div className="relative w-32 h-32 sm:w-40 sm:h-40">
             <Image
-              src="/images/logo-icon-transparent.png"
+              src="/images/Yellow and Black Modern Media Company Logo (14).png"
               alt="Glow Up Channel"
               fill
               className="object-contain"

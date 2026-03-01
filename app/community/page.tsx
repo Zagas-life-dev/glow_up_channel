@@ -101,11 +101,13 @@ type PromotedFeedItem = {
   [key: string]: unknown
 }
 
+export type CommunitySort = 'trending' | 'fresh' | 'forYou'
+
 export default function CommunityPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, normalizedUser } = useAuth()
   const [activeTab, setActiveTab] = useState<'connections' | 'explore'>('explore')
   const [trendingHashtags, setTrendingHashtags] = useState<TrendingHashtag[]>([])
-  const [sortBy, setSortBy] = useState<'trending' | 'recent'>('trending')
+  const [sortBy, setSortBy] = useState<CommunitySort>('trending')
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null)
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
 
@@ -125,34 +127,86 @@ export default function CommunityPage() {
     return parts.join('_')
   }, [activeTab, sortBy, filterHashtag])
 
+  // Build normalizedUser payload for backend (same shape as home unified recommendations)
+  const normalizedUserPayload = useMemo(() => {
+    if (!normalizedUser) return null
+    return {
+      id: normalizedUser.id,
+      interests: Array.isArray(normalizedUser.interests) ? normalizedUser.interests : [],
+      industrySectors: Array.isArray(normalizedUser.industrySectors) ? normalizedUser.industrySectors : [],
+      skills: Array.isArray(normalizedUser.skills) ? normalizedUser.skills : [],
+      aspirations: Array.isArray(normalizedUser.aspirations) ? normalizedUser.aspirations : [],
+      country: normalizedUser.country ?? null,
+      province: normalizedUser.province ?? null,
+      city: normalizedUser.city ?? null,
+      careerStage: normalizedUser.careerStage ?? null,
+      dateOfBirth: normalizedUser.dateOfBirth ?? null,
+    }
+  }, [normalizedUser])
+
   // Fetch function for cursor-based pagination
   const fetchPosts = useCallback(async (lastId: string | null) => {
     try {
-      let url = ''
+      const limit = 20
+      const headers = getAuthHeaders()
 
       if (activeTab === 'connections' && isAuthenticated) {
-        url = `${API_BASE_URL}/api/posts/feed?limit=20`
-        if (lastId) url += `&lastId=${lastId}`
-      } else {
-        url = `${API_BASE_URL}/api/posts/explore?limit=20&sort=${sortBy}`
-        if (lastId) url += `&lastId=${lastId}`
-        if (filterHashtag) {
-          url += `&hashtag=${filterHashtag}`
+        const url = `${API_BASE_URL}/api/posts/feed?limit=${limit}${lastId ? `&lastId=${lastId}` : ''}`
+        const response = await fetch(url, { headers })
+        if (!response.ok) {
+          console.warn('Failed to fetch posts:', response.status, response.statusText)
+          return { items: [], lastId: null, hasMore: false }
         }
-        // Add personalized=false if user wants to bypass personalized feed
-        // For now, always try personalized first, it will fallback automatically
-      }
-
-      const response = await fetch(url, {
-        headers: getAuthHeaders()
-      })
-
-      if (!response.ok) {
-        // If response is not ok, return empty results
-        console.warn('Failed to fetch posts:', response.status, response.statusText)
+        const data = await response.json()
+        if (data.success) {
+          return {
+            items: data.data.posts || [],
+            lastId: data.data.lastId || null,
+            hasMore: data.data.hasMore || false
+          }
+        }
         return { items: [], lastId: null, hasMore: false }
       }
 
+      // Explore: use POST when sending normalizedUser for sort=forYou, else GET
+      const usePostForExplore = sortBy === 'forYou' && normalizedUserPayload && isAuthenticated
+      if (usePostForExplore) {
+        const body = {
+          sort: sortBy,
+          limit,
+          ...(lastId && { lastId }),
+          ...(filterHashtag && { hashtag: filterHashtag }),
+          normalizedUser: normalizedUserPayload
+        }
+        const response = await fetch(`${API_BASE_URL}/api/posts/explore`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        })
+        if (!response.ok) {
+          console.warn('Failed to fetch explore posts:', response.status, response.statusText)
+          return { items: [], lastId: null, hasMore: false }
+        }
+        const data = await response.json()
+        if (data.success) {
+          return {
+            items: data.data.posts || [],
+            lastId: data.data.lastId || null,
+            hasMore: data.data.hasMore || false
+          }
+        }
+        return { items: [], lastId: null, hasMore: false }
+      }
+
+      let url = `${API_BASE_URL}/api/posts/explore?limit=${limit}&sort=${sortBy}`
+      if (lastId) url += `&lastId=${lastId}`
+      if (filterHashtag) url += `&hashtag=${encodeURIComponent(filterHashtag)}`
+
+      const response = await fetch(url, { headers })
+      if (!response.ok) {
+        console.warn('Failed to fetch posts:', response.status, response.statusText)
+        return { items: [], lastId: null, hasMore: false }
+      }
       const data = await response.json()
       if (data.success) {
         return {
@@ -163,12 +217,10 @@ export default function CommunityPage() {
       }
       return { items: [], lastId: null, hasMore: false }
     } catch (error) {
-      // Handle network errors, CORS errors, etc.
       console.error('Error fetching posts:', error)
-      // Return empty results instead of throwing
       return { items: [], lastId: null, hasMore: false }
     }
-  }, [activeTab, isAuthenticated, sortBy, filterHashtag, getAuthHeaders])
+  }, [activeTab, isAuthenticated, sortBy, filterHashtag, getAuthHeaders, normalizedUserPayload])
 
   // Use cursor pagination hook
   const {
@@ -309,15 +361,26 @@ export default function CommunityPage() {
               Trending
             </button>
             <button
-              onClick={() => { setSortBy("recent"); setFilterHashtag(null) }}
+              onClick={() => { setSortBy("forYou"); setFilterHashtag(null) }}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
-                sortBy === "recent" && !filterHashtag ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
+                sortBy === "forYou" && !filterHashtag ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
               )}
             >
               <Sparkles className="w-3 h-3" />
-              Recent
+              For You
             </button>
+            <button
+              onClick={() => { setSortBy("fresh"); setFilterHashtag(null) }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
+                sortBy === "fresh" && !filterHashtag ? "bg-card/80 backdrop-blur-sm border-border/60 text-foreground shadow-sm" : "bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-card/60"
+              )}
+            >
+              <RefreshCw className="w-3 h-3" />
+              Fresh
+            </button>
+            
           </div>
         )}
       </div>

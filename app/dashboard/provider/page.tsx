@@ -17,12 +17,15 @@ import {
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import { getPostingLimit } from "@/lib/posting-limits"
+import { hasPremiumAccess } from "@/lib/roles"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import PromotionButton from '@/components/promotion/PromotionButton'
 import PaymentDetails from '@/components/payment-details'
 import { EditContentModal } from '@/components/edit-content-modal'
 import { PromoteContentModal } from '@/components/promote-content-modal'
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import { 
   ArrowRight,
   TrendingUp,
@@ -428,16 +431,12 @@ export default function ProviderDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-page px-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
-          <p className="text-muted-foreground mb-4">Please log in to access your provider dashboard</p>
-          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
-            <Link href="/login">Sign In</Link>
-          </Button>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Access denied"
+        description="Please log in to access your provider dashboard."
+        icon={AlertCircle}
+        signInLabel="Sign in"
+      />
     )
   }
 
@@ -475,24 +474,27 @@ export default function ProviderDashboard() {
   ]
 
   const quickLinks = [
-    { label: 'Post Content', icon: Plus, href: '/dashboard/posting', variant: 'default' as const },
+    { label: 'Post Content', icon: Plus, href: '/dashboard/provider/posting', variant: 'default' as const },
     { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#020817] via-[#020817] to-black overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(147,51,234,0.16),_transparent_55%)]" />
-      <div className="relative flex">
+    <div className="min-h-screen bg-page flex">
+      <div className="flex flex-1 min-w-0">
         {/* Desktop Sidebar - Hidden on mobile */}
-        <aside className="hidden lg:flex flex-col w-64 border-r border-border/60 bg-card/10 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.65)] sticky top-0 h-screen">
+        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
           {/* Sidebar Header */}
-          <div className="p-6 border-b border-border/60 bg-card/10 backdrop-blur-xl">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 flex items-center justify-center border border-orange-500/30 shadow-inner">
-                <Crown className="w-5 h-5 text-orange-500" />
-              </div>
+              <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
+                <Image
+                  src="/images/Yellow and Black Modern Media Company Logo (14).png"
+                  alt="GlowUp"
+                  fill
+                  className="object-contain"
+                />
+              </Link>
               <div>
                 <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
                 <p className="text-xs text-muted-foreground">Dashboard</p>
@@ -500,8 +502,8 @@ export default function ProviderDashboard() {
             </div>
           
             {/* User Info */}
-            <div className="p-3 rounded-xl bg-card/70 backdrop-blur-sm border border-border/70 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500/30 to-rose-500/20 flex items-center justify-center overflow-hidden">
+            <div className="p-3 rounded-xl bg-muted border border-border flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-border">
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
@@ -544,8 +546,8 @@ export default function ProviderDashboard() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive 
-                    ? "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/70 hover:border hover:border-border/60"
+                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -556,7 +558,7 @@ export default function ProviderDashboard() {
           </nav>
 
           {/* Quick Actions */}
-          <div className="p-4 border-t border-border/60 space-y-2">
+          <div className="p-4 border-t border-border space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
             return (
@@ -565,10 +567,10 @@ export default function ProviderDashboard() {
                 asChild
                 variant={link.variant}
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-start rounded-xl",
                   link.variant === 'default' 
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30" 
-                    : "border-border/70 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                    ? "bg-primary hover:bg-primary/90" 
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Link href={link.href}>
@@ -580,18 +582,23 @@ export default function ProviderDashboard() {
           })}
         </div>
 
-        {/* Stats Summary */}
-        <div className="p-4 border-t border-border/60">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 shadow-inner">
+        {/* Stats Summary: posts used vs limit */}
+        <div className="p-4 border-t border-border">
+          <div className="p-3 rounded-xl bg-muted border border-border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Active Postings</span>
-              <span className="text-lg font-bold text-orange-400">{stats.activePostings}</span>
+              <span className="text-xs text-muted-foreground">Your posts</span>
+              <span className="text-lg font-bold text-orange-400">
+                {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources} of {getPostingLimit(user?.isPremium, user?.role)} max
+              </span>
             </div>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium: 20 posts max' : 'Free: 5 posts max (all statuses count)'}
+            </p>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               {(() => {
                 const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
-                const maxTotal = Math.max(totalPostings, 1)
-                const percentage = Math.min((stats.activePostings / maxTotal) * 100, 100)
+                const limit = getPostingLimit(user?.isPremium, user?.role)
+                const percentage = limit > 0 ? Math.min((totalPostings / limit) * 100, 100) : 0
                 return (
                   <div 
                     className="h-full bg-primary rounded-full transition-all"
@@ -607,10 +614,10 @@ export default function ProviderDashboard() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-card/10 backdrop-blur-xl border-b border-border/60">
+        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 flex items-center justify-center border border-orange-500/30">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Crown className="w-4 h-4 text-orange-500" />
               </div>
               <div>
@@ -645,7 +652,7 @@ export default function ProviderDashboard() {
                   className="w-56 p-2"
                 >
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/posting" className="flex items-center gap-3 w-full">
+                    <Link href="/dashboard/provider/posting" className="flex items-center gap-3 w-full">
                       <Plus className="h-4 w-4 text-orange-400" />
                       <span>Post Content</span>
                     </Link>
@@ -847,12 +854,15 @@ export default function ProviderDashboard() {
                     <CardContent className="p-4 md:p-6">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Posts</p>
                           <p className="text-xl md:text-3xl font-bold text-orange-400 mt-1">
-                            {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources}
+                            {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources} of {getPostingLimit(user?.isPremium, user?.role)}
+                          </p>
+                          <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
+                            {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? '20 max (Premium)' : '5 max (Free)'}
                           </p>
                         </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl flex items-center justify-center border border-orange-500/30 flex-shrink-0">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
                           <FileText className="h-5 w-5 md:h-6 md:w-6 text-orange-400" />
                         </div>
                       </div>
@@ -866,7 +876,7 @@ export default function ProviderDashboard() {
                           <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Views</p>
                           <p className="text-xl md:text-3xl font-bold text-primary mt-1">{stats.totalViews}</p>
                         </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-primary/20 to-primary/20 rounded-xl flex items-center justify-center border border-primary/30 flex-shrink-0">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
                           <Eye className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                         </div>
                       </div>
@@ -880,7 +890,7 @@ export default function ProviderDashboard() {
                           <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Applications</p>
                           <p className="text-xl md:text-3xl font-bold text-emerald-400 mt-1">{stats.totalApplications}</p>
                         </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30 flex-shrink-0">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
                           <Send className="h-5 w-5 md:h-6 md:w-6 text-emerald-400" />
                         </div>
                       </div>
@@ -894,7 +904,7 @@ export default function ProviderDashboard() {
                           <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending</p>
                           <p className="text-xl md:text-3xl font-bold text-yellow-400 mt-1">{stats.pendingApprovals}</p>
                         </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-500/30 flex-shrink-0">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
                           <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-400" />
                         </div>
                       </div>
@@ -913,25 +923,25 @@ export default function ProviderDashboard() {
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                       <Button asChild className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 bg-primary hover:bg-primary/90 rounded-xl">
-                        <Link href="/dashboard/posting">
+                        <Link href="/dashboard/provider/posting">
                           <Target className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Opportunity</span>
                         </Link>
                       </Button>
                       <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
-                        <Link href="/dashboard/posting">
+                        <Link href="/dashboard/provider/posting">
                           <Calendar className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Event</span>
                         </Link>
                       </Button>
                       <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
-                        <Link href="/dashboard/posting">
+                        <Link href="/dashboard/provider/posting">
                           <Briefcase className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Job</span>
                         </Link>
                       </Button>
                       <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
-                        <Link href="/dashboard/posting">
+                        <Link href="/dashboard/provider/posting">
                           <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Resource</span>
                         </Link>
@@ -1012,15 +1022,15 @@ export default function ProviderDashboard() {
                       </div>
                     ) : (
                       <div className="text-center py-8 md:py-12">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
                           <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                         </div>
                         <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
                         <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
                           Start by posting your first opportunity, event, or job
                         </p>
-                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl">
-                          <Link href="/dashboard/posting">
+                        <Button asChild className="bg-primary hover:bg-primary/90 text-foreground rounded-xl">
+                          <Link href="/dashboard/provider/posting">
                             Post Your First Content
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Link>
@@ -1043,7 +1053,7 @@ export default function ProviderDashboard() {
                         My Content
                       </CardTitle>
                       <Button asChild size="sm" className="bg-primary hover:bg-primary/90 rounded-xl w-full sm:w-auto">
-                        <Link href="/dashboard/posting">
+                        <Link href="/dashboard/provider/posting">
                           <Plus className="h-4 w-4 mr-2" />
                           Post New
                         </Link>
@@ -1176,15 +1186,15 @@ export default function ProviderDashboard() {
                       </div>
                     ) : (
                       <div className="text-center py-8 md:py-12">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
                           <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                         </div>
                         <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
                         <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
                           Start by posting your first opportunity, event, or job
                         </p>
-                        <Button asChild className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-xl">
-                          <Link href="/dashboard/posting">
+                        <Button asChild className="bg-primary hover:bg-primary/90 text-foreground rounded-xl">
+                          <Link href="/dashboard/provider/posting">
                             Post Your First Content
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Link>
@@ -1208,7 +1218,7 @@ export default function ProviderDashboard() {
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="text-center py-8 md:py-12">
-                      <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                      <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
                         <Zap className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                       </div>
                       <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Promote Your Content</h3>
@@ -1242,7 +1252,7 @@ export default function ProviderDashboard() {
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="text-center py-8 md:py-12">
-                      <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                      <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
                         <BarChart3 className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
                       </div>
                       <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Analytics Coming Soon</h3>

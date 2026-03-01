@@ -380,7 +380,7 @@ type PromotedFeedItem = {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { user, normalizedUser, isAuthenticated, isLoading: authLoading } = useAuth()
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -399,18 +399,54 @@ export default function Home() {
       return { items: [], lastId: null, hasMore: false }
     }
 
-    const headers: HeadersInit = { 'Authorization': `Bearer ${token}` }
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
 
     try {
-      const url = new URL(`${backendUrl}/api/recommended/unified`)
-      url.searchParams.set('includeOpportunities', 'true')
-      url.searchParams.set('includeEvents', 'true')
-      url.searchParams.set('includeJobs', 'true')
-      url.searchParams.set('includeResources', 'true')
-      url.searchParams.set('minScore', '0')
-      url.searchParams.set('limit', '50')
-
-      const response = await fetch(url.toString(), { headers })
+      let response: Response
+      if (normalizedUser) {
+        // Send frontend merged normalized user so the algo uses the same data (fixes 50% fallback for users without backend profile/onboarding)
+        const payload = {
+          normalizedUser: {
+            id: normalizedUser.id,
+            interests: Array.isArray(normalizedUser.interests) ? normalizedUser.interests : [],
+            industrySectors: Array.isArray(normalizedUser.industrySectors) ? normalizedUser.industrySectors : [],
+            skills: Array.isArray(normalizedUser.skills) ? normalizedUser.skills : [],
+            aspirations: Array.isArray(normalizedUser.aspirations) ? normalizedUser.aspirations : [],
+            country: normalizedUser.country ?? null,
+            province: normalizedUser.province ?? null,
+            city: normalizedUser.city ?? null,
+            careerStage: normalizedUser.careerStage ?? null,
+            dateOfBirth: normalizedUser.dateOfBirth ?? null,
+          },
+          includeOpportunities: true,
+          includeEvents: true,
+          includeJobs: true,
+          includeResources: true,
+          minScore: 0,
+          limit: 20,
+          ...(lastId && { lastId }),
+        }
+        response = await fetch(`${backendUrl}/api/recommended/unified`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        })
+      } else {
+        const url = new URL(`${backendUrl}/api/recommended/unified`)
+        url.searchParams.set('includeOpportunities', 'true')
+        url.searchParams.set('includeEvents', 'true')
+        url.searchParams.set('includeJobs', 'true')
+        url.searchParams.set('includeResources', 'true')
+        url.searchParams.set('minScore', '0')
+        url.searchParams.set('limit', '20')
+        if (lastId) {
+          url.searchParams.set('lastId', lastId)
+        }
+        response = await fetch(url.toString(), { headers })
+      }
 
       if (!response.ok) {
         console.warn('Failed to fetch unified recommendations:', response.status, response.statusText)
@@ -441,17 +477,18 @@ export default function Home() {
       })
 
       const lastItemId = sorted.length > 0 ? sorted[sorted.length - 1]._id : null
+      const hasMore = (data.data?.pagination?.hasMore ?? (data.data?.total > sorted.length)) && sorted.length >= 20
 
       return {
         items: sorted,
-        lastId: lastItemId,
-        hasMore: data.data.total > sorted.length
+        lastId: data.data?.pagination?.lastId ?? lastItemId,
+        hasMore
       }
     } catch (error) {
       console.error('Error fetching unified recommendations:', error)
       return { items: [], lastId: null, hasMore: false }
     }
-  }, [backendUrl, isAuthenticated, user])
+  }, [backendUrl, isAuthenticated, user, normalizedUser])
 
   // Fetch function for individual content types
   const fetchContentByType = useCallback(async (type: string, lastId: string | null) => {
@@ -495,50 +532,55 @@ export default function Home() {
     }
   }, [backendUrl, isAuthenticated, user])
 
-  // Get fetch function based on active tab
-  const getFetchFunction = useCallback(() => {
-    if (activeTab === 'all') {
-      return fetchAllContent
-    }
-    const typeMap: Record<string, string> = {
-      'opportunities': 'opportunities',
-      'jobs': 'jobs',
-      'events': 'events',
-      'resources': 'resources'
-    }
-    return (lastId: string | null) => fetchContentByType(typeMap[activeTab], lastId)
-  }, [activeTab, fetchAllContent, fetchContentByType])
+  // Single stable fetch for cursor pagination (same pattern as community page)
+  const fetchFeedContent = useCallback(
+    async (lastId: string | null) => {
+      if (activeTab === 'all') {
+        return fetchAllContent(lastId)
+      }
+      const typeMap: Record<TabType, string> = {
+        all: 'opportunities', // unused when activeTab is all
+        opportunities: 'opportunities',
+        jobs: 'jobs',
+        events: 'events',
+        resources: 'resources',
+      }
+      return fetchContentByType(typeMap[activeTab], lastId)
+    },
+    [activeTab, fetchAllContent, fetchContentByType]
+  )
 
-  // Use cursor pagination hook
+  // Use cursor pagination hook (stable fetchFunction like community page)
   const {
     items: allContent,
     isLoading,
+    isRefreshing,
     hasMore,
     loadMore,
-    reset: resetContent
+    reset: resetContent,
   } = useCursorPagination<any>({
-    fetchFunction: getFetchFunction(),
+    fetchFunction: fetchFeedContent,
     storageKey,
     resetOnMount: false,
-    limit: 20
+    limit: 20,
   })
 
-  // Use infinite scroll hook
+  // Use infinite scroll hook (same options as community page)
   const { sentinelRef, threshold } = useInfiniteScroll({
     hasMore,
     isLoading,
     onLoadMore: loadMore,
-    itemsBeforeLoad: 5, // Start loading when 5 items from the end
-    estimatedItemHeight: 350 // Estimated height of each feed card
+    itemsBeforeLoad: 5,
+    estimatedItemHeight: 350,
   })
 
-  // Reset when tab changes (only depend on activeTab to avoid infinite loop: resetContent identity changes after state update)
+  // Reset when tab changes (same pattern as community: reset when filters/tab change)
   useEffect(() => {
     resetContent()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when tab changes
   }, [activeTab])
 
-  // Also reset when auth state changes (user logs in/out)
+  // Reset when auth state changes (user logs in/out)
   useEffect(() => {
     if (!authLoading) {
       resetContent()
@@ -607,7 +649,7 @@ export default function Home() {
           />
         )}
 
-        {activeTab === "all" && !isLoading && allContent.length > 0 ? (
+        {activeTab === "all" && allContent.length > 0 ? (
           <div className="space-y-5 w-full max-w-full">
             {buildFeedWithSponsored(allContent, promotedFeed, { postsBetween: 4 }).map((item) =>
               item.type === "post" ? (
@@ -626,7 +668,7 @@ export default function Home() {
         ) : (
           <FeedContainer
             items={getCurrentItems()}
-            loading={isLoading}
+            loading={isLoading && allContent.length === 0}
             emptyMessage={
               activeTab === "all"
                 ? "No content available yet. Check back soon!"

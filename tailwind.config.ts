@@ -83,6 +83,7 @@ const config: Config = {
         "border-default": "hsl(var(--border-default))",
         "border-subtle": "hsl(var(--border-subtle))",
         "brand-orange": "#ff6700",
+        "brand-blue": "#0b1222",
         "orange": {
           DEFAULT: "hsl(var(--orange))",
           light: "hsl(var(--orange-light))",

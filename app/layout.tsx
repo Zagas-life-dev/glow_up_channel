@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   description: "Connect young ambitious people to opportunities, events, and free resources.",
   generator: 'v0.dev',
   icons: {
-    icon: '/images/logo-icon-transparent.png',
-    shortcut: '/images/logo-icon-transparent.png',
-    apple: '/images/logo-icon-transparent.png',
+    icon: '/images/Yellow and Black Modern Media Company Logo (14).png',
+    shortcut: '/images/Yellow and Black Modern Media Company Logo (14).png',
+    apple: '/images/Yellow and Black Modern Media Company Logo (14).png',
   }
 }
 
@@ -65,11 +65,11 @@ export default function RootLayout({
           </>
         )}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="theme-color" content="#f96008" />
+        <meta name="theme-color" content="#ff6700" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="GlowUp" />
-        <link rel="apple-touch-icon" href="/images/logo-icon-transparent.png" />
+        <link rel="apple-touch-icon" href="/images/Yellow and Black Modern Media Company Logo (14).png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
         <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />

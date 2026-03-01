@@ -27,9 +27,35 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      // TODO: Implement contact form submission with your backend API
-      toast.error("Feature not available", {
-        description: "Contact form submission needs to be implemented with your backend API."
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        const errorMessage = data?.error || "Failed to send message. Please try again."
+        toast.error("Error", {
+          description: errorMessage,
+        })
+        return
+      }
+
+      toast.success("Message sent", {
+        description: "Thanks for reaching out! We'll get back to you soon.",
+      })
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
       })
     } catch (error: any) {
       toast.error("Error", {

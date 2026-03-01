@@ -25,14 +25,14 @@ export function WalletBalanceCard({
   }).format(balanceNg || 0)
 
   return (
-    <Card className={cn("border-0 shadow-lg", className)}>
+    <Card className={cn("border border-border bg-card rounded-xl", className)}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Promotion wallet</p>
+            <p className="text-sm font-medium text-muted-foreground">Promotion wallet</p>
             <p className="text-2xl font-bold text-foreground">{formatted}</p>
           </div>
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border">
             <DollarSign className="w-6 h-6 text-primary" />
           </div>
         </div>
@@ -40,7 +40,7 @@ export function WalletBalanceCard({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 rounded-xl border-border"
             onClick={onTopUpClick}
           >
             <CreditCard className="h-4 w-4 mr-1.5" />

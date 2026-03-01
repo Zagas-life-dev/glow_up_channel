@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
+import { hasPremiumAccess } from "@/lib/roles"
 import ApiClient, { Channel } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +14,8 @@ import { Hash, AlertTriangle } from "lucide-react"
 type FilterTab = "all" | "public" | "private" | "mine"
 
 export default function ChannelsPage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const canCreateChannel = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [channels, setChannels] = useState<Channel[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +73,7 @@ export default function ChannelsPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">Join sub-communities focused on specific topics and conversations.</p>
               </div>
             </div>
-            {isAuthenticated && (
+            {isAuthenticated && canCreateChannel && (
               <Link href="/channels/create" className="shrink-0">
                 <Button className="w-full sm:w-auto rounded-xl h-10 px-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/20 font-medium border-0">
                   Create channel
@@ -135,13 +137,21 @@ export default function ChannelsPage() {
               <p className="text-sm text-muted-foreground">
                 {isAuthenticated ? "Be the first to create a channel for a topic you care about." : "Sign in or refine your search to discover channels."}
               </p>
-              {isAuthenticated && (
+              {isAuthenticated && canCreateChannel && (
                 <p className="text-xs text-muted-foreground mt-3">
                   Be the first to{" "}
                   <Link href="/channels/create" className="text-primary hover:underline">
                     create a channel
                   </Link>
                   .
+                </p>
+              )}
+              {isAuthenticated && !canCreateChannel && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  <Link href="/premium" className="text-primary hover:underline">
+                    Upgrade to Premium
+                  </Link>
+                  {" "}to create and manage your own channels.
                 </p>
               )}
             </div>

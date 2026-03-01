@@ -828,9 +828,9 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   // Handle image URL - use image from original post, fallback to heroImageUrl, then placeholder
   const getImageUrl = () => {
     if (imageError) {
-      return '/images/logo-icon-transparent.png'
+      return '/images/Yellow and Black Modern Media Company Logo (14).png'
     }
-    return currentPromotion.content?.image || currentPromotion.heroImageUrl || '/images/logo-icon-transparent.png'
+    return currentPromotion.content?.image || currentPromotion.heroImageUrl || '/images/Yellow and Black Modern Media Company Logo (14).png'
   }
   
   const imageUrl = getImageUrl()
@@ -839,7 +839,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
   const getResponsiveImageUrl = (url: string) => {
     // Validate URL
     if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
-      return '/images/logo-icon-transparent.png'
+      return '/images/Yellow and Black Modern Media Company Logo (14).png'
     }
     
     // Clean the URL
@@ -869,7 +869,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
 
   // Validate the final URL before using it
   const isValidImageUrl = (url: string) => {
-    if (!url || url === '/images/logo-icon-transparent.png') return true
+    if (!url || url === '/images/Yellow and Black Modern Media Company Logo (14).png') return true
     try {
       new URL(url)
       return true
@@ -1040,7 +1040,7 @@ export default function HeroCarousel({ heroPromotions = [], isLoading = false }:
             <div 
               className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center"
               style={{
-                backgroundImage: `url('/images/logo-icon-transparent.png')`,
+                backgroundImage: `url('/images/Yellow and Black Modern Media Company Logo (14).png')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'

@@ -11,7 +11,6 @@ import {
   Zap,
   DollarSign,
   BarChart3,
-  Crown,
   Plus,
   Settings,
   Home,
@@ -68,9 +67,14 @@ export function ProviderSidebar({
       {/* Sidebar Header */}
       <div className="p-6 border-b border-border/60 bg-card/10 backdrop-blur-xl">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 flex items-center justify-center border border-orange-500/30 shadow-inner">
-            <Crown className="w-5 h-5 text-orange-500" />
-          </div>
+          <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
+            <Image
+              src="/images/Yellow and Black Modern Media Company Logo (14).png"
+              alt="GlowUp"
+              fill
+              className="object-contain"
+            />
+          </Link>
           <div>
             <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
             <p className="text-xs text-muted-foreground">Dashboard</p>
@@ -133,7 +137,7 @@ export function ProviderSidebar({
           variant="default"
           className="w-full justify-start bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30"
         >
-          <Link href="/dashboard/posting">
+          <Link href="/dashboard/provider/posting">
             <Plus className="w-4 h-4 mr-2" />
             Post Content
           </Link>

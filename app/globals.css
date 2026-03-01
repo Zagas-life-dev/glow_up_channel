@@ -4,67 +4,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Palette: deep blue bg, white text, orange accent */
+/* Palette: logo blue #0b1222, logo orange #ff6700 — light variants for backgrounds/borders */
 @layer base {
   :root {
     /* Inter loaded via link in layout.tsx (avoids build-time fetch) */
     --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
-    /* Light: cool blue-white bg, dark text, orange accent */
-    --background: 214 32% 98%;
+    /* Light: blue-tinted neutrals (lighter variants of #0b1222), primary #ff6700 */
+    --background: 222 25% 98%;
     --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
+    --card: 222 20% 100%;
     --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
+    --popover: 222 20% 100%;
     --popover-foreground: 222 47% 11%;
     --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 214 32% 95%;
+    --secondary: 222 25% 94%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 214 32% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 222 25% 94%;
+    --muted-foreground: 222 20% 45%;
     --accent: 24 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 222 25% 90%;
+    --input: 222 25% 90%;
     --ring: 24 100% 50%;
     --radius: 0.5rem;
-    --page: 214 32% 98%;
+    --page: 222 25% 98%;
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
     --chart-3: 222 47% 25%;
-    --chart-4: 215 20% 45%;
-    --chart-5: 215 16% 65%;
+    --chart-4: 222 30% 45%;
+    --chart-5: 222 20% 65%;
   }
 
   .dark {
-    /* Dark: deep navy bg, white text, orange accent */
-    --background: 222 47% 7%;
-    --foreground: 214 32% 95%;
-    --card: 222 41% 11%;
-    --card-foreground: 214 32% 95%;
-    --popover: 222 41% 11%;
-    --popover-foreground: 214 32% 95%;
+    /* Dark: logo blue #0b1222 (222 51% 9%) as base, lighter variants for cards/borders; primary #ff6700 */
+    --background: 222 51% 9%;
+    --foreground: 222 25% 95%;
+    --card: 222 41% 12%;
+    --card-foreground: 222 25% 95%;
+    --popover: 222 41% 12%;
+    --popover-foreground: 222 25% 95%;
     --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 41% 15%;
-    --secondary-foreground: 214 32% 95%;
-    --muted: 222 41% 15%;
-    --muted-foreground: 215 20% 55%;
+    --secondary: 222 41% 16%;
+    --secondary-foreground: 222 25% 95%;
+    --muted: 222 41% 16%;
+    --muted-foreground: 222 20% 55%;
     --accent: 24 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 50%;
-    --destructive-foreground: 214 32% 95%;
+    --destructive-foreground: 222 25% 95%;
     --border: 222 41% 18%;
     --input: 222 41% 18%;
     --ring: 24 100% 50%;
-    --page: 222 47% 7%;
+    --page: 222 51% 9%;
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
-    --chart-3: 214 32% 70%;
-    --chart-4: 214 32% 80%;
-    --chart-5: 214 32% 90%;
+    --chart-3: 222 25% 70%;
+    --chart-4: 222 25% 80%;
+    --chart-5: 222 25% 90%;
   }
 }
 

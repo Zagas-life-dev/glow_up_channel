@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -98,6 +99,7 @@ interface Promotion {
 }
 
 export default function AdminPromotionsPage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [loading, setLoading] = useState(true)
@@ -119,8 +121,10 @@ export default function AdminPromotionsPage() {
   }, [setHideNavbar, setHideFooter])
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated || !user) return
+    if (user.role !== "super_admin") return
     fetchPromotions()
-  }, [])
+  }, [authLoading, isAuthenticated, user])
 
   const fetchPromotions = async () => {
     try {
@@ -266,6 +270,25 @@ export default function AdminPromotionsPage() {
   const totalPending = pendingPromotions.length
   const totalAwaitingPayment = awaitingPaymentPromotions.length
   const totalAwaitingVerification = awaitingVerificationPromotions.length
+
+  if (!authLoading && isAuthenticated && user && user.role !== "super_admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-page px-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+            <AlertTriangle className="w-8 h-8 text-red-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
+            Super admin privileges required for promotion management.
+          </p>
+          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
+            <Link href="/dashboard/admin">Back to Admin</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">

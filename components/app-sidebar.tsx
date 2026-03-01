@@ -1,18 +1,21 @@
 "use client"
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useLockedIn } from '@/contexts/locked-in-context'
 import { usePlaylist } from '@/contexts/playlist-context'
 import { cn } from '@/lib/utils'
 import { showPwaInstallPrompt } from '@/components/pwa-install-banner'
+import { Lock, LockOpen } from "lucide-react"
+import { toast } from 'sonner'
 import {
   RiHomeLine,
   RiGlobalLine,
   RiAddLine,
   RiSearchLine,
-  RiStarLine,
   RiUserLine,
   RiSettingsLine,
   RiVipCrownLine,
@@ -20,11 +23,13 @@ import {
   RiArrowLeftLine,
   RiArrowRightLine,
   RiPlayList2Fill,
-  RiFocus3Line,
   RiHashtag,
   RiDownloadLine,
   RiMoneyDollarCircleLine,
+  RiNotificationLine,
 } from "react-icons/ri"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 const mainNavItems = [
   { name: 'Home', icon: RiHomeLine, path: '/' },
@@ -51,6 +56,104 @@ function useIsStandalone() {
   return standalone
 }
 
+function LockedInSidebarLink({
+  pathname,
+  isCollapsed,
+  linkBase,
+  linkCollapsed,
+  linkExpanded,
+}: {
+  pathname: string | null
+  isCollapsed: boolean
+  linkBase: string
+  linkCollapsed: string
+  linkExpanded: string
+}) {
+  const { isActive: isLockedInActive } = useLockedIn()
+  const isOnPage = pathname?.startsWith('/locked-in')
+  return (
+    <Link
+      href="/locked-in"
+      title={isCollapsed ? "Locked In" : undefined}
+      className={cn(
+        linkBase,
+        isCollapsed ? linkCollapsed : linkExpanded,
+        isOnPage
+          ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
+      )}
+    >
+      {isLockedInActive ? (
+        <Lock className="w-5 h-5 flex-shrink-0 text-orange-500 drop-shadow-[0_0_6px_rgba(255,103,0,0.6)]" aria-hidden />
+      ) : (
+        <LockOpen className={cn("w-5 h-5 flex-shrink-0", isOnPage && "text-primary")} aria-hidden />
+      )}
+      {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Locked In</span>}
+    </Link>
+  )
+}
+
+function TestPushButton({
+  isCollapsed,
+  linkBase,
+  linkCollapsed,
+  linkExpanded,
+}: {
+  isCollapsed: boolean
+  linkBase: string
+  linkCollapsed: string
+  linkExpanded: string
+}) {
+  const [loading, setLoading] = useState(false)
+  const sendTestPush = async () => {
+    setLoading(true)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      if (!token) {
+        toast.error('Sign in to test push notifications.')
+        return
+      }
+      const res = await fetch(`${API_BASE_URL}/api/users/me/push-test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Test notification sent.')
+      } else {
+        toast.error(data.message || 'Failed to send test notification.')
+      }
+    } catch {
+      toast.error('Failed to send test notification.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={sendTestPush}
+      disabled={loading}
+      title={isCollapsed ? "Test push" : undefined}
+      className={cn(
+        linkBase,
+        isCollapsed ? linkCollapsed : linkExpanded,
+        "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent w-full text-left disabled:opacity-60"
+      )}
+    >
+      {loading ? (
+        <span className="w-5 h-5 flex-shrink-0 inline-block animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+      ) : (
+        <RiNotificationLine className="w-5 h-5 flex-shrink-0" aria-hidden />
+      )}
+      {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Test push</span>}
+    </button>
+  )
+}
+
 export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
@@ -71,8 +174,14 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
       {/* Logo */}
       <div className={cn("py-5 flex-shrink-0", isCollapsed ? "px-2 flex justify-center" : "px-5")}>
         <Link href="/" className={cn("flex items-center group", isCollapsed ? "justify-center" : "gap-3")}>
-          <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 group-hover:scale-105 transition-all duration-300 flex-shrink-0">
-            <RiStarLine className="w-5 h-5 text-white" />
+          <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 group-hover:scale-105 transition-all duration-300">
+            <Image
+              src="/images/Yellow and Black Modern Media Company Logo (14).png"
+              alt="GlowUp"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           {!isCollapsed && (
             <span className="text-xl font-bold tracking-tight text-foreground whitespace-nowrap overflow-hidden">
@@ -117,7 +226,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
         {/* Create Button (for providers) */}
         {user && (user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
           <Link
-            href="/dashboard/posting"
+            href="/dashboard/provider/posting"
             title="Create Post"
             className={cn(
               "flex rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/35 hover:from-orange-600 hover:to-orange-700 transition-all duration-300",
@@ -192,22 +301,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               </p>
             )}
             <div className="space-y-0.5">
-              {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
-                <Link
-                  href="/dashboard/provider/wallet"
-                  title={isCollapsed ? "Wallet" : undefined}
-                  className={cn(
-                    linkBase,
-                    isCollapsed ? linkCollapsed : linkExpanded,
-                    isActive('/dashboard/provider/wallet')
-                      ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
-                  )}
-                >
-                  <RiMoneyDollarCircleLine className={cn("w-5 h-5 flex-shrink-0", isActive('/dashboard/provider/wallet') && "text-primary")} />
-                  {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Wallet</span>}
-                </Link>
-              )}
+       
               <Link
                 href={`/profile/${user._id}`}
                 title={isCollapsed ? "My Profile" : undefined}
@@ -222,20 +316,13 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                 <RiUserLine className={cn("w-5 h-5 flex-shrink-0", pathname?.startsWith('/profile') && "text-primary")} />
                 {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">My Profile</span>}
               </Link>
-              <Link
-                href="/locked-in"
-                title={isCollapsed ? "Locked In" : undefined}
-                className={cn(
-                  linkBase,
-                  isCollapsed ? linkCollapsed : linkExpanded,
-                  pathname?.startsWith('/locked-in')
-                    ? "bg-primary/15 text-primary border border-primary/30 shadow-sm shadow-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70 border border-transparent"
-                )}
-              >
-                <RiFocus3Line className={cn("w-5 h-5 flex-shrink-0", pathname?.startsWith('/locked-in') && "text-primary")} />
-                {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Locked In</span>}
-              </Link>
+              <LockedInSidebarLink
+                pathname={pathname}
+                isCollapsed={isCollapsed}
+                linkBase={linkBase}
+                linkCollapsed={linkCollapsed}
+                linkExpanded={linkExpanded}
+              />
               {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
                 <Link
                   href="/dashboard/provider"
@@ -292,6 +379,12 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               <RiSettingsLine className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span className="font-medium">Settings</span>}
             </Link>
+            <TestPushButton
+              isCollapsed={isCollapsed}
+              linkBase={linkBase}
+              linkCollapsed={linkCollapsed}
+              linkExpanded={linkExpanded}
+            />
             {/* Premium entry */}
             <Link
               href="/premium"

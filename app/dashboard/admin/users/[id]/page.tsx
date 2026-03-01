@@ -81,8 +81,8 @@ export default function UserDetailsPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && currentUser) {
-      if (currentUser.role !== 'admin' && currentUser.role !== 'super_admin') {
-        setError('Access denied. Admin privileges required.')
+      if (currentUser.role !== 'super_admin') {
+        setError('Access denied. Super admin privileges required for user management.')
         setLoading(false)
         return
       }

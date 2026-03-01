@@ -120,9 +120,7 @@ export function normalizeUser(user: User | null, profile: UserProfile | null): N
   );
 
   const onboardingCompleted =
-    profile?.onboardingCompleted ??
-    profile?.completionPercentage === 100 ??
-    false;
+    (profile?.onboardingCompleted ?? profile?.completionPercentage === 100) ?? false;
 
   const normalized: NormalizedUser = {
     id: baseId,

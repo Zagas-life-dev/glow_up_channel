@@ -31,11 +31,11 @@ export default function Footer() {
           <div className="space-y-4 sm:space-y-6">
             <div className="mb-4 sm:mb-6 flex justify-center sm:justify-start">
               <Image
-                src="/images/logo-transparent.svg"
+                src="/images/Yellow and Black Modern Media Company Logo (14).png"
                 alt="GlowUp"
                 width={120}
                 height={50}
-                className="sm:w-32 md:w-36 lg:w-40 brightness-0 invert"
+                className="sm:w-32 md:w-36 lg:w-40 object-contain"
               />
             </div>
             <p className="text-sm sm:text-base text-gray-300 leading-relaxed max-w-sm mx-auto sm:mx-0">

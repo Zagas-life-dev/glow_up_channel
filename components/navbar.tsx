@@ -110,7 +110,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center space-x-2 sm:space-x-3 group">
               <div className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12">
                 <Image
-                  src="/images/logo-icon-transparent.png"
+                  src="/images/Yellow and Black Modern Media Company Logo (14).png"
                   alt="GlowUp"
                   fill
                   className="object-contain group-hover:scale-105 transition-transform duration-200"
@@ -410,7 +410,7 @@ export default function Navbar() {
                         Dashboard
                       </Link>
                     </Button>
-                    {(user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin') && (
+                    {(normalizedUser?.role === 'opportunity_poster' || normalizedUser?.role === 'admin' || normalizedUser?.role === 'super_admin') && (
                       <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
                         <Link href="/dashboard/provider" onClick={() => setIsMenuOpen(false)}>
                           <RiBriefcaseLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />

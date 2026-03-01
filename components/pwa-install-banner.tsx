@@ -344,7 +344,7 @@ export default function PwaInstallBanner() {
         <div className="flex flex-col items-center text-center">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
             <img
-              src="/images/logo-icon-transparent.svg"
+              src="/images/Yellow and Black Modern Media Company Logo (14).png"
               alt=""
               className="h-10 w-10"
             />

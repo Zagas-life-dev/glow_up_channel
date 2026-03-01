@@ -227,7 +227,7 @@ export default function AdminDashboard() {
   ]
 
   const actionCards = [
-    {
+    ...(isSuperAdmin ? [{
       title: 'User Management',
       description: 'Manage user accounts, approve registrations, and handle user status.',
       icon: Users,
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
         { label: 'Manage Users', href: '/dashboard/admin/users', icon: Users },
         { label: 'Pending', href: '/dashboard/admin/users/pending', icon: Clock, variant: 'outline' as const },
       ]
-    },
+    }] : []),
     {
       title: 'Create content',
       description: 'Post new events, jobs, opportunities, and resources. Add a link so viewers can access the main resource.',
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
         { label: 'Moderate Content', href: '/dashboard/admin/content', icon: FileText },
       ]
     },
-    {
+    ...(isSuperAdmin ? [{
       title: 'Posters Details',
       description: 'View all opportunity posters, their onboarding status, uploaded documents, and approval status.',
       icon: UserCheck,
@@ -263,16 +263,7 @@ export default function AdminDashboard() {
       actions: [
         { label: 'View Posters Details', href: '/dashboard/admin/business-upload', icon: Users },
       ]
-    },
-    {
-      title: 'Promotion Expiry',
-      description: 'Monitor and manage promotion expiry status, view statistics and manually expire promotions.',
-      icon: Timer,
-      color: 'orange',
-      actions: [
-        { label: 'Manage Expiry', href: '/dashboard/admin/promotion-expiry', icon: Timer },
-      ]
-    },
+    }] : []),
     {
       title: 'Past Posts',
       description: 'View and manage posts that have been moved to past collections due to expiry. Never deleted for legal compliance.',
@@ -291,7 +282,7 @@ export default function AdminDashboard() {
         { label: 'View Analytics', href: '/dashboard/admin/analytics', icon: BarChart3 },
       ]
     },
-    {
+    ...(isSuperAdmin ? [{
       title: 'Promotion Management',
       description: 'Manage content promotions, track revenue, and handle promotion requests.',
       icon: TrendingUp,
@@ -301,7 +292,7 @@ export default function AdminDashboard() {
         { label: 'Revenue', href: '/dashboard/admin/promotions/revenue', icon: DollarSign, variant: 'outline' as const },
         { label: 'Receipts', href: '/dashboard/admin/receipts', icon: Receipt, variant: 'outline' as const },
       ]
-    },
+    }] : []),
   ]
 
   const getColorClasses = (color: string) => {

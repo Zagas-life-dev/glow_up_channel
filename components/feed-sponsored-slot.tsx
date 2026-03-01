@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import FeedAd from "@/components/feed-ad"
 import FeedCard from "@/components/feed-card"
+import { Button } from "@/components/ui/button"
 
 export type PromotedContentItem = {
   _id: string
@@ -17,6 +19,10 @@ interface FeedSponsoredSlotProps {
   content?: PromotedContentItem | null
   adKey?: string
   slotId: string
+  /** When true, render FeedAd below the sponsored card (for "sponsored + ads" slots). */
+  showAdBelow?: boolean
+  /** Slot ID for the ad below; uses slotId if not provided. */
+  adSlotId?: string
   className?: string
 }
 
@@ -25,9 +31,23 @@ export default function FeedSponsoredSlot({
   content,
   adKey: _adKey,
   slotId,
+  showAdBelow = false,
+  adSlotId,
   className,
 }: FeedSponsoredSlotProps) {
   const showPromoted = kind === "promoted" && content && content.type
+  const adId = adSlotId ?? slotId
+
+  const detailHref =
+    showPromoted && content
+      ? content.type === "opportunity"
+        ? `/opportunities/${content._id}`
+        : content.type === "job"
+          ? `/jobs/${content._id}`
+          : content.type === "event"
+            ? `/events/${content._id}`
+            : `/resources/${content._id}`
+      : null
 
   return (
     <div
@@ -41,16 +61,30 @@ export default function FeedSponsoredSlot({
           Sponsored
         </span>
       </div>
-      <div className="px-3 pb-3">
+      <div className="px-3 pb-3 space-y-3">
         {showPromoted ? (
-          <FeedCard
-            item={{
-              ...content,
-              type: content.type as "opportunity" | "job" | "event" | "resource",
-            }}
-          />
+          <div className="space-y-3">
+            <FeedCard
+              item={{
+                ...content,
+                type: content.type as "opportunity" | "job" | "event" | "resource",
+              }}
+            />
+            {detailHref && (
+              <div className="flex justify-end">
+                <Button asChild size="sm" className="rounded-full">
+                  <Link href={detailHref}>
+                    Open
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
         ) : (
           <FeedAd slotId={slotId} className="min-h-[100px]" />
+        )}
+        {showAdBelow && adId && (
+          <FeedAd slotId={adId} className="min-h-[100px]" />
         )}
       </div>
     </div>

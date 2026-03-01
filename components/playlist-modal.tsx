@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from '@/contexts/playlist-context'
+import { useAuth } from '@/lib/auth-context'
+import { canCreatePremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -17,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { X } from 'lucide-react'
-import { RiPlayList2Fill } from "react-icons/ri"
+import { RiPlayList2Fill, RiVipCrownLine } from "react-icons/ri"
 
 interface PlaylistModalProps {
   isOpen: boolean
@@ -28,12 +30,16 @@ interface PlaylistModalProps {
 
 export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess }: PlaylistModalProps) {
   const { createPlaylist, updatePlaylist } = usePlaylist()
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [hashtags, setHashtags] = useState<string[]>([])
   const [isPublic, setIsPublic] = useState(false)
+  const [isPremiumPlaylist, setIsPremiumPlaylist] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  const canCreatePremium = user && canCreatePremiumPlaylist(user.role)
 
   // Reset form when modal opens/closes or editPlaylist changes
   useEffect(() => {
@@ -43,11 +49,13 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
         setDescription(editPlaylist.description || '')
         setHashtags(editPlaylist.hashtags || [])
         setIsPublic(editPlaylist.isPublic || false)
+        setIsPremiumPlaylist(editPlaylist.isPremiumPlaylist || false)
       } else {
         setName('')
         setDescription('')
         setHashtags([])
         setIsPublic(false)
+        setIsPremiumPlaylist(false)
       }
       setError('')
     }
@@ -205,7 +213,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           </div>
 
           {/* Public/Private Toggle */}
-          <div className="mb-6 flex items-center justify-between p-4 rounded-2xl bg-muted/60 border border-border/60">
+          <div className="mb-4 flex items-center justify-between p-4 rounded-2xl bg-muted/60 border border-border/60">
             <div className="flex items-center gap-3">
               {isPublic ? (
                 <FlaticonIcon name="globe" className="w-5 h-5 text-orange-500" aria-hidden />
@@ -226,6 +234,27 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               onCheckedChange={setIsPublic}
             />
           </div>
+
+          {/* Premium Playlist (admin/super_admin only) */}
+          {canCreatePremium && (
+            <div className="mb-6 flex items-center justify-between p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-3">
+                <RiVipCrownLine className="w-5 h-5 text-amber-500" aria-hidden />
+                <div>
+                  <p className="font-medium text-foreground">
+                    Premium Playlist
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Only premium members can view this playlist
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={isPremiumPlaylist}
+                onCheckedChange={setIsPremiumPlaylist}
+              />
+            </div>
+          )}
 
           {/* Submit Button */}
           <Button

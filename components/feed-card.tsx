@@ -87,6 +87,8 @@ interface FeedCardProps {
   onEngage?: () => void
   isExpanded?: boolean
   onExpand?: () => void
+  /** When provided (e.g. in sponsored slot), called when user clicks Show more so promotion budget can be charged. */
+  onPromotionShowMore?: () => void
 }
 
 const typeConfig = {
@@ -132,7 +134,7 @@ const typeConfig = {
   }
 }
 
-export default function FeedCard({ item, onEngage, isExpanded = false, onExpand }: FeedCardProps) {
+export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromotionShowMore }: FeedCardProps) {
   const { isAuthenticated } = useAuth()
   const [isLiked, setIsLiked] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
@@ -284,6 +286,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
 
         // Track active user activity (fire-and-forget, won't throw errors)
         trackLike(item.type, item._id)
+        // If content is promoted, deduct from promotion budget (backend no-ops if not promoted)
+        ApiClient.recordPromotionClick(item._id, item.type, 'like').catch(() => {})
       }
       onEngage?.()
     } catch (error: any) {
@@ -297,6 +301,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
       if (errorMessage.includes('only like active') ||
         errorMessage.includes('only save active') ||
         errorMessage.includes('only engage with active') ||
+        errorMessage.includes('inactive, unapproved, or expired') ||
+        errorMessage.includes('Cannot like inactive') ||
         errorMessage.includes('applications are closed') ||
         errorMessage.includes('deadline has passed') ||
         errorMessage.includes('event has ended')) {
@@ -359,6 +365,8 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
       if (errorMessage.includes('only like active') ||
         errorMessage.includes('only save active') ||
         errorMessage.includes('only engage with active') ||
+        errorMessage.includes('inactive, unapproved, or expired') ||
+        errorMessage.includes('Cannot like inactive') ||
         errorMessage.includes('applications are closed') ||
         errorMessage.includes('deadline has passed') ||
         errorMessage.includes('event has ended')) {
@@ -397,6 +405,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
         })
         // Track active user activity if share was successful (fire-and-forget)
         trackShare(item.type, item._id)
+        ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
       } catch (err) {
@@ -407,6 +416,7 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
       navigator.clipboard.writeText(url)
       // Track active user activity (fire-and-forget)
       trackShare(item.type, item._id)
+      ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
       setJustShared(true)
       setTimeout(() => setJustShared(false), 1500)
     }
@@ -423,11 +433,15 @@ export default function FeedCard({ item, onEngage, isExpanded = false, onExpand 
   const handleExpand = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    const newExpanded = isExpanded !== undefined ? !isExpanded : !localExpanded
+    if (newExpanded) {
+      onPromotionShowMore?.()
+      ApiClient.recordPromotionClick(item._id, item.type, 'show_more').catch(() => {})
+    }
     if (onExpand) {
       onExpand()
     } else {
       // Fallback for backward compatibility - local state management
-      const newExpanded = !localExpanded
       setLocalExpanded(newExpanded)
       if (newExpanded && !fullDetails && !loadingDetails) {
         loadFullDetails()

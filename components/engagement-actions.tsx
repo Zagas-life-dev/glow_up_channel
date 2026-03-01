@@ -80,6 +80,16 @@ export default function EngagementActions({
       toast.error('Please sign in to like items')
       return
     }
+
+    const promotionContentType =
+      type === 'opportunities'
+        ? 'opportunity'
+        : type === 'events'
+          ? 'event'
+          : type === 'jobs'
+            ? 'job'
+            : 'resource'
+
     try {
       setIsLoading(true)
       if (engagementStatus.isLiked) {
@@ -93,12 +103,27 @@ export default function EngagementActions({
         setLikeCount((c) => c + 1)
         toast.success('Added to liked items')
         trackLike(type === 'opportunities' ? 'opportunity' : type === 'events' ? 'event' : type === 'jobs' ? 'job' : 'resource', id)
+        ApiClient.recordPromotionClick(id, promotionContentType, 'like').catch(() => {})
       }
     } catch (error: any) {
-      if (error?.message?.includes('Authentication')) {
+      const msg = error?.message || ''
+      if (msg.includes('Authentication')) {
         toast.error('Please sign in to like items')
+      } else if (
+        msg.includes('inactive, unapproved, or expired') ||
+        msg.includes('Cannot like inactive') ||
+        msg.includes('only like active') ||
+        msg.includes('applications are closed') ||
+        msg.includes('deadline has passed') ||
+        msg.includes('event has ended')
+      ) {
+        const friendly =
+          type === 'jobs'
+            ? 'This job is no longer active, is unapproved, or has expired.'
+            : 'This item is no longer active.'
+        toast.error(friendly)
       } else {
-        toast.error(error?.message || 'Failed to update like')
+        toast.error(msg || 'Failed to update like')
       }
     } finally {
       setIsLoading(false)
@@ -112,6 +137,16 @@ export default function EngagementActions({
       toast.error('Please sign in to save items')
       return
     }
+
+    const promotionContentType =
+      type === 'opportunities'
+        ? 'opportunity'
+        : type === 'events'
+          ? 'event'
+          : type === 'jobs'
+            ? 'job'
+            : 'resource'
+
     try {
       setIsLoading(true)
       if (engagementStatus.isSaved) {
@@ -139,12 +174,14 @@ export default function EngagementActions({
     e.preventDefault()
     e.stopPropagation()
     const normalizedType = type === 'opportunities' ? 'opportunity' : type === 'events' ? 'event' : type === 'jobs' ? 'job' : 'resource'
+    const promotionContentType = normalizedType
     const path = type === 'opportunities' ? 'opportunities' : type === 'events' ? 'events' : type === 'jobs' ? 'jobs' : 'resources'
     const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${path}/${id}`
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ url, title: 'Share' })
         trackShare(normalizedType, id)
+        ApiClient.recordPromotionClick(id, promotionContentType, 'share').catch(() => {})
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
       } catch {
@@ -157,6 +194,7 @@ export default function EngagementActions({
           toast.success('Link copied')
         }
         trackShare(normalizedType, id)
+        ApiClient.recordPromotionClick(id, promotionContentType, 'share').catch(() => {})
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
       } catch {

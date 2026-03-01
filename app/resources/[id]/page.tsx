@@ -72,7 +72,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
   useEffect(() => {
     if (!isAuthenticated || !id || !resource || promotionClickSent.current) return
     promotionClickSent.current = true
-    ApiClient.recordPromotionClick(id, 'resource').catch(() => {})
+    ApiClient.recordPromotionClick(id, 'resource', 'view').catch(() => {})
   }, [isAuthenticated, id, resource])
 
   if (loading) return <ContentDetailSkeleton />

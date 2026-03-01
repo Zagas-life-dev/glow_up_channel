@@ -15,6 +15,11 @@ import {
 } from "@/components/ui/dialog"
 import Link from "next/link"
 import ApiClient from "@/lib/api-client"
+import FeedSponsoredSlot, { type PromotedContentItem } from "@/components/feed-sponsored-slot"
+import FeedAd from "@/components/feed-ad"
+
+const ADSENSE_FEED_SLOT = process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""
+const PROMOTED_REFRESH_MS = 20000
 
 function formatElapsed(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -70,7 +75,7 @@ function formatDurationForSummary(seconds: number): string {
 }
 
 function LockedInPageContent() {
-  const { state, elapsedSeconds, isActive, startSession, pauseSession, resumeSession, endSession, updateSession } = useLockedIn()
+  const { state, elapsedSeconds, isActive, startSession, pauseSession, resumeSession, endSession, updateSession, statsInvalidatedAt } = useLockedIn()
   const [intentionInput, setIntentionInput] = useState("")
   const [todoInput, setTodoInput] = useState("")
   const [pendingTodos, setPendingTodos] = useState<LockedInTodoItem[]>([])
@@ -84,6 +89,54 @@ function LockedInPageContent() {
   } | null>(null)
   const [startError, setStartError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
+  const [promotedFeed, setPromotedFeed] = useState<PromotedContentItem[]>([])
+  const [liveStats, setLiveStats] = useState<{ liveCount: number; totalToday: number }>({ liveCount: 0, totalToday: 0 })
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+
+  const fetchPromotedFeed = useCallback(() => {
+    if (!backendUrl) return
+    fetch(`${backendUrl}/api/promoted/feed?limit=10`)
+      .then((res) => (res.ok ? res.json() : { success: false, data: {} }))
+      .then((data) => {
+        const raw = data?.data?.feed ?? data?.data?.recommendations ?? []
+        const list = Array.isArray(raw) ? raw : []
+        const normalized = list
+          .filter((item: Record<string, unknown>) => item && (item._id ?? item.id) && (item.title ?? item.name))
+          .map((item: Record<string, unknown>) => ({
+            ...item,
+            _id: String(item._id ?? item.id),
+            title: String(item.title ?? item.name ?? ""),
+            type: (item.type ?? item.contentType ?? "opportunity") as PromotedContentItem["type"],
+          })) as PromotedContentItem[]
+        setPromotedFeed(normalized)
+      })
+      .catch(() => setPromotedFeed([]))
+  }, [backendUrl])
+
+  const fetchLiveStats = useCallback(() => {
+    ApiClient.getLockedInDailyStats()
+      .then((data) => setLiveStats({ liveCount: data.liveCount, totalToday: data.totalToday }))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!isActive) return
+    fetchPromotedFeed()
+    const interval = setInterval(fetchPromotedFeed, PROMOTED_REFRESH_MS)
+    return () => clearInterval(interval)
+  }, [isActive, fetchPromotedFeed])
+
+  useEffect(() => {
+    if (!isActive) return
+    fetchLiveStats()
+    const interval = setInterval(fetchLiveStats, 30000)
+    return () => clearInterval(interval)
+  }, [isActive, fetchLiveStats])
+
+  useEffect(() => {
+    if (isActive && statsInvalidatedAt > 0) fetchLiveStats()
+  }, [isActive, statsInvalidatedAt, fetchLiveStats])
 
   const handleStart = async () => {
     const intention = intentionInput.trim()
@@ -148,6 +201,118 @@ function LockedInPageContent() {
   }
 
   const canStart = intentionInput.trim().length > 0
+
+  if (isActive) {
+    const promoted0 = promotedFeed[0]
+    const promoted1 = promotedFeed[1]
+    return (
+      <div className="min-h-screen bg-page relative overflow-hidden px-4 py-6 flex flex-col items-center">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_60%)]" />
+        <div className="relative w-full flex flex-col items-center flex-1">
+          {/* Center: small circle + live counter + minimal controls */}
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="w-28 h-28 rounded-full border-2 border-primary/50 bg-card/80 flex items-center justify-center shadow-lg">
+              <span className="text-2xl font-mono font-semibold tabular-nums text-foreground">
+                {formatElapsed(elapsedSeconds)}
+              </span>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Locked in with</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums text-foreground">
+                {liveStats.liveCount} live now · {liveStats.totalToday} today
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {state.isPaused ? (
+                <Button size="sm" onClick={resumeSession} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  Resume
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" onClick={pauseSession} className="rounded-full">
+                  Pause
+                </Button>
+              )}
+              <Button size="sm" variant="outline" onClick={handleEndSession} className="rounded-full border-red-500/80 text-red-500 hover:bg-red-500/10">
+                End session
+              </Button>
+            </div>
+          </div>
+          {/* Ad slots: 4 on desktop, 2 on mobile */}
+          <div className="w-full max-w-4xl flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8">
+            {/* Mobile: 2 slots — ad only, sponsored+ads */}
+            <div className="lg:hidden space-y-4">
+              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
+              <FeedSponsoredSlot
+                kind={promoted1 ? "promoted" : "ad"}
+                content={promoted1 ?? undefined}
+                slotId={ADSENSE_FEED_SLOT}
+                showAdBelow={!!ADSENSE_FEED_SLOT}
+                adSlotId={ADSENSE_FEED_SLOT}
+              />
+            </div>
+            {/* Desktop: 4 slots — sponsored, sponsored+ads, ad, ad */}
+            <div className="hidden lg:contents">
+              <FeedSponsoredSlot
+                kind={promoted0 ? "promoted" : "ad"}
+                content={promoted0 ?? undefined}
+                slotId={ADSENSE_FEED_SLOT}
+              />
+              <FeedSponsoredSlot
+                kind={promoted1 ? "promoted" : "ad"}
+                content={promoted1 ?? undefined}
+                slotId={ADSENSE_FEED_SLOT}
+                showAdBelow={!!ADSENSE_FEED_SLOT}
+                adSlotId={ADSENSE_FEED_SLOT}
+              />
+              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
+              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
+            </div>
+          </div>
+        </div>
+        <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center text-xl">Session complete</DialogTitle>
+            </DialogHeader>
+            {summary && (
+              <div className="space-y-4 py-2">
+                <p className="text-center text-muted-foreground">
+                  You were locked in for <strong className="text-foreground">{formatDurationForSummary(summary.durationSeconds)}</strong>.
+                </p>
+                {summary.intention && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Intention</p>
+                    <p className="mt-1 rounded-lg bg-muted px-3 py-2 text-sm">{summary.intention}</p>
+                  </div>
+                )}
+                {summary.todos.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">To-do summary</p>
+                    <ul className="space-y-1 max-h-40 overflow-y-auto pr-1">
+                      {summary.todos.map((t) => (
+                        <li key={t.id} className="flex items-center gap-2 rounded bg-muted px-3 py-2 text-sm">
+                          <span className={t.done ? "line-through text-muted-foreground" : ""}>{t.text}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{t.done ? "Done" : "Pending"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {summary.totalTodos > 0 && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You completed <strong className="text-foreground">{summary.completedCount}</strong> of {summary.totalTodos} to-do{summary.totalTodos !== 1 ? "s" : ""}.
+                  </p>
+                )}
+                <div className="flex justify-center pt-2">
+                  <Button onClick={() => setSummaryOpen(false)}>Done</Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-page relative overflow-hidden px-4 py-10 flex items-center justify-center">
@@ -452,6 +617,7 @@ function LockedInPageContent() {
   )
 }
 
+/** Locked In is available to all authenticated users (not premium-only). */
 export default function LockedInPage() {
   return (
     <AuthGuard>

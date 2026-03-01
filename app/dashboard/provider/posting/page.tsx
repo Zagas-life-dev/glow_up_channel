@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +20,8 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
+import { getPostingLimit } from "@/lib/posting-limits"
+import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
 import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
@@ -46,7 +49,10 @@ import {
   Zap,
   LayoutDashboard,
   MoreVertical,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  FileText,
+  BarChart3
 } from 'lucide-react'
 import {
   Sheet,
@@ -82,7 +88,7 @@ function PostingContent() {
   const router = useRouter()
   const pathname = usePathname()
   const { setHideNavbar, setHideFooter } = usePage()
-  const { user, isAuthenticated } = useAuth()
+  const { user, profile, isAuthenticated } = useAuth()
   const [selectedType, setSelectedType] = useState<PostType | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -101,6 +107,7 @@ function PostingContent() {
   
   // Permission state
   const [canPost, setCanPost] = useState(false)
+  const [postingCount, setPostingCount] = useState<number | null>(null)
   const [onboardingStatus, setOnboardingStatus] = useState<{
     completionPercentage: number
     isCompleted: boolean
@@ -123,20 +130,30 @@ function PostingContent() {
     }
   }, [setHideNavbar, setHideFooter])
 
-  // Check posting permission
+  // Check posting permission and current posting count (always fetch count so it matches dashboard)
   useEffect(() => {
     const checkPermission = async () => {
       if (!isAuthenticated || !user) return
       try {
-        const response = await ApiClient.checkPostingPermission()
+        const [response, countResult] = await Promise.all([
+          ApiClient.checkPostingPermission().catch(() => ({
+            canPost: false,
+            completionPercentage: 0,
+            isCompleted: false,
+            reason: 'Could not verify posting permission'
+          })),
+          ApiClient.getMyPostingCount().catch(() => ({ total: 0, opportunities: 0, events: 0, jobs: 0, resources: 0 }))
+        ])
         setCanPost(response.canPost)
         setOnboardingStatus({
           completionPercentage: response.completionPercentage,
           isCompleted: response.isCompleted,
           reason: response.reason
         })
+        setPostingCount(countResult.total)
       } catch (error) {
         setCanPost(false)
+        setPostingCount(null)
         setOnboardingStatus({
           completionPercentage: 0,
           isCompleted: false,
@@ -148,6 +165,16 @@ function PostingContent() {
   }, [isAuthenticated, user])
 
   const handleSelectType = (type: PostType) => {
+    const limit = getPostingLimit(user?.isPremium, user?.role)
+    if (postingCount !== null && postingCount >= limit) {
+      toast.error(
+        user?.isPremium
+          ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
+          : `You have reached your maximum of ${limit} posts. Upgrade to Premium to post up to 20.`,
+        { duration: 5000 }
+      )
+      return
+    }
     setSelectedType(type)
     setIsSheetOpen(true)
     setSubmitStatus('idle')
@@ -298,6 +325,25 @@ function PostingContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedType || !canPost) return
+
+    const limit = getPostingLimit(user?.isPremium, user?.role)
+    let currentTotal = postingCount ?? 0
+    if (currentTotal >= limit) {
+      try {
+        const count = await ApiClient.getMyPostingCount()
+        currentTotal = count.total
+        setPostingCount(currentTotal)
+      } catch (_) {}
+      if (currentTotal >= limit) {
+        toast.error(
+          user?.isPremium
+            ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
+            : `You have reached your maximum of ${limit} posts. Upgrade to Premium to post up to 20.`,
+          { duration: 5000 }
+        )
+        return
+      }
+    }
     
     setIsSubmitting(true)
     setSubmitStatus('idle')
@@ -405,6 +451,8 @@ function PostingContent() {
       }
       
       setSubmitStatus('success')
+      const count = await ApiClient.getMyPostingCount()
+      setPostingCount(count.total)
       setTimeout(() => {
         setIsSheetOpen(false)
         setSelectedType(null)
@@ -420,35 +468,46 @@ function PostingContent() {
 
   const getTypeConfig = (type: PostType) => postTypes.find(t => t.id === type)!
 
+  const avatarUrl = (profile as any)?.profileImage ?? (user as any)?.profileImage ?? null
+
+  // Provider sidebar nav (same as provider dashboard)
   const navItems = [
-    { id: 'post', label: 'Post Content', icon: Plus, href: '/dashboard/posting' },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider' },
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider' },
+    { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/provider' },
     { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions' },
-    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/provider/settings' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/provider' },
   ]
 
   const quickLinks = [
-    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/provider', variant: 'default' as const },
-    { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
+    { label: 'Post Content', icon: Plus, href: '/dashboard/provider/posting', variant: 'default' as const },
     { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
 
   const handleRefresh = () => {
     setLoading(true)
-    // Re-check posting permission
     const checkPermission = async () => {
       if (!isAuthenticated || !user) return
       try {
-        const response = await ApiClient.checkPostingPermission()
+        const [response, countResult] = await Promise.all([
+          ApiClient.checkPostingPermission().catch(() => ({
+            canPost: false,
+            completionPercentage: 0,
+            isCompleted: false,
+            reason: 'Could not verify posting permission'
+          })),
+          ApiClient.getMyPostingCount().catch(() => ({ total: 0, opportunities: 0, events: 0, jobs: 0, resources: 0 }))
+        ])
         setCanPost(response.canPost)
         setOnboardingStatus({
           completionPercentage: response.completionPercentage,
           isCompleted: response.isCompleted,
           reason: response.reason
         })
+        setPostingCount(countResult.total)
       } catch (error) {
         setCanPost(false)
+        setPostingCount(null)
         setOnboardingStatus({
           completionPercentage: 0,
           isCompleted: false,
@@ -463,44 +522,57 @@ function PostingContent() {
 
   return (
     <div className="min-h-screen bg-page flex">
-      {/* Desktop Sidebar - Hidden on mobile */}
+      {/* Desktop Sidebar - Provider Hub (same as provider dashboard) */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
         {/* Sidebar Header */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-orange-500" />
-            </div>
+            <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
+              <Image
+                src="/images/Yellow and Black Modern Media Company Logo (14).png"
+                alt="GlowUp"
+                fill
+                className="object-contain"
+              />
+            </Link>
             <div>
-              <h1 className="text-base font-bold text-foreground">Post Content</h1>
-              <p className="text-xs text-muted-foreground">Create & Share</p>
+              <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
+              <p className="text-xs text-muted-foreground">Post Content</p>
             </div>
           </div>
           
           {/* User Info */}
-          <div className="p-3 rounded-xl bg-muted border border-border">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.firstName || user?.email?.split('@')[0]}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          <div className="p-3 rounded-xl bg-muted border border-border flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-border flex-shrink-0">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={user?.firstName || user?.email || 'Provider'} width={36} height={36} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-semibold text-orange-400">
+                  {(user?.firstName || user?.email || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {user?.firstName || user?.email?.split('@')[0]}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - same as provider dashboard */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
-            
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive 
-                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  isActive ? "bg-primary/10 text-orange-400 border border-orange-500/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
@@ -514,16 +586,18 @@ function PostingContent() {
         <div className="p-4 border-t border-border space-y-2">
           {quickLinks.map((link) => {
             const Icon = link.icon
+            const isActive = pathname === link.href
             return (
               <Button
                 key={link.label}
                 asChild
                 variant={link.variant}
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-start rounded-xl",
                   link.variant === 'default' 
                     ? "bg-primary hover:bg-primary/90" 
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted",
+                  isActive && "ring-2 ring-primary/30"
                 )}
               >
                 <Link href={link.href}>
@@ -534,19 +608,42 @@ function PostingContent() {
             )
           })}
         </div>
+
+        {/* Posts count - always show when we have a value (matches dashboard) */}
+        <div className="p-4 border-t border-border">
+          <div className="p-3 rounded-xl bg-muted border border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Your posts</span>
+              <span className="text-lg font-bold text-orange-400">
+                {postingCount !== null ? postingCount : '—'} of {getPostingLimit(user?.isPremium, user?.role)} max
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium: 20 posts max' : 'Free: 5 posts max (all statuses count)'}
+            </p>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              {(() => {
+                const total = postingCount ?? 0
+                const limit = getPostingLimit(user?.isPremium, user?.role)
+                const pct = limit > 0 ? Math.min((total / limit) * 100, 100) : 0
+                return <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+              })()}
+            </div>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header - Only visible on mobile */}
+        {/* Mobile Header - Only visible on mobile (Provider Hub) */}
         <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Plus className="w-4 h-4 text-orange-500" />
+                <Crown className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-foreground">Post Content</h1>
+                <h1 className="text-sm font-bold text-foreground">Provider Hub · Post</h1>
               </div>
             </div>
             
@@ -709,6 +806,11 @@ function PostingContent() {
 
       {/* Post Type Selection */}
         <div className="mb-8">
+        {postingCount !== null && (
+          <p className="text-sm text-muted-foreground mb-4">
+            You have <span className="font-semibold text-foreground">{postingCount} of {getPostingLimit(user?.isPremium, user?.role)}</span> posts (max for {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium' : 'free'}).
+          </p>
+        )}
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">What would you like to post?</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {postTypes.map((type) => {

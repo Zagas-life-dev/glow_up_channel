@@ -147,8 +147,10 @@ export default function SettingsPage() {
   // Premium membership state
   const [isPremium, setIsPremium] = useState<boolean>(false)
   const [premiumExpiresAt, setPremiumExpiresAt] = useState<string | null>(null)
+  const [canCancelPremium, setCanCancelPremium] = useState(false)
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [isStartingPremium, setIsStartingPremium] = useState(false)
+  const [isCancellingPremium, setIsCancellingPremium] = useState(false)
 
   // Basic Info State
   const [firstName, setFirstName] = useState('')
@@ -183,7 +185,7 @@ export default function SettingsPage() {
   const [isPrivate, setIsPrivate] = useState(false)
   const [showConnections, setShowConnections] = useState(true)
 
-  // Preferences State
+  // Preferences State (notificationSettings from backend + local UI)
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     pushNotifications: false,
@@ -191,10 +193,27 @@ export default function SettingsPage() {
     weeklyDigest: true,
     language: "en",
     timezone: "Africa/Lagos",
-    theme: "dark"
+    theme: "dark",
+    pushOpportunities: true,
+    pushEvents: true,
+    pushJobs: true,
+    pushResources: true,
+    pushLockedInReminders: true,
+    pushChannelPosts: true,
+    pushConnectionPosts: true,
+    pushFunReminders: true
   })
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false)
+  const [savingPushPref, setSavingPushPref] = useState(false)
 
   const push = usePushNotifications()
+
+  // Open notifications tab when ?tab=notifications
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('tab') === 'notifications') setActiveTab('notifications')
+  }, [])
 
   // Sync push preference from actual subscription state
   useEffect(() => {
@@ -202,6 +221,57 @@ export default function SettingsPage() {
       setPreferences((p) => (p.pushNotifications ? p : { ...p, pushNotifications: true }))
     }
   }, [push.isSubscribed, push.isLoading])
+
+  // Load preferences from backend (for notification settings)
+  useEffect(() => {
+    if (!user || !ApiClient.isAuthenticated()) return
+    let cancelled = false
+    fetch(`${API_BASE_URL}/api/users/preferences`, { headers: getAuthHeaders() })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled || !data?.data?.preferences) return
+        const ns = data.data.preferences.notificationSettings || {}
+        setPreferences((p) => ({
+          ...p,
+          emailNotifications: ns.emailNotifications !== false,
+          pushNotifications: ns.pushNotifications !== false,
+          weeklyDigest: ns.weeklyDigest !== false,
+          newOpportunities: ns.newOpportunities !== false,
+          eventReminders: ns.eventReminders !== false,
+          jobAlerts: ns.jobAlerts !== false,
+          pushOpportunities: ns.pushOpportunities !== false,
+          pushEvents: ns.pushEvents !== false,
+          pushJobs: ns.pushJobs !== false,
+          pushResources: ns.pushResources !== false,
+          pushLockedInReminders: ns.pushLockedInReminders !== false,
+          pushChannelPosts: ns.pushChannelPosts !== false,
+          pushConnectionPosts: ns.pushConnectionPosts !== false,
+          pushFunReminders: ns.pushFunReminders !== false
+        }))
+        setPreferencesLoaded(true)
+      })
+      .catch(() => setPreferencesLoaded(true))
+    return () => { cancelled = true }
+  }, [user])
+
+  const savePushPreference = async (key: string, value: boolean) => {
+    if (!ApiClient.isAuthenticated()) return
+    setSavingPushPref(true)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/users/preferences`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationSettings: { [key]: value } })
+      })
+      const data = await res.json()
+      if (data.success) setPreferences((p) => ({ ...p, [key]: value }))
+      else toast.error(data.message || 'Failed to save')
+    } catch {
+      toast.error('Failed to save notification setting')
+    } finally {
+      setSavingPushPref(false)
+    }
+  }
 
   // Security State
   const [currentPassword, setCurrentPassword] = useState('')
@@ -304,6 +374,22 @@ export default function SettingsPage() {
     }
     loadVerificationStatus()
   }, [user])
+
+  // When premium modal opens, fetch status to get canCancel
+  useEffect(() => {
+    if (!showPremiumModal || !user || !ApiClient.isAuthenticated()) return
+    let cancelled = false
+    ApiClient.getPremiumStatus()
+      .then((status) => {
+        if (!cancelled) {
+          setCanCancelPremium(!!status.canCancel)
+          if (typeof status.isPremium === 'boolean') setIsPremium(status.isPremium)
+          if (status.premiumExpiresAt != null) setPremiumExpiresAt(status.premiumExpiresAt)
+        }
+      })
+      .catch(() => { if (!cancelled) setCanCancelPremium(false) })
+    return () => { cancelled = true }
+  }, [showPremiumModal, user])
 
   // Handle premium callback from Paystack (?premium=success&reference=...)
   useEffect(() => {
@@ -698,6 +784,35 @@ export default function SettingsPage() {
               )}
             </div>
 
+            {/* Become a provider card - only show when not already a provider */}
+            {user?.role !== 'opportunity_poster' && user?.role !== 'admin' && user?.role !== 'super_admin' && (
+              <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/40 flex items-center justify-center">
+                    <Crown className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Become a provider</p>
+                    <p className="text-xs text-muted-foreground">
+                      Post opportunities and events. Reach seekers and grow your audience.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setUpgradeForm({ email: user?.email || '', password: '' })
+                    setUpgradeError(null)
+                    setShowUpgradeModal(true)
+                  }}
+                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium gap-2"
+                >
+                  <Crown className="h-4 w-4" />
+                  Become a provider
+                </Button>
+              </div>
+            )}
+
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 space-y-6">
               {/* Premium membership card */}
               <div className="p-4 rounded-xl border border-yellow-500/40 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -734,9 +849,7 @@ export default function SettingsPage() {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => {
-                    window.location.href = '/premium'
-                  }}
+                  onClick={() => router.push('/premium/manage')}
                   className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-xs font-medium"
                 >
                   {isPremium ? 'Manage Premium' : 'See Premium Plans'}
@@ -1383,7 +1496,7 @@ export default function SettingsPage() {
                       className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2"
                     >
                       <Crown className="h-4 w-4" />
-                      Become provider
+                      Become a provider
                     </Button>
                   )}
                 </div>
@@ -1502,11 +1615,15 @@ export default function SettingsPage() {
                     checked={preferences.pushNotifications || push.isSubscribed}
                     onCheckedChange={async (checked) => {
                       if (!push.isSupported) return
-                      setPreferences((p) => ({ ...p, pushNotifications: checked }))
+                      setPreferences((p) => ({ ...p, pushNotifications: checked, ...(checked && { pushFunReminders: true }) }))
                       if (checked) {
                         const ok = await push.subscribe()
-                        if (ok) toast.success("Push notifications enabled")
-                        else toast.error(push.error || "Could not enable push notifications")
+                        if (ok) {
+                          toast.success("Push notifications enabled")
+                          await savePushPreference('pushFunReminders', true)
+                        } else {
+                          toast.error(push.error || "Could not enable push notifications")
+                        }
                       } else {
                         await push.unsubscribe()
                         toast.success("Push notifications disabled")
@@ -1515,6 +1632,33 @@ export default function SettingsPage() {
                     className="data-[state=checked]:bg-primary"
                   />
                 </div>
+                {(preferences.pushNotifications || push.isSubscribed) && push.isSupported && (
+                  <div className="mt-4 pl-1 space-y-3 border-l-2 border-border/60">
+                    <p className="text-sm font-medium text-foreground mt-2 mb-2">What to receive</p>
+                    {[
+                      { key: 'pushOpportunities', label: 'Saved opportunities', desc: 'Deadline reminders for saved opportunities' },
+                      { key: 'pushEvents', label: 'Saved events', desc: 'Reminders for saved events' },
+                      { key: 'pushJobs', label: 'Saved jobs', desc: 'Deadline reminders for saved jobs' },
+                      { key: 'pushLockedInReminders', label: 'Locked In reminders', desc: 'Daily nudge to lock in' },
+                      { key: 'pushConnectionPosts', label: 'When connections post', desc: 'When someone you follow posts in Community' },
+                      { key: 'pushChannelPosts', label: 'Channel posts', desc: 'New posts in channels you\'re in' },
+                      { key: 'pushFunReminders', label: 'Fun & motivational', desc: 'Occasional goals and motivation (about once a day)' }
+                    ].map(({ key, label, desc }) => (
+                      <div key={key} className="flex items-center justify-between gap-4 py-1">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground text-sm">{label}</p>
+                          <p className="text-xs text-muted-foreground">{desc}</p>
+                        </div>
+                        <Switch
+                          disabled={savingPushPref}
+                          checked={!!(preferences as Record<string, unknown>)[key]}
+                          onCheckedChange={(checked) => savePushPreference(key, checked)}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1654,7 +1798,33 @@ export default function SettingsPage() {
             )}
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 flex-wrap gap-2">
+            {isPremium && canCancelPremium && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isStartingPremium || isCancellingPremium}
+                className="rounded-xl border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={async () => {
+                  if (!window.confirm('Cancel your premium subscription? You will keep access until the end of your current billing period and will not be charged again.')) return
+                  try {
+                    setIsCancellingPremium(true)
+                    const { premiumExpiresAt: expiresAt } = await ApiClient.cancelPremiumSubscription()
+                    setCanCancelPremium(false)
+                    await refreshUser()
+                    toast.success('Subscription cancelled. You keep premium until ' + (expiresAt ? new Date(expiresAt).toLocaleDateString() : 'the end of your period') + '.')
+                    setShowPremiumModal(false)
+                  } catch (error: unknown) {
+                    console.error('Error cancelling premium:', error)
+                    toast.error(error instanceof Error ? error.message : 'Failed to cancel subscription')
+                  } finally {
+                    setIsCancellingPremium(false)
+                  }
+                }}
+              >
+                {isCancellingPremium ? 'Cancelling…' : 'Cancel subscription'}
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -1666,24 +1836,24 @@ export default function SettingsPage() {
             </Button>
             <Button
               type="button"
-              disabled={isStartingPremium}
+              disabled={isStartingPremium || isCancellingPremium}
               className="bg-primary hover:bg-primary/90 rounded-xl"
               onClick={async () => {
                 try {
                   setIsStartingPremium(true)
-                  // For now, use a fixed monthly amount; adjust if needed
-                  const monthlyAmountNg = 2500
-                  const result = await ApiClient.startPremiumSubscription(monthlyAmountNg, {
+                  // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦2,500 = 250000 kobo.
+                  const result = await ApiClient.startPremiumSubscription(250000, {
                     planId: 'premium_monthly',
+                    callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/profile/settings?premium=success` : undefined,
                   })
                   if (result.authorizationUrl) {
                     window.location.href = result.authorizationUrl
                   } else {
                     toast.error('Failed to start premium subscription')
                   }
-                } catch (error: any) {
+                } catch (error: unknown) {
                   console.error('Error starting premium subscription:', error)
-                  toast.error(error?.message || 'Failed to start premium subscription')
+                  toast.error(error instanceof Error ? error.message : 'Failed to start premium subscription')
                 } finally {
                   // do not reset isStartingPremium here; we are leaving page to Paystack
                   setShowPremiumModal(false)

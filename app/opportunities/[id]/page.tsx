@@ -66,7 +66,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
   useEffect(() => {
     if (!isAuthenticated || !id || !opportunity || promotionClickSent.current) return
     promotionClickSent.current = true
-    ApiClient.recordPromotionClick(id, 'opportunity').catch(() => {})
+    ApiClient.recordPromotionClick(id, 'opportunity', 'view').catch(() => {})
   }, [isAuthenticated, id, opportunity])
 
   if (loading) return <ContentDetailSkeleton />
@@ -245,7 +245,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]"
               >
-                <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}>
                   Apply now
                   <RiExternalLinkLine className="w-4 h-4" />
                 </a>
@@ -258,7 +258,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                   size="lg"
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold"
                 >
-                  <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                  <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}>
                     Apply now
                     <RiExternalLinkLine className="w-4 h-4" />
                   </a>

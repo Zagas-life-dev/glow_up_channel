@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import { 
   ArrowLeft,
   ArrowRight,
@@ -295,18 +296,12 @@ export default function ProviderOnboarding() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-page flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-orange-500" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
-          <p className="text-muted-foreground mb-4">Please log in to access provider onboarding</p>
-          <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
-            <Link href="/login">Sign In</Link>
-          </Button>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please log in to access provider onboarding."
+        icon={Shield}
+        signInLabel="Sign in"
+      />
     )
   }
 
@@ -351,7 +346,7 @@ export default function ProviderOnboarding() {
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
+              className="h-full bg-primary rounded-full transition-all duration-300"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
@@ -397,7 +392,7 @@ export default function ProviderOnboarding() {
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-300"
+                className="h-full bg-primary rounded-full transition-all duration-300"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>

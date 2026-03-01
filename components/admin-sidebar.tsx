@@ -27,21 +27,22 @@ import {
   RiCloseLine,
   RiMenuLine,
   RiAddCircleLine,
+  RiMailLine,
 } from "react-icons/ri"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
-  { id: "overview", label: "Overview", icon: RiDashboardLine, href: "/dashboard/admin" },
-  { id: "create-content", label: "Create content", icon: RiAddCircleLine, href: "/dashboard/admin/create-content" },
-  { id: "users", label: "Users", icon: RiGroupLine, href: "/dashboard/admin/users" },
-  { id: "content", label: "Content", icon: RiFileLine, href: "/dashboard/admin/content" },
-  { id: "analytics", label: "Analytics", icon: RiBarChartBoxLine, href: "/dashboard/admin/analytics" },
+  { id: "overview", label: "Overview", icon: RiDashboardLine, href: "/dashboard/admin", superAdminOnly: false },
+  { id: "create-content", label: "Create content", icon: RiAddCircleLine, href: "/dashboard/admin/create-content", superAdminOnly: false },
+  { id: "users", label: "Users", icon: RiGroupLine, href: "/dashboard/admin/users", superAdminOnly: true },
+  { id: "content", label: "Content", icon: RiFileLine, href: "/dashboard/admin/content", superAdminOnly: false },
+  { id: "analytics", label: "Analytics", icon: RiBarChartBoxLine, href: "/dashboard/admin/analytics", superAdminOnly: false },
+  { id: "marketing-email", label: "Marketing email", icon: RiMailLine, href: "/dashboard/admin/marketing/email", superAdminOnly: true },
 ] as const
 
 const QUICK_LINKS = [
-  { label: "User Management", icon: RiGroupLine, href: "/dashboard/admin/user-management", variant: "default" as const },
-  { label: "Settings", icon: RiSettingsLine, href: "/dashboard/admin/settings", variant: "outline" as const },
-  { label: "Home", icon: RiHomeLine, href: "/", variant: "outline" as const },
+  { label: "Settings", icon: RiSettingsLine, href: "/dashboard/admin/settings", variant: "outline" as const, superAdminOnly: true },
+  { label: "Home", icon: RiHomeLine, href: "/", variant: "outline" as const, superAdminOnly: false },
 ] as const
 
 function isNavActive(pathname: string, item: (typeof NAV_ITEMS)[number]): boolean {
@@ -113,7 +114,7 @@ export function AdminLayout({
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin).map((item) => {
             const Icon = item.icon
             const isActive = isNavActive(pathname ?? "", item)
             return (
@@ -134,7 +135,7 @@ export function AdminLayout({
           })}
         </nav>
         <div className="p-4 border-t border-border/60 space-y-2">
-          {QUICK_LINKS.map((link) => {
+          {QUICK_LINKS.filter((link) => !link.superAdminOnly || isSuperAdmin).map((link) => {
             const Icon = link.icon
             return (
               <Button
@@ -143,7 +144,7 @@ export function AdminLayout({
                 variant={link.variant}
                 className={cn(
                   "w-full justify-start rounded-2xl",
-                  link.variant === "default" ? "bg-primary hover:bg-primary/90" : "border-border hover:bg-muted/60"
+                  link.variant === "outline" ? "border-border hover:bg-muted/60" : "bg-primary hover:bg-primary/90"
                 )}
               >
                 <Link href={link.href}>
@@ -215,18 +216,14 @@ export function AdminLayout({
                   </DropdownMenuItem>
                   {mobileMenuExtra}
                   <DropdownMenuSeparator className="bg-muted my-1" />
-                  <DropdownMenuItem asChild className="rounded-xl">
-                    <Link href="/dashboard/admin/user-management" className="flex items-center gap-3 w-full">
-                      <RiGroupLine className="h-4 w-4 text-orange-500" />
-                      <span>User Management</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl">
-                    <Link href="/dashboard/admin/settings" className="flex items-center gap-3 w-full">
-                      <RiSettingsLine className="h-4 w-4 text-orange-500" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  {isSuperAdmin && (
+                    <DropdownMenuItem asChild className="rounded-xl">
+                      <Link href="/dashboard/admin/settings" className="flex items-center gap-3 w-full">
+                        <RiSettingsLine className="h-4 w-4 text-orange-500" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild className="rounded-xl">
                     <Link href="/" className="flex items-center gap-3 w-full">
                       <RiHomeLine className="h-4 w-4 text-orange-500" />
@@ -248,7 +245,7 @@ export function AdminLayout({
               />
               <div className="fixed left-0 top-14 bottom-20 w-64 bg-white dark:bg-card border-r border-border/80 z-40 overflow-y-auto lg:hidden shadow-xl">
                 <div className="p-4 space-y-1">
-                  {NAV_ITEMS.map((item) => {
+                  {NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin).map((item) => {
                     const Icon = item.icon
                     const isActive = isNavActive(pathname ?? "", item)
                     return (
@@ -269,7 +266,7 @@ export function AdminLayout({
                     )
                   })}
                   <div className="pt-4 mt-4 border-t border-border/60 space-y-2">
-                    {QUICK_LINKS.map((link) => {
+                    {QUICK_LINKS.filter((link) => !link.superAdminOnly || isSuperAdmin).map((link) => {
                       const Icon = link.icon
                       return (
                         <Button
@@ -278,7 +275,7 @@ export function AdminLayout({
                           variant={link.variant}
                           className={cn(
                             "w-full justify-start rounded-2xl",
-                            link.variant === "default" ? "bg-primary hover:bg-primary/90" : "border-border hover:bg-muted/60"
+                            link.variant === "outline" ? "border-border hover:bg-muted/60" : "bg-primary hover:bg-primary/90"
                           )}
                           onClick={() => setSidebarOpen(false)}
                         >
@@ -301,9 +298,9 @@ export function AdminLayout({
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-card border-t border-border/80 z-30 shadow-lg">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-card border-t border-border/80 z-30 shadow-lg">
           <div className="flex justify-around h-16 items-center px-2">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin).map((item) => {
               const Icon = item.icon
               const isActive = isNavActive(pathname ?? "", item)
               return (

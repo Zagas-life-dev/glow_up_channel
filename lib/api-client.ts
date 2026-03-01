@@ -85,6 +85,7 @@ export interface UserProfile {
     fieldOfStudy?: string;
     institution?: string;
     aspirations?: string[];
+    skills?: string[];
   };
 }
 
@@ -165,18 +166,18 @@ export class ApiClient {
         throw new Error('Authentication required. Please sign in to perform this action.');
       }
 
-      // Handle validation errors with more detail
+      // Handle validation errors with more detail (errors may be strings or objects)
       if (data.errors && Array.isArray(data.errors)) {
-        const errorMessages = data.errors.map((err: any) => err.message || err.field).join(', ');
+        const errorMessages = data.errors.map((err: any) => err?.message ?? err?.field ?? (typeof err === 'string' ? err : String(err))).join(', ');
         throw new Error(`${data.message || 'Validation failed'}: ${errorMessages}`);
       }
       throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
 
     if (!data.success) {
-      // Handle validation errors with more detail
+      // Handle validation errors with more detail (errors may be strings or objects)
       if (data.errors && Array.isArray(data.errors)) {
-        const errorMessages = data.errors.map((err: any) => err.message || err.field).join(', ');
+        const errorMessages = data.errors.map((err: any) => err?.message ?? err?.field ?? (typeof err === 'string' ? err : String(err))).join(', ');
         throw new Error(`${data.message || 'Request failed'}: ${errorMessages}`);
       }
       throw new Error(data.message || data.error || 'Request failed');
@@ -343,6 +344,12 @@ export class ApiClient {
   static async getUserProfile(): Promise<{ profile: UserProfile | null, hasProfile: boolean }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/profile`);
     return this.handleResponse<{ profile: UserProfile | null, hasProfile: boolean }>(response);
+  }
+
+  /** Get normalized user (user + profile + onboarding merged). Used by recommendation algo and for consistent user shape. */
+  static async getNormalizedUserProfile(): Promise<{ normalizedUser: Record<string, unknown> | null, hasProfile: boolean }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/profile/normalized`);
+    return this.handleResponse<{ normalizedUser: Record<string, unknown> | null, hasProfile: boolean }>(response);
   }
 
   // Opportunities Methods
@@ -1395,7 +1402,7 @@ export class ApiClient {
       externalLink?: string
       eventLink?: string
       url?: string
-      location?: { city?: string; country?: string; province?: string; address?: string; isRemote?: boolean }
+      location?: { city?: string; country?: string; province?: string; address?: string; isRemote?: boolean; isHybrid?: boolean }
       paymentAmount?: number
       paymentNotes?: string
       price?: number
@@ -1448,16 +1455,17 @@ export class ApiClient {
   // Premium subscription methods
 
   /**
-   * Start a premium subscription payment via Paystack.
-   * Returns authorizationUrl + reference so the client can redirect to Paystack.
+   * Start a premium subscription (recurring) via Paystack. Uses the backend's subscription plan (e.g. ₦2,500/month).
+   * Returns authorizationUrl for redirect to Paystack.
+   * Paystack expects amount in KOBO (1 NGN = 100 kobo). Pass amount in kobo, e.g. 250000 for ₦2,500.
+   * amountKobo is optional when using plan-based subscription (planId).
    */
   static async startPremiumSubscription(
-    amountNg: number,
+    amountKobo?: number,
     options?: { planId?: string; callbackUrl?: string }
   ): Promise<{ authorizationUrl: string; reference: string; accessCode: string }> {
-    const body: any = {
-      amountNg,
-    };
+    const body: Record<string, unknown> = {};
+    if (amountKobo != null && Number.isFinite(amountKobo)) body.amountNg = amountKobo;
     if (options?.planId) body.planId = options.planId;
     if (options?.callbackUrl) body.callbackUrl = options.callbackUrl;
 
@@ -1517,17 +1525,44 @@ export class ApiClient {
 
   /**
    * Get current premium subscription status for the authenticated user.
+   * canCancel is true when the user has an active recurring subscription that can be cancelled.
    */
-  static async getPremiumStatus(): Promise<{ isPremium: boolean; premiumExpiresAt: string | null }> {
+  static async getPremiumStatus(): Promise<{
+    isPremium: boolean;
+    premiumExpiresAt: string | null;
+    canCancel?: boolean;
+  }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/status`, {
       method: 'GET',
     });
-    const result = await this.handleResponse<{ isPremium: boolean; premiumExpiresAt: string | null }>(response);
+    const result = await this.handleResponse<{
+      isPremium: boolean;
+      premiumExpiresAt: string | null;
+      canCancel?: boolean;
+    }>(response);
     if ((result as any)?.isPremium !== undefined) {
       return result as any;
     }
     const wrapped = result as any;
     return wrapped.data ?? wrapped;
+  }
+
+  /**
+   * Cancel the current user's premium subscription (stops future charges).
+   * User keeps premium access until the end of the current period.
+   */
+  static async cancelPremiumSubscription(): Promise<{
+    premiumExpiresAt: string | null;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/cancel`, {
+      method: 'POST',
+    });
+    const result = await this.handleResponse<{ premiumExpiresAt: string | null }>(response);
+    const wrapped = result as any;
+    const data = wrapped.data ?? wrapped;
+    return {
+      premiumExpiresAt: data.premiumExpiresAt ?? null,
+    };
   }
 
   /** Provider wallet: get balance (NGN). */
@@ -1607,13 +1642,58 @@ export class ApiClient {
   }
 
   /** Record a promoted click (signed-in user viewed promoted content). Call from detail pages once per load. */
-  static async recordPromotionClick(contentId: string, contentType: 'opportunity' | 'event' | 'job' | 'resource'): Promise<{ counted: boolean; reason?: string; costNg?: number; balanceNg?: number }> {
+  /** Record a promoted interaction. action: 'view' | 'like' | 'share' | 'show_more' | 'apply' (default 'view'). Costs: like N30, share N50, show_more N20, view/apply match-based. */
+  static async recordPromotionClick(
+    contentId: string,
+    contentType: 'opportunity' | 'event' | 'job' | 'resource',
+    action?: 'view' | 'like' | 'share' | 'show_more' | 'apply'
+  ): Promise<{ counted: boolean; reason?: string; costNg?: number; balanceNg?: number }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/click`, {
       method: 'POST',
-      body: JSON.stringify({ contentId, contentType }),
+      body: JSON.stringify({ contentId, contentType, action: action ?? 'view' }),
     });
     const json = await this.handleResponse(response) as ApiResponse<{ counted: boolean; reason?: string; costNg?: number; balanceNg?: number }>;
     return json?.data ?? { counted: false };
+  }
+
+  /** Initialize Paystack one-time payment for a promotion. Returns authorizationUrl to redirect user. spendLimitNg is required. */
+  static async initializePromotionPayment(params: {
+    contentId: string;
+    contentType: 'opportunity' | 'event' | 'job' | 'resource';
+    durationDays: number;
+    spendLimitNg: number;
+    callbackUrl?: string;
+  }): Promise<{ authorizationUrl: string; reference: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/initialize-payment`, {
+      method: 'POST',
+      body: JSON.stringify({
+        contentId: params.contentId,
+        contentType: params.contentType,
+        durationDays: params.durationDays,
+        spendLimitNg: params.spendLimitNg,
+        ...(params.callbackUrl && { callbackUrl: params.callbackUrl }),
+      }),
+    });
+    const json = await this.handleResponse(response) as ApiResponse<{ authorizationUrl: string; reference: string }>;
+    const data = (json as any)?.data ?? json;
+    if (!data?.authorizationUrl) throw new Error((json as any)?.message || 'Failed to initialize promotion payment');
+    return { authorizationUrl: data.authorizationUrl, reference: data.reference || '' };
+  }
+
+  /** Verify Paystack promotion payment and create promotion. Call after user returns from Paystack. */
+  static async verifyPromotionPayment(reference: string): Promise<{ promotion: any; spendLimitNg: number; duration: number }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/verify-payment`, {
+      method: 'POST',
+      body: JSON.stringify({ reference }),
+    });
+    const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; spendLimitNg?: number; duration?: number }>;
+    const data = (json as any)?.data ?? json;
+    if (!data?.promotion) throw new Error((json as any)?.message || 'Failed to verify promotion payment');
+    return {
+      promotion: data.promotion,
+      spendLimitNg: data.spendLimitNg ?? 0,
+      duration: data.duration ?? 0,
+    };
   }
 
   /** Start a promotion: N100/day upfront + optional per-click budget. Returns chargedNg (upfront) and balanceNg. */
@@ -1777,6 +1857,32 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Returns the current count of the authenticated user's total postings
+   * (opportunities + events + jobs + resources; all statuses count). Used to enforce posting limits.
+   */
+  static async getMyPostingCount(): Promise<{ total: number; opportunities: number; events: number; jobs: number; resources: number }> {
+    const limit = 100;
+    const [oppRes, evRes, jobRes, resRes] = await Promise.all([
+      this.makeAuthenticatedRequest(`${API_BASE_URL}/api/opportunities/my/opportunities?limit=${limit}`, { method: 'GET' }).then((r) => this.handleResponse(r)).catch(() => ({ opportunities: [] })),
+      this.makeAuthenticatedRequest(`${API_BASE_URL}/api/events/my/events?limit=${limit}`, { method: 'GET' }).then((r) => this.handleResponse(r)).catch(() => ({ events: [] })),
+      this.makeAuthenticatedRequest(`${API_BASE_URL}/api/jobs/my/jobs?limit=${limit}`, { method: 'GET' }).then((r) => this.handleResponse(r)).catch(() => ({ jobs: [] })),
+      this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/my/resources?limit=${limit}`, { method: 'GET' }).then((r) => this.handleResponse(r)).catch(() => ({ resources: [] })),
+    ]);
+    // handleResponse returns data.data, so we get { opportunities: [] } not { data: { opportunities: [] } }
+    const opportunities = Array.isArray((oppRes as any)?.opportunities) ? (oppRes as any).opportunities.length : (Array.isArray((oppRes as any)?.data?.opportunities) ? (oppRes as any).data.opportunities.length : 0);
+    const events = Array.isArray((evRes as any)?.events) ? (evRes as any).events.length : (Array.isArray((evRes as any)?.data?.events) ? (evRes as any).data.events.length : 0);
+    const jobs = Array.isArray((jobRes as any)?.jobs) ? (jobRes as any).jobs.length : (Array.isArray((jobRes as any)?.data?.jobs) ? (jobRes as any).data.jobs.length : 0);
+    const resources = Array.isArray((resRes as any)?.resources) ? (resRes as any).resources.length : (Array.isArray((resRes as any)?.data?.resources) ? (resRes as any).data.resources.length : 0);
+    return {
+      opportunities,
+      events,
+      jobs,
+      resources,
+      total: opportunities + events + jobs + resources,
+    };
+  }
+
   // Email Verification Methods
   static async sendVerificationCode(): Promise<void> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/send-verification-code`, {
@@ -1848,7 +1954,7 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Locked In (focus session) methods. Pass signal for timeout (e.g. 10s AbortController).
+  // Locked In (focus session) methods — available to all authenticated users (not premium-only). Pass signal for timeout (e.g. 10s AbortController).
   static async createLockedInSession(options?: {
     startedAt?: string;
     intention?: string;

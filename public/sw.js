@@ -20,8 +20,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "GlowUp", {
       body: payload.body || "",
-      icon: "/images/logo-icon-transparent.png",
-      badge: "/images/logo-icon-transparent.png",
+      icon: "/images/Yellow and Black Modern Media Company Logo (14).png",
+      badge: "/images/Yellow and Black Modern Media Company Logo (14).png",
       tag: payload.tag || "glowup-push",
       data: { url: payload.url || "/" },
       requireInteraction: false,

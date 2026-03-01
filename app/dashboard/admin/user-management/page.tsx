@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AuthRequiredCard } from '@/components/auth-required-card'
 import { 
   Users, 
   UserPlus, 
@@ -38,7 +39,7 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user: authUser, isAuthenticated } = useAuth()
   const { setHideNavbar, setHideFooter } = usePage()
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
@@ -69,10 +70,10 @@ export default function UserManagementPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       window.location.href = '/auth/login'
-    } else if (user?.role !== 'super_admin') {
-      window.location.href = '/dashboard'
+    } else if (authUser?.role !== 'super_admin') {
+      window.location.href = '/dashboard/admin'
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, authUser])
 
   // Fetch users
   useEffect(() => {
@@ -104,10 +105,10 @@ export default function UserManagementPage() {
       }
     }
 
-    if (isAuthenticated && user?.role === 'super_admin') {
+    if (isAuthenticated && authUser?.role === 'super_admin') {
       fetchUsers()
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, authUser])
 
   // Filter users based on search term and role
   useEffect(() => {
@@ -275,27 +276,25 @@ export default function UserManagementPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-lg text-gray-600">Please log in to access this page</p>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please log in to access this page."
+        icon={XCircle}
+        signInLabel="Sign in"
+      />
     )
   }
 
-  if (user?.role !== 'super_admin') {
+  if (authUser?.role !== 'super_admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-lg text-gray-600">Access denied. Super admin privileges required.</p>
-        </div>
-      </div>
+      <AuthRequiredCard
+        title="Access denied"
+        description="Super admin privileges required to access user management."
+        icon={XCircle}
+        iconVariant="neutral"
+        signInLabel="Sign in"
+        secondaryAction={{ label: "Back to dashboard", href: "/dashboard" }}
+      />
     )
   }
 
@@ -476,7 +475,7 @@ export default function UserManagementPage() {
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
-                      {user._id !== user?._id && (
+                      {user._id !== authUser?._id && (
                         <Button
                           variant="outline"
                           size="sm"

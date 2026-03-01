@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from '@/contexts/playlist-context'
 import { useAuth } from '@/lib/auth-context'
+import { canViewPremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import PlaylistModal from '@/components/playlist-modal'
 import {
@@ -37,11 +38,13 @@ type TabType = 'my' | 'shared' | 'saved' | 'public'
 
 export default function PlaylistsPage() {
   const { playlists, publicPlaylists, sharedPlaylists, savedPlaylists, isLoading, deletePlaylist, fetchPublicPlaylists, fetchPlaylists, fetchSavedPlaylists } = usePlaylist()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, normalizedUser } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>(isAuthenticated ? 'my' : 'public')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
 
   useEffect(() => {
     // Fetch data - loading state is managed by context
@@ -66,13 +69,19 @@ export default function PlaylistsPage() {
   }
 
   const getCurrentPlaylists = () => {
+    let list: Playlist[]
     switch (activeTab) {
-      case 'my': return playlists
-      case 'shared': return sharedPlaylists
-      case 'saved': return savedPlaylists
-      case 'public': return publicPlaylists
-      default: return []
+      case 'my': list = playlists; break
+      case 'shared': list = sharedPlaylists; break
+      case 'saved': list = savedPlaylists; break
+      case 'public': list = publicPlaylists; break
+      default: list = []
     }
+    // Premium playlists: only visible to premium users (except in "my" where owner always sees their own)
+    if (!canViewPremium && (activeTab === 'public' || activeTab === 'saved')) {
+      return list.filter((p) => !p.isPremiumPlaylist)
+    }
+    return list
   }
 
   const currentPlaylists = getCurrentPlaylists()
@@ -292,6 +301,12 @@ export default function PlaylistsPage() {
 
                             {/* Metadata */}
                             <div className="flex items-center flex-wrap gap-2">
+                              {playlist.isPremiumPlaylist && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-semibold uppercase border border-amber-500/20">
+                                  <RiStarLine className="w-3 h-3" />
+                                  Premium
+                                </span>
+                              )}
                               {playlist.isPublic ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold uppercase border border-emerald-500/20">
                                   <RiGlobalLine className="w-3 h-3" />

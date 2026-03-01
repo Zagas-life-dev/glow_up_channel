@@ -101,7 +101,10 @@ interface ContentItem {
   _fromInactive?: boolean
   company?: string
   category?: string
-  financial?: { amount?: number; currency?: string; isPaid?: boolean; benefits?: string[] }
+  jobType?: string
+  tags?: string[]
+  pay?: { amount?: number; currency?: string; period?: string }
+  financial?: { amount?: number; currency?: string; isPaid?: boolean; benefits?: string[]; period?: string }
   price?: number
   currency?: string
   dates?: {
@@ -177,6 +180,21 @@ const PAYMENT_OPTIONS: { value: PaymentFilter; label: string }[] = [
   { value: "verified", label: "Verified" },
 ]
 
+const JOB_TYPE_OPTIONS = ["Full-time", "Part-time", "Contract", "Freelance", "Internship", "Remote", "Other"]
+
+/** Backend expects jobType as lowercase hyphenated (e.g. full-time, part-time) */
+function jobTypeToBackendFormat(display: string): string {
+  return display.trim().toLowerCase().replace(/\s+/g, "-")
+}
+
+/** Normalize API jobType (e.g. full-time) to display format for Select (e.g. Full-time) */
+function jobTypeToDisplayFormat(apiValue: string | undefined): string {
+  if (!apiValue || !apiValue.trim()) return ""
+  const normalized = apiValue.trim().toLowerCase().replace(/\s+/g, "-")
+  const match = JOB_TYPE_OPTIONS.find((opt) => jobTypeToBackendFormat(opt) === normalized)
+  return match ?? apiValue.trim().replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 function AdminContentCardSkeleton() {
   return (
     <article className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-sm flex min-h-[140px] animate-pulse">
@@ -244,7 +262,13 @@ export default function AdminContent() {
   const [editLocationCountry, setEditLocationCountry] = useState("")
   const [editLocationProvince, setEditLocationProvince] = useState("")
   const [editLocationRemote, setEditLocationRemote] = useState(false)
+  const [editLocationHybrid, setEditLocationHybrid] = useState(false)
   const [editLocationAddress, setEditLocationAddress] = useState("")
+  const [editCompany, setEditCompany] = useState("")
+  const [editCategory, setEditCategory] = useState("")
+  const [editJobType, setEditJobType] = useState("")
+  const [editTags, setEditTags] = useState("")
+  const [editPayPeriod, setEditPayPeriod] = useState("")
   const [editPaymentAmount, setEditPaymentAmount] = useState<number | "">("")
   const [editPaymentNotes, setEditPaymentNotes] = useState("")
   const [editPrice, setEditPrice] = useState<number | "">("")
@@ -397,7 +421,13 @@ export default function AdminContent() {
       setEditLocationCountry(selectedContent.location?.country ?? "")
       setEditLocationProvince(selectedContent.location?.province ?? "")
       setEditLocationRemote(selectedContent.location?.isRemote ?? false)
+      setEditLocationHybrid((selectedContent.location as { isHybrid?: boolean })?.isHybrid ?? false)
       setEditLocationAddress((selectedContent.location as { address?: string })?.address ?? "")
+      setEditCompany(selectedContent.company ?? "")
+      setEditCategory(selectedContent.category ?? "")
+      setEditJobType(jobTypeToDisplayFormat(selectedContent.jobType as string))
+      setEditTags(Array.isArray(selectedContent.tags) ? (selectedContent.tags as string[]).join(", ") : "")
+      setEditPayPeriod((selectedContent.pay as { period?: string })?.period ?? (selectedContent.financial as { period?: string })?.period ?? "")
       setEditPaymentAmount(selectedContent.paymentAmount ?? "")
       setEditPaymentNotes(selectedContent.paymentNotes ?? "")
       const priceVal = selectedContent.price ?? selectedContent.financial?.amount ?? ""
@@ -639,6 +669,21 @@ export default function AdminContent() {
         province: editLocationProvince.trim() || undefined,
         address: editLocationAddress.trim() || undefined,
         isRemote: editLocationRemote,
+        isHybrid: editLocationHybrid,
+      },
+      company: editCompany.trim() || undefined,
+      category: editCategory.trim() || undefined,
+      jobType: editJobType.trim() || undefined,
+      tags: editTags.trim() ? editTags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+      pay: selectedContent.type === "job" && (editPrice !== "" || editPayPeriod.trim())
+        ? { ...(selectedContent.pay as object || {}), amount: editPrice === "" ? undefined : Number(editPrice), currency: editCurrency.trim() || undefined, period: editPayPeriod.trim() || undefined }
+        : selectedContent.pay,
+      financial: {
+        ...selectedContent.financial,
+        amount: editPrice === "" ? undefined : Number(editPrice),
+        currency: editCurrency.trim() || undefined,
+        benefits: benefitsList?.length ? benefitsList : undefined,
+        period: editPayPeriod.trim() || undefined,
       },
       paymentAmount: editPaymentAmount === "" ? undefined : Number(editPaymentAmount),
       paymentNotes: editPaymentNotes.trim() || undefined,
@@ -649,12 +694,6 @@ export default function AdminContent() {
         requirementsUpdate && selectedContent.type === "opportunity"
           ? { ...(selectedContent.requirements || {}), ...requirementsUpdate }
           : selectedContent.requirements,
-      financial: {
-        ...selectedContent.financial,
-        amount: editPrice === "" ? undefined : Number(editPrice),
-        currency: editCurrency.trim() || undefined,
-        benefits: benefitsList?.length ? benefitsList : undefined,
-      },
       dates: {
         ...selectedContent.dates,
         applicationDeadline: editAppDeadline ? new Date(editAppDeadline).toISOString() : undefined,
@@ -663,6 +702,8 @@ export default function AdminContent() {
         registrationDeadline: editRegistrationDeadline ? new Date(editRegistrationDeadline).toISOString() : undefined,
         duration: editDuration.trim() || undefined,
       },
+      // Once an item is made active, treat it as no longer coming from an *-inactive bucket
+      _fromInactive: editStatus === "active" ? false : selectedContent._fromInactive,
     }
     setContent((prev) => prev.map((c) => (c._id === id ? updated : c)))
     setSelectedContent(updated)
@@ -670,35 +711,91 @@ export default function AdminContent() {
     setDetailsSaveLoading(true)
     try {
       const descriptionChanged = description !== selectedContent.description
-      await ApiClient.updateContentByAdmin(id, selectedContent.type, {
-        title,
-        ...(descriptionChanged && { description }),
-        status: editStatus,
-        applicationLink: editApplicationLink.trim() || undefined,
-        externalLink: editExternalLink.trim() || undefined,
-        eventLink: editEventLink.trim() || undefined,
-        url: editUrl.trim() || undefined,
-        location: {
+      // Event API requires description min 20 chars and does not accept undefined in nested objects (would overwrite existing data)
+      if (selectedContent.type === "event") {
+        const eventDescription = description.trim() || (selectedContent.description ?? "")
+        if (eventDescription.length > 0 && eventDescription.length < 20) {
+          toast.error("Event description must be at least 20 characters.")
+          setDetailsSaveLoading(false)
+          setDetailsEditMode(true)
+          return
+        }
+        const omitUndefined = <T extends Record<string, unknown>>(o: T): Partial<T> =>
+          Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>
+        const eventLocation = omitUndefined({
           city: editLocationCity.trim() || undefined,
           country: editLocationCountry.trim() || undefined,
           province: editLocationProvince.trim() || undefined,
           address: editLocationAddress.trim() || undefined,
           isRemote: editLocationRemote,
-        },
-        paymentAmount: editPaymentAmount === "" ? undefined : Number(editPaymentAmount),
-        paymentNotes: editPaymentNotes.trim() || undefined,
-        price: editPrice === "" ? undefined : Number(editPrice),
-        currency: editCurrency.trim() || undefined,
-        benefits: benefitsList,
-        ...(requirementsUpdate && selectedContent.type === "opportunity" ? { requirements: requirementsUpdate } : {}),
-        dates: {
-          applicationDeadline: editAppDeadline ? new Date(editAppDeadline).toISOString() : undefined,
+          isHybrid: editLocationHybrid,
+        })
+        const eventDates = omitUndefined({
           startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
           endDate: editEndDate ? new Date(editEndDate).toISOString() : undefined,
           registrationDeadline: editRegistrationDeadline ? new Date(editRegistrationDeadline).toISOString() : undefined,
-          duration: editDuration.trim() || undefined,
-        },
-      })
+        })
+        await ApiClient.updateContentByAdmin(id, "event", {
+          title,
+          description: eventDescription || undefined,
+          status: editStatus,
+          url: editUrl.trim() || undefined,
+          ...(Object.keys(eventLocation).length > 0 && { location: eventLocation }),
+          ...(Object.keys(eventDates).length > 0 && { dates: eventDates }),
+          ...(editPrice !== "" && { price: Number(editPrice) }),
+          ...(editCurrency.trim() && { currency: editCurrency.trim() }),
+          ...(editPaymentAmount !== "" && { paymentAmount: Number(editPaymentAmount) }),
+          ...(editPaymentNotes.trim() && { paymentNotes: editPaymentNotes.trim() }),
+          ...(selectedContent._fromInactive && { _fromInactive: true }),
+        })
+      } else {
+        await ApiClient.updateContentByAdmin(id, selectedContent.type, {
+          title,
+          ...(descriptionChanged && { description }),
+          status: editStatus,
+          applicationLink: editApplicationLink.trim() || undefined,
+          externalLink: editExternalLink.trim() || undefined,
+          eventLink: editEventLink.trim() || undefined,
+          url: editUrl.trim() || undefined,
+          location: {
+            city: editLocationCity.trim() || undefined,
+            country: editLocationCountry.trim() || undefined,
+            province: editLocationProvince.trim() || undefined,
+            address: editLocationAddress.trim() || undefined,
+            isRemote: editLocationRemote,
+            isHybrid: editLocationHybrid,
+          },
+          ...(selectedContent.type === "job" && {
+            ...(editCompany.trim() && { company: editCompany.trim() }),
+            ...(editCategory.trim() && { category: editCategory.trim() }),
+            ...(editJobType.trim() || (selectedContent.jobType as string)
+              ? { jobType: jobTypeToBackendFormat(editJobType.trim() || (selectedContent.jobType as string)) }
+              : {}),
+            ...(editTags.trim() && { tags: editTags.split(",").map((t) => t.trim()).filter(Boolean) }),
+            ...((editPrice !== "" || editPayPeriod.trim()) && {
+              pay: {
+                ...(editPrice !== "" && { amount: Number(editPrice) }),
+                ...(editCurrency.trim() && { currency: editCurrency.trim() }),
+                ...(editPayPeriod.trim() && { period: editPayPeriod.trim() }),
+              },
+            }),
+          }),
+          paymentAmount: editPaymentAmount === "" ? undefined : Number(editPaymentAmount),
+          paymentNotes: editPaymentNotes.trim() || undefined,
+          price: editPrice === "" ? undefined : Number(editPrice),
+          currency: editCurrency.trim() || undefined,
+          benefits: benefitsList,
+          ...(requirementsUpdate && selectedContent.type === "opportunity" ? { requirements: requirementsUpdate } : {}),
+          dates: {
+            applicationDeadline: editAppDeadline ? new Date(editAppDeadline).toISOString() : undefined,
+            startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
+            endDate: editEndDate ? new Date(editEndDate).toISOString() : undefined,
+            registrationDeadline: editRegistrationDeadline ? new Date(editRegistrationDeadline).toISOString() : undefined,
+            duration: editDuration.trim() || undefined,
+          },
+          ...(selectedContent._fromInactive ? { _fromInactive: true } : {}),
+        })
+      }
       toast.success("Content updated")
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to update content")
@@ -708,6 +805,33 @@ export default function AdminContent() {
         setEditTitle(previousItem.title)
         setEditDescription(previousItem.description)
         setEditStatus(previousItem.status)
+        setEditApplicationLink(previousItem.applicationLink ?? "")
+        setEditExternalLink(previousItem.externalLink ?? "")
+        setEditEventLink(previousItem.eventLink ?? "")
+        setEditUrl(previousItem.url ?? "")
+        setEditLocationCity(previousItem.location?.city ?? "")
+        setEditLocationCountry(previousItem.location?.country ?? "")
+        setEditLocationProvince(previousItem.location?.province ?? "")
+        setEditLocationRemote(previousItem.location?.isRemote ?? false)
+        setEditLocationHybrid((previousItem.location as { isHybrid?: boolean })?.isHybrid ?? false)
+        setEditLocationAddress((previousItem.location as { address?: string })?.address ?? "")
+        setEditCompany(previousItem.company ?? "")
+        setEditCategory(previousItem.category ?? "")
+        setEditJobType(jobTypeToDisplayFormat(previousItem.jobType as string))
+        setEditTags(Array.isArray(previousItem.tags) ? (previousItem.tags as string[]).join(", ") : "")
+        setEditPayPeriod((previousItem.pay as { period?: string })?.period ?? (previousItem.financial as { period?: string })?.period ?? "")
+        setEditPaymentAmount(previousItem.paymentAmount ?? "")
+        setEditPaymentNotes(previousItem.paymentNotes ?? "")
+        const p = previousItem.price ?? previousItem.financial?.amount ?? ""
+        setEditPrice(p === "" ? "" : Number(p))
+        setEditCurrency(previousItem.currency ?? previousItem.financial?.currency ?? "")
+        const b = previousItem.benefits ?? previousItem.financial?.benefits ?? []
+        setEditBenefits(Array.isArray(b) ? b.join("\n") : "")
+        setEditAppDeadline(previousItem.dates?.applicationDeadline ? previousItem.dates.applicationDeadline.slice(0, 16) : "")
+        setEditStartDate(previousItem.dates?.startDate ? previousItem.dates.startDate.slice(0, 16) : "")
+        setEditEndDate(previousItem.dates?.endDate ? previousItem.dates.endDate.slice(0, 16) : "")
+        setEditRegistrationDeadline(previousItem.dates?.registrationDeadline ? previousItem.dates.registrationDeadline.slice(0, 16) : "")
+        setEditDuration(previousItem.dates?.duration ?? "")
         setDetailsEditMode(true)
       }
     } finally {
@@ -1330,11 +1454,47 @@ export default function AdminContent() {
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location — Address</label>
                         <Input value={editLocationAddress} onChange={(e) => setEditLocationAddress(e.target.value)} className="rounded-xl border-border" placeholder="Address" />
                       </div>
-                      <div className="sm:col-span-2 flex items-center gap-2">
-                        <input type="checkbox" id="edit-remote" checked={editLocationRemote} onChange={(e) => setEditLocationRemote(e.target.checked)} className="rounded border-border" />
-                        <label htmlFor="edit-remote" className="text-sm text-muted-foreground">Remote</label>
+                      <div className="sm:col-span-2 flex items-center gap-4 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="edit-remote" checked={editLocationRemote} onChange={(e) => setEditLocationRemote(e.target.checked)} className="rounded border-border" />
+                          <label htmlFor="edit-remote" className="text-sm text-muted-foreground">Remote</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="edit-hybrid" checked={editLocationHybrid} onChange={(e) => setEditLocationHybrid(e.target.checked)} className="rounded border-border" />
+                          <label htmlFor="edit-hybrid" className="text-sm text-muted-foreground">Hybrid</label>
+                        </div>
                       </div>
                     </div>
+                    {selectedContent.type === "job" && (
+                      <div className="space-y-3 pt-2 border-t border-border/60">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Job details</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Company</label>
+                            <Input value={editCompany} onChange={(e) => setEditCompany(e.target.value)} className="rounded-xl border-border" placeholder="Company name" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</label>
+                            <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="rounded-xl border-border" placeholder="e.g. Technology" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Job type</label>
+                            <Select value={editJobType} onValueChange={(v) => setEditJobType(v)}>
+                              <SelectTrigger className="rounded-xl border-border"><SelectValue placeholder="Select type" /></SelectTrigger>
+                              <SelectContent>
+                                {JOB_TYPE_OPTIONS.map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Tags (comma separated)</label>
+                            <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} className="rounded-xl border-border" placeholder="e.g. React, Node.js, Remote" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Payment amount (₦)</label>
@@ -1360,6 +1520,12 @@ export default function AdminContent() {
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Currency</label>
                         <Input value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)} className="rounded-xl border-border" placeholder="NGN / USD" />
                       </div>
+                      {(selectedContent.type === "job" || selectedContent.type === "opportunity") && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Pay period (e.g. month, year)</label>
+                          <Input value={editPayPeriod} onChange={(e) => setEditPayPeriod(e.target.value)} className="rounded-xl border-border" placeholder="month" />
+                        </div>
+                      )}
                       <div className="sm:col-span-2">
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Payment notes</label>
                         <Textarea value={editPaymentNotes} onChange={(e) => setEditPaymentNotes(e.target.value)} className="rounded-xl border-border min-h-[60px]" placeholder="Admin notes" />
@@ -1570,6 +1736,37 @@ export default function AdminContent() {
                       <p className="text-xs font-medium text-muted-foreground mb-0.5">Status</p>
                       <div className="mt-1">{getStatusBadge(selectedContent)}</div>
                     </div>
+                    {selectedContent.type === "job" && (selectedContent.company || selectedContent.category || (selectedContent as ContentItem & { jobType?: string }).jobType) && (
+                      <div className="p-3 rounded-2xl bg-muted/40 border border-border/50 sm:col-span-2 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Job details</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {selectedContent.company && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase">Company</p>
+                              <p className="text-sm font-medium">{selectedContent.company}</p>
+                            </div>
+                          )}
+                          {selectedContent.category && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase">Category</p>
+                              <p className="text-sm font-medium">{selectedContent.category}</p>
+                            </div>
+                          )}
+                          {(selectedContent as ContentItem & { jobType?: string }).jobType && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase">Job type</p>
+                              <p className="text-sm font-medium">{(selectedContent as ContentItem & { jobType?: string }).jobType}</p>
+                            </div>
+                          )}
+                        </div>
+                        {Array.isArray(selectedContent.tags) && selectedContent.tags.length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase mb-0.5">Tags</p>
+                            <p className="text-sm text-foreground/90">{(selectedContent.tags as string[]).join(", ")}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {selectedContent.location && (
                       <div className="flex items-start gap-3 p-3 rounded-2xl bg-muted/40 border border-border/50 sm:col-span-2">
                         <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center shrink-0">
@@ -1640,12 +1837,21 @@ export default function AdminContent() {
                   </section>
                 )}
 
-                {selectedContent.requirements && Object.keys(selectedContent.requirements).length > 0 && (
+                {selectedContent.requirements && (Array.isArray(selectedContent.requirements) ? (selectedContent.requirements as unknown[]).length > 0 : Object.keys(selectedContent.requirements).length > 0) && (
                   <section className="space-y-3 mb-6">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Requirements</h3>
                     <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                       {(() => {
-                        const req = selectedContent.requirements as any
+                        if (Array.isArray(selectedContent.requirements)) {
+                          return (
+                            <ul className="list-disc list-inside space-y-1 text-sm text-foreground/90">
+                              {(selectedContent.requirements as string[]).map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ul>
+                          )
+                        }
+                        const req = selectedContent.requirements as Record<string, unknown>
                         const hasStructured =
                           req.educationLevel ||
                           req.careerStage ||
@@ -1666,51 +1872,51 @@ export default function AdminContent() {
 
                         return (
                           <dl className="space-y-1 text-xs text-foreground/90">
-                            {req.educationLevel && (
+                            {req.educationLevel != null && req.educationLevel !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Education level:</dt>
                                 <dd>{String(req.educationLevel)}</dd>
                               </div>
                             )}
-                            {req.careerStage && (
+                            {req.careerStage != null && req.careerStage !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Career stage:</dt>
                                 <dd>{String(req.careerStage)}</dd>
                               </div>
                             )}
-                            {((Array.isArray(req.skills) && req.skills.length > 0) || req.skills) && (
+                            {((Array.isArray(req.skills) && req.skills.length > 0) || req.skills) ? (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Skills:</dt>
                                 <dd>
                                   {Array.isArray(req.skills) ? (req.skills as string[]).join(", ") : String(req.skills)}
                                 </dd>
                               </div>
-                            )}
-                            {req.experience && (
+                            ) : null}
+                            {req.experience != null && req.experience !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Experience:</dt>
                                 <dd>{String(req.experience)}</dd>
                               </div>
                             )}
-                            {req.ageRange && (
+                            {req.ageRange != null && req.ageRange !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Age range:</dt>
                                 <dd>{String(req.ageRange)}</dd>
                               </div>
                             )}
-                            {req.citizenship && (
+                            {req.citizenship != null && req.citizenship !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Citizenship:</dt>
                                 <dd>{String(req.citizenship)}</dd>
                               </div>
                             )}
-                            {req.Eligible_participants && (
+                            {req.Eligible_participants != null && req.Eligible_participants !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Eligible participants:</dt>
                                 <dd>{String(req.Eligible_participants)}</dd>
                               </div>
                             )}
-                            {req.other && (
+                            {req.other != null && req.other !== "" && (
                               <div className="flex gap-1">
                                 <dt className="font-semibold text-muted-foreground">Other:</dt>
                                 <dd className="whitespace-pre-wrap">{String(req.other)}</dd>
@@ -1736,11 +1942,18 @@ export default function AdminContent() {
                         <p className="text-sm font-medium">₦{Number(selectedContent.paymentAmount).toLocaleString()}</p>
                       </div>
                     )}
-                    {(selectedContent.price != null || selectedContent.financial?.amount != null) && (
+                    {(selectedContent.price != null || selectedContent.financial?.amount != null || (selectedContent.pay as { amount?: number })?.amount != null) && (
                       <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                         <p className="text-xs font-medium text-muted-foreground mb-0.5">Price / amount (content)</p>
                         <p className="text-sm font-medium">
-                          {selectedContent.currency || selectedContent.financial?.currency || "NGN"} {Number(selectedContent.price ?? selectedContent.financial?.amount ?? 0).toLocaleString()}
+                          {selectedContent.currency || selectedContent.financial?.currency || (selectedContent.pay as { currency?: string })?.currency || "NGN"}{" "}
+                          {Number(selectedContent.price ?? selectedContent.financial?.amount ?? (selectedContent.pay as { amount?: number })?.amount ?? 0).toLocaleString()}
+                          {(selectedContent.pay as { period?: string })?.period && (
+                            <span className="text-muted-foreground font-normal"> / {(selectedContent.pay as { period?: string }).period}</span>
+                          )}
+                          {(selectedContent.financial as { period?: string })?.period && !(selectedContent.pay as { period?: string })?.period && (
+                            <span className="text-muted-foreground font-normal"> / {(selectedContent.financial as { period?: string }).period}</span>
+                          )}
                         </p>
                       </div>
                     )}
@@ -1823,7 +2036,13 @@ export default function AdminContent() {
                       setEditLocationCountry(selectedContent.location?.country ?? "")
                       setEditLocationProvince(selectedContent.location?.province ?? "")
                       setEditLocationRemote(selectedContent.location?.isRemote ?? false)
+                      setEditLocationHybrid((selectedContent.location as { isHybrid?: boolean })?.isHybrid ?? false)
                       setEditLocationAddress((selectedContent.location as { address?: string })?.address ?? "")
+                      setEditCompany(selectedContent.company ?? "")
+                      setEditCategory(selectedContent.category ?? "")
+                      setEditJobType(jobTypeToDisplayFormat(selectedContent.jobType as string))
+                      setEditTags(Array.isArray(selectedContent.tags) ? (selectedContent.tags as string[]).join(", ") : "")
+                      setEditPayPeriod((selectedContent.pay as { period?: string })?.period ?? (selectedContent.financial as { period?: string })?.period ?? "")
                       setEditPaymentAmount(selectedContent.paymentAmount ?? "")
                       setEditPaymentNotes(selectedContent.paymentNotes ?? "")
                       const p = selectedContent.price ?? selectedContent.financial?.amount ?? ""

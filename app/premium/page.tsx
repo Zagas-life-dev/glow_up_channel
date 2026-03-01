@@ -1,74 +1,45 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import AuthGuard from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Shield, Star, Lock, QrCode, Mail, Hash, Focus, BookOpen } from "lucide-react"
+import { Crown, Shield, Star, QrCode, Mail, Hash, Focus, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 
 export default function PremiumPage() {
   const { user } = useAuth()
-  const router = useRouter()
   const [isStarting, setIsStarting] = useState(false)
 
   const handleSubscribe = async () => {
     try {
-      if (!user) {
-        toast.error("Please sign in to subscribe")
-        router.push("/login")
-        return
-      }
-      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
-      if (!key) {
-        toast.error("Paystack public key is not configured")
-        return
-      }
+      if (!user) return
 
       setIsStarting(true)
-      const monthlyAmountNg = 2500
-      // Dynamically import Paystack inline SDK on the client to avoid SSR "window is not defined" errors
-      const { default: PaystackPop } = await import("@paystack/inline-js")
-      const paystack = new PaystackPop()
-      paystack.newTransaction({
-        key,
-        email: user.email,
-        amount: monthlyAmountNg * 100, // kobo
-        metadata: {
-          planId: "premium_monthly",
-          userId: user._id,
-        },
-        onSuccess: async (transaction: { reference: string }) => {
-          try {
-            const result = await ApiClient.verifyPremiumSubscription(transaction.reference)
-            if (result.isPremium) {
-              toast.success("Premium subscription activated!")
-              router.push("/profile/settings")
-            } else {
-              toast.error("Payment was successful but premium could not be activated.")
-            }
-          } catch (error: any) {
-            console.error("Error verifying premium subscription:", error)
-            toast.error(error?.message || "Failed to verify premium subscription")
-          } finally {
-            setIsStarting(false)
-          }
-        },
-        onCancel: () => {
-          setIsStarting(false)
-        },
+      // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦2,500 = 250000 kobo.
+      const result = await ApiClient.startPremiumSubscription(250000, {
+        planId: "premium_monthly",
+        callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/profile/settings?premium=success` : undefined,
       })
-    } catch (error: any) {
+      if (result?.authorizationUrl) {
+        window.location.href = result.authorizationUrl
+        return
+      }
+      toast.error("Failed to start subscription")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to start premium subscription"
       console.error("Error starting premium subscription:", error)
-      toast.error(error?.message || "Failed to start premium subscription")
+      toast.error(message)
+    } finally {
       setIsStarting(false)
     }
   }
 
   return (
+    <AuthGuard>
     <div className="max-w-3xl mx-auto px-4 pb-24 lg:pb-8 pt-4 pt-safe">
       <div className="mb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-xs font-medium text-primary mb-3">
@@ -176,11 +147,6 @@ export default function PremiumPage() {
             <Button className="w-full bg-primary hover:bg-primary/90" onClick={handleSubscribe} disabled={isStarting}>
               {isStarting ? "Connecting to Paystack…" : "Continue with Paystack"}
             </Button>
-            {!user && (
-              <p className="text-[11px] text-muted-foreground text-center">
-                You&apos;ll be asked to sign in before subscribing.
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -190,6 +156,7 @@ export default function PremiumPage() {
         details.
       </div>
     </div>
+    </AuthGuard>
   )
 }
 

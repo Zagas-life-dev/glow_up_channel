@@ -75,8 +75,8 @@ export default function PendingUsers() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        setError('Access denied. Admin privileges required.')
+      if (user.role !== 'super_admin') {
+        setError('Access denied. Super admin privileges required for user management.')
         setLoading(false)
         return
       }
