@@ -719,6 +719,66 @@ export default function ProfilePage() {
                 })}
               </div>
             )}
+
+            {/* Action buttons: in top container under join date */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {isOwner ? (
+                <>
+                  <Button
+                    onClick={() => setShowEditModal(true)}
+                    variant="outline"
+                    className="flex-1 min-w-0 border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
+                  >
+                    Edit Profile
+                  </Button>
+                  <Link href="/profile/settings" className="flex-1 min-w-0">
+                    <Button
+                      variant="outline"
+                      className="w-full border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
+                    >
+                      <RiSettingsLine className="w-4 h-4 mr-2" aria-hidden />
+                      Settings
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleConnect}
+                    disabled={connectLoading}
+                    className={cn(
+                      "flex-1 min-w-0 rounded-xl h-10 text-sm font-medium transition-all border",
+                      connectionStatus?.isFollowing
+                        ? "bg-card/80 backdrop-blur-sm text-foreground hover:bg-red-500/10 hover:text-red-400 border-border/60 hover:border-red-500/30"
+                        : connectionStatus?.isPending
+                        ? "bg-card/80 backdrop-blur-sm text-muted-foreground border-border/60"
+                        : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-transparent shadow-lg shadow-orange-500/20"
+                    )}
+                  >
+                    {connectionStatus?.isFollowing ? (
+                      "Partnering"
+                    ) : connectionStatus?.isPending ? (
+                      <>
+                        <RiTimeLine className="w-4 h-4 mr-1.5" aria-hidden />
+                        Requested
+                      </>
+                    ) : (
+                      <>
+                        <RiUserAddLine className="w-4 h-4 mr-1.5" aria-hidden />
+                        Partner
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="flex-1 min-w-0 border border-border/60 bg-card/60 text-muted-foreground rounded-xl h-10 text-sm font-medium"
+                  >
+                    Message (coming soon)
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -849,66 +909,6 @@ export default function ProfilePage() {
             </Link>
           </div>
         )}
-
-        {/* Action Buttons: glass style */}
-        <div className="flex flex-wrap gap-2 mb-5">
-          {isOwner ? (
-            <>
-              <Button
-                onClick={() => setShowEditModal(true)}
-                variant="outline"
-                className="flex-1 min-w-0 border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
-              >
-                Edit Profile
-              </Button>
-              <Link href="/profile/settings" className="flex-1 min-w-0">
-                <Button
-                  variant="outline"
-                  className="w-full border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
-                >
-                  <RiSettingsLine className="w-4 h-4 mr-2" aria-hidden />
-                  Settings
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <Button
-                onClick={handleConnect}
-                disabled={connectLoading}
-                className={cn(
-                  "flex-1 min-w-0 rounded-xl h-10 text-sm font-medium transition-all border",
-                  connectionStatus?.isFollowing
-                    ? "bg-card/80 backdrop-blur-sm text-foreground hover:bg-red-500/10 hover:text-red-400 border-border/60 hover:border-red-500/30"
-                    : connectionStatus?.isPending
-                    ? "bg-card/80 backdrop-blur-sm text-muted-foreground border-border/60"
-                    : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-transparent shadow-lg shadow-orange-500/20"
-                )}
-              >
-                {connectionStatus?.isFollowing ? (
-                  "Partnering"
-                ) : connectionStatus?.isPending ? (
-                  <>
-                    <RiTimeLine className="w-4 h-4 mr-1.5" aria-hidden />
-                    Requested
-                  </>
-                ) : (
-                  <>
-                    <RiUserAddLine className="w-4 h-4 mr-1.5" aria-hidden />
-                    Partner
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                disabled
-                className="flex-1 min-w-0 border border-border/60 bg-card/60 text-muted-foreground rounded-xl h-10 text-sm font-medium"
-              >
-                Message (coming soon)
-              </Button>
-            </>
-          )}
-        </div>
 
         {/* Follows You: soft pill */}
         {!isOwner && connectionStatus?.followsYou && (

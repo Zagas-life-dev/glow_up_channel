@@ -26,6 +26,7 @@ export function useCursorPagination<T extends { _id: string }>({
   const [error, setError] = useState<string | null>(null)
   const lastIdRef = useRef<string | null>(null)
   const isInitialLoadRef = useRef(true)
+  const requestIdRef = useRef(0)
 
   // Get cached lastId from localStorage
   const getCachedLastId = useCallback((): string | null => {
@@ -64,8 +65,10 @@ export function useCursorPagination<T extends { _id: string }>({
     }
   }, [storageKey])
 
-  // Fetch items
+  // Fetch items — ignore results from stale fetches (e.g. after tab switch) so we don't overwrite with wrong tab's data
   const fetchItems = useCallback(async (reset = false) => {
+    const myRequestId = ++requestIdRef.current
+
     if (reset) {
       setItems([])
       setIsLoading(true)
@@ -82,18 +85,18 @@ export function useCursorPagination<T extends { _id: string }>({
       const currentLastId = reset ? null : (lastIdRef.current || getCachedLastId())
       const result = await fetchFunction(currentLastId)
 
+      if (myRequestId !== requestIdRef.current) return
+
       if (reset) {
         setItems(result.items)
       } else {
         setItems(prev => {
-          // Prevent duplicates
           const existingIds = new Set(prev.map(item => item._id))
           const newItems = result.items.filter(item => !existingIds.has(item._id))
           return [...prev, ...newItems]
         })
       }
 
-      // Update lastId
       if (result.items.length > 0) {
         const newLastId = result.lastId || result.items[result.items.length - 1]._id
         lastIdRef.current = newLastId
@@ -102,20 +105,20 @@ export function useCursorPagination<T extends { _id: string }>({
 
       setHasMore(result.hasMore && result.items.length === limit)
     } catch (err: any) {
-      // Silently handle errors - don't break the UI
-      // Only log in development
+      if (myRequestId !== requestIdRef.current) return
       if (process.env.NODE_ENV === 'development') {
         console.warn('Error fetching items:', err)
       }
       setError(err.message || 'Failed to fetch items')
-      // Set empty state instead of throwing
       if (reset) {
         setItems([])
       }
       setHasMore(false)
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      if (myRequestId === requestIdRef.current) {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     }
   }, [fetchFunction, getCachedLastId, saveLastId, clearCache, limit])
 

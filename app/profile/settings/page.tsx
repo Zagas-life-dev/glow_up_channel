@@ -714,6 +714,30 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
         </div>
 
+        {/* Admin: only visible for admin / super_admin */}
+        {(user?.role === 'admin' || user?.role === 'super_admin') && (
+          <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/40 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-violet-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Admin Hub</p>
+                <p className="text-xs text-muted-foreground">
+                  Manage content, users, and platform settings.
+                </p>
+              </div>
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-xl border-violet-500/40 text-violet-500 hover:bg-violet-500/10 hover:text-violet-400 shrink-0"
+            >
+              <Link href="/dashboard/admin">Open Admin</Link>
+            </Button>
+          </div>
+        )}
+
         {/* Tab Navigation - glass pills */}
         <div className="mb-6">
           <div className="flex gap-2 flex-wrap">
