@@ -516,7 +516,14 @@ export default function Home() {
       const data = await response.json()
 
       if (data.success) {
-        const items = (data.data?.[type] || []).map((item: any) => ({ ...item, type: type.slice(0, -1) }))
+        const singularType: Record<string, string> = {
+          opportunities: 'opportunity',
+          jobs: 'job',
+          events: 'event',
+          resources: 'resource',
+        }
+        const contentType = singularType[type] ?? type.slice(0, -1)
+        const items = (data.data?.[type] || []).map((item: any) => ({ ...item, type: contentType }))
         return {
           items,
           lastId: data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null),

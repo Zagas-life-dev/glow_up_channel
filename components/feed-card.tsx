@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -78,6 +79,7 @@ interface FeedCardProps {
     }
     score?: number
     url?: string
+    applicationLink?: string
     paymentLink?: string
     fileUrl?: string
     category?: string
@@ -747,20 +749,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           </div>
         )}
 
-        {/* Primary action button — always visible when there is a link (opportunities tab, resources, etc.) */}
+        {/* Primary action button — events, jobs, resources only; opportunity Apply shows after "Show more" */}
         <div className="mb-4">
-          {item.type === "opportunity" && (detailsAny.url || detailsAny.applicationLink) && (
-            <Button
-              asChild
-              size="sm"
-              className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-            >
-              <a href={cleanUrl(detailsAny.url || detailsAny.applicationLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                Apply Now
-                <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-              </a>
-            </Button>
-          )}
           {item.type === "event" && (detailsAny.url || details.url) && (
             <Button
               asChild
@@ -1329,18 +1319,35 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
                 {/* Action Button */}
                 <div className="pt-2">
-                  {item.type === 'opportunity' && (detailsAny.url || detailsAny.applicationLink) && (
-                    <Button
-                      asChild
-                      size="sm"
-                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                    >
-                      <a href={cleanUrl(detailsAny.url || detailsAny.applicationLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                        Apply Now
-                        <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                      </a>
-                    </Button>
-                  )}
+                  {item.type === 'opportunity' && (() => {
+                    const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? item.url ?? item.applicationLink
+                    if (applyUrl) {
+                      return (
+                        <Button
+                          asChild
+                          size="sm"
+                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                        >
+                          <a href={cleanUrl(applyUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                            Apply Now
+                            <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                          </a>
+                        </Button>
+                      )
+                    }
+                    return (
+                      <Button
+                        asChild
+                        size="sm"
+                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                      >
+                        <Link href={`/opportunities/${item._id}`} className="flex items-center justify-center gap-2">
+                          View & apply
+                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                        </Link>
+                      </Button>
+                    )
+                  })()}
                   {item.type === 'event' && details.url && (
                     <Button
                       asChild
