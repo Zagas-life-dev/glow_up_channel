@@ -747,6 +747,87 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           </div>
         )}
 
+        {/* Primary action button — always visible when there is a link (opportunities tab, resources, etc.) */}
+        <div className="mb-4">
+          {item.type === "opportunity" && (detailsAny.url || detailsAny.applicationLink) && (
+            <Button
+              asChild
+              size="sm"
+              className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+            >
+              <a href={cleanUrl(detailsAny.url || detailsAny.applicationLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                Apply Now
+                <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+              </a>
+            </Button>
+          )}
+          {item.type === "event" && (detailsAny.url || details.url) && (
+            <Button
+              asChild
+              size="sm"
+              className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+            >
+              <a href={cleanUrl(detailsAny.url || details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                Register
+                <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+              </a>
+            </Button>
+          )}
+          {item.type === "job" && (detailsAny.url || details.url) && (
+            <Button
+              asChild
+              size="sm"
+              className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+            >
+              <a href={cleanUrl(detailsAny.url || details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                Apply
+                <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+              </a>
+            </Button>
+          )}
+          {item.type === "resource" && (detailsAny.paymentLink || detailsAny.fileUrl) && (
+            <div className="flex flex-col gap-2">
+              {detailsAny.paymentLink ? (
+                <Button
+                  asChild
+                  size="sm"
+                  className={detailsAny.isPremium ? "w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-full shadow-md font-semibold" : cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                >
+                  <a href={cleanUrl(detailsAny.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                    {detailsAny.isPremium ? <><RiVipCrownLine className="w-4 h-4" aria-hidden /> Purchase Premium</> : <>Sign up <RiExternalLinkLine className="w-4 h-4" aria-hidden /></>}
+                  </a>
+                </Button>
+              ) : detailsAny.fileUrl ? (
+                <>
+                  <Button
+                    asChild
+                    size="sm"
+                    className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                  >
+                    <a href={cleanUrl(detailsAny.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                      Access Resource
+                      <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                    </a>
+                  </Button>
+                  {!detailsAny.isPremium && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
+                    >
+                      <a href={detailsAny.fileUrl} download className="flex items-center justify-center gap-2">
+                        <RiDownloadLine className="w-4 h-4" aria-hidden />
+                        Download
+                      </a>
+                    </Button>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
+
         {/* Expanded Details */}
         {expanded && (
           <div className="mt-4 pt-4 border-t border-border/50 space-y-6">
@@ -1248,13 +1329,13 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
                 {/* Action Button */}
                 <div className="pt-2">
-                  {item.type === 'opportunity' && details.url && (
+                  {item.type === 'opportunity' && (detailsAny.url || detailsAny.applicationLink) && (
                     <Button
                       asChild
                       size="sm"
                       className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                     >
-                      <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                      <a href={cleanUrl(detailsAny.url || detailsAny.applicationLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                         Apply Now
                         <RiExternalLinkLine className="w-4 h-4" aria-hidden />
                       </a>
@@ -1286,42 +1367,43 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                   )}
                   {item.type === 'resource' && (
                     <div className="flex flex-col gap-2">
-                      {details.isPremium && details.paymentLink ? (
+                      {detailsAny.paymentLink ? (
                         <Button
                           asChild
                           size="sm"
-                          className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-full shadow-md font-semibold"
+                          className={detailsAny.isPremium ? "w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-full shadow-md font-semibold" : cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                         >
-                          <a href={cleanUrl(details.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            <RiVipCrownLine className="w-4 h-4" aria-hidden />
-                            Purchase Premium
+                          <a href={cleanUrl(detailsAny.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                            {detailsAny.isPremium ? <><RiVipCrownLine className="w-4 h-4" aria-hidden /> Purchase Premium</> : <>Sign up <RiExternalLinkLine className="w-4 h-4" aria-hidden /></>}
                           </a>
                         </Button>
-                      ) : details.fileUrl ? (
-                        <Button
-                          asChild
-                          size="sm"
-                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                        >
-                          <a href={cleanUrl(details.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            Access Resource
-                            <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                          </a>
-                        </Button>
+                      ) : detailsAny.fileUrl ? (
+                        <>
+                          <Button
+                            asChild
+                            size="sm"
+                            className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                          >
+                            <a href={cleanUrl(detailsAny.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                              Access Resource
+                              <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                            </a>
+                          </Button>
+                          {!detailsAny.isPremium && (
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
+                            >
+                              <a href={detailsAny.fileUrl} download className="flex items-center justify-center gap-2">
+                                <RiDownloadLine className="w-4 h-4" aria-hidden />
+                                Download
+                              </a>
+                            </Button>
+                          )}
+                        </>
                       ) : null}
-                      {details.fileUrl && !details.isPremium && (
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
-                        >
-                          <a href={details.fileUrl} download className="flex items-center justify-center gap-2">
-                            <RiDownloadLine className="w-4 h-4" aria-hidden />
-                            Download
-                          </a>
-                        </Button>
-                      )}
                     </div>
                   )}
                 </div>

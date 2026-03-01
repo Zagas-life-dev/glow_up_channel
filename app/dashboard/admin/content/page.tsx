@@ -258,6 +258,7 @@ export default function AdminContent() {
   const [editExternalLink, setEditExternalLink] = useState("")
   const [editEventLink, setEditEventLink] = useState("")
   const [editUrl, setEditUrl] = useState("")
+  const [editPaymentLink, setEditPaymentLink] = useState("")
   const [editLocationCity, setEditLocationCity] = useState("")
   const [editLocationCountry, setEditLocationCountry] = useState("")
   const [editLocationProvince, setEditLocationProvince] = useState("")
@@ -417,6 +418,7 @@ export default function AdminContent() {
       setEditExternalLink(selectedContent.externalLink ?? "")
       setEditEventLink(selectedContent.eventLink ?? "")
       setEditUrl(selectedContent.url ?? "")
+      setEditPaymentLink((selectedContent as { paymentLink?: string }).paymentLink ?? "")
       setEditLocationCity(selectedContent.location?.city ?? "")
       setEditLocationCountry(selectedContent.location?.country ?? "")
       setEditLocationProvince(selectedContent.location?.province ?? "")
@@ -786,6 +788,8 @@ export default function AdminContent() {
           currency: editCurrency.trim() || undefined,
           benefits: benefitsList,
           ...(requirementsUpdate && selectedContent.type === "opportunity" ? { requirements: requirementsUpdate } : {}),
+          ...(selectedContent.type === "resource" && { paymentLink: editPaymentLink.trim() || undefined }),
+          ...(selectedContent.type === "resource" && editTags.trim() && { tags: editTags.split(",").map((t) => t.trim()).filter(Boolean) }),
           dates: {
             applicationDeadline: editAppDeadline ? new Date(editAppDeadline).toISOString() : undefined,
             startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
@@ -809,6 +813,7 @@ export default function AdminContent() {
         setEditExternalLink(previousItem.externalLink ?? "")
         setEditEventLink(previousItem.eventLink ?? "")
         setEditUrl(previousItem.url ?? "")
+        setEditPaymentLink((previousItem as { paymentLink?: string }).paymentLink ?? "")
         setEditLocationCity(previousItem.location?.city ?? "")
         setEditLocationCountry(previousItem.location?.country ?? "")
         setEditLocationProvince(previousItem.location?.province ?? "")
@@ -1436,6 +1441,12 @@ export default function AdminContent() {
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Source / main URL</label>
                         <Input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="rounded-xl border-border" placeholder="https://..." />
                       </div>
+                      {selectedContent.type === "resource" && (
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Payment link (URL)</label>
+                          <Input value={editPaymentLink} onChange={(e) => setEditPaymentLink(e.target.value)} className="rounded-xl border-border" placeholder="https://..." />
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -1491,6 +1502,17 @@ export default function AdminContent() {
                           <div className="sm:col-span-2">
                             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Tags (comma separated)</label>
                             <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} className="rounded-xl border-border" placeholder="e.g. React, Node.js, Remote" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {selectedContent.type === "resource" && (
+                      <div className="space-y-3 pt-2 border-t border-border/60">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resource details</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="sm:col-span-2">
+                            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Tags (comma separated)</label>
+                            <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} className="rounded-xl border-border" placeholder="e.g. guide, tutorial, template" />
                           </div>
                         </div>
                       </div>
@@ -2015,6 +2037,14 @@ export default function AdminContent() {
                         </a>
                       </Button>
                     )}
+                    {selectedContent.type === "resource" && selectedContent.paymentLink != null && selectedContent.paymentLink !== "" ? (
+                      <Button variant="outline" size="sm" className="rounded-xl" asChild>
+                        <a href={String(selectedContent.paymentLink)} target="_blank" rel="noopener noreferrer">
+                          <RiExternalLinkLine className="w-4 h-4 mr-2" />
+                          Payment link
+                        </a>
+                      </Button>
+                    ) : null}
                   </div>
                 </section>
                 </>
@@ -2032,6 +2062,7 @@ export default function AdminContent() {
                       setEditExternalLink(selectedContent.externalLink ?? "")
                       setEditEventLink(selectedContent.eventLink ?? "")
                       setEditUrl(selectedContent.url ?? "")
+                      setEditPaymentLink((selectedContent as { paymentLink?: string }).paymentLink ?? "")
                       setEditLocationCity(selectedContent.location?.city ?? "")
                       setEditLocationCountry(selectedContent.location?.country ?? "")
                       setEditLocationProvince(selectedContent.location?.province ?? "")

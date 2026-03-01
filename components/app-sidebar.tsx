@@ -379,12 +379,12 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               <RiSettingsLine className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span className="font-medium">Settings</span>}
             </Link>
-            <TestPushButton
+            {/* <TestPushButton
               isCollapsed={isCollapsed}
               linkBase={linkBase}
               linkCollapsed={linkCollapsed}
               linkExpanded={linkExpanded}
-            />
+            /> */}
             {/* Premium entry */}
             <Link
               href="/premium"

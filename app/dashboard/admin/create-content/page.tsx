@@ -90,6 +90,7 @@ export default function AdminCreateContentPage() {
   // Resource
   const [author, setAuthor] = useState("")
   const [resourceCategory, setResourceCategory] = useState("article")
+  const [resourceTags, setResourceTags] = useState("")
 
   // Benefits (optional) – event, job, opportunity only; one per line
   const [benefitsText, setBenefitsText] = useState("")
@@ -121,6 +122,7 @@ export default function AdminCreateContentPage() {
     setSalary("")
     setPrice("")
     setBenefitsText("")
+    setResourceTags("")
     setSuccess(false)
   }
 
@@ -215,7 +217,7 @@ export default function AdminCreateContentPage() {
           category: resourceCategory,
           url: basePayload.url,
           paymentLink: basePayload.url,
-          tags: [],
+          tags: resourceTags.trim() ? resourceTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         })
       }
 
@@ -546,6 +548,10 @@ export default function AdminCreateContentPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label>Tags (comma separated)</Label>
+                      <Input value={resourceTags} onChange={(e) => setResourceTags(e.target.value)} placeholder="e.g. guide, tutorial, template" className="rounded-xl" />
                     </div>
                   </div>
                 </div>
