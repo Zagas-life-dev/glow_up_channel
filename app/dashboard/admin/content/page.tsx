@@ -47,6 +47,7 @@ import {
   RiCloseLine,
   RiEditLine,
   RiExternalLinkLine,
+  RiDeleteBinLine,
 } from "react-icons/ri"
 import { AdminLayout } from "@/components/admin-sidebar"
 import { toast } from "sonner"
@@ -623,6 +624,31 @@ export default function AdminContent() {
           setCounts((prev) => ({ ...prev, live: Math.max(0, prev.live - 1), pending: prev.pending + 1 }))
         }
       }
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDeleteContent = async (item: ContentItem) => {
+    if (!item) return
+    const id = item._id
+    const type = item.type as 'opportunity' | 'event' | 'job' | 'resource'
+    const confirmed = window.confirm(
+      `This will move the ${type} "${item.title}" to past ${type}s. Continue?`
+    )
+    if (!confirmed) return
+
+    setActionLoading(id)
+    const previousContent = content
+    try {
+      // Optimistically remove from UI
+      setContent((prev) => prev.filter((c) => c._id !== id))
+      await ApiClient.deleteContentByAdmin(id, type)
+      toast.success(`Moved to past ${type}s`)
+    } catch (err: unknown) {
+      // Restore on failure
+      setContent(previousContent)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete content')
     } finally {
       setActionLoading(null)
     }
@@ -1254,6 +1280,16 @@ export default function AdminContent() {
                               <span className="hidden sm:inline">Verify</span>
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteContent(item)}
+                            disabled={actionLoading === item._id}
+                            className="rounded-xl border-red-500/40 text-red-600 hover:bg-red-500/10 h-9"
+                          >
+                            <RiDeleteBinLine className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </Button>
                         </div>
                       </div>
                     </article>

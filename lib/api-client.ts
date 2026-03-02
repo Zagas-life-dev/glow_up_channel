@@ -1340,6 +1340,20 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Admin delete content: move from live/inactive into corresponding past_* collection.
+   * This reuses the same disapprove endpoints used for rejection.
+   */
+  static async deleteContentByAdmin(contentId: string, contentType: 'opportunity' | 'event' | 'job' | 'resource', reason?: string): Promise<void> {
+    const endpoint = this.getContentEndpoint(contentType, contentId, 'disapprove');
+    console.log('Deleting content to past:', { contentId, contentType, endpoint, reason });
+    const response = await this.makeAuthenticatedRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ rejectionReason: reason || 'Deleted by admin' }),
+    });
+    return this.handleResponse(response);
+  }
+
   static async requestPayment(contentId: string, contentType: string, amount: number, notes?: string): Promise<any> {
     console.log('API Client - Requesting payment:', {
       contentId,
