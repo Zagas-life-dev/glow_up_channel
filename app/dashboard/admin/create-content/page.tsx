@@ -31,14 +31,40 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import PageSkeleton from "@/components/skeletons/page-skeleton"
+import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
+import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
 
 type ContentType = "event" | "job" | "opportunity" | "resource"
 
-const CONTENT_TYPES: { id: ContentType; label: string; icon: typeof RiCalendarLine }[] = [
-  { id: "event", label: "Event", icon: RiCalendarLine },
-  { id: "job", label: "Job", icon: RiBriefcaseLine },
-  { id: "opportunity", label: "Opportunity", icon: RiFocus3Line },
-  { id: "resource", label: "Resource", icon: RiBookOpenLine },
+const ADMIN_POST_TYPES: PostTypeOption<ContentType>[] = [
+  {
+    id: "event",
+    title: "Event",
+    icon: RiCalendarLine,
+    color: "emerald",
+    desc: "Workshops, conferences, meetups",
+  },
+  {
+    id: "job",
+    title: "Job",
+    icon: RiBriefcaseLine,
+    color: "primary",
+    desc: "Full-time, part-time positions",
+  },
+  {
+    id: "opportunity",
+    title: "Opportunity",
+    icon: RiFocus3Line,
+    color: "orange",
+    desc: "Scholarships, grants, fellowships",
+  },
+  {
+    id: "resource",
+    title: "Resource",
+    icon: RiBookOpenLine,
+    color: "violet",
+    desc: "Courses, guides, tools",
+  },
 ]
 
 const EVENT_TYPES = ["networking", "workshop", "conference", "webinar", "other"]
@@ -52,6 +78,7 @@ export default function AdminCreateContentPage() {
   const [contentType, setContentType] = useState<ContentType>("event")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
 
   // Common
   const [title, setTitle] = useState("")
@@ -90,7 +117,6 @@ export default function AdminCreateContentPage() {
   // Resource
   const [author, setAuthor] = useState("")
   const [resourceCategory, setResourceCategory] = useState("article")
-  const [resourceTags, setResourceTags] = useState("")
 
   // Benefits (optional) – event, job, opportunity only; one per line
   const [benefitsText, setBenefitsText] = useState("")
@@ -122,7 +148,7 @@ export default function AdminCreateContentPage() {
     setSalary("")
     setPrice("")
     setBenefitsText("")
-    setResourceTags("")
+    setTags([])
     setSuccess(false)
   }
 
@@ -217,7 +243,7 @@ export default function AdminCreateContentPage() {
           category: resourceCategory,
           url: basePayload.url,
           paymentLink: basePayload.url,
-          tags: resourceTags.trim() ? resourceTags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+          tags,
         })
       }
 
@@ -271,24 +297,16 @@ export default function AdminCreateContentPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Content type tabs */}
-            <div className="flex flex-wrap gap-2">
-              {CONTENT_TYPES.map(({ id, label, icon: Icon }) => (
-                <Button
-                  key={id}
-                  type="button"
-                  variant={contentType === id ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "rounded-xl",
-                    contentType === id && "bg-primary hover:bg-primary/90"
-                  )}
-                  onClick={() => setContentType(id)}
-                >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {label}
-                </Button>
-              ))}
+            {/* Content type selector - aligned with provider posting UI */}
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                What would you like to post?
+              </p>
+              <PostTypeSelector<ContentType>
+                types={ADMIN_POST_TYPES}
+                selectedType={contentType}
+                onSelect={(id) => setContentType(id)}
+              />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -549,9 +567,13 @@ export default function AdminCreateContentPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="sm:col-span-2 space-y-2">
-                      <Label>Tags (comma separated)</Label>
-                      <Input value={resourceTags} onChange={(e) => setResourceTags(e.target.value)} placeholder="e.g. guide, tutorial, template" className="rounded-xl" />
+                    <div className="sm:col-span-2">
+                      <TagInputWithSuggestions
+                        tags={tags}
+                        onTagsChange={setTags}
+                        label="Tags"
+                        helperText="Add up to 10 tags to help users discover this resource."
+                      />
                     </div>
                   </div>
                 </div>

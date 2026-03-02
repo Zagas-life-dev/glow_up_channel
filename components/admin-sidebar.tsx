@@ -33,7 +33,8 @@ import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: RiDashboardLine, href: "/dashboard/admin", superAdminOnly: false },
-  { id: "create-content", label: "Create content", icon: RiAddCircleLine, href: "/dashboard/admin/create-content", superAdminOnly: false },
+  // When admins click "Create content", send them to the provider posting page
+  { id: "create-content", label: "Create content", icon: RiAddCircleLine, href: "/dashboard/provider/posting", superAdminOnly: false },
   { id: "users", label: "Users", icon: RiGroupLine, href: "/dashboard/admin/users", superAdminOnly: true },
   { id: "content", label: "Content", icon: RiFileLine, href: "/dashboard/admin/content", superAdminOnly: false },
   { id: "analytics", label: "Analytics", icon: RiBarChartBoxLine, href: "/dashboard/admin/analytics", superAdminOnly: false },
@@ -47,7 +48,7 @@ const QUICK_LINKS = [
 
 function isNavActive(pathname: string, item: (typeof NAV_ITEMS)[number]): boolean {
   if (item.id === "overview") return pathname === "/dashboard/admin"
-  if (item.id === "create-content") return pathname === "/dashboard/admin/create-content"
+  if (item.id === "create-content") return pathname === "/dashboard/provider/posting"
   return pathname === item.href || pathname?.startsWith(item.href + "/") || pathname?.includes(item.href)
 }
 

@@ -25,6 +25,8 @@ import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
 import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
+import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
+import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
 import { 
   Target,
   Calendar,
@@ -64,11 +66,11 @@ import {
 
 type PostType = 'opportunity' | 'event' | 'job' | 'resource'
 
-const postTypes = [
-  { id: 'opportunity' as PostType, title: 'Opportunity', icon: Target, color: 'orange', desc: 'Internships, scholarships, grants' },
-  { id: 'job' as PostType, title: 'Job', icon: Briefcase, color: 'primary', desc: 'Full-time, part-time positions' },
-  { id: 'event' as PostType, title: 'Event', icon: Calendar, color: 'emerald', desc: 'Workshops, conferences, meetups' },
-  { id: 'resource' as PostType, title: 'Resource', icon: BookOpen, color: 'violet', desc: 'Courses, guides, tools' },
+const postTypes: PostTypeOption<PostType>[] = [
+  { id: 'opportunity', title: 'Opportunity', icon: Target, color: 'orange', desc: 'Internships, scholarships, grants' },
+  { id: 'job', title: 'Job', icon: Briefcase, color: 'primary', desc: 'Full-time, part-time positions' },
+  { id: 'event', title: 'Event', icon: Calendar, color: 'emerald', desc: 'Workshops, conferences, meetups' },
+  { id: 'resource', title: 'Resource', icon: BookOpen, color: 'violet', desc: 'Courses, guides, tools' },
 ]
 
 const opportunityTypes = [
@@ -96,11 +98,6 @@ function PostingContent() {
   const [errorMessage, setErrorMessage] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
-  const [isTagLoading, setIsTagLoading] = useState(false)
-  const [tagSelectedIndex, setTagSelectedIndex] = useState(0)
-  const tagDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const tagInputContainerRef = useRef<HTMLDivElement | null>(null)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
@@ -184,143 +181,7 @@ function PostingContent() {
     setIsPaid(false)
     setIsRemote(false)
   }
-  const handleSelectTagSuggestion = (tag: string) => {
-    const cleanTag = tag.trim()
-    if (!cleanTag) return
-    if (tags.includes(cleanTag) || tags.length >= 10) {
-      setShowTagSuggestions(false)
-      return
-    }
-    setTags([...tags, cleanTag])
-    setTagInput('')
-    setShowTagSuggestions(false)
-  }
-
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // When suggestions are visible, use keyboard to navigate/select them
-    if (showTagSuggestions && tagSuggestions.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setTagSelectedIndex((prev) => (prev + 1) % tagSuggestions.length)
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setTagSelectedIndex((prev) => (prev - 1 + tagSuggestions.length) % tagSuggestions.length)
-        return
-      }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault()
-        const selected = tagSuggestions[tagSelectedIndex] || tagSuggestions[0]
-        if (selected) {
-          handleSelectTagSuggestion(selected)
-        }
-        return
-      }
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        setShowTagSuggestions(false)
-        return
-      }
-    }
-
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      const cleanTag = tagInput.trim()
-      if (cleanTag && !tags.includes(cleanTag) && tags.length < 10) {
-        setTags([...tags, cleanTag])
-        setTagInput('')
-        setShowTagSuggestions(false)
-      }
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove))
-  }
-
-  // Fetch tag suggestions from the backend based on current input
-  useEffect(() => {
-    const query = tagInput.trim()
-
-    if (!query) {
-      setTagSuggestions([])
-      setShowTagSuggestions(false)
-      setIsTagLoading(false)
-      if (tagDebounceRef.current) {
-        clearTimeout(tagDebounceRef.current)
-      }
-      return
-    }
-
-    if (tagDebounceRef.current) {
-      clearTimeout(tagDebounceRef.current)
-    }
-
-    tagDebounceRef.current = setTimeout(async () => {
-      try {
-        setIsTagLoading(true)
-
-        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-        const headers: HeadersInit = { 'Content-Type': 'application/json' }
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-
-        // Use existing hashtag + skills suggestion endpoints as tag source
-        const [hashtagResponse, skillsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/hashtags/suggestions?q=${encodeURIComponent(query)}`, { headers }).catch(() => null),
-          fetch(`${API_BASE_URL}/api/skills/suggestions?q=${encodeURIComponent(query)}`, { headers }).catch(() => null),
-        ])
-
-        let hashtagSuggestions: string[] = []
-        if (hashtagResponse && hashtagResponse.ok) {
-          const hashtagData = await hashtagResponse.json()
-          if (hashtagData?.success && Array.isArray(hashtagData.suggestions)) {
-            hashtagSuggestions = hashtagData.suggestions
-          }
-        }
-
-        let skillSuggestions: string[] = []
-        if (skillsResponse && skillsResponse.ok) {
-          const skillsData = await skillsResponse.json()
-          if (skillsData?.success && Array.isArray(skillsData.suggestions)) {
-            skillSuggestions = skillsData.suggestions
-          }
-        }
-
-        const allSuggestions = new Set<string>([
-          ...hashtagSuggestions,
-          ...skillSuggestions,
-        ])
-
-        const combined = Array.from(allSuggestions)
-          .map((s) => s.trim())
-          .filter((s) => {
-            if (!s) return false
-            const normalized = s.toLowerCase()
-            return normalized.includes(query.toLowerCase()) && !tags.includes(s)
-          })
-          .slice(0, 8)
-
-        setTagSuggestions(combined)
-        setShowTagSuggestions(combined.length > 0)
-        setTagSelectedIndex(0)
-      } catch (err) {
-        console.error('Failed to fetch tag suggestions', err)
-        setTagSuggestions([])
-        setShowTagSuggestions(false)
-      } finally {
-        setIsTagLoading(false)
-      }
-    }, 300)
-
-    return () => {
-      if (tagDebounceRef.current) {
-        clearTimeout(tagDebounceRef.current)
-      }
-    }
-  }, [tagInput, API_BASE_URL, tags])
+  // Tag suggestions logic moved into shared TagInputWithSuggestions component
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -812,44 +673,12 @@ function PostingContent() {
           </p>
         )}
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">What would you like to post?</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {postTypes.map((type) => {
-            const Icon = type.icon
-              return (
-                <button
-                key={type.id}
-                onClick={() => handleSelectType(type.id)}
-                disabled={!canPost}
-                className={cn(
-                  "p-4 rounded-2xl border text-left transition-all duration-200 group",
-                  "bg-card border-border",
-                  "hover:bg-muted hover:border-border",
-                  !canPost && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                <div className={cn(
-                  "w-11 h-11 rounded-xl flex items-center justify-center mb-3",
-                  type.color === 'orange' && "bg-primary/10",
-                  type.color === 'primary' && "bg-primary/10",
-                  type.color === 'emerald' && "bg-emerald-500/10",
-                  type.color === 'violet' && "bg-violet-500/10"
-                )}>
-                  <Icon className={cn(
-                    "w-5 h-5",
-                    type.color === 'orange' && "text-orange-500",
-                    type.color === 'primary' && "text-primary",
-                    type.color === 'emerald' && "text-emerald-500",
-                    type.color === 'violet' && "text-violet-500"
-                  )} />
-                    </div>
-                <h3 className="font-semibold text-foreground mb-1 group-hover:text-orange-400 transition-colors">
-                  {type.title}
-                    </h3>
-                <p className="text-xs text-muted-foreground">{type.desc}</p>
-                </button>
-              )
-            })}
-          </div>
+        <PostTypeSelector<PostType>
+          types={postTypes}
+          selectedType={selectedType}
+          onSelect={handleSelectType}
+          disabled={!canPost}
+        />
         </div>
 
       {/* Recent Posts Section */}
@@ -1109,56 +938,14 @@ function PostingContent() {
                     )}
 
                     {/* Tags */}
-                    <div className="space-y-3">
-                      <Label className="text-muted-foreground">Tags</Label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {tags.map((tag) => (
-                          <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-sm">
-                              {tag}
-                            <button type="button" onClick={() => removeTag(tag)} className="hover:text-foreground">
-                              <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      <div ref={tagInputContainerRef} className="relative">
-                        <Input
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={handleAddTag}
-                          placeholder="Type to search tags (press Enter to add)"
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-xl"
-                        />
-                        {showTagSuggestions && (isTagLoading || tagSuggestions.length > 0) && (
-                          <div
-                            className="absolute z-50 top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-border bg-card/90 backdrop-blur-sm shadow-md shadow-black/20"
-                          >
-                            {isTagLoading && tagSuggestions.length === 0 && (
-                              <div className="px-3 py-2 text-xs text-muted-foreground">
-                                Searching tags...
-                              </div>
-                            )}
-                            {tagSuggestions.map((suggestion, index) => (
-                              <button
-                                key={`${suggestion}-${index}`}
-                                type="button"
-                                onMouseDown={(e) => {
-                                  e.preventDefault()
-                                  handleSelectTagSuggestion(suggestion)
-                                }}
-                                className={cn(
-                                  "w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/10 focus:bg-white/10 focus:outline-none rounded-lg",
-                                  index === tagSelectedIndex && "bg-white/10"
-                                )}
-                              >
-                                {suggestion}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Add up to 10 tags for better discovery</p>
-                  </div>
+                    <div ref={tagInputContainerRef}>
+                      <TagInputWithSuggestions
+                        tags={tags}
+                        onTagsChange={setTags}
+                        label="Tags"
+                        helperText="Add up to 10 tags for better discovery"
+                      />
+                    </div>
 
                     {/* Requirements (for opportunity) */}
                     {selectedType === 'opportunity' && (
