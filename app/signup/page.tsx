@@ -73,7 +73,7 @@ export default function SignupPage() {
         await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
       }
       
-      router.push('/onboarding')
+      router.push('/verify-email')
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
     } finally {

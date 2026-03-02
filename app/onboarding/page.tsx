@@ -63,6 +63,9 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!isPending && !user) {
       router.push('/login')
+    } else if (user && !user.emailVerified) {
+      // Require email verification before onboarding
+      router.push('/verify-email')
     } else if (user && isOnboardingCompleted) {
       // User has already completed onboarding, redirect to dashboard
       router.push('/dashboard')
