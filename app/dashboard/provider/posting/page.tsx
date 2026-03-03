@@ -163,7 +163,8 @@ function PostingContent() {
 
   const handleSelectType = (type: PostType) => {
     const limit = getPostingLimit(user?.isPremium, user?.role)
-    if (postingCount !== null && postingCount >= limit) {
+    // If limit is finite, enforce it; admins/super_admins get Infinity and bypass this check
+    if (Number.isFinite(limit) && postingCount !== null && postingCount >= limit) {
       toast.error(
         user?.isPremium
           ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
@@ -189,13 +190,13 @@ function PostingContent() {
 
     const limit = getPostingLimit(user?.isPremium, user?.role)
     let currentTotal = postingCount ?? 0
-    if (currentTotal >= limit) {
+    if (Number.isFinite(limit) && currentTotal >= limit) {
       try {
         const count = await ApiClient.getMyPostingCount()
         currentTotal = count.total
         setPostingCount(currentTotal)
       } catch (_) {}
-      if (currentTotal >= limit) {
+      if (Number.isFinite(limit) && currentTotal >= limit) {
         toast.error(
           user?.isPremium
             ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
@@ -476,20 +477,29 @@ function PostingContent() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-foreground">Your posts</span>
               <span className="text-lg font-bold text-orange-400">
-                {postingCount !== null ? postingCount : '—'} of {getPostingLimit(user?.isPremium, user?.role)} max
+                {postingCount !== null ? postingCount : '—'}
+                {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) && (
+                  <> of {getPostingLimit(user?.isPremium, user?.role)} max</>
+                )}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground mb-2">
-              {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium: 20 posts max' : 'Free: 5 posts max (all statuses count)'}
+              {Number.isFinite(getPostingLimit(user?.isPremium, user?.role))
+                ? hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
+                  ? 'Premium: 20 posts max'
+                  : 'Free: 5 posts max (all statuses count)'
+                : 'Admin: no posting limit'}
             </p>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              {(() => {
-                const total = postingCount ?? 0
-                const limit = getPostingLimit(user?.isPremium, user?.role)
-                const pct = limit > 0 ? Math.min((total / limit) * 100, 100) : 0
-                return <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-              })()}
-            </div>
+            {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) && (
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                {(() => {
+                  const total = postingCount ?? 0
+                  const limit = getPostingLimit(user?.isPremium, user?.role)
+                  const pct = limit > 0 ? Math.min((total / limit) * 100, 100) : 0
+                  return <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                })()}
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -669,7 +679,15 @@ function PostingContent() {
         <div className="mb-8">
         {postingCount !== null && (
           <p className="text-sm text-muted-foreground mb-4">
-            You have <span className="font-semibold text-foreground">{postingCount} of {getPostingLimit(user?.isPremium, user?.role)}</span> posts (max for {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium' : 'free'}).
+            You have <span className="font-semibold text-foreground">{postingCount}</span>{' '}
+            {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) ? (
+              <>
+                of <span className="font-semibold text-foreground">{getPostingLimit(user?.isPremium, user?.role)}</span> posts
+                (max for {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium' : 'free'}).
+              </>
+            ) : (
+              <>posts (no limit for admin users).</>
+            )}
           </p>
         )}
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">What would you like to post?</h2>

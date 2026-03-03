@@ -20,7 +20,7 @@ function SearchContent() {
   const [activeTab, setActiveTab] = useState<'all' | 'opportunities' | 'events' | 'jobs' | 'resources'>('all')
   const [filters, setFilters] = useState({
     location: '',
-    type: '',
+    contentType: '', // high-level type: opportunity | event | job | resource
     industry: ''
   })
   const [showFilters, setShowFilters] = useState(false)
@@ -34,7 +34,7 @@ function SearchContent() {
 
   // Storage key based on search query and filters
   const storageKey = useMemo(() => {
-    const parts = ['search', searchQuery, activeTab, filters.location, filters.type, filters.industry]
+    const parts = ['search', searchQuery, activeTab, filters.location, filters.contentType, filters.industry]
     return parts.filter(Boolean).join('_')
   }, [searchQuery, activeTab, filters])
 
@@ -50,44 +50,110 @@ function SearchContent() {
     }
 
     try {
-      const searchParams = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         search: searchQuery,
-        limit: '20',
-        ...(filters.location && { country: filters.location }),
-        ...(filters.type && { 
-          ...(filters.type === 'opportunity' && { category: filters.type }),
-          ...(filters.type === 'event' && { eventType: filters.type }),
-          ...(filters.type === 'job' && { jobType: filters.type }),
-          ...(filters.type === 'resource' && { category: filters.type })
-        }),
-        ...(filters.industry && { industry: filters.industry })
+        limit: '20'
       })
 
+      // Map generic filters into backend-specific query params later per endpoint
+
       if (lastId) {
-        searchParams.append('lastId', lastId)
+        queryParams.append('lastId', lastId)
       }
 
-      // Determine which endpoint to call based on active tab
+      // Determine the specific content type to search (if any)
+      const typeToSearch = filters.contentType || (activeTab === 'all' ? '' : activeTab)
+
+      if (!typeToSearch) {
+        // Search ALL endpoints concurrently if no specific type is requested
+        // Note: For a combined search, we fetch the first page from all collections.
+        // True cursor pagination across disparate collections without an aggregation backend is complex,
+        // so we'll return a rich combined first page (up to 80 items) and disable infinite scroll for "All".
+        if (lastId) {
+           // We already fetched the combined "All" page, don't fetch more to avoid duplicates
+           return { items: [], lastId: null, hasMore: false }
+        }
+
+        // Build per-endpoint query strings so filters map correctly
+        const oppParams = new URLSearchParams(queryParams.toString())
+        const eventParams = new URLSearchParams(queryParams.toString())
+        const jobParams = new URLSearchParams(queryParams.toString())
+        const resourceParams = new URLSearchParams(queryParams.toString())
+
+        if (filters.location) {
+          // Opportunities/events use country; jobs use location text; resources currently have no location filter
+          oppParams.append('country', filters.location)
+          eventParams.append('country', filters.location)
+          jobParams.append('location', filters.location)
+        }
+
+        if (filters.industry) {
+          // Map industry into a generic search term where supported
+          oppParams.append('search', `${searchQuery} ${filters.industry}`)
+          jobParams.append('search', `${searchQuery} ${filters.industry}`)
+        }
+
+        const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
+          fetch(`${backendUrl}/api/opportunities?${oppParams.toString()}`),
+          fetch(`${backendUrl}/api/events?${eventParams.toString()}`),
+          fetch(`${backendUrl}/api/jobs?${jobParams.toString()}`),
+          fetch(`${backendUrl}/api/resources?${resourceParams.toString()}`)
+        ])
+
+        const [opportunitiesData, eventsData, jobsData, resourcesData] = await Promise.all([
+          opportunitiesRes.json(),
+          eventsRes.json(),
+          jobsRes.json(),
+          resourcesRes.json()
+        ])
+
+        const combinedItems = [
+          ...(opportunitiesData.success ? (opportunitiesData.data?.opportunities || []).map((i: any) => ({ ...i, type: 'opportunity' })) : []),
+          ...(eventsData.success ? (eventsData.data?.events || []).map((i: any) => ({ ...i, type: 'event' })) : []),
+          ...(jobsData.success ? (jobsData.data?.jobs || []).map((i: any) => ({ ...i, type: 'job' })) : []),
+          ...(resourcesData.success ? (resourcesData.data?.resources || []).map((i: any) => ({ ...i, type: 'resource' })) : [])
+        ]
+
+        // Sort combined results by score (if available) or date
+        combinedItems.sort((a, b) => {
+          if (a.score && b.score) return b.score - a.score
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+
+        return { items: combinedItems, lastId: null, hasMore: false }
+      }
+
+      // We are searching a SPECIFIC type
       let endpoint = ''
       let dataKey = ''
-      if (activeTab === 'all') {
-        // For 'all', we need to fetch from all types and combine
-        // For simplicity, we'll fetch from opportunities as the primary type
-        // In a real implementation, you might want to fetch from all types
+
+      if (typeToSearch === 'opportunity' || typeToSearch === 'opportunities') {
         endpoint = 'opportunities'
         dataKey = 'opportunities'
-      } else {
-        endpoint = activeTab
-        dataKey = activeTab
+        if (filters.location) queryParams.append('country', filters.location)
+        if (filters.industry) queryParams.append('search', `${searchQuery} ${filters.industry}`)
+      } else if (typeToSearch === 'event' || typeToSearch === 'events') {
+        endpoint = 'events'
+        dataKey = 'events'
+        if (filters.location) queryParams.append('country', filters.location)
+      } else if (typeToSearch === 'job' || typeToSearch === 'jobs') {
+        endpoint = 'jobs'
+        dataKey = 'jobs'
+        if (filters.location) queryParams.append('location', filters.location)
+        if (filters.industry) queryParams.append('search', `${searchQuery} ${filters.industry}`)
+      } else if (typeToSearch === 'resource' || typeToSearch === 'resources') {
+        endpoint = 'resources'
+        dataKey = 'resources'
+        // resources currently don't support location/industry filters in backend
       }
 
-      const response = await fetch(`${backendUrl}/api/${endpoint}?${searchParams}`)
+      const response = await fetch(`${backendUrl}/api/${endpoint}?${queryParams.toString()}`)
       const data = await response.json()
 
       if (data.success) {
         const items = (data.data?.[dataKey] || []).map((item: any) => ({ 
           ...item, 
-          type: dataKey.slice(0, -1) // Remove 's' from end
+          type: dataKey === 'opportunities' ? 'opportunity' : dataKey.slice(0, -1)
         }))
         
         return {
@@ -134,6 +200,14 @@ function SearchContent() {
     }
   }, [searchParams])
 
+  // Debounce search as user types
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      resetSearch()
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchQuery, resetSearch])
+
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     resetSearch()
@@ -152,7 +226,7 @@ function SearchContent() {
   }
 
   const clearAllFilters = () => {
-    setFilters({ location: '', type: '', industry: '' })
+    setFilters({ location: '', contentType: '', industry: '' })
     resetSearch()
   }
 
@@ -199,11 +273,11 @@ function SearchContent() {
             {activeFiltersCount > 0 && (
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 <span className="text-xs text-muted-foreground">Filters:</span>
-                {filters.type && (
+                {filters.contentType && (
                   <Badge variant="secondary" className="bg-primary/20 text-orange-400 border-orange-500/30">
-                    {filters.type}
+                    {filters.contentType}
                     <button
-                      onClick={() => clearFilter('type')}
+                      onClick={() => clearFilter('contentType')}
                       className="ml-1.5 hover:text-orange-300"
                     >
                       <FlaticonIcon name="cross" className="w-3 h-3" />
@@ -272,8 +346,8 @@ function SearchContent() {
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-2 block">Content Type</label>
                   <select
-                    value={filters.type}
-                    onChange={(e) => handleFilterChange('type', e.target.value)}
+                    value={filters.contentType}
+                    onChange={(e) => handleFilterChange('contentType', e.target.value)}
                     className="w-full h-9 px-3 rounded-lg bg-muted border border-border text-foreground text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 outline-none"
                   >
                     <option value="">All Types</option>
@@ -350,7 +424,7 @@ function SearchContent() {
               onClick={() => {
                 setSearchQuery('')
                 resetSearch()
-                setFilters({ location: '', type: '', industry: '' })
+                setFilters({ location: '', contentType: '', industry: '' })
               }}
               variant="outline"
               className="border-border text-muted-foreground hover:text-foreground rounded-full"

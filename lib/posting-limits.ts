@@ -1,4 +1,4 @@
-import { hasPremiumAccess } from './roles'
+import { hasPremiumAccess, isAdminOrSuperAdmin } from './roles'
 
 /**
  * Posting limits for opportunity providers (total posts: active, inactive, and draft all count).
@@ -16,5 +16,10 @@ export function getPostingLimit(
   isPremium: boolean | undefined,
   role?: string | undefined | null
 ): number {
+  // Admins and super_admins have no posting limit
+  if (isAdminOrSuperAdmin(role ?? null)) {
+    return Infinity
+  }
+  // Premium users keep the higher limit, free users the base limit
   return hasPremiumAccess({ isPremium, role }) ? POST_LIMIT_PREMIUM : POST_LIMIT_FREE
 }

@@ -80,6 +80,8 @@ interface FeedCardProps {
     score?: number
     url?: string
     applicationLink?: string
+    externalUrl?: string
+    externalLink?: string
     paymentLink?: string
     fileUrl?: string
     category?: string
@@ -1253,7 +1255,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 {/* Action Button */}
                 <div className="pt-2">
                   {item.type === 'opportunity' && (() => {
-                    const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? item.url ?? item.applicationLink
+                    const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? detailsAny.externalUrl ?? detailsAny.externalLink ?? item.url ?? item.applicationLink ?? item.externalUrl ?? item.externalLink
                     if (applyUrl) {
                       return (
                         <Button
@@ -1281,30 +1283,36 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                       </Button>
                     )
                   })()}
-                  {item.type === 'event' && details.url && (
-                    <Button
-                      asChild
-                      size="sm"
-                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                    >
-                      <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                        Register
-                        <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                      </a>
-                    </Button>
-                  )}
-                  {item.type === 'job' && details.url && (
-                    <Button
-                      asChild
-                      size="sm"
-                      className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                    >
-                      <a href={cleanUrl(details.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                        Apply
-                        <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                      </a>
-                    </Button>
-                  )}
+                  {item.type === 'event' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink) && (() => {
+                    const eventUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink;
+                    return (
+                      <Button
+                        asChild
+                        size="sm"
+                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                      >
+                        <a href={cleanUrl(eventUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                          Register
+                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                        </a>
+                      </Button>
+                    );
+                  })()}
+                  {item.type === 'job' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink) && (() => {
+                    const jobUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink;
+                    return (
+                      <Button
+                        asChild
+                        size="sm"
+                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                      >
+                        <a href={cleanUrl(jobUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                          Apply
+                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                        </a>
+                      </Button>
+                    );
+                  })()}
                   {item.type === 'resource' && (
                     <div className="flex flex-col gap-2">
                       {detailsAny.paymentLink ? (

@@ -12,6 +12,7 @@ import { MapPin, BookOpen } from 'lucide-react'
 import { ApiClient } from '@/lib/api'
 import { useAuth } from '@/components/auth-provider'
 import Link from 'next/link'
+import FeedCard from '@/components/feed-card'
 
 interface SearchFilters {
   type?: string
@@ -110,41 +111,20 @@ export default function EnhancedSearch() {
 
   const totalResults = results.opportunities.length + results.events.length + results.jobs.length + results.resources.length
 
-  const renderResultCard = (item: any, type: string) => (
-    <Card key={`${type}-${item.id}`} className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </Badge>
-          {item.location && (
-            <span className="text-sm text-gray-500 flex items-center">
-              <MapPin className="h-3 w-3 mr-1" />
-              {item.location}
-            </span>
-          )}
-        </div>
-        <h3 className="font-semibold text-foreground mb-2 line-clamp-2">{item.title}</h3>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-          {item.description?.slice(0, 150)}...
-        </p>
-        <div className="flex justify-between items-center">
-          <div className="flex flex-wrap gap-1">
-            {item.tags?.slice(0, 3).map((tag: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          <Button asChild size="sm" variant="ghost" className="text-orange-600 hover:text-orange-700">
-            <Link href={`/${type === 'opportunity' ? 'opportunities' : type + 's'}/${item.id}`}>
-              View Details
-            </Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  const renderResultCard = (item: any, type: string) => {
+    const id = item.id || item._id
+    
+    // Map data for FeedCard
+    const mappedItem = {
+      ...item,
+      _id: id,
+      type: type as any,
+    }
+
+    return (
+      <FeedCard key={`${type}-${id}`} item={mappedItem} />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -313,7 +293,7 @@ export default function EnhancedSearch() {
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
                 {[...results.opportunities.map(item => ({ ...item, type: 'opportunity' })),
                   ...results.jobs.map(item => ({ ...item, type: 'job' })),
                   ...results.events.map(item => ({ ...item, type: 'event' })),
@@ -323,25 +303,25 @@ export default function EnhancedSearch() {
             </TabsContent>
 
             <TabsContent value="opportunities" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
                 {results.opportunities.map(item => renderResultCard(item, 'opportunity'))}
               </div>
             </TabsContent>
 
             <TabsContent value="jobs" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
                 {results.jobs.map(item => renderResultCard(item, 'job'))}
               </div>
             </TabsContent>
 
             <TabsContent value="events" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
                 {results.events.map(item => renderResultCard(item, 'event'))}
               </div>
             </TabsContent>
 
             <TabsContent value="resources" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-4 max-w-2xl mx-auto">
                 {results.resources.map(item => renderResultCard(item, 'resource'))}
               </div>
             </TabsContent>
