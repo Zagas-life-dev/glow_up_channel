@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -178,7 +179,14 @@ function ResourcePageContent({ params }: ResourcePageProps) {
         </div>
 
         <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border space-y-2">
-          {resource.isPremium && resource.paymentLink ? (
+          {!isAuthenticated ? (
+            <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-full h-12 font-semibold text-[15px]">
+              <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`} className="flex items-center justify-center gap-2">
+                Sign in to view
+                <RiExternalLinkLine className="w-4 h-4" />
+              </Link>
+            </Button>
+          ) : resource.isPremium && resource.paymentLink ? (
             <Button asChild size="lg" className="w-full bg-yellow-500 hover:bg-yellow-600 text-foreground rounded-full h-12 font-semibold text-[15px]">
               <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 <RiVipCrownLine className="w-4 h-4" /> Purchase premium
@@ -192,7 +200,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
               </a>
             </Button>
           ) : null}
-          {resource.fileUrl && !resource.isPremium && (
+          {isAuthenticated && resource.fileUrl && !resource.isPremium && (
             <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-full h-12 text-[15px]">
               <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
                 <RiDownloadLine className="w-4 h-4" /> Download
@@ -202,7 +210,14 @@ function ResourcePageContent({ params }: ResourcePageProps) {
         </div>
         <aside className="hidden xl:block pt-4">
           <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm space-y-2">
-            {resource.isPremium && resource.paymentLink ? (
+            {!isAuthenticated ? (
+              <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-12 font-semibold text-[15px] shadow-sm">
+                <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`} className="flex items-center justify-center gap-2">
+                  Sign in to view
+                  <RiExternalLinkLine className="w-4 h-4" />
+                </Link>
+              </Button>
+            ) : resource.isPremium && resource.paymentLink ? (
               <Button asChild size="lg" className="w-full bg-yellow-500 hover:bg-yellow-600 text-foreground rounded-xl h-12 font-semibold">
                 <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                   <RiVipCrownLine className="w-4 h-4" /> Purchase premium
@@ -216,7 +231,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                 </a>
               </Button>
             ) : null}
-            {resource.fileUrl && !resource.isPremium && (
+            {isAuthenticated && resource.fileUrl && !resource.isPremium && (
               <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl h-12">
                 <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
                   <RiDownloadLine className="w-4 h-4" /> Download
@@ -239,5 +254,5 @@ function ResourcePageContent({ params }: ResourcePageProps) {
 }
 
 export default function ResourcePage({ params }: ResourcePageProps) {
-  return <AuthGuard><ResourcePageContent params={params} /></AuthGuard>
+  return <ResourcePageContent params={params} />
 }

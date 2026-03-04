@@ -241,13 +241,10 @@ export default function UserManagement() {
 
       const formatInfo = formatMap[format]
 
-      const response = await fetch(
+      const response = await ApiClient.makeAuthenticatedRequest(
         `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'}/api/admin/users/export/${formatInfo.endpoint}`,
         {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          method: 'GET'
         }
       )
 
@@ -306,15 +303,13 @@ export default function UserManagement() {
 
     setIsRoleSwapSubmitting(true)
     try {
-      const token = localStorage.getItem("token") || localStorage.getItem("accessToken")
       const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
       // Backend requires all four fields to be non-empty; some users may have missing firstName/lastName
       const firstName = (roleSwapUser.firstName ?? "").trim() || roleSwapUser.email?.split("@")[0] || "User"
       const lastName = (roleSwapUser.lastName ?? "").trim() || "—"
-      const response = await fetch(`${baseUrl}/api/admin/users/${roleSwapUser._id}`, {
+      const response = await ApiClient.makeAuthenticatedRequest(`${baseUrl}/api/admin/users/${roleSwapUser._id}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

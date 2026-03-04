@@ -40,7 +40,9 @@ function SearchContent() {
 
   // Fetch function for search
   const fetchSearchResults = useCallback(async (lastId: string | null) => {
-    if (!searchQuery.trim()) {
+    // Return early only if there's no search query AND no filters applied
+    const hasActiveFilters = filters.location || filters.contentType || filters.industry;
+    if (!searchQuery.trim() && !hasActiveFilters) {
       return { items: [], lastId: null, hasMore: false }
     }
 
@@ -50,10 +52,11 @@ function SearchContent() {
     }
 
     try {
-      const queryParams = new URLSearchParams({
-        search: searchQuery,
-        limit: '20'
-      })
+      const queryParams = new URLSearchParams()
+      if (searchQuery.trim()) {
+        queryParams.append('search', searchQuery)
+      }
+      queryParams.append('limit', '20')
 
       // Map generic filters into backend-specific query params later per endpoint
 
@@ -89,8 +92,9 @@ function SearchContent() {
 
         if (filters.industry) {
           // Map industry into a generic search term where supported
-          oppParams.append('search', `${searchQuery} ${filters.industry}`)
-          jobParams.append('search', `${searchQuery} ${filters.industry}`)
+          const combinedSearch = [searchQuery.trim(), filters.industry].filter(Boolean).join(' ')
+          oppParams.set('search', combinedSearch)
+          jobParams.set('search', combinedSearch)
         }
 
         const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
@@ -131,7 +135,10 @@ function SearchContent() {
         endpoint = 'opportunities'
         dataKey = 'opportunities'
         if (filters.location) queryParams.append('country', filters.location)
-        if (filters.industry) queryParams.append('search', `${searchQuery} ${filters.industry}`)
+        if (filters.industry) {
+          const combinedSearch = [searchQuery.trim(), filters.industry].filter(Boolean).join(' ')
+          queryParams.set('search', combinedSearch)
+        }
       } else if (typeToSearch === 'event' || typeToSearch === 'events') {
         endpoint = 'events'
         dataKey = 'events'
@@ -140,7 +147,10 @@ function SearchContent() {
         endpoint = 'jobs'
         dataKey = 'jobs'
         if (filters.location) queryParams.append('location', filters.location)
-        if (filters.industry) queryParams.append('search', `${searchQuery} ${filters.industry}`)
+        if (filters.industry) {
+          const combinedSearch = [searchQuery.trim(), filters.industry].filter(Boolean).join(' ')
+          queryParams.set('search', combinedSearch)
+        }
       } else if (typeToSearch === 'resource' || typeToSearch === 'resources') {
         endpoint = 'resources'
         dataKey = 'resources'
@@ -411,14 +421,14 @@ function SearchContent() {
               </div>
             ))}
           </div>
-        ) : searchQuery && totalResults === 0 ? (
+        ) : (searchQuery || activeFiltersCount > 0) && totalResults === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
               <FlaticonIcon name="search" className="w-10 h-10 text-orange-500/50" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">No results found</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-              No results match your search for <span className="font-medium text-foreground">"{searchQuery}"</span>. Try a different search term or adjust your filters.
+              No results match your search criteria. Try a different search term or adjust your filters.
             </p>
             <Button
               onClick={() => {
@@ -429,10 +439,10 @@ function SearchContent() {
               variant="outline"
               className="border-border text-muted-foreground hover:text-foreground rounded-full"
             >
-              Clear Search
+              Clear Search & Filters
             </Button>
           </div>
-        ) : searchQuery && totalResults > 0 ? (
+        ) : (searchQuery || activeFiltersCount > 0) && totalResults > 0 ? (
           <div className="space-y-4">
             {getCurrentResults().map((item) => (
               <FeedCard

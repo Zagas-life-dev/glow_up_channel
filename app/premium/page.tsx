@@ -82,7 +82,7 @@ export default function PremiumPage() {
             <div className="flex items-start gap-3">
               <Focus className="w-4 h-4 mt-0.5 text-primary" />
               <div>
-                <p className="font-medium text-foreground">Host general Lock Ins</p>
+                <p className="font-medium text-foreground">Lock In sessions</p>
                 <p className="text-xs text-muted-foreground">
                   Run community focus sessions that keep everyone accountable together.
                 </p>
@@ -97,16 +97,8 @@ export default function PremiumPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <BookOpen className="w-4 h-4 mt-0.5 text-primary" />
-              <div>
-                <p className="font-medium text-foreground">Special premium library</p>
-                <p className="text-xs text-muted-foreground">
-                  Access a library of guides, templates, and resources just for premium members.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
+
+            {/* <div className="flex items-start gap-3">
               <QrCode className="w-4 h-4 mt-0.5 text-primary" />
               <div>
                 <p className="font-medium text-foreground">QR contact profile</p>
@@ -114,7 +106,7 @@ export default function PremiumPage() {
                   Generate a QR card that lets people save your details instantly at events.
                 </p>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 

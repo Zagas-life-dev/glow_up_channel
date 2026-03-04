@@ -39,6 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNormalizedUser(null);
   };
 
+  const isAuthError = (error: any): boolean => {
+    if (!error) return false;
+    const msg = error.message?.toLowerCase() || '';
+    return msg.includes('invalid token') || 
+           msg.includes('token expired') || 
+           msg.includes('unauthorized') || 
+           msg.includes('authentication required');
+  };
+
   // Initialize auth state on mount
   useEffect(() => {
     initializeAuth();
@@ -55,8 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Token refresh failed:', error);
-        // If refresh fails, logout user
-        await logout();
+        // Only logout if it's a definitive auth error, not a network/server issue
+        if (isAuthError(error)) {
+          await logout();
+        }
       }
     }, 60 * 60 * 1000); // Refresh every 60 minutes
 
@@ -73,8 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           console.error('Token refresh on visibility change failed:', error);
-          // If refresh fails, logout user
-          await logout();
+          if (isAuthError(error)) {
+            await logout();
+          }
         }
       }
     };
@@ -114,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Only clear tokens for actual auth errors (invalid token, etc.)
       // Don't try to logout if backend is down (will cause another error)
-      if (error.message?.includes('Invalid token') || error.message?.includes('Token expired') || error.message?.includes('Unauthorized')) {
+      if (isAuthError(error)) {
         clearUserState();
         try {
           await ApiClient.logout();
@@ -234,8 +246,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to refresh user data:', error);
-      // If refresh fails, user might need to login again
-      await logout();
+      // Only logout if it's an auth error, to avoid logging out active users during backend blips
+      if (isAuthError(error)) {
+        await logout();
+      }
     }
   };
 

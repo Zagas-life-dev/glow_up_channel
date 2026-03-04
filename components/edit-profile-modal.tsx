@@ -73,6 +73,7 @@ interface ProfileData {
   socialLinks: { linkedin?: string; twitter?: string; instagram?: string; github?: string; youtube?: string; tiktok?: string }
   isPrivate: boolean
   showConnections: boolean
+  phoneNumber?: string | null
   onboarding: OnboardingData | null
 }
 
@@ -158,6 +159,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
   const [educationDegree, setEducationDegree] = useState(profile.education?.degree || '')
   const [educationField, setEducationField] = useState(profile.education?.field || '')
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.socialLinks || {})
+  const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber || '')
   const [isPrivate, setIsPrivate] = useState(profile.isPrivate || false)
   const [showConnections, setShowConnections] = useState(profile.showConnections !== false)
 
@@ -199,6 +201,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
     setIsPrivate(profile.isPrivate || false)
     setShowConnections(profile.showConnections !== false)
     setProfileImage(profile.profileImage || '')
+    setPhoneNumber(profile.phoneNumber || '')
     
     // Onboarding
     setCountry(profile.onboarding?.country || '')
@@ -323,36 +326,35 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
         return
       }
 
-      // Update onboarding profile if we have onboarding data
-      if (profile.onboarding) {
-        const onboardingUpdates = {
-          country,
-          province,
-          city: city || undefined,
-          careerStage,
-          interests,
-          industrySectors,
-          educationLevel,
-          fieldOfStudy: fieldOfStudy || undefined,
-          institution: institution || undefined,
-          skills,
-          aspirations
-        }
+      // Update onboarding profile
+      const onboardingUpdates = {
+        country,
+        province,
+        city: city || undefined,
+        careerStage,
+        interests,
+        industrySectors,
+        educationLevel,
+        fieldOfStudy: fieldOfStudy || undefined,
+        institution: institution || undefined,
+        skills,
+        aspirations,
+        phoneNumber: phoneNumber || undefined
+      }
 
-        const onboardingResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
-          method: 'PUT',
-          headers: {
-            ...getAuthHeaders(),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(onboardingUpdates)
-        })
+      const onboardingResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(onboardingUpdates)
+      })
 
-        const onboardingData = await onboardingResponse.json()
+      const onboardingData = await onboardingResponse.json()
 
-        if (!onboardingData.success) {
-          console.warn('Failed to update onboarding data:', onboardingData.message)
-        }
+      if (!onboardingData.success) {
+        console.warn('Failed to update onboarding data:', onboardingData.message)
       }
 
       // Refresh user data to sync across all pages (settings, profile, etc.)
@@ -549,6 +551,18 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
                   className="mt-1 bg-muted border-border text-foreground rounded-xl focus:border-orange-500/50 resize-none"
                 />
                 <p className="text-xs text-muted-foreground mt-1 text-right">{bio.length}/500</p>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <Label className="text-muted-foreground text-xs">Phone Number</Label>
+                <Input
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  type="tel"
+                  placeholder="+1234567890"
+                  className="mt-1 bg-muted border-border text-foreground rounded-xl h-10 focus:border-orange-500/50"
+                />
               </div>
 
               {/* Work */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -237,32 +238,62 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
         </div>
 
         {/* CTA: sticky bottom on mobile/tablet, sticky sidebar on xl */}
-        {opportunity.url && (
+        {(opportunity.url || opportunity.applicationLink || opportunity.application_link || opportunity.externalUrl || opportunity.externalLink) && (
           <>
             <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
-              <Button
-                asChild
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]"
-              >
-                <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}>
-                  Apply now
-                  <RiExternalLinkLine className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
-            <aside className="hidden xl:block pt-4">
-              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
+              {!isAuthenticated ? (
+                <Button asChild size="lg" className="w-full bg-primary/90 hover:bg-primary text-white rounded-full h-12 font-semibold text-[15px]">
+                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/opportunities/${id}`)}`} className="flex items-center justify-center gap-2">
+                    Sign in to apply
+                    <RiExternalLinkLine className="w-4 h-4" />
+                  </Link>
+                </Button>
+              ) : (
                 <Button
                   asChild
                   size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]"
                 >
-                  <a href={cleanUrl(opportunity.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}>
+                  <a 
+                    href={cleanUrl(opportunity.url || opportunity.applicationLink || opportunity.application_link || opportunity.externalUrl || opportunity.externalLink)} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center justify-center gap-2" 
+                    onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}
+                  >
                     Apply now
                     <RiExternalLinkLine className="w-4 h-4" />
                   </a>
                 </Button>
+              )}
+            </div>
+            <aside className="hidden xl:block pt-4">
+              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
+                {!isAuthenticated ? (
+                  <Button asChild size="lg" className="w-full bg-primary/90 hover:bg-primary text-white rounded-xl h-12 font-semibold text-[15px]">
+                    <Link href={`/login?callbackUrl=${encodeURIComponent(`/opportunities/${id}`)}`} className="flex items-center justify-center gap-2">
+                      Sign in to apply
+                      <RiExternalLinkLine className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    size="lg"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold"
+                  >
+                    <a 
+                      href={cleanUrl(opportunity.url || opportunity.applicationLink || opportunity.application_link || opportunity.externalUrl || opportunity.externalLink)} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center justify-center gap-2" 
+                      onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}
+                    >
+                      Apply now
+                      <RiExternalLinkLine className="w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </aside>
           </>
@@ -290,5 +321,5 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
 }
 
 export default function OpportunityPage({ params }: OpportunityPageProps) {
-  return <AuthGuard><OpportunityPageContent params={params} /></AuthGuard>
+  return <OpportunityPageContent params={params} />
 }

@@ -155,6 +155,100 @@ interface Playlist {
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
 
+type CompletionItem = {
+  id: string
+  label: string
+  completed: boolean
+  location: 'Profile' | 'Settings: Basic info' | 'Settings: Background'
+  href: string
+}
+
+const buildCompletionChecklist = (profileData: ProfileData | null): CompletionItem[] => {
+  if (!profileData) return []
+
+  const onboarding = profileData.onboarding
+
+  return [
+    {
+      id: 'firstName',
+      label: 'Add your first name',
+      completed: !!profileData.firstName,
+      location: 'Settings: Basic info',
+      href: '/profile/settings',
+    },
+    {
+      id: 'bio',
+      label: 'Write a short bio',
+      completed: !!profileData.bio,
+      location: 'Settings: Basic info',
+      href: '/profile/settings',
+    },
+    {
+      id: 'headline',
+      label: 'Add a profile headline',
+      completed: !!profileData.headline,
+      location: 'Settings: Basic info',
+      href: '/profile/settings',
+    },
+    {
+      id: 'phoneNumber',
+      label: 'Add a phone number',
+      completed: !!profileData.phoneNumber,
+      location: 'Settings: Basic info',
+      href: '/profile/settings',
+    },
+    {
+      id: 'location',
+      label: 'Set your country and state',
+      completed: !!onboarding?.country && !!onboarding?.province,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'careerStage',
+      label: 'Choose your career stage',
+      completed: !!onboarding?.careerStage,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'educationLevel',
+      label: 'Select your education level',
+      completed: !!onboarding?.educationLevel,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'interests',
+      label: 'Pick at least one interest',
+      completed: (onboarding?.interests?.length ?? 0) > 0,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'industries',
+      label: 'Pick at least one industry',
+      completed: (onboarding?.industrySectors?.length ?? 0) > 0,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'aspirations',
+      label: 'Add what you are looking for',
+      completed: (onboarding?.aspirations?.length ?? 0) > 0,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+    {
+      id: 'skills',
+      label: 'Add at least one skill',
+      completed: (onboarding?.onboardingSkills?.length ?? 0) > 0,
+      location: 'Settings: Background',
+      href: '/profile/settings?tab=background',
+    },
+  ]
+}
+
 // Social link config
 const socialConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
   linkedin: { 
@@ -343,32 +437,13 @@ export default function ProfilePage() {
     }
   }, [isOwner, getAuthHeaders])
 
-  // Calculate profile completion percentage (mobile number is required for a complete profile)
+  // Calculate profile completion percentage based on the same checklist used for the UI
   const calculateProfileCompletion = useCallback((profileData: ProfileData | null): number => {
     if (!profileData) return 0
-    
-    const fields = [
-      profileData.firstName,
-      profileData.bio,
-      profileData.headline,
-      profileData.phoneNumber,
-      profileData.onboarding?.country,
-      profileData.onboarding?.province,
-      profileData.onboarding?.careerStage,
-      profileData.onboarding?.educationLevel,
-      (profileData.onboarding?.interests?.length ?? 0) > 0,
-      (profileData.onboarding?.industrySectors?.length ?? 0) > 0,
-      (profileData.onboarding?.aspirations?.length ?? 0) > 0,
-      (profileData.onboarding?.onboardingSkills?.length ?? 0) > 0
-    ]
-    
-    const completedFields = fields.filter(field => {
-      if (typeof field === 'boolean') return field
-      if (Array.isArray(field)) return field.length > 0
-      return field && field !== ''
-    }).length
-    
-    return Math.round((completedFields / fields.length) * 100)
+    const items = buildCompletionChecklist(profileData)
+    if (items.length === 0) return 0
+    const completed = items.filter(item => item.completed).length
+    return Math.round((completed / items.length) * 100)
   }, [])
 
   // Fetch profile completion (only for own profile)
@@ -882,7 +957,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Profile Completion: soft glass */}
+        {/* Profile Completion: soft glass with checklist */}
         {isOwner && completionPercentage < 100 && (
           <div className="mb-5 rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-600/5 backdrop-blur-sm p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -891,7 +966,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">Profile completion</h3>
-                <p className="text-xs text-muted-foreground">Unlock better recommendations</p>
+                <p className="text-xs text-muted-foreground">Finish these to reach 100%</p>
               </div>
             </div>
             <div className="flex items-center justify-between mb-2">
@@ -901,9 +976,40 @@ export default function ProfilePage() {
             <div className="h-1.5 bg-muted/80 rounded-full overflow-hidden mb-3">
               <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }} />
             </div>
+
+            {(() => {
+              const checklist = buildCompletionChecklist(profile)
+              const incomplete = checklist.filter(item => !item.completed)
+              if (incomplete.length === 0) return null
+              const toShow = incomplete.slice(0, 4)
+              return (
+                <div className="mb-3 space-y-1.5">
+                  {toShow.map(item => (
+                    <div key={item.id} className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-foreground truncate">{item.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{item.location}</p>
+                      </div>
+                      <Link
+                        href={item.href}
+                        className="text-[11px] font-medium text-orange-400 hover:text-orange-300 whitespace-nowrap"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  ))}
+                  {incomplete.length > toShow.length && (
+                    <p className="text-[11px] text-muted-foreground">
+                      +{incomplete.length - toShow.length} more fields in Settings
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
+
             <Link href="/onboarding">
               <Button size="sm" className="w-full bg-primary/90 hover:bg-primary text-white rounded-xl h-9 text-xs font-medium border border-orange-500/20">
-                Complete your profile
+                Open onboarding wizard
                 <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
               </Button>
             </Link>

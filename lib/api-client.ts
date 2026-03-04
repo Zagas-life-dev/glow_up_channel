@@ -194,7 +194,7 @@ export class ApiClient {
     }
   }
 
-  private static async refreshTokenIfNeeded(): Promise<boolean> {
+  public static async refreshTokenIfNeeded(): Promise<boolean> {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) return false;
 
@@ -211,16 +211,27 @@ export class ApiClient {
           this.setTokens(data.data.tokens);
           return true;
         }
+      } else if (response.status >= 500) {
+        // Don't clear tokens on server errors
+        console.error('Server error during token refresh');
+        return false;
+      }
+      
+      // If we got a 4xx error (like 401 Invalid Refresh Token), clear tokens
+      if (response.status >= 400 && response.status < 500) {
+        this.clearTokens();
+        return false;
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error('Token refresh failed (network error?):', error);
+      // Don't clear tokens on network errors
+      return false;
     }
 
-    this.clearTokens();
     return false;
   }
 
-  private static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+  public static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
     try {
       let response = await fetch(url, {
         ...options,
@@ -372,7 +383,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/opportunities?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/opportunities?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -380,7 +391,7 @@ export class ApiClient {
   }
 
   static async getOpportunityById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/api/opportunities/${id}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/opportunities/${id}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -439,14 +450,14 @@ export class ApiClient {
       });
     }
     const url = `${API_BASE_URL}/api/channels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    const response = await fetch(url, {
+    const response = await this.makeAuthenticatedRequest(url, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
   }
 
   static async getChannelBySlug(slug: string): Promise<{ channel: Channel; membership: ChannelMembership | null }> {
-    const response = await fetch(`${API_BASE_URL}/api/channels/${encodeURIComponent(slug)}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${encodeURIComponent(slug)}`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
@@ -543,7 +554,7 @@ export class ApiClient {
     if (params?.page) searchParams.append('page', String(params.page));
     if (params?.limit) searchParams.append('limit', String(params.limit));
     const qs = searchParams.toString();
-    const response = await fetch(`${API_BASE_URL}/api/channels/${id}/posts${qs ? `?${qs}` : ''}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/posts${qs ? `?${qs}` : ''}`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
@@ -646,7 +657,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/events?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/events?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -654,7 +665,7 @@ export class ApiClient {
   }
 
   static async getEventById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/events/${id}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -681,7 +692,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/jobs?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/jobs?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -689,7 +700,7 @@ export class ApiClient {
   }
 
   static async getJobById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/api/jobs/${id}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/jobs/${id}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -714,7 +725,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/resources?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -722,7 +733,7 @@ export class ApiClient {
   }
 
   static async getResourceById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/${id}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -731,28 +742,28 @@ export class ApiClient {
 
   // Engagement Methods
   static async saveOpportunity(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/opportunities/${id}/save`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/save`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
   }
 
   static async unsaveOpportunity(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/opportunities/${id}/unsave`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/unsave`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
   }
 
   static async likeOpportunity(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/opportunities/${id}/like`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/like`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
   }
 
   static async unlikeOpportunity(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/opportunities/${id}/unlike`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/unlike`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
@@ -768,7 +779,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/engagement/opportunities/saved?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/saved?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -785,7 +796,7 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/engagement/opportunities/liked?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/liked?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -794,14 +805,14 @@ export class ApiClient {
 
   // Similar methods for events, jobs, and resources...
   static async saveEvent(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/events/${id}/save`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/save`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
   }
 
   static async likeEvent(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/api/engagement/events/${id}/like`, {
+    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/like`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
     });
@@ -815,7 +826,7 @@ export class ApiClient {
       searchParams.append('limit', limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/opportunities?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/opportunities?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -828,7 +839,7 @@ export class ApiClient {
       searchParams.append('limit', limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/events?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/events?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -841,7 +852,7 @@ export class ApiClient {
       searchParams.append('limit', limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/jobs?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/jobs?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -854,7 +865,7 @@ export class ApiClient {
       searchParams.append('limit', limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/resources?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/resources?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -895,7 +906,7 @@ export class ApiClient {
       searchParams.append('limit', options.limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/unified?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/unified?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -929,7 +940,7 @@ export class ApiClient {
     searchParams.append('contentType', contentType);
     searchParams.append('contentId', contentId);
 
-    const response = await fetch(`${API_BASE_URL}/api/recommended/scoring-breakdown?${searchParams}`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/scoring-breakdown?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -1958,7 +1969,7 @@ export class ApiClient {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/delete-account`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

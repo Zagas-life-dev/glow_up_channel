@@ -314,6 +314,24 @@ export default function SettingsPage() {
       setFirstName(user.firstName || '')
       setLastName(user.lastName || '')
       setEmailVerified(user.emailVerified || false)
+      
+      // Basic Profile Info (from user object)
+      setBio((user as any).bio || '')
+      setHeadline((user as any).headline || '')
+      setWebsite((user as any).website || '')
+      setSkills((user as any).skills || [])
+      setWorkCompany((user as any).work?.company || '')
+      setWorkTitle((user as any).work?.title || '')
+      setEducationSchool((user as any).education?.school || '')
+      setEducationDegree((user as any).education?.degree || '')
+      setEducationField((user as any).education?.field || '')
+      setSocialLinks((user as any).socialLinks || {})
+      setProfileImage((user as any).profileImage || profile?.profileImage || '')
+      
+      // Privacy
+      setIsPrivate((user as any).isPrivate || false)
+      setShowConnections((user as any).showConnections !== false)
+
       // Initialize premium state from user if available
       if (typeof user.isPremium === 'boolean') {
         setIsPremium(user.isPremium)
@@ -322,43 +340,24 @@ export default function SettingsPage() {
         setPremiumExpiresAt((user as any).premiumExpiresAt)
       }
     }
-  }, [user])
+  }, [user, profile])
 
   useEffect(() => {
     if (profile) {
-      // Basic Info
-      setBio(profile.bio || '')
-      setHeadline(profile.headline || '')
-      setWebsite(profile.website || '')
-      setSkills(profile.skills || [])
-      setWorkCompany(profile.work?.company || '')
-      setWorkTitle(profile.work?.title || '')
-      setEducationSchool(profile.education?.school || '')
-      setEducationDegree(profile.education?.degree || '')
-      setEducationField(profile.education?.field || '')
-      setSocialLinks(profile.socialLinks || {})
-      setProfileImage(profile.profileImage || user?.profileImage || '')
+      // Onboarding/Background (from profile object directly)
+      setCountry(profile.country || '')
+      setProvince(profile.province || '')
+      setCity(profile.city || '')
+      setCareerStage(profile.careerStage || '')
+      setInterests(profile.interests || [])
+      setIndustrySectors(profile.industrySectors || [])
+      setEducationLevel(profile.educationLevel || '')
+      setFieldOfStudy(profile.fieldOfStudy || '')
+      setInstitution(profile.institution || '')
+      setAspirations(profile.aspirations || [])
       setPhoneNumber(profile.phoneNumber || '')
-      
-      // Privacy
-      setIsPrivate(profile.isPrivate || false)
-      setShowConnections(profile.showConnections !== false)
-
-      // Onboarding/Background
-      if (profile.onboarding) {
-        setCountry(profile.onboarding.country || '')
-        setProvince(profile.onboarding.province || '')
-        setCity(profile.onboarding.city || '')
-        setCareerStage(profile.onboarding.careerStage || '')
-        setInterests(profile.onboarding.interests || [])
-        setIndustrySectors(profile.onboarding.industrySectors || [])
-        setEducationLevel(profile.onboarding.educationLevel || '')
-        setFieldOfStudy(profile.onboarding.fieldOfStudy || '')
-        setInstitution(profile.onboarding.institution || '')
-        setAspirations(profile.onboarding.aspirations || [])
-      }
     }
-  }, [profile, user])
+  }, [profile])
 
   // Load verification status
   useEffect(() => {
@@ -432,6 +431,47 @@ export default function SettingsPage() {
     return headers
   }
 
+  // Auto-save profile/background changes while editing (debounced)
+  useEffect(() => {
+    if (!isEditing || !user) return
+
+    const timer = setTimeout(() => {
+      // Silent auto-save; errors are logged but don't interrupt the flow
+      saveProfile({ silent: true }).catch(() => {})
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [
+    isEditing,
+    user,
+    firstName,
+    lastName,
+    bio,
+    headline,
+    website,
+    phoneNumber,
+    workCompany,
+    workTitle,
+    educationSchool,
+    educationDegree,
+    educationField,
+    country,
+    province,
+    city,
+    careerStage,
+    educationLevel,
+    fieldOfStudy,
+    institution,
+    isPrivate,
+    showConnections,
+    // Arrays/objects – stringify to keep deps simple
+    JSON.stringify(skills),
+    JSON.stringify(socialLinks),
+    JSON.stringify(interests),
+    JSON.stringify(industrySectors),
+    JSON.stringify(aspirations),
+  ])
+
   // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -504,8 +544,9 @@ export default function SettingsPage() {
     setSocialLinks({ ...socialLinks, [platform]: url })
   }
 
-  // Save profile
-  const handleSave = async () => {
+  // Save profile (used for manual Save and silent auto-save)
+  const saveProfile = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false
     setIsSaving(true)
 
     try {
@@ -525,8 +566,7 @@ export default function SettingsPage() {
           Object.entries(socialLinks).filter(([_, v]) => v)
         ),
         isPrivate,
-        showConnections,
-        phoneNumber: phoneNumber || null
+        showConnections
       }
 
       const response = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -541,54 +581,63 @@ export default function SettingsPage() {
       const data = await response.json()
 
       if (!data.success) {
-        toast.error(data.message || 'Failed to save profile')
+        if (!silent) {
+          toast.error(data.message || 'Failed to save profile')
+        }
         setIsSaving(false)
         return
       }
 
-      // Update onboarding profile if we have onboarding data
-      if (profile?.onboarding) {
-        const onboardingUpdates = {
-          country,
-          province,
-          city: city || undefined,
-          careerStage,
-          interests,
-          industrySectors,
-          educationLevel,
-          fieldOfStudy: fieldOfStudy || undefined,
-          institution: institution || undefined,
-          skills,
-          aspirations
-        }
+      // Update onboarding profile
+      const onboardingUpdates = {
+        country,
+        province,
+        city: city || undefined,
+        careerStage,
+        interests,
+        industrySectors,
+        educationLevel,
+        fieldOfStudy: fieldOfStudy || undefined,
+        institution: institution || undefined,
+        skills,
+        aspirations,
+        phoneNumber: phoneNumber || undefined
+      }
 
-        const onboardingResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
-          method: 'PUT',
-          headers: {
-            ...getAuthHeaders(),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(onboardingUpdates)
-        })
+      const onboardingResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(onboardingUpdates)
+      })
 
-        const onboardingData = await onboardingResponse.json()
+      const onboardingData = await onboardingResponse.json()
 
-        if (!onboardingData.success) {
-          console.warn('Failed to update onboarding data:', onboardingData.message)
-        }
+      if (!onboardingData.success && !silent) {
+        console.warn('Failed to update onboarding data:', onboardingData.message)
       }
 
       // Refresh user data
       await refreshUser()
       
-      setIsEditing(false)
-      toast.success('Profile updated successfully!')
+      if (!silent) {
+        setIsEditing(false)
+        toast.success('Profile updated successfully!')
+      }
     } catch (err) {
       console.error('Error saving profile:', err)
-      toast.error('Failed to save profile')
+      if (!silent) {
+        toast.error('Failed to save profile')
+      }
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleSave = () => {
+    return saveProfile({ silent: false })
   }
 
   const handleDeleteAccount = async () => {

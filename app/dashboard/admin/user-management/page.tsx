@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import ApiClient from '@/lib/api-client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -79,12 +80,7 @@ export default function UserManagementPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await ApiClient.makeAuthenticatedRequest(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users`)
 
         if (!response.ok) {
           throw new Error('Failed to fetch users')
@@ -137,11 +133,9 @@ export default function UserManagementPage() {
 
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users`, {
+      const response = await ApiClient.makeAuthenticatedRequest(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
@@ -174,11 +168,9 @@ export default function UserManagementPage() {
 
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users/${selectedUser._id}`, {
+      const response = await ApiClient.makeAuthenticatedRequest(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users/${selectedUser._id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -214,12 +206,8 @@ export default function UserManagementPage() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await ApiClient.makeAuthenticatedRequest(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/admin/users/${userId}`, {
+        method: 'DELETE'
       })
 
       const data = await response.json()

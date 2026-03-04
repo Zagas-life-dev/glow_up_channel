@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -222,24 +223,42 @@ function EventPageContent({ params }: EventPageProps) {
         </div>
         </div>
 
-        {event.url && cleanUrl(event.url) && isRegistrationOpen() && (
+        {(event.url || event.registrationLink || event.externalUrl || event.externalLink) && isRegistrationOpen() && (
           <>
             <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
-              <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full h-12 font-semibold text-[15px]">
-                <a href={cleanUrl(event.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
-                  Register
-                  <RiExternalLinkLine className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
-            <aside className="hidden xl:block pt-4">
-              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-semibold">
-                  <a href={cleanUrl(event.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
+              {!isAuthenticated ? (
+                <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full h-12 font-semibold text-[15px]">
+                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`} className="flex items-center justify-center gap-2">
+                    Sign in to register
+                    <RiExternalLinkLine className="w-4 h-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full h-12 font-semibold text-[15px]">
+                  <a href={cleanUrl(event.url || event.registrationLink || event.externalUrl || event.externalLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
                     Register
                     <RiExternalLinkLine className="w-4 h-4" />
                   </a>
                 </Button>
+              )}
+            </div>
+            <aside className="hidden xl:block pt-4">
+              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
+                {!isAuthenticated ? (
+                  <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-semibold">
+                    <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`} className="flex items-center justify-center gap-2">
+                      Sign in to register
+                      <RiExternalLinkLine className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-semibold">
+                    <a href={cleanUrl(event.url || event.registrationLink || event.externalUrl || event.externalLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
+                      Register
+                      <RiExternalLinkLine className="w-4 h-4" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </aside>
           </>
@@ -258,5 +277,5 @@ function EventPageContent({ params }: EventPageProps) {
 }
 
 export default function EventPage({ params }: EventPageProps) {
-  return <AuthGuard><EventPageContent params={params} /></AuthGuard>
+  return <EventPageContent params={params} />
 }
