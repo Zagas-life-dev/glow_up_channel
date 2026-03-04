@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
@@ -136,6 +136,45 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [hasTrackedView, setHasTrackedView] = useState(false)
+
+  // Track post view when it becomes visible
+  useEffect(() => {
+    if (!user || hasTrackedView || !cardRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting) {
+          setHasTrackedView(true)
+          
+          // Call analytics
+          trackCommunityEngagement('view', post._id)
+          
+          // Call backend endpoint to log view for algorithm
+          const token = localStorage.getItem('accessToken')
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+          if (token) headers['Authorization'] = `Bearer ${token}`
+          
+          fetch(`${API_BASE_URL}/api/posts/${post._id}/view`, {
+            method: 'POST',
+            headers
+          }).catch(() => {})
+          
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.5 } // Post must be 50% visible
+    )
+
+    observer.observe(cardRef.current)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [user, hasTrackedView, post._id])
 
   // Reset image index when post changes
   useEffect(() => {
@@ -454,7 +493,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
   }
 
   return (
-    <article className="w-full max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 overflow-hidden hover:border-border hover:shadow-sm transition-all duration-200">
+    <article ref={cardRef} className="w-full max-w-full rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 overflow-hidden hover:border-border hover:shadow-sm transition-all duration-200">
       {/* Repost Header */}
       {localPost.isRepost && localPost.repostedBy && (
         <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-xs text-muted-foreground border-b border-border/40">

@@ -107,7 +107,7 @@ export default function CommunityPage() {
   const { user, isAuthenticated, normalizedUser } = useAuth()
   const [activeTab, setActiveTab] = useState<'connections' | 'explore'>('explore')
   const [trendingHashtags, setTrendingHashtags] = useState<TrendingHashtag[]>([])
-  const [sortBy, setSortBy] = useState<CommunitySort>('trending')
+  const [sortBy, setSortBy] = useState<CommunitySort>('forYou')
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null)
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
 
@@ -378,7 +378,7 @@ export default function CommunityPage() {
               )}
             >
               <RefreshCw className="w-3 h-3" />
-              Fresh
+              Latest
             </button>
             
           </div>
