@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth-context"
+
+const AUTH_DELAY_MS = 5 * 60 * 1000 // 5 minutes
+export const PWA_DISMISSED_EVENT = "glowup-pwa-dismissed"
 
 const BROWSER_LABELS: Record<PwaBrowserKind, string> = {
   safari_ios: "Safari",
@@ -96,6 +100,10 @@ function setDismissedUntil() {
   try {
     const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000
     localStorage.setItem(STORAGE_KEY, String(until))
+    sessionStorage.setItem("glowup-pwa-prompt-dismissed", "true")
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(PWA_DISMISSED_EVENT))
+    }
   } catch {
     // ignore
   }
@@ -236,6 +244,8 @@ function getSharePointerPosition(kind: PwaBrowserKind): "bottom" | "topRight" | 
 }
 
 export default function PwaInstallBanner() {
+  const { isAuthenticated } = useAuth()
+  const [allowShowAfterDelay, setAllowShowAfterDelay] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showCenterPrompt, setShowCenterPrompt] = useState(false)
   const [showIosSteps, setShowIosSteps] = useState(false)
@@ -243,11 +253,19 @@ export default function PwaInstallBanner() {
   const [browserKind, setBrowserKind] = useState<PwaBrowserKind>("desktop")
 
   const canShow = useCallback(() => {
+    if (!isAuthenticated || !allowShowAfterDelay) return false
     if (isStandalone() || isInstalled) return false
     const until = getDismissedUntil()
     if (until != null && Date.now() < until) return false
     return true
-  }, [isInstalled])
+  }, [isInstalled, isAuthenticated, allowShowAfterDelay])
+
+  // Only allow PWA prompt 5 min after user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return
+    const t = setTimeout(() => setAllowShowAfterDelay(true), AUTH_DELAY_MS)
+    return () => clearTimeout(t)
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (isStandalone()) {
@@ -279,7 +297,7 @@ export default function PwaInstallBanner() {
     setBrowserKind(getBrowserKind())
   }, [])
 
-  // On iOS (no beforeinstallprompt), show centered prompt so user can tap to see instructions
+  // On iOS (no beforeinstallprompt), show centered prompt after delay when authenticated
   useEffect(() => {
     if (!isIos() || isStandalone() || !canShow()) return
     setShowCenterPrompt(true)
@@ -313,7 +331,7 @@ export default function PwaInstallBanner() {
     setDismissedUntil()
   }
 
-  if (!showCenterPrompt || !canShow()) return null
+  if (!isAuthenticated || !showCenterPrompt || !canShow()) return null
 
   // Centered popup: one main "Download app" button, user-initiated install
   return (

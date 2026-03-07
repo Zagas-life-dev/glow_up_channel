@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
+import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-popup'
 import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
 import {
@@ -194,6 +195,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
   const handleLike = async () => {
     if (!user) {
+      dispatchGuestEngaged()
       toast.error('Please log in to like posts')
       return
     }
@@ -263,6 +265,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
   const handleBookmark = async () => {
     if (!user) {
+      dispatchGuestEngaged()
       toast.error('Please log in to bookmark posts')
       return
     }
@@ -297,6 +300,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
   const handleVote = async (optionIndex: number) => {
     if (!user) {
+      dispatchGuestEngaged()
       toast.error('Please login to vote')
       return
     }
@@ -333,6 +337,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
 
   const handleRepost = async () => {
     if (!user) {
+      dispatchGuestEngaged()
       toast.error('Please log in to repost')
       return
     }

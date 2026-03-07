@@ -7,6 +7,7 @@ import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
+import { getOrCreateAnonId } from "@/lib/anon-id"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import PageSkeleton from "@/components/skeletons/page-skeleton"
@@ -387,15 +388,31 @@ export default function Home() {
   // Storage key based on active tab
   const storageKey = useMemo(() => `home_${activeTab}`, [activeTab])
 
-  // Fetch function for "all" tab (personalized unified recommendations only)
+  // Fetch function for "all" tab (personalized unified recommendations or anonymous public feed)
   const fetchAllContent = useCallback(async (lastId: string | null) => {
     if (!backendUrl) {
       return { items: [], lastId: null, hasMore: false }
     }
 
-    const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
-    if (!isAuthenticated || !token) {
-      // Without an authenticated user we can't compute personalized recommendations
+    // Anonymous users: use public feed API (cached 100-item interleaved feed)
+    if (!isAuthenticated || !user) {
+      const anonId = getOrCreateAnonId()
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (anonId) headers['X-Anon-Id'] = anonId
+      try {
+        const response = await fetch(`${backendUrl}/api/feed/anonymous`, { headers })
+        if (!response.ok) return { items: [], lastId: null, hasMore: false }
+        const data = await response.json()
+        const feed = Array.isArray(data?.data?.feed) ? data.data.feed : []
+        return { items: feed, lastId: null, hasMore: false }
+      } catch (err) {
+        console.error('Anonymous feed fetch error:', err)
+        return { items: [], lastId: null, hasMore: false }
+      }
+    }
+
+    const token = localStorage.getItem('accessToken')
+    if (!token) {
       return { items: [], lastId: null, hasMore: false }
     }
 
@@ -615,10 +632,7 @@ export default function Home() {
     return <PageSkeleton />
   }
 
-  if (!isAuthenticated) {
-    return <LandingPage />
-  }
-
+  // Always show the feed (auth version). Guests see empty/CTA until they sign in.
   return (
     <PageShell>
       {/* Tab bar: sticky, page bg, glass tab buttons */}
@@ -638,7 +652,7 @@ export default function Home() {
 
       {/* Feed Content */}
       <div className="max-w-2xl mx-auto py-6">
-        {!isLoading && allContent.length > 0 && activeTab === "all" && (
+        {!isLoading && activeTab === "all" && (allContent.length > 0 || !isAuthenticated) && (
           <SectionCard
             emphasized
             className="mb-6"
@@ -678,7 +692,7 @@ export default function Home() {
             loading={isLoading && allContent.length === 0}
             emptyMessage={
               activeTab === "all"
-                ? "No content available yet. Check back soon!"
+                ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
                 : `No ${activeTab} found. Try another category!`
             }
           />

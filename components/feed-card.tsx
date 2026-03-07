@@ -34,6 +34,7 @@ import {
   RiEyeLine,
 } from 'react-icons/ri'
 import { useAuth } from '@/lib/auth-context'
+import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-popup'
 import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
@@ -265,7 +266,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      dispatchGuestEngaged()
+      return
+    }
 
     // Store previous state in case we need to revert
     const previousLikedState = isLiked
@@ -335,7 +339,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      dispatchGuestEngaged()
+      return
+    }
 
     // Store previous state in case we need to revert
     const previousSavedState = isSaved
@@ -437,6 +444,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const handleExpand = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!isAuthenticated) dispatchGuestEngaged()
     const newExpanded = isExpanded !== undefined ? !isExpanded : !localExpanded
     if (newExpanded) {
       onPromotionShowMore?.()

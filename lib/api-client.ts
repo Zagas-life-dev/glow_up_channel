@@ -1,5 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+import { getOrCreateAnonId, clearAnonId } from '@/lib/anon-id';
+
 if (!API_BASE_URL && typeof window !== 'undefined') {
   console.error('NEXT_PUBLIC_BACKEND_URL environment variable is required');
   throw new Error('Backend URL not configured. Please set NEXT_PUBLIC_BACKEND_URL environment variable.');
@@ -276,26 +278,36 @@ export class ApiClient {
   }
 
   static async registerOpportunitySeeker(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
+    const body: Record<string, unknown> = { email, password, firstName, lastName, dateOfBirth };
+    if (typeof window !== 'undefined') {
+      body.anonId = getOrCreateAnonId();
+    }
     const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-seeker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
+      body: JSON.stringify(body),
     });
 
     const data = await this.handleResponse<RegisterResponse>(response);
     this.setTokens(data.tokens);
+    if (typeof window !== 'undefined') clearAnonId();
     return data;
   }
 
   static async registerOpportunityPoster(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
+    const body: Record<string, unknown> = { email, password, firstName, lastName, dateOfBirth };
+    if (typeof window !== 'undefined') {
+      body.anonId = getOrCreateAnonId();
+    }
     const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-poster`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth }),
+      body: JSON.stringify(body),
     });
 
     const data = await this.handleResponse<RegisterResponse>(response);
     this.setTokens(data.tokens);
+    if (typeof window !== 'undefined') clearAnonId();
     return data;
   }
 

@@ -6,14 +6,31 @@ import { X, Bell } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { usePushNotifications } from "@/hooks/use-push-notifications"
 import { Button } from "@/components/ui/button"
+import { PWA_DISMISSED_EVENT } from "@/components/pwa-install-banner"
 
 const STORAGE_KEY = "glowup-push-prompt-dismissed"
+const AUTH_DELAY_MS = 5 * 60 * 1000 // 5 minutes
+
+function isStandalone() {
+  if (typeof window === "undefined") return false
+  return (
+    (window as Window & { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches
+  )
+}
+
+function wasPwaDismissed() {
+  if (typeof window === "undefined") return false
+  return sessionStorage.getItem("glowup-pwa-prompt-dismissed") === "true"
+}
 
 export default function PushPromptBanner() {
   const { user } = useAuth()
   const push = usePushNotifications()
   const [dismissed, setDismissed] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [allowAfterDelay, setAllowAfterDelay] = useState(false)
+  const [pwaDismissed, setPwaDismissed] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -25,9 +42,27 @@ export default function PushPromptBanner() {
     setDismissed(wasDismissed)
   }, [mounted])
 
+  // Only allow push prompt 5 min after user is authenticated
+  useEffect(() => {
+    if (!user) return
+    const t = setTimeout(() => setAllowAfterDelay(true), AUTH_DELAY_MS)
+    return () => clearTimeout(t)
+  }, [user])
+
+  // Show push only after PWA was dismissed (or PWA not applicable e.g. standalone)
+  useEffect(() => {
+    if (!mounted) return
+    setPwaDismissed(wasPwaDismissed() || isStandalone())
+    const onPwaDismissed = () => setPwaDismissed(true)
+    window.addEventListener(PWA_DISMISSED_EVENT, onPwaDismissed)
+    return () => window.removeEventListener(PWA_DISMISSED_EVENT, onPwaDismissed)
+  }, [mounted])
+
   const shouldShow =
     mounted &&
     !!user &&
+    allowAfterDelay &&
+    pwaDismissed &&
     push.isSupported &&
     !push.isSubscribed &&
     !push.isLoading &&
