@@ -44,11 +44,11 @@ const TAB_CONFIG: {
   authOnly?: boolean
   premiumOnly?: boolean
 }[] = [
-  { id: "my", label: "Mine", shortLabel: "Mine", icon: RiPlayList2Fill, count: (c) => c.playlists.length, authOnly: true },
-  { id: "shared", label: "Shared", shortLabel: "Shared", icon: RiUserAddLine, count: (c) => c.sharedPlaylists.length, authOnly: true },
+  { id: "public", label: "Discover", shortLabel: "Discover", icon: RiGlobalLine },
   { id: "saved", label: "Saved", shortLabel: "Saved", icon: RiBookmarkLine, count: (c) => c.savedPlaylists.length, authOnly: true },
   { id: "premium", label: "Premium", shortLabel: "Pro", icon: RiVipCrownLine, count: (c) => c.premiumPlaylists.length, authOnly: true, premiumOnly: true },
-  { id: "public", label: "Discover", shortLabel: "Discover", icon: RiGlobalLine },
+  { id: "my", label: "Mine", shortLabel: "Mine", icon: RiPlayList2Fill, count: (c) => c.playlists.length, authOnly: true },
+  { id: "shared", label: "Shared", shortLabel: "Shared", icon: RiUserAddLine, count: (c) => c.sharedPlaylists.length, authOnly: true },
 ]
 
 function PlaylistsPageInner() {
@@ -71,7 +71,7 @@ function PlaylistsPageInner() {
     unsavePlaylist,
   } = usePlaylist()
   const { isAuthenticated, user, normalizedUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabType>(isAuthenticated ? "my" : "public")
+  const [activeTab, setActiveTab] = useState<TabType>("public")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -84,9 +84,22 @@ function PlaylistsPageInner() {
       if (canViewPremium) {
         setActiveTab("premium")
       } else {
-        setActiveTab(isAuthenticated ? "my" : "public")
+        setActiveTab("public")
         router.replace("/playlists")
       }
+      return
+    }
+    if (tabParam === "my" || tabParam === "shared" || tabParam === "saved") {
+      if (isAuthenticated) {
+        setActiveTab(tabParam as TabType)
+      } else {
+        setActiveTab("public")
+        router.replace("/playlists")
+      }
+      return
+    }
+    if (tabParam === "public" || tabParam === null) {
+      setActiveTab("public")
     }
   }, [searchParams, canViewPremium, isAuthenticated, router])
 
