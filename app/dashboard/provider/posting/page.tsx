@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
 import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
 import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
+import ProviderDashboardSidebar from '@/components/provider/provider-dashboard-sidebar'
+import ProviderDashboardBottomNav from '@/components/provider/provider-dashboard-bottom-nav'
 import { 
   Target,
   Calendar,
@@ -96,7 +98,6 @@ function PostingContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const tagInputContainerRef = useRef<HTMLDivElement | null>(null)
 
@@ -345,6 +346,19 @@ function PostingContent() {
     { label: 'Settings', icon: Settings, href: '/dashboard/provider/settings', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
+  const providerNavItems = [
+    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { id: 'content' as const, label: 'Content', icon: FileText },
+    { id: 'promotions' as const, label: 'Promotions', icon: Zap },
+    { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
+  ]
+  const providerNavRouteMap = {
+    overview: '/dashboard/provider',
+    content: '/dashboard/provider/posting',
+    promotions: '/dashboard/provider/promotions',
+    analytics: '/dashboard/provider/settings',
+  }
+  const activeProviderTab: 'overview' | 'content' | 'promotions' | 'analytics' = pathname?.startsWith('/dashboard/provider/posting') ? 'content' : 'overview'
 
   const handleRefresh = () => {
     setLoading(true)
@@ -383,260 +397,31 @@ function PostingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Desktop Sidebar - Provider Hub (same as provider dashboard) */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
-              <Image
-                src="/images/Yellow and Black Modern Media Company Logo (14).png"
-                alt="GlowUp"
-                fill
-                className="object-contain"
-              />
-            </Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
+      <ProviderDashboardSidebar
+        user={user as any}
+        profile={profile as any}
+        navItems={providerNavItems}
+        quickLinks={quickLinks}
+        activeTab={activeProviderTab}
+        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+        totalPostings={postingCount ?? 0}
+        postingLimit={Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) ? getPostingLimit(user?.isPremium, user?.role) : 999}
+        hasPremium={hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })}
+      />
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+        <header className="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-border/70">
+          <div className="flex items-center justify-between h-14 px-4 pt-[max(0rem,env(safe-area-inset-top))]">
             <div>
-              <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
-              <p className="text-xs text-muted-foreground">Post Content</p>
+              <p className="text-overline uppercase tracking-[0.14em] text-muted-foreground">Provider workspace</p>
+              <h1 className="text-body font-semibold text-foreground">Post Content</h1>
             </div>
+            <Button onClick={handleRefresh} variant="ghost" size="sm" disabled={loading} className="h-9 w-9 p-0 text-muted-foreground">
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
           </div>
-          
-          {/* User Info */}
-          <div className="p-3 rounded-xl bg-muted border border-border flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-border flex-shrink-0">
-              {avatarUrl ? (
-                <Image src={avatarUrl} alt={user?.firstName || user?.email || 'Provider'} width={36} height={36} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-semibold text-orange-400">
-                  {(user?.firstName || user?.email || '?').charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {user?.firstName || user?.email?.split('@')[0]}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation - same as provider dashboard */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive ? "bg-primary/10 text-orange-400 border border-orange-500/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-border space-y-2">
-          {quickLinks.map((link) => {
-            const Icon = link.icon
-            const isActive = pathname === link.href
-            return (
-              <Button
-                key={link.label}
-                asChild
-                variant={link.variant}
-                className={cn(
-                  "w-full justify-start rounded-xl",
-                  link.variant === 'default' 
-                    ? "bg-primary hover:bg-primary/90" 
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted",
-                  isActive && "ring-2 ring-primary/30"
-                )}
-              >
-                <Link href={link.href}>
-                  <Icon className="w-4 h-4 mr-2" />
-                  {link.label}
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
-
-        {/* Posts count - always show when we have a value (matches dashboard) */}
-        <div className="p-4 border-t border-border">
-          <div className="p-3 rounded-xl bg-muted border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Your posts</span>
-              <span className="text-lg font-bold text-orange-400">
-                {postingCount !== null ? postingCount : '—'}
-                {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) && (
-                  <> of {getPostingLimit(user?.isPremium, user?.role)} max</>
-                )}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mb-2">
-              {Number.isFinite(getPostingLimit(user?.isPremium, user?.role))
-                ? hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
-                  ? 'Premium: 20 posts max'
-                  : 'Free: 5 posts max (all statuses count)'
-                : 'Admin: no posting limit'}
-            </p>
-            {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) && (
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                {(() => {
-                  const total = postingCount ?? 0
-                  const limit = getPostingLimit(user?.isPremium, user?.role)
-                  const pct = limit > 0 ? Math.min((total / limit) * 100, 100) : 0
-                  return <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                })()}
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header - Only visible on mobile (Provider Hub) */}
-        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
-          <div className="flex items-center justify-between h-14 px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Crown className="w-4 h-4 text-orange-500" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-foreground">Provider Hub · Post</h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleRefresh} 
-                variant="ghost" 
-                size="sm"
-                disabled={loading}
-                className="h-9 w-9 p-0 text-muted-foreground"
-              >
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-              </Button>
-              
-              {/* Quick Actions Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-9 w-9 p-0 text-muted-foreground"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-56 p-2"
-                >
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
-                      <LayoutDashboard className="h-4 w-4 text-orange-400" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  {/* <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
-                      <Zap className="h-4 w-4 text-orange-400" />
-                      <span>Promotions</span>
-                    </Link>
-                  </DropdownMenuItem> */}
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
-                      <Settings className="h-4 w-4 text-orange-400" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-muted my-1" />
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/" className="flex items-center gap-3 w-full">
-                      <Home className="h-4 w-4 text-orange-400" />
-                      <span>Home</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Mobile Sidebar Drawer */}
-          {sidebarOpen && (
-            <>
-              <div 
-                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
-                <div className="p-4 space-y-1">
-                  {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.href
-                    
-                    return (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        onClick={() => setSidebarOpen(false)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                          isActive 
-                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                        <span>{item.label}</span>
-                      </Link>
-                    )
-                  })}
-                  
-                  <div className="pt-4 mt-4 border-t border-border space-y-2">
-                    {quickLinks.map((link) => {
-                      const Icon = link.icon
-                      return (
-                        <Button
-                          key={link.label}
-                          asChild
-                          variant={link.variant}
-                          className={cn(
-                            "w-full justify-start",
-                            link.variant === 'default' 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                          )}
-                          onClick={() => setSidebarOpen(false)}
-                        >
-                          <Link href={link.href}>
-                            <Icon className="w-4 h-4 mr-2" />
-                            {link.label}
-                          </Link>
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </header>
-
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
 
       {/* Onboarding Warning */}
@@ -1021,36 +806,11 @@ function PostingContent() {
           </div>
         </main>
 
-        {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
-          <div className="flex items-center justify-around h-16 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
-                    isActive 
-                      ? "text-orange-400" 
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                  <span className={cn(
-                    "text-[10px] font-medium truncate w-full text-center",
-                    isActive && "text-orange-400"
-                  )}>
-                    {item.label}
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
-        </nav>
+        <ProviderDashboardBottomNav
+          navItems={providerNavItems}
+          activeTab={activeProviderTab}
+          onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+        />
       </div>
     </div>
   )

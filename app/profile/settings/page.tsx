@@ -356,8 +356,12 @@ export default function SettingsPage() {
       setInstitution(profile.institution || '')
       setAspirations(profile.aspirations || [])
       setPhoneNumber(profile.phoneNumber || '')
+    } else if (user && (user as any).phoneNumber) {
+      // Fallback: if there is no separate onboarding profile yet, fall back
+      // to any phone number stored directly on the user document.
+      setPhoneNumber((user as any).phoneNumber || '')
     }
-  }, [profile])
+  }, [profile, user])
 
   // Load verification status
   useEffect(() => {
@@ -557,6 +561,7 @@ export default function SettingsPage() {
         bio: bio || null,
         headline: headline || null,
         website: website || null,
+        phoneNumber: phoneNumber || null,
         skills,
         work: workCompany || workTitle ? { company: workCompany, title: workTitle } : null,
         education: educationSchool || educationDegree || educationField 
@@ -1847,7 +1852,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-foreground">₦2,500</p>
+                  <p className="text-lg font-bold text-foreground">₦1,500</p>
                   <p className="text-[11px] text-muted-foreground">per month</p>
                 </div>
               </div>
@@ -1914,8 +1919,8 @@ export default function SettingsPage() {
               onClick={async () => {
                 try {
                   setIsStartingPremium(true)
-                  // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦2,500 = 250000 kobo.
-                  const result = await ApiClient.startPremiumSubscription(250000, {
+                  // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦1,500 = 150000 kobo.
+                  const result = await ApiClient.startPremiumSubscription(150000, {
                     planId: 'premium_monthly',
                     callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/profile/settings?premium=success` : undefined,
                   })

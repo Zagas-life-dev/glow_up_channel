@@ -12,16 +12,41 @@ import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
 import Script from "next/script"
+import { getMetadataBase } from "@/lib/site-url"
 
 export const metadata: Metadata = {
-  title: "GlowUp",
-  description: "Connect young ambitious people to opportunities, events, and free resources.",
-  generator: 'v0.dev',
+  metadataBase: getMetadataBase(),
+  title: {
+    default: "GlowUp — opportunities, events, and resources",
+    template: "%s | GlowUp",
+  },
+  description:
+    "GlowUp connects young ambitious people to opportunities, events, jobs, and free resources in one community-driven platform.",
+  applicationName: "GlowUp",
+  authors: [{ name: "GlowUp" }],
+  keywords: [
+    "GlowUp",
+    "opportunities",
+    "jobs",
+    "events",
+    "resources",
+    "youth",
+    "career",
+    "community",
+  ],
+  robots: { index: true, follow: true },
   icons: {
-    icon: '/images/Yellow and Black Modern Media Company Logo (14).png',
-    shortcut: '/images/Yellow and Black Modern Media Company Logo (14).png',
-    apple: '/images/Yellow and Black Modern Media Company Logo (14).png',
-  }
+    icon: "/images/Yellow and Black Modern Media Company Logo (14).png",
+    shortcut: "/images/Yellow and Black Modern Media Company Logo (14).png",
+    apple: "/images/Yellow and Black Modern Media Company Logo (14).png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "GlowUp",
+    title: "GlowUp — opportunities, events, and resources",
+    description:
+      "Connect to opportunities, events, jobs, and free resources tailored for ambitious young people.",
+  },
 }
 
 export default function RootLayout({
@@ -71,17 +96,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="GlowUp" />
         <link rel="apple-touch-icon" href="/images/Yellow and Black Modern Media Company Logo (14).png" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="description" content="GlowUp is a platform for young ambitious people to connect to opportunities, events, and free resources." />
-        <meta name="keywords" content="GlowUp, opportunities, events, resources, young ambitious people" />
-        <meta name="author" content="GlowUp" />
-        <meta name="robots" content="index, follow" />
-        <meta name="googlebot" content="index, follow" />
-        <meta name="bingbot" content="index, follow" />
-        <meta name="yandexbot" content="index, follow" />
-        <meta name="google" content="notranslate" />
         <meta name="google" content="notranslate" />
       </head>
-      <body className="font-sans" suppressHydrationWarning>
+      <body className="font-sans antialiased bg-page text-foreground" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <PlaylistProvider>

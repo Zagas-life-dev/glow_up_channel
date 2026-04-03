@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist } from '@/contexts/playlist-context'
@@ -23,16 +23,24 @@ interface PostComposerProps {
   replyToPostId?: string
   placeholder?: string
   compact?: boolean
+  /** Debounced typing ping for channel presence (only when channelId is set) */
+  onTypingActivity?: () => void
+  /** Clear typing state (blur, send, unmount) */
+  onTypingEnd?: () => void
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+
+const TYPING_PING_MS = 2200
 
 export default function PostComposer({
   onPostCreated,
   channelId,
   replyToPostId,
   placeholder = "What's on your mind?",
-  compact = false
+  compact = false,
+  onTypingActivity,
+  onTypingEnd,
 }: PostComposerProps) {
   const { user } = useAuth()
   const { playlists, sharedPlaylists, publicPlaylists } = usePlaylist()
@@ -53,8 +61,27 @@ export default function PostComposer({
   const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
   const [pollDuration, setPollDuration] = useState<number>(1) // days
 
+  const lastTypingPingRef = useRef(0)
+  const typingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onTypingEndRef = useRef(onTypingEnd)
+  onTypingEndRef.current = onTypingEnd
+
+  useEffect(() => {
+    return () => {
+      if (typingIdleTimerRef.current) clearTimeout(typingIdleTimerRef.current)
+      if (compactBlurTimerRef.current) clearTimeout(compactBlurTimerRef.current)
+      onTypingEndRef.current?.()
+    }
+  }, [])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const composerRootRef = useRef<HTMLDivElement>(null)
+  const compactBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showPlaylistPickerRef = useRef(showPlaylistPicker)
+  const showPollCreatorRef = useRef(showPollCreator)
+  showPlaylistPickerRef.current = showPlaylistPicker
+  showPollCreatorRef.current = showPollCreator
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -210,6 +237,7 @@ export default function PostComposer({
         setPollOptions(['', ''])
         setPollDuration(1)
         setIsExpanded(false)
+        onTypingEnd?.()
       } else {
         throw new Error(data.message || 'Failed to create post')
       }
@@ -220,6 +248,41 @@ export default function PostComposer({
     }
   }
 
+  const clearTypingIdle = () => {
+    if (typingIdleTimerRef.current) {
+      clearTimeout(typingIdleTimerRef.current)
+      typingIdleTimerRef.current = null
+    }
+  }
+
+  const handleComposerBlur = () => {
+    clearTypingIdle()
+    onTypingEnd?.()
+  }
+
+  /** Compact chat: collapse toolbar when focus leaves the composer; keep draft text. Deferred so toolbar / hashtag list can take focus first. */
+  const scheduleCompactCollapse = () => {
+    if (!compact) return
+    if (compactBlurTimerRef.current) clearTimeout(compactBlurTimerRef.current)
+    compactBlurTimerRef.current = setTimeout(() => {
+      compactBlurTimerRef.current = null
+      const root = composerRootRef.current
+      const active = document.activeElement
+      if (root && active && root.contains(active)) return
+      if (showPlaylistPickerRef.current || showPollCreatorRef.current) return
+      setIsExpanded(false)
+      if (channelId) {
+        clearTypingIdle()
+        onTypingEnd?.()
+      }
+    }, 80)
+  }
+
+  const handleTextareaBlur = () => {
+    if (compact) scheduleCompactCollapse()
+    else if (channelId) handleComposerBlur()
+  }
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
 
@@ -227,6 +290,18 @@ export default function PostComposer({
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+
+    if (channelId && onTypingActivity) {
+      const now = Date.now()
+      if (now - lastTypingPingRef.current >= TYPING_PING_MS) {
+        lastTypingPingRef.current = now
+        onTypingActivity()
+      }
+      if (typingIdleTimerRef.current) clearTimeout(typingIdleTimerRef.current)
+      typingIdleTimerRef.current = setTimeout(() => {
+        onTypingEnd?.()
+      }, 3000)
     }
   }
 
@@ -240,19 +315,32 @@ export default function PostComposer({
     )
   ]
 
+  const hasPollReady =
+    showPollCreator && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2
+  const canPost =
+    !isPosting &&
+    !isUploading &&
+    (Boolean(text.trim()) || images.length > 0 || Boolean(selectedPlaylist) || hasPollReady)
+
   if (!user) return null
 
   return (
     <>
-      <div className={cn(
+      <div
+        ref={composerRootRef}
+        className={cn(
         "rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 overflow-hidden transition-all duration-200",
-        isExpanded && "ring-1 ring-primary/30 border-border shadow-sm"
+        isExpanded && "ring-1 ring-primary/30 border-border shadow-sm",
+        compact && "rounded-xl"
       )}>
         {/* Main Input Area */}
-        <div className="p-4">
+        <div className={cn("p-4", compact && "p-3")}>
           <div className="flex gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/20 bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
+            <div className={cn(
+              "rounded-full overflow-hidden ring-2 ring-primary/20 bg-gradient-to-br from-orange-500 to-rose-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0",
+              compact ? "h-9 w-9" : "w-10 h-10",
+            )}>
               {user.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -267,15 +355,39 @@ export default function PostComposer({
 
             {/* Input */}
             <div className="flex-1 min-w-0 relative">
-              <textarea
-                ref={textareaRef}
-                value={text}
-                onChange={handleTextChange}
-                onFocus={() => setIsExpanded(true)}
-                placeholder={placeholder}
-                className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none min-h-[60px] text-[15px] leading-relaxed"
-                rows={compact ? 1 : 2}
-              />
+              <div
+                className={cn(
+                  "flex gap-2",
+                  compact && !isExpanded ? "items-center" : "items-end",
+                )}
+              >
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={handleTextChange}
+                  onFocus={() => setIsExpanded(true)}
+                  onBlur={compact || channelId ? handleTextareaBlur : undefined}
+                  placeholder={placeholder}
+                  className={cn(
+                    "bg-transparent text-foreground placeholder:text-muted-foreground resize-none outline-none text-[15px] leading-relaxed min-w-0",
+                    compact && !isExpanded ? "flex-1 min-h-11 max-h-32 py-2.5" : "w-full",
+                    compact && isExpanded ? "w-full min-h-11 max-h-32 py-2.5" : "",
+                    !compact && "w-full min-h-[60px]",
+                  )}
+                  rows={compact ? 1 : 2}
+                />
+                {compact && !isExpanded && (
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!canPost}
+                    className="h-9 w-9 shrink-0 rounded-full p-0 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md shadow-orange-500/20"
+                    aria-label="Post"
+                  >
+                    <RiSendPlaneLine className="w-4 h-4" aria-hidden />
+                  </Button>
+                )}
+              </div>
               <HashtagAutocomplete
                 text={text}
                 onTextChange={setText}
@@ -504,7 +616,7 @@ export default function PostComposer({
             {/* Post Button */}
             <Button
               onClick={handleSubmit}
-              disabled={isPosting || isUploading || (!text.trim() && images.length === 0 && !selectedPlaylist && !(showPollCreator && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2))}
+              disabled={!canPost}
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-5 shadow-md shadow-orange-500/20 font-semibold"
             >
               <RiSendPlaneLine className="w-4 h-4 mr-2" />

@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { usePlaylist, Playlist, PlaylistItem } from '@/contexts/playlist-context'
+import { usePlaylist, Playlist } from "@/contexts/playlist-context"
 import { useAuth } from '@/lib/auth-context'
 import { canViewPremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
@@ -51,13 +50,52 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 const typeConfig = {
-  opportunity: { icon: RiFocus3Line, color: 'orange', label: 'Opportunity', path: 'opportunities', gradient: 'from-orange-500/20 to-orange-600/10' },
-  job: { icon: RiBriefcaseLine, color: 'primary', label: 'Job', path: 'jobs', gradient: 'from-primary/20 to-primary/10' },
-  event: { icon: RiCalendarLine, color: 'emerald', label: 'Event', path: 'events', gradient: 'from-emerald-500/20 to-emerald-600/10' },
-  resource: { icon: RiBookLine, color: 'violet', label: 'Resource', path: 'resources', gradient: 'from-violet-500/20 to-violet-600/10' }
+  opportunity: { icon: RiFocus3Line, color: "orange", label: "Opportunity", path: "opportunities", gradient: "from-orange-500/20 to-orange-600/10" },
+  job: { icon: RiBriefcaseLine, color: "primary", label: "Job", path: "jobs", gradient: "from-primary/20 to-primary/10" },
+  event: { icon: RiCalendarLine, color: "emerald", label: "Event", path: "events", gradient: "from-emerald-500/20 to-emerald-600/10" },
+  resource: { icon: RiBookLine, color: "slate", label: "Resource", path: "resources", gradient: "from-slate-500/15 to-slate-600/8" },
+} as const
+
+type TypeColor = (typeof typeConfig)[keyof typeof typeConfig]["color"]
+
+function typeIconClass(color: TypeColor) {
+  return cn(
+    color === "orange" && "text-orange-400",
+    color === "primary" && "text-primary",
+    color === "emerald" && "text-emerald-400",
+    color === "slate" && "text-slate-500 dark:text-slate-400",
+  )
+}
+
+function typeBadgeClass(color: TypeColor) {
+  return cn(
+    "text-xs font-medium backdrop-blur-sm",
+    color === "orange" && "border-orange-500/30 text-orange-400 bg-primary/10",
+    color === "primary" && "border-primary/30 text-primary bg-primary/10",
+    color === "emerald" && "border-emerald-500/30 text-emerald-400 bg-emerald-500/10",
+    color === "slate" && "border-slate-500/30 text-slate-600 bg-slate-500/10 dark:text-slate-300",
+  )
+}
+
+function typeBadgeSmallClass(color: TypeColor) {
+  return cn(
+    "text-[10px] font-semibold px-2 py-0.5",
+    color === "orange" && "border-orange-500/40 text-orange-400 bg-primary/10",
+    color === "primary" && "border-primary/30 text-primary bg-primary/10",
+    color === "emerald" && "border-emerald-500/40 text-emerald-400 bg-emerald-500/10",
+    color === "slate" && "border-slate-500/40 text-slate-600 bg-slate-500/10 dark:text-slate-300",
+  )
 }
 
 type ViewMode = 'grid' | 'list'
@@ -74,6 +112,7 @@ export default function PlaylistDetailPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [premiumGatedBy403, setPremiumGatedBy403] = useState(false)
 
   const playlistId = params.id as string
   const [isLoading, setIsLoading] = useState(true)
@@ -82,7 +121,8 @@ export default function PlaylistDetailPage() {
   // Initial fetch
   useEffect(() => {
     let isMounted = true
-    
+    setPremiumGatedBy403(false)
+
     const loadPlaylist = async () => {
       setIsLoading(true)
       try {
@@ -90,17 +130,23 @@ export default function PlaylistDetailPage() {
         if (isMounted) {
           setPlaylist(found)
         }
-      } catch (err) {
-        console.error('Error loading playlist:', err)
+      } catch (err: unknown) {
+        const status = (err as { status?: number })?.status
+        if (status === 403 && isMounted) {
+          setPremiumGatedBy403(true)
+          setPlaylist(null)
+        } else {
+          console.error('Error loading playlist:', err)
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false)
         }
       }
     }
-    
+
     loadPlaylist()
-    
+
     return () => { isMounted = false }
   }, [playlistId, getPlaylistById])
 
@@ -205,7 +251,9 @@ export default function PlaylistDetailPage() {
     return <PlaylistDetailSkeleton />
   }
 
-  if (!playlist) {
+  const showPremiumDialog = (playlist && isPremiumGated) || premiumGatedBy403
+
+  if (!playlist && !premiumGatedBy403) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
@@ -225,56 +273,20 @@ export default function PlaylistDetailPage() {
     )
   }
 
-  // Premium gate: only premium users (or playlist owner) can view premium playlists
-  if (isPremiumGated) {
-    return (
-      <div className="min-h-screen bg-page flex items-center justify-center px-4">
-        <div className="text-center max-w-md mx-auto">
-          <div className="w-20 h-20 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
-            <RiStarLine className="w-10 h-10 text-amber-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Premium Playlist</h1>
-          <p className="text-muted-foreground mb-6">
-            This playlist is for premium members only. Upgrade to view and save premium playlists.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">
-              <Link href="/premium">Upgrade to Premium</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-full border-border">
-              <Link href="/playlists">
-                <RiArrowLeftLine className="w-4 h-4 mr-2 inline" />
-                Back to Playlists
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+  // At this point, playlist should always be non-null
+  if (!playlist) {
+    return null
   }
 
-  // Group items by type for better organization
-  const groupedItems = playlist.items.reduce((acc, item) => {
-    const type = item.contentType || 'opportunity'
-    if (!acc[type]) acc[type] = []
-    acc[type].push(item)
-    return acc
-  }, {} as Record<string, typeof playlist.items>)
-
-  return (
-    <div className="min-h-screen bg-page pb-24 lg:pb-8">
-      {/* Hero Section with Gradient Background */}
-      <div className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 via-violet-500/5 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
-        
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-50 bg-page/60 backdrop-blur-2xl border-b border-border">
+  // Premium gate: show Dialog (and Back to Playlists header when user landed on premium link)
+  if (showPremiumDialog) {
+    return (
+      <div className="min-h-screen bg-page pb-24 lg:pb-8">
+        <div className="sticky top-0 z-40 bg-page/60 backdrop-blur-2xl border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-6">
             <div className="flex items-center justify-between py-4">
-              <Link 
-                href="/playlists" 
+              <Link
+                href="/playlists"
                 className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
               >
                 <div className="p-1.5 rounded-lg bg-muted group-hover:bg-card/[0.1] transition-colors">
@@ -282,274 +294,411 @@ export default function PlaylistDetailPage() {
                 </div>
                 <span className="text-sm font-medium hidden sm:inline">Back</span>
               </Link>
+            </div>
+          </div>
+        </div>
+        <Dialog open={true} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>Premium content</DialogTitle>
+              <DialogDescription>
+                This is premium content and you cannot access it. Become a premium user today to gain access.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+              <Button asChild variant="outline" className="rounded-full border-border">
+                <Link href="/playlists">
+                  <RiArrowLeftLine className="w-4 h-4 mr-2" />
+                  Back to Playlists
+                </Link>
+              </Button>
+              <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">
+                <Link href="/premium">Become a premium user</Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
 
-              <div className="flex items-center gap-2">
+  const showMobileStickyActions =
+    (playlist.isPublic || playlist.isPremiumPlaylist) || (isAuthenticated && !isOwner)
+
+  return (
+    <div className="min-h-screen bg-page pb-24 font-sans lg:pb-8">
+      {/* Atmosphere: orange-led depth, subtle grain (frontend-design) */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute -top-24 right-0 h-72 w-72 rounded-full opacity-[0.14] dark:opacity-[0.2] blur-3xl"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 72%)" }}
+        />
+        <div
+          className="absolute top-1/4 -left-16 h-56 w-56 rounded-full opacity-[0.06] blur-3xl"
+          style={{ background: "radial-gradient(circle, hsl(222 41% 40%) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.3] dark:opacity-[0.18]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E")`,
+          }}
+        />
+      </div>
+
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.07] via-transparent to-transparent" />
+
+        {/* Sticky header + mobile Share/Save (always reachable while scrolling) */}
+        <div className="sticky top-0 z-50 border-b border-border/60 bg-page/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-page/65">
+          <div className="mx-auto max-w-6xl px-4 md:px-6">
+            <div className="flex items-center justify-between gap-3 py-3">
+              <Link
+                href="/playlists"
+                className="group inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl text-muted-foreground transition-colors hover:text-foreground sm:justify-start"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted transition-colors group-hover:bg-muted/80">
+                  <RiArrowLeftLine className="h-5 w-5" />
+                </span>
+                <span className="hidden text-sm font-medium sm:inline">Playlists</span>
+              </Link>
+
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Button
+                  type="button"
                   onClick={handleRefresh}
                   disabled={isRefreshing}
                   variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Refresh playlist"
                 >
-                  <RiRefreshLine className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                  <RiRefreshLine className={cn("h-5 w-5", isRefreshing && "animate-spin")} />
                 </Button>
-
-                {isOwner && (
+                {isOwner ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
+                        type="button"
                         variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
+                        size="icon"
+                        className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="Playlist menu"
                       >
-                        <RiMore2Line className="w-5 h-5" />
+                        <RiMore2Line className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="p-1">
                       <DropdownMenuItem
                         onClick={() => setShowEditModal(true)}
-                        className="text-foreground hover:bg-muted cursor-pointer rounded-lg"
+                        className="cursor-pointer rounded-lg text-foreground hover:bg-muted"
                       >
-                        <RiPencilLine className="w-4 h-4 mr-2" />
-                        Edit Playlist
+                        <RiPencilLine className="mr-2 h-4 w-4" />
+                        Edit playlist
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setShowInviteModal(true)}
-                        className="text-foreground hover:bg-muted cursor-pointer rounded-lg"
+                        className="cursor-pointer rounded-lg text-foreground hover:bg-muted"
                       >
-                        <RiUserAddLine className="w-4 h-4 mr-2" />
-                        Invite Collaborators
+                        <RiUserAddLine className="mr-2 h-4 w-4" />
+                        Invite collaborators
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-muted" />
                       <DropdownMenuItem
                         onClick={handleDelete}
-                        className="text-red-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer rounded-lg"
+                        className="cursor-pointer rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-400"
                       >
-                        <RiDeleteBinLine className="w-4 h-4 mr-2" />
-                        Delete Playlist
+                        <RiDeleteBinLine className="mr-2 h-4 w-4" />
+                        Delete playlist
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                )}
+                ) : null}
               </div>
             </div>
+
+            {showMobileStickyActions ? (
+              <div className="flex gap-2 border-t border-border/50 pb-3 pt-3 md:hidden">
+                {(playlist.isPublic || playlist.isPremiumPlaylist) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 min-h-11 flex-1 rounded-xl border-border/80"
+                    onClick={handleShare}
+                  >
+                    <RiShareLine className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                )}
+                {isAuthenticated && !isOwner ? (
+                  <Button
+                    type="button"
+                    disabled={isSaving}
+                    className={cn(
+                      "h-11 min-h-11 flex-1 rounded-xl",
+                      isSaved
+                        ? "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/20"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90",
+                    )}
+                    onClick={handleSavePlaylist}
+                  >
+                    {isSaving ? (
+                      <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
+                    ) : isSaved ? (
+                      <RiBookmarkFill className="mr-2 h-4 w-4" />
+                    ) : (
+                      <RiBookmarkLine className="mr-2 h-4 w-4" />
+                    )}
+                    {isSaved ? "Saved" : "Save"}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {/* Hero Content */}
-        <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-6 md:gap-8">
-            {/* Cover Art */}
-            <div className="relative group">
-              <div className="w-48 h-48 md:w-64 md:h-64 rounded-3xl bg-gradient-to-br from-orange-500/30 via-violet-500/20 to-orange-500/30 border border-border flex items-center justify-center shadow-2xl shadow-primary/20 transition-transform group-hover:scale-[1.02]">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-violet-500/20 rounded-3xl" />
-                <RiPlayList2Fill className="w-24 h-24 md:w-32 md:h-32 text-orange-400 relative z-10" />
-              </div>
-              {playlist.items.length > 0 && (
-                <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-[#0a0a0a]">
-                  <RiPlayLine className="w-5 h-5 text-foreground ml-0.5" />
+        {/* Hero: compact row on mobile, editorial scale on desktop */}
+        <div className="relative mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-12">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8 md:gap-10">
+            <div className="relative shrink-0 sm:mx-0">
+              <div className="group/cover relative mx-auto w-[7.5rem] sm:mx-0 md:w-64">
+                <div
+                  className={cn(
+                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-[1.02]",
+                    playlist.isPremiumPlaylist
+                      ? "border-amber-500/30 bg-gradient-to-br from-amber-500/35 via-amber-600/20 to-amber-500/25 shadow-amber-500/15"
+                      : "border-border/80 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/25 shadow-primary/15",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute inset-0 rounded-[1.35rem] sm:rounded-3xl",
+                      playlist.isPremiumPlaylist
+                        ? "bg-gradient-to-br from-amber-500/15 to-amber-700/10"
+                        : "bg-gradient-to-br from-primary/20 to-transparent",
+                    )}
+                  />
+                  <RiPlayList2Fill
+                    className={cn(
+                      "relative z-10 h-14 w-14 sm:h-20 sm:w-20 md:h-32 md:w-32",
+                      playlist.isPremiumPlaylist ? "text-amber-400" : "text-primary",
+                    )}
+                  />
                 </div>
-              )}
+                {playlist.items && playlist.items.length > 0 ? (
+                  <div className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-page bg-primary shadow-lg md:-bottom-2 md:-right-2 md:h-12 md:w-12">
+                    <RiPlayLine className="ml-0.5 h-5 w-5 text-primary-foreground" />
+                  </div>
+                ) : null}
+              </div>
             </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0 w-full">
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                {playlist.isPremiumPlaylist && (
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 backdrop-blur-sm">
-                    <RiStarLine className="w-3 h-3 mr-1.5" />
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <div className="mb-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                {playlist.isPremiumPlaylist ? (
+                  <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 backdrop-blur-sm dark:text-amber-400">
+                    <RiStarLine className="mr-1.5 h-3 w-3" />
                     Premium
                   </Badge>
-                )}
-                {playlist.isPublic ? (
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 backdrop-blur-sm">
-                    <RiGlobalLine className="w-3 h-3 mr-1.5" />
+                ) : playlist.isPublic ? (
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 backdrop-blur-sm dark:text-emerald-400">
+                    <RiGlobalLine className="mr-1.5 h-3 w-3" />
                     Public
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="border-border text-muted-foreground bg-muted backdrop-blur-sm">
-                    <RiLockLine className="w-3 h-3 mr-1.5" />
+                  <Badge variant="outline" className="border-border bg-muted text-muted-foreground backdrop-blur-sm">
+                    <RiLockLine className="mr-1.5 h-3 w-3" />
                     Private
                   </Badge>
                 )}
-                {acceptedCollaborators.length > 0 && (
-                  <Badge variant="outline" className="border-violet-500/40 text-violet-400 bg-violet-500/10 backdrop-blur-sm">
-                    <RiGroupLine className="w-3 h-3 mr-1.5" />
-                    {acceptedCollaborators.length + 1} Creators
+                {acceptedCollaborators.length > 0 ? (
+                  <Badge variant="outline" className="border-border/80 bg-muted/60 text-muted-foreground backdrop-blur-sm">
+                    <RiGroupLine className="mr-1.5 h-3 w-3" />
+                    {acceptedCollaborators.length + 1} creators
                   </Badge>
-                )}
-                {(playlist.saveCount ?? 0) > 0 && (
-                  <Badge variant="outline" className="border-orange-500/40 text-orange-400 bg-primary/10 backdrop-blur-sm">
-                    <RiBookmarkLine className="w-3 h-3 mr-1.5" />
+                ) : null}
+                {(playlist.saveCount ?? 0) > 0 ? (
+                  <Badge variant="outline" className="border-primary/35 bg-primary/10 text-primary backdrop-blur-sm">
+                    <RiBookmarkLine className="mr-1.5 h-3 w-3" />
                     {playlist.saveCount} saved
                   </Badge>
-                )}
+                ) : null}
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-3 leading-tight">
+              <h1 className="mb-2 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
                 {playlist.name}
               </h1>
-              
-              {playlist.description && (
-                <p className="text-muted-foreground mb-4 text-base md:text-lg leading-relaxed max-w-2xl">
+
+              {playlist.description ? (
+                <p className="mx-auto mb-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:mx-0 sm:text-base md:text-lg">
                   {playlist.description}
                 </p>
-              )}
+              ) : null}
 
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 flex-wrap">
+              <div className="mb-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-foreground sm:justify-start">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-foreground">
-                    {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || '?').toUpperCase()}
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-orange-600 text-xs font-bold text-primary-foreground">
+                    {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || "?").toUpperCase()}
                   </div>
-                  <span className="font-medium">{playlist.createdBy.firstName || playlist.createdBy.email.split('@')[0]}</span>
+                  <span className="font-medium text-foreground/90">
+                    {playlist.createdBy.firstName || playlist.createdBy.email.split("@")[0]}
+                  </span>
                 </div>
-                <span>•</span>
+                <span className="hidden sm:inline">·</span>
                 <span className="flex items-center gap-1.5">
-                  <RiStarLine className="w-4 h-4" />
+                  <RiStarLine className="h-4 w-4 text-primary" />
                   {playlist.itemCount} items
                 </span>
-                <span>•</span>
+                <span className="hidden sm:inline">·</span>
                 <span className="flex items-center gap-1.5">
-                  <RiTimeLine className="w-4 h-4" />
-                  Updated {new Date(playlist.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  <RiTimeLine className="h-4 w-4" />
+                  Updated{" "}
+                  {new Date(playlist.updatedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
 
-              {/* Hashtags */}
-              {playlist.hashtags && playlist.hashtags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
+              {playlist.hashtags && playlist.hashtags.length > 0 ? (
+                <div className="mb-6 flex flex-wrap justify-center gap-2 sm:justify-start">
                   {playlist.hashtags.map((tag) => (
                     <Link
                       key={tag}
                       href={`/community?hashtag=${tag}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted hover:bg-card/[0.1] text-orange-400 text-xs font-medium transition-colors border border-border"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
                     >
-                      <RiHashtag className="w-3 h-3" />
+                      <RiHashtag className="h-3 w-3" />
                       {tag}
                     </Link>
                   ))}
                 </div>
-              )}
+              ) : null}
 
-              {/* Actions */}
-              <div className="flex items-center gap-3 flex-wrap">
-                {playlist.isPublic && (
-                  <Button 
-                    onClick={handleShare} 
-                    size="lg" 
-                    className="bg-muted hover:bg-muted text-foreground border border-border rounded-full px-6 backdrop-blur-sm"
+              {/* Desktop / tablet primary actions */}
+              <div className="hidden flex-wrap items-center justify-center gap-3 md:flex md:justify-start">
+                {(playlist.isPublic || playlist.isPremiumPlaylist) && (
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="h-11 min-h-11 rounded-2xl border-border px-6"
+                    onClick={handleShare}
                   >
-                    <RiShareLine className="w-4 h-4 mr-2" />
+                    <RiShareLine className="mr-2 h-4 w-4" />
                     Share
                   </Button>
                 )}
-                {isAuthenticated && !isOwner && (
-                  <Button 
-                    onClick={handleSavePlaylist} 
+                {isAuthenticated && !isOwner ? (
+                  <Button
+                    type="button"
+                    size="lg"
                     disabled={isSaving}
-                    size="lg" 
                     className={cn(
-                      "rounded-full px-6 transition-all backdrop-blur-sm",
-                      isSaved 
-                        ? "bg-primary/20 hover:bg-primary/30 text-orange-400 border border-orange-500/30" 
-                        : "bg-muted hover:bg-muted text-foreground border border-border"
+                      "h-11 min-h-11 rounded-2xl px-6",
+                      isSaved
+                        ? "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/20"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90",
                     )}
+                    onClick={handleSavePlaylist}
                   >
                     {isSaving ? (
-                      <RiLoader4Line className="w-4 h-4 mr-2 animate-spin" />
+                      <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
                     ) : isSaved ? (
-                      <RiBookmarkFill className="w-4 h-4 mr-2" />
+                      <RiBookmarkFill className="mr-2 h-4 w-4" />
                     ) : (
-                      <RiBookmarkLine className="w-4 h-4 mr-2" />
+                      <RiBookmarkLine className="mr-2 h-4 w-4" />
                     )}
-                    {isSaved ? 'Saved' : 'Save'}
+                    {isSaved ? "Saved" : "Save"}
                   </Button>
-                )}
-                {isOwner && (
+                ) : null}
+                {isOwner ? (
                   <>
-                    <Button 
-                      onClick={() => setShowInviteModal(true)} 
-                      size="lg" 
-                      className="bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30 rounded-full px-6 backdrop-blur-sm"
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="outline"
+                      className="h-11 min-h-11 rounded-2xl border-border px-6"
+                      onClick={() => setShowInviteModal(true)}
                     >
-                      <RiUserAddLine className="w-4 h-4 mr-2" />
+                      <RiUserAddLine className="mr-2 h-4 w-4" />
                       Invite
                     </Button>
-                    <Button 
-                      onClick={() => setShowEditModal(true)} 
-                      size="lg" 
-                      className="bg-muted hover:bg-muted text-foreground border border-border rounded-full px-6 backdrop-blur-sm"
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="secondary"
+                      className="h-11 min-h-11 rounded-2xl px-6"
+                      onClick={() => setShowEditModal(true)}
                     >
-                      <RiPencilLine className="w-4 h-4 mr-2" />
+                      <RiPencilLine className="mr-2 h-4 w-4" />
                       Edit
                     </Button>
                   </>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
-        {/* Collaborators Section */}
+      <div className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">
         {(acceptedCollaborators.length > 0 || isOwner) && (
-          <div className="mb-8 rounded-2xl bg-card border border-border p-6 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <RiGroupLine className="w-5 h-5 text-violet-400" />
+          <section className="mb-8 rounded-[1.35rem] border border-border/70 bg-card/80 p-4 backdrop-blur-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground sm:text-lg">
+                <RiGroupLine className="h-5 w-5 text-primary" />
                 Creators
               </h2>
-              {isOwner && (
+              {isOwner ? (
                 <Button
-                  onClick={() => setShowInviteModal(true)}
+                  type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-full"
+                  className="h-10 shrink-0 rounded-xl text-primary hover:bg-primary/10"
+                  onClick={() => setShowInviteModal(true)}
                 >
-                  <RiUserAddLine className="w-4 h-4 mr-2" />
+                  <RiUserAddLine className="mr-2 h-4 w-4" />
                   Invite
                 </Button>
-              )}
+              ) : null}
             </div>
-            
-            <div className="flex flex-wrap gap-3">
-              {/* Owner */}
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-500/5 border border-orange-500/20 hover:border-orange-500/30 transition-colors">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-bold text-foreground shadow-lg">
-                  {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || '?').toUpperCase()}
+            <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              <div className="flex min-w-[min(100%,16rem)] shrink-0 items-center gap-3 rounded-xl border border-primary/25 bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-orange-600 text-sm font-bold text-primary-foreground shadow-md">
+                  {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || "?").toUpperCase()}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {playlist.createdBy.firstName || playlist.createdBy.email.split('@')[0]}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {playlist.createdBy.firstName || playlist.createdBy.email.split("@")[0]}
                   </p>
-                  <p className="text-xs text-orange-400 flex items-center gap-1">
-                    <RiVipCrownLine className="w-3 h-3" />
+                  <p className="flex items-center gap-1 text-xs text-primary">
+                    <RiVipCrownLine className="h-3 w-3" />
                     Owner
                   </p>
                 </div>
               </div>
-              
-              {/* Collaborators */}
               {acceptedCollaborators.map((collab) => (
-                <div key={collab._id} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted border border-border hover:bg-muted hover:border-border transition-colors">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500/30 to-violet-600/20 flex items-center justify-center text-sm font-bold text-foreground border border-violet-500/20">
-                    {(collab.firstName?.charAt(0) || collab.email?.charAt(0) || '?').toUpperCase()}
+                <div
+                  key={collab._id}
+                  className="flex min-w-[min(100%,16rem)] shrink-0 items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-bold text-foreground">
+                    {(collab.firstName?.charAt(0) || collab.email?.charAt(0) || "?").toUpperCase()}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {collab.firstName || collab.email.split('@')[0]}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {collab.firstName || collab.email.split("@")[0]}
                     </p>
-                    <p className="text-xs text-violet-400 flex items-center gap-1">
-                      {collab.role === 'editor' ? (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      {collab.role === "editor" ? (
                         <>
-                          <RiPencilLine className="w-3 h-3" />
+                          <RiPencilLine className="h-3 w-3" />
                           Editor
                         </>
                       ) : (
                         <>
-                          <RiGroupLine className="w-3 h-3" />
+                          <RiGroupLine className="h-3 w-3" />
                           Viewer
                         </>
                       )}
@@ -558,62 +707,64 @@ export default function PlaylistDetailPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Items Section */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Items ({playlist.items.length})</h2>
-            
-            {playlist.items.length > 0 && (
-              <div className="flex items-center gap-2 p-1 rounded-full bg-muted border border-border">
+        <section>
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              Items <span className="text-muted-foreground">({playlist.items.length})</span>
+            </h2>
+            {playlist.items.length > 0 ? (
+              <div className="flex h-11 w-full items-center gap-1 rounded-2xl border border-border/80 bg-muted/50 p-1 sm:w-auto">
                 <button
-                  onClick={() => setViewMode('list')}
+                  type="button"
+                  onClick={() => setViewMode("list")}
                   className={cn(
-                    "p-2 rounded-full transition-colors",
-                    viewMode === 'list' 
-                      ? "bg-primary/20 text-orange-400" 
-                      : "text-muted-foreground hover:text-muted-foreground"
+                    "flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors sm:flex-initial sm:px-4",
+                    viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground",
                   )}
+                  aria-pressed={viewMode === "list"}
                 >
-                  <RiListUnordered className="w-4 h-4" />
+                  <RiListUnordered className="h-4 w-4" />
+                  List
                 </button>
                 <button
-                  onClick={() => setViewMode('grid')}
+                  type="button"
+                  onClick={() => setViewMode("grid")}
                   className={cn(
-                    "p-2 rounded-full transition-colors",
-                    viewMode === 'grid' 
-                      ? "bg-primary/20 text-orange-400" 
-                      : "text-muted-foreground hover:text-muted-foreground"
+                    "flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors sm:flex-initial sm:px-4",
+                    viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground",
                   )}
+                  aria-pressed={viewMode === "grid"}
                 >
-                  <RiDashboardLine className="w-4 h-4" />
+                  <RiDashboardLine className="h-4 w-4" />
+                  Grid
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
 
           {playlist.items.length === 0 ? (
-            <div className="rounded-2xl bg-card border border-border p-16 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/20 to-violet-500/20 flex items-center justify-center mx-auto mb-6 border border-border">
-                <RiPlayList2Fill className="w-10 h-10 text-orange-400" />
+            <div className="rounded-[1.35rem] border border-border/70 bg-card/90 px-6 py-14 text-center backdrop-blur-sm sm:py-16">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
+                <RiPlayList2Fill className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">No Items Yet</h3>
-              <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
-                Start adding opportunities, jobs, events, or resources to this playlist.
+              <h3 className="mb-2 text-xl font-bold text-foreground">No items yet</h3>
+              <p className="mx-auto mb-8 max-w-sm text-sm text-muted-foreground">
+                Add opportunities, jobs, events, or resources to this playlist.
               </p>
               <Link href="/">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 rounded-full px-8">
-                  Browse Content
+                <Button type="button" size="lg" className="h-11 min-h-11 rounded-2xl px-8">
+                  Browse content
                 </Button>
               </Link>
             </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {playlist.items.map((item) => {
-                const itemType = item.contentType || 'opportunity'
-                const config = typeConfig[itemType] || typeConfig.opportunity
+          ) : viewMode === "grid" ? (
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {playlist.items.map((item, gi) => {
+                const itemType = item.contentType || "opportunity"
+                const config = typeConfig[itemType as keyof typeof typeConfig] || typeConfig.opportunity
                 const Icon = config.icon
                 const detailUrl = `/${config.path}/${item.contentId || item._id}`
 
@@ -622,220 +773,173 @@ export default function PlaylistDetailPage() {
                     key={item._id}
                     href={detailUrl}
                     className={cn(
-                      "group relative rounded-2xl bg-card border border-border overflow-hidden hover:border-border transition-all",
-                      removingItemId === item._id && "opacity-50 pointer-events-none"
+                      "group relative overflow-hidden rounded-[1.25rem] border border-border/70 bg-card/80 transition-all duration-200 animate-fade-in-up hover:border-primary/25",
+                      removingItemId === item._id && "pointer-events-none opacity-50",
                     )}
+                    style={{
+                      animationDelay: `${Math.min(gi, 10) * 40}ms`,
+                      animationFillMode: "both",
+                    }}
                   >
-                    {/* Image/Icon Header */}
-                    <div className={cn(
-                      "relative h-32 bg-gradient-to-br",
-                      config.gradient
-                    )}>
+                    <div className={cn("relative h-28 bg-gradient-to-br sm:h-32", config.gradient)}>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Icon className={cn(
-                          "w-12 h-12",
-                          config.color === 'orange' && "text-orange-400",
-                          config.color === 'primary' && "text-primary",
-                          config.color === 'emerald' && "text-emerald-400",
-                          config.color === 'violet' && "text-violet-400"
-                        )} />
+                        <Icon className={cn("h-11 w-11 sm:h-12 sm:w-12", typeIconClass(config.color))} />
                       </div>
-                      <div className="absolute top-3 right-3">
-                        <Badge 
-                          variant="outline" 
-                          className={cn(
-                            "text-xs font-medium backdrop-blur-sm",
-                            config.color === 'orange' && "border-orange-500/30 text-orange-400 bg-primary/10",
-                            config.color === 'primary' && "border-primary/30 text-primary bg-primary/10",
-                            config.color === 'emerald' && "border-emerald-500/30 text-emerald-400 bg-emerald-500/10",
-                            config.color === 'violet' && "border-violet-500/30 text-violet-400 bg-violet-500/10"
-                          )}
-                        >
+                      <div className="absolute right-2 top-2 sm:right-3 sm:top-3">
+                        <Badge variant="outline" className={typeBadgeClass(config.color)}>
                           {config.label}
                         </Badge>
                       </div>
                     </div>
-
-                    {/* Content */}
                     <div className="p-4">
-                      <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
+                      <h3 className="mb-2 line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary">
                         {item.title}
                       </h3>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {item.description}
-                        </p>
-                      )}
+                      {item.description ? (
+                        <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
+                      ) : null}
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <RiTimeLine className="w-3 h-3" />
+                        <RiTimeLine className="h-3 w-3" />
                         <span>Added {new Date(item.addedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-
-                    {/* Remove Button (if can edit) */}
-                    {canEdit && (
+                    {canEdit ? (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           handleRemoveItem(item._id)
                         }}
-                        className="absolute top-2 left-2 p-2 rounded-full bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className={cn(
+                          "absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-foreground transition-opacity hover:bg-black/80",
+                          "opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
+                        )}
+                        aria-label="Remove from playlist"
                       >
-                        <RiCloseLine className="w-4 h-4 text-foreground" />
+                        <RiCloseLine className="h-5 w-5" />
                       </button>
-                    )}
+                    ) : null}
                   </Link>
                 )
               })}
             </div>
           ) : (
-            <div className="space-y-2">
+            <ul className="space-y-2">
               {playlist.items.map((item, index) => {
-                const itemType = item.contentType || 'opportunity'
-                const config = typeConfig[itemType] || typeConfig.opportunity
+                const itemType = item.contentType || "opportunity"
+                const config = typeConfig[itemType as keyof typeof typeConfig] || typeConfig.opportunity
                 const Icon = config.icon
                 const detailUrl = `/${config.path}/${item.contentId || item._id}`
 
                 return (
-                  <Link
+                  <li
                     key={item._id}
-                    href={detailUrl}
-                    className={cn(
-                      "group relative flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted hover:border-border transition-all duration-200",
-                      removingItemId === item._id && "opacity-50 pointer-events-none"
-                    )}
+                    className="animate-fade-in-up"
+                    style={{
+                      animationDelay: `${Math.min(index, 12) * 35}ms`,
+                      animationFillMode: "both",
+                    }}
                   >
-                    {/* Number Badge */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center">
-                      <span className="text-xs font-bold text-muted-foreground group-hover:text-muted-foreground transition-colors">
+                    <Link
+                      href={detailUrl}
+                      className={cn(
+                        "group flex min-h-[4.5rem] items-center gap-3 rounded-[1.15rem] border border-border/70 bg-card/70 p-3 transition-all duration-200 active:scale-[0.99] sm:gap-4 sm:p-4",
+                        "hover:border-primary/20 hover:bg-muted/40",
+                        removingItemId === item._id && "pointer-events-none opacity-50",
+                      )}
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-xs font-bold text-muted-foreground">
                         {index + 1}
-                      </span>
-                    </div>
-
-                    {/* Thumbnail/Icon */}
-                    <div className={cn(
-                      "relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden",
-                      "bg-gradient-to-br",
-                      config.gradient,
-                      "border border-border group-hover:scale-105 transition-transform duration-200"
-                    )}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Icon className={cn(
-                          "w-7 h-7",
-                          config.color === 'orange' && "text-orange-400",
-                          config.color === 'primary' && "text-primary",
-                          config.color === 'emerald' && "text-emerald-400",
-                          config.color === 'violet' && "text-violet-400"
-                        )} />
                       </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <div className="flex-1 min-w-0">
-                          {/* Type Badge & Provider */}
-                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <Badge 
-                              variant="outline" 
-                              className={cn(
-                                "text-[10px] font-semibold px-2 py-0.5",
-                                config.color === 'orange' && "border-orange-500/40 text-orange-400 bg-primary/10",
-                                config.color === 'primary' && "border-primary/30 text-primary bg-primary/10",
-                                config.color === 'emerald' && "border-emerald-500/40 text-emerald-400 bg-emerald-500/10",
-                                config.color === 'violet' && "border-violet-500/40 text-violet-400 bg-violet-500/10"
-                              )}
-                            >
-                              {config.label}
-                            </Badge>
-                            {(item.company || item.organization || item.author) && (
-                              <>
-                                <span className="text-muted-foreground text-xs">•</span>
-                                <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                                  <RiBuildingLine className="w-3 h-3 flex-shrink-0" />
+                      <div
+                        className={cn(
+                          "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-gradient-to-br transition-transform duration-200 sm:h-16 sm:w-16",
+                          config.gradient,
+                          "group-hover:scale-[1.03]",
+                        )}
+                      >
+                        <Icon className={cn("h-7 w-7 sm:h-8 sm:w-8", typeIconClass(config.color))} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                              <Badge variant="outline" className={typeBadgeSmallClass(config.color)}>
+                                {config.label}
+                              </Badge>
+                              {(item.company || item.organization || item.author) && (
+                                <span className="flex min-w-0 max-w-full items-center gap-1 truncate text-xs text-muted-foreground">
+                                  <RiBuildingLine className="h-3 w-3 shrink-0" />
                                   <span className="truncate">{item.company || item.organization || item.author}</span>
                                 </span>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Title */}
-                          <h3 className="text-base font-semibold text-foreground group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
-                            {item.title}
-                          </h3>
-
-                          {/* Description */}
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-1 mb-1.5">
-                              {item.description}
-                            </p>
-                          )}
-
-                          {/* Metadata */}
-                          <div className="flex items-center gap-2.5 text-xs text-muted-foreground flex-wrap">
-                            {item.location && (
-                              <span className="flex items-center gap-1">
-                                <RiMapPinLine className="w-3 h-3" />
-                                <span className="truncate">{item.location}</span>
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-<RiTimeLine className="w-3 h-3" />
-                        Added {new Date(item.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
-                            {item.addedBy && (
-                              <>
-                                <span>•</span>
-                                <span className="truncate">
-                                  by {item.addedBy.firstName || item.addedBy.email.split('@')[0]}
+                              )}
+                            </div>
+                            <h3 className="line-clamp-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary sm:line-clamp-1">
+                              {item.title}
+                            </h3>
+                            {item.description ? (
+                              <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{item.description}</p>
+                            ) : null}
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                              {item.location ? (
+                                <span className="flex max-w-[10rem] items-center gap-1 truncate sm:max-w-none">
+                                  <RiMapPinLine className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{item.location}</span>
                                 </span>
-                              </>
-                            )}
+                              ) : null}
+                              <span className="flex items-center gap-1">
+                                <RiTimeLine className="h-3 w-3" />
+                                {new Date(item.addedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                              </span>
+                              {item.addedBy ? (
+                                <span className="truncate">
+                                  · {item.addedBy.firstName || item.addedBy.email.split("@")[0]}
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              window.open(detailUrl, '_blank')
-                            }}
-                          >
-                            <RiExternalLinkLine className="w-4 h-4" />
-                          </Button>
-
-                          {canEdit && (
+                          <div className="flex shrink-0 items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                             <Button
+                              type="button"
                               variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                              size="icon"
+                              className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
-                                handleRemoveItem(item._id)
+                                window.open(detailUrl, "_blank")
                               }}
+                              aria-label="Open in new tab"
                             >
-                              <RiCloseLine className="w-4 h-4" />
+                              <RiExternalLinkLine className="h-4 w-4" />
                             </Button>
-                          )}
+                            {canEdit ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-red-500/10 hover:text-destructive"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleRemoveItem(item._id)
+                                }}
+                                aria-label="Remove from playlist"
+                              >
+                                <RiCloseLine className="h-4 w-4" />
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Hover Indicator */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary rounded-l-full group-hover:h-8 transition-all duration-200 opacity-0 group-hover:opacity-100" />
-                  </Link>
+                    </Link>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
-        </div>
+        </section>
       </div>
 
       {/* Edit Modal */}

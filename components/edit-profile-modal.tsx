@@ -297,6 +297,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
         bio: bio || null,
         headline: headline || null,
         website: website || null,
+        phoneNumber: phoneNumber || null,
         skills,
         work: workCompany || workTitle ? { company: workCompany, title: workTitle } : null,
         education: educationSchool || educationDegree || educationField 
@@ -380,7 +381,8 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSuccess }
           institution,
           aspirations,
           onboardingSkills: skills
-        } : null
+        } : null,
+        phoneNumber: phoneNumber || null
       })
     } catch (err) {
       console.error('Error saving profile:', err)

@@ -1,9 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter, usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +24,8 @@ import PaymentDetails from '@/components/payment-details'
 import { EditContentModal } from '@/components/edit-content-modal'
 import { PromoteContentModal } from '@/components/promote-content-modal'
 import { AuthRequiredCard } from '@/components/auth-required-card'
+import ProviderDashboardSidebar from '@/components/provider/provider-dashboard-sidebar'
+import ProviderDashboardBottomNav from '@/components/provider/provider-dashboard-bottom-nav'
 import { 
   ArrowRight,
   TrendingUp,
@@ -41,7 +41,6 @@ import {
   Heart,
   MapPin,
   Building,
-  CheckCircle,
   AlertCircle,
   RefreshCw,
   Crown,
@@ -54,13 +53,8 @@ import {
   FileText,
   Send,
   Home,
-  Menu,
-  X,
-  ChevronRight,
-  Sparkles,
   LayoutDashboard,
   MoreVertical,
-  DollarSign
 } from 'lucide-react'
 
 interface ProviderStats {
@@ -119,15 +113,243 @@ interface Application {
   notes?: string
 }
 
+type ProviderTab = 'overview' | 'content' | 'promotions' | 'analytics'
+
+const DASHBOARD_PANEL_CLASS = "border border-border/60 bg-card/70 backdrop-blur-sm"
+const DASHBOARD_PANEL_HEADER_CLASS = "p-4 md:p-6 pb-3 md:pb-4"
+
+function DashboardPanel({
+  icon: Icon,
+  title,
+  children,
+  action,
+}: {
+  icon: any
+  title: string
+  children: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <Card className={DASHBOARD_PANEL_CLASS}>
+      <CardHeader className={DASHBOARD_PANEL_HEADER_CLASS}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="flex items-center text-foreground text-base md:text-lg">
+            <Icon className="mr-2 h-4 w-4 text-primary md:h-5 md:w-5" />
+            {title}
+          </CardTitle>
+          {action}
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 md:p-6 pt-0">{children}</CardContent>
+    </Card>
+  )
+}
+
+function DashboardEmptyState({
+  icon: Icon,
+  title,
+  description,
+  ctaHref,
+  ctaLabel,
+}: {
+  icon: any
+  title: string
+  description: string
+  ctaHref?: string
+  ctaLabel?: string
+}) {
+  return (
+    <div className="py-8 text-center md:py-12">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-primary/10 md:h-16 md:w-16">
+        <Icon className="h-7 w-7 text-primary md:h-8 md:w-8" />
+      </div>
+      <h3 className="mb-2 text-base font-semibold text-foreground md:text-lg">{title}</h3>
+      <p className="mb-4 px-4 text-xs text-muted-foreground md:text-sm">{description}</p>
+      {ctaHref && ctaLabel ? (
+        <Button asChild className="min-h-11 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
+          <Link href={ctaHref}>
+            {ctaLabel}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      ) : null}
+    </div>
+  )
+}
+
+function DashboardStatCard({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  iconClassName,
+  iconWrapClassName,
+}: {
+  label: string
+  value: ReactNode
+  hint?: string
+  icon: any
+  iconClassName?: string
+  iconWrapClassName?: string
+}) {
+  return (
+    <Card className="border border-border/60 bg-card/70 backdrop-blur-sm transition-all hover:border-primary/25 hover:bg-card">
+      <CardContent className="p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium text-muted-foreground md:text-sm">{label}</p>
+            <p className="mt-1 text-xl font-bold text-foreground md:text-3xl">{value}</p>
+            {hint ? <p className="mt-0.5 text-[10px] text-muted-foreground md:text-xs">{hint}</p> : null}
+          </div>
+          <div
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-xl border border-border flex items-center justify-center md:h-12 md:w-12",
+              iconWrapClassName,
+            )}
+          >
+            <Icon className={cn("h-5 w-5 md:h-6 md:w-6", iconClassName)} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ProviderContentCard({
+  item,
+  config,
+  getStatusColor,
+  getStatusText,
+  getLocationString,
+  showActions = false,
+  showTags = false,
+  showSaves = false,
+  onPromote,
+  onEdit,
+  onView,
+  onDelete,
+  onStatusUpdate,
+}: {
+  item: PostedItem
+  config: { icon: any; bg: string; border: string; text: string; label: string }
+  getStatusColor: (status: string, isApproved: boolean) => string
+  getStatusText: (status: string, isApproved: boolean) => string
+  getLocationString: (location?: any) => string
+  showActions?: boolean
+  showTags?: boolean
+  showSaves?: boolean
+  onPromote?: (item: PostedItem) => void
+  onEdit?: (item: PostedItem) => void
+  onView?: (item: PostedItem) => void
+  onDelete?: (item: PostedItem) => void
+  onStatusUpdate: () => void
+}) {
+  const Icon = config.icon
+  return (
+    <div className="rounded-[1rem] border border-border/60 bg-card/70 p-3 transition-all hover:border-primary/20 hover:bg-card md:p-4">
+      <div className="flex items-start gap-3">
+        <div className={cn("h-9 w-9 md:h-10 md:w-10 rounded-xl flex items-center justify-center shrink-0 border", config.bg, config.border)}>
+          <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h4 className={cn("mb-1 font-medium text-foreground text-sm md:text-base", showActions ? "line-clamp-2" : "line-clamp-1")}>
+                {item.title}
+              </h4>
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="capitalize">{config.label}</span>
+                <span>•</span>
+                <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+                <Badge className={cn("text-xs", getStatusColor(item.status, item.isApproved))}>
+                  {getStatusText(item.status, item.isApproved)}
+                </Badge>
+              </div>
+
+              {showTags && item.tags && item.tags.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {item.tags.slice(0, 3).map((tag, index) => (
+                    <Badge key={index} variant="outline" className="border-border text-xs text-muted-foreground">
+                      {tag}
+                    </Badge>
+                  ))}
+                  {item.tags.length > 3 ? (
+                    <Badge variant="outline" className="border-border text-xs text-muted-foreground">
+                      +{item.tags.length - 3}
+                    </Badge>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {showActions ? (
+              <div className="flex shrink-0 items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={() => onPromote?.(item)} className="h-8 w-8 p-0 text-primary/80 hover:bg-primary/10 hover:text-primary" title="Promote">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => onEdit?.(item)} className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted hover:text-foreground" title="Edit">
+                  <Edit className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => onView?.(item)} className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted hover:text-foreground" title="View">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => onDelete?.(item)} className="h-8 w-8 p-0 text-red-400/60 hover:bg-red-500/10 hover:text-red-400" title="Delete">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Eye className="h-3.5 w-3.5" />
+              <span>{item.metrics?.viewCount || 0}{showActions ? " views" : ""}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Heart className="h-3.5 w-3.5 text-red-400" />
+              <span>{item.metrics?.likeCount || 0}{showActions ? " likes" : ""}</span>
+            </div>
+            {showSaves ? (
+              <div className="flex items-center gap-1.5">
+                <Bookmark className="h-3.5 w-3.5 text-primary" />
+                <span>{item.metrics?.saveCount || 0} saves</span>
+              </div>
+            ) : null}
+            {item.location ? (
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="max-w-[120px] truncate">{getLocationString(item.location)}</span>
+              </div>
+            ) : null}
+          </div>
+
+          {item.paymentStatus && item.paymentStatus !== "not_required" ? (
+            <div className="mt-3 border-t border-border pt-3">
+              <PaymentDetails
+                contentId={item._id}
+                contentType={item.type}
+                paymentStatus={item.paymentStatus}
+                paymentAmount={item.paymentAmount}
+                paymentReference={item.paymentReference}
+                paymentReceipt={item.paymentReceipt}
+                paymentNotes={item.paymentNotes}
+                onStatusUpdate={onStatusUpdate}
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ProviderDashboard() {
   const { setHideNavbar, setHideFooter } = usePage()
   const { user, profile, isLoading: authLoading } = useAuth()
-  const router = useRouter()
-  const pathname = usePathname()
-  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'promotions' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<ProviderTab>('overview')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   
   // Dashboard data state
   const [stats, setStats] = useState<ProviderStats>({
@@ -420,10 +642,10 @@ export default function ProviderDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-page">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading provider dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] px-4">
+        <div className="text-center rounded-[1.25rem] border border-border/70 bg-card/80 p-8 backdrop-blur-sm">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground text-body-sm">Loading provider dashboard...</p>
         </div>
       </div>
     )
@@ -442,16 +664,16 @@ export default function ProviderDashboard() {
 
   if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-page px-4">
-        <div className="text-center max-w-md">
-          <Crown className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+      <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] px-4">
+        <div className="text-center max-w-md rounded-[1.25rem] border border-border/70 bg-card/80 p-6 backdrop-blur-sm">
+          <Crown className="h-12 w-12 text-primary mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">Provider Access Required</h2>
-          <p className="text-muted-foreground mb-4">You need to be an opportunity provider to access this dashboard</p>
+          <p className="text-muted-foreground mb-4 text-body-sm">You need to be an opportunity provider to access this dashboard.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+            <Button asChild variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl min-h-11">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
-            <Button asChild className="bg-primary hover:bg-primary/90 rounded-xl">
+            <Button asChild className="bg-primary hover:bg-primary/90 rounded-2xl min-h-11 text-primary-foreground">
               <Link href="/profile/settings">Upgrade Account</Link>
             </Button>
           </div>
@@ -460,17 +682,11 @@ export default function ProviderDashboard() {
     )
   }
 
-  const avatarUrl =
-    (profile as any)?.profileImage ||
-    (user as any)?.profileImage ||
-    null
-
-  const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider' },
-    { id: 'content', label: 'Content', icon: FileText, href: '/dashboard/provider' },
-    { id: 'promotions', label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions' },
-    // Wallet is hidden from provider nav for now; page remains reachable via direct URL if needed
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/provider' },
+  const navItems: { id: ProviderTab; label: string; icon: any }[] = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'content', label: 'Content', icon: FileText },
+    { id: 'promotions', label: 'Promotions', icon: Zap },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   ]
 
   const quickLinks = [
@@ -479,149 +695,37 @@ export default function ProviderDashboard() {
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
 
+  const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
+  const postingLimit = user ? getPostingLimit(user?.isPremium, user?.role) : 0
+  const premiumPostingAccess = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
+
   return (
-    <div className="min-h-screen bg-page flex">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
       <div className="flex flex-1 min-w-0">
-        {/* Desktop Sidebar - Hidden on mobile */}
-        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
-          {/* Sidebar Header */}
-          <div className="p-6 border-b border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
-                <Image
-                  src="/images/Yellow and Black Modern Media Company Logo (14).png"
-                  alt="GlowUp"
-                  fill
-                  className="object-contain"
-                />
-              </Link>
-              <div>
-                <h1 className="text-base font-bold text-foreground">Provider Hub</h1>
-                <p className="text-xs text-muted-foreground">Dashboard</p>
-              </div>
-            </div>
-          
-            {/* User Info */}
-            <div className="p-3 rounded-xl bg-muted border border-border flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-border">
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt={user?.firstName || user?.email || 'Provider avatar'}
-                    width={36}
-                    height={36}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xs font-semibold text-orange-400">
-                    {(user?.firstName || user?.email || '?').charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {user?.firstName || user?.email?.split('@')[0]}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id === 'wallet') {
-                    router.push(item.href)
-                    return
-                  }
-                  setActiveTab(item.id as any)
-                }}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive 
-                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-          </nav>
-
-          {/* Quick Actions */}
-          <div className="p-4 border-t border-border space-y-2">
-          {quickLinks.map((link) => {
-            const Icon = link.icon
-            return (
-              <Button
-                key={link.label}
-                asChild
-                variant={link.variant}
-                className={cn(
-                  "w-full justify-start rounded-xl",
-                  link.variant === 'default' 
-                    ? "bg-primary hover:bg-primary/90" 
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Link href={link.href}>
-                  <Icon className="w-4 h-4 mr-2" />
-                  {link.label}
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
-
-        {/* Stats Summary: posts used vs limit */}
-        <div className="p-4 border-t border-border">
-          <div className="p-3 rounded-xl bg-muted border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Your posts</span>
-              <span className="text-lg font-bold text-orange-400">
-                {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources} of {getPostingLimit(user?.isPremium, user?.role)} max
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mb-2">
-              {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium: 20 posts max' : 'Free: 5 posts max (all statuses count)'}
-            </p>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              {(() => {
-                const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
-                const limit = getPostingLimit(user?.isPremium, user?.role)
-                const percentage = limit > 0 ? Math.min((totalPostings / limit) * 100, 100) : 0
-                return (
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${percentage}%` }}
-                  />
-                )
-              })()}
-            </div>
-          </div>
-        </div>
-        </aside>
+        <ProviderDashboardSidebar
+          user={user as any}
+          profile={profile as any}
+          navItems={navItems}
+          quickLinks={quickLinks}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          totalPostings={totalPostings}
+          postingLimit={postingLimit}
+          hasPremium={premiumPostingAccess}
+        />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
-          <div className="flex items-center justify-between h-14 px-4">
+        <header className="lg:hidden sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-border/70">
+          <div className="flex items-center justify-between h-14 px-4 pt-[max(0rem,env(safe-area-inset-top))]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Crown className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <Crown className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-foreground">Provider Hub</h1>
+                <h1 className="text-body-sm font-semibold text-foreground">Provider Hub</h1>
+                <p className="text-caption text-muted-foreground">Workspace</p>
               </div>
             </div>
             
@@ -653,20 +757,20 @@ export default function ProviderDashboard() {
                 >
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/posting" className="flex items-center gap-3 w-full">
-                      <Plus className="h-4 w-4 text-orange-400" />
+                      <Plus className="h-4 w-4 text-primary" />
                       <span>Post Content</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/dashboard/provider/settings" className="flex items-center gap-3 w-full">
-                      <Settings className="h-4 w-4 text-orange-400" />
+                      <Settings className="h-4 w-4 text-primary" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-muted my-1" />
                   <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
                     <Link href="/" className="flex items-center gap-3 w-full">
-                      <Home className="h-4 w-4 text-orange-400" />
+                      <Home className="h-4 w-4 text-primary" />
                       <span>Home</span>
                     </Link>
                   </DropdownMenuItem>
@@ -684,75 +788,64 @@ export default function ProviderDashboard() {
             </div>
           </div>
 
-          {/* Mobile Sidebar Drawer */}
-          {sidebarOpen && (
-            <>
-              <div 
-                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
-                <div className="p-4 space-y-1">
-                  {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = activeTab === item.id
-                    
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id as any)
-                          setSidebarOpen(false)
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                          isActive 
-                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                        <span>{item.label}</span>
-                      </button>
-                    )
-                  })}
-                  
-                  <div className="pt-4 mt-4 border-t border-border space-y-2">
-                    {quickLinks.map((link) => {
-                      const Icon = link.icon
-                      return (
-                        <Button
-                          key={link.label}
-                          asChild
-                          variant={link.variant}
-                          className={cn(
-                            "w-full justify-start",
-                            link.variant === 'default' 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                          )}
-                          onClick={() => setSidebarOpen(false)}
-                        >
-                          <Link href={link.href}>
-                            <Icon className="w-4 h-4 mr-2" />
-                            {link.label}
-                          </Link>
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 md:py-8 lg:px-8">
+            <div className="mb-4 lg:hidden">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                {navItems.map((item) => {
+                  const active = activeTab === item.id
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={cn(
+                        "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-body-sm font-semibold transition-all",
+                        active
+                          ? "border-primary/30 bg-primary/12 text-primary"
+                          : "border-border/60 bg-card/70 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="mb-4 rounded-[1.25rem] border border-border/70 bg-card/75 p-4 backdrop-blur-sm sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-overline uppercase tracking-[0.14em] text-muted-foreground">Provider workspace</p>
+                  <h1 className="mt-1 text-display-sm text-foreground sm:text-display-md">
+                    Build and scale your listings
+                  </h1>
+                  <p className="mt-1 text-body-sm text-muted-foreground">
+                    Publish faster, monitor engagement, and keep your funnel moving from one dashboard.
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 sm:w-[19rem]">
+                  <div className="rounded-xl border border-border/60 bg-card/70 p-2.5 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Live</p>
+                    <p className="text-body font-semibold text-foreground tabular-nums">{stats.activePostings}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-card/70 p-2.5 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Pending</p>
+                    <p className="text-body font-semibold text-foreground tabular-nums">{stats.pendingApprovals}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-card/70 p-2.5 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Views</p>
+                    <p className="text-body font-semibold text-foreground tabular-nums">{stats.totalViews}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
             {/* Error Message */}
             {error && (
-              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-red-400 break-words">{error}</p>
@@ -795,7 +888,7 @@ export default function ProviderDashboard() {
             {/* Onboarding Call-to-Action */}
             {onboardingStatus && !onboardingStatus.isCompleted && (
               <div className="mb-4 md:mb-8">
-                <Card className="border border-primary/30 bg-primary/10">
+                <Card className="border border-primary/25 bg-gradient-to-br from-primary/12 to-primary/[0.06] backdrop-blur-sm">
                   <CardContent className="p-4 md:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -825,7 +918,7 @@ export default function ProviderDashboard() {
                           )}
                         </div>
                       </div>
-                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-foreground rounded-xl w-full sm:w-auto">
+                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl h-11 w-full sm:w-auto">
                         <Link href="/dashboard/provider/onboarding">
                           <Building className="h-4 w-4 mr-2" />
                           {onboardingStatus.completionPercentage > 0 ? 'Continue' : 'Start Setup'}
@@ -839,8 +932,8 @@ export default function ProviderDashboard() {
                     
             {/* Loading State */}
             {isLoading && (
-              <div className="text-center py-12 md:py-16">
-                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <div className="text-center py-12 md:py-16">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-sm md:text-base text-muted-foreground">Loading dashboard data...</p>
               </div>
             )}
@@ -849,419 +942,187 @@ export default function ProviderDashboard() {
             {!isLoading && activeTab === 'overview' && (
               <div className="space-y-4 md:space-y-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                  <Card className="border border-border bg-card hover:bg-muted transition-all">
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Posts</p>
-                          <p className="text-xl md:text-3xl font-bold text-orange-400 mt-1">
-                            {stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources} of {getPostingLimit(user?.isPremium, user?.role)}
-                          </p>
-                          <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
-                            {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? '20 max (Premium)' : '5 max (Free)'}
-                          </p>
-                        </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
-                          <FileText className="h-5 w-5 md:h-6 md:w-6 text-orange-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border border-border bg-card hover:bg-muted transition-all">
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Views</p>
-                          <p className="text-xl md:text-3xl font-bold text-primary mt-1">{stats.totalViews}</p>
-                        </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
-                          <Eye className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border border-border bg-card hover:bg-muted transition-all">
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Applications</p>
-                          <p className="text-xl md:text-3xl font-bold text-emerald-400 mt-1">{stats.totalApplications}</p>
-                        </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
-                          <Send className="h-5 w-5 md:h-6 md:w-6 text-emerald-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border border-border bg-card hover:bg-muted transition-all">
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending</p>
-                          <p className="text-xl md:text-3xl font-bold text-yellow-400 mt-1">{stats.pendingApprovals}</p>
-                        </div>
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center border border-border flex-shrink-0">
-                          <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+                  <DashboardStatCard
+                    label="Posts"
+                    value={
+                      <span className="text-primary">
+                        {totalPostings} of {postingLimit}
+                      </span>
+                    }
+                    hint={premiumPostingAccess ? "20 max (Premium)" : "5 max (Free)"}
+                    icon={FileText}
+                    iconWrapClassName="border-primary/20 bg-primary/10"
+                    iconClassName="text-primary"
+                  />
+                  <DashboardStatCard
+                    label="Views"
+                    value={<span className="text-primary">{stats.totalViews}</span>}
+                    icon={Eye}
+                    iconWrapClassName="bg-primary/10"
+                    iconClassName="text-primary"
+                  />
+                  <DashboardStatCard
+                    label="Applications"
+                    value={<span className="text-emerald-400">{stats.totalApplications}</span>}
+                    icon={Send}
+                    iconWrapClassName="bg-emerald-500/10"
+                    iconClassName="text-emerald-400"
+                  />
+                  <DashboardStatCard
+                    label="Pending"
+                    value={<span className="text-yellow-400">{stats.pendingApprovals}</span>}
+                    icon={Clock}
+                    iconWrapClassName="bg-yellow-500/10"
+                    iconClassName="text-yellow-400"
+                  />
                 </div>
 
                 {/* Quick Actions */}
-                <Card className="border border-border bg-card">
-                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
-                      <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                      Quick Actions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0">
+                <DashboardPanel icon={Zap} title="Quick Actions">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                      <Button asChild className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 bg-primary hover:bg-primary/90 rounded-xl">
+                      <Button asChild className="h-auto min-h-11 p-3 md:p-4 flex flex-col items-center space-y-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl">
                         <Link href="/dashboard/provider/posting">
                           <Target className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Opportunity</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+                      <Button asChild variant="outline" className="h-auto min-h-11 p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl">
                         <Link href="/dashboard/provider/posting">
                           <Calendar className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Event</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+                      <Button asChild variant="outline" className="h-auto min-h-11 p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl">
                         <Link href="/dashboard/provider/posting">
                           <Briefcase className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Job</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="h-auto p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+                      <Button asChild variant="outline" className="h-auto min-h-11 p-3 md:p-4 flex flex-col items-center space-y-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl">
                         <Link href="/dashboard/provider/posting">
                           <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="text-xs md:text-sm">Resource</span>
                         </Link>
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                </DashboardPanel>
 
                 {/* Recent Activity */}
-                <Card className="border border-border bg-card">
-                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
-                      <Activity className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                      Recent Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0">
+                <DashboardPanel icon={Activity} title="Recent Activity">
                     {postedItems.length > 0 ? (
                       <div className="space-y-3 md:space-y-4">
                         {postedItems.slice(0, 5).map((item) => {
                           const config = getTypeConfig(item.type)
-                          const Icon = config.icon
-                          
                           return (
-                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-muted border border-border hover:bg-muted transition-all">
-                              <div className="flex items-start gap-3">
-                                <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
-                                  <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
-                                </div>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-foreground mb-1 line-clamp-1 text-sm md:text-base">{item.title}</h4>
-                                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
-                                    <span className="capitalize">{config.label}</span>
-                                    <span>•</span>
-                                    <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
-                                    <Badge className={cn("text-xs", getStatusColor(item.status, item.isApproved))}>
-                                      {getStatusText(item.status, item.isApproved)}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                                    <div className="flex items-center gap-1.5">
-                                      <Eye className="h-3.5 w-3.5" />
-                                      <span>{item.metrics?.viewCount || 0}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <Heart className="h-3.5 w-3.5 text-red-400" />
-                                      <span>{item.metrics?.likeCount || 0}</span>
-                                    </div>
-                                    {item.location && (
-                                      <div className="flex items-center gap-1.5">
-                                        <MapPin className="h-3.5 w-3.5" />
-                                        <span className="truncate max-w-[120px]">{getLocationString(item.location)}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  {item.paymentStatus && item.paymentStatus !== 'not_required' && (
-                                    <div className="mt-3 pt-3 border-t border-border">
-                                      <PaymentDetails
-                                        contentId={item._id}
-                                        contentType={item.type}
-                                        paymentStatus={item.paymentStatus}
-                                        paymentAmount={item.paymentAmount}
-                                        paymentReference={item.paymentReference}
-                                        paymentReceipt={item.paymentReceipt}
-                                        paymentNotes={item.paymentNotes}
-                                        onStatusUpdate={loadProviderData}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                            <ProviderContentCard
+                              key={item._id}
+                              item={item}
+                              config={config}
+                              getStatusColor={getStatusColor}
+                              getStatusText={getStatusText}
+                              getLocationString={getLocationString}
+                              onStatusUpdate={loadProviderData}
+                            />
                           )
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 md:py-12">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
-                          <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
-                        </div>
-                        <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
-                          Start by posting your first opportunity, event, or job
-                        </p>
-                        <Button asChild className="bg-primary hover:bg-primary/90 text-foreground rounded-xl">
-                          <Link href="/dashboard/provider/posting">
-                            Post Your First Content
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Link>
-                        </Button>
-                      </div>
+                      <DashboardEmptyState
+                        icon={FileText}
+                        title="No Content Yet"
+                        description="Start by posting your first opportunity, event, or job"
+                        ctaHref="/dashboard/provider/posting"
+                        ctaLabel="Post Your First Content"
+                      />
                     )}
-                  </CardContent>
-                </Card>
+                </DashboardPanel>
               </div>
             )}
 
             {/* Content Tab */}
             {!isLoading && activeTab === 'content' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-border bg-card">
-                  <CardHeader className="p-4 md:p-6 pb-3 md:pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <CardTitle className="flex items-center text-foreground text-base md:text-lg">
-                        <FileText className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                        My Content
-                      </CardTitle>
-                      <Button asChild size="sm" className="bg-primary hover:bg-primary/90 rounded-xl w-full sm:w-auto">
-                        <Link href="/dashboard/provider/posting">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Post New
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0">
+                <DashboardPanel
+                  icon={FileText}
+                  title="My Content"
+                  action={
+                    <Button asChild size="sm" className="w-full rounded-xl bg-primary hover:bg-primary/90 sm:w-auto">
+                      <Link href="/dashboard/provider/posting">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Post New
+                      </Link>
+                    </Button>
+                  }
+                >
                     {postedItems.length > 0 ? (
                       <div className="space-y-3 md:space-y-4">
                         {postedItems.map((item) => {
                           const config = getTypeConfig(item.type)
-                          const Icon = config.icon
-                          
                           return (
-                            <div key={item._id} className="p-3 md:p-4 rounded-xl bg-muted border border-border hover:bg-muted transition-all">
-                              <div className="flex items-start gap-3">
-                                <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border", config.bg, config.border)}>
-                                  <Icon className={cn("h-4 w-4 md:h-5 md:w-5", config.text)} />
-                                </div>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between gap-3 mb-2">
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-medium text-foreground mb-1 line-clamp-2 text-sm md:text-base">{item.title}</h4>
-                                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
-                                        <span className="capitalize">{config.label}</span>
-                                        <span>•</span>
-                                        <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
-                                        <Badge className={cn("text-xs", getStatusColor(item.status, item.isApproved))}>
-                                          {getStatusText(item.status, item.isApproved)}
-                                        </Badge>
-                                      </div>
-                                      
-                                      {item.tags && item.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2">
-                                          {item.tags.slice(0, 3).map((tag, index) => (
-                                            <Badge key={index} variant="outline" className="text-xs border-border text-muted-foreground">
-                                              {tag}
-                                            </Badge>
-                                          ))}
-                                          {item.tags.length > 3 && (
-                                            <Badge variant="outline" className="text-xs border-border text-muted-foreground">
-                                              +{item.tags.length - 3}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-1 flex-shrink-0">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handlePromoteContent(item)}
-                                        className="h-8 w-8 p-0 text-primary/80 hover:text-primary hover:bg-primary/10"
-                                        title="Promote"
-                                      >
-                                        <TrendingUp className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handleEditContent(item)}
-                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                                        title="Edit"
-                                      >
-                                        <Edit className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handleViewContent(item)}
-                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                                        title="View"
-                                      >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handleDeleteContent(item)}
-                                        className="h-8 w-8 p-0 text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
-                                        title="Delete"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
-                                    <div className="flex items-center gap-1.5">
-                                      <Eye className="h-3.5 w-3.5" />
-                                      <span>{item.metrics?.viewCount || 0} views</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <Heart className="h-3.5 w-3.5 text-red-400" />
-                                      <span>{item.metrics?.likeCount || 0} likes</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <Bookmark className="h-3.5 w-3.5 text-primary" />
-                                      <span>{item.metrics?.saveCount || 0} saves</span>
-                                    </div>
-                                    {item.location && (
-                                      <div className="flex items-center gap-1.5">
-                                        <MapPin className="h-3.5 w-3.5" />
-                                        <span className="truncate max-w-[120px]">{getLocationString(item.location)}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  {item.paymentStatus && item.paymentStatus !== 'not_required' && (
-                                    <div className="mt-3 pt-3 border-t border-border">
-                                      <PaymentDetails
-                                        contentId={item._id}
-                                        contentType={item.type}
-                                        paymentStatus={item.paymentStatus}
-                                        paymentAmount={item.paymentAmount}
-                                        paymentReference={item.paymentReference}
-                                        paymentReceipt={item.paymentReceipt}
-                                        paymentNotes={item.paymentNotes}
-                                        onStatusUpdate={loadProviderData}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                            <ProviderContentCard
+                              key={item._id}
+                              item={item}
+                              config={config}
+                              getStatusColor={getStatusColor}
+                              getStatusText={getStatusText}
+                              getLocationString={getLocationString}
+                              showActions
+                              showTags
+                              showSaves
+                              onPromote={handlePromoteContent}
+                              onEdit={handleEditContent}
+                              onView={handleViewContent}
+                              onDelete={handleDeleteContent}
+                              onStatusUpdate={loadProviderData}
+                            />
                           )
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 md:py-12">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
-                          <FileText className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
-                        </div>
-                        <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">No Content Yet</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
-                          Start by posting your first opportunity, event, or job
-                        </p>
-                        <Button asChild className="bg-primary hover:bg-primary/90 text-foreground rounded-xl">
-                          <Link href="/dashboard/provider/posting">
-                            Post Your First Content
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Link>
-                        </Button>
-                      </div>
+                      <DashboardEmptyState
+                        icon={FileText}
+                        title="No Content Yet"
+                        description="Start by posting your first opportunity, event, or job"
+                        ctaHref="/dashboard/provider/posting"
+                        ctaLabel="Post Your First Content"
+                      />
                     )}
-                  </CardContent>
-                </Card>
+                </DashboardPanel>
               </div>
             )}
 
             {/* Promotions Tab */}
             {!isLoading && activeTab === 'promotions' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-border bg-card">
-                  <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
-                      <Zap className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                      Promotions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0">
-                    <div className="text-center py-8 md:py-12">
-                      <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
-                        <Zap className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
-                      </div>
-                      <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Promote Your Content</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mb-6 px-4">
-                        Boost the visibility of your opportunities, events, jobs, and resources
-                      </p>
-                      <Button 
-                        asChild
-                        className="bg-primary hover:bg-primary/90 text-foreground rounded-xl"
-                      >
-                        <Link href="/dashboard/provider/promotions">
-                          <Zap className="h-4 w-4 mr-2" />
-                          Manage Promotions
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DashboardPanel icon={Zap} title="Promotions">
+                  <DashboardEmptyState
+                    icon={Zap}
+                    title="Promote Your Content"
+                    description="Boost the visibility of your opportunities, events, jobs, and resources"
+                  />
+                  <div className="-mt-4 flex justify-center">
+                    <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Link href="/dashboard/provider/promotions">
+                        <Zap className="mr-2 h-4 w-4" />
+                        Manage Promotions
+                      </Link>
+                    </Button>
+                  </div>
+                </DashboardPanel>
               </div>
             )}
 
             {/* Analytics Tab */}
             {!isLoading && activeTab === 'analytics' && (
               <div className="space-y-4 md:space-y-6">
-                <Card className="border border-border bg-card">
-                  <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="flex items-center text-foreground text-base md:text-lg">
-                      <BarChart3 className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-400" />
-                      Analytics & Insights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 pt-0">
-                    <div className="text-center py-8 md:py-12">
-                      <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
-                        <BarChart3 className="h-7 w-7 md:h-8 md:w-8 text-orange-400" />
-                      </div>
-                      <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">Analytics Coming Soon</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mb-4 px-4">
-                        Detailed analytics and insights for your content performance will be available here
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DashboardPanel icon={BarChart3} title="Analytics & Insights">
+                  <DashboardEmptyState
+                    icon={BarChart3}
+                    title="Analytics Coming Soon"
+                    description="Detailed analytics and insights for your content performance will be available here"
+                  />
+                </DashboardPanel>
               </div>
             )}
           </div>
@@ -1280,42 +1141,7 @@ export default function ProviderDashboard() {
           onSuccess={loadProviderData}
         />
 
-        {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
-          <div className="flex items-center justify-around h-16 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activeTab === item.id
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.id === 'wallet') {
-                      router.push(item.href)
-                      return
-                    }
-                    setActiveTab(item.id as any)
-                  }}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
-                    isActive ? "text-orange-400" : "text-muted-foreground"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                  <span
-                    className={cn(
-                      "text-[10px] font-medium truncate w-full text-center",
-                      isActive && "text-orange-400"
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </nav>
+        <ProviderDashboardBottomNav navItems={navItems} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
     </div>
     </div>

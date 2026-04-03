@@ -4,66 +4,45 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 
 interface UseCursorPaginationOptions<T> {
   fetchFunction: (lastId: string | null) => Promise<{ items: T[], lastId: string | null, hasMore: boolean }>
-  storageKey?: string // localStorage key to cache lastId
+  /** Used by page for session-store keying only; no cross-session persistence */
+  storageKey?: string
   resetOnMount?: boolean // Whether to reset on component mount
   limit?: number
+  /** Session-restored state: when provided, skip initial fetch and use these instead (from page-state-session) */
+  initialItems?: T[]
+  initialLastId?: string | null
+  /** When false, defer initial fetch until it becomes true (e.g. wait for auth). Default true. */
+  enabled?: boolean
 }
 
 /**
- * Custom hook for cursor-based pagination
- * Stores last item ID in localStorage and uses it for next fetch
+ * Custom hook for cursor-based pagination.
+ * Does not use localStorage; cache is session-scoped and provided by the page via initialItems/initialLastId.
+ * On refresh, no restored state is passed so the feed starts fresh.
  */
 export function useCursorPagination<T extends { _id: string }>({
   fetchFunction,
-  storageKey,
+  storageKey: _storageKey,
   resetOnMount = false,
-  limit = 20
+  limit = 20,
+  initialItems,
+  initialLastId,
+  enabled = true,
 }: UseCursorPaginationOptions<T>) {
-  const [items, setItems] = useState<T[]>([])
+  const hasRestored = Array.isArray(initialItems) && initialItems.length >= 0 && initialLastId !== undefined
+  const [items, setItems] = useState<T[]>(() => (hasRestored ? (initialItems ?? []) : []))
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const lastIdRef = useRef<string | null>(null)
-  const isInitialLoadRef = useRef(true)
+  const lastIdRef = useRef<string | null>(hasRestored ? (initialLastId ?? null) : null)
+  const initialFetchDoneRef = useRef(false)
   const requestIdRef = useRef(0)
 
-  // Get cached lastId from localStorage
-  const getCachedLastId = useCallback((): string | null => {
-    if (!storageKey || typeof window === 'undefined') return null
-    try {
-      const cached = localStorage.getItem(storageKey)
-      return cached || null
-    } catch {
-      return null
-    }
-  }, [storageKey])
-
-  // Save lastId to localStorage
-  const saveLastId = useCallback((id: string | null) => {
-    if (!storageKey || typeof window === 'undefined') return
-    try {
-      if (id) {
-        localStorage.setItem(storageKey, id)
-      } else {
-        localStorage.removeItem(storageKey)
-      }
-    } catch {
-      // Ignore localStorage errors
-    }
-  }, [storageKey])
-
-  // Clear cached lastId
+  // No localStorage: session-only cache is provided by the page via initialItems/initialLastId
   const clearCache = useCallback(() => {
     lastIdRef.current = null
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey)
-      } catch {
-        // Ignore localStorage errors
-      }
-    }
-  }, [storageKey])
+  }, [])
 
   // Fetch items — ignore results from stale fetches (e.g. after tab switch) so we don't overwrite with wrong tab's data
   const fetchItems = useCallback(async (reset = false) => {
@@ -82,7 +61,7 @@ export function useCursorPagination<T extends { _id: string }>({
     setError(null)
 
     try {
-      const currentLastId = reset ? null : (lastIdRef.current || getCachedLastId())
+      const currentLastId = reset ? null : lastIdRef.current
       const result = await fetchFunction(currentLastId)
 
       if (myRequestId !== requestIdRef.current) return
@@ -100,10 +79,9 @@ export function useCursorPagination<T extends { _id: string }>({
       if (result.items.length > 0) {
         const newLastId = result.lastId || result.items[result.items.length - 1]._id
         lastIdRef.current = newLastId
-        saveLastId(newLastId)
       }
 
-      setHasMore(result.hasMore && result.items.length === limit)
+      setHasMore(result.hasMore)
     } catch (err: any) {
       if (myRequestId !== requestIdRef.current) return
       if (process.env.NODE_ENV === 'development') {
@@ -120,7 +98,7 @@ export function useCursorPagination<T extends { _id: string }>({
         setIsRefreshing(false)
       }
     }
-  }, [fetchFunction, getCachedLastId, saveLastId, clearCache, limit])
+  }, [fetchFunction, clearCache, limit])
 
   // Load more items
   const loadMore = useCallback(() => {
@@ -141,18 +119,16 @@ export function useCursorPagination<T extends { _id: string }>({
     ))
   }, [])
 
-  // Initial load
+  // Initial load: when enabled, run once (skip when session-restored). When enabled is false (e.g. auth loading), defer until enabled.
   useEffect(() => {
-    if (isInitialLoadRef.current) {
-      isInitialLoadRef.current = false
-      if (resetOnMount) {
-        clearCache()
-        fetchItems(true)
-      } else {
-        fetchItems(true)
-      }
-    }
-  }, []) // Only run on mount
+    if (!enabled || initialFetchDoneRef.current) return
+    initialFetchDoneRef.current = true
+    if (hasRestored) return
+    if (resetOnMount) clearCache()
+    fetchItems(true)
+  }, [enabled])
+
+  const getLastId = useCallback((): string | null => lastIdRef.current, [])
 
   return {
     items,
@@ -163,7 +139,8 @@ export function useCursorPagination<T extends { _id: string }>({
     loadMore,
     reset,
     updateItem,
-    clearCache
+    clearCache,
+    getLastId,
   }
 }
 

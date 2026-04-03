@@ -19,8 +19,8 @@ export default function PremiumPage() {
       if (!user) return
 
       setIsStarting(true)
-      // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦2,500 = 250000 kobo.
-      const result = await ApiClient.startPremiumSubscription(250000, {
+      // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦1,500 = 150000 kobo.
+      const result = await ApiClient.startPremiumSubscription(150000, {
         planId: "premium_monthly",
         callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/profile/settings?premium=success` : undefined,
       })
@@ -62,11 +62,11 @@ export default function PremiumPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
-              <Mail className="w-4 h-4 mt-0.5 text-primary" />
+              <BookOpen className="w-4 h-4 mt-0.5 text-primary" />
               <div>
-                <p className="font-medium text-foreground">Weekly premium newsletter</p>
+                <p className="font-medium text-foreground">Premium Resource</p>
                 <p className="text-xs text-muted-foreground">
-                  Curated opportunities, insights, and focus prompts sent to your inbox every week.
+                  Access to a special library of premium guides and resources.
                 </p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function PremiumPage() {
           <CardContent className="space-y-4">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-foreground">₦2,500</span>
+                <span className="text-3xl font-bold text-foreground">₦1,500</span>
                 <span className="text-xs text-muted-foreground">per month</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">

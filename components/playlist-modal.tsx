@@ -75,12 +75,16 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
     try {
       if (editPlaylist) {
         // Update existing playlist
-        const updated = await updatePlaylist(editPlaylist._id, {
+        const updatePayload: Parameters<typeof updatePlaylist>[1] = {
           name: name.trim(),
           description: description.trim(),
           hashtags,
           isPublic
-        })
+        }
+        if (canCreatePremium) {
+          updatePayload.isPremiumPlaylist = isPremiumPlaylist
+        }
+        const updated = await updatePlaylist(editPlaylist._id, updatePayload)
         onSuccess?.(updated)
       } else {
         // Create new playlist
@@ -88,7 +92,8 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           name: name.trim(),
           description: description.trim(),
           hashtags,
-          isPublic
+          isPublic,
+          ...(canCreatePremium && { isPremiumPlaylist })
         })
         onSuccess?.(newPlaylist)
       }

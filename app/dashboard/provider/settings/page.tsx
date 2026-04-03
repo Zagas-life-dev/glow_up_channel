@@ -25,6 +25,8 @@ import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import { AuthRequiredCard } from '@/components/auth-required-card'
 import ApiClient from "@/lib/api-client"
+import ProviderDashboardSidebar from '@/components/provider/provider-dashboard-sidebar'
+import ProviderDashboardBottomNav from '@/components/provider/provider-dashboard-bottom-nav'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { 
@@ -115,7 +117,6 @@ export default function ProviderSettings() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // User profile data
   const [userData, setUserData] = useState({
@@ -385,7 +386,7 @@ export default function ProviderSettings() {
     )
   }
 
-  const navItems = [
+  const settingsTabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/dashboard/provider/settings' },
     { id: 'profile', label: 'Profile', icon: User, href: '/dashboard/provider/settings' },
     { id: 'organization', label: 'Organization', icon: Building2, href: '/dashboard/provider/settings' },
@@ -399,262 +400,72 @@ export default function ProviderSettings() {
     { label: 'Promotions', icon: Zap, href: '/dashboard/provider/promotions', variant: 'outline' as const },
     { label: 'Home', icon: Home, href: '/', variant: 'outline' as const },
   ]
+  const providerNavItems = [
+    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { id: 'content' as const, label: 'Content', icon: FileText },
+    { id: 'promotions' as const, label: 'Promotions', icon: Zap },
+    { id: 'analytics' as const, label: 'Analytics', icon: Settings },
+  ]
+  const providerNavRouteMap = {
+    overview: '/dashboard/provider',
+    content: '/dashboard/provider/posting',
+    promotions: '/dashboard/provider/promotions',
+    analytics: '/dashboard/provider/settings',
+  }
+  const activeProviderTab: 'overview' | 'content' | 'promotions' | 'analytics' =
+    pathname?.startsWith('/dashboard/provider/settings') ? 'analytics' : 'overview'
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-page sticky top-0 h-screen">
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
-              <NextImage
-                src="/images/Yellow and Black Modern Media Company Logo (14).png"
-                alt="GlowUp"
-                fill
-                className="object-contain"
-              />
-            </Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
+      <ProviderDashboardSidebar
+        user={user as any}
+        profile={profile as any}
+        navItems={providerNavItems}
+        quickLinks={quickLinks}
+        activeTab={activeProviderTab}
+        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+        totalPostings={0}
+        postingLimit={20}
+        hasPremium
+      />
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+        <header className="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-border/70">
+          <div className="flex items-center justify-between h-14 px-4 pt-[max(0rem,env(safe-area-inset-top))]">
             <div>
-              <h1 className="text-base font-bold text-foreground">Settings</h1>
-              <p className="text-xs text-muted-foreground">Provider</p>
+              <p className="text-overline uppercase tracking-[0.14em] text-muted-foreground">Provider workspace</p>
+              <h1 className="text-body font-semibold text-foreground">Settings</h1>
             </div>
+            <Button onClick={() => loadProviderData()} variant="ghost" size="sm" disabled={loading} className="h-9 w-9 p-0 text-muted-foreground">
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
           </div>
-          
-          {/* User Info */}
-          <div className="p-3 rounded-xl bg-muted border border-border">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.firstName || user?.email?.split('@')[0]}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                  isActive 
-                    ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-border space-y-2">
-          {quickLinks.map((link) => {
-            const Icon = link.icon
-            return (
-              <Button
-                key={link.label}
-                asChild
-                variant={link.variant}
-                className={cn(
-                  "w-full justify-start",
-                  link.variant === 'default' 
-                    ? "bg-primary hover:bg-primary/90" 
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Link href={link.href}>
-                  <Icon className="w-4 h-4 mr-2" />
-                  {link.label}
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
-
-        {/* Onboarding Status */}
-        {onboardingData && (
-          <div className="p-4 border-t border-border">
-            <div className="p-3 rounded-xl bg-muted border border-border">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">Onboarding</span>
-                <Badge className={cn(
-                  "text-xs",
-                  onboardingData.isCompleted 
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                    : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                )}>
-                  {onboardingData.isCompleted ? 'Complete' : 'In Progress'}
-                </Badge>
-              </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                {(() => {
-                  const percentage = onboardingData.completionPercentage || 0
-                  return (
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  )
-                })()}
-              </div>
-            </div>
-          </div>
-        )}
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header - Only visible on mobile */}
-        <header className="lg:hidden sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
-          <div className="flex items-center justify-between h-14 px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Settings className="w-4 h-4 text-orange-500" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-foreground">Settings</h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => loadProviderData()} 
-                variant="ghost" 
-                size="sm"
-                disabled={loading}
-                className="h-9 w-9 p-0 text-muted-foreground"
-              >
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-              </Button>
-              
-              {/* Quick Actions Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-9 w-9 p-0 text-muted-foreground"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-56 p-2"
-                >
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider" className="flex items-center gap-3 w-full">
-                      <LayoutDashboard className="h-4 w-4 text-orange-400" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider/posting" className="flex items-center gap-3 w-full">
-                      <Plus className="h-4 w-4 text-orange-400" />
-                      <span>Post Content</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/dashboard/provider/promotions" className="flex items-center gap-3 w-full">
-                      <Zap className="h-4 w-4 text-orange-400" />
-                      <span>Promotions</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-muted my-1" />
-                  <DropdownMenuItem asChild className="text-foreground hover:bg-muted rounded-lg cursor-pointer focus:bg-muted focus:text-foreground">
-                    <Link href="/" className="flex items-center gap-3 w-full">
-                      <Home className="h-4 w-4 text-orange-400" />
-                      <span>Home</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {/* <Button 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                variant="ghost" 
-                size="sm"
-                className="h-9 w-9 p-0 text-muted-foreground"
-              >
-                {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              </Button> */}
-            </div>
-          </div>
-
-          {/* Mobile Sidebar Drawer */}
-          {sidebarOpen && (
-            <>
-              <div 
-                className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="fixed left-0 top-14 bottom-20 w-64 bg-page border-r border-border z-40 overflow-y-auto lg:hidden">
-                <div className="p-4 space-y-1">
-                  {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = activeTab === item.id
-                    
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id as any)
-                          setSidebarOpen(false)
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                          isActive 
-                            ? "bg-primary/10 text-orange-400 border border-orange-500/20" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                        <span>{item.label}</span>
-                      </button>
-                    )
-                  })}
-                  
-                  <div className="pt-4 mt-4 border-t border-border space-y-2">
-                    {quickLinks.map((link) => {
-                      const Icon = link.icon
-                      return (
-                        <Button
-                          key={link.label}
-                          asChild
-                          variant={link.variant}
-                          className={cn(
-                            "w-full justify-start",
-                            link.variant === 'default' 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                          )}
-                          onClick={() => setSidebarOpen(false)}
-                        >
-                          <Link href={link.href}>
-                            <Icon className="w-4 h-4 mr-2" />
-                            {link.label}
-                          </Link>
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                {settingsTabs.map((item) => {
+                  const Icon = item.icon
+                  const active = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id as any)}
+                      className={cn(
+                        "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-body-sm font-semibold transition-all",
+                        active
+                          ? "border-primary/30 bg-primary/12 text-primary"
+                          : "border-border/60 bg-card/70 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
             {/* Error Message */}
             {error && (
               <div className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
@@ -1252,36 +1063,11 @@ export default function ProviderSettings() {
           </div>
         </main>
 
-        {/* Mobile Bottom Navigation - Only visible on mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-page/95 backdrop-blur-xl border-t border-border safe-area-bottom">
-          <div className="flex items-center justify-around h-16 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activeTab === item.id
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
-                    isActive 
-                      ? "text-orange-400" 
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5", isActive && "text-orange-400")} />
-                  <span className={cn(
-                    "text-[10px] font-medium truncate w-full text-center",
-                    isActive && "text-orange-400"
-                  )}>
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </nav>
+        <ProviderDashboardBottomNav
+          navItems={providerNavItems}
+          activeTab={activeProviderTab}
+          onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+        />
       </div>
     </div>
   )

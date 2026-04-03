@@ -198,7 +198,7 @@ function JobPageContent({ params }: JobPageProps) {
                 </Button>
               ) : (
                 <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]">
-                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})}>
+                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => { ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {}); ApiClient.recordApply('job', id).catch(() => {}); }}>
                     Apply
                     <RiExternalLinkLine className="w-4 h-4" />
                   </a>
@@ -216,7 +216,7 @@ function JobPageContent({ params }: JobPageProps) {
                   </Button>
                 ) : (
                   <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold">
-                    <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})}>
+                    <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => { ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {}); ApiClient.recordApply('job', id).catch(() => {}); }}>
                       Apply
                       <RiExternalLinkLine className="w-4 h-4" />
                     </a>

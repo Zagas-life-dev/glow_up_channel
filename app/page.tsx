@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { getPageState, savePageState } from "@/lib/page-state-session"
+import { setContentCache, getContentCache, type ContentCacheType } from "@/lib/content-cache-session"
 import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
+import { applyVarietyOrder } from "@/lib/feed-variety-order"
 import { getOrCreateAnonId } from "@/lib/anon-id"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -31,6 +35,7 @@ import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { PageShell } from "@/components/layout/page-shell"
 import { SectionCard } from "@/components/layout/section-card"
 import { TabStrip } from "@/components/layout/tab-strip"
+import { canViewPremiumPlaylist } from "@/lib/roles"
 
 type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
 
@@ -58,15 +63,15 @@ const landingStats = [
 
 const landingPillars = [
   {
-    title: "Access Over Excuses",
+    title: "Access over excuses",
     description: "We remove barriers so talent can meet opportunity without friction.",
   },
   {
-    title: "Community First",
-    description: "We build pathways, not pipelines. Grow with mentors and peers.",
+    title: "Community first",
+    description: "Grow with mentors, peers, and providers who care about the same things.",
   },
   {
-    title: "Real Impact",
+    title: "Real impact",
     description: "Every listing, event, and resource is built to move you forward.",
   },
 ]
@@ -76,15 +81,15 @@ const landingTracks = [
     title: "Opportunities",
     description: "Jobs, internships, freelance gigs, and scholarships.",
     icon: RiFocus3Line,
-    accent: "from-orange-500/20 to-orange-600/10",
-    border: "border-orange-500/30",
-    text: "text-orange-400",
+    accent: "from-primary/18 to-primary/8",
+    border: "border-primary/30",
+    text: "text-primary",
   },
   {
     title: "Jobs",
     description: "Curated roles from trusted companies and founders.",
     icon: RiBriefcaseLine,
-    accent: "from-primary/20 to-primary/10",
+    accent: "from-primary/18 to-primary/8",
     border: "border-primary/30",
     text: "text-primary",
   },
@@ -92,17 +97,17 @@ const landingTracks = [
     title: "Events",
     description: "Networking, workshops, and live learning experiences.",
     icon: RiCalendarLine,
-    accent: "from-emerald-500/20 to-emerald-600/10",
-    border: "border-emerald-500/30",
-    text: "text-emerald-400",
+    accent: "from-primary/18 to-primary/8",
+    border: "border-primary/30",
+    text: "text-primary",
   },
   {
     title: "Resources",
     description: "Courses, templates, and toolkits to build your edge.",
     icon: RiBookLine,
-    accent: "from-violet-500/20 to-violet-600/10",
-    border: "border-violet-500/30",
-    text: "text-violet-400",
+    accent: "from-primary/18 to-primary/8",
+    border: "border-primary/30",
+    text: "text-primary",
   },
 ]
 
@@ -120,38 +125,57 @@ const providerSteps = [
 
 function LandingPage() {
   return (
-    <PageShell>
+    <PageShell
+      fullWidth
+      className="relative font-sans bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.12),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)]"
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.12),_transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(249,115,22,0.06),_transparent_50%)]" />
+      <section className="relative overflow-hidden pb-10 pt-[max(4rem,env(safe-area-inset-top)+3.5rem)] sm:pb-12 sm:pt-24">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div
+            className="absolute -top-32 right-0 h-80 w-80 rounded-full opacity-[0.18] blur-3xl dark:opacity-[0.22]"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute left-0 top-1/3 h-72 w-72 -translate-x-1/3 rounded-full opacity-[0.08] blur-3xl dark:opacity-[0.14]"
+            style={{ background: "radial-gradient(circle, hsl(222 41% 38%) 0%, transparent 68%)" }}
+          />
+        </div>
         <div className="relative">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] items-center">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/70 shadow-sm mb-5">
-                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">GlowUp</span>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1.5 text-overline font-semibold uppercase tracking-[0.18em] text-muted-foreground shadow-sm backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span>GlowUp</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight mb-5">
+              <h1 className="mb-5 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 More than a platform.
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-500">
+                <span className="block bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   A movement for access.
                 </span>
               </h1>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8">
-                Brilliant African talent has always existed. What’s been missing is access.
-                GlowUp bridges the gap with opportunities, resources, and deep focus tools
-                like Locked In sessions to keep you moving.
+              <p className="mb-8 max-w-xl text-body text-muted-foreground sm:text-body-lg">
+                Brilliant African talent has always existed. What’s been missing is access. GlowUp stitches
+                opportunities, resources, and deep-focus tools into one place so you can move with intention.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg shadow-orange-500/25 font-semibold">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-11 rounded-2xl bg-primary px-6 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
+                >
                   <Link href="/signup">
-                    Get Started
+                    Get started
                     <RiRightArrowAlt className="ml-2 h-5 w-5" aria-hidden />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-border/70 hover:bg-muted/60 rounded-full backdrop-blur-sm">
-                  <Link href="/submit">Become a Provider</Link>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="h-11 rounded-2xl border-border/70 bg-card/80 px-6 text-body-sm font-semibold hover:bg-card"
+                >
+                  <Link href="/submit">Become a provider</Link>
                 </Button>
               </div>
             </div>
@@ -378,8 +402,39 @@ type PromotedFeedItem = {
   [key: string]: unknown
 }
 
+const HOME_PATH = '/'
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>('all')
+  const pathname = usePathname()
+  const prevPathnameRef = useRef<string | null>(null)
+  const scrollRestoredRef = useRef(false)
+
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (typeof window === 'undefined') return 'all'
+    const s = getPageState(HOME_PATH)
+    return ((s?.state?.activeTab as TabType) || 'all')
+  })
+  const [initialFeed] = useState<{ items: any[], lastId: string | null } | null>(() => {
+    if (typeof window === 'undefined') return null
+    const s = getPageState(HOME_PATH)
+    const tab = (s?.state?.activeTab as TabType) || 'all'
+    // Prefer page-state restore (exact tab + scroll). For "all" tab don't use content cache here so
+    // signed-in users never get anonymous cached feed as initial state; they'll get recommendations from API.
+    if (s?.feed && s.feed.storageKey === `home_${tab}`) {
+      return { items: (s.feed.items || []) as any[], lastId: s.feed.lastId ?? null }
+    }
+    if (tab !== 'all' && (tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources')) {
+      const cached = getContentCache(tab)
+      if (cached?.items?.length) return { items: cached.items as any[], lastId: cached.lastId }
+    }
+    return null
+  })
+  const restoredFromCacheRef = useRef(Boolean(initialFeed?.items?.length))
+  const [expandedId, setExpandedId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const s = getPageState(HOME_PATH)
+    return (s?.state?.expandedId as string | null) ?? null
+  })
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
   const { user, normalizedUser, isAuthenticated, isLoading: authLoading } = useAuth()
 
@@ -394,6 +449,21 @@ export default function Home() {
       return { items: [], lastId: null, hasMore: false }
     }
 
+    // First page: use session cache for instant load (anon: unified, auth: unified_auth so we never serve anon cache to signed-in users)
+    if (!lastId) {
+      if (!isAuthenticated || !user) {
+        const cached = getContentCache('unified')
+        if (cached?.items?.length) {
+          return { items: cached.items as any[], lastId: cached.lastId, hasMore: true }
+        }
+      } else {
+        const cached = getContentCache('unified_auth')
+        if (cached?.items?.length) {
+          return { items: cached.items as any[], lastId: cached.lastId, hasMore: true }
+        }
+      }
+    }
+
     // Anonymous users: use public feed API (cached 100-item interleaved feed)
     if (!isAuthenticated || !user) {
       const anonId = getOrCreateAnonId()
@@ -404,6 +474,7 @@ export default function Home() {
         if (!response.ok) return { items: [], lastId: null, hasMore: false }
         const data = await response.json()
         const feed = Array.isArray(data?.data?.feed) ? data.data.feed : []
+        if (feed.length) setContentCache('unified', { items: feed, lastId: null })
         return { items: feed, lastId: null, hasMore: false }
       } catch (err) {
         console.error('Anonymous feed fetch error:', err)
@@ -443,7 +514,7 @@ export default function Home() {
           includeJobs: true,
           includeResources: true,
           minScore: 0,
-          limit: 20,
+          limit: lastId ? 20 : 15,
           ...(lastId && { lastId }),
         }
         response = await fetch(`${backendUrl}/api/recommended/unified`, {
@@ -458,7 +529,7 @@ export default function Home() {
         url.searchParams.set('includeJobs', 'true')
         url.searchParams.set('includeResources', 'true')
         url.searchParams.set('minScore', '0')
-        url.searchParams.set('limit', '20')
+        url.searchParams.set('limit', lastId ? '20' : '15')
         if (lastId) {
           url.searchParams.set('lastId', lastId)
         }
@@ -481,24 +552,18 @@ export default function Home() {
         type: item.contentType
       }))
 
-      // Sort by personalized score (highest first), fallback to createdAt
-      const sorted = unifiedItems.sort((a, b) => {
-        const aHasScore = typeof a.score === 'number'
-        const bHasScore = typeof b.score === 'number'
-        if (aHasScore && bHasScore && b.score !== a.score) {
-          return b.score - a.score
-        } else if (aHasScore !== bHasScore) {
-          return bHasScore ? 1 : -1
-        }
-        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-      })
+      // Variety ordering: score buckets + skewed random start, then surrounding pool, mid, low (under 2000ms)
+      const sorted = applyVarietyOrder(unifiedItems)
 
       const lastItemId = sorted.length > 0 ? sorted[sorted.length - 1]._id : null
-      const hasMore = (data.data?.pagination?.hasMore ?? (data.data?.total > sorted.length)) && sorted.length >= 20
+      const resultLastId = data.data?.pagination?.lastId ?? lastItemId
+      const pageLimit = lastId ? 20 : 15
+      const hasMore = (data.data?.pagination?.hasMore ?? (data.data?.total > sorted.length)) && sorted.length >= pageLimit
+      if (sorted.length) setContentCache('unified_auth', { items: sorted, lastId: resultLastId })
 
       return {
         items: sorted,
-        lastId: data.data?.pagination?.lastId ?? lastItemId,
+        lastId: resultLastId,
         hasMore
       }
     } catch (error) {
@@ -512,6 +577,14 @@ export default function Home() {
     if (!backendUrl) {
       console.warn('Backend URL not configured')
       return { items: [], lastId: null, hasMore: false }
+    }
+
+    // First page: use cache if available to avoid API call
+    if (!lastId && (type === 'opportunities' || type === 'events' || type === 'jobs' || type === 'resources')) {
+      const cached = getContentCache(type as ContentCacheType)
+      if (cached?.items?.length) {
+        return { items: cached.items as any[], lastId: cached.lastId, hasMore: true }
+      }
     }
 
     const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
@@ -541,9 +614,13 @@ export default function Home() {
         }
         const contentType = singularType[type] ?? type.slice(0, -1)
         const items = (data.data?.[type] || []).map((item: any) => ({ ...item, type: contentType }))
+        const lastId = data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null)
+        if (type === 'opportunities' || type === 'events' || type === 'jobs' || type === 'resources') {
+          setContentCache(type as ContentCacheType, { items, lastId })
+        }
         return {
           items,
-          lastId: data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null),
+          lastId,
           hasMore: data.data?.pagination?.hasMore || false
         }
       }
@@ -574,7 +651,8 @@ export default function Home() {
     [activeTab, fetchAllContent, fetchContentByType]
   )
 
-  // Use cursor pagination hook (stable fetchFunction like community page)
+  // Use cursor pagination hook (stable fetchFunction like community page); session-restored feed when returning to page.
+  // Defer first fetch until auth is ready (enabled={!authLoading}) so we call the correct endpoint and avoid double fetch.
   const {
     items: allContent,
     isLoading,
@@ -582,11 +660,15 @@ export default function Home() {
     hasMore,
     loadMore,
     reset: resetContent,
+    getLastId,
   } = useCursorPagination<any>({
     fetchFunction: fetchFeedContent,
     storageKey,
     resetOnMount: false,
     limit: 20,
+    initialItems: initialFeed?.items,
+    initialLastId: initialFeed?.lastId,
+    enabled: isAuthenticated && !authLoading,
   })
 
   // Use infinite scroll hook (same options as community page)
@@ -604,40 +686,93 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when tab changes
   }, [activeTab])
 
-  // Reset when auth state changes (user logs in/out)
+  // Reset feed only when user actually logs in/out, not when auth first settles (avoids double fetch with enabled defer)
+  const prevAuthRef = useRef<boolean | undefined>(undefined)
   useEffect(() => {
-    if (!authLoading) {
+    if (authLoading) return
+    if (prevAuthRef.current !== undefined && prevAuthRef.current !== isAuthenticated) {
       resetContent()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when auth changes
+    prevAuthRef.current = isAuthenticated
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when auth state changes
   }, [isAuthenticated, authLoading])
 
+  // Save scroll, state, and feed when navigating away from home (session-scoped; works for all users)
+  useEffect(() => {
+    const prev = prevPathnameRef.current
+    prevPathnameRef.current = pathname ?? null
+    if (prev === HOME_PATH && pathname !== HOME_PATH) {
+      savePageState(HOME_PATH, {
+        scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
+        state: { activeTab, expandedId: expandedId ?? undefined },
+        feed: {
+          storageKey,
+          items: allContent,
+          lastId: getLastId?.() ?? null,
+        },
+      })
+    }
+  }, [pathname, activeTab, storageKey, allContent, getLastId, expandedId])
+
+  // Restore scroll only for cache/session-restored feed, never for API-only initial loads.
+  useEffect(() => {
+    if (scrollRestoredRef.current) return
+    if (!restoredFromCacheRef.current) return
+    const s = getPageState(HOME_PATH)
+    if (!s?.feed || s.feed.storageKey !== storageKey) return
+    const scrollY = s?.scrollY
+    if (typeof scrollY !== 'number' || scrollY <= 0 || allContent.length === 0) return
+    // Wait for content to be in DOM and laid out (double rAF + brief delay for list layout)
+    let timeoutId: ReturnType<typeof setTimeout>
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        timeoutId = setTimeout(() => {
+          window.scrollTo(0, scrollY)
+          scrollRestoredRef.current = true
+        }, 80)
+      })
+    })
+    return () => {
+      cancelAnimationFrame(rafId)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [allContent.length, storageKey])
+
+  // Defer promoted feed until after main feed has priority (next tick) to avoid competing for bandwidth
   useEffect(() => {
     if (!backendUrl) return
-    fetch(`${backendUrl}/api/promoted/feed?limit=20`)
-      .then((res) => (res.ok ? res.json() : { success: false }))
-      .then((data) => {
-        if (data?.success && Array.isArray(data?.data?.feed)) {
-          setPromotedFeed(data.data.feed)
-        }
-      })
-      .catch(() => {})
+    const id = setTimeout(() => {
+      fetch(`${backendUrl}/api/promoted/feed?limit=20`)
+        .then((res) => (res.ok ? res.json() : { success: false }))
+        .then((data) => {
+          if (data?.success && Array.isArray(data?.data?.feed)) {
+            setPromotedFeed(data.data.feed)
+          }
+        })
+        .catch(() => {})
+    }, 0)
+    return () => clearTimeout(id)
   }, [backendUrl])
 
   const getCurrentItems = () => {
     return allContent
   }
 
-  if (authLoading) {
-    return <PageSkeleton />
+  // Show landing for guests; feed only for signed-in users.
+  const feedLoading = authLoading || (isLoading && allContent.length === 0)
+
+  if (!authLoading && !isAuthenticated) {
+    return <LandingPage />
   }
 
-  // Always show the feed (auth version). Guests see empty/CTA until they sign in.
   return (
-    <PageShell>
-      {/* Tab bar: sticky, page bg, glass tab buttons */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 bg-page px-4 sm:px-6 lg:px-8 pt-3 pb-2">
-        <div className="max-w-2xl mx-auto">
+    <PageShell
+      fullWidth
+      className="relative font-sans bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.12),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)]"
+    >
+      {/* Tab bar: sticky, glass tab buttons */}
+      <div className="sticky top-0 z-30 -mx-4 bg-page/80 px-4 pt-[max(0.25rem,env(safe-area-inset-top)+0.25rem)] pb-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="mx-auto max-w-2xl">
           <TabStrip
             tabs={tabs.map((tab) => ({
               id: tab.id,
@@ -651,23 +786,32 @@ export default function Home() {
       </div>
 
       {/* Feed Content */}
-      <div className="max-w-2xl mx-auto py-6">
-        {!isLoading && activeTab === "all" && (allContent.length > 0 || !isAuthenticated) && (
-          <SectionCard
-            emphasized
-            className="mb-6"
-            title={
-              isAuthenticated
-                ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}!`
-                : "Discover Opportunities"
-            }
-            description={
-              isAuthenticated
-                ? "Here are picks to help you Glow Up."
-                : "Sign in to get personalized recommendations."
-            }
-            icon={<RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />}
-          />
+      <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
+        {!feedLoading && activeTab === "all" && (allContent.length > 0 || !isAuthenticated) && (
+          <>
+            <SectionCard
+              emphasized
+              className="mb-4"
+              title={
+                isAuthenticated
+                  ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}!`
+                  : "Discover Opportunities"
+              }
+              description={
+                isAuthenticated
+                  ? "Here are picks to help you Glow Up."
+                  : "Sign in to get personalized recommendations."
+              }
+              icon={<RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />}
+              actions={
+                isAuthenticated && canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role) ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/playlists?tab=premium">Get premium playlist</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          </>
         )}
 
         {activeTab === "all" && allContent.length > 0 ? (
@@ -689,12 +833,14 @@ export default function Home() {
         ) : (
           <FeedContainer
             items={getCurrentItems()}
-            loading={isLoading && allContent.length === 0}
+            loading={feedLoading}
             emptyMessage={
               activeTab === "all"
                 ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
                 : `No ${activeTab} found. Try another category!`
             }
+            initialExpandedId={expandedId}
+            onExpandedIdChange={setExpandedId}
           />
         )}
 

@@ -6,8 +6,8 @@ export default function PlaylistDetailSkeleton() {
       {/* Hero Section with Gradient Background */}
       <div className="relative overflow-hidden">
         {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 via-violet-500/5 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.08] to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,hsl(var(--primary)_/_0.06),transparent_55%)]" />
         
         {/* Sticky Header */}
         <div className="sticky top-0 z-50 bg-page/60 backdrop-blur-2xl border-b border-border">

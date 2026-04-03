@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,6 +25,8 @@ import {
 import { toast } from "sonner"
 import { WalletTopUpModal } from "@/components/wallet/WalletTopUpModal"
 import { PromoteContentModal } from "@/components/promote-content-modal"
+import ProviderDashboardSidebar from '@/components/provider/provider-dashboard-sidebar'
+import ProviderDashboardBottomNav from '@/components/provider/provider-dashboard-bottom-nav'
 
 // Types matching backend exactly
 interface Promotion {
@@ -68,6 +71,8 @@ interface UserContent {
 export default function PromotionsPage() {
   const { setHideNavbar, setHideFooter } = usePage()
   const { user, isAuthenticated } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
   
   // State
   const [promotions, setPromotions] = useState<Promotion[]>([])
@@ -341,36 +346,54 @@ export default function PromotionsPage() {
     )
   }
 
+  const providerNavItems = [
+    { id: 'overview' as const, label: 'Overview', icon: BarChart3 },
+    { id: 'content' as const, label: 'Content', icon: Target },
+    { id: 'promotions' as const, label: 'Promotions', icon: TrendingUp },
+    { id: 'analytics' as const, label: 'Analytics', icon: Clock },
+  ]
+  const providerNavRouteMap = {
+    overview: '/dashboard/provider',
+    content: '/dashboard/provider/posting',
+    promotions: '/dashboard/provider/promotions',
+    analytics: '/dashboard/provider/settings',
+  }
+  const activeProviderTab: 'overview' | 'content' | 'promotions' | 'analytics' =
+    pathname?.startsWith('/dashboard/provider/promotions') ? 'promotions' : 'overview'
+  const quickLinks = [
+    { label: 'Post Content', icon: Target, href: '/dashboard/provider/posting', variant: 'default' as const },
+    { label: 'Settings', icon: Clock, href: '/dashboard/provider/settings', variant: 'outline' as const },
+    { label: 'Home', icon: Calendar, href: '/', variant: 'outline' as const },
+  ]
+
   return (
-    <div className="min-h-screen bg-page flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border px-4 lg:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Link href="/dashboard/provider" className="p-2 hover:bg-muted rounded-xl transition-colors">
-              <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-            </Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
+      <ProviderDashboardSidebar
+        user={user as any}
+        profile={null}
+        navItems={providerNavItems}
+        quickLinks={quickLinks}
+        activeTab={activeProviderTab}
+        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+        totalPostings={userContent.length}
+        postingLimit={20}
+        hasPremium
+      />
+
+      <div className="flex-1 flex min-w-0 flex-col lg:pl-64">
+        <header className="sticky top-0 z-20 border-b border-border/70 bg-page/80 backdrop-blur-xl">
+          <div className="flex h-14 items-center justify-between px-4 pt-[max(0rem,env(safe-area-inset-top))]">
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground">Promotion Manager</h1>
-              <p className="text-sm lg:text-base text-muted-foreground">Track all your promotions, budgets, and recommendations in one place.</p>
+              <p className="text-overline uppercase tracking-[0.14em] text-muted-foreground">Provider workspace</p>
+              <h1 className="text-body font-semibold text-foreground">Promotion Manager</h1>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-            >
-              <Link href="/dashboard/provider?tab=content">
-                <Target className="h-4 w-4 mr-1.5" />
-                Go to Content
-              </Link>
+            <Button variant="outline" size="sm" asChild className="rounded-xl border-border/70">
+              <Link href="/dashboard/provider/posting">Post content</Link>
             </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-6 py-6">
+        <div className="flex-1 mx-auto max-w-7xl w-full px-4 lg:px-6 py-6 pb-24 lg:pb-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <Card className="border border-border bg-card rounded-xl">
@@ -880,7 +903,12 @@ export default function PromotionsPage() {
         } : null}
         onSuccess={fetchData}
       />
-
+      <ProviderDashboardBottomNav
+        navItems={providerNavItems}
+        activeTab={activeProviderTab}
+        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
+      />
+      </div>
     </div>
   )
 }

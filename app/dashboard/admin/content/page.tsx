@@ -234,6 +234,7 @@ export default function AdminContent() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [counts, setCounts] = useState({ live: 0, pending: 0, drafts: 0, inactive: 0 })
+  const [cleanupLoading, setCleanupLoading] = useState(false)
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
@@ -390,6 +391,28 @@ export default function AdminContent() {
       setLoadingMore(false)
     }
   }, [currentPage, totalPages, loadingMore, loading, filters, fetchPosters])
+
+  const runCleanup = useCallback(async () => {
+    setCleanupLoading(true)
+    try {
+      const data = await ApiClient.triggerPastContentCleanup()
+      if (data?.success) {
+        const d = data.data
+        const moved =
+          d ? (d.live.opportunities + d.live.events + d.live.jobs + d.inactive.opportunities + d.inactive.events + d.inactive.jobs) : 0
+        const message = data?.message ?? (moved > 0 ? `Cleanup completed. ${moved} expired item(s) moved to past.` : "Nothing to clean up.")
+        toast.success(message)
+        fetchFirstPage()
+      } else {
+        toast.error(data?.message ?? "Cleanup failed")
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Cleanup request failed"
+      toast.error(msg)
+    } finally {
+      setCleanupLoading(false)
+    }
+  }, [fetchFirstPage])
 
   const hasMore = currentPage < totalPages
   const { sentinelRef, threshold } = useInfiniteScroll({
@@ -990,10 +1013,22 @@ export default function AdminContent() {
                   <p className="text-sm text-muted-foreground">Review, approve, and manage platform content (live + opportunity-inactive, events-inactive, jobs-inactive, resources-inactive)</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => fetchFirstPage()} disabled={loading} className="rounded-2xl border-border">
-                <RiRefreshLine className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
-                Refresh
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={runCleanup}
+                  disabled={cleanupLoading || loading}
+                  className="rounded-2xl border-border"
+                >
+                  <RiDeleteBinLine className={cn("w-4 h-4 mr-2", cleanupLoading && "animate-pulse")} />
+                  Clean up
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => fetchFirstPage()} disabled={loading} className="rounded-2xl border-border">
+                  <RiRefreshLine className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
             {error && (

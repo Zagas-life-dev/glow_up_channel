@@ -1,38 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import ApiClient, { Channel, ChannelMembership } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
+import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
-import PostComposer from "@/components/post-composer"
-import PostCard from "@/components/post-card"
-import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
-import { buildFeedWithSponsored } from "@/lib/feed-ads"
+import ChannelChatMessage, { type ChannelChatPost, type ReadReceiptState } from "@/components/channel-chat-message"
+import { ChannelChatComposerDock } from "@/components/channel-chat-composer-dock"
+import { ChannelChatThread } from "@/components/channel-chat-thread"
 import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
-import { PageHeader } from "@/components/layout/page-header"
 import { SectionCard } from "@/components/layout/section-card"
+import { ArrowLeft } from "lucide-react"
+import { ChannelsSurface } from "../_components/channels-surface"
+import { toast } from "sonner"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
+const POLL_MS = 5000
+const NEAR_BOTTOM_PX = 140
+const MARK_READ_DEBOUNCE_MS = 700
 
 interface ChannelPageState {
   channel: Channel | null
   membership: ChannelMembership | null
 }
 
-interface Post {
-  _id: string
-  author: {
-    _id: string
-    email: string
-    firstName?: string
-    profileImage?: string
-  }
-  content: {
-    text: string
-    images: { url: string; publicId?: string }[]
+interface Post extends ChannelChatPost {
+  content: ChannelChatPost["content"] & {
     playlist?: {
       _id: string
       name: string
@@ -69,43 +66,74 @@ interface Post {
   hashtags: string[]
   mentions: { userId: string; username: string }[]
   visibility: "public" | "private"
-  likeCount: number
-  replyCount: number
   repostCount: number
   bookmarkCount: number
   isRepost: boolean
   originalPost?: string
   repostedBy?: { _id: string; email: string; firstName?: string }
-  createdAt: string
   updatedAt: string
-  isEdited: boolean
   hasLiked?: boolean
   hasBookmarked?: boolean
   hasReposted?: boolean
+}
+
+type ReaderRow = { userId: string; firstName: string | null; lastReadPostId: string | null }
+
+function readReceiptForLastOwnMessage(
+  postsAsc: Post[],
+  currentUserId: string | undefined,
+  readers: ReaderRow[] | undefined,
+): ReadReceiptState | null {
+  if (!currentUserId || !readers?.length) return null
+  const own = postsAsc.filter((p) => p.author._id === currentUserId)
+  const lastOwn = own[own.length - 1]
+  if (!lastOwn) return null
+  const others = readers.filter((r) => r.userId !== currentUserId)
+  if (others.length === 0) return null
+  const msgId = lastOwn._id
+  let readCount = 0
+  for (const r of others) {
+    if (r.lastReadPostId && r.lastReadPostId >= msgId) readCount += 1
+  }
+  if (readCount === others.length) return "read"
+  return "sent"
+}
+
+function mergePostsIncremental(prev: Post[], incoming: Post[]): Post[] {
+  const map = new Map<string, Post>()
+  for (const p of prev) map.set(p._id, p)
+  for (const p of incoming) map.set(p._id, p)
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  )
 }
 
 export default function ChannelDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const slug = params?.slug as string
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const premiumOk = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [state, setState] = useState<ChannelPageState>({ channel: null, membership: null })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [postsLoading, setPostsLoading] = useState(true)
   const [joinLoading, setJoinLoading] = useState(false)
-  const [membersOpen, setMembersOpen] = useState(false)
-  const [members, setMembers] = useState<any[]>([])
-  const [requests, setRequests] = useState<any[]>([])
-  const [promotedFeed, setPromotedFeed] = useState<{ _id: string; title: string; type: "opportunity" | "job" | "event" | "resource"; [key: string]: unknown }[]>([])
-  const [membersLoading, setMembersLoading] = useState(false)
-  const [joinStatus, setJoinStatus] = useState<"idle" | "pending" | "joined">("idle")
-  const [showInvitePanel, setShowInvitePanel] = useState(false)
+  const [readSummary, setReadSummary] = useState<{ readers: ReaderRow[]; capped: boolean } | null>(null)
+  const [typers, setTypers] = useState<{ userId: string; firstName: string }[]>([])
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const nearBottomRef = useRef(true)
+  const postsRef = useRef<Post[]>([])
+  const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  postsRef.current = posts
 
   const canViewFeed =
     state.channel &&
-    (state.channel.type === "public" || (state.channel.type === "private" && !!state.membership))
+    (state.channel.type === "public" ||
+      (state.channel.type === "private" && !!state.membership) ||
+      (state.channel.type === "pro" && premiumOk && !!state.membership))
 
   useEffect(() => {
     if (!slug) return
@@ -117,9 +145,6 @@ export default function ChannelDetailPage() {
         const data = await ApiClient.getChannelBySlug(slug)
         if (!cancelled) {
           setState({ channel: data.channel, membership: data.membership })
-          if (data.membership) {
-            setJoinStatus("joined")
-          }
         }
       } catch (err: any) {
         if (!cancelled) setError(err?.message || "Failed to load channel")
@@ -132,19 +157,6 @@ export default function ChannelDetailPage() {
       cancelled = true
     }
   }, [slug])
-
-  useEffect(() => {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/api/promoted/feed?limit=20`
-    if (!url.startsWith("http")) return
-    fetch(url)
-      .then((res) => (res.ok ? res.json() : { success: false }))
-      .then((data) => {
-        if (data?.success && Array.isArray(data?.data?.feed)) {
-          setPromotedFeed(data.data.feed)
-        }
-      })
-      .catch(() => {})
-  }, [])
 
   // Auto-join flow when visiting with invite=1
   useEffect(() => {
@@ -167,9 +179,6 @@ export default function ChannelDetailPage() {
               }
               : prev
           )
-          setJoinStatus("joined")
-        } else if (res.status === "pending") {
-          setJoinStatus("pending")
         }
       } catch {
         // ignore for now
@@ -189,8 +198,10 @@ export default function ChannelDetailPage() {
       if (!state.channel) return
       try {
         setPostsLoading(true)
-        const data = await ApiClient.getChannelPosts(state.channel._id, { page: 1, limit: 20 })
-        setPosts(data.posts || [])
+        const data = await ApiClient.getChannelPosts(state.channel._id, { page: 1, limit: 50 })
+        const raw = data.posts || []
+        setPosts([...raw].reverse())
+        nearBottomRef.current = true
       } catch (err) {
         // ignore for now, error will be visible via main error if needed
       } finally {
@@ -204,359 +215,335 @@ export default function ChannelDetailPage() {
     }
   }, [state.channel?._id, canViewFeed])
 
-  const handleJoin = async () => {
-    if (!state.channel) return
-    setJoinLoading(true)
-    try {
-      const res = await ApiClient.joinChannel(state.channel._id)
-      if (res.status === "joined") {
-        setState((prev) =>
-          prev.channel
-            ? {
-              channel: { ...prev.channel, memberCount: prev.channel.memberCount + 1 },
-              membership: { role: "member", joinedAt: new Date().toISOString() },
-            }
-            : prev
-        )
-        setJoinStatus("joined")
-      }
-      if (res.status === "pending") {
-        setJoinStatus("pending")
-      }
-    } catch (err) {
-      // show toast in future
-    } finally {
-      setJoinLoading(false)
-    }
+  const chronologicalPosts = useMemo(
+    () =>
+      [...posts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    [posts],
+  )
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }, [])
+
+  useEffect(() => {
+    if (postsLoading || posts.length === 0) return
+    if (!nearBottomRef.current) return
+    scrollToBottom()
+  }, [postsLoading, posts.length, chronologicalPosts[chronologicalPosts.length - 1]?._id, scrollToBottom])
+
+  const handleMessagesScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight
+    nearBottomRef.current = dist < NEAR_BOTTOM_PX
   }
+
+  const scheduleMarkRead = useCallback(
+    (lastPostId: string) => {
+      if (!state.channel?._id || !isAuthenticated || !state.membership) return
+      if (markReadTimerRef.current) clearTimeout(markReadTimerRef.current)
+      markReadTimerRef.current = setTimeout(() => {
+        ApiClient.markChannelRead(state.channel!._id, lastPostId).catch(() => {})
+      }, MARK_READ_DEBOUNCE_MS)
+    },
+    [state.channel?._id, isAuthenticated, state.membership],
+  )
+
+  const lastPostIdForRead = chronologicalPosts[chronologicalPosts.length - 1]?._id
+
+  useEffect(() => {
+    if (!lastPostIdForRead || !nearBottomRef.current) return
+    scheduleMarkRead(lastPostIdForRead)
+  }, [lastPostIdForRead, scheduleMarkRead])
+
+  useEffect(() => {
+    if (!canViewFeed || !state.channel) return
+
+    const tick = async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return
+      const ch = state.channel
+      if (!ch) return
+      const ordered = [...postsRef.current].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      )
+      const lastPost = ordered[ordered.length - 1]
+
+      try {
+        if (lastPost?._id) {
+          const data = await ApiClient.getChannelPosts(ch._id, { after: lastPost._id, limit: 50 })
+          if (data.posts?.length) {
+            setPosts((prev) => mergePostsIncremental(prev, data.posts as Post[]))
+            if (nearBottomRef.current) {
+              requestAnimationFrame(() => scrollToBottom())
+            }
+          }
+        } else {
+          const data = await ApiClient.getChannelPosts(ch._id, { page: 1, limit: 50 })
+          const raw = data.posts || []
+          if (raw.length) {
+            setPosts([...raw].reverse())
+            nearBottomRef.current = true
+            requestAnimationFrame(() => scrollToBottom())
+          }
+        }
+
+        if (isAuthenticated && state.membership) {
+          const [rs, ty] = await Promise.all([
+            ApiClient.getChannelReadSummary(ch._id),
+            ApiClient.getChannelTyping(ch._id),
+          ])
+          setReadSummary(rs)
+          const selfId = user?._id
+          setTypers((ty.typers || []).filter((t) => t.userId !== selfId))
+        } else {
+          try {
+            const ty = await ApiClient.getChannelTyping(ch._id)
+            const selfId = user?._id
+            setTypers((ty.typers || []).filter((t) => t.userId !== selfId))
+          } catch {
+            setTypers([])
+          }
+        }
+      } catch {
+        // network / auth edge cases: ignore for polling
+      }
+    }
+
+    const id = window.setInterval(tick, POLL_MS)
+    const onVis = () => {
+      if (document.visibilityState === "visible") tick()
+    }
+    document.addEventListener("visibilitychange", onVis)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", onVis)
+    }
+  }, [canViewFeed, state.channel, isAuthenticated, state.membership, user?._id, scrollToBottom])
 
   const handlePostCreated = (post: Post) => {
     if (!post?._id) return
-    setPosts((prev) => [post, ...prev])
-  }
-
-  const handlePostUpdate = (updated: Post) => {
-    if (!updated?._id) return
-    setPosts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
+    setPosts((prev) => mergePostsIncremental(prev, [post]))
+    nearBottomRef.current = true
+    requestAnimationFrame(() => scrollToBottom())
   }
 
   const handlePostDelete = (postId: string) => {
     setPosts((prev) => prev.filter((p) => p._id !== postId))
   }
 
+  const handleDeleteChannelPost = async (postId: string) => {
+    if (!confirm("Delete this message?")) return
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
+    const headers: Record<string, string> = {}
+    if (token) headers.Authorization = `Bearer ${token}`
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, { method: "DELETE", headers })
+      const data = await response.json()
+      if (data.success) {
+        toast.success("Message deleted")
+        handlePostDelete(postId)
+      } else {
+        toast.error(data.message || "Failed to delete")
+      }
+    } catch {
+      toast.error("Failed to delete message")
+    }
+  }
+
+  const lastOwnPostId = useMemo(() => {
+    if (!user) return null
+    const own = chronologicalPosts.filter(
+      (p) => p.author._id === user._id || (!!user.email && user.email === p.author.email),
+    )
+    return own[own.length - 1]?._id ?? null
+  }, [chronologicalPosts, user])
+
+  const lastOwnReadReceipt = useMemo(
+    () => readReceiptForLastOwnMessage(chronologicalPosts, user?._id, readSummary?.readers),
+    [chronologicalPosts, user?._id, readSummary?.readers],
+  )
+
+  const typingLabel = useMemo(() => {
+    const names = typers.slice(0, 3).map((t) => t.firstName || "Someone")
+    if (names.length === 0) return null
+    if (names.length === 1) return `${names[0]} is typing…`
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`
+    if (names.length === 3) return `${names[0]}, ${names[1]}, and ${names[2]} are typing…`
+    return `${names[0]} and ${typers.length - 1} others are typing…`
+  }, [typers])
+
   if (loading) {
     return (
-      <PageShell className="flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading channel…</p>
-      </PageShell>
+      <ChannelsSurface withAtmosphere className="flex min-h-0 flex-1 flex-col">
+        <PageShell fullWidth chatMode className="relative">
+          <div className="mx-auto max-w-5xl space-y-4 px-0 py-4">
+            <div className="h-12 animate-pulse rounded-2xl bg-muted/60" />
+            <div className="h-28 animate-pulse rounded-[1.35rem] border border-border/50 bg-card/50" />
+            <div className="space-y-3 pt-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-36 animate-pulse rounded-2xl border border-border/50 bg-card/50" />
+              ))}
+            </div>
+          </div>
+        </PageShell>
+      </ChannelsSurface>
     )
   }
 
   if (error || !state.channel) {
     return (
-      <PageShell className="flex flex-col items-center justify-center">
-        <div className="text-center space-y-3">
-          <p className="text-sm text-destructive">{error || "Channel not found"}</p>
-          <Link href="/channels" className="text-xs text-primary underline">
-            Back to channels
-          </Link>
-        </div>
-      </PageShell>
+      <ChannelsSurface withAtmosphere className="flex min-h-0 flex-1 flex-col">
+        <PageShell fullWidth chatMode className="relative">
+          <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 text-center">
+            <p className="text-sm font-medium text-destructive">{error || "Channel not found"}</p>
+            <Button type="button" asChild variant="outline" className="mt-6 h-11 rounded-2xl">
+              <Link href="/channels" className="inline-flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to channels
+              </Link>
+            </Button>
+          </div>
+        </PageShell>
+      </ChannelsSurface>
     )
   }
 
-  const headerActions = (
-    <div className="flex gap-2 flex-wrap">
-      {!state.membership && isAuthenticated && state.channel.type === "public" && (
-        <Button size="sm" onClick={handleJoin} disabled={joinLoading} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold">
-          {joinLoading ? "Joining…" : "Join channel"}
-        </Button>
-      )}
-      {!state.membership && isAuthenticated && state.channel.type === "private" && (
-        <Button size="sm" onClick={handleJoin} disabled={joinLoading || joinStatus === "pending"} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold">
-          {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
-        </Button>
-      )}
-      {!isAuthenticated && state.channel.type === "public" && (
-        <Link href="/login">
-          <Button size="sm" variant="outline" className="rounded-full border-border/70">
-            Sign in to join
-          </Button>
-        </Link>
-      )}
-      {!isAuthenticated && state.channel.type === "private" && (
-        <Link href="/login">
-          <Button size="sm" variant="outline" className="rounded-full border-border/70">
-            Sign in to request access
-          </Button>
-        </Link>
-      )}
-    </div>
-  )
+  const showChatDock = !!(canViewFeed && isAuthenticated && state.membership && state.channel)
+  const detailsHref = slug ? `/channels/${slug}/details` : "/channels"
 
   const feedSection = canViewFeed ? (
-    <div className="space-y-4 mt-4">
-      {isAuthenticated && state.membership && state.channel && (
-        <div className="pt-2 pb-4 border-b border-border/50">
-          <PostComposer
-            onPostCreated={handlePostCreated}
-            channelId={state.channel._id}
-            placeholder="Share something with this channel…"
-          />
-        </div>
+    <div
+      className={cn(
+        "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card/95 via-card/85 to-muted/20 p-2 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.06)] backdrop-blur-sm sm:p-3",
       )}
-      <div className="pt-4 space-y-4">
+    >
+      <ChannelChatThread
+        ref={scrollRef}
+        onScroll={handleMessagesScroll}
+        reserveBottomForComposer={false}
+        className="px-1 py-2 sm:px-2 sm:py-3"
+      >
         {postsLoading && posts.length === 0 ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="w-full rounded-2xl bg-card/80 border border-border/70 overflow-hidden animate-pulse"
-              >
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-muted" />
-                    <div className="h-4 bg-muted rounded w-24" />
-                    <div className="h-3 bg-muted rounded w-20" />
-                  </div>
-                  <div className="h-4 bg-muted rounded w-full mb-2" />
-                  <div className="h-4 bg-muted rounded w-5/6" />
-                  <div className="h-48 bg-muted rounded-xl mt-3" />
+          <div className="space-y-3 px-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex gap-3 animate-pulse">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-28 rounded bg-muted" />
+                  <div className="h-16 rounded-2xl bg-muted/80" />
                 </div>
               </div>
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <SectionCard
-            className="mt-4 text-center"
-            title="No posts in this channel yet"
-            description="Start the conversation by sharing something with this group."
-          />
+          <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+            <p className="text-sm font-medium text-foreground">No messages yet</p>
+            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+              Say hello and start the thread — messages appear here in order.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {buildFeedWithSponsored(posts, promotedFeed, { postsBetween: 4 }).map((item) =>
-              item.type === "post" ? (
-                <PostCard
-                  key={item.post._id}
-                  post={item.post}
-                  onUpdate={handlePostUpdate}
-                  onDelete={handlePostDelete}
-                />
-              ) : (
-                <FeedSponsoredSlot
-                  key={item.key}
-                  kind={item.kind}
-                  content={item.kind === "promoted" ? item.content : undefined}
-                  adKey={item.key}
-                  slotId={process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""}
+          <div className="flex flex-col gap-0.5 pb-2">
+            {chronologicalPosts.map((post) => {
+              const isOwn =
+                !!user &&
+                (post.author._id === user._id || (!!user.email && user.email === post.author.email))
+              const showReceipt = isOwn && post._id === lastOwnPostId && !!lastOwnReadReceipt
+              return (
+                <ChannelChatMessage
+                  key={post._id}
+                  post={post as ChannelChatPost}
+                  isOwn={isOwn}
+                  readReceipt={lastOwnReadReceipt}
+                  showReadReceipt={showReceipt}
+                  onDelete={isOwn ? handleDeleteChannelPost : undefined}
                 />
               )
-            )}
+            })}
           </div>
         )}
-      </div>
+      </ChannelChatThread>
+      {showChatDock && state.channel ? (
+        <ChannelChatComposerDock
+          variant="inline"
+          channelId={state.channel._id}
+          typingLabel={typingLabel}
+          onPostCreated={(p) => handlePostCreated(p as Post)}
+          onTypingActivity={() => {
+            ApiClient.setChannelTyping(state.channel!._id, true).catch(() => {})
+          }}
+          onTypingEnd={() => {
+            ApiClient.setChannelTyping(state.channel!._id, false).catch(() => {})
+          }}
+        />
+      ) : null}
     </div>
   ) : (
     <SectionCard
       className="mt-4"
-      title="Private channel"
-      description="Join to see posts and participate in the conversation."
+      title={
+        state.channel.type === "pro" && !premiumOk
+          ? "Premium members only"
+          : state.channel.type === "pro"
+            ? "Members only"
+            : "Private channel"
+      }
+      description={
+        state.channel.type === "pro" && !premiumOk ? (
+          <span>
+            <Link href="/premium" className="font-medium text-primary underline-offset-4 hover:underline">
+              Upgrade to Premium
+            </Link>{" "}
+            to view and join this channel.{" "}
+            <Link href={detailsHref} className="text-muted-foreground underline-offset-4 hover:underline">
+              Details
+            </Link>
+          </span>
+        ) : (
+          <span>
+            Open{" "}
+            <Link href={detailsHref} className="font-medium text-primary underline-offset-4 hover:underline">
+              channel details
+            </Link>{" "}
+            to request access or learn more.
+          </span>
+        )
+      }
     />
   )
 
   const pageContent = (
-    <PageShell fullWidth>
-      <div className="max-w-5xl mx-auto pt-4 pb-10 space-y-6">
-        <PageHeader
-          title={state.channel.name}
-          description={
-            state.channel.description || `${state.channel.memberCount} member${state.channel.memberCount === 1 ? "" : "s"}`
-          }
-          icon={<span className="text-lg font-bold">#</span>}
-          actions={headerActions}
-        />
-
-        <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/70 p-5">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-orange-400 text-xl font-bold">#</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h2 className="font-bold text-base text-foreground">{state.channel.name}</h2>
-                <span className={cn(
-                  "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full",
-                  state.channel.type === "public"
-                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                    : "bg-muted text-muted-foreground border border-border/60"
-                )}>
-                  {state.channel.type}
+    <ChannelsSurface withAtmosphere className="flex min-h-0 flex-1 flex-col">
+      <PageShell fullWidth chatMode className="relative flex min-h-0 flex-1 flex-col">
+        <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+          <div className="sticky top-0 z-40 shrink-0 border-b border-border/60 bg-page/90 backdrop-blur-xl supports-[backdrop-filter]:bg-page/80">
+            <div className="flex items-center gap-2 py-2 sm:gap-3 sm:py-3">
+              <Link
+                href="/channels"
+                className="flex h-11 min-h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                aria-label="Back to channels"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <Link
+                href={detailsHref}
+                className="min-w-0 flex-1 rounded-xl px-1 py-1 text-left outline-none ring-offset-background transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="sr-only">Open channel details for </span>
+                <span className="block truncate text-base font-semibold leading-tight text-foreground sm:text-lg">
+                  {state.channel.name}
                 </span>
-                {state.membership && (
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    {state.membership.role}
-                  </span>
-                )}
-              </div>
-              {state.channel.description && (
-                <p className="text-xs text-muted-foreground">{state.channel.description}</p>
-              )}
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {state.channel.memberCount} member{state.channel.memberCount === 1 ? "" : "s"}
-              </p>
+                <span className="sr-only"> — view description, members, and settings</span>
+              </Link>
             </div>
           </div>
 
-          {state.channel.isOwner && (
-            <div className="mt-4 rounded-2xl border border-border/60 bg-muted/40 p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <h2 className="text-sm font-semibold">Members & requests</h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={async () => {
-                      if (!state.channel) return
-                      setMembersLoading(true)
-                      try {
-                        const [m, r] = await Promise.all([
-                          ApiClient.getChannelMembers(state.channel._id),
-                          ApiClient.getChannelJoinRequests(state.channel._id),
-                        ])
-                        setMembers(m.members || [])
-                        setRequests(r.requests || [])
-                        setMembersOpen(true)
-                      } finally {
-                        setMembersLoading(false)
-                      }
-                    }}
-                  >
-                    {membersLoading ? "Loading…" : "View members"}
-                  </Button>
-                  {state.channel.type === "private" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => setShowInvitePanel((prev) => !prev)}
-                    >
-                      {showInvitePanel ? "Hide invite link" : "Invite users"}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {showInvitePanel && state.channel && (
-                <div className="rounded-2xl border border-border/60 bg-muted/40 backdrop-blur-sm p-4 text-xs space-y-3">
-                  <p className="text-muted-foreground">
-                    Share this link with people you want to add to the channel. When they open it while signed in, they&apos;ll be added automatically.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                    <input
-                      type="text"
-                      readOnly
-                      value={
-                        typeof window !== "undefined"
-                          ? `${window.location.origin}/channels/${state.channel.slug}?invite=1`
-                          : `/channels/${state.channel.slug}?invite=1`
-                      }
-                      className="flex-1 px-3 py-2 rounded-xl border border-border/60 bg-muted/60 text-[11px] truncate focus:outline-none focus:border-orange-500/60"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs whitespace-nowrap rounded-full border-border/60 hover:bg-muted/60"
-                      onClick={() => {
-                        if (typeof window === "undefined" || !navigator?.clipboard || !state.channel) return
-                        const url = `${window.location.origin}/channels/${state.channel.slug}?invite=1`
-                        navigator.clipboard.writeText(url).catch(() => {
-                          // ignore clipboard errors silently
-                        })
-                      }}
-                    >
-                      Copy link
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {membersOpen && (
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Members
-                    </h3>
-                    {members.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No members yet.</p>
-                    ) : (
-                      <ul className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
-                        {members.map((m) => (
-                          <li
-                            key={m.userId}
-                            className="flex items-center gap-2 rounded bg-muted px-3 py-2"
-                          >
-                            <span>
-                              {m.user?.firstName || m.user?.email || "User"} • {m.role}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Join requests
-                    </h3>
-                    {requests.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No pending requests.</p>
-                    ) : (
-                      <ul className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
-                        {requests.map((r) => (
-                          <li
-                            key={r.userId}
-                            className="flex items-center gap-2 rounded bg-muted px-3 py-2"
-                          >
-                            <span>{r.user?.firstName || r.user?.email || "User"}</span>
-                            <span className="ml-auto flex gap-1">
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                onClick={async () => {
-                                  if (!state.channel) return
-                                  await ApiClient.approveChannelJoinRequest(state.channel._id, r.userId)
-                                  setRequests((prev) => prev.filter((x) => x.userId !== r.userId))
-                                }}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                onClick={async () => {
-                                  if (!state.channel) return
-                                  await ApiClient.rejectChannelJoinRequest(state.channel._id, r.userId)
-                                  setRequests((prev) => prev.filter((x) => x.userId !== r.userId))
-                                }}
-                              >
-                                Reject
-                              </Button>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {feedSection}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col px-0 py-2 sm:py-3">{feedSection}</div>
         </div>
-      </div>
-    </PageShell>
+      </PageShell>
+    </ChannelsSurface>
   )
 
   // Allow public read for public channels; guard posting by isAuthenticated above

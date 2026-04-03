@@ -37,7 +37,7 @@ export default function ManagePremiumPage() {
     try {
       if (!user) return
       setIsStarting(true)
-      const result = await ApiClient.startPremiumSubscription(250000, {
+      const result = await ApiClient.startPremiumSubscription(150000, {
         planId: "premium_monthly",
         callbackUrl:
           typeof window !== "undefined"
@@ -233,7 +233,7 @@ export default function ManagePremiumPage() {
                       ) : (
                         <Star className="w-4 h-4" />
                       )}
-                      {isStarting ? "Connecting…" : "Subscribe – ₦2,500/month"}
+                      {isStarting ? "Connecting…" : "Subscribe – ₦1,500/month"}
                     </Button>
                     <Button variant="outline" asChild className="rounded-xl">
                       <Link href="/premium">View full plan details</Link>

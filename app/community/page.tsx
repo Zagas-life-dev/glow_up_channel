@@ -1,7 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { getPageState, savePageState } from '@/lib/page-state-session'
+import { setContentCache, getContentCache } from '@/lib/content-cache-session'
 import { Button } from "@/components/ui/button"
 import PostCard from '@/components/post-card'
 import PostComposer from '@/components/post-composer'
@@ -103,12 +106,52 @@ type PromotedFeedItem = {
 
 export type CommunitySort = 'trending' | 'fresh' | 'forYou'
 
+const COMMUNITY_PATH = '/community'
+
+function getCommunityStorageKey(activeTab: string, sortBy: string, filterHashtag: string | null): string {
+  const parts = ['community', activeTab, sortBy]
+  if (filterHashtag) parts.push(`hashtag-${filterHashtag}`)
+  return parts.join('_')
+}
+
 export default function CommunityPage() {
+  const pathname = usePathname()
+  const prevPathnameRef = useRef<string | null>(null)
   const { user, isAuthenticated, normalizedUser } = useAuth()
-  const [activeTab, setActiveTab] = useState<'connections' | 'explore'>('explore')
+
+  const [activeTab, setActiveTab] = useState<'connections' | 'explore'>(() => {
+    if (typeof window === 'undefined') return 'explore'
+    const s = getPageState(COMMUNITY_PATH)
+    return (s?.state?.activeTab as 'connections' | 'explore') || 'explore'
+  })
+  const [sortBy, setSortBy] = useState<CommunitySort>(() => {
+    if (typeof window === 'undefined') return 'forYou'
+    const s = getPageState(COMMUNITY_PATH)
+    return (s?.state?.sortBy as CommunitySort) || 'forYou'
+  })
+  const [filterHashtag, setFilterHashtag] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const s = getPageState(COMMUNITY_PATH)
+    return (s?.state?.filterHashtag as string | null) ?? null
+  })
+  const [initialFeed] = useState<{ items: Post[], lastId: string | null } | null>(() => {
+    if (typeof window === 'undefined') return null
+    const s = getPageState(COMMUNITY_PATH)
+    const tab = (s?.state?.activeTab as 'connections' | 'explore') || 'explore'
+    const sort = (s?.state?.sortBy as CommunitySort) || 'forYou'
+    const tag = (s?.state?.filterHashtag as string | null) ?? null
+    const key = getCommunityStorageKey(tab, sort, tag)
+    if (s?.feed && s.feed.storageKey === key) {
+      return { items: (s.feed.items || []) as Post[], lastId: s.feed.lastId ?? null }
+    }
+    const cached = getContentCache('posts')
+    if (cached?.items?.length) return { items: cached.items as Post[], lastId: cached.lastId }
+    return null
+  })
+  const scrollRestoredRef = useRef(false)
+  const restoredFromCacheRef = useRef(Boolean(initialFeed))
+  const didInitFiltersRef = useRef(false)
   const [trendingHashtags, setTrendingHashtags] = useState<TrendingHashtag[]>([])
-  const [sortBy, setSortBy] = useState<CommunitySort>('forYou')
-  const [filterHashtag, setFilterHashtag] = useState<string | null>(null)
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
 
   const getAuthHeaders = useCallback((): HeadersInit => {
@@ -147,6 +190,14 @@ export default function CommunityPage() {
   // Fetch function for cursor-based pagination
   const fetchPosts = useCallback(async (lastId: string | null) => {
     try {
+      // First page: use cache if available to avoid API call
+      if (!lastId) {
+        const cached = getContentCache('posts')
+        if (cached?.items?.length) {
+          return { items: cached.items as Post[], lastId: cached.lastId, hasMore: true }
+        }
+      }
+
       const limit = 20
       const headers = getAuthHeaders()
 
@@ -159,11 +210,10 @@ export default function CommunityPage() {
         }
         const data = await response.json()
         if (data.success) {
-          return {
-            items: data.data.posts || [],
-            lastId: data.data.lastId || null,
-            hasMore: data.data.hasMore || false
-          }
+          const items = data.data.posts || []
+          const lastId = data.data.lastId || null
+          setContentCache('posts', { items, lastId })
+          return { items, lastId, hasMore: data.data.hasMore || false }
         }
         return { items: [], lastId: null, hasMore: false }
       }
@@ -189,11 +239,10 @@ export default function CommunityPage() {
         }
         const data = await response.json()
         if (data.success) {
-          return {
-            items: data.data.posts || [],
-            lastId: data.data.lastId || null,
-            hasMore: data.data.hasMore || false
-          }
+          const items = data.data.posts || []
+          const lastId = data.data.lastId || null
+          setContentCache('posts', { items, lastId })
+          return { items, lastId, hasMore: data.data.hasMore || false }
         }
         return { items: [], lastId: null, hasMore: false }
       }
@@ -209,11 +258,10 @@ export default function CommunityPage() {
       }
       const data = await response.json()
       if (data.success) {
-        return {
-          items: data.data.posts || [],
-          lastId: data.data.lastId || null,
-          hasMore: data.data.hasMore || false
-        }
+        const items = data.data.posts || []
+        const lastId = data.data.lastId || null
+        setContentCache('posts', { items, lastId })
+        return { items, lastId, hasMore: data.data.hasMore || false }
       }
       return { items: [], lastId: null, hasMore: false }
     } catch (error) {
@@ -222,7 +270,7 @@ export default function CommunityPage() {
     }
   }, [activeTab, isAuthenticated, sortBy, filterHashtag, getAuthHeaders, normalizedUserPayload])
 
-  // Use cursor pagination hook
+  // Use cursor pagination hook; session-restored feed when returning to page
   const {
     items: posts,
     isLoading,
@@ -230,12 +278,15 @@ export default function CommunityPage() {
     hasMore,
     loadMore,
     reset: resetPosts,
-    updateItem: updatePost
+    updateItem: updatePost,
+    getLastId,
   } = useCursorPagination<Post>({
     fetchFunction: fetchPosts,
     storageKey,
     resetOnMount: false,
-    limit: 20
+    limit: 20,
+    initialItems: initialFeed?.items,
+    initialLastId: initialFeed?.lastId,
   })
 
   // Use infinite scroll hook
@@ -267,9 +318,89 @@ export default function CommunityPage() {
 
   // Reset posts when filters change
   useEffect(() => {
+    // Keep restored cached/page-state feed on first mount.
+    // Only reset when user actually changes tab/sort/filter afterward.
+    if (!didInitFiltersRef.current) {
+      didInitFiltersRef.current = true
+      fetchTrendingHashtags()
+      return
+    }
     resetPosts()
     fetchTrendingHashtags()
   }, [activeTab, sortBy, filterHashtag])
+
+  // Save scroll, state, and feed when navigating away from community
+  useEffect(() => {
+    const prev = prevPathnameRef.current
+    prevPathnameRef.current = pathname ?? null
+    if (prev === COMMUNITY_PATH && pathname !== COMMUNITY_PATH) {
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
+      const scrollableHeight = typeof window !== 'undefined'
+        ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+        : 0
+      const scrollRatio = scrollableHeight > 0 ? Math.min(1, Math.max(0, scrollY / scrollableHeight)) : 0
+      savePageState(COMMUNITY_PATH, {
+        scrollY,
+        state: { activeTab, sortBy, filterHashtag, scrollRatio },
+        feed: {
+          storageKey,
+          items: posts,
+          lastId: getLastId?.() ?? null,
+        },
+      })
+    }
+  }, [pathname, activeTab, sortBy, filterHashtag, storageKey, posts, getLastId])
+
+  // Keep shared posts cache as full accumulated list (from top), not just the latest fetched page.
+  useEffect(() => {
+    if (!posts.length) return
+    setContentCache('posts', {
+      items: posts,
+      lastId: getLastId?.() ?? null,
+    })
+  }, [posts, getLastId])
+
+  // Restore scroll only when feed came from cache/session restore and list is rendered.
+  useEffect(() => {
+    if (scrollRestoredRef.current) return
+    if (!restoredFromCacheRef.current) return
+    const s = getPageState(COMMUNITY_PATH)
+    if (!s?.feed || s.feed.storageKey !== storageKey) return
+    const scrollY = s?.scrollY
+    const rawRatio = s?.state?.scrollRatio
+    const scrollRatio = typeof rawRatio === 'number' && Number.isFinite(rawRatio)
+      ? Math.min(1, Math.max(0, rawRatio))
+      : null
+    if ((typeof scrollY !== 'number' || scrollY <= 0) && scrollRatio === null) return
+    if (posts.length === 0) return
+    let timeoutId: ReturnType<typeof setTimeout>
+    let timeoutId2: ReturnType<typeof setTimeout>
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        timeoutId = setTimeout(() => {
+          const maxScrollable = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+          const targetY = scrollRatio !== null
+            ? Math.round(maxScrollable * scrollRatio)
+            : (scrollY as number)
+          window.scrollTo(0, Math.max(0, targetY))
+          // Re-apply once more after late content (e.g., images/sponsored slots) finishes layout.
+          timeoutId2 = setTimeout(() => {
+            const nextMaxScrollable = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+            const nextTargetY = scrollRatio !== null
+              ? Math.round(nextMaxScrollable * scrollRatio)
+              : (scrollY as number)
+            window.scrollTo(0, Math.max(0, nextTargetY))
+          }, 700)
+          scrollRestoredRef.current = true
+        }, 500)
+      })
+    })
+    return () => {
+      cancelAnimationFrame(rafId)
+      if (timeoutId) clearTimeout(timeoutId)
+      if (timeoutId2) clearTimeout(timeoutId2)
+    }
+  }, [posts.length, storageKey])
 
   useEffect(() => {
     const url = `${API_BASE_URL}/api/promoted/feed?limit=20`

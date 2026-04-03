@@ -39,7 +39,7 @@ import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
 import { cleanUrl } from '@/lib/url-utils'
-import { trackLike, trackSave, trackShare } from '@/lib/tracking'
+import { trackLike, trackSave, trackShare, trackContentView } from '@/lib/tracking'
 import { toast } from 'sonner'
 
 interface FeedCardProps {
@@ -77,6 +77,11 @@ interface FeedCardProps {
       viewCount?: number
       likeCount?: number
       saveCount?: number
+      /** Share button completions (native share or copy link). */
+      shareCount?: number
+      /** Adds to a playlist only — not bookmark/save. */
+      playlistAddCount?: number
+      playlistCount?: number
     }
     score?: number
     url?: string
@@ -144,6 +149,12 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const [isLiked, setIsLiked] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [likeCount, setLikeCount] = useState(item.metrics?.likeCount || 0)
+  const [viewCount, setViewCount] = useState(item.metrics?.viewCount ?? 0)
+  const [shareCount, setShareCount] = useState(item.metrics?.shareCount ?? 0)
+  const [saveCount, setSaveCount] = useState(item.metrics?.saveCount ?? 0)
+  const [playlistAddCount, setPlaylistAddCount] = useState(
+    item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0
+  )
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const [showShareComposer, setShowShareComposer] = useState(false)
   const [justShared, setJustShared] = useState(false)
@@ -172,6 +183,27 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       setEngagementStatusLoaded(true)
     }
   }, [isAuthenticated, item._id])
+
+  useEffect(() => {
+    setViewCount(item.metrics?.viewCount ?? 0)
+    setShareCount(item.metrics?.shareCount ?? 0)
+    setSaveCount(item.metrics?.saveCount ?? 0)
+    setPlaylistAddCount(item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0)
+  }, [item._id, item.metrics?.viewCount, item.metrics?.shareCount, item.metrics?.saveCount, item.metrics?.playlistAddCount, item.metrics?.playlistCount])
+
+  const feedViewSessionKey = () => `glow_feed_view_expand_${item.type}_${item._id}`
+
+  const recordAuthenticatedFeedView = async (source: 'feed_show_more' | 'feed_like') => {
+    if (!isAuthenticated || !item._id) return
+    try {
+      await ApiClient.recordFeedContentView(item.type, item._id, source)
+      if (source === 'feed_show_more') {
+        trackContentView(item.type, item._id)
+      }
+    } catch {
+      // Optimistic count already applied; backend may be unavailable
+    }
+  }
 
   const loadEngagementStatus = async () => {
     // Don't make API call if item ID is invalid or already loaded
@@ -254,6 +286,25 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
             : item.type === 'event' ? response.data.event
               : response.data.resource
         setFullDetails(data)
+        const m = data?.metrics
+        if (m && typeof m === 'object') {
+          const vc = m.viewCount
+          if (typeof vc === 'number' && !Number.isNaN(vc)) {
+            setViewCount((prev) => Math.max(prev, vc))
+          }
+          const sc = m.shareCount
+          if (typeof sc === 'number' && !Number.isNaN(sc)) {
+            setShareCount((prev) => Math.max(prev, sc))
+          }
+          const sv = m.saveCount
+          if (typeof sv === 'number' && !Number.isNaN(sv)) {
+            setSaveCount((prev) => Math.max(prev, sv))
+          }
+          const pl = m.playlistAddCount ?? m.playlistCount
+          if (typeof pl === 'number' && !Number.isNaN(pl)) {
+            setPlaylistAddCount((prev) => Math.max(prev, pl))
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading full details:', error)
@@ -291,6 +342,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         setLikeCount(prev => prev + 1)
 
         await ApiClient.likeItem(apiType, item._id)
+
+        // Like also counts as a view for feed metrics
+        setViewCount((v) => v + 1)
+        void recordAuthenticatedFeedView('feed_like')
 
         // Track active user activity (fire-and-forget, won't throw errors)
         trackLike(item.type, item._id)
@@ -346,6 +401,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
     // Store previous state in case we need to revert
     const previousSavedState = isSaved
+    const previousSaveCount = saveCount
 
     try {
       const apiType = item.type === 'opportunity' ? 'opportunities'
@@ -356,11 +412,13 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       if (isSaved) {
         await ApiClient.unsaveItem(apiType, item._id)
         setIsSaved(false)
+        setSaveCount((c) => Math.max(0, c - 1))
       } else {
         // Optimistically update UI
         setIsSaved(true)
 
         await ApiClient.saveItem(apiType, item._id)
+        setSaveCount((c) => c + 1)
 
         // Track active user activity (fire-and-forget, won't throw errors)
         trackSave(item.type, item._id)
@@ -369,6 +427,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     } catch (error: any) {
       // Revert optimistic update on error
       setIsSaved(previousSavedState)
+      setSaveCount(previousSaveCount)
 
       const errorMessage = error?.message || 'Failed to update save status'
 
@@ -408,6 +467,13 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
     const url = `${window.location.origin}/${item.type === 'opportunity' ? 'opportunities' : item.type === 'job' ? 'jobs' : item.type === 'event' ? 'events' : 'resources'}/${item._id}`
 
+    const onShareCompleted = () => {
+      setShareCount((c) => c + 1)
+      if (isAuthenticated) {
+        void ApiClient.recordFeedShare(item.type, item._id)
+      }
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -417,6 +483,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         // Track active user activity if share was successful (fire-and-forget)
         trackShare(item.type, item._id)
         ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
+        onShareCompleted()
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
       } catch (err) {
@@ -424,12 +491,16 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(url)
-      // Track active user activity (fire-and-forget)
-      trackShare(item.type, item._id)
-      ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
-      setJustShared(true)
-      setTimeout(() => setJustShared(false), 1500)
+      try {
+        await navigator.clipboard.writeText(url)
+        trackShare(item.type, item._id)
+        ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
+        onShareCompleted()
+        setJustShared(true)
+        setTimeout(() => setJustShared(false), 1500)
+      } catch {
+        // clipboard denied — no count
+      }
     }
   }
 
@@ -449,6 +520,15 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     if (newExpanded) {
       onPromotionShowMore?.()
       ApiClient.recordPromotionClick(item._id, item.type, 'show_more').catch(() => {})
+      // Valid view: first "Show more" expand per item per browser session (authenticated)
+      if (isAuthenticated && typeof sessionStorage !== 'undefined') {
+        const key = feedViewSessionKey()
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1')
+          setViewCount((v) => v + 1)
+          void recordAuthenticatedFeedView('feed_show_more')
+        }
+      }
     }
     if (onExpand) {
       onExpand()
@@ -720,6 +800,13 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
         {/* Meta Pills */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
+          {/* <div
+            // className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/60 text-muted-foreground text-[11px]"
+            title="Views from Show more and likes on the feed"
+          >
+            {/* <RiEyeLine className="w-3 h-3 shrink-0" aria-hidden />
+            <span>{viewCount.toLocaleString()} views</span> 
+          </div> */}
           {getLocationString() && (
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[11px]">
               <RiMapPinLine className="w-3 h-3" aria-hidden />
@@ -1372,6 +1459,11 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <div className="flex items-center gap-1">
             {/* Like */}
+            {/* View Counter */}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground">
+              <RiEyeLine className="w-4 h-4" aria-hidden />
+              {viewCount}
+            </span>
             <button
               onClick={handleLike}
               className={cn(
@@ -1391,6 +1483,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
             {/* Save */}
             <button
+              type="button"
               onClick={handleSave}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
@@ -1398,41 +1491,49 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                   ? "text-orange-500 bg-primary/10"
                   : "text-muted-foreground hover:text-orange-500 hover:bg-primary/10"
               )}
+              title="Saves"
             >
               {isSaved ? (
                 <RiBookmarkFill className="w-4 h-4 text-current" aria-hidden />
               ) : (
                 <RiBookmarkLine className="w-4 h-4" aria-hidden />
               )}
+              <span className="text-xs tabular-nums">{saveCount}</span>
             </button>
 
             {/* Add to Playlist */}
             {isAuthenticated && (
               <button
+                type="button"
                 onClick={handleAddToPlaylist}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
+                title="Playlist adds (not saves)"
               >
                 <RiListOrdered className="w-5 h-5" aria-hidden />
+                <span className="text-xs tabular-nums">{playlistAddCount}</span>
               </button>
             )}
 
             {/* Share */}
             <button
+              type="button"
               onClick={handleShare}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
                 justShared ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
               )}
+              title="Share taps (completed share or copy)"
             >
               {justShared ? (
                 <RiShareFill className="w-4 h-4" aria-hidden />
               ) : (
                 <RiShareLine className="w-4 h-4" aria-hidden />
               )}
+              <span className="text-xs tabular-nums">{shareCount}</span>
             </button>
 
             {/* Post About This */}
-            {isAuthenticated && (
+            {/* {isAuthenticated && (
               <button
                 onClick={(e) => {
                   e.preventDefault()
@@ -1444,7 +1545,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 <RiChat1Line className="w-4 h-4" aria-hidden />
                 <span className="hidden sm:inline">Post</span>
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </article>
@@ -1473,6 +1574,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           organization: item.organization,
           author: item.author,
           description: item.description
+        }}
+        onItemAddedToPlaylist={() => {
+          setPlaylistAddCount((c) => c + 1)
+          void ApiClient.recordFeedPlaylistAdd(item.type, item._id)
         }}
       />
     </>

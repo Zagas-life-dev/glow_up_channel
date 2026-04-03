@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist } from '@/contexts/playlist-context'
+import { canViewPremiumPlaylist } from '@/lib/roles'
 import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
 import EditProfileModal from '@/components/edit-profile-modal'
@@ -57,6 +58,8 @@ import {
   RiPlayList2Fill,
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
+import { GlowScoreBar } from "@/components/glow-score-bar"
+import { useGlowScore } from "@/hooks/use-glow-score"
 
 interface OnboardingData {
   country: string
@@ -321,6 +324,8 @@ export default function ProfilePage() {
   // QR dashboard (open mini-app with session)
   const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
 
+  const { glow, isLoading: glowLoading } = useGlowScore({ enabled: isOwner })
+
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('accessToken')
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -565,16 +570,29 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <PageShell className="flex items-center justify-center">
-        <div className="text-center max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-            <RiUserLine className="w-8 h-8 text-muted-foreground" aria-hidden />
+      <PageShell fullWidth className="relative flex min-h-[50vh] items-center justify-center font-sans">
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div
+            className="absolute -top-28 right-0 h-72 w-72 rounded-full opacity-[0.1] dark:opacity-[0.14] blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 72%)" }}
+          />
+        </div>
+        <div className="relative mx-auto max-w-md px-4 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm">
+            <RiUserLine className="h-8 w-8 text-muted-foreground" aria-hidden />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">Profile Not Found</h2>
-          <p className="text-muted-foreground text-sm mb-6">{error || 'This profile doesn\'t exist or has been removed.'}</p>
-          <Button onClick={() => router.back()} variant="outline" className="border-border text-foreground rounded-full px-6">
-            <RiArrowLeftLine className="w-4 h-4 mr-2" aria-hidden />
-            Go Back
+          <h2 className="text-display-sm font-bold tracking-tight text-foreground">Profile not found</h2>
+          <p className="mt-3 text-body-sm leading-relaxed text-muted-foreground">
+            {error || "This profile doesn&apos;t exist or has been removed."}
+          </p>
+          <Button
+            type="button"
+            onClick={() => router.back()}
+            variant="outline"
+            className="mt-8 h-11 rounded-2xl border-border/70 px-6"
+          >
+            <RiArrowLeftLine className="mr-2 h-4 w-4" aria-hidden />
+            Go back
           </Button>
         </div>
       </PageShell>
@@ -593,40 +611,56 @@ export default function ProfilePage() {
   const activeSocialLinks = Object.entries(profile.socialLinks || {}).filter(([_, url]) => url)
 
   return (
-    <PageShell>
-      <div className="max-w-2xl mx-auto">
-        {/* Minimal top row: back + actions (no sticky bar) */}
-        <div className="flex items-center justify-between gap-3 py-3 px-1">
+    <PageShell fullWidth className="relative font-sans">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute -top-28 right-0 h-80 w-80 rounded-full opacity-[0.11] dark:opacity-[0.16] blur-3xl"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 72%)" }}
+        />
+        <div
+          className="absolute left-0 top-1/3 h-64 w-64 -translate-x-1/4 rounded-full opacity-[0.05] blur-3xl dark:opacity-[0.09]"
+          style={{ background: "radial-gradient(circle, hsl(222 41% 38%) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.28] dark:opacity-[0.16]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.48'/%3E%3C/svg%3E")`,
+          }}
+        />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-2xl">
+        <div className="sticky top-0 z-20 -mx-1 mb-1 flex items-center justify-between gap-2 border-b border-border/50 bg-page/90 px-2 py-2.5 pt-[max(0.25rem,env(safe-area-inset-top))] backdrop-blur-xl supports-[backdrop-filter]:bg-page/75 sm:static sm:mx-0 sm:mb-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-3 sm:pt-0 sm:backdrop-blur-0">
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors rounded-xl py-2 pr-3 pl-2 -ml-2 hover:bg-card/80 hover:backdrop-blur-sm hover:border border-transparent hover:border-border/50"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-2xl text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:min-w-0 sm:justify-start sm:px-3"
             aria-label="Go back"
           >
-            <RiArrowLeftLine className="w-5 h-5" aria-hidden />
-            <span className="text-sm font-medium">Back</span>
+            <RiArrowLeftLine className="h-5 w-5 shrink-0" aria-hidden />
+            <span className="hidden text-body-sm font-semibold sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {isOwner && (
               currentUser?.isPremium ? (
                 <button
                   type="button"
                   onClick={handleOpenQrDashboard}
                   disabled={isOpeningQrDashboard}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all disabled:opacity-50"
-                  title="Manage QR Profile"
-                  aria-label="Manage QR Profile"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-all hover:border-border/60 hover:bg-card/80 hover:text-foreground disabled:opacity-50"
+                  title="Manage QR profile"
+                  aria-label="Manage QR profile"
                 >
                   {isOpeningQrDashboard ? (
-                    <RiLoader4Line className="w-5 h-5 animate-spin" aria-hidden />
+                    <RiLoader4Line className="h-5 w-5 animate-spin" aria-hidden />
                   ) : (
-                    <RiQrCodeLine className="w-5 h-5" aria-hidden />
+                    <RiQrCodeLine className="h-5 w-5" aria-hidden />
                   )}
                 </button>
               ) : (
                 <Link
                   href="/premium"
-                  className="inline-flex items-center justify-center px-3 h-10 rounded-xl text-xs font-medium bg-primary text-foreground hover:bg-primary/90 transition-colors border border-primary/40"
+                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl border border-primary/35 bg-primary px-3 text-caption font-bold text-primary-foreground transition-colors hover:bg-primary/90"
                   aria-label="Subscribe to unlock QR profile"
                 >
                   Subscribe
@@ -659,80 +693,80 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile hero: glass card */}
-        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden mb-5">
-          <div className="p-5 sm:p-6">
-            <div className="flex items-start gap-5 mb-5">
-              <div className="relative flex-shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden ring-2 ring-border/40">
+        {/* Profile hero */}
+        <div className="mb-5 overflow-hidden rounded-[1.35rem] border border-border/60 bg-gradient-to-b from-card/95 via-card/88 to-muted/10 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.06)] backdrop-blur-sm">
+          <div className="p-4 sm:p-6">
+            <div className="mb-5 flex items-start gap-4 sm:gap-5">
+              <div className="relative shrink-0">
+                <div className="h-24 w-24 overflow-hidden rounded-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-card sm:h-28 sm:w-28">
                   {profile.profileImage ? (
                     <Image
                       src={profile.profileImage}
                       alt={displayName}
-                      width={96}
-                      height={96}
-                      className="w-full h-full object-cover"
+                      width={112}
+                      height={112}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-orange-500/90 to-rose-600/90 flex items-center justify-center">
-                      <span className="text-2xl sm:text-3xl font-bold text-white">
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-primary/70">
+                      <span className="text-3xl font-bold text-primary-foreground sm:text-4xl">
                         {displayName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
                 {profile.isPrivate && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-lg bg-card/95 backdrop-blur-sm border border-border/60 flex items-center justify-center">
-                    <RiLockLine className="w-3 h-3 text-muted-foreground" aria-hidden />
+                  <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm">
+                    <RiLockLine className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                   </div>
                 )}
               </div>
               {profile.showConnections && (
-                <div className="flex-1 flex items-center justify-around pt-1 min-w-0">
-                  <div className="text-center">
-                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.postCount}</p>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Posts</p>
+                <div className="flex min-w-0 flex-1 items-stretch justify-between gap-1 pt-0.5 sm:pt-1">
+                  <div className="flex min-h-[3.25rem] flex-1 flex-col items-center justify-center rounded-xl px-1 text-center">
+                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.postCount}</p>
+                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Posts</p>
                   </div>
                   <button
-                    onClick={() => setShowConnectionsList('followers')}
-                    className="text-center hover:opacity-80 transition-opacity"
+                    type="button"
+                    onClick={() => setShowConnectionsList("followers")}
+                    className="flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 text-center transition-colors hover:bg-muted/60 active:scale-[0.98]"
                   >
-                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.followersCount ?? 0}</p>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partners</p>
+                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.followersCount ?? 0}</p>
+                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Partners</p>
                   </button>
                   <button
-                    onClick={() => setShowConnectionsList('following')}
-                    className="text-center hover:opacity-80 transition-opacity"
+                    type="button"
+                    onClick={() => setShowConnectionsList("following")}
+                    className="flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 text-center transition-colors hover:bg-muted/60 active:scale-[0.98]"
                   >
-                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{profile.followingCount ?? 0}</p>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partnering</p>
+                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.followingCount ?? 0}</p>
+                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Partnering</p>
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-lg font-bold text-foreground">{displayName}</h1>
-              {profile.role === 'opportunity_poster' && (
-                <span className="px-2 py-0.5 rounded-lg bg-primary/15 text-orange-400 text-[10px] font-medium border border-primary/20">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <h1 className="text-display-sm font-bold tracking-tight text-foreground sm:text-display-md">{displayName}</h1>
+              {profile.role === "opportunity_poster" && (
+                <span className="rounded-lg border border-primary/25 bg-primary/12 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-primary">
                   Provider
                 </span>
               )}
-              {(profile.role === 'admin' || profile.role === 'super_admin') && (
-                <span className="px-2 py-0.5 rounded-lg bg-violet-500/15 text-violet-400 text-[10px] font-medium border border-violet-500/20 flex items-center gap-0.5">
-                  <RiShieldLine className="w-2.5 h-2.5" aria-hidden />
+              {(profile.role === "admin" || profile.role === "super_admin") && (
+                <span className="flex items-center gap-1 rounded-lg border border-border/70 bg-muted/50 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
+                  <RiShieldLine className="h-3 w-3 text-primary" aria-hidden />
                   Admin
                 </span>
               )}
             </div>
-            {profile.headline && (
-              <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
-            )}
+            {profile.headline && <p className="mb-2 text-body-sm text-muted-foreground sm:text-body">{profile.headline}</p>}
             {profile.bio && (
-              <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{profile.bio}</p>
+              <p className="whitespace-pre-line text-body-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
             )}
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-muted-foreground">
               {profile.onboarding?.country && (
                 <span className="flex items-center gap-1">
                   <RiMapPinLine className="w-3 h-3 opacity-70" aria-hidden />
@@ -770,7 +804,7 @@ export default function ProfilePage() {
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-primary hover:text-orange-400 transition-colors flex items-center gap-1"
+                    className="flex items-center gap-1 text-caption font-medium text-primary transition-colors hover:text-primary/80"
                   >
                     <RiLink className="w-3 h-3" aria-hidden />
                     {new URL(profile.website).hostname.replace('www.', '')}
@@ -796,38 +830,54 @@ export default function ProfilePage() {
             )}
 
             {/* Action buttons: in top container under join date */}
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="mt-5 flex flex-wrap gap-2">
               {isOwner ? (
                 <>
                   <Button
+                    type="button"
                     onClick={() => setShowEditModal(true)}
                     variant="outline"
-                    className="flex-1 min-w-0 border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
+                    className="h-11 min-h-11 min-w-[8rem] flex-1 rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
                   >
-                    Edit Profile
+                    Edit profile
                   </Button>
-                  <Link href="/profile/settings" className="flex-1 min-w-0">
+                  <Link href="/profile/settings" className="min-w-0 flex-1">
                     <Button
+                      type="button"
                       variant="outline"
-                      className="w-full border border-border/60 bg-card/80 backdrop-blur-sm text-foreground hover:bg-card hover:border-border rounded-xl h-10 text-sm font-medium transition-all"
+                      className="h-11 min-h-11 w-full rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
                     >
-                      <RiSettingsLine className="w-4 h-4 mr-2" aria-hidden />
+                      <RiSettingsLine className="mr-2 h-4 w-4" aria-hidden />
                       Settings
                     </Button>
                   </Link>
+                  {canViewPremiumPlaylist(currentUser?.isPremium, currentUser?.role) && (
+                    <Link href="/playlists?tab=premium" className="shrink-0 sm:min-w-0 sm:flex-1" title="Premium playlists">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 min-h-11 w-11 rounded-2xl border-amber-500/35 bg-amber-500/8 p-0 text-amber-900 hover:bg-amber-500/12 dark:text-amber-400 sm:w-full sm:px-4"
+                        aria-label="Premium playlists"
+                      >
+                        <RiPlayList2Fill className="h-4 w-4 shrink-0 sm:mr-2" aria-hidden />
+                        <span className="hidden sm:inline">Premium</span>
+                      </Button>
+                    </Link>
+                  )}
                 </>
               ) : (
                 <>
                   <Button
+                    type="button"
                     onClick={handleConnect}
                     disabled={connectLoading}
                     className={cn(
-                      "flex-1 min-w-0 rounded-xl h-10 text-sm font-medium transition-all border",
+                      "h-11 min-h-11 min-w-0 flex-1 rounded-2xl border text-body-sm font-semibold transition-all",
                       connectionStatus?.isFollowing
-                        ? "bg-card/80 backdrop-blur-sm text-foreground hover:bg-red-500/10 hover:text-red-400 border-border/60 hover:border-red-500/30"
+                        ? "border-border/60 bg-card/80 text-foreground hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                         : connectionStatus?.isPending
-                        ? "bg-card/80 backdrop-blur-sm text-muted-foreground border-border/60"
-                        : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-transparent shadow-lg shadow-orange-500/20"
+                          ? "border-border/60 bg-muted/40 text-muted-foreground"
+                          : "border-transparent bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90",
                     )}
                   >
                     {connectionStatus?.isFollowing ? (
@@ -845,17 +895,23 @@ export default function ProfilePage() {
                     )}
                   </Button>
                   <Button
+                    type="button"
                     variant="outline"
                     disabled
-                    className="flex-1 min-w-0 border border-border/60 bg-card/60 text-muted-foreground rounded-xl h-10 text-sm font-medium"
+                    className="h-11 min-h-11 min-w-0 flex-1 rounded-2xl border-border/60 bg-muted/30 text-body-sm font-medium text-muted-foreground"
                   >
-                    Message (coming soon)
+                    Message soon
                   </Button>
                 </>
               )}
             </div>
           </div>
         </div>
+
+        {/* Glow Score (own profile only) */}
+        {isOwner && glow && (
+          <GlowScoreBar glow={glow} isLoading={glowLoading} className="mb-5" />
+        )}
 
         {/* Skills / Interests / Industries: soft glass block */}
         {(() => {
@@ -864,7 +920,7 @@ export default function ProfilePage() {
           const hasIndustries = profile.onboarding?.industrySectors?.length
           if (skills.length === 0 && !hasInterests && !hasIndustries) return null
           return (
-            <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 mb-5">
+            <div className="mb-5 rounded-[1.25rem] border border-border/60 bg-card/70 p-4 backdrop-blur-sm sm:p-5">
               {skills.length > 0 && (
                 <div className="mb-4 last:mb-0">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
@@ -873,7 +929,10 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {skills.slice(0, 8).map((skill, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-xl bg-primary/10 text-orange-400 text-xs border border-primary/20">
+                      <span
+                        key={i}
+                        className="rounded-xl border border-primary/20 bg-primary/10 px-2.5 py-1 text-caption font-medium text-primary"
+                      >
                         {skill}
                       </span>
                     ))}
@@ -907,7 +966,10 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {profile.onboarding!.industrySectors!.slice(0, 5).map((sector, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-xl bg-violet-500/10 text-violet-400 text-xs border border-violet-500/20">
+                      <span
+                        key={i}
+                        className="rounded-xl border border-border/70 bg-muted/50 px-2.5 py-1 text-caption font-medium text-foreground"
+                      >
                         {sector}
                       </span>
                     ))}
@@ -959,22 +1021,25 @@ export default function ProfilePage() {
 
         {/* Profile Completion: soft glass with checklist */}
         {isOwner && completionPercentage < 100 && (
-          <div className="mb-5 rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-600/5 backdrop-blur-sm p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/20 flex items-center justify-center">
-                <RiSparkling2Line className="w-4 h-4 text-orange-400" aria-hidden />
+          <div className="mb-5 rounded-[1.25rem] border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/5 p-4 backdrop-blur-sm sm:p-5">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/25 bg-primary/15">
+                <RiSparkling2Line className="h-5 w-5 text-primary" aria-hidden />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Profile completion</h3>
-                <p className="text-xs text-muted-foreground">Finish these to reach 100%</p>
+              <div className="min-w-0">
+                <h3 className="text-body-sm font-bold text-foreground">Profile completion</h3>
+                <p className="text-caption text-muted-foreground">Finish these to reach 100%</p>
               </div>
             </div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">{completionPercentage}% complete</span>
-              <span className="text-sm font-bold text-orange-400">{completionPercentage}%</span>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-caption text-muted-foreground">{completionPercentage}% complete</span>
+              <span className="text-body-sm font-bold tabular-nums text-primary">{completionPercentage}%</span>
             </div>
-            <div className="h-1.5 bg-muted/80 rounded-full overflow-hidden mb-3">
-              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }} />
+            <div className="mb-3 h-2 overflow-hidden rounded-full bg-muted/80">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              />
             </div>
 
             {(() => {
@@ -992,7 +1057,7 @@ export default function ProfilePage() {
                       </div>
                       <Link
                         href={item.href}
-                        className="text-[11px] font-medium text-orange-400 hover:text-orange-300 whitespace-nowrap"
+                        className="whitespace-nowrap text-caption font-semibold text-primary hover:text-primary/80"
                       >
                         Open
                       </Link>
@@ -1008,9 +1073,13 @@ export default function ProfilePage() {
             })()}
 
             <Link href="/onboarding">
-              <Button size="sm" className="w-full bg-primary/90 hover:bg-primary text-white rounded-xl h-9 text-xs font-medium border border-orange-500/20">
-                Open onboarding wizard
-                <RiArrowRightLine className="w-3 h-3 ml-1" aria-hidden />
+              <Button
+                type="button"
+                size="sm"
+                className="h-10 w-full rounded-2xl border border-primary/30 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Open onboarding
+                <RiArrowRightLine className="ml-1 h-3.5 w-3.5" aria-hidden />
               </Button>
             </Link>
           </div>
@@ -1023,29 +1092,28 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Tabs: glass pills */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full flex gap-1.5 p-0 h-auto mb-4 bg-transparent border-0">
+          <TabsList className="mb-4 flex h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 scrollbar-hide sm:justify-stretch">
             <TabsTrigger
               value="posts"
-              className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <RiFileLine className="w-4 h-4 mr-2" aria-hidden />
+              <RiFileLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
               Posts
             </TabsTrigger>
             <TabsTrigger
               value="playlists"
-              className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <RiPlayList2Fill className="w-4 h-4 mr-2" aria-hidden />
-              Playlists
+              <RiPlayList2Fill className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
+              Lists
             </TabsTrigger>
             {isOwner && (
               <TabsTrigger
                 value="bookmarks"
-                className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-all border border-transparent bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/60 data-[state=active]:bg-card/80 data-[state=active]:backdrop-blur-sm data-[state=active]:border-border/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
               >
-                <RiBookmarkLine className="w-4 h-4 mr-2" aria-hidden />
+                <RiBookmarkLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Saved
               </TabsTrigger>
             )}
@@ -1068,18 +1136,18 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-                  <RiFileLine className="w-6 h-6 text-muted-foreground" aria-hidden />
+              <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                  <RiFileLine className="h-7 w-7 text-muted-foreground" aria-hidden />
                 </div>
-                <p className="font-medium text-foreground mb-1">No Posts Yet</p>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {isOwner ? "Share your first post and start connecting!" : "This user hasn't shared any posts yet."}
+                <p className="text-body-sm font-bold text-foreground">No posts yet</p>
+                <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
+                  {isOwner ? "Share your first post and start connecting." : "This user hasn't shared any posts yet."}
                 </p>
                 {isOwner && (
                   <Link href="/community">
-                    <Button size="sm" className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6 shadow-md shadow-orange-500/20">
-                      Create Post
+                    <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                      Create post
                     </Button>
                   </Link>
                 )}
@@ -1120,20 +1188,18 @@ export default function ProfilePage() {
 
               if (!hasAnyPlaylists) {
                 return (
-                  <div className="text-center py-16">
-                    <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-                      <RiPlayList2Fill className="w-6 h-6 text-muted-foreground" aria-hidden />
+                  <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                      <RiPlayList2Fill className="h-7 w-7 text-muted-foreground" aria-hidden />
                     </div>
-                    <p className="font-medium text-foreground mb-1">No Playlists</p>
-                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                      {isOwner 
-                        ? "Create or save playlists to see them here." 
-                        : "This user hasn't created any public playlists."}
+                    <p className="text-body-sm font-bold text-foreground">No playlists</p>
+                    <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
+                      {isOwner ? "Create or save playlists to see them here." : "No public playlists yet."}
                     </p>
                     {isOwner && (
                       <Link href="/playlists">
-                        <Button size="sm" className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6 shadow-md shadow-orange-500/20">
-                          Create Playlist
+                        <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                          Create playlist
                         </Button>
                       </Link>
                     )}
@@ -1263,17 +1329,17 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : bookmarks.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-                    <RiBookmarkLine className="w-6 h-6 text-muted-foreground" aria-hidden />
+                <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                    <RiBookmarkLine className="h-7 w-7 text-muted-foreground" aria-hidden />
                   </div>
-                  <p className="font-medium text-foreground mb-1">No Saved Posts</p>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    Posts you bookmark will appear here for easy access.
+                  <p className="text-body-sm font-bold text-foreground">No saved posts</p>
+                  <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
+                    Bookmarked posts show up here.
                   </p>
                   <Link href="/community">
-                    <Button size="sm" className="mt-4 bg-primary hover:bg-primary/90 rounded-full px-6">
-                      Explore Feed
+                    <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                      Explore feed
                     </Button>
                   </Link>
                 </div>

@@ -74,6 +74,7 @@ interface PlaylistContextType {
   publicPlaylists: Playlist[]
   sharedPlaylists: Playlist[]
   savedPlaylists: Playlist[]
+  premiumPlaylists: Playlist[]
   invitations: PlaylistInvitation[]
   isLoading: boolean
   error: string | null
@@ -91,6 +92,7 @@ interface PlaylistContextType {
   isPlaylistSaved: (playlistId: string) => boolean
   fetchPlaylists: () => Promise<void>
   fetchPublicPlaylists: () => Promise<void>
+  fetchPremiumPlaylists: () => Promise<void>
   fetchInvitations: () => Promise<void>
   fetchSavedPlaylists: () => Promise<void>
   getPlaylistById: (id: string) => Promise<Playlist | null>
@@ -126,6 +128,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const [publicPlaylists, setPublicPlaylists] = useState<Playlist[]>([])
   const [sharedPlaylists, setSharedPlaylists] = useState<Playlist[]>([])
   const [savedPlaylists, setSavedPlaylists] = useState<Playlist[]>([])
+  const [premiumPlaylists, setPremiumPlaylists] = useState<Playlist[]>([])
   const [invitations, setInvitations] = useState<PlaylistInvitation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -232,6 +235,33 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       setPublicPlaylists([])
     }
   }, [])
+
+  // Fetch premium playlists (only when authenticated; call from Premium tab)
+  const fetchPremiumPlaylists = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      setPremiumPlaylists([])
+      return
+    }
+    try {
+      if (!API_BASE_URL) return
+      const response = await fetch(`${API_BASE_URL}/api/playlists/premium?page=1&limit=50`, {
+        headers: getAuthHeaders()
+      })
+      if (response.status === 403) {
+        setPremiumPlaylists([])
+        return
+      }
+      if (!response.ok) return
+      const data = await response.json()
+      if (data.success && data.data?.playlists) {
+        setPremiumPlaylists(data.data.playlists)
+      } else {
+        setPremiumPlaylists([])
+      }
+    } catch {
+      setPremiumPlaylists([])
+    }
+  }, [isAuthenticated, user, getAuthHeaders])
 
   // Fetch pending invitations
   const fetchInvitations = useCallback(async () => {
@@ -550,15 +580,21 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`${API_BASE_URL}/api/playlists/${id}`, {
         headers: getAuthHeaders()
       })
-      
+
       const result = await response.json()
-      
+
+      if (response.status === 403) {
+        const err = Object.assign(new Error(result?.message || 'Premium membership required'), { status: 403 })
+        throw err
+      }
+
       if (result.success) {
         return result.data.playlist
       }
-      
+
       return null
     } catch (err) {
+      if ((err as { status?: number })?.status === 403) throw err
       console.error('Error fetching playlist:', err)
       return null
     }
@@ -585,6 +621,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       publicPlaylists,
       sharedPlaylists,
       savedPlaylists,
+      premiumPlaylists,
       invitations,
       isLoading,
       error,
@@ -602,6 +639,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       isPlaylistSaved,
       fetchPlaylists,
       fetchPublicPlaylists,
+      fetchPremiumPlaylists,
       fetchInvitations,
       fetchSavedPlaylists,
       getPlaylistById,

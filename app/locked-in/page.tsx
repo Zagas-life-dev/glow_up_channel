@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import confetti from "canvas-confetti"
 import { useLockedIn, type LockedInTodoItem } from "@/contexts/locked-in-context"
 import AuthGuard from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
@@ -52,14 +53,16 @@ function LockedInWithStats() {
   }, [statsInvalidatedAt, fetchStats])
 
   return (
-    <div className="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-center">
-      <p className="text-xs font-medium uppercase tracking-wider text-white/60">Locked in with</p>
-      <div className="mt-1 flex items-center justify-center gap-6">
-        <span className="text-2xl font-bold tabular-nums text-white">{stats.liveCount}</span>
-        <span className="text-white/50">live now</span>
-        <span className="text-white/30">·</span>
-        <span className="text-2xl font-bold tabular-nums text-white">{stats.totalToday}</span>
-        <span className="text-white/50">today</span>
+    <div className="rounded-2xl border border-border/70 bg-card/90 px-4 py-3 text-center backdrop-blur-sm">
+      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        Locked in with
+      </p>
+      <div className="mt-1 flex items-center justify-center gap-4 text-body-sm">
+        <span className="text-lg font-semibold tabular-nums text-foreground">{stats.liveCount}</span>
+        <span className="text-muted-foreground">live now</span>
+        <span className="text-muted-foreground/40">·</span>
+        <span className="text-lg font-semibold tabular-nums text-foreground">{stats.totalToday}</span>
+        <span className="text-muted-foreground">today</span>
       </div>
     </div>
   )
@@ -91,6 +94,12 @@ function LockedInPageContent() {
   const [starting, setStarting] = useState(false)
   const [promotedFeed, setPromotedFeed] = useState<PromotedContentItem[]>([])
   const [liveStats, setLiveStats] = useState<{ liveCount: number; totalToday: number }>({ liveCount: 0, totalToday: 0 })
+  const [usage, setUsage] = useState<{
+    isPremium: boolean
+    weeklyUsed: number
+    weeklyLimit: number
+    remaining: number | null
+  } | null>(null)
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -120,6 +129,12 @@ function LockedInPageContent() {
       .catch(() => {})
   }, [])
 
+  const fetchUsage = useCallback(() => {
+    ApiClient.getLockedInUsage()
+      .then((data) => setUsage(data))
+      .catch(() => setUsage(null))
+  }, [])
+
   useEffect(() => {
     if (!isActive) return
     fetchPromotedFeed()
@@ -133,6 +148,10 @@ function LockedInPageContent() {
     const interval = setInterval(fetchLiveStats, 30000)
     return () => clearInterval(interval)
   }, [isActive, fetchLiveStats])
+
+  useEffect(() => {
+    fetchUsage()
+  }, [fetchUsage])
 
   useEffect(() => {
     if (isActive && statsInvalidatedAt > 0) fetchLiveStats()
@@ -168,6 +187,19 @@ function LockedInPageContent() {
     await endSession()
     setSummary({ durationSeconds, intention, completedCount, totalTodos, todos: todosSnapshot })
     setSummaryOpen(true)
+    // Celebrate the end of a successful Locked In session
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.3 },
+        angle: 90,
+        startVelocity: 45,
+        ticks: 250,
+      })
+    } catch {
+      // If confetti fails for any reason, ignore so it never breaks core flow
+    }
   }
 
   const addPendingTodo = () => {
@@ -206,67 +238,83 @@ function LockedInPageContent() {
     const promoted0 = promotedFeed[0]
     const promoted1 = promotedFeed[1]
     return (
-      <div className="min-h-screen bg-page relative overflow-hidden px-4 py-6 flex flex-col items-center">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_60%)]" />
-        <div className="relative w-full flex flex-col items-center flex-1">
-          {/* Center: small circle + live counter + minimal controls */}
-          <div className="flex flex-col items-center gap-4 py-6">
-            <div className="w-28 h-28 rounded-full border-2 border-primary/50 bg-card/80 flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-mono font-semibold tabular-nums text-foreground">
-                {formatElapsed(elapsedSeconds)}
-              </span>
-            </div>
-            <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Locked in with</p>
-              <p className="mt-0.5 text-lg font-semibold tabular-nums text-foreground">
-                {liveStats.liveCount} live now · {liveStats.totalToday} today
+      <div className="relative flex min-h-screen w-full flex-col items-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.18),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] px-4 pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-[max(4rem,env(safe-area-inset-top)+3.5rem)] font-sans">
+        <div className="relative flex w-full max-w-md flex-1 flex-col items-center">
+          {/* Center: timer + live counter + controls */}
+          <div className="mt-4 flex w-full flex-col items-center gap-4 rounded-[1.35rem] border border-border/70 bg-card/90 px-5 py-6 shadow-xl backdrop-blur-sm">
+            <div className="flex w-full items-center justify-between">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Locked In
               </p>
+              {usage && (
+                <span className="rounded-full bg-muted/70 px-3 py-1 text-[11px] text-muted-foreground">
+                  {usage.isPremium
+                    ? "Premium: unlimited sessions"
+                    : `Week: ${usage.weeklyUsed}/${usage.weeklyLimit}${
+                        usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""
+                      }`}
+                </span>
+              )}
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-1 flex flex-col items-center gap-3">
+              <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-primary/70 bg-background/70 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+                <span className="text-3xl font-mono font-semibold tabular-nums text-foreground">
+                  {formatElapsed(elapsedSeconds)}
+                </span>
+              </div>
+              <div className="text-center">
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Locked in with others
+                </p>
+                <p className="mt-1 text-body-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground tabular-nums">{liveStats.liveCount}</span> live now ·{" "}
+                  <span className="font-semibold text-foreground tabular-nums">{liveStats.totalToday}</span> today
+                </p>
+              </div>
+            </div>
+            <div className="mt-2 flex w-full flex-wrap items-center justify-center gap-2">
               {state.isPaused ? (
-                <Button size="sm" onClick={resumeSession} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button
+                  size="sm"
+                  onClick={resumeSession}
+                  className="h-9 rounded-2xl bg-primary px-4 text-primary-foreground hover:bg-primary/90"
+                >
                   Resume
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" onClick={pauseSession} className="rounded-full">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={pauseSession}
+                  className="h-9 rounded-2xl border-border px-4 text-body-sm hover:bg-muted"
+                >
                   Pause
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={handleEndSession} className="rounded-full border-red-500/80 text-red-500 hover:bg-red-500/10">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleEndSession}
+                className="h-9 rounded-2xl border-red-500/80 px-4 text-body-sm text-red-500 hover:bg-red-500/10"
+              >
                 End session
               </Button>
             </div>
           </div>
-          {/* Ad slots: 4 on desktop, 2 on mobile */}
-          <div className="w-full max-w-4xl flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8">
-            {/* Mobile: 2 slots — ad only, sponsored+ads */}
-            <div className="lg:hidden space-y-4">
-              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
+          {/* Promoted content rail (mobile-first) */}
+          <div className="mt-6 w-full space-y-4">
+            {promoted1 && (
               <FeedSponsoredSlot
-                kind={promoted1 ? "promoted" : "ad"}
-                content={promoted1 ?? undefined}
+                kind="promoted"
+                content={promoted1}
                 slotId={ADSENSE_FEED_SLOT}
                 showAdBelow={!!ADSENSE_FEED_SLOT}
                 adSlotId={ADSENSE_FEED_SLOT}
               />
-            </div>
-            {/* Desktop: 4 slots — sponsored, sponsored+ads, ad, ad */}
-            <div className="hidden lg:contents">
-              <FeedSponsoredSlot
-                kind={promoted0 ? "promoted" : "ad"}
-                content={promoted0 ?? undefined}
-                slotId={ADSENSE_FEED_SLOT}
-              />
-              <FeedSponsoredSlot
-                kind={promoted1 ? "promoted" : "ad"}
-                content={promoted1 ?? undefined}
-                slotId={ADSENSE_FEED_SLOT}
-                showAdBelow={!!ADSENSE_FEED_SLOT}
-                adSlotId={ADSENSE_FEED_SLOT}
-              />
-              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
-              {ADSENSE_FEED_SLOT && <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[100px]" />}
-            </div>
+            )}
+            {!promoted1 && ADSENSE_FEED_SLOT && (
+              <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[96px]" />
+            )}
           </div>
         </div>
         <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
@@ -315,25 +363,30 @@ function LockedInPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-page relative overflow-hidden px-4 py-10 flex items-center justify-center">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_60%)]" />
-      <div className="relative w-full max-w-5xl grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)] items-start">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.18),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] px-4 pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-[max(4rem,env(safe-area-inset-top)+3.5rem)] font-sans">
+      <div className="relative w-full max-w-3xl space-y-8">
         {/* Focus card */}
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/70 border border-border/70 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Locked In session
-            </span>
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1.5 text-overline font-semibold uppercase tracking-[0.18em] text-muted-foreground shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span>Locked In session</span>
           </div>
 
-          <div className="rounded-2xl bg-card/90 border border-border/80 shadow-xl p-6 sm:p-7 flex flex-col gap-6">
+          {usage && (
+            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/80 border border-border/70 text-[11px] text-muted-foreground">
+              {usage.isPremium
+                ? "Premium: unlimited Locked In sessions"
+                : `Free sessions this week: ${usage.weeklyUsed}/${usage.weeklyLimit} used${usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""}`}
+            </div>
+          )}
+
+          <div className="rounded-[1.35rem] border border-border/80 bg-card/90 p-6 shadow-xl backdrop-blur-sm sm:p-7">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+                <h1 className="text-display-sm text-foreground sm:text-display-md">
                   Stay locked in on one thing
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">
+                <p className="mt-1 max-w-xs text-body-sm text-muted-foreground sm:text-body">
                   Set your intention, break it into a few to-dos, and let the timer keep you honest.
                 </p>
               </div>
@@ -342,11 +395,11 @@ function LockedInPageContent() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-background/60 border border-border/70 px-5 py-6 flex flex-col items-center gap-3">
-              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="mt-5 flex flex-col items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-5 py-6">
+              <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 Elapsed
               </span>
-              <div className="text-5xl sm:text-6xl md:text-7xl font-mono tabular-nums text-foreground">
+              <div className="text-5xl font-mono tabular-nums text-foreground sm:text-6xl md:text-7xl">
                 {formatElapsed(elapsedSeconds)}
               </div>
             </div>
@@ -354,7 +407,7 @@ function LockedInPageContent() {
             {!isActive && (
               <>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <label className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Intention
                   </label>
                   <Textarea
@@ -366,7 +419,7 @@ function LockedInPageContent() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <label className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     To-do list
                   </label>
                   <div className="flex gap-2">
@@ -410,15 +463,15 @@ function LockedInPageContent() {
                 {startError && (
                   <p className="text-sm text-red-400 text-center">{startError}</p>
                 )}
-                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                  <p className="text-[11px] text-muted-foreground max-w-xs">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="max-w-xs text-[11px] text-muted-foreground">
                     Sessions auto-save to your history when you end them, so you can see how often you’re really locked in.
                   </p>
                   <Button
                     size="lg"
                     onClick={handleStart}
                     disabled={!canStart || starting}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-full px-8"
+                    className="rounded-2xl bg-primary px-8 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
                   >
                     {starting ? "Starting…" : "Start session"}
                   </Button>
@@ -440,7 +493,7 @@ function LockedInPageContent() {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <label className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     To-do list
                   </label>
                   <div className="flex gap-2">
@@ -495,7 +548,7 @@ function LockedInPageContent() {
                       <Button
                         size="lg"
                         onClick={resumeSession}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-foreground rounded-full px-6"
+                        className="rounded-2xl bg-primary px-6 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
                       >
                         Resume
                       </Button>
@@ -504,7 +557,7 @@ function LockedInPageContent() {
                         size="lg"
                         variant="outline"
                         onClick={pauseSession}
-                        className="border-border text-foreground hover:bg-muted rounded-full px-6"
+                        className="rounded-2xl border-border px-6 text-foreground hover:bg-muted"
                       >
                         Pause
                       </Button>
@@ -513,12 +566,12 @@ function LockedInPageContent() {
                       size="lg"
                       variant="outline"
                       onClick={handleEndSession}
-                      className="border-red-500/80 text-red-400 hover:bg-red-500/10 rounded-full px-6"
+                      className="rounded-2xl border-red-500/80 px-6 text-red-400 hover:bg-red-500/10"
                     >
                       End session
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground max-w-[220px]">
+                  <p className="max-w-[220px] text-[11px] text-muted-foreground">
                     You can browse anywhere in GlowUp while this runs. If you close the app or browser, we&apos;ll pause the timer and resume when you return—use “End session” to save it to your history.
                   </p>
                 </div>

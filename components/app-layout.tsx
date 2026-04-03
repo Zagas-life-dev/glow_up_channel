@@ -1,15 +1,15 @@
 "use client"
 
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect, Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import { usePage } from '@/contexts/page-context'
+import { useCleanupPastContent } from '@/hooks/use-cleanup-past-content'
 import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
 import LockedInIndicator from './locked-in-indicator'
 import PushPromptBanner from './push-prompt-banner'
 import SignUpBetterExperiencePopup from './sign-up-better-experience-popup'
-import NewsletterPopup from './newsletter-popup'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -24,6 +24,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
+  // Auto-trigger backend cleanup of past/expired events, opportunities, jobs (once per session)
+  useCleanupPastContent()
+
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)')
     setIsDesktop(mq.matches)
@@ -36,6 +39,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/signup') || 
                      pathname?.startsWith('/forgot-password') || pathname?.startsWith('/reset-password') ||
                      pathname?.startsWith('/verify-email') || pathname?.startsWith('/onboarding')
+
+  /** /channels/[slug] thread or /channels/[slug]/details: full-height layout, bottom tab hidden elsewhere */
+  const isChannelFullBleed =
+    !!pathname &&
+    (/^\/channels\/(?!create$)[^/]+$/.test(pathname) || /^\/channels\/[^/]+\/details$/.test(pathname))
 
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED
   // When collapsed, add a tiny extra gap between the sidebar rail and content
@@ -60,10 +68,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className="hidden lg:block flex-shrink-0 fixed left-0 top-0 bottom-0 z-40 transition-[width] duration-300 ease-in-out"
         style={{ width: sidebarWidth }}
       >
-        <AppSidebar
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
-        />
+        <Suspense fallback={null}>
+          <AppSidebar
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
+          />
+        </Suspense>
       </aside>
 
       {/* Main Content Area */}
@@ -76,7 +86,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <AppTopBar />
         </div>
         {/* Scrollable Content — top padding + safe area for notch */}
-        <main className="flex-1 pb-24 lg:pb-8 pt-4 pt-safe w-full max-w-full overflow-x-hidden">
+        <main
+          className={
+            isChannelFullBleed
+              ? "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden pt-4 pt-safe pb-0 w-full max-w-full"
+              : "flex-1 pb-24 lg:pb-8 pt-4 pt-safe w-full max-w-full overflow-x-hidden"
+          }
+        >
           {children}
         </main>
       </div>
@@ -85,7 +101,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AppBottomNav />
       <PushPromptBanner />
       <SignUpBetterExperiencePopup />
-      <NewsletterPopup />
       <LockedInIndicator />
     </div>
   )

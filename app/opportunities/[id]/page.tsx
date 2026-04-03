@@ -259,7 +259,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="flex items-center justify-center gap-2" 
-                    onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}
+                    onClick={() => { ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {}); ApiClient.recordApply('opportunity', id).catch(() => {}); }}
                   >
                     Apply now
                     <RiExternalLinkLine className="w-4 h-4" />
@@ -287,7 +287,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="flex items-center justify-center gap-2" 
-                      onClick={() => ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})}
+                      onClick={() => { ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {}); ApiClient.recordApply('opportunity', id).catch(() => {}); }}
                     >
                       Apply now
                       <RiExternalLinkLine className="w-4 h-4" />

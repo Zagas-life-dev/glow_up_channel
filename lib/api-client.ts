@@ -89,6 +89,18 @@ export interface UserProfile {
     aspirations?: string[];
     skills?: string[];
   };
+  // Optional gamification fields (Glow Score)
+  xp_total?: number;
+  level?: number;
+  current_streak?: number;
+}
+
+// Glow Score response (backend shape)
+export interface GlowScoreResponse {
+  xp_total: number;
+  level: number;
+  current_streak: number;
+  xp_to_next_level?: number;
 }
 
 interface AuthTokens {
@@ -113,7 +125,7 @@ export interface Channel {
   name: string;
   slug: string;
   description: string;
-  type: 'public' | 'private';
+  type: 'public' | 'private' | 'pro';
   ownerId: string | null;
   moderatorIds: string[];
   memberCount: number;
@@ -125,6 +137,30 @@ export interface Channel {
 export interface ChannelMembership {
   role: 'owner' | 'moderator' | 'member';
   joinedAt: string;
+}
+
+/** Playlist rows from GET /api/playlists/premium (premium subscribers or admin on backend). */
+export interface PremiumPlaylistSummary {
+  _id: string;
+  name: string;
+  description: string;
+  hashtags: string[];
+  isPublic: boolean;
+  isPremiumPlaylist?: boolean;
+  itemCount: number;
+  createdBy: { _id: string; email: string; firstName?: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PremiumPlaylistsPage {
+  playlists: PremiumPlaylistSummary[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
 }
 
 // API Client Class
@@ -258,10 +294,33 @@ export class ApiClient {
       }
 
       return response;
-    } catch (error: any) {
-      // Re-throw network errors so callers can handle them
+    } catch (error: unknown) {
+      const base =
+        typeof window !== "undefined"
+          ? "Request failed. Check your connection"
+          : `Cannot reach ${url.split("?")[0]}`;
+      const hint =
+        typeof window !== "undefined"
+          ? " — ensure the dev server is running and, for API calls, NEXT_PUBLIC_BACKEND_URL matches your backend (e.g. http://localhost:3001)."
+          : "";
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg === "Failed to fetch" || error instanceof TypeError) {
+        throw new Error(`${base}: ${msg}${hint}`);
+      }
       throw error;
     }
+  }
+
+  /**
+   * Subscription endpoints: in the browser, call same-origin Next.js proxies under /api/subscriptions/*
+   * so fetch does not cross origins (fixes CORS / "Failed to fetch" to localhost:3001).
+   * On the server, use the configured backend URL directly.
+   */
+  private static subscriptionsApiUrl(path: "initialize" | "verify" | "cancel" | "status"): string {
+    if (typeof window !== "undefined") {
+      return `/api/subscriptions/${path}`;
+    }
+    return `${API_BASE_URL}/api/subscriptions/${path}`;
   }
 
   // Authentication Methods
@@ -314,6 +373,12 @@ export class ApiClient {
   static async getCurrentUser(): Promise<{ user: User; profile: UserProfile | null; preferences: any }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`);
     return this.handleResponse(response);
+  }
+
+  // Glow Score / gamification
+  static async getGlowScore(): Promise<GlowScoreResponse> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/me/glow`);
+    return this.handleResponse<GlowScoreResponse>(response);
   }
 
   static async logout(): Promise<void> {
@@ -450,7 +515,7 @@ export class ApiClient {
   static async getChannels(params?: {
     page?: number;
     limit?: number;
-    type?: 'public' | 'private';
+    type?: 'public' | 'private' | 'pro';
     search?: string;
   }): Promise<{ channels: Channel[]; total: number; page: number; limit: number; totalPages: number }> {
     const searchParams = new URLSearchParams();
@@ -468,6 +533,19 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /** Premium playlists (`isPremiumPlaylist: true` in DB). Requires auth; backend returns 403 without premium/admin. */
+  static async getPremiumPlaylists(params?: { page?: number; limit?: number }): Promise<PremiumPlaylistsPage> {
+    const searchParams = new URLSearchParams();
+    if (params?.page != null) searchParams.set('page', String(params.page));
+    if (params?.limit != null) searchParams.set('limit', String(params.limit));
+    const qs = searchParams.toString();
+    const url = `${API_BASE_URL}/api/playlists/premium${qs ? `?${qs}` : ''}`;
+    const response = await this.makeAuthenticatedRequest(url, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<PremiumPlaylistsPage>(response);
+  }
+
   static async getChannelBySlug(slug: string): Promise<{ channel: Channel; membership: ChannelMembership | null }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${encodeURIComponent(slug)}`, {
       headers: this.getAuthHeaders(),
@@ -475,7 +553,7 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async createChannel(payload: { name: string; description?: string; type?: 'public' | 'private' }): Promise<Channel> {
+  static async createChannel(payload: { name: string; description?: string; type?: 'public' | 'private' | 'pro' }): Promise<Channel> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels`, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -483,7 +561,7 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async updateChannel(id: string, payload: { name?: string; description?: string; type?: 'public' | 'private' }): Promise<Channel> {
+  static async updateChannel(id: string, payload: { name?: string; description?: string; type?: 'public' | 'private' | 'pro' }): Promise<Channel> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
@@ -555,18 +633,56 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async getChannelPosts(id: string, params?: { page?: number; limit?: number }): Promise<{
+  static async getChannelPosts(
+    id: string,
+    params?: { page?: number; limit?: number; after?: string }
+  ): Promise<{
     posts: any[];
     page: number;
     limit: number;
     total: number;
     totalPages: number;
+    incremental?: boolean;
   }> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append('page', String(params.page));
     if (params?.limit) searchParams.append('limit', String(params.limit));
+    if (params?.after) searchParams.append('after', params.after);
     const qs = searchParams.toString();
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/posts${qs ? `?${qs}` : ''}`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async markChannelRead(channelId: string, lastReadPostId: string): Promise<{ lastReadPostId: string; lastReadAt: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/read`, {
+      method: 'POST',
+      body: JSON.stringify({ lastReadPostId }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getChannelReadSummary(channelId: string): Promise<{
+    readers: { userId: string; firstName: string | null; lastReadPostId: string | null; lastReadAt: string | null }[];
+    capped: boolean;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/read-summary`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async setChannelTyping(channelId: string, active: boolean): Promise<{ ok: boolean }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/typing`, {
+      method: 'POST',
+      body: JSON.stringify({ active }),
+    });
+    return this.handleResponse(response);
+  }
+
+  static async getChannelTyping(channelId: string): Promise<{ typers: { userId: string; firstName: string }[] }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/typing`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
@@ -973,6 +1089,98 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Record a feed view for home feed items (increments metrics used for recommendations / analytics).
+   * Call when the user expands "Show more" or when they like (like also counts as a view).
+   * Requires authentication; no-ops if the request fails (caller can still bump UI optimistically).
+   */
+  static async recordFeedContentView(
+    itemType: 'opportunity' | 'job' | 'event' | 'resource',
+    contentId: string,
+    _source: 'feed_show_more' | 'feed_like'
+  ): Promise<void> {
+    const contentType =
+      itemType === 'opportunity'
+        ? 'opportunity'
+        : itemType === 'job'
+          ? 'job'
+          : itemType === 'event'
+            ? 'event'
+            : 'resource';
+    try {
+      await this.trackEngagement(contentType, contentId, 'view');
+    } catch {
+      try {
+        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/view`, {
+          method: 'POST',
+          body: JSON.stringify({
+            contentType: itemType,
+            contentId,
+            source: _source,
+          }),
+        });
+        await this.handleResponse(response);
+      } catch {
+        // Backend may only implement recommended/engagement; ignore
+      }
+    }
+  }
+
+  private static _feedMetricContentType(itemType: 'opportunity' | 'job' | 'event' | 'resource'): string {
+    return itemType === 'opportunity'
+      ? 'opportunity'
+      : itemType === 'job'
+        ? 'job'
+        : itemType === 'event'
+          ? 'event'
+          : 'resource';
+  }
+
+  /** Record a share from the feed (share button completed). Best-effort backend increment for metrics.shareCount. */
+  static async recordFeedShare(
+    itemType: 'opportunity' | 'job' | 'event' | 'resource',
+    contentId: string
+  ): Promise<void> {
+    const contentType = this._feedMetricContentType(itemType);
+    try {
+      await this.trackEngagement(contentType, contentId, 'share');
+    } catch {
+      try {
+        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/share`, {
+          method: 'POST',
+          body: JSON.stringify({ contentType: itemType, contentId, source: 'feed' }),
+        });
+        await this.handleResponse(response);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  /**
+   * Record add-to-playlist from the feed (distinct from bookmark/save).
+   * Best-effort backend increment for metrics.playlistAddCount.
+   */
+  static async recordFeedPlaylistAdd(
+    itemType: 'opportunity' | 'job' | 'event' | 'resource',
+    contentId: string
+  ): Promise<void> {
+    const contentType = this._feedMetricContentType(itemType);
+    try {
+      await this.trackEngagement(contentType, contentId, 'playlist_add');
+    } catch {
+      try {
+        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/playlist-add`, {
+          method: 'POST',
+          body: JSON.stringify({ contentType: itemType, contentId, source: 'feed' }),
+        });
+        await this.handleResponse(response);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   // Utility method to check if user is authenticated
   static isAuthenticated(): boolean {
     return !!this.getAccessToken();
@@ -1084,6 +1292,34 @@ export class ApiClient {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/unregister`, {
       method: 'POST',
     });
+    await this.handleResponse(response);
+  }
+
+  /**
+   * Record an "apply" engagement for external jobs/opportunities/events.
+   * This does not perform a full in-platform application; it just logs
+   * an engagement click to the backend.
+   */
+  static async recordApply(
+    contentType: 'job' | 'opportunity' | 'event',
+    id: string
+  ): Promise<void> {
+    const typeToPath: Record<string, string> = {
+      job: 'jobs',
+      opportunity: 'opportunities',
+      event: 'events'
+    };
+    const path = typeToPath[contentType];
+    if (!path) return;
+
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/engagement/${path}/${id}/click`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ contentType, source: 'apply_button' })
+      }
+    );
+
     await this.handleResponse(response);
   }
 
@@ -1343,6 +1579,23 @@ export class ApiClient {
     }
   }
 
+  /** Trigger past-content cleanup (expired events, opportunities, jobs from live + inactive). */
+  static async triggerPastContentCleanup(): Promise<{
+    success: boolean;
+    message?: string;
+    data?: {
+      live: { opportunities: number; events: number; jobs: number };
+      inactive: { opportunities: number; events: number; jobs: number };
+      runAt?: string;
+    };
+  }> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/cleanup/past-content`,
+      { method: 'POST' }
+    );
+    return this.handleResponse(response);
+  }
+
   static async approveContent(contentId: string, contentType: string, options?: { bypassPayment?: boolean }): Promise<void> {
     const endpoint = this.getContentEndpoint(contentType, contentId, 'approve');
     console.log('Approving content:', { contentId, contentType, endpoint });
@@ -1492,9 +1745,9 @@ export class ApiClient {
   // Premium subscription methods
 
   /**
-   * Start a premium subscription (recurring) via Paystack. Uses the backend's subscription plan (e.g. ₦2,500/month).
+   * Start a premium subscription (recurring) via Paystack. Uses the backend's subscription plan (e.g. ₦1,500/month).
    * Returns authorizationUrl for redirect to Paystack.
-   * Paystack expects amount in KOBO (1 NGN = 100 kobo). Pass amount in kobo, e.g. 250000 for ₦2,500.
+   * Paystack expects amount in KOBO (1 NGN = 100 kobo). Pass amount in kobo, e.g. 150000 for ₦1,500.
    * amountKobo is optional when using plan-based subscription (planId).
    */
   static async startPremiumSubscription(
@@ -1506,7 +1759,7 @@ export class ApiClient {
     if (options?.planId) body.planId = options.planId;
     if (options?.callbackUrl) body.callbackUrl = options.callbackUrl;
 
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/initialize`, {
+    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("initialize"), {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -1532,7 +1785,7 @@ export class ApiClient {
   static async verifyPremiumSubscription(
     reference: string
   ): Promise<{ isPremium: boolean; premiumExpiresAt: string | null }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/verify`, {
+    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("verify"), {
       method: 'POST',
       body: JSON.stringify({ reference }),
     });
@@ -1569,7 +1822,7 @@ export class ApiClient {
     premiumExpiresAt: string | null;
     canCancel?: boolean;
   }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/status`, {
+    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("status"), {
       method: 'GET',
     });
     const result = await this.handleResponse<{
@@ -1591,7 +1844,7 @@ export class ApiClient {
   static async cancelPremiumSubscription(): Promise<{
     premiumExpiresAt: string | null;
   }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/subscriptions/cancel`, {
+    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("cancel"), {
       method: 'POST',
     });
     const result = await this.handleResponse<{ premiumExpiresAt: string | null }>(response);
@@ -1810,6 +2063,8 @@ export class ApiClient {
         viewCount: item.metrics?.viewCount || 0,
         likeCount: item.metrics?.likeCount || 0,
         saveCount: item.metrics?.saveCount || 0,
+        shareCount: item.metrics?.shareCount ?? 0,
+        playlistAddCount: item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0,
         applicationCount: item.metrics?.applicationCount || 0,
         registrationCount: item.metrics?.registrationCount || 0
       }
@@ -2062,6 +2317,16 @@ export class ApiClient {
       return { date: date || new Date().toISOString().slice(0, 10), liveCount: 0, totalToday: 0 };
     }
     return result.data;
+  }
+
+  static async getLockedInUsage(): Promise<{
+    isPremium: boolean;
+    weeklyUsed: number;
+    weeklyLimit: number;
+    remaining: number | null;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/usage`);
+    return this.handleResponse(response);
   }
 
   static async endLockedInSession(sessionId: string, payload: { endedAt: string; durationSeconds: number; endReason?: 'user_ended' | 'tab_closed' }): Promise<void> {

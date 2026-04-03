@@ -31,9 +31,11 @@ interface AddToPlaylistModalProps {
   isOpen: boolean
   onClose: () => void
   item: AddToPlaylistItem
+  /** Called once each time the item is successfully added to a playlist (not when already in list). */
+  onItemAddedToPlaylist?: () => void
 }
 
-export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlaylistModalProps) {
+export default function AddToPlaylistModal({ isOpen, onClose, item, onItemAddedToPlaylist }: AddToPlaylistModalProps) {
   const { playlists, sharedPlaylists, addToPlaylist, canEditPlaylist } = usePlaylist()
   
   // Filter shared playlists to only show those the user can edit
@@ -60,6 +62,7 @@ export default function AddToPlaylistModal({ isOpen, onClose, item }: AddToPlayl
       
       // Track active user activity (fire-and-forget, won't throw errors)
       trackAddToPlaylist(item.type, item._id)
+      onItemAddedToPlaylist?.()
     } catch (err: any) {
       setError(err.message || 'Failed to add to playlist')
     } finally {

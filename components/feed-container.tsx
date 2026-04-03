@@ -9,18 +9,26 @@ interface FeedContainerProps {
   loading?: boolean
   emptyMessage?: string
   emptyIcon?: ReactNode
+  /** Session-restored expanded card id */
+  initialExpandedId?: string | null
+  /** Notify parent when expanded id changes (for session save) */
+  onExpandedIdChange?: (id: string | null) => void
 }
 
 export default function FeedContainer({
   items,
   loading = false,
   emptyMessage = "No content found",
-  emptyIcon
+  emptyIcon,
+  initialExpandedId = null,
+  onExpandedIdChange,
 }: FeedContainerProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(initialExpandedId ?? null)
 
   const handleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
+    const next = expandedId === id ? null : id
+    setExpandedId(next)
+    onExpandedIdChange?.(next)
   }
 
   if (loading) {

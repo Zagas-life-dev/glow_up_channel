@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Privacy Policy | GlowUp",
+  title: { absolute: "Privacy Policy | GlowUp" },
   description: "How GlowUp collects, uses, shares, and protects your information.",
 }
 
