@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 import { getSiteUrl } from "@/lib/site-url"
 
-/** Public routes worth listing for crawlers (dashboard and auth flows are excluded). */
+/** Public routes igworth listing for crawlers (dashboard and auth flows are excluded). */
 const PATHS = [
   "/",
   "/about",
