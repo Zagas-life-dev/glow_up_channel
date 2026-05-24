@@ -5,7 +5,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { getPageState, savePageState } from "@/lib/page-state-session"
-import { setContentCache, getContentCache, type ContentCacheType } from "@/lib/content-cache-session"
+import { getContentCache, setContentCache, type ContentCacheType } from "@/lib/content-cache-session"
+import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page"
 import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
@@ -231,66 +232,26 @@ export default function Home() {
     }
   }, [backendUrl, isAuthenticated, user, normalizedUser])
 
-  // Fetch function for individual content types
-  const fetchContentByType = useCallback(async (type: string, lastId: string | null) => {
-    if (!backendUrl) {
-      console.warn('Backend URL not configured')
-      return { items: [], lastId: null, hasMore: false }
-    }
-
-    // First page: use cache if available to avoid API call
-    if (!lastId && (type === 'opportunities' || type === 'events' || type === 'jobs' || type === 'resources')) {
-      const cached = getContentCache(type as ContentCacheType)
-      if (cached?.items?.length) {
-        return { items: cached.items as any[], lastId: cached.lastId, hasMore: true }
-      }
-    }
-
-    const token = isAuthenticated && user ? localStorage.getItem('accessToken') : null
-    const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {}
-
-    try {
-      let url = `${backendUrl}/api/${type}?limit=20`
-      if (lastId) {
-        url += `&lastId=${lastId}`
-      }
-
-      const response = await fetch(url, { headers })
-
-      if (!response.ok) {
-        console.warn(`Failed to fetch ${type}:`, response.status, response.statusText)
+  // Fetch function for individual content types (same lastId pagination as Opportunities/Jobs)
+  const fetchContentByType = useCallback(
+    async (type: HomeListType, cursorLastId: string | null) => {
+      if (!backendUrl) {
+        console.warn("Backend URL not configured")
         return { items: [], lastId: null, hasMore: false }
       }
 
-      const data = await response.json()
+      const token = isAuthenticated && user ? localStorage.getItem("accessToken") : null
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
 
-      if (data.success) {
-        const singularType: Record<string, string> = {
-          opportunities: 'opportunity',
-          jobs: 'job',
-          events: 'event',
-          resources: 'resource',
-        }
-        const contentType = singularType[type] ?? type.slice(0, -1)
-        const items = (data.data?.[type] || []).map((item: any) => ({ ...item, type: contentType }))
-        const lastId = data.data?.pagination?.lastId || (items.length > 0 ? items[items.length - 1]._id : null)
-        if (type === 'opportunities' || type === 'events' || type === 'jobs' || type === 'resources') {
-          setContentCache(type as ContentCacheType, { items, lastId })
-        }
-        return {
-          items,
-          lastId,
-          hasMore: data.data?.pagination?.hasMore || false
-        }
-      }
-
-      console.warn(`API returned unsuccessful response for ${type}:`, data.message || 'Unknown error')
-      return { items: [], lastId: null, hasMore: false }
-    } catch (error) {
-      console.error(`Error fetching ${type}:`, error)
-      return { items: [], lastId: null, hasMore: false }
-    }
-  }, [backendUrl, isAuthenticated, user])
+      return fetchHomeListPage({
+        type,
+        cursorLastId,
+        backendUrl,
+        headers,
+      })
+    },
+    [backendUrl, isAuthenticated, user],
+  )
 
   // Single stable fetch for cursor pagination (same pattern as community page)
   const fetchFeedContent = useCallback(
@@ -298,12 +259,12 @@ export default function Home() {
       if (activeTab === 'all') {
         return fetchAllContent(lastId)
       }
-      const typeMap: Record<TabType, string> = {
-        all: 'opportunities', // unused when activeTab is all
-        opportunities: 'opportunities',
-        jobs: 'jobs',
-        events: 'events',
-        resources: 'resources',
+      const typeMap: Record<TabType, HomeListType> = {
+        all: "opportunities", // unused when activeTab is all
+        opportunities: "opportunities",
+        jobs: "jobs",
+        events: "events",
+        resources: "resources",
       }
       return fetchContentByType(typeMap[activeTab], lastId)
     },
@@ -327,7 +288,7 @@ export default function Home() {
     limit: 20,
     initialItems: initialFeed?.items,
     initialLastId: initialFeed?.lastId,
-    enabled: isAuthenticated && !authLoading,
+    enabled: !authLoading,
   })
 
   // Use infinite scroll hook (same options as community page)

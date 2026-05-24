@@ -760,7 +760,9 @@ export default function AdminContent() {
       },
       paymentAmount: editPaymentAmount === "" ? undefined : Number(editPaymentAmount),
       paymentNotes: editPaymentNotes.trim() || undefined,
-      price: editPrice === "" ? undefined : Number(editPrice),
+      ...(selectedContent.type === "event"
+        ? { isPaid: editPrice !== "", price: editPrice === "" ? undefined : Number(editPrice) }
+        : { price: editPrice === "" ? undefined : Number(editPrice) }),
       currency: editCurrency.trim() || undefined,
       benefits: benefitsList?.length ? benefitsList : undefined,
       requirements:
@@ -815,10 +817,11 @@ export default function AdminContent() {
           url: editUrl.trim() || undefined,
           ...(Object.keys(eventLocation).length > 0 && { location: eventLocation }),
           ...(Object.keys(eventDates).length > 0 && { dates: eventDates }),
-          ...(editPrice !== "" && { price: Number(editPrice) }),
+          isPaid: editPrice !== "",
+          price: editPrice === "" ? null : Number(editPrice),
           ...(editCurrency.trim() && { currency: editCurrency.trim() }),
-          ...(editPaymentAmount !== "" && { paymentAmount: Number(editPaymentAmount) }),
-          ...(editPaymentNotes.trim() && { paymentNotes: editPaymentNotes.trim() }),
+          paymentAmount: editPaymentAmount === "" ? null : Number(editPaymentAmount),
+          paymentNotes: editPaymentNotes.trim() || null,
           ...(selectedContent._fromInactive && { _fromInactive: true }),
         })
       } else {

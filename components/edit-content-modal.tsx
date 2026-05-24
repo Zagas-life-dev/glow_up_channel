@@ -226,7 +226,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
           url: formData.url,
           tags,
           isPaid,
-          ...(isPaid && eventPrice != null && !Number.isNaN(eventPrice) && { price: eventPrice }),
+          price: isPaid && eventPrice != null && !Number.isNaN(eventPrice) ? eventPrice : null,
           currency: formData.currency || 'NGN',
           location: {
             ...(formData.location?.country && { country: formData.location.country }),

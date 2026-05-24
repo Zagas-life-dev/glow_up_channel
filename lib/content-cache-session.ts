@@ -17,12 +17,14 @@ const MAX_ITEMS = 100
 export interface ContentCacheEntry<T = unknown> {
   items: T[]
   lastId: string | null
+  hasMore?: boolean
 }
 
 interface StoredContentCache {
   boot: string
   items: unknown[]
   lastId: string | null
+  hasMore?: boolean
 }
 
 function getStorage(): Storage | null {
@@ -41,7 +43,10 @@ function cacheKey(type: ContentCacheType): string {
 /**
  * Write fetched items + lastId for a content type. Only used in current session (boot stored).
  */
-export function setContentCache<T extends { _id: string }>(type: ContentCacheType, data: { items: T[]; lastId: string | null }): void {
+export function setContentCache<T extends { _id: string }>(
+  type: ContentCacheType,
+  data: { items: T[]; lastId: string | null; hasMore?: boolean },
+): void {
   const storage = getStorage()
   if (!storage) return
   try {
@@ -49,6 +54,7 @@ export function setContentCache<T extends { _id: string }>(type: ContentCacheTyp
       boot: getBootId(),
       items: (data.items || []).slice(-MAX_ITEMS),
       lastId: data.lastId ?? null,
+      hasMore: data.hasMore,
     }
     storage.setItem(cacheKey(type), JSON.stringify(stored))
   } catch {
@@ -70,6 +76,7 @@ export function getContentCache<T = unknown>(type: ContentCacheType): ContentCac
     return {
       items: (stored.items || []) as T[],
       lastId: stored.lastId ?? null,
+      hasMore: stored.hasMore,
     }
   } catch {
     return null

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import { fetchListBySearch } from "@/lib/fetch-list-search"
 import AuthGuard from "@/components/auth-guard"
 
 function OpportunitiesContent() {
@@ -104,20 +105,21 @@ function OpportunitiesContent() {
     fetchInitialOpportunities()
   }, [fetchInitialOpportunities])
 
-  // Filter opportunities based on search
   useEffect(() => {
-    const lowercasedQuery = searchQuery.toLowerCase()
-    const filtered = opportunities.filter((opportunity) => {
-      return (
-        (opportunity.title?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (opportunity.description?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (opportunity.category?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (opportunity.eligibility?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (opportunity.tags && opportunity.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))) ||
-        ((!opportunity.isPaid ? "free" : "paid").toLowerCase().includes(lowercasedQuery))
-      )
-    })
-    setFilteredOpportunities(filtered)
+    const q = searchQuery.trim()
+    if (!q) {
+      setFilteredOpportunities(opportunities)
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      const results = await fetchListBySearch("opportunities", q)
+      if (!cancelled) setFilteredOpportunities(results as typeof opportunities)
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [searchQuery, opportunities])
 
 

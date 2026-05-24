@@ -1326,7 +1326,7 @@ export class ApiClient {
   }
 
   // Search Methods
-  static async searchContent(query: string, filters?: {
+  static async searchContent(query: string, _filters?: {
     type?: string;
     location?: string;
     industry?: string[];
@@ -1347,17 +1347,10 @@ export class ApiClient {
     }
 
     try {
-      // Build search parameters
       const searchParams = new URLSearchParams();
-      searchParams.append('search', query);
-      searchParams.append('limit', '20'); // Limit results per type
+      searchParams.append('search', query.trim());
+      searchParams.append('limit', '20');
 
-      // Add filters
-      if (filters?.location) {
-        searchParams.append('location', filters.location);
-      }
-
-      // Search all content types in parallel
       const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/opportunities?${searchParams.toString()}`),
         fetch(`${API_BASE_URL}/api/events?${searchParams.toString()}`),

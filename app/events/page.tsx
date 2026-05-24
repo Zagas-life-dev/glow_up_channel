@@ -13,6 +13,7 @@ import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import AuthGuard from "@/components/auth-guard"
 import { getLinkType, openExternalUrl } from "@/lib/url-utils"
+import { fetchListBySearch } from "@/lib/fetch-list-search"
 
 function EventsContent() {
   const [events, setEvents] = useState<any[]>([])
@@ -76,20 +77,21 @@ function EventsContent() {
     fetchAllEvents()
   }, [fetchAllEvents])
 
-    // Filter events based on search
     useEffect(() => {
-        const lowercasedQuery = searchQuery.toLowerCase()
-        const filtered = events.filter((event) => {
-            return (
-                (event.title?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (event.description?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (event.category?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (typeof event.location === 'string' ? event.location : event.location?.city || event.location?.address || '').toLowerCase().includes(lowercasedQuery) ||
-                (event.tags && event.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))) ||
-                ((!event.isPaid ? "free" : "paid").toLowerCase().includes(lowercasedQuery))
-            )
-        })
-        setFilteredEvents(filtered)
+        const q = searchQuery.trim()
+        if (!q) {
+            setFilteredEvents(events)
+            return
+        }
+        let cancelled = false
+        const timer = setTimeout(async () => {
+            const results = await fetchListBySearch("events", q)
+            if (!cancelled) setFilteredEvents(results as typeof events)
+        }, 300)
+        return () => {
+            cancelled = true
+            clearTimeout(timer)
+        }
     }, [searchQuery, events])
 
     const handleSearch = (query: string) => {

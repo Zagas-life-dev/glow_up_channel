@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
+import { fetchListBySearch } from "@/lib/fetch-list-search"
 import AuthGuard from "@/components/auth-guard"
 
 // Utility function to determine if a resource is premium/paid
@@ -81,19 +82,21 @@ function ResourcesContent() {
     fetchAllResources()
   }, [fetchAllResources])
 
-    // Filter resources based on search
     useEffect(() => {
-        const lowercasedQuery = searchQuery.toLowerCase()
-        const filtered = resources.filter((resource) => {
-            return (
-                (resource.title?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (resource.description?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (resource.category?.toLowerCase() || '').includes(lowercasedQuery) ||
-                (resource.tags && resource.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery))) ||
-                ((resource.is_premium ? "premium" : "free").toLowerCase().includes(lowercasedQuery))
-            )
-  })
-        setFilteredResources(filtered)
+        const q = searchQuery.trim()
+        if (!q) {
+            setFilteredResources(resources)
+            return
+        }
+        let cancelled = false
+        const timer = setTimeout(async () => {
+            const results = await fetchListBySearch("resources", q)
+            if (!cancelled) setFilteredResources(results as typeof resources)
+        }, 300)
+        return () => {
+            cancelled = true
+            clearTimeout(timer)
+        }
     }, [searchQuery, resources])
 
     const handleSearch = (query: string) => {

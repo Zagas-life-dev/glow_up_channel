@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import { fetchListBySearch } from "@/lib/fetch-list-search"
 import AuthGuard from "@/components/auth-guard"
 
 function JobsContent() {
@@ -91,20 +92,21 @@ function JobsContent() {
     fetchAllJobs()
   }, [fetchAllJobs])
 
-  // Filter jobs based on search
   useEffect(() => {
-    const lowercasedQuery = searchQuery.toLowerCase()
-    const filtered = jobs.filter((job) => {
-      return (
-        (job.title?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (job.description?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (job.company?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (typeof job.location === 'string' ? job.location : job.location?.city || job.location?.address || '').toLowerCase().includes(lowercasedQuery) ||
-        (job.job_type?.toLowerCase() || '').includes(lowercasedQuery) ||
-        (job.tags && job.tags.some((tag: string) => (tag?.toLowerCase() || '').includes(lowercasedQuery)))
-      )
-    })
-    setFilteredJobs(filtered)
+    const q = searchQuery.trim()
+    if (!q) {
+      setFilteredJobs(jobs)
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      const results = await fetchListBySearch("jobs", q)
+      if (!cancelled) setFilteredJobs(results as typeof jobs)
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [searchQuery, jobs])
 
   const handleSearch = (query: string) => {
