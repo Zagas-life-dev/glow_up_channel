@@ -56,6 +56,7 @@ import {
   RiSparkling2Line,
   RiGraduationCapLine,
   RiPlayList2Fill,
+  RiVipCrownLine,
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
 import { GlowScoreBar } from "@/components/glow-score-bar"
@@ -151,6 +152,7 @@ interface Playlist {
   description: string
   hashtags: string[]
   isPublic: boolean
+  isPremiumPlaylist?: boolean
   itemCount: number
   createdAt: string
 }
@@ -1225,20 +1227,45 @@ export default function ProfilePage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        {playlists.map((playlist) => (
+                        {playlists.map((playlist) => {
+                          const premium = !!playlist.isPremiumPlaylist
+                          return (
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/70 border border-transparent hover:border-border/50 transition-all duration-200"
+                            className={cn(
+                              "group flex items-center gap-4 p-3 rounded-2xl border transition-all duration-200",
+                              premium
+                                ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.07] to-transparent hover:border-amber-500/35"
+                                : "border-transparent hover:bg-muted/70 hover:border-border/50",
+                            )}
                           >
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-                              <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
+                            <div
+                              className={cn(
+                                "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border",
+                                premium
+                                  ? "bg-gradient-to-br from-amber-500/25 to-amber-600/10 border-amber-500/30"
+                                  : "bg-gradient-to-br from-orange-500/20 to-rose-500/15 border-orange-500/20",
+                              )}
+                            >
+                              {premium ? (
+                                <RiVipCrownLine className="w-5 h-5 text-amber-400" aria-hidden />
+                              ) : (
+                                <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-foreground truncate group-hover:text-orange-400 transition-colors">
+                              <h4
+                                className={cn(
+                                  "font-medium truncate transition-colors",
+                                  premium
+                                    ? "text-foreground group-hover:text-amber-400"
+                                    : "text-foreground group-hover:text-orange-400",
+                                )}
+                              >
                                 {playlist.name}
                               </h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                                 <span>{playlist.itemCount} items</span>
                                 <span>•</span>
                                 {playlist.isPublic ? (
@@ -1252,11 +1279,21 @@ export default function ProfilePage() {
                                     Private
                                   </span>
                                 )}
+                                {premium ? (
+                                  <>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-0.5 text-amber-500/90">
+                                      <RiVipCrownLine className="w-3 h-3" aria-hidden />
+                                      Premium
+                                    </span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
                             <RiArrowRightLine className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" aria-hidden />
                           </Link>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   )}

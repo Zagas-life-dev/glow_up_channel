@@ -28,6 +28,28 @@ interface PlaylistModalProps {
   onSuccess?: (playlist: Playlist) => void
 }
 
+function getErrorStatus(err: unknown): number | undefined {
+  if (!err || typeof err !== 'object' || !('status' in err)) return undefined
+  const s = (err as { status: unknown }).status
+  return typeof s === 'number' ? s : undefined
+}
+
+function formatPlaylistSaveError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err)
+  const status = getErrorStatus(err)
+
+  if (status === 403) {
+    if (/premium membership is required/i.test(msg)) {
+      return `${msg} If you subscribed recently, try refreshing the page or signing out and back in.`
+    }
+    return `${msg} You may not have permission for this action.`
+  }
+  if (status === 502 || /cannot reach backend/i.test(msg)) {
+    return `${msg} Check NEXT_PUBLIC_BACKEND_URL or BACKEND_URL and that the API server is running.`
+  }
+  return msg
+}
+
 export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess }: PlaylistModalProps) {
   const { createPlaylist, updatePlaylist } = usePlaylist()
   const { user } = useAuth()
@@ -39,7 +61,16 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const canCreatePremium = user && canCreatePremiumPlaylist(user.role)
+  const canCreatePremium =
+    !!user &&
+    canCreatePremiumPlaylist(
+      user.role,
+      user.isPremium,
+      user.premiumExpiresAt ?? user.premiumEndsAt ?? null
+    )
+  const showPremiumSection =
+    canCreatePremium ||
+    !!(editPlaylist?.isPremiumPlaylist || editPlaylist?.is_premium)
 
   // Reset form when modal opens/closes or editPlaylist changes
   useEffect(() => {
@@ -49,7 +80,9 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
         setDescription(editPlaylist.description || '')
         setHashtags(editPlaylist.hashtags || [])
         setIsPublic(editPlaylist.isPublic || false)
-        setIsPremiumPlaylist(editPlaylist.isPremiumPlaylist || false)
+        setIsPremiumPlaylist(
+          !!(editPlaylist.isPremiumPlaylist || editPlaylist.is_premium)
+        )
       } else {
         setName('')
         setDescription('')
@@ -79,10 +112,9 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           name: name.trim(),
           description: description.trim(),
           hashtags,
-          isPublic
-        }
-        if (canCreatePremium) {
-          updatePayload.isPremiumPlaylist = isPremiumPlaylist
+          isPublic,
+          // Always send so MongoDB updates; omitting left the field unchanged. Backend authorizes true.
+          isPremiumPlaylist
         }
         const updated = await updatePlaylist(editPlaylist._id, updatePayload)
         onSuccess?.(updated)
@@ -93,14 +125,14 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           description: description.trim(),
           hashtags,
           isPublic,
-          ...(canCreatePremium && { isPremiumPlaylist })
+          isPremiumPlaylist: canCreatePremium ? isPremiumPlaylist : false
         })
         onSuccess?.(newPlaylist)
       }
       
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Failed to save playlist')
+    } catch (err: unknown) {
+      setError(formatPlaylistSaveError(err) || 'Failed to save playlist')
     } finally {
       setIsSubmitting(false)
     }
@@ -240,8 +272,8 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
             />
           </div>
 
-          {/* Premium Playlist (admin/super_admin only) */}
-          {canCreatePremium && (
+          {/* Premium playlist: active subscribers or admins; existing premium lists stay editable to turn off */}
+          {showPremiumSection && (
             <div className="mb-6 flex items-center justify-between p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
               <div className="flex items-center gap-3">
                 <RiVipCrownLine className="w-5 h-5 text-amber-500" aria-hidden />
@@ -250,13 +282,18 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                     Premium Playlist
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Only premium members can view this playlist
+                    {canCreatePremium
+                      ? 'Shown in the Premium hub; only members with premium access can open it (private or public there).'
+                      : 'Renew premium to turn this back on. You can turn premium off for this list.'}
                   </p>
                 </div>
               </div>
               <Switch
                 checked={isPremiumPlaylist}
-                onCheckedChange={setIsPremiumPlaylist}
+                onCheckedChange={(on) => {
+                  if (on && !canCreatePremium) return
+                  setIsPremiumPlaylist(on)
+                }}
               />
             </div>
           )}

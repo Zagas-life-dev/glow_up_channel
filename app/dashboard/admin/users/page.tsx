@@ -58,6 +58,17 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
 
+function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
+}
+
 const Users = RiUserLine
 const Search = RiSearchLine
 const Filter = RiFilterLine
@@ -654,7 +665,7 @@ export default function UserManagement() {
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">
-                                Joined {formatDistanceToNow(new Date(userItem.createdAt), { addSuffix: true })}
+                                Joined {safeFormatDistanceToNow(userItem.createdAt)}
                               </p>
                             </div>
                           </div>

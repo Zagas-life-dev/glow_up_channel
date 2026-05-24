@@ -52,8 +52,9 @@ export interface Playlist {
   description: string
   hashtags: string[]
   isPublic: boolean
-  /** Premium playlists are only visible to premium users; only admin/super_admin can create them. */
+  /** Premium playlist flag (mirrors DB `isPremiumPlaylist` / `is_premium`). */
   isPremiumPlaylist?: boolean
+  is_premium?: boolean
   items: PlaylistItem[]
   createdBy: {
     _id: string
@@ -99,13 +100,26 @@ interface PlaylistContextType {
   canEditPlaylist: (playlist: Playlist) => boolean
 }
 
+/** Optional rows for POST /api/playlists — same shape as add-item, persisted with `addedBy` from the creator. */
+export interface PlaylistCreateInitialItem {
+  contentId: string
+  contentType: 'opportunity' | 'job' | 'event' | 'resource'
+  title: string
+  company?: string | null
+  organization?: string | null
+  author?: string | null
+  description?: string | null
+}
+
 export interface CreatePlaylistData {
   name: string
   description: string
   hashtags: string[]
   isPublic: boolean
-  /** Only admin/super_admin can set this to true. */
+  /** Backend allows active premium or admin. */
   isPremiumPlaylist?: boolean
+  /** Up to 100 items; duplicates by contentId return 409. */
+  items?: PlaylistCreateInitialItem[]
 }
 
 interface AddToPlaylistItem {
@@ -376,56 +390,75 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const createPlaylist = useCallback(async (data: CreatePlaylistData): Promise<Playlist> => {
     if (!isAuthenticated) throw new Error('Must be logged in to create a playlist')
 
-    // Only allow isPremiumPlaylist if user is admin or super_admin
-    const canPremium = user && canCreatePremiumPlaylist(user.role)
+    // Send premium flag as requested; backend enforces permission (avoid stripping when user.isPremium is stale)
+    const premium = !!data.isPremiumPlaylist
     const payload = {
       ...data,
-      isPremiumPlaylist: canPremium ? !!data.isPremiumPlaylist : false
+      isPremiumPlaylist: premium,
+      is_premium: premium
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/playlists`, {
+    // Same-origin Next route proxies to the backend with a canonical body (avoids CORS / dev URL mismatches).
+    const response = await fetch('/api/playlists', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     })
-    
-    const result = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.message || 'Failed to create playlist')
+
+    let result: { success?: boolean; message?: string; data?: { playlist: Playlist } }
+    try {
+      result = await response.json()
+    } catch {
+      const err = new Error(`Invalid response from server (${response.status})`) as Error & { status: number }
+      err.status = response.status
+      throw err
+    }
+
+    if (!result.success || !result.data) {
+      const err = new Error(result.message || 'Failed to create playlist') as Error & { status: number }
+      err.status = response.status
+      throw err
     }
 
     // Refresh playlists
     await fetchPlaylists()
     
     return result.data.playlist
-  }, [isAuthenticated, user, getAuthHeaders, fetchPlaylists])
+  }, [isAuthenticated, getAuthHeaders, fetchPlaylists])
 
   // Update a playlist
   const updatePlaylist = useCallback(async (id: string, data: Partial<CreatePlaylistData>): Promise<Playlist> => {
-    const canPremium = user && canCreatePremiumPlaylist(user.role)
-    const payload = { ...data }
-    if (!canPremium && data.isPremiumPlaylist === true) {
-      payload.isPremiumPlaylist = false
+    const payload: Record<string, unknown> = { ...data }
+    if (Object.prototype.hasOwnProperty.call(data, 'isPremiumPlaylist')) {
+      payload.is_premium = !!data.isPremiumPlaylist
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/playlists/${id}`, {
-      method: 'PUT',
+    const response = await fetch(`/api/playlists/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     })
-    
-    const result = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.message || 'Failed to update playlist')
+
+    let result: { success?: boolean; message?: string; data?: { playlist: Playlist } }
+    try {
+      result = await response.json()
+    } catch {
+      const err = new Error(`Invalid response from server (${response.status})`) as Error & { status: number }
+      err.status = response.status
+      throw err
+    }
+
+    if (!result.success || !result.data) {
+      const err = new Error(result.message || 'Failed to update playlist') as Error & { status: number }
+      err.status = response.status
+      throw err
     }
 
     // Refresh playlists
     await fetchPlaylists()
     
     return result.data.playlist
-  }, [user, getAuthHeaders, fetchPlaylists])
+  }, [getAuthHeaders, fetchPlaylists])
 
   // Delete a playlist
   const deletePlaylist = useCallback(async (id: string): Promise<void> => {

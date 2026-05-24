@@ -56,6 +56,28 @@ import { formatDistanceToNow } from "date-fns"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { Skeleton } from "@/components/ui/skeleton"
 
+function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
+}
+
+function safeToLocaleString(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+  } catch {
+    return "N/A"
+  }
+}
+
 const ITEMS_PER_PAGE = 20
 
 interface ContentItem {
@@ -247,7 +269,7 @@ export default function AdminContent() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
   const [rejectionReason, setRejectionReason] = useState("")
-  const [bypassPayment, setBypassPayment] = useState(false)
+  const [bypassPayment, setBypassPayment] = useState(true)
   const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
   const [paymentVerification, setPaymentVerification] = useState<"verify" | "reject">("verify")
   const [paymentNotes, setPaymentNotes] = useState("")
@@ -513,7 +535,7 @@ export default function AdminContent() {
       }))
       setShowReviewDialog(false)
       setRejectionReason("")
-      setBypassPayment(false)
+      setBypassPayment(true)
       setSelectedContent(null)
     } else {
       const wasPending = previousItem?.status === "active" && !previousItem?.isApproved
@@ -1265,7 +1287,7 @@ export default function AdminContent() {
                             )}
                             <span className="flex items-center gap-1.5">
                               <RiCalendarLine className="w-3.5 h-3.5" />
-                              {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                              {safeFormatDistanceToNow(item.createdAt)}
                             </span>
                           </div>
                         </div>
@@ -1391,7 +1413,7 @@ export default function AdminContent() {
             />
           )}
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => { setShowReviewDialog(false); setRejectionReason(""); setBypassPayment(false); setSelectedContent(null) }} className="rounded-2xl">
+            <Button variant="outline" onClick={() => { setShowReviewDialog(false); setRejectionReason(""); setBypassPayment(true); setSelectedContent(null) }} className="rounded-2xl">
               Cancel
             </Button>
             <Button
@@ -1470,7 +1492,7 @@ export default function AdminContent() {
                   {getStatusBadge(selectedContent)}
                   {getPaymentBadge(selectedContent)}
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {formatDistanceToNow(new Date(selectedContent.createdAt), { addSuffix: true })}
+                    {safeFormatDistanceToNow(selectedContent.createdAt)}
                   </span>
                 </div>
 
@@ -1799,8 +1821,8 @@ export default function AdminContent() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-muted-foreground mb-0.5">Created</p>
-                        <p className="text-sm font-medium">{new Date(selectedContent.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
-                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(selectedContent.createdAt), { addSuffix: true })}</p>
+                        <p className="text-sm font-medium">{safeToLocaleString(selectedContent.createdAt)}</p>
+                        <p className="text-xs text-muted-foreground">{safeFormatDistanceToNow(selectedContent.createdAt)}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 rounded-2xl bg-muted/40 border border-border/50">
@@ -1809,20 +1831,20 @@ export default function AdminContent() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-muted-foreground mb-0.5">Updated</p>
-                        <p className="text-sm font-medium">{new Date(selectedContent.updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="text-sm font-medium">{safeToLocaleString(selectedContent.updatedAt)}</p>
                       </div>
                     </div>
                     {selectedContent.approvedAt && (
                       <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                         <p className="text-xs font-medium text-muted-foreground mb-0.5">Approved</p>
-                        <p className="text-sm font-medium">{new Date(selectedContent.approvedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="text-sm font-medium">{safeToLocaleString(selectedContent.approvedAt)}</p>
                         {selectedContent.approvedBy && <p className="text-xs text-muted-foreground">{selectedContent.approvedBy}</p>}
                       </div>
                     )}
                     {selectedContent.publishedAt && (
                       <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                         <p className="text-xs font-medium text-muted-foreground mb-0.5">Published</p>
-                        <p className="text-sm font-medium">{new Date(selectedContent.publishedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="text-sm font-medium">{safeToLocaleString(selectedContent.publishedAt)}</p>
                       </div>
                     )}
                     <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
@@ -1888,25 +1910,25 @@ export default function AdminContent() {
                       {selectedContent.dates.applicationDeadline && (
                         <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                           <p className="text-xs font-medium text-muted-foreground mb-0.5">Application deadline</p>
-                          <p className="text-sm font-medium">{new Date(selectedContent.dates.applicationDeadline).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                          <p className="text-sm font-medium">{safeToLocaleString(selectedContent.dates.applicationDeadline)}</p>
                         </div>
                       )}
                       {selectedContent.dates.registrationDeadline && (
                         <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                           <p className="text-xs font-medium text-muted-foreground mb-0.5">Registration deadline</p>
-                          <p className="text-sm font-medium">{new Date(selectedContent.dates.registrationDeadline).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                          <p className="text-sm font-medium">{safeToLocaleString(selectedContent.dates.registrationDeadline)}</p>
                         </div>
                       )}
                       {selectedContent.dates.startDate && (
                         <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                           <p className="text-xs font-medium text-muted-foreground mb-0.5">Start date</p>
-                          <p className="text-sm font-medium">{new Date(selectedContent.dates.startDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                          <p className="text-sm font-medium">{safeToLocaleString(selectedContent.dates.startDate)}</p>
                         </div>
                       )}
                       {selectedContent.dates.endDate && (
                         <div className="p-3 rounded-2xl bg-muted/40 border border-border/50">
                           <p className="text-xs font-medium text-muted-foreground mb-0.5">End date</p>
-                          <p className="text-sm font-medium">{new Date(selectedContent.dates.endDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                          <p className="text-sm font-medium">{safeToLocaleString(selectedContent.dates.endDate)}</p>
                         </div>
                       )}
                       {selectedContent.dates.duration && (

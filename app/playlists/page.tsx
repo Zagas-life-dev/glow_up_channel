@@ -345,7 +345,7 @@ function PlaylistsPageInner() {
                       ? "Save public playlists you love—they will live here for quick access."
                       : activeTab === "premium"
                         ? "Premium playlists you can access will appear here."
-                        : "Be the first to publish a playlist for the community."}
+                        : "Community playlists here are non-premium. Public premium lists live under Premium."}
               </p>
               {isAuthenticated && activeTab !== "shared" && activeTab !== "saved" ? (
                 <Button

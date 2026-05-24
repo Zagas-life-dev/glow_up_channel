@@ -82,6 +82,7 @@ export default function Footer() {
                 { name: "Jobs", href: "/jobs" },
                 { name: "Events", href: "/events" },
                 { name: "Resources", href: "/resources" },
+                { name: "Product Overview", href: "/product" },
                 { name: "About Us", href: "/about" },
                 { name: "Contact", href: "/contact" }
               ].map((link) => (
@@ -153,13 +154,13 @@ export default function Footer() {
               <p>&copy; 2025 GlowUp. All rights reserved.</p>
             </div>
             <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6 text-xs sm:text-sm">
-              <Link href="/privacy" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
-                Privacy Polcy
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
+                Privacy Policy
               </Link>
-              <Link href="/terms" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
+              <Link href="/terms-of-service" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
                 Terms of Service
               </Link>
-              <Link href="/cookies" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
+              <Link href="/cookie-policy" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">
                 Cookie Policy
               </Link>
             </div>

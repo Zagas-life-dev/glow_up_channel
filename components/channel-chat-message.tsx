@@ -4,6 +4,17 @@ import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
+
+function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
+}
 import { RiChat3Line, RiHeartLine, RiMore2Line, RiPlayList2Fill, RiExternalLinkLine } from "react-icons/ri"
 import {
   DropdownMenu,
@@ -53,7 +64,7 @@ export default function ChannelChatMessage({
   onDelete,
 }: ChannelChatMessageProps) {
   const name = post.author.firstName || post.author.email?.split("@")[0] || "Member"
-  const timeLabel = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
+  const timeLabel = safeFormatDistanceToNow(post.createdAt)
   const text = (post.content?.text || "").trim()
   const images = post.content?.images || []
   const playlist = post.content?.playlist

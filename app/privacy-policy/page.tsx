@@ -58,7 +58,7 @@ export default function PrivacyPolicyPage() {
                 Cookies and Similar Technologies:
               </span>{" "}
               information collected through cookies, web beacons, and similar tools to
-              recognize your device, remember your preferences, and analyze traffic.
+              recognize your device, remember your preferences, and analyze traffic. This includes third-party tracking technologies such as Google AdSense and the Google DoubleClick DART cookie to serve ads based on your visits to this and other sites on the Internet. Users may opt out of the use of the DART cookie by visiting the Google Ad and Content Network privacy policy.
             </li>
           </ul>
         </section>
@@ -88,7 +88,7 @@ export default function PrivacyPolicyPage() {
             personal information with third parties, including:
           </p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Advertising partners and networks.</li>
+            <li>Advertising partners and networks (including Google AdSense).</li>
             <li>Analytics and market research providers.</li>
             <li>Business partners and affiliates.</li>
             <li>

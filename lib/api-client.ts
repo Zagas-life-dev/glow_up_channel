@@ -31,6 +31,8 @@ export interface User {
   // Premium membership (optional fields; may be absent for non-premium users)
   isPremium?: boolean;
   premiumExpiresAt?: string | null;
+  /** Some API responses use premiumEndsAt (mirrors backend User model). */
+  premiumEndsAt?: string | null;
   premiumPlanId?: string;
   createdAt: string;
   approvedAt?: string;

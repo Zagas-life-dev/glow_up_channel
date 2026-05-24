@@ -721,10 +721,8 @@ function SearchFallback() {
 
 export default function SearchPage() {
   return (
-    <AuthGuard>
-      <Suspense fallback={<SearchFallback />}>
-        <SearchContent />
-      </Suspense>
-    </AuthGuard>
+    <Suspense fallback={<SearchFallback />}>
+      <SearchContent />
+    </Suspense>
   )
 }

@@ -6,7 +6,7 @@
 const ADMIN_ROLES = ['admin', 'super_admin'] as const
 
 /**
- * Returns true if the user has admin or super_admin role (can create premium playlists, etc.).
+ * Returns true if the user has admin or super_admin role (full premium feature access, moderation, etc.).
  */
 export function isAdminOrSuperAdmin(role: string | undefined | null): boolean {
   if (!role) return false
@@ -26,10 +26,20 @@ export function hasPremiumAccess(options: {
 }
 
 /**
- * Returns true if the current user can create premium playlists (admin or super_admin only).
+ * Returns true if the user can create or mark playlists as premium:
+ * active premium subscriber (not past expiry) OR admin/super_admin.
  */
-export function canCreatePremiumPlaylist(role: string | undefined | null): boolean {
-  return isAdminOrSuperAdmin(role)
+export function canCreatePremiumPlaylist(
+  role: string | undefined | null,
+  isPremium?: boolean | null,
+  premiumExpiresAt?: string | null
+): boolean {
+  if (isAdminOrSuperAdmin(role)) return true
+  if (isPremium !== true) return false
+  if (!premiumExpiresAt) return true
+  const end = new Date(premiumExpiresAt)
+  if (Number.isNaN(end.getTime())) return true
+  return end > new Date()
 }
 
 /**

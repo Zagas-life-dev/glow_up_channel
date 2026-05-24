@@ -16,6 +16,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
+
+function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
+}
 import { trackLike, trackRepost, trackSave, trackShare, trackVote, trackCommunityEngagement } from '@/lib/tracking'
 import { Globe, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
@@ -532,7 +543,7 @@ export default function PostCard({ post, onUpdate, onDelete, showActions = true 
                 {localPost.author.firstName || localPost.author.email.split('@')[0]}
               </Link>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                <span>{formatDistanceToNow(new Date(localPost.createdAt), { addSuffix: true })}</span>
+                <span>{safeFormatDistanceToNow(localPost.createdAt)}</span>
                 {localPost.isEdited && <span>· edited</span>}
                 <span>·</span>
                 {localPost.visibility === 'private' ? (

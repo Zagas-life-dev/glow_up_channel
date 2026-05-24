@@ -17,6 +17,17 @@ import { RiMore2Line, RiPlayList2Fill } from 'react-icons/ri'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 
+function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "N/A"
+  try {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(date.getTime())) return "N/A"
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
+}
+
 interface Reply {
   _id: string
   postId: string
@@ -143,7 +154,7 @@ export default function ReplyCard({ reply, onUpdate, onDelete, onReply }: ReplyC
               {localReply.author.firstName || localReply.author.email.split('@')[0]}
             </Link>
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <span>{formatDistanceToNow(new Date(localReply.createdAt), { addSuffix: true })}</span>
+              <span>{safeFormatDistanceToNow(localReply.createdAt)}</span>
               {localReply.isEdited && <span>• edited</span>}
             </div>
           </div>
