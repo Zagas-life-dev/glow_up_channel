@@ -186,7 +186,7 @@ function SearchContent() {
               </Button>
             </div>
           ) : hasQuery && items.length > 0 ? (
-            <div className="space-y-5 w-full max-w-full">
+            <div className="space-y-3 sm:space-y-4">
               {items.map((item, index) => (
                 <div
                   key={item._id}

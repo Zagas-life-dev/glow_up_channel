@@ -653,8 +653,18 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
               "bg-gradient-to-r from-yellow-500 to-yellow-600 text-smoke-500",
               "shadow-lg shadow-yellow-100/50 animate-pulse"
             )}>
-              {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {contentKind === 'event' ? 'sign up' : 'apply'}
+              {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {contentKind === 'event' ? 'sign up' : contentKind === 'opportunity' ? 'apply' : 'apply'}
             </div>
+            {/* Match Score Badge - Below hot card tag */}
+            {typeof item.score === 'number' && (
+              <div className={cn(
+                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
+                "shadow-lg shadow-primary/30"
+              )}>
+                {Math.round(item.score)}% Match
+              </div>
+            )}
           </div>
         )}
 
@@ -668,8 +678,31 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
             )}>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-card animate-pulse" />
-                <span>{formatCountdown(timeRemaining, contentKind)} left to {contentKind === 'event' ? 'sign up' : contentKind === 'job' ? 'submit' : 'apply'}</span>
+                <span>{formatCountdown(timeRemaining, contentKind)} left to {contentKind === 'event' ? 'sign up' : contentKind === 'opportunity' ? 'apply' : 'submit'}</span>
               </div>
+            </div>
+            {/* Match Score Badge - Below urgent timer */}
+            {typeof item.score === 'number' && (
+              <div className={cn(
+                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
+                "shadow-lg shadow-primary/30"
+              )}>
+                {Math.round(item.score)}% Match
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Match Score Badge - Only show if not a hot card or urgent */}
+        {typeof item.score === 'number' && !deadlineInfo?.isHot && !deadlineInfo?.isUrgent && (
+          <div className="absolute -top-2 -right-2 z-10">
+            <div className={cn(
+              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+              "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
+              "shadow-lg shadow-primary/30"
+            )}>
+              {Math.round(item.score)}% Match
             </div>
           </div>
         )}
@@ -1513,7 +1546,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         item={{
           _id: item._id,
           title: item.title,
-          type: contentKind as 'opportunity' | 'job' | 'event' | 'resource',
+          type: contentKind,
           company: item.company,
           organization: item.organization,
           author: item.author,

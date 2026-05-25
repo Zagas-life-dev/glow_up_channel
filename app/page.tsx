@@ -7,11 +7,12 @@ import { useAuth } from "@/lib/auth-context"
 import { getPageState, savePageState } from "@/lib/page-state-session"
 import { getContentCache, setContentCache, type ContentCacheType } from "@/lib/content-cache-session"
 import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page"
+import { normalizeUnifiedFeedItem } from "@/lib/feed-content-type"
+import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
-import { normalizeFeedCardItems } from "@/lib/feed-content-type"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
-import { applyVarietyOrder } from "@/lib/feed-variety-order"
+import { applyVarietyOrder, type VarietyFeedItem } from "@/lib/feed-variety-order"
 import { getOrCreateAnonId } from "@/lib/anon-id"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -81,27 +82,20 @@ export default function Home() {
     // Prefer page-state restore (exact tab + scroll). For "all" tab don't use content cache here so
     // signed-in users never get anonymous cached feed as initial state; they'll get recommendations from API.
     if (s?.feed && s.feed.storageKey === `home_${tab}`) {
-      const raw = (s.feed.items || []) as Record<string, unknown>[]
-      const items =
-        tab === 'all'
-          ? normalizeFeedCardItems(raw)
-          : tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources'
-            ? normalizeFeedCardItems(raw, { listType: tab })
-            : raw
-      return { items, lastId: s.feed.lastId ?? null }
+      return { items: (s.feed.items || []) as any[], lastId: s.feed.lastId ?? null }
     }
     if (tab !== 'all' && (tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources')) {
       const cached = getContentCache(tab)
-      if (cached?.items?.length) {
-        return {
-          items: normalizeFeedCardItems(cached.items as Record<string, unknown>[], { listType: tab }),
-          lastId: cached.lastId ?? null,
-        }
-      }
+      if (cached?.items?.length) return { items: cached.items as any[], lastId: cached.lastId }
     }
     return null
   })
   const restoredFromCacheRef = useRef(Boolean(initialFeed?.items?.length))
+  const [expandedId, setExpandedId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const s = getPageState(HOME_PATH)
+    return (s?.state?.expandedId as string | null) ?? null
+  })
   const [promotedFeed, setPromotedFeed] = useState<PromotedFeedItem[]>([])
   const { user, normalizedUser, isAuthenticated, isLoading: authLoading } = useAuth()
 
@@ -122,7 +116,9 @@ export default function Home() {
         const cached = getContentCache('unified')
         if (cached?.items?.length) {
           return {
-            items: normalizeFeedCardItems(cached.items as Record<string, unknown>[]),
+            items: (cached.items as Record<string, unknown>[]).map((row) =>
+              normalizeUnifiedFeedItem(row),
+            ),
             lastId: cached.lastId,
             hasMore: true,
           }
@@ -131,7 +127,9 @@ export default function Home() {
         const cached = getContentCache('unified_auth')
         if (cached?.items?.length) {
           return {
-            items: normalizeFeedCardItems(cached.items as Record<string, unknown>[]),
+            items: (cached.items as Record<string, unknown>[]).map((row) =>
+              normalizeUnifiedFeedItem(row),
+            ),
             lastId: cached.lastId,
             hasMore: true,
           }
@@ -149,11 +147,13 @@ export default function Home() {
         if (!response.ok) return { items: [], lastId: null, hasMore: false }
         const data = await response.json()
         const feed = Array.isArray(data?.data?.feed) ? data.data.feed : []
-        const normalized = normalizeFeedCardItems(
-          feed as Record<string, unknown>[],
+        const normalizedFeed = feed.map((row: Record<string, unknown>) =>
+          normalizeUnifiedFeedItem(row),
         )
-        if (normalized.length) setContentCache('unified', { items: normalized, lastId: null })
-        return { items: normalized, lastId: null, hasMore: false }
+        if (normalizedFeed.length) {
+          setContentCache('unified', { items: normalizedFeed, lastId: null })
+        }
+        return { items: normalizedFeed, lastId: null, hasMore: false }
       } catch (err) {
         console.error('Anonymous feed fetch error:', err)
         return { items: [], lastId: null, hasMore: false }
@@ -224,8 +224,8 @@ export default function Home() {
         return { items: [], lastId: null, hasMore: false }
       }
 
-      const unifiedItems = normalizeFeedCardItems(
-        data.data.content as Record<string, unknown>[],
+      const unifiedItems = (data.data.content as Record<string, unknown>[]).map(
+        (item) => normalizeUnifiedFeedItem(item),
       )
 
       // Variety ordering: score buckets + skewed random start, then surrounding pool, mid, low (under 2000ms)
@@ -340,7 +340,7 @@ export default function Home() {
     if (prev === HOME_PATH && pathname !== HOME_PATH) {
       savePageState(HOME_PATH, {
         scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
-        state: { activeTab },
+        state: { activeTab, expandedId: expandedId ?? undefined },
         feed: {
           storageKey,
           items: allContent,
@@ -348,7 +348,7 @@ export default function Home() {
         },
       })
     }
-  }, [pathname, activeTab, storageKey, allContent, getLastId])
+  }, [pathname, activeTab, storageKey, allContent, getLastId, expandedId])
 
   // Restore scroll only for cache/session-restored feed, never for API-only initial loads.
   useEffect(() => {
@@ -382,9 +382,7 @@ export default function Home() {
         .then((res) => (res.ok ? res.json() : { success: false }))
         .then((data) => {
           if (data?.success && Array.isArray(data?.data?.feed)) {
-            setPromotedFeed(
-              normalizeFeedCardItems(data.data.feed as Record<string, unknown>[]),
-            )
+            setPromotedFeed(data.data.feed)
           }
         })
         .catch(() => {})
@@ -396,7 +394,7 @@ export default function Home() {
     return allContent
   }
 
-  const feedLoading = isLoading && allContent.length === 0
+  const feedLoading = false
 
   return (
     <PageShell
@@ -463,30 +461,18 @@ export default function Home() {
               )
             )}
           </div>
-        ) : feedLoading ? (
-          <div className="space-y-4 pt-2">
-            <FeedCardSkeleton />
-            <FeedCardSkeleton />
-          </div>
-        ) : getCurrentItems().length > 0 ? (
-          <div className="space-y-5 w-full max-w-full">
-            {getCurrentItems().map((item) => (
-              <FeedCard
-                key={String(item._id)}
-                item={item}
-              />
-            ))}
-          </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-muted-foreground text-sm">
-              {activeTab === "all"
-                ? isAuthenticated
-                  ? "No content available yet. Check back soon!"
-                  : "Sign in to get personalized recommendations."
-                : `No ${activeTab} found. Try another category!`}
-            </p>
-          </div>
+          <FeedContainer
+            items={getCurrentItems()}
+            loading={feedLoading}
+            emptyMessage={
+              activeTab === "all"
+                ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
+                : `No ${activeTab} found. Try another category!`
+            }
+            initialExpandedId={expandedId}
+            onExpandedIdChange={setExpandedId}
+          />
         )}
 
         {/* Infinite scroll sentinel */}

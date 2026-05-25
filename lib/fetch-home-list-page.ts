@@ -10,10 +10,7 @@ import {
   setContentCache,
   type ContentCacheType,
 } from "@/lib/content-cache-session"
-import {
-  normalizeFeedListItem,
-  type FeedCardNormalizedItem,
-} from "@/lib/feed-content-type"
+import { normalizeFeedListItem } from "@/lib/feed-content-type"
 
 export const HOME_LIST_PAGE_SIZE = 20
 
@@ -23,7 +20,11 @@ export type HomeListType = Extract<
   "opportunities" | "events" | "jobs" | "resources"
 >
 
-export type HomeListItem = FeedCardNormalizedItem
+export type HomeListItem = {
+  _id: string
+  type: string
+  [key: string]: unknown
+}
 
 export type HomeListPageResult = {
   items: HomeListItem[]
