@@ -10,6 +10,7 @@ import {
   type HomeListPageResult,
   type HomeListType,
 } from "@/lib/fetch-home-list-page"
+import { normalizeFeedListItem } from "@/lib/feed-content-type"
 
 export const SEARCH_CATEGORIES: HomeListType[] = [
   "opportunities",
@@ -24,19 +25,10 @@ export function searchTabToListType(tab: SearchTab): HomeListType | null {
   return tab === "all" ? null : tab
 }
 
-const SINGULAR_TYPE: Record<HomeListType, string> = {
-  opportunities: "opportunity",
-  events: "event",
-  jobs: "job",
-  resources: "resource",
-}
-
 function tagItems(type: HomeListType, items: HomeListItem[]): HomeListItem[] {
-  const singular = SINGULAR_TYPE[type]
-  return items.map((item) => ({
-    ...item,
-    type: (item.type as string) || singular,
-  }))
+  return items.map((item) =>
+    normalizeFeedListItem(type, item as Record<string, unknown>),
+  ) as HomeListItem[]
 }
 
 function mergeSearchResults(

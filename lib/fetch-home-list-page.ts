@@ -10,6 +10,10 @@ import {
   setContentCache,
   type ContentCacheType,
 } from "@/lib/content-cache-session"
+import {
+  normalizeFeedListItem,
+  type FeedCardNormalizedItem,
+} from "@/lib/feed-content-type"
 
 export const HOME_LIST_PAGE_SIZE = 20
 
@@ -19,11 +23,7 @@ export type HomeListType = Extract<
   "opportunities" | "events" | "jobs" | "resources"
 >
 
-export type HomeListItem = {
-  _id: string
-  type: string
-  [key: string]: unknown
-}
+export type HomeListItem = FeedCardNormalizedItem
 
 export type HomeListPageResult = {
   items: HomeListItem[]
@@ -49,11 +49,9 @@ function parseApiListPage(type: HomeListType, payload: ApiListPayload): HomeList
   if (!payload.success || !payload.data) return null
 
   const raw = (payload.data[type] as HomeListItem[] | undefined) ?? []
-  const contentType = SINGULAR_TYPE[type]
-  const items = raw.map((item) => ({
-    ...item,
-    type: (item.type as string) || contentType,
-  }))
+  const items = raw.map((item) =>
+    normalizeFeedListItem(type, item as Record<string, unknown>),
+  ) as HomeListItem[]
 
   const pagination = payload.data.pagination
   const lastId =
@@ -91,11 +89,9 @@ export async function fetchHomeListPage(params: {
   if (isFirstPage && !hasListQuery) {
     const cached = getContentCache<HomeListItem>(type)
     if (cached?.items?.length) {
-      const contentType = SINGULAR_TYPE[type]
-      const items = cached.items.map((item) => ({
-        ...item,
-        type: item.type || contentType,
-      }))
+      const items = cached.items.map((item) =>
+        normalizeFeedListItem(type, item as Record<string, unknown>),
+      ) as HomeListItem[]
       const lastId =
         cached.lastId ??
         (items.length > 0 ? String(items[items.length - 1]._id) : null)

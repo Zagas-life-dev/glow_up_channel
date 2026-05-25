@@ -40,6 +40,11 @@ import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
 import { cleanUrl } from '@/lib/url-utils'
 import { trackLike, trackSave, trackShare, trackContentView } from '@/lib/tracking'
+import {
+  resolveFeedContentKind,
+  toEngagementApiPlural,
+  type FeedContentKind,
+} from '@/lib/feed-content-type'
 import { toast } from 'sonner'
 
 interface FeedCardProps {
@@ -166,7 +171,9 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const [localExpanded, setLocalExpanded] = useState(false)
   const expanded = isExpanded !== undefined ? isExpanded : localExpanded
 
-  const config = typeConfig[item.type] || typeConfig.opportunity
+  const contentKind: FeedContentKind = resolveFeedContentKind(item.type)
+  const engagementApiType = toEngagementApiPlural(contentKind)
+  const config = typeConfig[contentKind] || typeConfig.opportunity
   const TypeIcon = config.icon
 
   // Load engagement status (like/save) when component mounts
@@ -191,14 +198,14 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     setPlaylistAddCount(item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0)
   }, [item._id, item.metrics?.viewCount, item.metrics?.shareCount, item.metrics?.saveCount, item.metrics?.playlistAddCount, item.metrics?.playlistCount])
 
-  const feedViewSessionKey = () => `glow_feed_view_expand_${item.type}_${item._id}`
+  const feedViewSessionKey = () => `glow_feed_view_expand_${contentKind}_${item._id}`
 
   const recordAuthenticatedFeedView = async (source: 'feed_show_more' | 'feed_like') => {
     if (!isAuthenticated || !item._id) return
     try {
-      await ApiClient.recordFeedContentView(item.type, item._id, source)
+      await ApiClient.recordFeedContentView(contentKind, item._id, source)
       if (source === 'feed_show_more') {
-        trackContentView(item.type, item._id)
+        trackContentView(contentKind, item._id)
       }
     } catch {
       // Optimistic count already applied; backend may be unavailable
@@ -212,12 +219,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     }
 
     try {
-      const apiType = item.type === 'opportunity' ? 'opportunities'
-        : item.type === 'job' ? 'jobs'
-          : item.type === 'event' ? 'events'
-            : 'resources'
-
-      const status = await ApiClient.getEngagementStatus(apiType, item._id)
+      const status = await ApiClient.getEngagementStatus(engagementApiType, item._id)
       setIsLiked(status.isLiked || false)
       setIsSaved(status.isSaved || false)
       setEngagementStatusLoaded(true)
@@ -260,12 +262,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     setLoadingDetails(true)
     try {
       let response
-      const apiType = item.type === 'opportunity' ? 'opportunities'
-        : item.type === 'job' ? 'jobs'
-          : item.type === 'event' ? 'events'
-            : 'resources'
-
-      switch (item.type) {
+      switch (contentKind) {
         case 'opportunity':
           response = await ApiClient.getOpportunityById(item._id)
           break
@@ -281,9 +278,9 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       }
 
       if (response?.success) {
-        const data = item.type === 'opportunity' ? response.data.opportunity
-          : item.type === 'job' ? response.data.job
-            : item.type === 'event' ? response.data.event
+        const data = contentKind === 'opportunity' ? response.data.opportunity
+          : contentKind === 'job' ? response.data.job
+            : contentKind === 'event' ? response.data.event
               : response.data.resource
         setFullDetails(data)
         const m = data?.metrics
@@ -327,13 +324,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     const previousLikeCount = likeCount
 
     try {
-      const apiType = item.type === 'opportunity' ? 'opportunities'
-        : item.type === 'job' ? 'jobs'
-          : item.type === 'event' ? 'events'
-            : 'resources'
-
       if (isLiked) {
-        await ApiClient.unlikeItem(apiType, item._id)
+        await ApiClient.unlikeItem(engagementApiType, item._id)
         setIsLiked(false)
         setLikeCount(prev => Math.max(0, prev - 1))
       } else {
@@ -341,16 +333,16 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         setIsLiked(true)
         setLikeCount(prev => prev + 1)
 
-        await ApiClient.likeItem(apiType, item._id)
+        await ApiClient.likeItem(engagementApiType, item._id)
 
         // Like also counts as a view for feed metrics
         setViewCount((v) => v + 1)
         void recordAuthenticatedFeedView('feed_like')
 
         // Track active user activity (fire-and-forget, won't throw errors)
-        trackLike(item.type, item._id)
+        trackLike(contentKind, item._id)
         // If content is promoted, deduct from promotion budget (backend no-ops if not promoted)
-        ApiClient.recordPromotionClick(item._id, item.type, 'like').catch(() => {})
+        ApiClient.recordPromotionClick(item._id, contentKind, 'like').catch(() => {})
       }
       onEngage?.()
     } catch (error: any) {
@@ -370,13 +362,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         errorMessage.includes('deadline has passed') ||
         errorMessage.includes('event has ended')) {
 
-        const contentType = item.type === 'opportunity' ? 'opportunity'
-          : item.type === 'job' ? 'job'
-            : item.type === 'event' ? 'event'
-              : 'resource'
-
         toast.error(
-          `This ${contentType} is no longer active. Applications may be closed or the deadline has passed.`,
+          `This ${contentKind} is no longer active. Applications may be closed or the deadline has passed.`,
           { duration: 4000 }
         )
       } else if (errorMessage.includes('authentication') || errorMessage.includes('401')) {
@@ -404,24 +391,19 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     const previousSaveCount = saveCount
 
     try {
-      const apiType = item.type === 'opportunity' ? 'opportunities'
-        : item.type === 'job' ? 'jobs'
-          : item.type === 'event' ? 'events'
-            : 'resources'
-
       if (isSaved) {
-        await ApiClient.unsaveItem(apiType, item._id)
+        await ApiClient.unsaveItem(engagementApiType, item._id)
         setIsSaved(false)
         setSaveCount((c) => Math.max(0, c - 1))
       } else {
         // Optimistically update UI
         setIsSaved(true)
 
-        await ApiClient.saveItem(apiType, item._id)
+        await ApiClient.saveItem(engagementApiType, item._id)
         setSaveCount((c) => c + 1)
 
         // Track active user activity (fire-and-forget, won't throw errors)
-        trackSave(item.type, item._id)
+        trackSave(contentKind, item._id)
       }
       onEngage?.()
     } catch (error: any) {
@@ -441,13 +423,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         errorMessage.includes('deadline has passed') ||
         errorMessage.includes('event has ended')) {
 
-        const contentType = item.type === 'opportunity' ? 'opportunity'
-          : item.type === 'job' ? 'job'
-            : item.type === 'event' ? 'event'
-              : 'resource'
-
         toast.error(
-          `This ${contentType} is no longer active. Applications may be closed or the deadline has passed.`,
+          `This ${contentKind} is no longer active. Applications may be closed or the deadline has passed.`,
           { duration: 4000 }
         )
       } else if (errorMessage.includes('authentication') || errorMessage.includes('401')) {
@@ -465,12 +442,12 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     e.preventDefault()
     e.stopPropagation()
 
-    const url = `${window.location.origin}/${item.type === 'opportunity' ? 'opportunities' : item.type === 'job' ? 'jobs' : item.type === 'event' ? 'events' : 'resources'}/${item._id}`
+    const url = `${window.location.origin}/${engagementApiType}/${item._id}`
 
     const onShareCompleted = () => {
       setShareCount((c) => c + 1)
       if (isAuthenticated) {
-        void ApiClient.recordFeedShare(item.type, item._id)
+        void ApiClient.recordFeedShare(contentKind, item._id)
       }
     }
 
@@ -481,8 +458,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           url
         })
         // Track active user activity if share was successful (fire-and-forget)
-        trackShare(item.type, item._id)
-        ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
+        trackShare(contentKind, item._id)
+        ApiClient.recordPromotionClick(item._id, contentKind, 'share').catch(() => {})
         onShareCompleted()
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
@@ -493,8 +470,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(url)
-        trackShare(item.type, item._id)
-        ApiClient.recordPromotionClick(item._id, item.type, 'share').catch(() => {})
+        trackShare(contentKind, item._id)
+        ApiClient.recordPromotionClick(item._id, contentKind, 'share').catch(() => {})
         onShareCompleted()
         setJustShared(true)
         setTimeout(() => setJustShared(false), 1500)
@@ -519,7 +496,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     const newExpanded = isExpanded !== undefined ? !isExpanded : !localExpanded
     if (newExpanded) {
       onPromotionShowMore?.()
-      ApiClient.recordPromotionClick(item._id, item.type, 'show_more').catch(() => {})
+      ApiClient.recordPromotionClick(item._id, contentKind, 'show_more').catch(() => {})
       // Valid view: first "Show more" expand per item per browser session (authenticated)
       if (isAuthenticated && typeof sessionStorage !== 'undefined') {
         const key = feedViewSessionKey()
@@ -576,9 +553,9 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     // Get the appropriate deadline field based on content type
     let deadline: string | undefined
 
-    if (item.type === 'event') {
+    if (contentKind === 'event') {
       deadline = item.dates?.registrationDeadline
-    } else if (item.type === 'opportunity' || item.type === 'job') {
+    } else if (contentKind === 'opportunity' || contentKind === 'job') {
       deadline = item.dates?.applicationDeadline
     } else {
       return null // Resources don't have deadlines
@@ -603,7 +580,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
       isUrgent: diffHours <= 24, // Urgent if 24 hours or less
       timeRemaining: diffTime // Milliseconds remaining
     }
-  }, [item.type, item.dates?.registrationDeadline, item.dates?.applicationDeadline])
+  }, [contentKind, item.dates?.registrationDeadline, item.dates?.applicationDeadline])
 
   // Countdown timer state for urgent events (1 day or less)
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
@@ -653,10 +630,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   // Show "Show more" if description is long OR if there are additional details to show
   const detailsAny = details as any
   const hasMoreDetails = (item.description && item.description.length > 150) ||
-    (item.type === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
-    (item.type === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
-    (item.type === 'job' && (detailsAny.requirements || detailsAny.benefits || detailsAny.pay || detailsAny.dates)) ||
-    (item.type === 'resource' && (detailsAny.category || detailsAny.duration))
+    (contentKind === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
+    (contentKind === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
+    (contentKind === 'job' && (detailsAny.requirements || detailsAny.benefits || detailsAny.pay || detailsAny.dates)) ||
+    (contentKind === 'resource' && (detailsAny.category || detailsAny.duration))
 
   return (
     <>
@@ -676,18 +653,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
               "bg-gradient-to-r from-yellow-500 to-yellow-600 text-smoke-500",
               "shadow-lg shadow-yellow-100/50 animate-pulse"
             )}>
-              {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {item.type === 'event' ? 'sign up' : item.type === 'opportunity' ? 'apply' : 'apply'}
+              {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {contentKind === 'event' ? 'sign up' : 'apply'}
             </div>
-            {/* Match Score Badge - Below hot card tag */}
-            {typeof item.score === 'number' && (
-              <div className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-                "shadow-lg shadow-primary/30"
-              )}>
-                {Math.round(item.score)}% Match
-              </div>
-            )}
           </div>
         )}
 
@@ -701,31 +668,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
             )}>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-card animate-pulse" />
-                <span>{formatCountdown(timeRemaining, item.type)} left to {item.type === 'event' ? 'sign up' : item.type === 'opportunity' ? 'apply' : 'submit'}</span>
+                <span>{formatCountdown(timeRemaining, contentKind)} left to {contentKind === 'event' ? 'sign up' : contentKind === 'job' ? 'submit' : 'apply'}</span>
               </div>
-            </div>
-            {/* Match Score Badge - Below urgent timer */}
-            {typeof item.score === 'number' && (
-              <div className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-                "shadow-lg shadow-primary/30"
-              )}>
-                {Math.round(item.score)}% Match
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Match Score Badge - Only show if not a hot card or urgent */}
-        {typeof item.score === 'number' && !deadlineInfo?.isHot && !deadlineInfo?.isUrgent && (
-          <div className="absolute -top-2 -right-2 z-10">
-            <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-              "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-              "shadow-lg shadow-primary/30"
-            )}>
-              {Math.round(item.score)}% Match
             </div>
           </div>
         )}
@@ -875,7 +819,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )} */}
 
                 {/* Opportunity Details */}
-                {item.type === 'opportunity' && details.requirements && (
+                {contentKind === 'opportunity' && details.requirements && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <RiFocus3Line className="w-4 h-4" aria-hidden />
@@ -969,7 +913,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )}
 
                 {/* Opportunity Dates - Only show dates not already shown in preview */}
-                {item.type === 'opportunity' && details.dates && (
+                {contentKind === 'opportunity' && details.dates && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <RiCalendarLine className="w-4 h-4" aria-hidden />
@@ -1008,7 +952,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )}
 
                 {/* Opportunity Location Details - Only show if not already shown in preview */}
-                {item.type === 'opportunity' && details.location && details.location.address && (
+                {contentKind === 'opportunity' && details.location && details.location.address && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <RiMapPinLine className="w-4 h-4" aria-hidden />
@@ -1026,7 +970,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )}
 
                 {/* Job Requirements & Benefits */}
-                {item.type === 'job' && (
+                {contentKind === 'job' && (
                   <>
                     {details.requirements && details.requirements.length > 0 && (
                       <div className="space-y-4">
@@ -1127,7 +1071,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )}
 
                 {/* Event Details */}
-                {item.type === 'event' && (
+                {contentKind === 'event' && (
                   <>
                     {/* Event Dates - Only show additional dates not in preview */}
                     {details.dates && (
@@ -1307,7 +1251,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 )}
 
                 {/* Resource Details */}
-                {item.type === 'resource' && (
+                {contentKind === 'resource' && (
                   <div className="space-y-4">
                     {details.category && (
                       <div className="space-y-2">
@@ -1349,7 +1293,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
                 {/* Action Button */}
                 <div className="pt-2">
-                  {item.type === 'opportunity' && (() => {
+                  {contentKind === 'opportunity' && (() => {
                     const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? detailsAny.externalUrl ?? detailsAny.externalLink ?? item.url ?? item.applicationLink ?? item.externalUrl ?? item.externalLink
                     if (applyUrl) {
                       return (
@@ -1378,7 +1322,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                       </Button>
                     )
                   })()}
-                  {item.type === 'event' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink) && (() => {
+                  {contentKind === 'event' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink) && (() => {
                     const eventUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink;
                     return (
                       <Button
@@ -1393,7 +1337,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                       </Button>
                     );
                   })()}
-                  {item.type === 'job' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink) && (() => {
+                  {contentKind === 'job' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink) && (() => {
                     const jobUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink;
                     return (
                       <Button
@@ -1408,7 +1352,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                       </Button>
                     );
                   })()}
-                  {item.type === 'resource' && (
+                  {contentKind === 'resource' && (
                     <div className="flex flex-col gap-2">
                       {detailsAny.paymentLink ? (
                         <Button
@@ -1569,7 +1513,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         item={{
           _id: item._id,
           title: item.title,
-          type: item.type,
+          type: contentKind as 'opportunity' | 'job' | 'event' | 'resource',
           company: item.company,
           organization: item.organization,
           author: item.author,
@@ -1577,7 +1521,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         }}
         onItemAddedToPlaylist={() => {
           setPlaylistAddCount((c) => c + 1)
-          void ApiClient.recordFeedPlaylistAdd(item.type, item._id)
+          void ApiClient.recordFeedPlaylistAdd(contentKind, item._id)
         }}
       />
     </>
