@@ -1688,9 +1688,10 @@ export class ApiClient {
       eventLink?: string
       url?: string
       location?: { city?: string; country?: string; province?: string; address?: string; isRemote?: boolean; isHybrid?: boolean }
-      paymentAmount?: number
-      paymentNotes?: string
-      price?: number
+      isPaid?: boolean
+      paymentAmount?: number | null
+      paymentNotes?: string | null
+      price?: number | null
       currency?: string
       benefits?: string[]
       dates?: {
