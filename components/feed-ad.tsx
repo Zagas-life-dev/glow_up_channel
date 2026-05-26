@@ -1,42 +1,93 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useId, useRef } from "react"
 import { cn } from "@/lib/utils"
 
-const AD_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-4275585712096268"
+const INVOKE_BASE =
+  process.env.NEXT_PUBLIC_ADSTERRA_INVOKE_BASE ||
+  "https://www.highperformanceformat.com"
 
 interface FeedAdProps {
+  /**
+   * Adsterra "key" (zone key) from the ad unit snippet.
+   * Example snippet URL: https://www.highperformanceformat.com/<key>/invoke.js
+   */
   slotId: string
   className?: string
+  width?: number
+  height?: number
 }
 
-export default function FeedAd({ slotId, className }: FeedAdProps) {
+type AdsterraWindow = Window & {
+  atOptions?: unknown
+  __adsterraQueue?: Promise<void>
+}
+
+function enqueueAdsterraWork(win: AdsterraWindow, work: () => Promise<void>) {
+  const queue = win.__adsterraQueue ?? Promise.resolve()
+  win.__adsterraQueue = queue
+    .catch(() => {
+      // swallow to keep queue moving
+    })
+    .then(work)
+    .catch(() => {
+      // swallow to keep queue moving
+    })
+}
+
+export default function FeedAd({
+  slotId,
+  className,
+  width = 320,
+  height = 100,
+}: FeedAdProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const pushedRef = useRef(false)
+  const reactId = useId()
 
   useEffect(() => {
-    if (!slotId || pushedRef.current) return
+    const key = slotId?.trim()
+    const node = containerRef.current
+    if (!key || !node || pushedRef.current) return
+
     pushedRef.current = true
-    try {
-      ;(window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle =
-        (window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle || []
-      ;(window as unknown as { adsbygoogle: unknown[] }).adsbygoogle.push({})
-    } catch {
-      // ignore
-    }
-  }, [slotId])
+
+    enqueueAdsterraWork(window as AdsterraWindow, async () => {
+      // Clear anything previously injected into this container (e.g. remount)
+      node.replaceChildren()
+
+      ;(window as AdsterraWindow).atOptions = {
+        key,
+        format: "iframe",
+        height,
+        width,
+        params: {},
+      }
+
+      await new Promise<void>((resolve) => {
+        const script = document.createElement("script")
+        script.type = "text/javascript"
+        script.async = true
+        script.src = `${INVOKE_BASE.replace(/\/$/, "")}/${encodeURIComponent(key)}/invoke.js`
+        script.onload = () => resolve()
+        script.onerror = () => resolve()
+        node.appendChild(script)
+      })
+    })
+  }, [slotId, width, height])
 
   if (!slotId) return null
 
   return (
-    <div className={cn("min-h-[120px] w-full flex items-center justify-center", className)}>
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-client={AD_CLIENT}
-        data-ad-slot={slotId}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </div>
+    <div
+      ref={containerRef}
+      data-adsterra-key={slotId}
+      data-adsterra-react-id={reactId}
+      className={cn(
+        "min-h-[120px] w-full flex items-center justify-center overflow-hidden",
+        className,
+      )}
+      style={{ minHeight: height }}
+    />
   )
 }

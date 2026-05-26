@@ -57,8 +57,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="google-adsense-slot" content="3194443159" />
-        <meta name="google-adsense-account" content="ca-pub-4275585712096268"></meta>
         {/* Third-party ad/CMP scripts: only in production and loaded after page is ready to avoid "identity bridging" timeout errors in dev */}
         {process.env.NODE_ENV === "production" && (
           <>
@@ -81,12 +79,6 @@ export default function RootLayout({
               {`window.ezstandalone = window.ezstandalone || {};
           ezstandalone.cmd = ezstandalone.cmd || [];`}
             </Script>
-            <Script
-              async
-              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275585712096268"
-              crossOrigin="anonymous"
-              strategy="lazyOnload"
-            />
           </>
         )}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

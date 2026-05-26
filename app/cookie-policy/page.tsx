@@ -40,7 +40,7 @@ export default function CookiePolicyPage() {
             <li><span className="font-medium text-foreground">Strictly Necessary Cookies:</span> These are required for the operation of our Service, such as keeping you securely logged in.</li>
             <li><span className="font-medium text-foreground">Performance and Functionality Cookies:</span> These are used to recognize you when you return to our Service, allowing us to personalize our content for you and remember your preferences.</li>
             <li><span className="font-medium text-foreground">Analytics Cookies:</span> These allow us to recognize and count the number of visitors and see how visitors move around our Service.</li>
-            <li><span className="font-medium text-foreground">Advertising Cookies:</span> These cookies record your visit to our website, the pages you have visited, and the links you have followed. This information may be shared with third parties (such as Google AdSense) to show you relevant advertisements.</li>
+            <li><span className="font-medium text-foreground">Advertising Cookies:</span> These cookies record your visit to our website, the pages you have visited, and the links you have followed. This information may be shared with third parties (such as Adsterra) to show you relevant advertisements.</li>
           </ul>
         </section>
 
@@ -49,11 +49,12 @@ export default function CookiePolicyPage() {
             3. Third-Party Advertising and the DART Cookie
           </h2>
           <p>
-            Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to our website or other websites. 
-            Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet.
+            Third-party advertising vendors may use cookies or similar technologies to serve
+            ads based on a user's prior visits to our Service and/or other sites on the Internet.
           </p>
           <p>
-            Users may opt out of personalized advertising by visiting <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Ads Settings</a>. You can also opt out of some third-party vendors' uses of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.aboutads.info/choices</a>.
+            You can opt out of some third-party vendors' uses of cookies for personalized
+            advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.aboutads.info/choices</a>.
           </p>
         </section>
 

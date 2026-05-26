@@ -72,7 +72,7 @@ export default function TermsOfServicePage() {
             6. Third-Party Links and Advertising
           </h2>
           <p>
-            The Service may contain links to third-party websites or services that are not owned or controlled by GlowUp. This includes advertisements served by third-party networks (e.g., Google AdSense). We assume no responsibility for the content, privacy policies, or practices of any third-party websites. Interaction with any such third party is solely between you and them.
+            The Service may contain links to third-party websites or services that are not owned or controlled by GlowUp. This includes advertisements served by third-party networks (e.g., Adsterra). We assume no responsibility for the content, privacy policies, or practices of any third-party websites. Interaction with any such third party is solely between you and them.
           </p>
         </section>
 

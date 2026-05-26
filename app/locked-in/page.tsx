@@ -19,7 +19,7 @@ import ApiClient from "@/lib/api-client"
 import FeedSponsoredSlot, { type PromotedContentItem } from "@/components/feed-sponsored-slot"
 import FeedAd from "@/components/feed-ad"
 
-const ADSENSE_FEED_SLOT = process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || ""
+const ADSTERRA_FEED_KEY = process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || ""
 const PROMOTED_REFRESH_MS = 20000
 
 function formatElapsed(seconds: number): string {
@@ -307,13 +307,13 @@ function LockedInPageContent() {
               <FeedSponsoredSlot
                 kind="promoted"
                 content={promoted1}
-                slotId={ADSENSE_FEED_SLOT}
-                showAdBelow={!!ADSENSE_FEED_SLOT}
-                adSlotId={ADSENSE_FEED_SLOT}
+                slotId={ADSTERRA_FEED_KEY}
+                showAdBelow={!!ADSTERRA_FEED_KEY}
+                adSlotId={ADSTERRA_FEED_KEY}
               />
             )}
-            {!promoted1 && ADSENSE_FEED_SLOT && (
-              <FeedAd slotId={ADSENSE_FEED_SLOT} className="min-h-[96px]" />
+            {!promoted1 && ADSTERRA_FEED_KEY && (
+              <FeedAd slotId={ADSTERRA_FEED_KEY} className="min-h-[96px]" />
             )}
           </div>
         </div>
