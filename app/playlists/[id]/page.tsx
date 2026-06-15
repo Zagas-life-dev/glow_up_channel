@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import PlaylistModal from '@/components/playlist-modal'
 import InviteCollaboratorModal from '@/components/invite-collaborator-modal'
 import PlaylistDetailSkeleton from '@/components/skeletons/playlist-detail-skeleton'
+import PremiumGuard from '@/components/premium-guard'
 import {
   RiArrowLeftLine,
   RiGlobalLine,
@@ -50,14 +51,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
 import { toast } from "sonner"
 
 const typeConfig = {
@@ -100,7 +93,7 @@ function typeBadgeSmallClass(color: TypeColor) {
 
 type ViewMode = 'grid' | 'list'
 
-export default function PlaylistDetailPage() {
+function PlaylistContent() {
   const params = useParams()
   const router = useRouter()
   const { getPlaylistById, removeFromPlaylist, deletePlaylist, fetchPublicPlaylists, fetchPlaylists, canEditPlaylist, savePlaylist, unsavePlaylist, isPlaylistSaved } = usePlaylist()
@@ -172,7 +165,8 @@ export default function PlaylistDetailPage() {
   const canEdit = playlist ? canEditPlaylist(playlist) : false
 
   const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
-  const isPremiumGated = playlist?.isPremiumPlaylist && !canViewPremium && !isOwner
+  const isPremiumUser = normalizedUser?.isPremium ?? user?.isPremium
+  const isAdmin = user?.role === "admin"
 
   const handleRemoveItem = async (itemId: string) => {
     if (!playlist) return
@@ -251,8 +245,6 @@ export default function PlaylistDetailPage() {
     return <PlaylistDetailSkeleton />
   }
 
-  const showPremiumDialog = (playlist && isPremiumGated) || premiumGatedBy403
-
   if (!playlist && !premiumGatedBy403) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
@@ -278,49 +270,147 @@ export default function PlaylistDetailPage() {
     return null
   }
 
-  // Premium gate: show Dialog (and Back to Playlists header when user landed on premium link)
-  if (showPremiumDialog) {
+  // Premium gate with PremiumGuard component
+  if (playlist.isPremiumPlaylist) {
     return (
-      <div className="min-h-screen bg-page pb-24 lg:pb-8">
-        <div className="sticky top-0 z-40 bg-page/60 backdrop-blur-2xl border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex items-center justify-between py-4">
-              <Link
-                href="/playlists"
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <div className="p-1.5 rounded-lg bg-muted group-hover:bg-card/[0.1] transition-colors">
-                  <RiArrowLeftLine className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-medium hidden sm:inline">Back</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-        <Dialog open={true} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle>Premium content</DialogTitle>
-              <DialogDescription>
-                This is premium content and you cannot access it. Become a premium user today to gain access.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
-              <Button asChild variant="outline" className="rounded-full border-border">
-                <Link href="/playlists">
-                  <RiArrowLeftLine className="w-4 h-4 mr-2" />
-                  Back to Playlists
-                </Link>
-              </Button>
-              <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">
-                <Link href="/premium">Become a premium user</Link>
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <PremiumGuard
+        isPremium={isPremiumUser}
+        isAdmin={isAdmin}
+        title="Premium Playlist"
+        description="This playlist is available exclusively to Premium members. Upgrade your account to unlock full access to this playlist and all other premium content."
+        callbackUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+        redirectDelay={3000}
+      >
+        <PlaylistContentRender
+          playlist={playlist}
+          playlistId={playlistId}
+          isOwner={isOwner}
+          canEdit={canEdit}
+          isAuthenticated={isAuthenticated}
+          isSaved={isSaved}
+          isRefreshing={isRefreshing}
+          viewMode={viewMode}
+          removingItemId={removingItemId}
+          acceptedCollaborators={acceptedCollaborators}
+          onRefresh={handleRefresh}
+          onRemoveItem={handleRemoveItem}
+          onDelete={handleDelete}
+          onShare={handleShare}
+          onSavePlaylist={handleSavePlaylist}
+          onSetViewMode={setViewMode}
+          onSetShowEditModal={setShowEditModal}
+          onSetShowInviteModal={setShowInviteModal}
+          isSaving={isSaving}
+          showEditModal={showEditModal}
+          showInviteModal={showInviteModal}
+          onSavePlaylistSuccess={setPlaylist}
+          onEditModalClose={() => setShowEditModal(false)}
+          onInviteModalClose={async () => {
+            setShowInviteModal(false)
+            const updated = await getPlaylistById(playlistId)
+            if (updated) setPlaylist(updated)
+          }}
+          onPlaylistUpdate={setPlaylist}
+        />
+      </PremiumGuard>
     )
   }
+
+  const showMobileStickyActions =
+    (playlist.isPublic || playlist.isPremiumPlaylist) || (isAuthenticated && !isOwner)
+
+  return (
+    <PlaylistContentRender
+      playlist={playlist}
+      playlistId={playlistId}
+      isOwner={isOwner}
+      canEdit={canEdit}
+      isAuthenticated={isAuthenticated}
+      isSaved={isSaved}
+      isRefreshing={isRefreshing}
+      viewMode={viewMode}
+      removingItemId={removingItemId}
+      acceptedCollaborators={acceptedCollaborators}
+      onRefresh={handleRefresh}
+      onRemoveItem={handleRemoveItem}
+      onDelete={handleDelete}
+      onShare={handleShare}
+      onSavePlaylist={handleSavePlaylist}
+      onSetViewMode={setViewMode}
+      onSetShowEditModal={setShowEditModal}
+      onSetShowInviteModal={setShowInviteModal}
+      isSaving={isSaving}
+      showEditModal={showEditModal}
+      showInviteModal={showInviteModal}
+      onSavePlaylistSuccess={setPlaylist}
+      onEditModalClose={() => setShowEditModal(false)}
+      onInviteModalClose={async () => {
+        setShowInviteModal(false)
+        const updated = await getPlaylistById(playlistId)
+        if (updated) setPlaylist(updated)
+      }}
+      onPlaylistUpdate={setPlaylist}
+    />
+  )
+}
+
+interface PlaylistContentRenderProps {
+  playlist: Playlist
+  playlistId: string
+  isOwner: boolean | null
+  canEdit: boolean
+  isAuthenticated: boolean
+  isSaved: boolean
+  isRefreshing: boolean
+  viewMode: ViewMode
+  removingItemId: string | null
+  acceptedCollaborators: any[]
+  onRefresh: () => Promise<void>
+  onRemoveItem: (itemId: string) => Promise<void>
+  onDelete: () => Promise<void>
+  onShare: () => Promise<void>
+  onSavePlaylist: () => Promise<void>
+  onSetViewMode: (mode: ViewMode) => void
+  onSetShowEditModal: (show: boolean) => void
+  onSetShowInviteModal: (show: boolean) => void
+  isSaving: boolean
+  showEditModal: boolean
+  showInviteModal: boolean
+  onSavePlaylistSuccess: (playlist: Playlist) => void
+  onEditModalClose: () => void
+  onInviteModalClose: () => void
+  onPlaylistUpdate: (playlist: Playlist) => void
+}
+
+function PlaylistContentRender({
+  playlist,
+  playlistId,
+  isOwner,
+  canEdit,
+  isAuthenticated,
+  isSaved,
+  isRefreshing,
+  viewMode,
+  removingItemId,
+  acceptedCollaborators,
+  onRefresh,
+  onRemoveItem,
+  onDelete,
+  onShare,
+  onSavePlaylist,
+  onSetViewMode,
+  onSetShowEditModal,
+  onSetShowInviteModal,
+  isSaving,
+  showEditModal,
+  showInviteModal,
+  onSavePlaylistSuccess,
+  onEditModalClose,
+  onInviteModalClose,
+  onPlaylistUpdate,
+}: PlaylistContentRenderProps) {
+  const { getPlaylistById } = usePlaylist()
+  const router = useRouter()
 
   const showMobileStickyActions =
     (playlist.isPublic || playlist.isPremiumPlaylist) || (isAuthenticated && !isOwner)
@@ -340,7 +430,7 @@ export default function PlaylistDetailPage() {
         <div
           className="absolute inset-0 opacity-[0.3] dark:opacity-[0.18]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' fill='%23000'/%3E%3Crect width='256' height='256' fill='%23fff' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E")`,
           }}
         />
       </div>
@@ -365,7 +455,7 @@ export default function PlaylistDetailPage() {
               <div className="flex items-center gap-1 sm:gap-2">
                 <Button
                   type="button"
-                  onClick={handleRefresh}
+                  onClick={onRefresh}
                   disabled={isRefreshing}
                   variant="ghost"
                   size="icon"
@@ -389,14 +479,14 @@ export default function PlaylistDetailPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="p-1">
                       <DropdownMenuItem
-                        onClick={() => setShowEditModal(true)}
+                        onClick={() => onSetShowEditModal(true)}
                         className="cursor-pointer rounded-lg text-foreground hover:bg-muted"
                       >
                         <RiPencilLine className="mr-2 h-4 w-4" />
                         Edit playlist
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setShowInviteModal(true)}
+                        onClick={() => onSetShowInviteModal(true)}
                         className="cursor-pointer rounded-lg text-foreground hover:bg-muted"
                       >
                         <RiUserAddLine className="mr-2 h-4 w-4" />
@@ -404,7 +494,7 @@ export default function PlaylistDetailPage() {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-muted" />
                       <DropdownMenuItem
-                        onClick={handleDelete}
+                        onClick={onDelete}
                         className="cursor-pointer rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-400"
                       >
                         <RiDeleteBinLine className="mr-2 h-4 w-4" />
@@ -423,7 +513,7 @@ export default function PlaylistDetailPage() {
                     type="button"
                     variant="outline"
                     className="h-11 min-h-11 flex-1 rounded-xl border-border/80"
-                    onClick={handleShare}
+                    onClick={onShare}
                   >
                     <RiShareLine className="mr-2 h-4 w-4" />
                     Share
@@ -439,7 +529,7 @@ export default function PlaylistDetailPage() {
                         ? "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/20"
                         : "bg-primary text-primary-foreground hover:bg-primary/90",
                     )}
-                    onClick={handleSavePlaylist}
+                    onClick={onSavePlaylist}
                   >
                     {isSaving ? (
                       <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
@@ -463,7 +553,7 @@ export default function PlaylistDetailPage() {
               <div className="group/cover relative mx-auto w-[7.5rem] sm:mx-0 md:w-64">
                 <div
                   className={cn(
-                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-[1.02]",
+                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-105",
                     playlist.isPremiumPlaylist
                       ? "border-amber-500/30 bg-gradient-to-br from-amber-500/35 via-amber-600/20 to-amber-500/25 shadow-amber-500/15"
                       : "border-border/80 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/25 shadow-primary/15",
@@ -566,7 +656,7 @@ export default function PlaylistDetailPage() {
                     <Link
                       key={tag}
                       href={`/community?hashtag=${tag}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary/30"
                     >
                       <RiHashtag className="h-3 w-3" />
                       {tag}
@@ -583,7 +673,7 @@ export default function PlaylistDetailPage() {
                     size="lg"
                     variant="outline"
                     className="h-11 min-h-11 rounded-2xl border-border px-6"
-                    onClick={handleShare}
+                    onClick={onShare}
                   >
                     <RiShareLine className="mr-2 h-4 w-4" />
                     Share
@@ -600,7 +690,7 @@ export default function PlaylistDetailPage() {
                         ? "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/20"
                         : "bg-primary text-primary-foreground hover:bg-primary/90",
                     )}
-                    onClick={handleSavePlaylist}
+                    onClick={onSavePlaylist}
                   >
                     {isSaving ? (
                       <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
@@ -619,7 +709,7 @@ export default function PlaylistDetailPage() {
                       size="lg"
                       variant="outline"
                       className="h-11 min-h-11 rounded-2xl border-border px-6"
-                      onClick={() => setShowInviteModal(true)}
+                      onClick={() => onSetShowInviteModal(true)}
                     >
                       <RiUserAddLine className="mr-2 h-4 w-4" />
                       Invite
@@ -629,7 +719,7 @@ export default function PlaylistDetailPage() {
                       size="lg"
                       variant="secondary"
                       className="h-11 min-h-11 rounded-2xl px-6"
-                      onClick={() => setShowEditModal(true)}
+                      onClick={() => onSetShowEditModal(true)}
                     >
                       <RiPencilLine className="mr-2 h-4 w-4" />
                       Edit
@@ -656,7 +746,7 @@ export default function PlaylistDetailPage() {
                   variant="ghost"
                   size="sm"
                   className="h-10 shrink-0 rounded-xl text-primary hover:bg-primary/10"
-                  onClick={() => setShowInviteModal(true)}
+                  onClick={() => onSetShowInviteModal(true)}
                 >
                   <RiUserAddLine className="mr-2 h-4 w-4" />
                   Invite
@@ -719,7 +809,7 @@ export default function PlaylistDetailPage() {
               <div className="flex h-11 w-full items-center gap-1 rounded-2xl border border-border/80 bg-muted/50 p-1 sm:w-auto">
                 <button
                   type="button"
-                  onClick={() => setViewMode("list")}
+                  onClick={() => onSetViewMode("list")}
                   className={cn(
                     "flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors sm:flex-initial sm:px-4",
                     viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground",
@@ -731,7 +821,7 @@ export default function PlaylistDetailPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => onSetViewMode("grid")}
                   className={cn(
                     "flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors sm:flex-initial sm:px-4",
                     viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground",
@@ -809,7 +899,7 @@ export default function PlaylistDetailPage() {
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          handleRemoveItem(item._id)
+                          onRemoveItem(item._id)
                         }}
                         className={cn(
                           "absolute left-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-foreground transition-opacity hover:bg-black/80",
@@ -923,7 +1013,7 @@ export default function PlaylistDetailPage() {
                                 onClick={(e) => {
                                   e.preventDefault()
                                   e.stopPropagation()
-                                  handleRemoveItem(item._id)
+                                  onRemoveItem(item._id)
                                 }}
                                 aria-label="Remove from playlist"
                               >
@@ -945,12 +1035,12 @@ export default function PlaylistDetailPage() {
       {/* Edit Modal */}
       <PlaylistModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={onEditModalClose}
         editPlaylist={playlist}
         onSuccess={async (updated) => {
-          setPlaylist(updated)
+          onSavePlaylistSuccess(updated)
           const refreshed = await getPlaylistById(playlistId)
-          if (refreshed) setPlaylist(refreshed)
+          if (refreshed) onPlaylistUpdate(refreshed)
         }}
       />
 
@@ -958,14 +1048,14 @@ export default function PlaylistDetailPage() {
       {isOwner && (
         <InviteCollaboratorModal
           isOpen={showInviteModal}
-          onClose={async () => {
-            setShowInviteModal(false)
-            const updated = await getPlaylistById(playlistId)
-            if (updated) setPlaylist(updated)
-          }}
+          onClose={onInviteModalClose}
           playlist={playlist}
         />
       )}
     </div>
   )
+}
+
+export default function PlaylistDetailPage() {
+  return <PlaylistContent />
 }
