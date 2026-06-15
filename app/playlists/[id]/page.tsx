@@ -165,7 +165,7 @@ function PlaylistContent() {
   const canEdit = playlist ? canEditPlaylist(playlist) : false
 
   const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
-  const isPremiumUser = normalizedUser?.isPremium ?? user?.isPremium
+  const isPremiumUser = (normalizedUser?.isPremium ?? user?.isPremium) ?? false
   const isAdmin = user?.role === "admin"
 
   const handleRemoveItem = async (itemId: string) => {
@@ -430,7 +430,7 @@ function PlaylistContentRender({
         <div
           className="absolute inset-0 opacity-[0.3] dark:opacity-[0.18]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' fill='%23000'/%3E%3Crect width='256' height='256' fill='%23fff' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOc[...]
           }}
         />
       </div>
@@ -553,7 +553,7 @@ function PlaylistContentRender({
               <div className="group/cover relative mx-auto w-[7.5rem] sm:mx-0 md:w-64">
                 <div
                   className={cn(
-                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-105",
+                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-ho[...]
                     playlist.isPremiumPlaylist
                       ? "border-amber-500/30 bg-gradient-to-br from-amber-500/35 via-amber-600/20 to-amber-500/25 shadow-amber-500/15"
                       : "border-border/80 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/25 shadow-primary/15",
@@ -575,7 +575,7 @@ function PlaylistContentRender({
                   />
                 </div>
                 {playlist.items && playlist.items.length > 0 ? (
-                  <div className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-page bg-primary shadow-lg md:-bottom-2 md:-right-2 md:h-12 md:w-12">
+                  <div className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-page bg-primary shadow-lg md:-bottom-2 md:-right-2 md:h-12 md:w-12[...]
                     <RiPlayLine className="ml-0.5 h-5 w-5 text-primary-foreground" />
                   </div>
                 ) : null}
@@ -656,7 +656,7 @@ function PlaylistContentRender({
                     <Link
                       key={tag}
                       href={`/community?hashtag=${tag}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary/30"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:border-primary[...]
                     >
                       <RiHashtag className="h-3 w-3" />
                       {tag}
