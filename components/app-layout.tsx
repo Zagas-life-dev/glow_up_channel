@@ -7,6 +7,8 @@ import { useCleanupPastContent } from '@/hooks/use-cleanup-past-content'
 import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
+import SocialBarAd from './social-bar-ad'
+import PopunderAd from './popunder-ad'
 import LockedInIndicator from './locked-in-indicator'
 import PushPromptBanner from './push-prompt-banner'
 import SignUpBetterExperiencePopup from './sign-up-better-experience-popup'
@@ -102,6 +104,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <PushPromptBanner />
       <SignUpBetterExperiencePopup />
       <LockedInIndicator />
+      <SocialBarAd />
+      <PopunderAd />
     </div>
   )
 }

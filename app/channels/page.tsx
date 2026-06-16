@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
+import AdSlot from "@/components/ad-slot"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { hasPremiumAccess } from "@/lib/roles"
@@ -272,8 +273,8 @@ export default function ChannelsPage() {
                 <>
                   <ul className="space-y-3 sm:space-y-4">
                     {paginatedPremiumPlaylists.map((pl, index) => (
+                      <Fragment key={pl._id}>
                       <li
-                        key={pl._id}
                         className="animate-fade-in-up"
                         style={{
                           animationDelay: `${Math.min(index, 10) * 40}ms`,
@@ -310,6 +311,12 @@ export default function ChannelsPage() {
                           </div>
                         </Link>
                       </li>
+                      {(index + 1) % 5 === 0 && (
+                        <li>
+                          <AdSlot variant="banner" />
+                        </li>
+                      )}
+                      </Fragment>
                     ))}
                   </ul>
                   {showPagination ? (
@@ -368,8 +375,8 @@ export default function ChannelsPage() {
               <>
                 <ul className="space-y-3 sm:space-y-4">
                   {channels.map((channel, index) => (
+                    <Fragment key={channel._id}>
                     <li
-                      key={channel._id}
                       className="animate-fade-in-up"
                       style={{
                         animationDelay: `${Math.min(index, 10) * 40}ms`,
@@ -419,6 +426,12 @@ export default function ChannelsPage() {
                         </div>
                       </Link>
                     </li>
+                    {(index + 1) % 5 === 0 && (
+                      <li>
+                        <AdSlot variant="banner" />
+                      </li>
+                    )}
+                    </Fragment>
                   ))}
                 </ul>
 

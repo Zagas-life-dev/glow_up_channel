@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import AdSlot from "@/components/ad-slot"
 import FeedListSkeleton from '@/components/skeletons/feed-card-skeleton'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
 import ErrorState from '@/components/error-state'
@@ -196,6 +197,9 @@ function OpportunitiesContent() {
             <ErrorState isNetworkError onRetry={fetchInitialOpportunities} />
           ) : filteredOpportunities.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="col-span-full">
+                <AdSlot variant="banner" />
+              </div>
               {filteredOpportunities.map((opportunity) => {
                 // Check if _id is a valid MongoDB ObjectId (24 hex characters)
                 const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(opportunity._id)

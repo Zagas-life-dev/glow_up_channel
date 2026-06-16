@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
-import { Loader2, Send, MapPin, DollarSign, Clock, Globe, X } from 'lucide-react'
+import { Loader2, Send, MapPin, DollarSign, Clock, Globe, X, FileText, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const opportunityTypes = [
@@ -86,6 +86,10 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
   const [tagInput, setTagInput] = useState('')
   const [isRemote, setIsRemote] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
+  // Resource-specific state
+  const [isPremium, setIsPremium] = useState(false)
+  const [resourceSource, setResourceSource] = useState<'link' | 'file'>('link')
+  const [resourceFile, setResourceFile] = useState<File | null>(null)
 
   const fetchFullItem = useCallback(async () => {
     if (!item?._id || !item?.type) return
@@ -120,6 +124,9 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
           ? full.isPaid
           : !!(full.pay?.isPaid || full.financial?.isPaid)
       )
+      setIsPremium(!!full.isPremium)
+      setResourceSource(full.resourceType === 'file' || full.hasFile ? 'file' : 'link')
+      setResourceFile(null)
     } catch (e: any) {
       setError(e?.message || 'Failed to load')
       toast.error(e?.message || 'Failed to load content')
@@ -134,6 +141,9 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
       setFormData({})
       setTags([])
       setError('')
+      setIsPremium(false)
+      setResourceSource('link')
+      setResourceFile(null)
     }
   }, [open, item, fetchFullItem])
 
@@ -243,14 +253,51 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
         }
         await ApiClient.updateEvent(id, payload)
       } else if (type === 'resource') {
-        const resourceCategory = (formData.type || formData.category || '').trim()
-        const payload = {
+        const resourceCategory = (formData.category || formData.type || '').trim()
+        const wasFile = formData.resourceType === 'file' || formData.hasFile === true
+        const base = {
           title: formData.title,
           description: formData.description,
           category: resourceCategory,
-          ...(formData.paymentLink?.trim() && { paymentLink: formData.paymentLink.trim() }),
+          tags,
+          isPremium,
         }
-        await ApiClient.updateResource(id, payload)
+
+        if (resourceSource === 'file') {
+          if (resourceFile) {
+            // Replace (or set) the uploaded file via multipart.
+            await ApiClient.updateResourceWithFile(id, resourceFile, base)
+          } else if (wasFile) {
+            // Keep the existing file; only update metadata.
+            await ApiClient.updateResource(id, base)
+          } else {
+            setError('Please select a file to upload.')
+            setSaving(false)
+            return
+          }
+        } else {
+          const link = (formData.paymentLink || '').trim()
+          if (!link) {
+            setError('Please provide an external link.')
+            setSaving(false)
+            return
+          }
+          await ApiClient.updateResource(id, {
+            ...base,
+            paymentLink: link,
+            // Switching a file resource to a link clears the uploaded-file refs.
+            ...(wasFile && {
+              resourceType: 'link',
+              cloudinaryUrl: null,
+              cloudinaryPublicId: null,
+              pdfUrl: null,
+              pdfPublicId: null,
+              fileType: null,
+              fileSize: null,
+              pageCount: null,
+            }),
+          })
+        }
       }
 
       toast.success('Content updated successfully')
@@ -395,15 +442,95 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
             )}
 
             {item?.type === 'resource' && (
-              <div className="space-y-2">
-                <Label>Payment / Link</Label>
-                <Input
-                  value={formData.paymentLink ?? ''}
-                  onChange={(e) => updateField('paymentLink', e.target.value)}
-                  placeholder="https://..."
-                  className="bg-muted border-border"
-                />
-              </div>
+              <>
+                {/* Premium toggle — gold accent, consistent with premium resource UI */}
+                <div className="p-4 rounded-xl bg-muted/50 border border-border flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" /> Premium resource
+                  </span>
+                  <Switch checked={isPremium} onCheckedChange={setIsPremium} />
+                </div>
+
+                {/* Resource source: external link OR uploaded file (mutually exclusive) */}
+                <div className="space-y-3">
+                  <Label>Resource Source *</Label>
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted">
+                    <button
+                      type="button"
+                      onClick={() => { setResourceSource('link'); setResourceFile(null) }}
+                      className={cn(
+                        "flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors",
+                        resourceSource === 'link' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Globe className="w-4 h-4" /> External Link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setResourceSource('file')}
+                      className={cn(
+                        "flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors",
+                        resourceSource === 'file' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <FileText className="w-4 h-4" /> File Upload
+                    </button>
+                  </div>
+
+                  {resourceSource === 'link' ? (
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={formData.paymentLink ?? ''}
+                        onChange={(e) => updateField('paymentLink', e.target.value)}
+                        placeholder="https://..."
+                        type="url"
+                        className="pl-10 bg-muted border-border"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(formData.resourceType === 'file' || formData.hasFile) && !resourceFile && (
+                        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                          <FileText className="w-4 h-4 text-violet-500" />
+                          <span className="uppercase">{formData.fileType || 'file'}</span>
+                          {formData.fileSize ? <span>· {(formData.fileSize / (1024 * 1024)).toFixed(2)} MB</span> : null}
+                          <span className="ml-auto text-xs">Current file</span>
+                        </div>
+                      )}
+                      <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed border-border bg-muted/50 cursor-pointer hover:border-violet-500/60 transition-colors text-center">
+                        <FileText className="w-7 h-7 text-violet-500" />
+                        {resourceFile ? (
+                          <>
+                            <span className="text-sm font-medium text-foreground break-all">{resourceFile.name}</span>
+                            <span className="text-xs text-muted-foreground">{(resourceFile.size / (1024 * 1024)).toFixed(2)} MB · Click to change</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-sm font-medium text-foreground">
+                              {(formData.resourceType === 'file' || formData.hasFile) ? 'Click to replace the file' : 'Click to upload a file'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">PDF, Word, PowerPoint or image (JPEG, PNG, WebP, GIF, AVIF) · max 25MB</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.avif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png,image/gif,image/webp,image/avif"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] ?? null
+                            if (f && f.size > 25 * 1024 * 1024) {
+                              toast.error('File is too large. Maximum size is 25MB.')
+                              return
+                            }
+                            setResourceFile(f)
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {item?.type !== 'resource' && (

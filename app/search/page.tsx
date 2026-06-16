@@ -1,6 +1,7 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Fragment, Suspense, useEffect, useState } from "react"
+import AdSlot from "@/components/ad-slot"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -188,20 +189,22 @@ function SearchContent() {
           ) : hasQuery && items.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
               {items.map((item, index) => (
-                <div
-                  key={item._id}
-                  className="animate-fade-in-up"
-                  style={{
-                    animationDelay: `${Math.min(index, 12) * 35}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  <FeedCard
-                    item={
-                      item as ComponentProps<typeof FeedCard>["item"]
-                    }
-                  />
-                </div>
+                <Fragment key={item._id}>
+                  <div
+                    className="animate-fade-in-up"
+                    style={{
+                      animationDelay: `${Math.min(index, 12) * 35}ms`,
+                      animationFillMode: "both",
+                    }}
+                  >
+                    <FeedCard
+                      item={
+                        item as ComponentProps<typeof FeedCard>["item"]
+                      }
+                    />
+                  </div>
+                  {(index + 1) % 5 === 0 && <AdSlot variant="banner" />}
+                </Fragment>
               ))}
               <div
                 ref={sentinelRef}

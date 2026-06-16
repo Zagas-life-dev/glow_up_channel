@@ -20,6 +20,7 @@ import {
   RiGroupLine,
   RiExternalLinkLine,
   RiVipCrownLine,
+  RiStarLine,
   RiDownloadLine,
   RiHeartLine,
   RiHeartFill,
@@ -629,6 +630,8 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const details = fullDetails || item
   // Show "Show more" if description is long OR if there are additional details to show
   const detailsAny = details as any
+  // Premium resources get a distinct gold treatment so they stand out while scrolling.
+  const isPremiumResource = contentKind === 'resource' && !!detailsAny.isPremium
   const hasMoreDetails = (item.description && item.description.length > 150) ||
     (contentKind === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
     (contentKind === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
@@ -639,8 +642,12 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     <>
       <article className={cn(
         "w-full max-w-full relative p-4 rounded-2xl border transition-all duration-300",
-        "bg-card/80 backdrop-blur-sm border-border/70",
-        "hover:bg-card hover:border-border/90 hover:shadow-sm",
+        isPremiumResource
+          ? [
+              "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.07] to-transparent backdrop-blur-sm",
+              "hover:border-amber-500/45 hover:from-amber-500/[0.11] hover:shadow-sm",
+            ].join(" ")
+          : "bg-card/80 backdrop-blur-sm border-border/70 hover:bg-card hover:border-border/90 hover:shadow-sm",
         // Hot card effects for events/opportunities/jobs approaching deadline
         deadlineInfo?.isHot && "shadow-[0_0_20px_rgba(234,179,8,0.4)] border-yellow-500/40",
         deadlineInfo?.isUrgent && "shadow-[0_0_30px_rgba(239,68,68,0.5)] border-red-500/50 bg-red-500/5"
@@ -709,21 +716,35 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
         {/* Header Row */}
         <div className="flex items-start gap-4 mb-4">
-          {/* Type Icon */}
-          <div className={cn(
-            "w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border",
-            config.bg, config.border
-          )}>
-            {(() => { const Icon = config.icon; return <Icon className={cn("w-5 h-5", config.accent)} aria-hidden /> })()}
-          </div>
+          {/* Type Icon — gold accent for premium resources */}
+          {(() => {
+            const Icon = config.icon
+            return (
+              <div className={cn(
+                "w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border",
+                isPremiumResource
+                  ? "border-amber-500/40 bg-gradient-to-br from-amber-500/30 to-amber-600/15"
+                  : cn(config.bg, config.border)
+              )}>
+                <Icon className={cn("w-5 h-5", isPremiumResource ? "text-amber-500 dark:text-amber-400" : config.accent)} aria-hidden />
+              </div>
+            )
+          })()}
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             {/* Type & Provider */}
             <div className="flex items-center gap-2 mb-1.5">
-              <span className={cn("text-xs font-medium", config.accent)}>
-                {config.label}
-              </span>
+              {isPremiumResource ? (
+                <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                  <RiStarLine className="h-3 w-3" aria-hidden />
+                  Premium
+                </span>
+              ) : (
+                <span className={cn("text-xs font-medium", config.accent)}>
+                  {config.label}
+                </span>
+              )}
               {getProviderName() && (
                 <>
                   <span className="text-muted-foreground">•</span>
@@ -758,7 +779,12 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           <div className="mb-4">
             <button
               onClick={handleExpand}
-              className="text-orange-500 hover:text-orange-400 text-xs font-medium flex items-center gap-1"
+              className={cn(
+                "text-xs font-medium flex items-center gap-1",
+                isPremiumResource
+                  ? "text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400"
+                  : "text-orange-500 hover:text-orange-400"
+              )}
             >
               {expanded ? (
                 <>
@@ -1423,6 +1449,18 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                             </Button>
                           )}
                         </>
+                      ) : (detailsAny.resourceType === 'file' || detailsAny.hasFile) ? (
+                        // Uploaded (file) resources are viewed in-platform — open the resource page.
+                        <Button
+                          asChild
+                          size="sm"
+                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                        >
+                          <Link href={`/resources/${item._id}`} className="flex items-center justify-center gap-2">
+                            View Resource
+                            <RiExternalLinkLine className="w-4 h-4" aria-hidden />
+                          </Link>
+                        </Button>
                       ) : null}
                     </div>
                   )}

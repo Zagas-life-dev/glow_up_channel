@@ -35,11 +35,16 @@ export default function FeedSponsoredSlot({
   adSlotId,
   className,
 }: FeedSponsoredSlotProps) {
-  const showPromoted = kind === "promoted" && content && content.type
   const adId = adSlotId ?? slotId
 
+  // Pure ad slot: render the ad bare so it collapses to nothing when it doesn't
+  // fill, instead of leaving an empty "Sponsored" card in the feed.
+  if (kind !== "promoted" || !content || !content.type) {
+    return <FeedAd slotId={slotId} className={className} />
+  }
+
   const detailHref =
-    showPromoted && content
+    content
       ? content.type === "opportunity"
         ? `/opportunities/${content._id}`
         : content.type === "job"
@@ -62,30 +67,24 @@ export default function FeedSponsoredSlot({
         </span>
       </div>
       <div className="px-3 pb-3 space-y-3">
-        {showPromoted ? (
-          <div className="space-y-3">
-            <FeedCard
-              item={{
-                ...content,
-                type: content.type as "opportunity" | "job" | "event" | "resource",
-              }}
-            />
-            {detailHref && (
-              <div className="flex justify-end">
-                <Button asChild size="sm" className="rounded-full">
-                  <Link href={detailHref}>
-                    Open
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <FeedAd slotId={slotId} className="min-h-[100px]" />
-        )}
-        {showAdBelow && adId && (
-          <FeedAd slotId={adId} className="min-h-[100px]" />
-        )}
+        <div className="space-y-3">
+          <FeedCard
+            item={{
+              ...content,
+              type: content.type as "opportunity" | "job" | "event" | "resource",
+            }}
+          />
+          {detailHref && (
+            <div className="flex justify-end">
+              <Button asChild size="sm" className="rounded-full">
+                <Link href={detailHref}>
+                  Open
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+        {showAdBelow && adId && <FeedAd slotId={adId} />}
       </div>
     </div>
   )

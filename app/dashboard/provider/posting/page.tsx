@@ -117,6 +117,9 @@ function PostingContent() {
   const [isRemote, setIsRemote] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+  // Resource source: external link vs uploaded file (only one allowed per resource)
+  const [resourceSource, setResourceSource] = useState<'link' | 'file'>('link')
+  const [resourceFile, setResourceFile] = useState<File | null>(null)
 
   // Hide navbar when this page is active
   useEffect(() => {
@@ -182,6 +185,8 @@ function PostingContent() {
     setTagInput('')
     setIsPaid(false)
     setIsRemote(false)
+    setResourceSource('link')
+    setResourceFile(null)
   }
   // Tag suggestions logic moved into shared TagInputWithSuggestions component
 
@@ -287,13 +292,40 @@ function PostingContent() {
         const rawUrl = data.url ?? ''
         const resourceCategory = typeof rawType === 'string' ? rawType.trim() : ''
         const resourceUrl = typeof rawUrl === 'string' ? rawUrl.trim() : ''
-        submissionData = {
+        const baseResource = {
           title: typeof data.title === 'string' ? data.title : '',
           description: typeof data.description === 'string' ? data.description : '',
           // Reuse the same tag/hashtag selection so resources can be ranked by tags too
           tags,
           category: resourceCategory,
-          ...(resourceUrl && { paymentLink: resourceUrl })
+        }
+
+        // A resource is either an uploaded file OR an external link — never both.
+        if (resourceSource === 'file') {
+          if (!resourceFile) {
+            setIsSubmitting(false)
+            setSubmitStatus('error')
+            setErrorMessage('Please select a file to upload.')
+            return
+          }
+          await ApiClient.createResourceWithFile(resourceFile, baseResource)
+          setSubmitStatus('success')
+          const c = await ApiClient.getMyPostingCount()
+          setPostingCount(c.total)
+          setTimeout(() => { setIsSheetOpen(false); setSelectedType(null) }, 2000)
+          setIsSubmitting(false)
+          return
+        }
+
+        if (!resourceUrl) {
+          setIsSubmitting(false)
+          setSubmitStatus('error')
+          setErrorMessage('Please provide an external link.')
+          return
+        }
+        submissionData = {
+          ...baseResource,
+          paymentLink: resourceUrl,
         }
       }
       
@@ -631,20 +663,88 @@ function PostingContent() {
                       />
                   </div>
 
-                    {/* URL */}
-                  <div className="space-y-2">
-                      <Label className="text-muted-foreground">External Link *</Label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          name="url"
-                          type="url"
-                          placeholder="https://..."
-                          required
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl pl-10"
-                        />
-                              </div>
+                    {/* Resource source: external link OR file upload (mutually exclusive) */}
+                    {selectedType === 'resource' ? (
+                      <div className="space-y-3">
+                        <Label className="text-muted-foreground">Resource Source *</Label>
+                        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted">
+                          <button
+                            type="button"
+                            onClick={() => { setResourceSource('link'); setResourceFile(null) }}
+                            className={cn(
+                              "flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors",
+                              resourceSource === 'link' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <Globe className="w-4 h-4" /> External Link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setResourceSource('file')}
+                            className={cn(
+                              "flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium transition-colors",
+                              resourceSource === 'file' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <FileText className="w-4 h-4" /> File Upload
+                          </button>
+                        </div>
+
+                        {resourceSource === 'link' ? (
+                          <div className="relative">
+                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              name="url"
+                              type="url"
+                              placeholder="https://..."
+                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl pl-10"
+                            />
                           </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-border bg-muted/50 cursor-pointer hover:border-violet-500/60 transition-colors text-center">
+                            <FileText className="w-8 h-8 text-violet-500" />
+                            {resourceFile ? (
+                              <>
+                                <span className="text-sm font-medium text-foreground break-all">{resourceFile.name}</span>
+                                <span className="text-xs text-muted-foreground">{(resourceFile.size / (1024 * 1024)).toFixed(2)} MB · Click to change</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-sm font-medium text-foreground">Click to upload a file</span>
+                                <span className="text-xs text-muted-foreground">PDF, Word, PowerPoint or image (JPEG, PNG, WebP, GIF, AVIF) · max 25MB</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.avif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png,image/gif,image/webp,image/avif"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0] ?? null
+                                if (f && f.size > 25 * 1024 * 1024) {
+                                  toast.error('File is too large. Maximum size is 25MB.')
+                                  return
+                                }
+                                setResourceFile(f)
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground">External Link *</Label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            name="url"
+                            type="url"
+                            placeholder="https://..."
+                            required
+                            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl pl-10"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     {/* Location (not for resource) */}
                     {selectedType !== 'resource' && (

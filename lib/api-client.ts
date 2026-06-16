@@ -513,6 +513,98 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Create a resource from an uploaded file (PDF / Word / PowerPoint).
+   * Sends multipart/form-data; the file field must be named "file".
+   * `fields` contains the text metadata (title, description, category, tags, etc.).
+   */
+  static async createResourceWithFile(file: File, fields: Record<string, any>): Promise<any> {
+    const formData = new FormData();
+    Object.entries(fields).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      // Arrays (e.g. tags) are serialized as JSON; the backend parses them.
+      formData.append(key, Array.isArray(value) || typeof value === 'object' ? JSON.stringify(value) : String(value));
+    });
+    formData.append('file', file);
+
+    // Send with only an Authorization header. We deliberately bypass
+    // makeAuthenticatedRequest/getAuthHeaders here because they force
+    // Content-Type: application/json, which would break the multipart boundary
+    // the browser needs to set for FormData.
+    const url = `${API_BASE_URL}/api/resources`;
+    const doFetch = () => {
+      const headers: Record<string, string> = {};
+      const t = this.getAccessToken();
+      if (t) headers.Authorization = `Bearer ${t}`;
+      return fetch(url, { method: 'POST', headers, body: formData });
+    };
+
+    let response = await doFetch();
+    if (response.status === 401) {
+      const refreshed = await this.refreshTokenIfNeeded();
+      if (refreshed) response = await doFetch();
+    }
+
+    return this.handleResponse(response);
+  }
+
+  /**
+   * Update a resource, replacing its uploaded file (PDF / Word / PowerPoint).
+   * Sends multipart/form-data; the file field must be named "file".
+   */
+  static async updateResourceWithFile(id: string, file: File, fields: Record<string, any>): Promise<any> {
+    const formData = new FormData();
+    Object.entries(fields).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      formData.append(key, Array.isArray(value) || typeof value === 'object' ? JSON.stringify(value) : String(value));
+    });
+    formData.append('file', file);
+
+    const url = `${API_BASE_URL}/api/resources/${id}`;
+    const doFetch = () => {
+      const headers: Record<string, string> = {};
+      const t = this.getAccessToken();
+      if (t) headers.Authorization = `Bearer ${t}`;
+      return fetch(url, { method: 'PUT', headers, body: formData });
+    };
+
+    let response = await doFetch();
+    if (response.status === 401) {
+      const refreshed = await this.refreshTokenIfNeeded();
+      if (refreshed) response = await doFetch();
+    }
+
+    return this.handleResponse(response);
+  }
+
+  /**
+   * Fetch an uploaded resource's PDF content through the authenticated backend proxy.
+   * Returns a Blob suitable for the in-app PDF viewer. The Cloudinary URL is never exposed.
+   */
+  static async getResourceContentBlob(id: string): Promise<Blob> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/${id}/content`);
+    if (!response.ok) {
+      throw new Error(`Failed to load resource content (HTTP ${response.status})`);
+    }
+    return response.blob();
+  }
+
+  /** Get the current user's saved reading progress for a resource (or null). */
+  static async getResourceProgress(id: string): Promise<{ page: number; pageCount: number | null; updatedAt: string } | null> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/${id}/progress`);
+    const data = await this.handleResponse<{ progress: any }>(response);
+    return data?.progress ?? null;
+  }
+
+  /** Save the current user's reading progress for a resource. */
+  static async saveResourceProgress(id: string, page: number, pageCount?: number | null): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/${id}/progress`, {
+      method: 'PUT',
+      body: JSON.stringify({ page, ...(pageCount != null && { pageCount }) }),
+    });
+    await this.handleResponse(response);
+  }
+
   // Channels
   static async getChannels(params?: {
     page?: number;

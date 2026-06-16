@@ -2,6 +2,8 @@
 
 import { ReactNode, useState } from 'react'
 import FeedCard from './feed-card'
+import FeedAd from './feed-ad'
+import { buildFeedWithAds } from '@/lib/feed-ads'
 import { RiInboxLine, RiSparklingLine } from 'react-icons/ri'
 
 interface FeedContainerProps {
@@ -13,6 +15,10 @@ interface FeedContainerProps {
   initialExpandedId?: string | null
   /** Notify parent when expanded id changes (for session save) */
   onExpandedIdChange?: (id: string | null) => void
+  /** Insert an ad after every N cards. 0 disables ads. */
+  adEvery?: number
+  /** Adsterra zone key for in-feed ads. Defaults to NEXT_PUBLIC_ADSTERRA_FEED_KEY. */
+  adSlotId?: string
 }
 
 export default function FeedContainer({
@@ -22,6 +28,8 @@ export default function FeedContainer({
   emptyIcon,
   initialExpandedId = null,
   onExpandedIdChange,
+  adEvery = 4,
+  adSlotId = process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || "",
 }: FeedContainerProps) {
   const [expandedId, setExpandedId] = useState<string | null>(initialExpandedId ?? null)
 
@@ -90,16 +98,25 @@ export default function FeedContainer({
     )
   }
 
+  const showAds = adEvery > 0 && !!adSlotId
+  const feed = showAds
+    ? buildFeedWithAds(items, { adEvery })
+    : items.map((post) => ({ type: "post" as const, post }))
+
   return (
     <div className="space-y-5 w-full max-w-full">
-      {items.map((item) => (
-        <FeedCard
-          key={item._id}
-          item={item}
-          isExpanded={expandedId === item._id}
-          onExpand={() => handleExpand(item._id)}
-        />
-      ))}
+      {feed.map((entry) =>
+        entry.type === "ad" ? (
+          <FeedAd key={entry.key} slotId={adSlotId} className="my-1" />
+        ) : (
+          <FeedCard
+            key={entry.post._id}
+            item={entry.post}
+            isExpanded={expandedId === entry.post._id}
+            onExpand={() => handleExpand(entry.post._id)}
+          />
+        )
+      )}
     </div>
   )
 }

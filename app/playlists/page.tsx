@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { Fragment, useState, useEffect, Suspense } from "react"
+import AdSlot from "@/components/ad-slot"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -367,8 +368,8 @@ function PlaylistsPageInner() {
                 const premium = playlist.isPremiumPlaylist
 
                 return (
+                  <Fragment key={playlist._id}>
                   <li
-                    key={playlist._id}
                     className={cn(
                       "group animate-fade-in-up rounded-[1.35rem] border transition-all duration-200",
                       premium
@@ -568,6 +569,12 @@ function PlaylistsPageInner() {
                       </div>
                     </div>
                   </li>
+                  {(index + 1) % 5 === 0 && (
+                    <li className="md:col-span-2">
+                      <AdSlot variant="banner" />
+                    </li>
+                  )}
+                  </Fragment>
                 )
               })}
             </ul>

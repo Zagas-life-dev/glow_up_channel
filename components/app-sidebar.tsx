@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useLockedIn } from "@/contexts/locked-in-context"
 import { usePlaylist } from "@/contexts/playlist-context"
 import { cn } from "@/lib/utils"
+import AdSlot from "@/components/ad-slot"
 import { showPwaInstallPrompt } from "@/components/pwa-install-banner"
 import { Lock, LockOpen } from "lucide-react"
 import {
@@ -251,6 +252,13 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
               {!isCollapsed && <span className="truncate">Install app</span>}
             </button>
           </>
+        )}
+
+        {/* Regular 300x250 banner. Expanded only. */}
+        {!isCollapsed && (
+          <div className="mt-5">
+            <AdSlot variant="banner" />
+          </div>
         )}
       </nav>
 

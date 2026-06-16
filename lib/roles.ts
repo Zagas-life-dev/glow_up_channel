@@ -51,3 +51,15 @@ export function canViewPremiumPlaylist(
 ): boolean {
   return isPremium === true || isAdminOrSuperAdmin(role)
 }
+
+/**
+ * Returns true if the user can read premium resource content
+ * (active premium subscriber OR admin/super_admin). Mirrors the playlist rule
+ * so premium access stays consistent across the platform.
+ */
+export function canViewPremiumResource(
+  isPremium: boolean | undefined | null,
+  role?: string | undefined | null
+): boolean {
+  return isPremium === true || isAdminOrSuperAdmin(role)
+}

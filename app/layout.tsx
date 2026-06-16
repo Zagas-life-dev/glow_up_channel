@@ -11,7 +11,6 @@ import { LockedInProvider } from "@/contexts/locked-in-context"
 import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
-import Script from "next/script"
 import { getMetadataBase } from "@/lib/site-url"
 
 export const metadata: Metadata = {
@@ -57,30 +56,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Third-party ad/CMP scripts: only in production and loaded after page is ready to avoid "identity bridging" timeout errors in dev */}
-        {process.env.NODE_ENV === "production" && (
-          <>
-            <Script
-              async
-              src="//www.ezojs.com/ezoic/sa.min.js"
-              strategy="lazyOnload"
-            />
-            <Script
-              data-cfasync="false"
-              src="https://cmp.gatekeeperconsent.com/min.js"
-              strategy="lazyOnload"
-            />
-            <Script
-              data-cfasync="false"
-              src="https://thegatekeeperconsent.com/cmp.min.js"
-              strategy="lazyOnload"
-            />
-            <Script strategy="lazyOnload">
-              {`window.ezstandalone = window.ezstandalone || {};
-          ezstandalone.cmd = ezstandalone.cmd || [];`}
-            </Script>
-          </>
-        )}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#ff6700" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

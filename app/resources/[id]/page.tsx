@@ -1,9 +1,20 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+
+// PDF viewer relies on browser-only APIs (pdf.js); load it client-side only.
+const ResourceViewer = dynamic(() => import('@/components/resource/ResourceViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
+      Loading viewer…
+    </div>
+  ),
+})
 import {
   RiArrowLeftLine,
   RiExternalLinkLine,
@@ -16,6 +27,8 @@ import {
   RiVideoLine,
   RiHeadphoneLine,
   RiVipCrownLine,
+  RiLockLine,
+  RiStarLine,
 } from 'react-icons/ri'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
@@ -23,7 +36,9 @@ import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleto
 import ErrorState from '@/components/error-state'
 import AuthGuard from '@/components/auth-guard'
 import { cleanUrl } from '@/lib/url-utils'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
+import { canViewPremiumResource } from '@/lib/roles'
 import { toast } from 'sonner'
 import { trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
@@ -39,9 +54,51 @@ function getResourceTypeIcon(type: string) {
   }
 }
 
+// Paywall shown in place of premium resource content for users without access.
+// Mirrors the Premium Playlist gate (gold accent, crown + lock, upgrade CTA).
+function PremiumResourcePaywall({ title, description, resourceId, isAuthenticated }: { title: string; description?: string; resourceId: string; isAuthenticated: boolean }) {
+  return (
+    <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/[0.07] to-transparent p-6 text-center sm:p-10">
+      <div className="mx-auto mb-5 relative w-20 h-20">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500/30 via-amber-600/15 to-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-xl shadow-amber-500/10">
+          <RiVipCrownLine className="w-10 h-10 text-amber-400" />
+        </div>
+        <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-md ring-2 ring-page">
+          <RiLockLine className="w-3.5 h-3.5 text-white" />
+        </div>
+      </div>
+      <div className="flex justify-center mb-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <RiStarLine className="h-3 w-3" /> Premium Resource
+        </span>
+      </div>
+      <h2 className="text-xl font-bold text-foreground mb-2">{title}</h2>
+      {description && <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground line-clamp-3">{description}</p>}
+      <p className="mx-auto mb-6 max-w-sm text-sm text-muted-foreground">
+        This resource is available to premium members. Upgrade to unlock the full content.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        {isAuthenticated ? (
+          <Button asChild size="lg" className="h-12 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold px-8 shadow-lg shadow-amber-500/20">
+            <Link href="/premium" className="flex items-center justify-center gap-2">
+              <RiVipCrownLine className="h-4 w-4" /> Become a premium member
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild size="lg" className="h-12 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold px-8 shadow-lg shadow-amber-500/20">
+            <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${resourceId}`)}`} className="flex items-center justify-center gap-2">
+              Sign in to continue
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ResourcePageContent({ params }: ResourcePageProps) {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [resource, setResource] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -88,6 +145,13 @@ function ResourcePageContent({ params }: ResourcePageProps) {
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
+  // Uploaded (file) resources are viewed in-platform; legacy link resources keep external links.
+  const isFileResource = resource.resourceType === 'file' || resource.hasFile === true
+
+  // Premium gating (frontend mirror of the backend source of truth).
+  const canAccessPremium = canViewPremiumResource(user?.isPremium, user?.role)
+  const isPremiumLocked = resource.isPremium === true && !canAccessPremium
+
   const metaParts = [`Published ${formatDate(resource.createdAt)}`]
   if (resource.metrics?.viewCount != null) metaParts.push(`${resource.metrics.viewCount} views`)
   if (resource.duration) metaParts.push(resource.duration)
@@ -108,7 +172,12 @@ function ResourcePageContent({ params }: ResourcePageProps) {
       <main className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 border-x border-border min-h-screen xl:grid xl:grid-cols-[1fr_320px] xl:gap-12 2xl:gap-16">
         <div className="min-w-0">
         <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 text-white">
+          <div className={cn(
+            "w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white",
+            resource.isPremium
+              ? "bg-gradient-to-br from-amber-400 to-amber-600"
+              : "bg-gradient-to-br from-violet-500 to-purple-600"
+          )}>
             {getResourceTypeIcon(resource.category || 'resource')}
           </div>
           <div className="flex-1 min-w-0">
@@ -149,6 +218,27 @@ function ResourcePageContent({ params }: ResourcePageProps) {
         </div>
 
         <div className="px-4 py-5 space-y-6 text-[15px]">
+          {/* Premium gate: never render the viewer or load content for locked users. */}
+          {isPremiumLocked ? (
+            <PremiumResourcePaywall
+              title={resource.title}
+              description={resource.description}
+              resourceId={id}
+              isAuthenticated={isAuthenticated}
+            />
+          ) : isFileResource ? (
+            isAuthenticated ? (
+              <ResourceViewer resourceId={id} fileType={resource.fileType ?? null} initialPageCount={resource.pageCount ?? null} />
+            ) : (
+              <div className="rounded-2xl border border-border bg-card py-12 text-center">
+                <p className="text-sm text-muted-foreground mb-4">Sign in to view this resource.</p>
+                <Button asChild className="bg-violet-500 hover:bg-violet-600 text-white rounded-full">
+                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>Sign in to view</Link>
+                </Button>
+              </div>
+            )
+          ) : null}
+
           {resource.description && <p className="text-foreground leading-relaxed whitespace-pre-wrap">{resource.description}</p>}
 
           {resource.category && (
@@ -200,7 +290,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
               </a>
             </Button>
           ) : null}
-          {isAuthenticated && resource.fileUrl && !resource.isPremium && (
+          {isAuthenticated && !isFileResource && resource.fileUrl && !resource.isPremium && (
             <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-full h-12 text-[15px]">
               <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
                 <RiDownloadLine className="w-4 h-4" /> Download
@@ -223,7 +313,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                   <RiVipCrownLine className="w-4 h-4" /> Purchase premium
                 </a>
               </Button>
-            ) : resource.fileUrl ? (
+            ) : !isFileResource && resource.fileUrl ? (
               <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-12 font-semibold">
                 <a href={cleanUrl(resource.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                   Access resource
@@ -231,7 +321,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                 </a>
               </Button>
             ) : null}
-            {isAuthenticated && resource.fileUrl && !resource.isPremium && (
+            {isAuthenticated && !isFileResource && resource.fileUrl && !resource.isPremium && (
               <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl h-12">
                 <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
                   <RiDownloadLine className="w-4 h-4" /> Download

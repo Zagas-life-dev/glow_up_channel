@@ -50,14 +50,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
 import { toast } from "sonner"
 
 const typeConfig = {
@@ -172,7 +164,10 @@ export default function PlaylistDetailPage() {
   const canEdit = playlist ? canEditPlaylist(playlist) : false
 
   const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
-  const isPremiumGated = playlist?.isPremiumPlaylist && !canViewPremium && !isOwner
+  // Explicitly check isPremium as a boolean — canViewPremiumPlaylist may return true
+  // for undefined/missing isPremium values, so we also guard directly on the flag.
+  const userIsPremium = Boolean(normalizedUser?.isPremium ?? user?.isPremium)
+  const isPremiumGated = Boolean(playlist?.isPremiumPlaylist) && (!canViewPremium || !userIsPremium) && !isOwner
 
   const handleRemoveItem = async (itemId: string) => {
     if (!playlist) return
@@ -251,9 +246,125 @@ export default function PlaylistDetailPage() {
     return <PlaylistDetailSkeleton />
   }
 
-  const showPremiumDialog = (playlist && isPremiumGated) || premiumGatedBy403
+  // ─── PREMIUM WALL ────────────────────────────────────────────────────────────
+  // Fires when: playlist is premium + user isn't premium + user isn't owner,
+  // OR the API returned a 403 (server-side premium check).
+  // Show wall if:
+  // 1. Playlist loaded but is premium-gated for this user, OR
+  // 2. API returned 403 (server enforced — catches authenticated non-premium users too)
+  const showPremiumWall = (playlist != null && isPremiumGated) || premiumGatedBy403
 
-  if (!playlist && !premiumGatedBy403) {
+  if (showPremiumWall) {
+    return (
+      <div className="min-h-screen bg-page flex flex-col">
+        {/* Atmosphere blobs — match the rest of the page */}
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div
+            className="absolute -top-24 right-0 h-72 w-72 rounded-full opacity-[0.14] dark:opacity-[0.2] blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(38 92% 50%) 0%, transparent 72%)" }}
+          />
+          <div
+            className="absolute bottom-0 -left-16 h-56 w-56 rounded-full opacity-[0.07] blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(38 92% 50%) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.25] dark:opacity-[0.15]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E")`,
+            }}
+          />
+        </div>
+
+        {/* Sticky back header */}
+        <div className="sticky top-0 z-40 bg-page/70 backdrop-blur-2xl border-b border-border/60">
+          <div className="max-w-6xl mx-auto px-4 md:px-6">
+            <div className="flex items-center py-3">
+              <Link
+                href="/playlists"
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted transition-colors group-hover:bg-muted/80">
+                  <RiArrowLeftLine className="w-4 h-4" />
+                </span>
+                <span className="text-sm font-medium hidden sm:inline">Back to Playlists</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Premium gate content */}
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="max-w-md w-full text-center">
+
+            {/* Crown icon with lock badge */}
+            <div className="mx-auto mb-7 relative w-24 h-24">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/30 via-amber-600/15 to-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-xl shadow-amber-500/10">
+                <RiVipCrownLine className="w-12 h-12 text-amber-400" />
+              </div>
+              <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-md ring-2 ring-page">
+                <RiLockLine className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
+
+            {/* Badge */}
+            <div className="flex justify-center mb-3">
+              <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1">
+                <RiStarLine className="mr-1.5 h-3 w-3" />
+                Premium Playlist
+              </Badge>
+            </div>
+
+            {/* Headline */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 tracking-tight leading-tight">
+              This is a premium playlist
+            </h1>
+
+            {/* Body */}
+            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8 max-w-sm mx-auto">
+              This playlist is curated exclusively for premium members. Upgrade your account to unlock it and get full access to all premium content on the platform.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/premium" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="h-12 w-full px-8 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg shadow-amber-500/20 transition-all duration-200 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.99]"
+                >
+                  <RiVipCrownLine className="mr-2 h-4 w-4" />
+                  Become a premium member
+                </Button>
+              </Link>
+              <Link href="/playlists" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 w-full px-8 rounded-2xl border-border/80 text-foreground hover:bg-muted/60"
+                >
+                  <RiArrowLeftLine className="mr-2 h-4 w-4" />
+                  Browse free playlists
+                </Button>
+              </Link>
+            </div>
+
+            {/* Sign-in nudge for unauthenticated users */}
+            {!isAuthenticated && (
+              <p className="mt-7 text-xs text-muted-foreground/70">
+                Already a member?{" "}
+                <Link href="/login" className="text-primary hover:underline underline-offset-2 font-medium">
+                  Sign in
+                </Link>{" "}
+                to access your content.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+  // ─── END PREMIUM WALL ────────────────────────────────────────────────────────
+
+  if (!playlist) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
@@ -269,55 +380,6 @@ export default function PlaylistDetailPage() {
             </Button>
           </Link>
         </div>
-      </div>
-    )
-  }
-
-  // At this point, playlist should always be non-null
-  if (!playlist) {
-    return null
-  }
-
-  // Premium gate: show Dialog (and Back to Playlists header when user landed on premium link)
-  if (showPremiumDialog) {
-    return (
-      <div className="min-h-screen bg-page pb-24 lg:pb-8">
-        <div className="sticky top-0 z-40 bg-page/60 backdrop-blur-2xl border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex items-center justify-between py-4">
-              <Link
-                href="/playlists"
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <div className="p-1.5 rounded-lg bg-muted group-hover:bg-card/[0.1] transition-colors">
-                  <RiArrowLeftLine className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-medium hidden sm:inline">Back</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-        <Dialog open={true} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle>Premium content</DialogTitle>
-              <DialogDescription>
-                This is premium content and you cannot access it. Become a premium user today to gain access.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
-              <Button asChild variant="outline" className="rounded-full border-border">
-                <Link href="/playlists">
-                  <RiArrowLeftLine className="w-4 h-4 mr-2" />
-                  Back to Playlists
-                </Link>
-              </Button>
-              <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">
-                <Link href="/premium">Become a premium user</Link>
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     )
   }
