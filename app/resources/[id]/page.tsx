@@ -282,9 +282,9 @@ function ResourcePageContent({ params }: ResourcePageProps) {
                 <RiVipCrownLine className="w-4 h-4" /> Purchase premium
               </a>
             </Button>
-          ) : resource.fileUrl ? (
+          ) : resource.paymentLink ? (
             <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-full h-12 font-semibold text-[15px]">
-              <a href={cleanUrl(resource.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+              <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                 Access resource
                 <RiExternalLinkLine className="w-4 h-4" />
               </a>
@@ -292,7 +292,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
           ) : null}
           {isAuthenticated && !isFileResource && resource.fileUrl && !resource.isPremium && (
             <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-full h-12 text-[15px]">
-              <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
+              <a href={resource.paymentLink} download className="flex items-center justify-center gap-2">
                 <RiDownloadLine className="w-4 h-4" /> Download
               </a>
             </Button>
@@ -315,7 +315,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
               </Button>
             ) : !isFileResource && resource.fileUrl ? (
               <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-12 font-semibold">
-                <a href={cleanUrl(resource.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                   Access resource
                   <RiExternalLinkLine className="w-4 h-4" />
                 </a>
@@ -323,7 +323,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
             ) : null}
             {isAuthenticated && !isFileResource && resource.fileUrl && !resource.isPremium && (
               <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl h-12">
-                <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
+                <a href={resource.paymentLink} download className="flex items-center justify-center gap-2">
                   <RiDownloadLine className="w-4 h-4" /> Download
                 </a>
               </Button>
