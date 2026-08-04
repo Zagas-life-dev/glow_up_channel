@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { RiHomeLine, RiPlayList2Fill, RiSearchLine, RiUserLine, RiHashtag } from "react-icons/ri"
+import { RiHomeLine, RiPlayList2Fill, RiSearchLine, RiUserLine, RiSettingsLine } from "react-icons/ri"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 
@@ -10,7 +10,7 @@ const navItems = [
   { name: "Home", icon: RiHomeLine, path: "/" },
   { name: "Playlist", icon: RiPlayList2Fill, path: "/playlists" },
   { name: "Search", icon: RiSearchLine, path: "/search" },
-  { name: "Channels", icon: RiHashtag, path: "/channels" },
+  { name: "Settings", icon: RiSettingsLine, path: "/profile/settings" },
   { name: "Profile", icon: RiUserLine, path: "/profile" },
 ]
 
@@ -25,7 +25,11 @@ export default function AppBottomNav() {
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/"
-    if (path.startsWith("/profile")) return pathname?.startsWith("/profile")
+    if (path === "/profile/settings") return pathname?.startsWith("/profile/settings")
+    // "Profile" must not light up while the Settings tab is the active route.
+    if (path.startsWith("/profile")) {
+      return pathname?.startsWith("/profile") && !pathname.startsWith("/profile/settings")
+    }
     return pathname?.startsWith(path)
   }
 

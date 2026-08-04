@@ -55,7 +55,6 @@ import {
   TrendingUp,
   Building2,
   Lightbulb,
-  QrCode,
   Crown
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
@@ -65,6 +64,7 @@ import { cn } from '@/lib/utils'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
 import { PageShell } from '@/components/layout/page-shell'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
+import { canPublishContent } from '@/lib/roles'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -125,8 +125,6 @@ const aspirationOptions = [
   'Entrepreneurship support'
 ]
 
-const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
-
 export default function SettingsPage() {
   const router = useRouter()
   const { user, profile, logout, refreshUser, isLoading, upgradeToProvider } = useAuth()
@@ -142,15 +140,7 @@ export default function SettingsPage() {
   const [emailVerified, setEmailVerified] = useState<boolean>(false)
   const [isResendingCode, setIsResendingCode] = useState(false)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
-  const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
 
-  // Premium membership state
-  const [isPremium, setIsPremium] = useState<boolean>(false)
-  const [premiumExpiresAt, setPremiumExpiresAt] = useState<string | null>(null)
-  const [canCancelPremium, setCanCancelPremium] = useState(false)
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
-  const [isStartingPremium, setIsStartingPremium] = useState(false)
-  const [isCancellingPremium, setIsCancellingPremium] = useState(false)
 
   // Basic Info State
   const [firstName, setFirstName] = useState('')
@@ -278,36 +268,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const handleOpenQrDashboard = () => {
-    if (!user) {
-      toast.error('Please log in again to manage your QR profile.')
-      return
-    }
-
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('accessToken') || localStorage.getItem('authToken')
-      : null
-
-    if (!token) {
-      toast.error('No active session found. Please sign in again.')
-      return
-    }
-
-    if (!QR_APP_URL) {
-      toast.error('QR app URL is not configured.')
-      return
-    }
-
-    setIsOpeningQrDashboard(true)
-
-    try {
-      const url = `${QR_APP_URL.replace(/\/$/, '')}/dashboard?token=${encodeURIComponent(token)}`
-      window.open(url, '_blank', 'noopener,noreferrer')
-    } finally {
-      setTimeout(() => setIsOpeningQrDashboard(false), 500)
-    }
-  }
-
   // Load data from profile/user
   useEffect(() => {
     if (user) {
@@ -332,13 +292,6 @@ export default function SettingsPage() {
       setIsPrivate((user as any).isPrivate || false)
       setShowConnections((user as any).showConnections !== false)
 
-      // Initialize premium state from user if available
-      if (typeof user.isPremium === 'boolean') {
-        setIsPremium(user.isPremium)
-      }
-      if ((user as any).premiumExpiresAt) {
-        setPremiumExpiresAt((user as any).premiumExpiresAt)
-      }
     }
   }, [user, profile])
 
@@ -377,54 +330,6 @@ export default function SettingsPage() {
     }
     loadVerificationStatus()
   }, [user])
-
-  // When premium modal opens, fetch status to get canCancel
-  useEffect(() => {
-    if (!showPremiumModal || !user || !ApiClient.isAuthenticated()) return
-    let cancelled = false
-    ApiClient.getPremiumStatus()
-      .then((status) => {
-        if (!cancelled) {
-          setCanCancelPremium(!!status.canCancel)
-          if (typeof status.isPremium === 'boolean') setIsPremium(status.isPremium)
-          if (status.premiumExpiresAt != null) setPremiumExpiresAt(status.premiumExpiresAt)
-        }
-      })
-      .catch(() => { if (!cancelled) setCanCancelPremium(false) })
-    return () => { cancelled = true }
-  }, [showPremiumModal, user])
-
-  // Handle premium callback from Paystack (?premium=success&reference=...)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const params = new URLSearchParams(window.location.search)
-    const premiumFlag = params.get('premium')
-    const reference = params.get('reference')
-
-    if (premiumFlag === 'success' && reference) {
-      ;(async () => {
-        try {
-          setIsStartingPremium(true)
-          const result = await ApiClient.verifyPremiumSubscription(reference)
-          setIsPremium(result.isPremium)
-          setPremiumExpiresAt(result.premiumExpiresAt)
-          await refreshUser()
-          toast.success('Premium subscription activated!')
-        } catch (error: any) {
-          console.error('Error verifying premium subscription:', error)
-          toast.error(error?.message || 'Failed to verify premium subscription')
-        } finally {
-          setIsStartingPremium(false)
-          // Clean up query params
-          const url = new URL(window.location.href)
-          url.searchParams.delete('premium')
-          url.searchParams.delete('reference')
-          window.history.replaceState({}, '', url.toString())
-        }
-      })()
-    }
-  }, [refreshUser])
 
   const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('accessToken')
@@ -825,115 +730,32 @@ export default function SettingsPage() {
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
           <div className="space-y-6">
-            {/* QR Profile quick access / Premium gate */}
-            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-orange-500/40 flex items-center justify-center">
-                  <QrCode className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    QR Profile {isPremium && <span className="ml-1 text-[11px] text-primary/80">(Premium)</span>}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Generate and manage a QR code that shares your public contact card.
-                  </p>
-                </div>
-              </div>
-              {isPremium ? (
-                <Button
-                  type="button"
-                  onClick={handleOpenQrDashboard}
-                  disabled={isOpeningQrDashboard}
-                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
-                >
-                  {isOpeningQrDashboard ? 'Opening…' : 'Manage QR Profile'}
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = '/premium'
-                  }}
-                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium"
-                >
-                  View premium plans
-                </Button>
-              )}
-            </div>
-
-            {/* Become a provider card - only show when not already a provider */}
-            {user?.role !== 'opportunity_poster' && user?.role !== 'admin' && user?.role !== 'super_admin' && (
+            {/* Founder Batch upsell — only when the account cannot already publish */}
+            {!canPublishContent(user?.role) && (
               <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/40 flex items-center justify-center">
                     <Crown className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Become a provider</p>
+                    <p className="text-sm font-semibold text-foreground">Join Founder Batch</p>
                     <p className="text-xs text-muted-foreground">
-                      Post opportunities and events. Reach seekers and grow your audience.
+                      ₦80,000 for 12 months. Publish your own opportunities, events and jobs.
                     </p>
                   </div>
                 </div>
                 <Button
                   type="button"
-                  onClick={() => {
-                    setUpgradeForm({ email: user?.email || '', password: '' })
-                    setUpgradeError(null)
-                    setShowUpgradeModal(true)
-                  }}
+                  onClick={() => router.push('/founder-batch')}
                   className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-sm font-medium gap-2"
                 >
                   <Crown className="h-4 w-4" />
-                  Become a provider
+                  Join Founder Batch
                 </Button>
               </div>
             )}
 
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 space-y-6">
-              {/* Premium membership card */}
-              <div className="p-4 rounded-xl border border-yellow-500/40 bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-orange-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
-                    <Crown className="w-5 h-5 text-yellow-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      Glow Up Premium
-                      {isPremium && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
-                          Premium
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Unlock extra power features:
-                    </p>
-                    <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-                      <li>• Weekly premium newsletter</li>
-                      <li>• Ability to create channels</li>
-                      <li>• Ability to host a general Lock In</li>
-                      <li>• No ads (still see promoted content)</li>
-                      <li>• Special library with free premium guides</li>
-                    </ul>
-                    {isPremium && premiumExpiresAt && (
-                      <p className="text-[11px] text-yellow-300 mt-2">
-                        Premium active · renews by {new Date(premiumExpiresAt).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => router.push('/premium/manage')}
-                  className="rounded-full bg-primary hover:bg-primary/90 px-4 py-2 text-xs font-medium"
-                >
-                  {isPremium ? 'Manage Premium' : 'See Premium Plans'}
-                </Button>
-              </div>
-
               {/* Profile Image and basic fields */}
               {/* Profile Image */}
               <div className="flex flex-col items-center">
@@ -1543,21 +1365,21 @@ export default function SettingsPage() {
               </div>
 
               <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Become a provider</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Founder Batch</h3>
                 <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
                   <div>
                     <p className="font-medium text-foreground">
-                      {user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin'
-                        ? 'You have provider access'
-                        : 'Post opportunities and reach seekers'}
+                      {canPublishContent(user?.role)
+                        ? 'You can publish content'
+                        : 'Publish your own opportunities and events'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin'
+                      {canPublishContent(user?.role)
                         ? 'Manage your content and promotions in Provider Hub.'
-                        : 'Upgrade your account to post opportunities and events.'}
+                        : 'Join Founder Batch — ₦80,000 for 12 months.'}
                     </p>
                   </div>
-                  {(user?.role === 'opportunity_poster' || user?.role === 'admin' || user?.role === 'super_admin') ? (
+                  {(canPublishContent(user?.role)) ? (
                     <Link href="/dashboard/provider">
                       <Button className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2">
                         <Crown className="h-4 w-4" />
@@ -1566,15 +1388,11 @@ export default function SettingsPage() {
                     </Link>
                   ) : (
                     <Button
-                      onClick={() => {
-                        setUpgradeForm({ email: user?.email || '', password: '' })
-                        setUpgradeError(null)
-                        setShowUpgradeModal(true)
-                      }}
+                      onClick={() => router.push('/founder-batch')}
                       className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2"
                     >
                       <Crown className="h-4 w-4" />
-                      Become a provider
+                      Join Founder Batch
                     </Button>
                   )}
                 </div>
@@ -1827,122 +1645,6 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Premium subscription modal */}
-      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-        <DialogContent className="bg-card border-border rounded-2xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary" />
-              {isPremium ? 'Manage Premium' : 'Upgrade to Premium'}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {isPremium
-                ? 'Your premium membership unlocks extra benefits on Glow Up Channel.'
-                : 'Get access to creator tools, special resources, and an ad‑light experience.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Glow Up Premium – Monthly</p>
-                  <p className="text-xs text-muted-foreground">
-                    Billed monthly via Paystack. You can cancel any time.
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-foreground">₦1,500</p>
-                  <p className="text-[11px] text-muted-foreground">per month</p>
-                </div>
-              </div>
-              <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-                <li>• Weekly premium newsletter and insights</li>
-                <li>• Create and manage your own channels</li>
-                <li>• Host general Lock In sessions</li>
-                <li>• Experience Glow Up with no ads (promoted content may still appear)</li>
-                <li>• Access a special library of premium guides and resources</li>
-              </ul>
-            </div>
-
-            {isPremium && premiumExpiresAt && (
-              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-foreground">
-                Premium is currently active. Your access runs until{' '}
-                <span className="font-semibold">
-                  {new Date(premiumExpiresAt).toLocaleDateString()}
-                </span>
-                .
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="mt-4 flex-wrap gap-2">
-            {isPremium && canCancelPremium && (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isStartingPremium || isCancellingPremium}
-                className="rounded-xl border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={async () => {
-                  if (!window.confirm('Cancel your premium subscription? You will keep access until the end of your current billing period and will not be charged again.')) return
-                  try {
-                    setIsCancellingPremium(true)
-                    const { premiumExpiresAt: expiresAt } = await ApiClient.cancelPremiumSubscription()
-                    setCanCancelPremium(false)
-                    await refreshUser()
-                    toast.success('Subscription cancelled. You keep premium until ' + (expiresAt ? new Date(expiresAt).toLocaleDateString() : 'the end of your period') + '.')
-                    setShowPremiumModal(false)
-                  } catch (error: unknown) {
-                    console.error('Error cancelling premium:', error)
-                    toast.error(error instanceof Error ? error.message : 'Failed to cancel subscription')
-                  } finally {
-                    setIsCancellingPremium(false)
-                  }
-                }}
-              >
-                {isCancellingPremium ? 'Cancelling…' : 'Cancel subscription'}
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowPremiumModal(false)}
-              disabled={isStartingPremium}
-              className="rounded-xl"
-            >
-              Close
-            </Button>
-            <Button
-              type="button"
-              disabled={isStartingPremium || isCancellingPremium}
-              className="bg-primary hover:bg-primary/90 rounded-xl"
-              onClick={async () => {
-                try {
-                  setIsStartingPremium(true)
-                  // Paystack expects amount in kobo (1 NGN = 100 kobo). ₦1,500 = 150000 kobo.
-                  const result = await ApiClient.startPremiumSubscription(150000, {
-                    planId: 'premium_monthly',
-                    callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/profile/settings?premium=success` : undefined,
-                  })
-                  if (result.authorizationUrl) {
-                    window.location.href = result.authorizationUrl
-                  } else {
-                    toast.error('Failed to start premium subscription')
-                  }
-                } catch (error: unknown) {
-                  console.error('Error starting premium subscription:', error)
-                  toast.error(error instanceof Error ? error.message : 'Failed to start premium subscription')
-                } finally {
-                  // do not reset isStartingPremium here; we are leaving page to Paystack
-                  setShowPremiumModal(false)
-                }
-              }}
-            >
-              {isStartingPremium ? 'Connecting to Paystack…' : isPremium ? 'Renew / Manage via Paystack' : 'Continue with Paystack'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </PageShell>
   )
 }

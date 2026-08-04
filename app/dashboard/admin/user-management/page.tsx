@@ -33,7 +33,7 @@ interface User {
   firstName: string
   lastName: string
   email: string
-  role: 'user' | 'opportunity_poster' | 'admin' | 'super_admin'
+  role: 'user' | 'founder_batch' | 'opportunity_poster' | 'admin' | 'super_admin'
   isActive: boolean
   createdAt: string
   lastLogin?: string
@@ -58,7 +58,7 @@ export default function UserManagementPage() {
     lastName: '',
     email: '',
     password: '',
-    role: 'user' as 'user' | 'opportunity_poster' | 'admin' | 'super_admin'
+    role: 'user' as 'user' | 'founder_batch' | 'opportunity_poster' | 'admin' | 'super_admin'
   })
 
   // Hide navbar and footer when this page is active
@@ -243,6 +243,7 @@ export default function UserManagementPage() {
         return <Badge className="bg-purple-100 text-purple-800"><Crown className="w-3 h-3 mr-1" />Super Admin</Badge>
       case 'admin':
         return <Badge className="bg-primary/10 text-foreground"><Shield className="w-3 h-3 mr-1" />Admin</Badge>
+      case 'founder_batch':
       case 'opportunity_poster':
         return <Badge className="bg-green-100 text-green-800">Provider</Badge>
       default:
@@ -375,7 +376,7 @@ export default function UserManagementPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="opportunity_poster">Provider</SelectItem>
+                        <SelectItem value="founder_batch">Founder Batch</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="super_admin">Super Admin</SelectItem>
                       </SelectContent>
@@ -413,7 +414,7 @@ export default function UserManagementPage() {
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="user">Users</SelectItem>
-              <SelectItem value="opportunity_poster">Providers</SelectItem>
+              <SelectItem value="founder_batch">Founder Batch</SelectItem>
               <SelectItem value="admin">Admins</SelectItem>
               <SelectItem value="super_admin">Super Admins</SelectItem>
             </SelectContent>
@@ -527,7 +528,7 @@ export default function UserManagementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="opportunity_poster">Provider</SelectItem>
+                    <SelectItem value="founder_batch">Founder Batch</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>

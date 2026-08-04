@@ -67,7 +67,6 @@ interface ContentItem {
   tags?: string[]
   category?: string
   duration?: string
-  isPremium?: boolean
 }
 
 interface ContentShareComposerProps {

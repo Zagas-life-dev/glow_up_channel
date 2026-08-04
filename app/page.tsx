@@ -12,7 +12,6 @@ import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
-import { applyVarietyOrder, type VarietyFeedItem } from "@/lib/feed-variety-order"
 import { getOrCreateAnonId } from "@/lib/anon-id"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -37,7 +36,6 @@ import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { PageShell } from "@/components/layout/page-shell"
 import { SectionCard } from "@/components/layout/section-card"
 import { TabStrip } from "@/components/layout/tab-strip"
-import { canViewPremiumPlaylist } from "@/lib/roles"
 
 type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
 
@@ -228,8 +226,11 @@ export default function Home() {
         (item) => normalizeUnifiedFeedItem(item),
       )
 
-      // Variety ordering: score buckets + skewed random start, then surrounding pool, mid, low (under 2000ms)
-      const sorted = applyVarietyOrder(unifiedItems)
+      // Scatter ordering now happens server-side (scatterRankingService), where it
+      // can draw on the whole candidate pool instead of just the page we were sent,
+      // and where its seed keeps the order stable across paginated requests.
+      // Re-shuffling here would only jumble an already-ordered page.
+      const sorted = unifiedItems
 
       const lastItemId = sorted.length > 0 ? sorted[sorted.length - 1]._id : null
       const resultLastId = data.data?.pagination?.lastId ?? lastItemId
@@ -396,13 +397,48 @@ export default function Home() {
 
   const feedLoading = false
 
+  // The tab bar is position:fixed (always on screen, like the bottom nav), so it no
+  // longer occupies space. Reserve exactly what it covers: its height minus whatever
+  // layout padding already sits above the feed, measured rather than hard-coded so
+  // safe-area insets and tab wrapping stay correct.
+  const tabBarRef = useRef<HTMLDivElement>(null)
+  const spacerRef = useRef<HTMLDivElement>(null)
+  const [tabBarOffset, setTabBarOffset] = useState(0)
+
+  useEffect(() => {
+    const bar = tabBarRef.current
+    const spacer = spacerRef.current
+    if (!bar || !spacer) return
+
+    const measure = () => {
+      // A spacer's own height never moves its own top edge, so this stays stable.
+      const contentTop = spacer.getBoundingClientRect().top + window.scrollY
+      setTabBarOffset(Math.max(0, Math.round(bar.offsetHeight - contentTop)))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(bar)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
+
   return (
     <PageShell
       fullWidth
       className="relative font-sans bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.12),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)]"
     >
-      {/* Tab bar: sticky, glass tab buttons */}
-      <div className="sticky top-0 z-30 -mx-4 bg-page/80 px-4 pt-[max(0.25rem,env(safe-area-inset-top)+0.25rem)] pb-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      {/* Tab bar: fixed to the viewport so it never leaves the screen, the same way the
+          bottom nav behaves. `left` follows the content column (0 on mobile, sidebar
+          width on desktop) so it never covers the sidebar. */}
+      <div
+        ref={tabBarRef}
+        className="fixed right-0 top-0 z-40 bg-page/95 px-4 pt-[max(0.25rem,env(safe-area-inset-top)+0.25rem)] pb-2 backdrop-blur-xl transition-[left] duration-300 ease-in-out sm:px-6 lg:px-8"
+        style={{ left: 'var(--app-content-left, 0px)' }}
+      >
         <div className="mx-auto max-w-2xl">
           <TabStrip
             tabs={tabs.map((tab) => ({
@@ -415,6 +451,9 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Holds open the space the fixed bar would otherwise overlap. */}
+      <div ref={spacerRef} aria-hidden style={{ height: tabBarOffset }} />
 
       {/* Feed Content */}
       <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
@@ -434,13 +473,6 @@ export default function Home() {
                   : "Sign in to get personalized recommendations."
               }
               icon={<RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />}
-              actions={
-                isAuthenticated && canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role) ? (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/playlists?tab=premium">Get premium playlist</Link>
-                  </Button>
-                ) : undefined
-              }
             />
           </>
         )}
@@ -455,8 +487,6 @@ export default function Home() {
                   key={item.key}
                   kind={item.kind}
                   content={item.kind === "promoted" ? item.content : undefined}
-                  adKey={item.key}
-                  slotId={process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || ""}
                 />
               )
             )}

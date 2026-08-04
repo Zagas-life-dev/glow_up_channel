@@ -13,13 +13,8 @@ export default function ProfileSkeleton() {
         </div>
 
         <div className="mb-5 overflow-hidden rounded-[1.35rem] border border-border/60 bg-card/70 p-4 sm:p-6">
-          <div className="mb-5 flex items-start gap-4">
+          <div className="mb-5 flex items-start">
             <Skeleton className="h-24 w-24 shrink-0 rounded-2xl sm:h-28 sm:w-28" />
-            <div className="flex min-w-0 flex-1 justify-between gap-1">
-              <Skeleton className="h-[3.25rem] flex-1 rounded-xl" />
-              <Skeleton className="h-[3.25rem] flex-1 rounded-xl" />
-              <Skeleton className="h-[3.25rem] flex-1 rounded-xl" />
-            </div>
           </div>
           <Skeleton className="mb-2 h-8 w-44 max-w-full" />
           <Skeleton className="mb-3 h-4 w-full max-w-sm" />
@@ -33,26 +28,15 @@ export default function ProfileSkeleton() {
         <div className="mb-4 flex gap-2">
           <Skeleton className="h-11 min-h-11 flex-1 rounded-2xl" />
           <Skeleton className="h-11 min-h-11 flex-1 rounded-2xl" />
-          <Skeleton className="h-11 min-h-11 flex-1 rounded-2xl" />
         </div>
 
-        <div className="space-y-4">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-[1.25rem] border border-border/50 bg-card/50 p-5">
-              <div className="mb-3 flex items-start gap-3">
-                <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </div>
-              <Skeleton className="mb-2 h-4 w-full" />
-              <Skeleton className="mb-2 h-4 w-[85%]" />
-              <Skeleton className="mb-4 h-40 w-full rounded-2xl" />
-              <div className="flex flex-wrap gap-4">
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-12" />
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 rounded-2xl p-3">
+              <Skeleton className="h-12 w-12 shrink-0 rounded-2xl" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-40 max-w-full" />
+                <Skeleton className="h-3 w-24" />
               </div>
             </div>
           ))}

@@ -1,7 +1,6 @@
 "use client"
 
 import { Fragment, Suspense, useEffect, useState } from "react"
-import AdSlot from "@/components/ad-slot"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -203,7 +202,6 @@ function SearchContent() {
                       }
                     />
                   </div>
-                  {(index + 1) % 5 === 0 && <AdSlot variant="banner" />}
                 </Fragment>
               ))}
               <div

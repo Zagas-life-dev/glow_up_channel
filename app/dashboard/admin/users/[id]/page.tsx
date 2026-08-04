@@ -152,7 +152,8 @@ export default function UserDetailsPage() {
   const getRoleBadge = (role: string) => {
     const roleColors = {
       'opportunity_seeker': 'bg-primary/10 text-foreground',
-      'opportunity_poster': 'bg-purple-100 text-purple-800',
+      'founder_batch': 'bg-purple-100 text-purple-800',
+      'opportunity_poster': 'bg-slate-100 text-slate-800',
       'admin': 'bg-orange-100 text-orange-800',
       'super_admin': 'bg-red-100 text-red-800'
     }

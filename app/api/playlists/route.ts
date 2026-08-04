@@ -5,7 +5,7 @@ const CONTENT_TYPES = new Set(["opportunity", "job", "event", "resource"])
 
 /**
  * Normalizes the playlist create body so every field the backend expects is present
- * (camelCase + is_premium mirror). Validates name before proxying.
+ * in camelCase. Validates name before proxying.
  */
 function buildPlaylistCreatePayload(raw: Record<string, unknown>) {
   const name = typeof raw.name === "string" ? raw.name.trim() : ""
@@ -14,13 +14,6 @@ function buildPlaylistCreatePayload(raw: Record<string, unknown>) {
     ? raw.hashtags.filter((t): t is string => typeof t === "string")
     : []
   const isPublic = raw.isPublic === undefined ? true : Boolean(raw.isPublic)
-  const premium =
-    raw.isPremiumPlaylist === true ||
-    raw.is_premium === true ||
-    raw.isPremiumPlaylist === "true" ||
-    raw.is_premium === "true" ||
-    raw.isPremiumPlaylist === 1 ||
-    raw.is_premium === 1
 
   let items: unknown[] | undefined
   if (Array.isArray(raw.items)) {
@@ -44,8 +37,6 @@ function buildPlaylistCreatePayload(raw: Record<string, unknown>) {
     description,
     hashtags,
     isPublic,
-    isPremiumPlaylist: premium,
-    is_premium: premium,
   }
 
   if (items && items.length > 0) {
@@ -112,8 +103,6 @@ export async function POST(request: NextRequest) {
 
   if (process.env.NODE_ENV === "development") {
     console.info("[playlists create proxy] →", `${backendUrl}/api/playlists`, {
-      isPremiumPlaylist: payload.isPremiumPlaylist,
-      is_premium: payload.is_premium,
       hasItems: Array.isArray(payload.items) && payload.items.length > 0,
     })
   }

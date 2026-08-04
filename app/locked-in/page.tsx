@@ -17,9 +17,7 @@ import {
 import Link from "next/link"
 import ApiClient from "@/lib/api-client"
 import FeedSponsoredSlot, { type PromotedContentItem } from "@/components/feed-sponsored-slot"
-import FeedAd from "@/components/feed-ad"
 
-const ADSTERRA_FEED_KEY = process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || ""
 const PROMOTED_REFRESH_MS = 20000
 
 function formatElapsed(seconds: number): string {
@@ -95,7 +93,6 @@ function LockedInPageContent() {
   const [promotedFeed, setPromotedFeed] = useState<PromotedContentItem[]>([])
   const [liveStats, setLiveStats] = useState<{ liveCount: number; totalToday: number }>({ liveCount: 0, totalToday: 0 })
   const [usage, setUsage] = useState<{
-    isPremium: boolean
     weeklyUsed: number
     weeklyLimit: number
     remaining: number | null
@@ -248,11 +245,9 @@ function LockedInPageContent() {
               </p>
               {usage && (
                 <span className="rounded-full bg-muted/70 px-3 py-1 text-[11px] text-muted-foreground">
-                  {usage.isPremium
-                    ? "Premium: unlimited sessions"
-                    : `Week: ${usage.weeklyUsed}/${usage.weeklyLimit}${
-                        usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""
-                      }`}
+                  {`Week: ${usage.weeklyUsed}/${usage.weeklyLimit}${
+                    usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""
+                  }`}
                 </span>
               )}
             </div>
@@ -303,18 +298,7 @@ function LockedInPageContent() {
           </div>
           {/* Promoted content rail (mobile-first) */}
           <div className="mt-6 w-full space-y-4">
-            {promoted1 && (
-              <FeedSponsoredSlot
-                kind="promoted"
-                content={promoted1}
-                slotId={ADSTERRA_FEED_KEY}
-                showAdBelow={!!ADSTERRA_FEED_KEY}
-                adSlotId={ADSTERRA_FEED_KEY}
-              />
-            )}
-            {!promoted1 && ADSTERRA_FEED_KEY && (
-              <FeedAd slotId={ADSTERRA_FEED_KEY} className="min-h-[96px]" />
-            )}
+            {promoted1 && <FeedSponsoredSlot kind="promoted" content={promoted1} />}
           </div>
         </div>
         <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
@@ -374,9 +358,7 @@ function LockedInPageContent() {
 
           {usage && (
             <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/80 border border-border/70 text-[11px] text-muted-foreground">
-              {usage.isPremium
-                ? "Premium: unlimited Locked In sessions"
-                : `Free sessions this week: ${usage.weeklyUsed}/${usage.weeklyLimit} used${usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""}`}
+              {`Sessions this week: ${usage.weeklyUsed}/${usage.weeklyLimit} used${usage.remaining !== null ? ` · ${Math.max(0, usage.remaining)} left` : ""}`}
             </div>
           )}
 
@@ -670,7 +652,7 @@ function LockedInPageContent() {
   )
 }
 
-/** Locked In is available to all authenticated users (not premium-only). */
+/** Locked In is available to all authenticated users. */
 export default function LockedInPage() {
   return (
     <AuthGuard>

@@ -1,25 +1,16 @@
-import { hasPremiumAccess, isAdminOrSuperAdmin } from './roles'
+import { isAdminOrSuperAdmin } from './roles'
+import { FOUNDER_BATCH } from './roles'
 
 /**
- * Posting limits for opportunity providers (total posts: active, inactive, and draft all count).
- * - Free: 5 posts max total.
- * - Premium / Admin / Super admin: 20 posts max total.
+ * Posting limit for Founder Batch members (total posts: active, inactive and draft
+ * all count). Admin/super_admin are unlimited.
  */
-export const POST_LIMIT_FREE = 5
-export const POST_LIMIT_PREMIUM = 20
+export const POST_LIMIT = FOUNDER_BATCH.POST_LIMIT
 
-/**
- * Returns the posting limit for the user. Premium limit is granted to premium subscribers
- * and to admin/super_admin roles.
- */
-export function getPostingLimit(
-  isPremium: boolean | undefined,
-  role?: string | undefined | null
-): number {
-  // Admins and super_admins have no posting limit
+/** Returns the posting limit for the user's role. */
+export function getPostingLimit(role?: string | undefined | null): number {
   if (isAdminOrSuperAdmin(role ?? null)) {
     return Infinity
   }
-  // Premium users keep the higher limit, free users the base limit
-  return hasPremiumAccess({ isPremium, role }) ? POST_LIMIT_PREMIUM : POST_LIMIT_FREE
+  return POST_LIMIT
 }

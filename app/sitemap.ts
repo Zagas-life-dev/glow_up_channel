@@ -15,7 +15,6 @@ const PATHS = [
   "/opportunities",
   "/resources",
   "/playlists",
-  "/premium",
   "/privacy-policy",
   "/submit",
   "/post",

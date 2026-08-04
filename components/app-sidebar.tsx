@@ -5,12 +5,9 @@ import Image from "next/image"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { useLockedIn } from "@/contexts/locked-in-context"
 import { usePlaylist } from "@/contexts/playlist-context"
 import { cn } from "@/lib/utils"
-import AdSlot from "@/components/ad-slot"
 import { showPwaInstallPrompt } from "@/components/pwa-install-banner"
-import { Lock, LockOpen } from "lucide-react"
 import {
   RiHomeLine,
   RiGlobalLine,
@@ -23,15 +20,15 @@ import {
   RiArrowLeftLine,
   RiArrowRightLine,
   RiPlayList2Fill,
-  RiHashtag,
   RiDownloadLine,
 } from "react-icons/ri"
+import { canPublishContent } from '@/lib/roles'
 
 const mainNavItems = [
   { name: "Home", icon: RiHomeLine, path: "/" },
   { name: "Playlist", icon: RiPlayList2Fill, path: "/playlists" },
   { name: "Search", icon: RiSearchLine, path: "/search" },
-  { name: "Channels", icon: RiHashtag, path: "/channels" },
+  { name: "Settings", icon: RiSettingsLine, path: "/profile/settings" },
 ]
 
 interface AppSidebarProps {
@@ -67,34 +64,6 @@ function navLinkClass({
   )
 }
 
-function LockedInSidebarLink({
-  pathname,
-  isCollapsed,
-}: {
-  pathname: string | null
-  isCollapsed: boolean
-}) {
-  const { isActive: isLockedInActive } = useLockedIn()
-  const active = Boolean(pathname?.startsWith("/locked-in"))
-  return (
-    <Link
-      href="/locked-in"
-      title={isCollapsed ? "Locked In" : undefined}
-      className={navLinkClass({ isCollapsed, active })}
-    >
-      {isLockedInActive ? (
-        <Lock
-          className="h-5 w-5 shrink-0 text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
-          aria-hidden
-        />
-      ) : (
-        <LockOpen className={cn("h-5 w-5 shrink-0", active && "text-primary")} aria-hidden />
-      )}
-      {!isCollapsed && <span className="truncate">Locked In</span>}
-    </Link>
-  )
-}
-
 export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -106,6 +75,9 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
     if (path === "/") return pathname === "/"
     return pathname?.startsWith(path)
   }
+
+  // "My profile" must not light up while the Settings nav item owns the route.
+  const profileActive = !!pathname?.startsWith("/profile") && !pathname.startsWith("/profile/settings")
 
   const onPlaylists = pathname?.startsWith("/playlists") ?? false
   const playlistTab = onPlaylists ? searchParams.get("tab") : null
@@ -215,16 +187,15 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                 <Link
                   href={`/profile/${user._id}`}
                   title={isCollapsed ? "My Profile" : undefined}
-                  className={navLinkClass({ isCollapsed, active: !!pathname?.startsWith("/profile") })}
+                  className={navLinkClass({ isCollapsed, active: profileActive })}
                 >
                   <RiUserLine
-                    className={cn("h-5 w-5 shrink-0", pathname?.startsWith("/profile") && "text-primary")}
+                    className={cn("h-5 w-5 shrink-0", profileActive && "text-primary")}
                     aria-hidden
                   />
                   {!isCollapsed && <span className="truncate">My profile</span>}
                 </Link>
-                <LockedInSidebarLink pathname={pathname} isCollapsed={isCollapsed} />
-                {(user.role === "opportunity_poster" || user.role === "admin" || user.role === "super_admin") && (
+                {canPublishContent(user.role) && (
                   <Link
                     href="/dashboard/provider"
                     title={isCollapsed ? "Provider Hub" : undefined}
@@ -253,37 +224,11 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
             </button>
           </>
         )}
-
-        {/* Regular 300x250 banner. Expanded only. */}
-        {!isCollapsed && (
-          <div className="mt-5">
-            <AdSlot variant="banner" />
-          </div>
-        )}
       </nav>
 
       <div className={cn("relative z-[1] flex-shrink-0 border-t border-border/60 bg-card/40 backdrop-blur-sm", isCollapsed ? "px-2 py-3" : "px-3 py-4")}>
         {user ? (
           <div className="space-y-1">
-            <Link
-              href="/profile/settings"
-              title={isCollapsed ? "Settings" : undefined}
-              className={navLinkClass({ isCollapsed, active: false })}
-            >
-              <RiSettingsLine className="h-5 w-5 shrink-0" aria-hidden />
-              {!isCollapsed && <span className="truncate">Settings</span>}
-            </Link>
-            <Link
-              href="/premium"
-              title={isCollapsed ? (user.isPremium ? "Premium" : "Go Premium") : undefined}
-              className={navLinkClass({
-                isCollapsed,
-                active: !!user.isPremium,
-              })}
-            >
-              <RiVipCrownLine className={cn("h-5 w-5 shrink-0", user.isPremium && "text-primary")} aria-hidden />
-              {!isCollapsed && <span className="truncate">{user.isPremium ? "Premium" : "Go Premium"}</span>}
-            </Link>
             <button
               type="button"
               onClick={logout}

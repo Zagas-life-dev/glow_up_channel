@@ -1,43 +1,18 @@
-export type FeedItem<T> =
-  | { type: "post"; post: T }
-  | { type: "ad"; key: string }
-
-/** Sponsored slot: either a promoted content card or an ad. */
+/** Sponsored slot: a provider-promoted content card, or a reserved slot with nothing to show. */
 export type SponsoredSlot<P> =
   | { type: "sponsored"; kind: "promoted"; content: P; key: string }
   | { type: "sponsored"; kind: "ad"; key: string }
 
-/** Feed item for feeds that support promoted + ads (3-slot cycle: promoted, ad, ad). */
+/** Feed item for feeds that support promoted content. */
 export type FeedItemWithSponsored<T, P> =
   | { type: "post"; post: T }
   | SponsoredSlot<P>
 
 /**
- * Builds an array of feed items with ad slots interleaved after every `adEvery` posts.
- * Use with PostCard + FeedAd: map post items to PostCard, ad items to FeedAd.
- */
-export function buildFeedWithAds<T>(
-  items: T[],
-  options: { adEvery: number }
-): FeedItem<T>[] {
-  const { adEvery } = options
-  const result: FeedItem<T>[] = []
-  let adIndex = 0
-
-  items.forEach((post, i) => {
-    if (i > 0 && i % adEvery === 0) {
-      result.push({ type: "ad", key: `ad-${adIndex++}` })
-    }
-    result.push({ type: "post", post })
-  })
-
-  return result
-}
-
-/**
  * Builds a feed with sponsored slots every `postsBetween` items.
- * 3-slot cycle: Slot 1 = promoted (or ad if none), Slot 2 = ad, Slot 3 = ad, then repeat.
- * When promotedItems are exhausted, promoted slots render as ad.
+ * 3-slot cycle: only slot 1 of each cycle carries promoted content; the other two
+ * are reserved slots that render as nothing. Once promotedItems are exhausted,
+ * every slot renders as nothing.
  */
 export function buildFeedWithSponsored<T, P>(
   items: T[],

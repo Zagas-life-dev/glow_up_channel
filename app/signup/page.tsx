@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { FlaticonIcon } from '@/components/ui/flaticon-icon'
 import { Target } from 'lucide-react'
 import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
@@ -27,7 +26,6 @@ const signupSchema = z.object({
     .regex(/[A-Z]/, "Must contain at least one uppercase letter")
     .regex(/[a-z]/, "Must contain at least one lowercase letter")
     .regex(/[0-9]/, "Must contain at least one number"),
-  role: z.enum(['seeker', 'provider'], { required_error: "Please select a role" })
 })
 
 type SignupFormValues = z.infer<typeof signupSchema>
@@ -36,7 +34,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const { registerOpportunitySeeker, registerOpportunityPoster } = useAuth()
+  const { registerOpportunitySeeker } = useAuth()
   const router = useRouter()
 
   const {
@@ -51,7 +49,6 @@ export default function SignupPage() {
       email: '',
       dateOfBirth: '',
       password: '',
-      role: undefined
     }
   })
 
@@ -67,11 +64,10 @@ export default function SignupPage() {
         return
       }
 
-      if (data.role === 'seeker') {
-        await registerOpportunitySeeker(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
-      } else if (data.role === 'provider') {
-        await registerOpportunityPoster(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
-      }
+      // Every new account is an opportunity seeker. Publishing is unlocked by
+      // purchasing Founder Batch after signing up, not chosen at registration.
+      await registerOpportunitySeeker(data.email, data.password, data.firstName, data.lastName, data.dateOfBirth)
+
       
       router.push('/verify-email')
     } catch (err: any) {
@@ -121,10 +117,10 @@ export default function SignupPage() {
             <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
               <div className="flex items-center gap-2 text-foreground">
                 <Target className="w-4 h-4 text-orange-400" aria-hidden />
-                <span className="font-medium">For providers</span>
+                <span className="font-medium">Founder Batch</span>
               </div>
               <p className="text-muted-foreground">
-                Post opportunities and reach the right young talent.
+                Upgrade after joining to publish your own opportunities and events.
               </p>
             </div>
             <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
@@ -304,55 +300,6 @@ export default function SignupPage() {
                 {errors.password && (
                   <p className="text-sm text-red-400">{errors.password.message}</p>
                   )}
-              </div>
-
-              {/* Role Selection */}
-              <div className="space-y-3">
-                <Label className="text-foreground font-semibold text-sm">I want to join as a:</Label>
-                <Controller
-                  name="role"
-                  control={control}
-                  render={({ field }) => (
-                    <RadioGroup
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      className="space-y-2.5"
-                    >
-                      <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
-                        <RadioGroupItem value="seeker" id="seeker" />
-                        <Label htmlFor="seeker" className="flex-1 cursor-pointer">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 rounded-2xl flex items-center justify-center">
-                              <FlaticonIcon name="users" className="w-5 h-5 text-orange-400" aria-hidden />
-                            </div>
-                            <div>
-                              <div className="font-semibold text-foreground text-sm">Opportunity Seeker</div>
-                              <div className="text-xs text-muted-foreground">Find and apply for opportunities</div>
-                            </div>
-                          </div>
-                        </Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3 p-4 border border-border/60 rounded-2xl hover:border-orange-500/40 hover:bg-primary/5 transition-all duration-200 bg-muted/40 backdrop-blur-sm cursor-pointer">
-                        <RadioGroupItem value="provider" id="provider" />
-                        <Label htmlFor="provider" className="flex-1 cursor-pointer">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 rounded-2xl flex items-center justify-center">
-                              <Target className="w-5 h-5 text-orange-400" />
-                            </div>
-                            <div>
-                              <div className="font-semibold text-foreground text-sm">Opportunity Provider</div>
-                              <div className="text-xs text-muted-foreground">Post opportunities and events</div>
-                            </div>
-                          </div>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  )}
-                />
-                {errors.role && (
-                  <p className="text-sm text-red-400">{errors.role.message}</p>
-                )}
               </div>
 
               <Button

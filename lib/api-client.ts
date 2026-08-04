@@ -28,12 +28,6 @@ export interface User {
   status: string;
   isActive: boolean;
   emailVerified: boolean;
-  // Premium membership (optional fields; may be absent for non-premium users)
-  isPremium?: boolean;
-  premiumExpiresAt?: string | null;
-  /** Some API responses use premiumEndsAt (mirrors backend User model). */
-  premiumEndsAt?: string | null;
-  premiumPlanId?: string;
   createdAt: string;
   approvedAt?: string;
   profileImage?: string;
@@ -141,28 +135,38 @@ export interface ChannelMembership {
   joinedAt: string;
 }
 
-/** Playlist rows from GET /api/playlists/premium (premium subscribers or admin on backend). */
-export interface PremiumPlaylistSummary {
-  _id: string;
-  name: string;
-  description: string;
-  hashtags: string[];
-  isPublic: boolean;
-  isPremiumPlaylist?: boolean;
-  itemCount: number;
-  createdBy: { _id: string; email: string; firstName?: string };
-  createdAt: string;
-  updatedAt: string;
+/** Founder Batch tier state for the signed-in user. */
+export interface FounderBatchStatus {
+  role: string | null;
+  /** True only while an unexpired term is held. */
+  isFounder: boolean;
+  /** True for founders and admins alike — the practical "can I post?" answer. */
+  canPublish: boolean;
+  startedAt: string | null;
+  expiresAt: string | null;
+  status: 'active' | 'expired' | null;
+  priceNgn: number;
+  termMonths: number;
+  postLimit: number;
 }
 
-export interface PremiumPlaylistsPage {
-  playlists: PremiumPlaylistSummary[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-  };
+/** Per-collection counts of items moved into the `past_*` collections. */
+export interface PastContentCleanupCounts {
+  opportunities: number;
+  events: number;
+  jobs: number;
+}
+
+/** Result of a past-content cleanup run, split by source collection. */
+export interface PastContentCleanupResult {
+  live: PastContentCleanupCounts;
+  inactive: PastContentCleanupCounts;
+  /** Documents carrying no usable date — these can never expire and need data fixes. */
+  skippedNoDate?: number;
+  /** Documents the sweep could not move; see `errors`. */
+  failed?: number;
+  errors?: string[];
+  runAt?: string;
 }
 
 // API Client Class
@@ -355,22 +359,6 @@ export class ApiClient {
     return data;
   }
 
-  static async registerOpportunityPoster(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
-    const body: Record<string, unknown> = { email, password, firstName, lastName, dateOfBirth };
-    if (typeof window !== 'undefined') {
-      body.anonId = getOrCreateAnonId();
-    }
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-poster`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    const data = await this.handleResponse<RegisterResponse>(response);
-    this.setTokens(data.tokens);
-    if (typeof window !== 'undefined') clearAnonId();
-    return data;
-  }
 
   static async getCurrentUser(): Promise<{ user: User; profile: UserProfile | null; preferences: any }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`);
@@ -625,19 +613,6 @@ export class ApiClient {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
-  }
-
-  /** Premium playlists (`isPremiumPlaylist: true` in DB). Requires auth; backend returns 403 without premium/admin. */
-  static async getPremiumPlaylists(params?: { page?: number; limit?: number }): Promise<PremiumPlaylistsPage> {
-    const searchParams = new URLSearchParams();
-    if (params?.page != null) searchParams.set('page', String(params.page));
-    if (params?.limit != null) searchParams.set('limit', String(params.limit));
-    const qs = searchParams.toString();
-    const url = `${API_BASE_URL}/api/playlists/premium${qs ? `?${qs}` : ''}`;
-    const response = await this.makeAuthenticatedRequest(url, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<PremiumPlaylistsPage>(response);
   }
 
   static async getChannelBySlug(slug: string): Promise<{ channel: Channel; membership: ChannelMembership | null }> {
@@ -934,7 +909,6 @@ export class ApiClient {
     page?: number;
     limit?: number;
     category?: string;
-    isPremium?: boolean;
     featured?: boolean;
     search?: string;
   }): Promise<{ resources: any[]; pagination: any }> {
@@ -1666,21 +1640,31 @@ export class ApiClient {
     }
   }
 
-  /** Trigger past-content cleanup (expired events, opportunities, jobs from live + inactive). */
-  static async triggerPastContentCleanup(): Promise<{
-    success: boolean;
-    message?: string;
-    data?: {
-      live: { opportunities: number; events: number; jobs: number };
-      inactive: { opportunities: number; events: number; jobs: number };
-      runAt?: string;
-    };
-  }> {
+  /**
+   * Trigger past-content cleanup (expired events, opportunities, jobs from live + inactive).
+   *
+   * Resolves with the move counts only. `handleResponse` strips the
+   * `{ success, message, data }` envelope and throws when `success` is false, so
+   * reaching the caller already means the run succeeded — do not re-check `success`
+   * on the result (it isn't there).
+   */
+  static async triggerPastContentCleanup(): Promise<PastContentCleanupResult> {
     const response = await this.makeAuthenticatedRequest(
       `${API_BASE_URL}/api/cleanup/past-content`,
       { method: 'POST' }
     );
-    return this.handleResponse(response);
+    const result = await this.handleResponse<Partial<PastContentCleanupResult>>(response);
+    // A response without `data` falls through handleResponse as the bare envelope,
+    // so treat a missing breakdown as "nothing moved" instead of reading undefined.
+    const none = { opportunities: 0, events: 0, jobs: 0 };
+    return {
+      live: result?.live ?? none,
+      inactive: result?.inactive ?? none,
+      skippedNoDate: result?.skippedNoDate,
+      failed: result?.failed,
+      errors: result?.errors,
+      runAt: result?.runAt,
+    };
   }
 
   static async approveContent(contentId: string, contentType: string, options?: { bypassPayment?: boolean }): Promise<void> {
@@ -1830,120 +1814,46 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Premium subscription methods
+  /** Provider wallet: get balance (NGN). */
+  // Founder Batch: paid tier granting publishing rights for a fixed term.
 
-  /**
-   * Start a premium subscription (recurring) via Paystack. Uses the backend's subscription plan (e.g. ₦1,500/month).
-   * Returns authorizationUrl for redirect to Paystack.
-   * Paystack expects amount in KOBO (1 NGN = 100 kobo). Pass amount in kobo, e.g. 150000 for ₦1,500.
-   * amountKobo is optional when using plan-based subscription (planId).
-   */
-  static async startPremiumSubscription(
-    amountKobo?: number,
-    options?: { planId?: string; callbackUrl?: string }
-  ): Promise<{ authorizationUrl: string; reference: string; accessCode: string }> {
-    const body: Record<string, unknown> = {};
-    if (amountKobo != null && Number.isFinite(amountKobo)) body.amountNg = amountKobo;
-    if (options?.planId) body.planId = options.planId;
-    if (options?.callbackUrl) body.callbackUrl = options.callbackUrl;
-
-    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("initialize"), {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-
-    const data = await this.handleResponse<{
-      authorizationUrl: string;
-      reference: string;
-      accessCode: string;
-    }>(response);
-
-    // Some backends wrap in data, others may return flat; normalize
-    if ((data as any)?.authorizationUrl) {
-      return data as any;
-    }
-
-    const wrapped = data as any;
-    return wrapped.data ?? wrapped;
+  /** Current Founder Batch state for the signed-in user. */
+  static async getFounderBatchStatus(): Promise<FounderBatchStatus> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/founder-batch/status`);
+    return this.handleResponse<FounderBatchStatus>(response);
   }
 
   /**
-   * Verify a completed Paystack transaction and activate/renew the premium subscription.
+   * Start a Founder Batch purchase. Resolves with the Paystack URL to redirect to;
+   * the term is only granted after {@link verifyFounderBatch} confirms the payment.
    */
-  static async verifyPremiumSubscription(
-    reference: string
-  ): Promise<{ isPremium: boolean; premiumExpiresAt: string | null }> {
-    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("verify"), {
+  static async initializeFounderBatch(callbackUrl?: string): Promise<{
+    authorizationUrl: string;
+    reference: string;
+    amountNgn: number;
+    termMonths: number;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/founder-batch/initialize`, {
+      method: 'POST',
+      body: JSON.stringify({ callbackUrl }),
+    });
+    return this.handleResponse(response);
+  }
+
+  /** Verify a Paystack reference and activate the term. Safe to call twice. */
+  static async verifyFounderBatch(reference: string): Promise<{
+    role: string;
+    startedAt?: string;
+    expiresAt?: string;
+    alreadyApplied?: boolean;
+  }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/founder-batch/verify`, {
       method: 'POST',
       body: JSON.stringify({ reference }),
     });
-    // Be defensive here because this endpoint is only used in a very specific context
-    let json: any = null;
-    try {
-      json = await response.json();
-    } catch {
-      // ignore JSON parse errors; we'll handle below
-    }
-
-    if (!response.ok || !json) {
-      throw new Error(json?.message || `Failed to verify premium subscription (HTTP ${response.status})`);
-    }
-
-    // Standard { success, data } envelope
-    if (json.success === false) {
-      throw new Error(json.message || 'Failed to verify premium subscription');
-    }
-
-    const payload = json.data ?? json;
-    return {
-      isPremium: !!payload.isPremium,
-      premiumExpiresAt: payload.premiumExpiresAt ?? null,
-    };
+    return this.handleResponse(response);
   }
 
-  /**
-   * Get current premium subscription status for the authenticated user.
-   * canCancel is true when the user has an active recurring subscription that can be cancelled.
-   */
-  static async getPremiumStatus(): Promise<{
-    isPremium: boolean;
-    premiumExpiresAt: string | null;
-    canCancel?: boolean;
-  }> {
-    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("status"), {
-      method: 'GET',
-    });
-    const result = await this.handleResponse<{
-      isPremium: boolean;
-      premiumExpiresAt: string | null;
-      canCancel?: boolean;
-    }>(response);
-    if ((result as any)?.isPremium !== undefined) {
-      return result as any;
-    }
-    const wrapped = result as any;
-    return wrapped.data ?? wrapped;
-  }
-
-  /**
-   * Cancel the current user's premium subscription (stops future charges).
-   * User keeps premium access until the end of the current period.
-   */
-  static async cancelPremiumSubscription(): Promise<{
-    premiumExpiresAt: string | null;
-  }> {
-    const response = await this.makeAuthenticatedRequest(this.subscriptionsApiUrl("cancel"), {
-      method: 'POST',
-    });
-    const result = await this.handleResponse<{ premiumExpiresAt: string | null }>(response);
-    const wrapped = result as any;
-    const data = wrapped.data ?? wrapped;
-    return {
-      premiumExpiresAt: data.premiumExpiresAt ?? null,
-    };
-  }
-
-  /** Provider wallet: get balance (NGN). */
   static async getWallet(): Promise<{ balanceNg: number; currency: string }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet`);
     const result = await this.handleResponse<{ balanceNg: number; currency: string } | { data: { balanceNg: number; currency: string } }>(response);
@@ -2334,7 +2244,7 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Locked In (focus session) methods — available to all authenticated users (not premium-only). Pass signal for timeout (e.g. 10s AbortController).
+  // Locked In (focus session) methods — available to all authenticated users. Pass signal for timeout (e.g. 10s AbortController).
   static async createLockedInSession(options?: {
     startedAt?: string;
     intention?: string;
@@ -2408,7 +2318,6 @@ export class ApiClient {
   }
 
   static async getLockedInUsage(): Promise<{
-    isPremium: boolean;
     weeklyUsed: number;
     weeklyLimit: number;
     remaining: number | null;

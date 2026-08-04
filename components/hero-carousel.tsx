@@ -41,7 +41,7 @@ const fallbackData = [
   {
     id: 'resources',
     title: 'Access Valuable Resources',
-    description: 'Download guides, templates, courses, and tools to accelerate your growth. Get free and premium resources from experts.',
+    description: 'Download guides, templates, courses, and tools to accelerate your growth. Free resources from experts.',
     iconName: 'book',
     color: 'from-orange-500 to-orange-700',
     href: '/resources',

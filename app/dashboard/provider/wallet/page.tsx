@@ -12,6 +12,7 @@ import { WalletBalanceCard } from '@/components/wallet/WalletBalanceCard'
 import { WalletTopUpModal } from '@/components/wallet/WalletTopUpModal'
 import { cn } from '@/lib/utils'
 import { AlertCircle, ArrowLeft, DollarSign } from 'lucide-react'
+import { canPublishContent } from '@/lib/roles'
 
 export default function ProviderWalletPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -49,7 +50,7 @@ export default function ProviderWalletPage() {
   }
 
   useEffect(() => {
-    if (!authLoading && user && (user.role === 'opportunity_poster' || user.role === 'admin' || user.role === 'super_admin')) {
+    if (!authLoading && user && canPublishContent(user.role)) {
       loadWallet()
     }
   }, [authLoading, user])
@@ -76,7 +77,7 @@ export default function ProviderWalletPage() {
     )
   }
 
-  if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
+  if (!canPublishContent(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#020817] via-[#020817] to-black px-4">
         <div className="max-w-md w-full bg-card/80 backdrop-blur-xl border border-border/60 rounded-2xl p-6 shadow-xl">

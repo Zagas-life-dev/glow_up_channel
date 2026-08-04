@@ -22,7 +22,7 @@ interface QuickLink {
 }
 
 interface ProviderDashboardSidebarProps {
-  user: { firstName?: string; email?: string; profileImage?: string | null; isPremium?: boolean; role?: string } | null
+  user: { firstName?: string; email?: string; profileImage?: string | null; role?: string } | null
   profile: { profileImage?: string | null } | null
   navItems: NavItem[]
   quickLinks: QuickLink[]
@@ -30,7 +30,6 @@ interface ProviderDashboardSidebarProps {
   onTabChange: (tab: ProviderTab) => void
   totalPostings: number
   postingLimit: number
-  hasPremium: boolean
 }
 
 export default function ProviderDashboardSidebar({
@@ -42,7 +41,6 @@ export default function ProviderDashboardSidebar({
   onTabChange,
   totalPostings,
   postingLimit,
-  hasPremium,
 }: ProviderDashboardSidebarProps) {
   const avatarUrl = profile?.profileImage || user?.profileImage || null
   const percentage = postingLimit > 0 ? Math.min((totalPostings / postingLimit) * 100, 100) : 0
@@ -151,7 +149,7 @@ export default function ProviderDashboardSidebar({
             </span>
           </div>
           <p className="mb-2 text-[11px] text-muted-foreground">
-            {hasPremium ? "Premium: 20 posts max" : "Free: 5 posts max (all statuses count)"}
+            {`${postingLimit} posts max (all statuses count)`}
           </p>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percentage}%` }} />

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { canCreatePremiumPlaylist } from '@/lib/roles'
 
 export interface PlaylistItem {
   _id: string
@@ -52,9 +51,6 @@ export interface Playlist {
   description: string
   hashtags: string[]
   isPublic: boolean
-  /** Premium playlist flag (mirrors DB `isPremiumPlaylist` / `is_premium`). */
-  isPremiumPlaylist?: boolean
-  is_premium?: boolean
   items: PlaylistItem[]
   createdBy: {
     _id: string
@@ -75,7 +71,6 @@ interface PlaylistContextType {
   publicPlaylists: Playlist[]
   sharedPlaylists: Playlist[]
   savedPlaylists: Playlist[]
-  premiumPlaylists: Playlist[]
   invitations: PlaylistInvitation[]
   isLoading: boolean
   error: string | null
@@ -93,7 +88,6 @@ interface PlaylistContextType {
   isPlaylistSaved: (playlistId: string) => boolean
   fetchPlaylists: () => Promise<void>
   fetchPublicPlaylists: () => Promise<void>
-  fetchPremiumPlaylists: () => Promise<void>
   fetchInvitations: () => Promise<void>
   fetchSavedPlaylists: () => Promise<void>
   getPlaylistById: (id: string) => Promise<Playlist | null>
@@ -116,8 +110,6 @@ export interface CreatePlaylistData {
   description: string
   hashtags: string[]
   isPublic: boolean
-  /** Backend allows active premium or admin. */
-  isPremiumPlaylist?: boolean
   /** Up to 100 items; duplicates by contentId return 409. */
   items?: PlaylistCreateInitialItem[]
 }
@@ -142,7 +134,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const [publicPlaylists, setPublicPlaylists] = useState<Playlist[]>([])
   const [sharedPlaylists, setSharedPlaylists] = useState<Playlist[]>([])
   const [savedPlaylists, setSavedPlaylists] = useState<Playlist[]>([])
-  const [premiumPlaylists, setPremiumPlaylists] = useState<Playlist[]>([])
   const [invitations, setInvitations] = useState<PlaylistInvitation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -249,33 +240,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       setPublicPlaylists([])
     }
   }, [])
-
-  // Fetch premium playlists (only when authenticated; call from Premium tab)
-  const fetchPremiumPlaylists = useCallback(async () => {
-    if (!isAuthenticated || !user) {
-      setPremiumPlaylists([])
-      return
-    }
-    try {
-      if (!API_BASE_URL) return
-      const response = await fetch(`${API_BASE_URL}/api/playlists/premium?page=1&limit=50`, {
-        headers: getAuthHeaders()
-      })
-      if (response.status === 403) {
-        setPremiumPlaylists([])
-        return
-      }
-      if (!response.ok) return
-      const data = await response.json()
-      if (data.success && data.data?.playlists) {
-        setPremiumPlaylists(data.data.playlists)
-      } else {
-        setPremiumPlaylists([])
-      }
-    } catch {
-      setPremiumPlaylists([])
-    }
-  }, [isAuthenticated, user, getAuthHeaders])
 
   // Fetch pending invitations
   const fetchInvitations = useCallback(async () => {
@@ -390,13 +354,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const createPlaylist = useCallback(async (data: CreatePlaylistData): Promise<Playlist> => {
     if (!isAuthenticated) throw new Error('Must be logged in to create a playlist')
 
-    // Send premium flag as requested; backend enforces permission (avoid stripping when user.isPremium is stale)
-    const premium = !!data.isPremiumPlaylist
-    const payload = {
-      ...data,
-      isPremiumPlaylist: premium,
-      is_premium: premium
-    }
+    const payload = { ...data }
 
     // Same-origin Next route proxies to the backend with a canonical body (avoids CORS / dev URL mismatches).
     const response = await fetch('/api/playlists', {
@@ -429,9 +387,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   // Update a playlist
   const updatePlaylist = useCallback(async (id: string, data: Partial<CreatePlaylistData>): Promise<Playlist> => {
     const payload: Record<string, unknown> = { ...data }
-    if (Object.prototype.hasOwnProperty.call(data, 'isPremiumPlaylist')) {
-      payload.is_premium = !!data.isPremiumPlaylist
-    }
 
     const response = await fetch(`/api/playlists/${encodeURIComponent(id)}`, {
       method: 'PATCH',
@@ -617,7 +572,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       const result = await response.json()
 
       if (response.status === 403) {
-        const err = Object.assign(new Error(result?.message || 'Premium membership required'), { status: 403 })
+        const err = Object.assign(new Error(result?.message || 'You do not have access to this playlist'), { status: 403 })
         throw err
       }
 
@@ -654,7 +609,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       publicPlaylists,
       sharedPlaylists,
       savedPlaylists,
-      premiumPlaylists,
       invitations,
       isLoading,
       error,
@@ -672,7 +626,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       isPlaylistSaved,
       fetchPlaylists,
       fetchPublicPlaylists,
-      fetchPremiumPlaylists,
       fetchInvitations,
       fetchSavedPlaylists,
       getPlaylistById,

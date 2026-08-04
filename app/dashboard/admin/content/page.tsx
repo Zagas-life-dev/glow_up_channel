@@ -417,17 +417,21 @@ export default function AdminContent() {
   const runCleanup = useCallback(async () => {
     setCleanupLoading(true)
     try {
-      const data = await ApiClient.triggerPastContentCleanup()
-      if (data?.success) {
-        const d = data.data
-        const moved =
-          d ? (d.live.opportunities + d.live.events + d.live.jobs + d.inactive.opportunities + d.inactive.events + d.inactive.jobs) : 0
-        const message = data?.message ?? (moved > 0 ? `Cleanup completed. ${moved} expired item(s) moved to past.` : "Nothing to clean up.")
-        toast.success(message)
-        fetchFirstPage()
-      } else {
-        toast.error(data?.message ?? "Cleanup failed")
+      // Resolves only on a successful run — ApiClient throws otherwise.
+      const { live, inactive, failed } = await ApiClient.triggerPastContentCleanup()
+      const moved =
+        live.opportunities + live.events + live.jobs +
+        inactive.opportunities + inactive.events + inactive.jobs
+      toast.success(
+        moved > 0
+          ? `Cleanup completed. ${moved} expired item(s) moved to past.`
+          : "Nothing to clean up.",
+      )
+      // A partial sweep still reports success for what moved; surface the rest.
+      if (failed) {
+        toast.warning(`${failed} item(s) could not be moved. Check the server logs.`)
       }
+      fetchFirstPage()
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Cleanup request failed"
       toast.error(msg)

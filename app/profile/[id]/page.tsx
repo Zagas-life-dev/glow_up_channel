@@ -6,15 +6,11 @@ import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist } from '@/contexts/playlist-context'
-import { canViewPremiumPlaylist } from '@/lib/roles'
 import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
 import EditProfileModal from '@/components/edit-profile-modal'
 import PostCard from '@/components/post-card'
-import FeedSponsoredSlot from '@/components/feed-sponsored-slot'
-import { buildFeedWithSponsored } from '@/lib/feed-ads'
 import ConnectionRequestsModal from '@/components/connection-requests-modal'
-import ConnectionsListModal from '@/components/connections-list-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
 import {
   DropdownMenu,
@@ -29,12 +25,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { toast } from "sonner"
 import {
   RiUserLine,
   RiArrowLeftLine,
-  RiLoader4Line,
-  RiQrCodeLine,
   RiMoreLine,
   RiLockLine,
   RiShieldLine,
@@ -48,7 +41,6 @@ import {
   RiSettingsLine,
   RiTimeLine,
   RiUserAddLine,
-  RiFileLine,
   RiBookmarkLine,
   RiGlobalLine,
   RiArrowRightLine,
@@ -59,8 +51,7 @@ import {
   RiVipCrownLine,
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
-import { GlowScoreBar } from "@/components/glow-score-bar"
-import { useGlowScore } from "@/hooks/use-glow-score"
+import { isFounderBatch } from '@/lib/roles'
 
 interface OnboardingData {
   country: string
@@ -85,7 +76,6 @@ interface ProfileData {
   bio: string | null
   headline: string | null
   profileImage: string | null
-  isPremium: boolean
   website: string | null
   phoneNumber: string | null
   skills: string[]
@@ -96,9 +86,6 @@ interface ProfileData {
   showConnections: boolean
   role: string
   createdAt: string
-  followingCount: number | null
-  followersCount: number | null
-  postCount: number
   playlistCount: number
   onboarding: OnboardingData | null
 }
@@ -152,13 +139,11 @@ interface Playlist {
   description: string
   hashtags: string[]
   isPublic: boolean
-  isPremiumPlaylist?: boolean
   itemCount: number
   createdAt: string
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
-const QR_APP_URL = process.env.NEXT_PUBLIC_QR_APP_URL
 
 type CompletionItem = {
   id: string
@@ -291,7 +276,7 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
 export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
-  const { normalizedUser: currentUser, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { savedPlaylists, fetchSavedPlaylists } = usePlaylist()
   const userId = params.id as string
 
@@ -302,14 +287,11 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null)
 
   // Tabs data
-  const [activeTab, setActiveTab] = useState('posts')
-  const [posts, setPosts] = useState<Post[]>([])
+  const [activeTab, setActiveTab] = useState('playlists')
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [bookmarks, setBookmarks] = useState<Post[]>([])
-  const [loadingPosts, setLoadingPosts] = useState(false)
   const [loadingPlaylists, setLoadingPlaylists] = useState(false)
   const [loadingBookmarks, setLoadingBookmarks] = useState(false)
-  const [promotedFeed, setPromotedFeed] = useState<{ _id: string; title: string; type: 'opportunity' | 'job' | 'event' | 'resource'; [key: string]: unknown }[]>([])
 
   // Profile completion (only for own profile)
   const [completionPercentage, setCompletionPercentage] = useState(0)
@@ -318,15 +300,9 @@ export default function ProfilePage() {
   // Modals
   const [showEditModal, setShowEditModal] = useState(false)
   const [showConnectionRequests, setShowConnectionRequests] = useState(false)
-  const [showConnectionsList, setShowConnectionsList] = useState<'followers' | 'following' | null>(null)
-  
+
   // Connection action
   const [connectLoading, setConnectLoading] = useState(false)
-
-  // QR dashboard (open mini-app with session)
-  const [isOpeningQrDashboard, setIsOpeningQrDashboard] = useState(false)
-
-  const { glow, isLoading: glowLoading } = useGlowScore({ enabled: isOwner })
 
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('accessToken')
@@ -336,31 +312,6 @@ export default function ProfilePage() {
     }
     return headers
   }, [])
-
-  const handleOpenQrDashboard = () => {
-    if (!currentUser) {
-      toast.error('Please log in to manage your QR profile.')
-      return
-    }
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('accessToken') || localStorage.getItem('authToken')
-      : null
-    if (!token) {
-      toast.error('No active session. Please sign in again.')
-      return
-    }
-    if (!QR_APP_URL) {
-      toast.error('QR app is not configured.')
-      return
-    }
-    setIsOpeningQrDashboard(true)
-    try {
-      const url = `${QR_APP_URL.replace(/\/$/, '')}/dashboard?token=${encodeURIComponent(token)}`
-      window.open(url, '_blank', 'noopener,noreferrer')
-    } finally {
-      setTimeout(() => setIsOpeningQrDashboard(false), 500)
-    }
-  }
 
   // Fetch profile
   const fetchProfile = useCallback(async () => {
@@ -385,24 +336,6 @@ export default function ProfilePage() {
       setError('Failed to load profile')
     } finally {
       setIsLoading(false)
-    }
-  }, [userId, getAuthHeaders])
-
-  // Fetch posts
-  const fetchPosts = useCallback(async () => {
-    setLoadingPosts(true)
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/profile/${userId}/posts?page=1&limit=50`, {
-        headers: getAuthHeaders()
-      })
-      const data = await response.json()
-      if (data.success) {
-        setPosts(data.data.posts)
-      }
-    } catch (err) {
-      console.error('Error fetching posts:', err)
-    } finally {
-      setLoadingPosts(false)
     }
   }, [userId, getAuthHeaders])
 
@@ -485,9 +418,6 @@ export default function ProfilePage() {
         const data = await response.json()
         if (data.success) {
           setConnectionStatus({ ...connectionStatus, isFollowing: false, isPending: false })
-          if (profile && profile.followersCount !== null) {
-            setProfile({ ...profile, followersCount: profile.followersCount - 1 })
-          }
         }
       } else {
         const response = await fetch(`${API_BASE_URL}/api/connections/${userId}`, {
@@ -500,9 +430,6 @@ export default function ProfilePage() {
             setConnectionStatus({ ...connectionStatus!, isFollowing: false, isPending: true })
           } else {
             setConnectionStatus({ ...connectionStatus!, isFollowing: true, isPending: false })
-            if (profile && profile.followersCount !== null) {
-              setProfile({ ...profile, followersCount: profile.followersCount + 1 })
-            }
           }
         }
       }
@@ -518,19 +445,6 @@ export default function ProfilePage() {
     fetchProfile()
   }, [fetchProfile])
 
-  useEffect(() => {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL || ''}/api/promoted/feed?limit=20`
-    if (!url.startsWith('http')) return
-    fetch(url)
-      .then((res) => (res.ok ? res.json() : { success: false }))
-      .then((data) => {
-        if (data?.success && Array.isArray(data?.data?.feed)) {
-          setPromotedFeed(data.data.feed)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
   // Fetch profile completion when profile is loaded and user is owner
   useEffect(() => {
     if (isOwner && profile) {
@@ -540,9 +454,7 @@ export default function ProfilePage() {
 
   // Fetch tab data when tab changes
   useEffect(() => {
-    if (activeTab === 'posts' && posts.length === 0) {
-      fetchPosts()
-    } else if (activeTab === 'playlists' && playlists.length === 0) {
+    if (activeTab === 'playlists' && playlists.length === 0) {
       fetchPlaylists()
       if (isOwner && savedPlaylists.length === 0) {
         fetchSavedPlaylists().catch(err => {
@@ -553,15 +465,13 @@ export default function ProfilePage() {
       fetchBookmarks()
     }
   }, [
-    activeTab, 
-    posts.length, 
-    playlists.length, 
-    bookmarks.length, 
-    isOwner, 
+    activeTab,
+    playlists.length,
+    bookmarks.length,
+    isOwner,
     savedPlaylists.length,
-    fetchPosts, 
-    fetchPlaylists, 
-    fetchBookmarks, 
+    fetchPlaylists,
+    fetchBookmarks,
     fetchSavedPlaylists
   ])
 
@@ -643,32 +553,6 @@ export default function ProfilePage() {
             <span className="hidden text-body-sm font-semibold sm:inline">Back</span>
           </button>
           <div className="flex items-center gap-1.5">
-            {isOwner && (
-              currentUser?.isPremium ? (
-                <button
-                  type="button"
-                  onClick={handleOpenQrDashboard}
-                  disabled={isOpeningQrDashboard}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-transparent text-muted-foreground transition-all hover:border-border/60 hover:bg-card/80 hover:text-foreground disabled:opacity-50"
-                  title="Manage QR profile"
-                  aria-label="Manage QR profile"
-                >
-                  {isOpeningQrDashboard ? (
-                    <RiLoader4Line className="h-5 w-5 animate-spin" aria-hidden />
-                  ) : (
-                    <RiQrCodeLine className="h-5 w-5" aria-hidden />
-                  )}
-                </button>
-              ) : (
-                <Link
-                  href="/premium"
-                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl border border-primary/35 bg-primary px-3 text-caption font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-                  aria-label="Subscribe to unlock QR profile"
-                >
-                  Subscribe
-                </Link>
-              )
-            )}
             {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-10 h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-card/80 hover:backdrop-blur-sm border border-transparent hover:border-border/50 transition-all">
@@ -698,7 +582,7 @@ export default function ProfilePage() {
         {/* Profile hero */}
         <div className="mb-5 overflow-hidden rounded-[1.35rem] border border-border/60 bg-gradient-to-b from-card/95 via-card/88 to-muted/10 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.06)] backdrop-blur-sm">
           <div className="p-4 sm:p-6">
-            <div className="mb-5 flex items-start gap-4 sm:gap-5">
+            <div className="mb-5 flex items-start">
               <div className="relative shrink-0">
                 <div className="h-24 w-24 overflow-hidden rounded-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-card sm:h-28 sm:w-28">
                   {profile.profileImage ? (
@@ -723,37 +607,13 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-              {profile.showConnections && (
-                <div className="flex min-w-0 flex-1 items-stretch justify-between gap-1 pt-0.5 sm:pt-1">
-                  <div className="flex min-h-[3.25rem] flex-1 flex-col items-center justify-center rounded-xl px-1 text-center">
-                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.postCount}</p>
-                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Posts</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowConnectionsList("followers")}
-                    className="flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 text-center transition-colors hover:bg-muted/60 active:scale-[0.98]"
-                  >
-                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.followersCount ?? 0}</p>
-                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Partners</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowConnectionsList("following")}
-                    className="flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 text-center transition-colors hover:bg-muted/60 active:scale-[0.98]"
-                  >
-                    <p className="text-lg font-bold tabular-nums text-foreground sm:text-xl">{profile.followingCount ?? 0}</p>
-                    <p className="text-overline font-semibold uppercase tracking-wider text-muted-foreground">Partnering</p>
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <h1 className="text-display-sm font-bold tracking-tight text-foreground sm:text-display-md">{displayName}</h1>
-              {profile.role === "opportunity_poster" && (
+              {isFounderBatch(profile.role) && (
                 <span className="rounded-lg border border-primary/25 bg-primary/12 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-primary">
-                  Provider
+                  Founder Batch
                 </span>
               )}
               {(profile.role === "admin" || profile.role === "super_admin") && (
@@ -853,19 +713,6 @@ export default function ProfilePage() {
                       Settings
                     </Button>
                   </Link>
-                  {canViewPremiumPlaylist(currentUser?.isPremium, currentUser?.role) && (
-                    <Link href="/playlists?tab=premium" className="shrink-0 sm:min-w-0 sm:flex-1" title="Premium playlists">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-11 min-h-11 w-11 rounded-2xl border-amber-500/35 bg-amber-500/8 p-0 text-amber-900 hover:bg-amber-500/12 dark:text-amber-400 sm:w-full sm:px-4"
-                        aria-label="Premium playlists"
-                      >
-                        <RiPlayList2Fill className="h-4 w-4 shrink-0 sm:mr-2" aria-hidden />
-                        <span className="hidden sm:inline">Premium</span>
-                      </Button>
-                    </Link>
-                  )}
                 </>
               ) : (
                 <>
@@ -909,11 +756,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
-        {/* Glow Score (own profile only) */}
-        {isOwner && glow && (
-          <GlowScoreBar glow={glow} isLoading={glowLoading} className="mb-5" />
-        )}
 
         {/* Skills / Interests / Industries: soft glass block */}
         {(() => {
@@ -1095,22 +937,16 @@ export default function ProfilePage() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4 flex h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 scrollbar-hide sm:justify-stretch">
-            <TabsTrigger
-              value="posts"
-              className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
-            >
-              <RiFileLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
-              Posts
-            </TabsTrigger>
-            <TabsTrigger
-              value="playlists"
-              className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
-            >
-              <RiPlayList2Fill className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
-              Lists
-            </TabsTrigger>
-            {isOwner && (
+          {/* Only owners get a second tab (Saved) — a lone always-active tab is noise, so hide the bar. */}
+          {isOwner && (
+            <TabsList className="mb-4 flex h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 scrollbar-hide sm:justify-stretch">
+              <TabsTrigger
+                value="playlists"
+                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              >
+                <RiPlayList2Fill className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
+                Lists
+              </TabsTrigger>
               <TabsTrigger
                 value="bookmarks"
                 className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
@@ -1118,60 +954,8 @@ export default function ProfilePage() {
                 <RiBookmarkLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Saved
               </TabsTrigger>
-            )}
-          </TabsList>
-
-          {/* Posts Tab */}
-          <TabsContent value="posts" className="mt-4">
-            {loadingPosts ? (
-              <div className="space-y-4 py-8 animate-pulse">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-card/80 border border-border/70 p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-muted" />
-                      <div className="h-4 bg-muted rounded w-32" />
-                    </div>
-                    <div className="h-4 bg-muted rounded w-full mb-2" />
-                    <div className="h-4 bg-muted rounded w-5/6" />
-                    <div className="h-48 bg-muted rounded-2xl mt-3" />
-                  </div>
-                ))}
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
-                  <RiFileLine className="h-7 w-7 text-muted-foreground" aria-hidden />
-                </div>
-                <p className="text-body-sm font-bold text-foreground">No posts yet</p>
-                <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
-                  {isOwner ? "Share your first post and start connecting." : "This user hasn't shared any posts yet."}
-                </p>
-                {isOwner && (
-                  <Link href="/community">
-                    <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
-                      Create post
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {buildFeedWithSponsored(posts, promotedFeed, { postsBetween: 4 }).map((item) =>
-                  item.type === 'post' ? (
-                    <PostCard key={item.post._id} post={item.post} onUpdate={fetchPosts} />
-                  ) : (
-                    <FeedSponsoredSlot
-                      key={item.key}
-                      kind={item.kind}
-                      content={item.kind === 'promoted' ? item.content : undefined}
-                      adKey={item.key}
-                      slotId={process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || ''}
-                    />
-                  )
-                )}
-              </div>
-            )}
-          </TabsContent>
+            </TabsList>
+          )}
 
           {/* Playlists Tab */}
           <TabsContent value="playlists" className="mt-4">
@@ -1228,41 +1012,17 @@ export default function ProfilePage() {
                       </div>
                       <div className="space-y-2">
                         {playlists.map((playlist) => {
-                          const premium = !!playlist.isPremiumPlaylist
                           return (
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className={cn(
-                              "group flex items-center gap-4 p-3 rounded-2xl border transition-all duration-200",
-                              premium
-                                ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.07] to-transparent hover:border-amber-500/35"
-                                : "border-transparent hover:bg-muted/70 hover:border-border/50",
-                            )}
+                            className="group flex items-center gap-4 p-3 rounded-2xl border border-transparent transition-all duration-200 hover:bg-muted/70 hover:border-border/50"
                           >
-                            <div
-                              className={cn(
-                                "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border",
-                                premium
-                                  ? "bg-gradient-to-br from-amber-500/25 to-amber-600/10 border-amber-500/30"
-                                  : "bg-gradient-to-br from-orange-500/20 to-rose-500/15 border-orange-500/20",
-                              )}
-                            >
-                              {premium ? (
-                                <RiVipCrownLine className="w-5 h-5 text-amber-400" aria-hidden />
-                              ) : (
-                                <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
-                              )}
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border bg-gradient-to-br from-orange-500/20 to-rose-500/15 border-orange-500/20">
+                              <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4
-                                className={cn(
-                                  "font-medium truncate transition-colors",
-                                  premium
-                                    ? "text-foreground group-hover:text-amber-400"
-                                    : "text-foreground group-hover:text-orange-400",
-                                )}
-                              >
+                              <h4 className="font-medium truncate transition-colors text-foreground group-hover:text-orange-400">
                                 {playlist.name}
                               </h4>
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
@@ -1279,15 +1039,6 @@ export default function ProfilePage() {
                                     Private
                                   </span>
                                 )}
-                                {premium ? (
-                                  <>
-                                    <span>•</span>
-                                    <span className="flex items-center gap-0.5 text-amber-500/90">
-                                      <RiVipCrownLine className="w-3 h-3" aria-hidden />
-                                      Premium
-                                    </span>
-                                  </>
-                                ) : null}
                               </div>
                             </div>
                             <RiArrowRightLine className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" aria-hidden />
@@ -1402,15 +1153,6 @@ export default function ProfilePage() {
           setShowEditModal(false)
         }}
       />
-
-      {showConnectionsList && (
-        <ConnectionsListModal
-          isOpen={!!showConnectionsList}
-          onClose={() => setShowConnectionsList(null)}
-          userId={userId}
-          type={showConnectionsList}
-        />
-      )}
 
       {isOwner && (
         <ConnectionRequestsModal

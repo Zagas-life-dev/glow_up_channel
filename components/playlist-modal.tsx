@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from '@/contexts/playlist-context'
-import { useAuth } from '@/lib/auth-context'
-import { canCreatePremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -19,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { X } from 'lucide-react'
-import { RiPlayList2Fill, RiVipCrownLine } from "react-icons/ri"
+import { RiPlayList2Fill } from "react-icons/ri"
 
 interface PlaylistModalProps {
   isOpen: boolean
@@ -39,9 +37,6 @@ function formatPlaylistSaveError(err: unknown): string {
   const status = getErrorStatus(err)
 
   if (status === 403) {
-    if (/premium membership is required/i.test(msg)) {
-      return `${msg} If you subscribed recently, try refreshing the page or signing out and back in.`
-    }
     return `${msg} You may not have permission for this action.`
   }
   if (status === 502 || /cannot reach backend/i.test(msg)) {
@@ -52,25 +47,12 @@ function formatPlaylistSaveError(err: unknown): string {
 
 export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess }: PlaylistModalProps) {
   const { createPlaylist, updatePlaylist } = usePlaylist()
-  const { user } = useAuth()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [hashtags, setHashtags] = useState<string[]>([])
   const [isPublic, setIsPublic] = useState(false)
-  const [isPremiumPlaylist, setIsPremiumPlaylist] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-
-  const canCreatePremium =
-    !!user &&
-    canCreatePremiumPlaylist(
-      user.role,
-      user.isPremium,
-      user.premiumExpiresAt ?? user.premiumEndsAt ?? null
-    )
-  const showPremiumSection =
-    canCreatePremium ||
-    !!(editPlaylist?.isPremiumPlaylist || editPlaylist?.is_premium)
 
   // Reset form when modal opens/closes or editPlaylist changes
   useEffect(() => {
@@ -80,15 +62,11 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
         setDescription(editPlaylist.description || '')
         setHashtags(editPlaylist.hashtags || [])
         setIsPublic(editPlaylist.isPublic || false)
-        setIsPremiumPlaylist(
-          !!(editPlaylist.isPremiumPlaylist || editPlaylist.is_premium)
-        )
       } else {
         setName('')
         setDescription('')
         setHashtags([])
         setIsPublic(false)
-        setIsPremiumPlaylist(false)
       }
       setError('')
     }
@@ -112,9 +90,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           name: name.trim(),
           description: description.trim(),
           hashtags,
-          isPublic,
-          // Always send so MongoDB updates; omitting left the field unchanged. Backend authorizes true.
-          isPremiumPlaylist
+          isPublic
         }
         const updated = await updatePlaylist(editPlaylist._id, updatePayload)
         onSuccess?.(updated)
@@ -124,8 +100,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           name: name.trim(),
           description: description.trim(),
           hashtags,
-          isPublic,
-          isPremiumPlaylist: canCreatePremium ? isPremiumPlaylist : false
+          isPublic
         })
         onSuccess?.(newPlaylist)
       }
@@ -272,31 +247,6 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
             />
           </div>
 
-          {/* Premium playlist: active subscribers or admins; existing premium lists stay editable to turn off */}
-          {showPremiumSection && (
-            <div className="mb-6 flex items-center justify-between p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-              <div className="flex items-center gap-3">
-                <RiVipCrownLine className="w-5 h-5 text-amber-500" aria-hidden />
-                <div>
-                  <p className="font-medium text-foreground">
-                    Premium Playlist
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {canCreatePremium
-                      ? 'Shown in the Premium hub; only members with premium access can open it (private or public there).'
-                      : 'Renew premium to turn this back on. You can turn premium off for this list.'}
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={isPremiumPlaylist}
-                onCheckedChange={(on) => {
-                  if (on && !canCreatePremium) return
-                  setIsPremiumPlaylist(on)
-                }}
-              />
-            </div>
-          )}
 
           {/* Submit Button */}
           <Button

@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { BookOpen, Eye, Heart, Bookmark, Users } from 'lucide-react'
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
-import AdSlot from "@/components/ad-slot"
 import FeedListSkeleton from '@/components/skeletons/feed-card-skeleton'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
 import ErrorState from '@/components/error-state'
@@ -15,11 +14,6 @@ import SearchBar from "@/components/search-bar"
 import { useAuth } from "@/lib/auth-context"
 import { fetchListBySearch } from "@/lib/fetch-list-search"
 import AuthGuard from "@/components/auth-guard"
-
-// Utility function to determine if a resource is premium/paid
-const isResourcePaid = (resource: any): boolean => {
-    return !!(resource.is_premium || resource.isPremium || resource.price || resource.paymentAmount)
-}
 
 function ResourcesContent() {
   const [resources, setResources] = useState<any[]>([])
@@ -172,9 +166,6 @@ function ResourcesContent() {
                     <ErrorState isNetworkError onRetry={fetchAllResources} />
                 ) : filteredResources.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            <div className="col-span-full">
-                                <AdSlot variant="banner" />
-                            </div>
                             {filteredResources.map((resource) => {
                                 // Check if _id is a valid MongoDB ObjectId (24 hex characters)
                                 const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(resource._id)
@@ -196,13 +187,6 @@ function ResourcesContent() {
                                                 {resource.category || 'Resource'}
                                                 </span>
                                             </div>
-                                            <span className={`text-xs font-medium ${
-                                                isResourcePaid(resource) 
-                                                ? 'text-violet-400' 
-                                                    : 'text-muted-foreground'
-                                            }`}>
-                                            {isResourcePaid(resource) ? 'premium' : 'free'}
-                                            </span>
                                     </div>
                                     
                                     <h3 className="text-base font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-violet-400 transition-colors">
@@ -281,13 +265,6 @@ function ResourcesContent() {
                                                         {resource.category || 'Resource'}
                                                         </span>
                                                     </div>
-                                                    <span className={`text-xs font-medium ${
-                                                        isResourcePaid(resource) 
-                                                        ? 'text-purple-500' 
-                                                            : 'text-gray-400'
-                                                    }`}>
-                                                    {isResourcePaid(resource) ? 'premium' : 'free'}
-                                                    </span>
                                             </div>
                                             
                                             <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 sm:mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors duration-200">

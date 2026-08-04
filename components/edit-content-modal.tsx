@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
-import { Loader2, Send, MapPin, DollarSign, Clock, Globe, X, FileText, Crown } from 'lucide-react'
+import { Loader2, Send, MapPin, DollarSign, Clock, Globe, X, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const opportunityTypes = [
@@ -87,7 +87,6 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
   const [isRemote, setIsRemote] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
   // Resource-specific state
-  const [isPremium, setIsPremium] = useState(false)
   const [resourceSource, setResourceSource] = useState<'link' | 'file'>('link')
   const [resourceFile, setResourceFile] = useState<File | null>(null)
 
@@ -124,7 +123,6 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
           ? full.isPaid
           : !!(full.pay?.isPaid || full.financial?.isPaid)
       )
-      setIsPremium(!!full.isPremium)
       setResourceSource(full.resourceType === 'file' || full.hasFile ? 'file' : 'link')
       setResourceFile(null)
     } catch (e: any) {
@@ -141,7 +139,6 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
       setFormData({})
       setTags([])
       setError('')
-      setIsPremium(false)
       setResourceSource('link')
       setResourceFile(null)
     }
@@ -260,7 +257,6 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
           description: formData.description,
           category: resourceCategory,
           tags,
-          isPremium,
         }
 
         if (resourceSource === 'file') {
@@ -443,14 +439,6 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
 
             {item?.type === 'resource' && (
               <>
-                {/* Premium toggle — gold accent, consistent with premium resource UI */}
-                <div className="p-4 rounded-xl bg-muted/50 border border-border flex items-center justify-between">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-amber-500" /> Premium resource
-                  </span>
-                  <Switch checked={isPremium} onCheckedChange={setIsPremium} />
-                </div>
-
                 {/* Resource source: external link OR uploaded file (mutually exclusive) */}
                 <div className="space-y-3">
                   <Label>Resource Source *</Label>

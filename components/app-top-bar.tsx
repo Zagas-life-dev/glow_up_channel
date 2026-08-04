@@ -27,8 +27,10 @@ export default function AppTopBar() {
   }
 
   return (
+    // z-30: purely a safe-area backdrop with no content, so page-level sticky headers
+    // (which carry their own safe-area padding) must be able to sit above it.
     <header
-      className="sticky top-0 z-40 bg-page/95 backdrop-blur-md min-h-[1rem] pt-[env(safe-area-inset-top,0)]"
+      className="fixed top-0 z-30 bg-page/95 backdrop-blur-md min-h-[1rem] pt-[env(safe-area-inset-top,0)]"
       aria-hidden="true"
     />
   )

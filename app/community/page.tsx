@@ -638,8 +638,6 @@ export default function CommunityPage() {
                     key={item.key}
                     kind={item.kind}
                     content={item.kind === 'promoted' ? item.content : undefined}
-                    adKey={item.key}
-                    slotId={process.env.NEXT_PUBLIC_ADSTERRA_FEED_KEY || ''}
                   />
                 )
               )}

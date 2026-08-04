@@ -54,7 +54,6 @@ interface Promotion {
     description: string
     image?: string
     isPaid?: boolean
-    isPremium?: boolean
   }
 }
 
@@ -377,7 +376,6 @@ export default function PromotionsPage() {
         onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
         totalPostings={userContent.length}
         postingLimit={20}
-        hasPremium
       />
 
       <div className="flex-1 flex min-w-0 flex-col lg:pl-64">

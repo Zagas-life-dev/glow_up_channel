@@ -13,7 +13,6 @@ interface AuthContextType {
   isOnboardingCompleted: boolean;
   login: (email: string, password: string) => Promise<void>;
   registerOpportunitySeeker: (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => Promise<void>;
-  registerOpportunityPoster: (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => Promise<void>;
   upgradeToProvider: (email: string, password: string) => Promise<{ user: any; needsApproval: boolean }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -183,23 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerOpportunityPoster = async (email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string) => {
-    try {
-      setIsLoading(true);
-      const response = await ApiClient.registerOpportunityPoster(email, password, firstName, lastName, dateOfBirth);
-      setUser(response.user);
-      setProfile(null); // New user won't have profile yet
-      setNormalizedUser(normalizeUser(response.user, null));
-    } catch (error) {
-      console.error('Registration failed:', error);
-      // Clear any partial state on registration failure
-      clearUserState();
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const upgradeToProvider = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -289,7 +271,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isOnboardingCompleted,
     login,
     registerOpportunitySeeker,
-    registerOpportunityPoster,
     upgradeToProvider,
     logout,
     refreshUser,

@@ -6,7 +6,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import ApiClient, { Channel, ChannelMembership } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
-import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
 import { PageShell } from "@/components/layout/page-shell"
 import { ArrowLeft, MessageCircle, Users } from "lucide-react"
@@ -65,7 +64,6 @@ export default function ChannelDetailsPage() {
   const searchParams = useSearchParams()
   const slug = params?.slug as string
   const { isAuthenticated, user } = useAuth()
-  const premiumOk = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [state, setState] = useState<ChannelPageState>({ channel: null, membership: null })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -191,7 +189,7 @@ export default function ChannelDetailsPage() {
             {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
           </Button>
         )}
-        {isAuthenticated && channelForDock.type === "pro" && premiumOk && (
+        {isAuthenticated && channelForDock.type === "pro" && (
           <Button
             type="button"
             onClick={handleJoin}
@@ -200,11 +198,6 @@ export default function ChannelDetailsPage() {
             className="h-11 min-h-11 flex-1 rounded-2xl border-border/80 bg-card/80 text-body-sm font-semibold"
           >
             {joinStatus === "pending" ? "Request sent" : joinLoading ? "Requesting…" : "Request to join"}
-          </Button>
-        )}
-        {isAuthenticated && channelForDock.type === "pro" && !premiumOk && (
-          <Button type="button" asChild variant="outline" className="h-11 min-h-11 flex-1 rounded-2xl border-border/80">
-            <Link href="/premium">Upgrade to Premium</Link>
           </Button>
         )}
         {!isAuthenticated && channelForDock.type === "public" && (

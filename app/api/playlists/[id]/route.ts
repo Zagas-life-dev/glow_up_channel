@@ -6,7 +6,7 @@ function isLikelyObjectId(id: string) {
 }
 
 /**
- * Normalizes edit-modal fields: mirrors premium flags and coerces types.
+ * Normalizes edit-modal fields and coerces types.
  * Only keys present in `raw` are set (partial updates still go to backend as-is for those keys).
  */
 function buildPlaylistUpdatePayload(raw: Record<string, unknown>) {
@@ -23,20 +23,6 @@ function buildPlaylistUpdatePayload(raw: Record<string, unknown>) {
   }
   if (raw.isPublic !== undefined) {
     out.isPublic = Boolean(raw.isPublic)
-  }
-
-  const hasPremiumCamel = Object.prototype.hasOwnProperty.call(raw, "isPremiumPlaylist")
-  const hasPremiumSnake = Object.prototype.hasOwnProperty.call(raw, "is_premium")
-  if (hasPremiumCamel || hasPremiumSnake) {
-    const premium =
-      raw.isPremiumPlaylist === true ||
-      raw.is_premium === true ||
-      raw.isPremiumPlaylist === "true" ||
-      raw.is_premium === "true" ||
-      raw.isPremiumPlaylist === 1 ||
-      raw.is_premium === 1
-    out.isPremiumPlaylist = premium
-    out.is_premium = premium
   }
 
   return out

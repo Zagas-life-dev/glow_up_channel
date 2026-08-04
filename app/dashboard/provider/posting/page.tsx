@@ -21,7 +21,6 @@ import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
 import { getPostingLimit } from "@/lib/posting-limits"
-import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
 import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
@@ -166,13 +165,11 @@ function PostingContent() {
   }, [isAuthenticated, user])
 
   const handleSelectType = (type: PostType) => {
-    const limit = getPostingLimit(user?.isPremium, user?.role)
+    const limit = getPostingLimit(user?.role)
     // If limit is finite, enforce it; admins/super_admins get Infinity and bypass this check
     if (Number.isFinite(limit) && postingCount !== null && postingCount >= limit) {
       toast.error(
-        user?.isPremium
-          ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
-          : `You have reached your maximum of ${limit} posts. Upgrade to Premium to post up to 20.`,
+        `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`,
         { duration: 5000 }
       )
       return
@@ -194,7 +191,7 @@ function PostingContent() {
     e.preventDefault()
     if (!selectedType || !canPost) return
 
-    const limit = getPostingLimit(user?.isPremium, user?.role)
+    const limit = getPostingLimit(user?.role)
     let currentTotal = postingCount ?? 0
     if (Number.isFinite(limit) && currentTotal >= limit) {
       try {
@@ -204,9 +201,7 @@ function PostingContent() {
       } catch (_) {}
       if (Number.isFinite(limit) && currentTotal >= limit) {
         toast.error(
-          user?.isPremium
-            ? `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`
-            : `You have reached your maximum of ${limit} posts. Upgrade to Premium to post up to 20.`,
+          `You have reached your maximum of ${limit} posts. Remove an existing post to add more.`,
           { duration: 5000 }
         )
         return
@@ -438,8 +433,7 @@ function PostingContent() {
         activeTab={activeProviderTab}
         onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
         totalPostings={postingCount ?? 0}
-        postingLimit={Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) ? getPostingLimit(user?.isPremium, user?.role) : 999}
-        hasPremium={hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })}
+        postingLimit={Number.isFinite(getPostingLimit(user?.role)) ? getPostingLimit(user?.role) : 999}
       />
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         <header className="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-border/70">
@@ -497,10 +491,9 @@ function PostingContent() {
         {postingCount !== null && (
           <p className="text-sm text-muted-foreground mb-4">
             You have <span className="font-semibold text-foreground">{postingCount}</span>{' '}
-            {Number.isFinite(getPostingLimit(user?.isPremium, user?.role)) ? (
+            {Number.isFinite(getPostingLimit(user?.role)) ? (
               <>
-                of <span className="font-semibold text-foreground">{getPostingLimit(user?.isPremium, user?.role)}</span> posts
-                (max for {hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role }) ? 'Premium' : 'free'}).
+                of <span className="font-semibold text-foreground">{getPostingLimit(user?.role)}</span> posts.
               </>
             ) : (
               <>posts (no limit for admin users).</>

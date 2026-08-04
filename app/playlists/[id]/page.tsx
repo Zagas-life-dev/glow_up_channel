@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { usePlaylist, Playlist } from "@/contexts/playlist-context"
 import { useAuth } from '@/lib/auth-context'
-import { canViewPremiumPlaylist } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import PlaylistModal from '@/components/playlist-modal'
 import InviteCollaboratorModal from '@/components/invite-collaborator-modal'
@@ -96,7 +95,7 @@ export default function PlaylistDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { getPlaylistById, removeFromPlaylist, deletePlaylist, fetchPublicPlaylists, fetchPlaylists, canEditPlaylist, savePlaylist, unsavePlaylist, isPlaylistSaved } = usePlaylist()
-  const { user, isAuthenticated, normalizedUser } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -104,7 +103,6 @@ export default function PlaylistDetailPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
-  const [premiumGatedBy403, setPremiumGatedBy403] = useState(false)
 
   const playlistId = params.id as string
   const [isLoading, setIsLoading] = useState(true)
@@ -113,7 +111,6 @@ export default function PlaylistDetailPage() {
   // Initial fetch
   useEffect(() => {
     let isMounted = true
-    setPremiumGatedBy403(false)
 
     const loadPlaylist = async () => {
       setIsLoading(true)
@@ -125,7 +122,7 @@ export default function PlaylistDetailPage() {
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status
         if (status === 403 && isMounted) {
-          setPremiumGatedBy403(true)
+          // Not visible to this user (private playlist) — render the not-found state.
           setPlaylist(null)
         } else {
           console.error('Error loading playlist:', err)
@@ -162,12 +159,6 @@ export default function PlaylistDetailPage() {
   )
 
   const canEdit = playlist ? canEditPlaylist(playlist) : false
-
-  const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
-  // Explicitly check isPremium as a boolean — canViewPremiumPlaylist may return true
-  // for undefined/missing isPremium values, so we also guard directly on the flag.
-  const userIsPremium = Boolean(normalizedUser?.isPremium ?? user?.isPremium)
-  const isPremiumGated = Boolean(playlist?.isPremiumPlaylist) && (!canViewPremium || !userIsPremium) && !isOwner
 
   const handleRemoveItem = async (itemId: string) => {
     if (!playlist) return
@@ -246,123 +237,6 @@ export default function PlaylistDetailPage() {
     return <PlaylistDetailSkeleton />
   }
 
-  // ─── PREMIUM WALL ────────────────────────────────────────────────────────────
-  // Fires when: playlist is premium + user isn't premium + user isn't owner,
-  // OR the API returned a 403 (server-side premium check).
-  // Show wall if:
-  // 1. Playlist loaded but is premium-gated for this user, OR
-  // 2. API returned 403 (server enforced — catches authenticated non-premium users too)
-  const showPremiumWall = (playlist != null && isPremiumGated) || premiumGatedBy403
-
-  if (showPremiumWall) {
-    return (
-      <div className="min-h-screen bg-page flex flex-col">
-        {/* Atmosphere blobs — match the rest of the page */}
-        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-          <div
-            className="absolute -top-24 right-0 h-72 w-72 rounded-full opacity-[0.14] dark:opacity-[0.2] blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(38 92% 50%) 0%, transparent 72%)" }}
-          />
-          <div
-            className="absolute bottom-0 -left-16 h-56 w-56 rounded-full opacity-[0.07] blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(38 92% 50%) 0%, transparent 70%)" }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.25] dark:opacity-[0.15]"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
-
-        {/* Sticky back header */}
-        <div className="sticky top-0 z-40 bg-page/70 backdrop-blur-2xl border-b border-border/60">
-          <div className="max-w-6xl mx-auto px-4 md:px-6">
-            <div className="flex items-center py-3">
-              <Link
-                href="/playlists"
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted transition-colors group-hover:bg-muted/80">
-                  <RiArrowLeftLine className="w-4 h-4" />
-                </span>
-                <span className="text-sm font-medium hidden sm:inline">Back to Playlists</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Premium gate content */}
-        <div className="flex-1 flex items-center justify-center px-4 py-16">
-          <div className="max-w-md w-full text-center">
-
-            {/* Crown icon with lock badge */}
-            <div className="mx-auto mb-7 relative w-24 h-24">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/30 via-amber-600/15 to-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-xl shadow-amber-500/10">
-                <RiVipCrownLine className="w-12 h-12 text-amber-400" />
-              </div>
-              <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shadow-md ring-2 ring-page">
-                <RiLockLine className="w-3.5 h-3.5 text-white" />
-              </div>
-            </div>
-
-            {/* Badge */}
-            <div className="flex justify-center mb-3">
-              <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1">
-                <RiStarLine className="mr-1.5 h-3 w-3" />
-                Premium Playlist
-              </Badge>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 tracking-tight leading-tight">
-              This is a premium playlist
-            </h1>
-
-            {/* Body */}
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8 max-w-sm mx-auto">
-              This playlist is curated exclusively for premium members. Upgrade your account to unlock it and get full access to all premium content on the platform.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/premium" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="h-12 w-full px-8 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg shadow-amber-500/20 transition-all duration-200 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.99]"
-                >
-                  <RiVipCrownLine className="mr-2 h-4 w-4" />
-                  Become a premium member
-                </Button>
-              </Link>
-              <Link href="/playlists" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 w-full px-8 rounded-2xl border-border/80 text-foreground hover:bg-muted/60"
-                >
-                  <RiArrowLeftLine className="mr-2 h-4 w-4" />
-                  Browse free playlists
-                </Button>
-              </Link>
-            </div>
-
-            {/* Sign-in nudge for unauthenticated users */}
-            {!isAuthenticated && (
-              <p className="mt-7 text-xs text-muted-foreground/70">
-                Already a member?{" "}
-                <Link href="/login" className="text-primary hover:underline underline-offset-2 font-medium">
-                  Sign in
-                </Link>{" "}
-                to access your content.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-  // ─── END PREMIUM WALL ────────────────────────────────────────────────────────
 
   if (!playlist) {
     return (
@@ -385,7 +259,7 @@ export default function PlaylistDetailPage() {
   }
 
   const showMobileStickyActions =
-    (playlist.isPublic || playlist.isPremiumPlaylist) || (isAuthenticated && !isOwner)
+    playlist.isPublic || (isAuthenticated && !isOwner)
 
   return (
     <div className="min-h-screen bg-page pb-24 font-sans lg:pb-8">
@@ -480,7 +354,7 @@ export default function PlaylistDetailPage() {
 
             {showMobileStickyActions ? (
               <div className="flex gap-2 border-t border-border/50 pb-3 pt-3 md:hidden">
-                {(playlist.isPublic || playlist.isPremiumPlaylist) && (
+                {playlist.isPublic && (
                   <Button
                     type="button"
                     variant="outline"
@@ -523,28 +397,9 @@ export default function PlaylistDetailPage() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8 md:gap-10">
             <div className="relative shrink-0 sm:mx-0">
               <div className="group/cover relative mx-auto w-[7.5rem] sm:mx-0 md:w-64">
-                <div
-                  className={cn(
-                    "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border shadow-xl transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-[1.02]",
-                    playlist.isPremiumPlaylist
-                      ? "border-amber-500/30 bg-gradient-to-br from-amber-500/35 via-amber-600/20 to-amber-500/25 shadow-amber-500/15"
-                      : "border-border/80 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/25 shadow-primary/15",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "absolute inset-0 rounded-[1.35rem] sm:rounded-3xl",
-                      playlist.isPremiumPlaylist
-                        ? "bg-gradient-to-br from-amber-500/15 to-amber-700/10"
-                        : "bg-gradient-to-br from-primary/20 to-transparent",
-                    )}
-                  />
-                  <RiPlayList2Fill
-                    className={cn(
-                      "relative z-10 h-14 w-14 sm:h-20 sm:w-20 md:h-32 md:w-32",
-                      playlist.isPremiumPlaylist ? "text-amber-400" : "text-primary",
-                    )}
-                  />
+                <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.35rem] border border-border/80 bg-gradient-to-br from-primary/30 via-primary/10 to-primary/25 shadow-xl shadow-primary/15 transition-transform duration-300 sm:rounded-3xl md:group-hover/cover:scale-[1.02]">
+                  <div className="absolute inset-0 rounded-[1.35rem] bg-gradient-to-br from-primary/20 to-transparent sm:rounded-3xl" />
+                  <RiPlayList2Fill className="relative z-10 h-14 w-14 text-primary sm:h-20 sm:w-20 md:h-32 md:w-32" />
                 </div>
                 {playlist.items && playlist.items.length > 0 ? (
                   <div className="absolute -bottom-1 -right-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-page bg-primary shadow-lg md:-bottom-2 md:-right-2 md:h-12 md:w-12">
@@ -556,12 +411,7 @@ export default function PlaylistDetailPage() {
 
             <div className="min-w-0 flex-1 text-center sm:text-left">
               <div className="mb-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                {playlist.isPremiumPlaylist ? (
-                  <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 backdrop-blur-sm dark:text-amber-400">
-                    <RiStarLine className="mr-1.5 h-3 w-3" />
-                    Premium
-                  </Badge>
-                ) : playlist.isPublic ? (
+                {playlist.isPublic ? (
                   <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 backdrop-blur-sm dark:text-emerald-400">
                     <RiGlobalLine className="mr-1.5 h-3 w-3" />
                     Public
@@ -639,7 +489,7 @@ export default function PlaylistDetailPage() {
 
               {/* Desktop / tablet primary actions */}
               <div className="hidden flex-wrap items-center justify-center gap-3 md:flex md:justify-start">
-                {(playlist.isPublic || playlist.isPremiumPlaylist) && (
+                {playlist.isPublic && (
                   <Button
                     type="button"
                     size="lg"

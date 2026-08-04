@@ -6,7 +6,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import ApiClient, { Channel, ChannelMembership } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
-import { hasPremiumAccess } from "@/lib/roles"
 import AuthGuard from "@/components/auth-guard"
 import ChannelChatMessage, { type ChannelChatPost, type ReadReceiptState } from "@/components/channel-chat-message"
 import { ChannelChatComposerDock } from "@/components/channel-chat-composer-dock"
@@ -113,7 +112,6 @@ export default function ChannelDetailPage() {
   const searchParams = useSearchParams()
   const slug = params?.slug as string
   const { isAuthenticated, user } = useAuth()
-  const premiumOk = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [state, setState] = useState<ChannelPageState>({ channel: null, membership: null })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -133,7 +131,7 @@ export default function ChannelDetailPage() {
     state.channel &&
     (state.channel.type === "public" ||
       (state.channel.type === "private" && !!state.membership) ||
-      (state.channel.type === "pro" && premiumOk && !!state.membership))
+      (state.channel.type === "pro" && !!state.membership))
 
   useEffect(() => {
     if (!slug) return
@@ -483,33 +481,15 @@ export default function ChannelDetailPage() {
   ) : (
     <SectionCard
       className="mt-4"
-      title={
-        state.channel.type === "pro" && !premiumOk
-          ? "Premium members only"
-          : state.channel.type === "pro"
-            ? "Members only"
-            : "Private channel"
-      }
+      title={state.channel.type === "pro" ? "Members only" : "Private channel"}
       description={
-        state.channel.type === "pro" && !premiumOk ? (
-          <span>
-            <Link href="/premium" className="font-medium text-primary underline-offset-4 hover:underline">
-              Upgrade to Premium
-            </Link>{" "}
-            to view and join this channel.{" "}
-            <Link href={detailsHref} className="text-muted-foreground underline-offset-4 hover:underline">
-              Details
-            </Link>
-          </span>
-        ) : (
-          <span>
-            Open{" "}
-            <Link href={detailsHref} className="font-medium text-primary underline-offset-4 hover:underline">
-              channel details
-            </Link>{" "}
-            to request access or learn more.
-          </span>
-        )
+        <span>
+          Open{" "}
+          <Link href={detailsHref} className="font-medium text-primary underline-offset-4 hover:underline">
+            channel details
+          </Link>{" "}
+          to request access or learn more.
+        </span>
       }
     />
   )

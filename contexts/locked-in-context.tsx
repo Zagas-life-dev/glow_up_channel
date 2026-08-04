@@ -2,7 +2,7 @@
 
 /**
  * Locked In (focus sessions): available to all authenticated users.
- * Not restricted to premium — any logged-in user can start and use sessions.
+ * Any logged-in user can start and use sessions.
  */
 import {
   createContext,

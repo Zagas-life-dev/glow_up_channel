@@ -9,16 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import ApiClient from "@/lib/api-client"
 import AuthGuard from "@/components/auth-guard"
-import { useAuth } from "@/lib/auth-context"
-import { hasPremiumAccess } from "@/lib/roles"
 import { PageShell } from "@/components/layout/page-shell"
 import { cn } from "@/lib/utils"
 import { ChannelsSurface } from "../_components/channels-surface"
 
 export default function CreateChannelPage() {
   const router = useRouter()
-  const { user } = useAuth()
-  const canCreate = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [type, setType] = useState<"public" | "private">("public")
@@ -70,21 +66,7 @@ export default function CreateChannelPage() {
             </p>
           </header>
 
-          {!canCreate ? (
-            <div className="rounded-[1.35rem] border border-border/70 bg-card/90 p-6 text-center backdrop-blur-sm sm:p-8">
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Creating channels is a Premium feature. Upgrade to start your own topic spaces.
-              </p>
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <Button type="button" asChild className="h-11 rounded-2xl">
-                  <Link href="/premium">Upgrade to Premium</Link>
-                </Button>
-                <Button type="button" variant="outline" onClick={() => router.push("/channels")} className="h-11 rounded-2xl">
-                  Back to channels
-                </Button>
-              </div>
-            </div>
-          ) : (
+          {(
             <div className="rounded-[1.35rem] border border-border/70 bg-card/85 p-4 backdrop-blur-sm sm:p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">

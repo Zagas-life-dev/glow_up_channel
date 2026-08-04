@@ -200,7 +200,6 @@ export function normalizeFeedCardDisplay<T extends Record<string, unknown>>(
         url: fileUrl,
         paymentLink: (item.paymentLink as string) ?? base.paymentLink,
         category: (item.category as string) ?? base.category,
-        isPremium: item.isPremium ?? base.isPremium,
       } as NormalizedFeedCardItem
     }
     default:

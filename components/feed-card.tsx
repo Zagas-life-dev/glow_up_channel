@@ -98,7 +98,6 @@ interface FeedCardProps {
     fileUrl?: string
     category?: string
     duration?: string
-    isPremium?: boolean
   }
   onEngage?: () => void
   isExpanded?: boolean
@@ -107,26 +106,29 @@ interface FeedCardProps {
   onPromotionShowMore?: () => void
 }
 
+// One colour per content kind. `--primary` is hsl(24 100% 50%) — an orange —
+// so `job` must NOT use primary-based classes or it renders identically to
+// `opportunity` and the feed reads as monochrome.
 const typeConfig = {
   opportunity: {
     icon: RiFocus3Line,
     color: 'orange',
     gradient: 'from-orange-500/20 to-orange-600/10',
     accent: 'text-orange-500',
-    bg: 'bg-primary/10',
+    bg: 'bg-orange-500/10',
     border: 'border-orange-500/20',
     label: 'Opportunity',
-    buttonColor: 'bg-primary hover:bg-primary/90'
+    buttonColor: 'bg-orange-500 hover:bg-orange-600'
   },
   job: {
     icon: RiBriefcaseLine,
-    color: 'primary',
-    gradient: 'from-primary/20 to-primary/10',
-    accent: 'text-primary',
-    bg: 'bg-primary/10',
-    border: 'border-primary/20',
+    color: 'sky',
+    gradient: 'from-sky-500/20 to-sky-600/10',
+    accent: 'text-sky-500',
+    bg: 'bg-sky-500/10',
+    border: 'border-sky-500/20',
     label: 'Job',
-    buttonColor: 'bg-primary hover:bg-primary/90'
+    buttonColor: 'bg-sky-500 hover:bg-sky-600'
   },
   event: {
     icon: RiCalendarLine,
@@ -148,6 +150,90 @@ const typeConfig = {
     label: 'Resource',
     buttonColor: 'bg-violet-500 hover:bg-violet-600'
   }
+}
+
+/*
+ * "Show more" panel primitives.
+ *
+ * Every content kind (opportunity / job / event / resource) renders its extra
+ * data through these four, so the expanded panel keeps one rhythm instead of
+ * each block inventing its own indentation, icon and label style.
+ */
+
+/** Titled, boxed group. One per topic (Requirements, Dates, Compensation…). */
+function DetailSection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="rounded-xl border border-border/60 bg-muted/25 px-3.5 py-3">
+      <h4 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden />
+        {title}
+      </h4>
+      <div className="mt-2.5">{children}</div>
+    </section>
+  )
+}
+
+/** Label-above-value grid: one column on phones, two from `sm` up. */
+function DetailGrid({ children }: { children: React.ReactNode }) {
+  return <dl className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">{children}</dl>
+}
+
+/** Single field inside a DetailGrid. `wide` spans both columns for prose. */
+function DetailItem({
+  label,
+  wide = false,
+  children,
+}: {
+  label: string
+  wide?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn('min-w-0', wide && 'sm:col-span-2')}>
+      <dt className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-sm text-foreground/90 break-words">{children}</dd>
+    </div>
+  )
+}
+
+/** Bulleted list for free-form arrays (requirements, benefits, prerequisites). */
+function DetailList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((entry, index) => (
+        <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" aria-hidden />
+          <span className="min-w-0 break-words">{entry}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Short keyword arrays (skills, equipment) read better as chips than a list. */
+function DetailChips({ items }: { items: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((entry, index) => (
+        <span
+          key={index}
+          className="rounded-full border border-border/60 bg-background/60 px-2 py-0.5 text-[11px] text-muted-foreground"
+        >
+          {entry}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromotionShowMore }: FeedCardProps) {
@@ -630,24 +716,45 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const details = fullDetails || item
   // Show "Show more" if description is long OR if there are additional details to show
   const detailsAny = details as any
-  // Premium resources get a distinct gold treatment so they stand out while scrolling.
-  const isPremiumResource = contentKind === 'resource' && !!detailsAny.isPremium
   const hasMoreDetails = (item.description && item.description.length > 150) ||
     (contentKind === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
     (contentKind === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
     (contentKind === 'job' && (detailsAny.requirements || detailsAny.benefits || detailsAny.pay || detailsAny.dates)) ||
     (contentKind === 'resource' && (detailsAny.category || detailsAny.duration))
 
+  // A section is only worth boxing up when it actually holds values — scraped
+  // items often carry an empty `requirements`/`dates` object, and an empty
+  // bordered card is what made the expanded view read as noise.
+  const oppRequirements = contentKind === 'opportunity' ? detailsAny.requirements : null
+  const hasOppRequirements = Boolean(oppRequirements && (
+    oppRequirements.educationLevel || oppRequirements.careerStage || oppRequirements.experience ||
+    oppRequirements.ageRange || oppRequirements.citizenship || oppRequirements.other ||
+    oppRequirements.skills?.length
+  ))
+  const oppDates = contentKind === 'opportunity' ? detailsAny.dates : null
+  const hasOppDates = Boolean(oppDates && (oppDates.startDate || oppDates.endDate || oppDates.duration))
+  const eventDates = contentKind === 'event' ? detailsAny.dates : null
+  const hasEventSchedule = Boolean(eventDates && (
+    (eventDates.startDate && eventDates.endDate) || eventDates.registrationDeadline || eventDates.timezone
+  ))
+  const eventRequirements = contentKind === 'event' ? detailsAny.requirements : null
+  const hasEventRequirements = Boolean(eventRequirements && (
+    eventRequirements.ageRange || eventRequirements.skillLevel ||
+    eventRequirements.prerequisites?.length || eventRequirements.equipment?.length
+  ))
+  const jobLocation = contentKind === 'job' && detailsAny.location && typeof detailsAny.location === 'object' && !detailsAny.location.isRemote
+    ? detailsAny.location
+    : null
+  const hasJobLocation = Boolean(jobLocation && (jobLocation.city || jobLocation.country || jobLocation.address))
+  const hasResourceDetails = contentKind === 'resource' && Boolean(
+    detailsAny.category || detailsAny.duration || detailsAny.metrics?.viewCount !== undefined
+  )
+
   return (
     <>
       <article className={cn(
         "w-full max-w-full relative p-4 rounded-2xl border transition-all duration-300",
-        isPremiumResource
-          ? [
-              "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.07] to-transparent backdrop-blur-sm",
-              "hover:border-amber-500/45 hover:from-amber-500/[0.11] hover:shadow-sm",
-            ].join(" ")
-          : "bg-card/80 backdrop-blur-sm border-border/70 hover:bg-card hover:border-border/90 hover:shadow-sm",
+        "bg-card/80 backdrop-blur-sm border-border/70 hover:bg-card hover:border-border/90 hover:shadow-sm",
         // Hot card effects for events/opportunities/jobs approaching deadline
         deadlineInfo?.isHot && "shadow-[0_0_20px_rgba(234,179,8,0.4)] border-yellow-500/40",
         deadlineInfo?.isUrgent && "shadow-[0_0_30px_rgba(239,68,68,0.5)] border-red-500/50 bg-red-500/5"
@@ -716,17 +823,16 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
         {/* Header Row */}
         <div className="flex items-start gap-4 mb-4">
-          {/* Type Icon — gold accent for premium resources */}
+          {/* Type Icon */}
           {(() => {
             const Icon = config.icon
             return (
               <div className={cn(
                 "w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border",
-                isPremiumResource
-                  ? "border-amber-500/40 bg-gradient-to-br from-amber-500/30 to-amber-600/15"
-                  : cn(config.bg, config.border)
+                config.bg,
+                config.border
               )}>
-                <Icon className={cn("w-5 h-5", isPremiumResource ? "text-amber-500 dark:text-amber-400" : config.accent)} aria-hidden />
+                <Icon className={cn("w-5 h-5", config.accent)} aria-hidden />
               </div>
             )
           })()}
@@ -735,16 +841,9 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           <div className="flex-1 min-w-0">
             {/* Type & Provider */}
             <div className="flex items-center gap-2 mb-1.5">
-              {isPremiumResource ? (
-                <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                  <RiStarLine className="h-3 w-3" aria-hidden />
-                  Premium
-                </span>
-              ) : (
-                <span className={cn("text-xs font-medium", config.accent)}>
-                  {config.label}
-                </span>
-              )}
+              <span className={cn("text-xs font-medium", config.accent)}>
+                {config.label}
+              </span>
               {getProviderName() && (
                 <>
                   <span className="text-muted-foreground">•</span>
@@ -779,12 +878,7 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
           <div className="mb-4">
             <button
               onClick={handleExpand}
-              className={cn(
-                "text-xs font-medium flex items-center gap-1",
-                isPremiumResource
-                  ? "text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400"
-                  : "text-orange-500 hover:text-orange-400"
-              )}
+              className="text-xs font-medium flex items-center gap-1 text-orange-500 hover:text-orange-400"
             >
               {expanded ? (
                 <>
@@ -853,352 +947,180 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
         {/* Expanded Details */}
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-border/50 space-y-6">
+          <div className="mt-4 pt-4 border-t border-border/50 space-y-2.5">
             {loadingDetails ? (
-              // Skeleton Loading
-              <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-muted/60 rounded-full w-3/4" />
-                <div className="h-4 bg-muted/60 rounded-full w-full" />
-                <div className="h-4 bg-muted/60 rounded-full w-5/6" />
-                <div className="h-20 bg-muted/60 rounded-2xl" />
+              // Skeleton mirrors the boxed sections below so the panel doesn't jump
+              <div className="space-y-2.5 animate-pulse">
+                <div className="h-24 rounded-xl border border-border/40 bg-muted/40" />
+                <div className="h-16 rounded-xl border border-border/40 bg-muted/40" />
+                <div className="h-9 rounded-full bg-muted/40" />
               </div>
             ) : details ? (
               <>
-                {/* Full Description - Only show if it's longer than what's already shown */}
-                {/* {details.description && details.description.length > 150 && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <RiFileLine className="w-4 h-4" aria-hidden />
-                      Full Description
-                    </h4>
-                    <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap pl-6">
-                      {details.description}
-                    </div>
-                  </div>
-                )} */}
-
-                {/* Opportunity Details */}
-                {contentKind === 'opportunity' && details.requirements && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <RiFocus3Line className="w-4 h-4" aria-hidden />
-                      Requirements
-                    </h4>
-                    <div className="space-y-3 text-sm text-muted-foreground pl-6">
-                      {details.requirements.educationLevel && (
-                        <div className="flex items-start gap-2">
-                          <RiBookLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Education Level: </span>
-                            <span>{details.requirements.educationLevel}</span>
-                          </div>
-                        </div>
+                {/* Opportunity — Requirements */}
+                {hasOppRequirements && (
+                  <DetailSection icon={RiFocus3Line} title="Requirements">
+                    <DetailGrid>
+                      {oppRequirements.educationLevel && (
+                        <DetailItem label="Education level">{oppRequirements.educationLevel}</DetailItem>
                       )}
-                      {details.requirements.careerStage && (
-                        <div className="flex items-start gap-2">
-                          <RiBriefcaseLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Career Stage: </span>
-                            <span>{details.requirements.careerStage}</span>
-                          </div>
-                        </div>
+                      {oppRequirements.careerStage && (
+                        <DetailItem label="Career stage">{oppRequirements.careerStage}</DetailItem>
                       )}
-                      {details.requirements.skills && details.requirements.skills.length > 0 && (
-                        <div className="flex items-start gap-2">
-                          <RiCheckboxCircleLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Skills: </span>
-                            <span>{details.requirements.skills.join(', ')}</span>
-                          </div>
-                        </div>
+                      {oppRequirements.experience && (
+                        <DetailItem label="Experience">{oppRequirements.experience}</DetailItem>
                       )}
-                      {details.requirements.experience && (
-                        <div className="flex items-start gap-2">
-                          <RiBriefcaseLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Experience: </span>
-                            <span>{details.requirements.experience}</span>
-                          </div>
-                        </div>
+                      {oppRequirements.ageRange && (
+                        <DetailItem label="Age range">{oppRequirements.ageRange}</DetailItem>
                       )}
-                      {details.requirements.ageRange && (
-                        <div className="flex items-start gap-2">
-                          <RiGroupLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Age Range: </span>
-                            <span>{details.requirements.ageRange}</span>
-                          </div>
-                        </div>
+                      {oppRequirements.citizenship && (
+                        <DetailItem label="Citizenship">{oppRequirements.citizenship}</DetailItem>
                       )}
-                      {details.requirements.citizenship && (
-                        <div className="flex items-start gap-2">
-                          <RiMapPinLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Citizenship: </span>
-                            <span>{details.requirements.citizenship}</span>
-                          </div>
-                        </div>
+                      {oppRequirements.skills?.length > 0 && (
+                        <DetailItem label="Skills" wide>
+                          <DetailChips items={oppRequirements.skills} />
+                        </DetailItem>
                       )}
-                      {details.requirements.other && (
-                        <div className="mt-4 pt-3 border-t border-border/50">
-                          <div className="flex items-start gap-2">
-                            <RiFileLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                            <div className="flex-1">
-                              <span className="font-medium text-foreground/90 block mb-1">Other: </span>
-                              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {details.requirements.other}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                      {oppRequirements.other && (
+                        <DetailItem label="Other" wide>
+                          <span className="block leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                            {oppRequirements.other}
+                          </span>
+                        </DetailItem>
                       )}
-                    </div>
-                  </div>
+                    </DetailGrid>
+                  </DetailSection>
                 )}
 
-                {/* Financial Benefits - Only show benefits, not basic financial info already shown */}
-                {details.financial && details.financial.benefits && details.financial.benefits.length > 0 && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <RiCheckboxCircleLine className="w-4 h-4" aria-hidden />
-                      Benefits
-                    </h4>
-                    <ul className="space-y-1.5 text-sm text-muted-foreground pl-6 list-disc">
-                      {details.financial.benefits.map((benefit: string, index: number) => (
-                        <li key={index}>{benefit}</li>
-                      ))}
-                    </ul>
-                  </div>
+                {/* Benefits — financial perks only; the paid/amount pill already sits in the preview */}
+                {details.financial?.benefits?.length > 0 && (
+                  <DetailSection icon={RiCheckboxCircleLine} title="Benefits">
+                    <DetailList items={details.financial.benefits} />
+                  </DetailSection>
                 )}
 
-                {/* Opportunity Dates - Only show dates not already shown in preview */}
-                {contentKind === 'opportunity' && details.dates && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <RiCalendarLine className="w-4 h-4" aria-hidden />
-                      Additional Dates
-                    </h4>
-                    <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                      {details.dates.startDate && (
-                        <div className="flex items-center gap-2">
-                          <RiCalendarLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Start Date: </span>
-                            <span>{formatDate(details.dates.startDate)}</span>
-                          </div>
-                        </div>
+                {/* Opportunity — dates beyond the deadline shown in the preview */}
+                {hasOppDates && (
+                  <DetailSection icon={RiCalendarLine} title="Key dates">
+                    <DetailGrid>
+                      {oppDates.startDate && (
+                        <DetailItem label="Starts">{formatDate(oppDates.startDate)}</DetailItem>
                       )}
-                      {details.dates.endDate && (
-                        <div className="flex items-center gap-2">
-                          <RiCalendarLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">End Date: </span>
-                            <span>{formatDate(details.dates.endDate)}</span>
-                          </div>
-                        </div>
+                      {oppDates.endDate && (
+                        <DetailItem label="Ends">{formatDate(oppDates.endDate)}</DetailItem>
                       )}
-                      {details.dates.duration && (
-                        <div className="flex items-center gap-2">
-                          <RiTimeLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                          <div>
-                            <span className="font-medium text-foreground/90">Duration: </span>
-                            <span>{details.dates.duration}</span>
-                          </div>
-                        </div>
+                      {oppDates.duration && (
+                        <DetailItem label="Duration">{oppDates.duration}</DetailItem>
                       )}
-                    </div>
-                  </div>
+                    </DetailGrid>
+                  </DetailSection>
                 )}
 
-                {/* Opportunity Location Details - Only show if not already shown in preview */}
-                {contentKind === 'opportunity' && details.location && details.location.address && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <RiMapPinLine className="w-4 h-4" aria-hidden />
-                      Location Details
-                    </h4>
-                    <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                      {details.location.address && (
-                        <div>
-                          <span className="font-medium text-foreground/90">Address: </span>
-                          <span>{details.location.address}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {/* Opportunity — location detail not covered by the city/country pill */}
+                {contentKind === 'opportunity' && details.location?.address && (
+                  <DetailSection icon={RiMapPinLine} title="Location">
+                    <DetailGrid>
+                      <DetailItem label="Address" wide>{details.location.address}</DetailItem>
+                    </DetailGrid>
+                  </DetailSection>
                 )}
 
-                {/* Job Requirements & Benefits */}
+                {/* Job */}
                 {contentKind === 'job' && (
                   <>
-                    {details.requirements && details.requirements.length > 0 && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiCheckboxCircleLine className="w-4 h-4" aria-hidden />
-                          Requirements
-                        </h4>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground pl-6 list-disc">
-                          {details.requirements.map((req: string, index: number) => (
-                            <li key={index}>{req}</li>
-                          ))}
-                        </ul>
-                      </div>
+                    {details.requirements?.length > 0 && (
+                      <DetailSection icon={RiCheckboxCircleLine} title="Requirements">
+                        <DetailList items={details.requirements} />
+                      </DetailSection>
                     )}
-                    {details.benefits && details.benefits.length > 0 && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiCheckboxCircleLine className="w-4 h-4" aria-hidden />
-                          Benefits
-                        </h4>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground pl-6 list-disc">
-                          {details.benefits.map((benefit: string, index: number) => (
-                            <li key={index}>{benefit}</li>
-                          ))}
-                        </ul>
-                      </div>
+                    {details.benefits?.length > 0 && (
+                      <DetailSection icon={RiStarLine} title="Benefits">
+                        <DetailList items={details.benefits} />
+                      </DetailSection>
                     )}
-                    {/* Job Location Details */}
-                    {details.location && typeof details.location === 'object' && !details.location.isRemote && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiMapPinLine className="w-4 h-4" aria-hidden />
-                          Location Details
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.location.city && (
-                            <div>
-                              <span className="font-medium text-foreground/90">City: </span>
-                              <span>{details.location.city}</span>
-                            </div>
-                          )}
-                          {details.location.country && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Country: </span>
-                              <span>{details.location.country}</span>
-                            </div>
-                          )}
-                          {details.location.address && (
-                            <div className="mt-2 pt-2 border-t border-border">
-                              <span className="font-medium text-foreground/90">Address: </span>
-                              <span>{details.location.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    {details.pay?.amount && (
+                      <DetailSection icon={RiMoneyDollarCircleLine} title="Compensation">
+                        <DetailGrid>
+                          <DetailItem label="Pay">
+                            {details.pay.currency || 'NGN'} {details.pay.amount}
+                            {details.pay.period && (
+                              <span className="text-muted-foreground"> / {details.pay.period}</span>
+                            )}
+                          </DetailItem>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
-                    {/* Job Dates */}
-                    {details.dates && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiCalendarLine className="w-4 h-4" aria-hidden />
-                          Important Dates
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.dates.applicationDeadline && (
-                            <div className="flex items-center gap-2">
-                              <RiTimeLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                              <div>
-                                <span className="font-medium text-foreground/90">Application Deadline: </span>
-                                <span>{formatDate(details.dates.applicationDeadline)}</span>
-                              </div>
-                            </div>
+                    {hasJobLocation && (
+                      <DetailSection icon={RiMapPinLine} title="Location">
+                        <DetailGrid>
+                          {jobLocation.city && <DetailItem label="City">{jobLocation.city}</DetailItem>}
+                          {jobLocation.country && <DetailItem label="Country">{jobLocation.country}</DetailItem>}
+                          {jobLocation.address && (
+                            <DetailItem label="Address" wide>{jobLocation.address}</DetailItem>
                           )}
-                        </div>
-                      </div>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
-                    {/* Job Pay */}
-                    {details.pay && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiMoneyDollarCircleLine className="w-4 h-4" aria-hidden />
-                          Compensation
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.pay.amount && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Amount: </span>
-                              <span>{details.pay.currency || 'NGN'} {details.pay.amount}</span>
-                              {details.pay.period && (
-                                <span className="text-muted-foreground"> per {details.pay.period}</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    {details.dates?.applicationDeadline && (
+                      <DetailSection icon={RiCalendarLine} title="Key dates">
+                        <DetailGrid>
+                          <DetailItem label="Application deadline">
+                            {formatDate(details.dates.applicationDeadline)}
+                          </DetailItem>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
                   </>
                 )}
 
-                {/* Event Details */}
+                {/* Event */}
                 {contentKind === 'event' && (
                   <>
-                    {/* Event Dates - Only show additional dates not in preview */}
-                    {details.dates && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiCalendarLine className="w-4 h-4" aria-hidden />
-                          Event Schedule
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.dates.endDate && details.dates.startDate && (
-                            <div className="flex items-center gap-2">
-                              <RiCalendarLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                              <div>
-                                <span className="font-medium text-foreground/90">End Date: </span>
-                                <span>{formatDate(details.dates.endDate)}</span>
-                                <span className="text-muted-foreground ml-2">
-                                  ({(() => {
-                                    const start = new Date(details.dates.startDate)
-                                    const end = new Date(details.dates.endDate)
-                                    const diffTime = Math.abs(end.getTime() - start.getTime())
-                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-                                    return `${diffDays} day${diffDays > 1 ? 's' : ''}`
-                                  })()})
-                                </span>
-                              </div>
-                            </div>
+                    {/* Schedule — dates beyond the start date shown in the preview */}
+                    {hasEventSchedule && (
+                      <DetailSection icon={RiCalendarLine} title="Schedule">
+                        <DetailGrid>
+                          {eventDates.startDate && eventDates.endDate && (
+                            <DetailItem label="Ends">
+                              {formatDate(eventDates.endDate)}
+                              <span className="text-muted-foreground">
+                                {' · '}
+                                {(() => {
+                                  const start = new Date(eventDates.startDate)
+                                  const end = new Date(eventDates.endDate)
+                                  const diffTime = Math.abs(end.getTime() - start.getTime())
+                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+                                  return `${diffDays} day${diffDays > 1 ? 's' : ''}`
+                                })()}
+                              </span>
+                            </DetailItem>
                           )}
-                          {details.dates.registrationDeadline && (
-                            <div className="flex items-center gap-2">
-                              <RiTimeLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                              <div>
-                                <span className="font-medium text-foreground/90">Registration Deadline: </span>
-                                <span>{formatDate(details.dates.registrationDeadline)}</span>
-                                {new Date(details.dates.registrationDeadline) < new Date() && (
-                                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-500/20 text-red-400 rounded">Closed</span>
+                          {eventDates.registrationDeadline && (
+                            <DetailItem label="Registration deadline">
+                              <span className="inline-flex flex-wrap items-center gap-1.5">
+                                {formatDate(eventDates.registrationDeadline)}
+                                {new Date(eventDates.registrationDeadline) < new Date() && (
+                                  <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-400">
+                                    Closed
+                                  </span>
                                 )}
-                              </div>
-                            </div>
+                              </span>
+                            </DetailItem>
                           )}
-                          {details.dates.timezone && (
-                            <div className="flex items-center gap-2">
-                              <RiTimeLine className="w-4 h-4 text-muted-foreground" aria-hidden />
-                              <div>
-                                <span className="font-medium text-foreground/90">Timezone: </span>
-                                <span>{details.dates.timezone}</span>
-                              </div>
-                            </div>
+                          {eventDates.timezone && (
+                            <DetailItem label="Timezone">{eventDates.timezone}</DetailItem>
                           )}
-                        </div>
-                      </div>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
 
-                    {/* Event Location - Only show address if not already shown */}
-                    {details.location && details.location.address && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiMapPinLine className="w-4 h-4" aria-hidden />
-                          Location Details
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.location.address && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Address: </span>
-                              <span>{details.location.address}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    {/* Location — address only; city/country already sits in the preview pill */}
+                    {details.location?.address && (
+                      <DetailSection icon={RiMapPinLine} title="Location">
+                        <DetailGrid>
+                          <DetailItem label="Address" wide>{details.location.address}</DetailItem>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
 
                     {/* Event Capacity */}
@@ -1230,128 +1152,89 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                       </div>
                     )} */}
 
-                    {/* Event Requirements */}
-                    {details.requirements && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiCheckboxCircleLine className="w-4 h-4" aria-hidden />
-                          Requirements
-                        </h4>
-                        <div className="space-y-2 text-sm text-muted-foreground pl-6">
-                          {details.requirements.ageRange && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Age Range: </span>
-                              <span>{details.requirements.ageRange}</span>
-                            </div>
+                    {/* Requirements — scalar fields in the grid, lists underneath */}
+                    {hasEventRequirements && (
+                      <DetailSection icon={RiCheckboxCircleLine} title="Requirements">
+                        <DetailGrid>
+                          {eventRequirements.ageRange && (
+                            <DetailItem label="Age range">{eventRequirements.ageRange}</DetailItem>
                           )}
-                          {details.requirements.skillLevel && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Skill Level: </span>
-                              <span>{details.requirements.skillLevel}</span>
-                            </div>
+                          {eventRequirements.skillLevel && (
+                            <DetailItem label="Skill level">{eventRequirements.skillLevel}</DetailItem>
                           )}
-                          {details.requirements.prerequisites && details.requirements.prerequisites.length > 0 && (
-                            <div>
-                              <span className="font-medium text-foreground/90 block mb-1">Prerequisites: </span>
-                              <ul className="list-disc list-inside space-y-0.5">
-                                {details.requirements.prerequisites.map((prereq: string, index: number) => (
-                                  <li key={index}>{prereq}</li>
-                                ))}
-                              </ul>
-                            </div>
+                          {eventRequirements.prerequisites?.length > 0 && (
+                            <DetailItem label="Prerequisites" wide>
+                              <DetailList items={eventRequirements.prerequisites} />
+                            </DetailItem>
                           )}
-                          {details.requirements.equipment && details.requirements.equipment.length > 0 && (
-                            <div>
-                              <span className="font-medium text-foreground/90 block mb-1">Equipment Needed: </span>
-                              <ul className="list-disc list-inside space-y-0.5">
-                                {details.requirements.equipment.map((equip: string, index: number) => (
-                                  <li key={index}>{equip}</li>
-                                ))}
-                              </ul>
-                            </div>
+                          {eventRequirements.equipment?.length > 0 && (
+                            <DetailItem label="Equipment needed" wide>
+                              <DetailChips items={eventRequirements.equipment} />
+                            </DetailItem>
                           )}
-                        </div>
-                      </div>
+                        </DetailGrid>
+                      </DetailSection>
                     )}
 
-                    {/* Event Agenda */}
+                    {/* Agenda — free text from some sources, a timed list from others */}
                     {details.agenda && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiFileLine className="w-4 h-4" aria-hidden />
-                          Agenda
-                        </h4>
-                        <div className="text-sm text-muted-foreground pl-6">
-                          {typeof details.agenda === 'string' ? (
-                            <p className="leading-relaxed whitespace-pre-wrap">{details.agenda}</p>
-                          ) : Array.isArray(details.agenda) ? (
-                            <ul className="space-y-2 list-none">
-                              {details.agenda.map((item: any, index: number) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <RiTimeLine className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden />
-                                  <div>
-                                    {item.time && (
-                                      <span className="font-medium text-foreground/90">{item.time} - </span>
-                                    )}
-                                    <span>{item.title || item}</span>
-                                    {item.description && (
-                                      <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
-                                    )}
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : null}
-                        </div>
-                      </div>
+                      <DetailSection icon={RiFileLine} title="Agenda">
+                        {typeof details.agenda === 'string' ? (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                            {details.agenda}
+                          </p>
+                        ) : Array.isArray(details.agenda) ? (
+                          <ol className="space-y-2.5">
+                            {details.agenda.map((entry: any, index: number) => (
+                              <li key={index} className="flex gap-3 text-sm">
+                                <span className="w-16 shrink-0 pt-px text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                                  {entry.time || `${index + 1}.`}
+                                </span>
+                                <span className="min-w-0 border-l border-border/60 pl-3">
+                                  <span className="block text-foreground/90 break-words">
+                                    {entry.title || (typeof entry === 'string' ? entry : '')}
+                                  </span>
+                                  {entry.description && (
+                                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground break-words">
+                                      {entry.description}
+                                    </span>
+                                  )}
+                                </span>
+                              </li>
+                            ))}
+                          </ol>
+                        ) : null}
+                      </DetailSection>
                     )}
-
                   </>
                 )}
 
-                {/* Resource Details */}
-                {contentKind === 'resource' && (
-                  <div className="space-y-4">
-                    {details.category && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          {details.category === 'video' && <RiVideoLine className="w-4 h-4" aria-hidden />}
-                          {details.category === 'audio' && <RiHeadphoneLine className="w-4 h-4" aria-hidden />}
-                          {details.category === 'document' && <RiFileLine className="w-4 h-4" aria-hidden />}
-                          Resource Type
-                        </h4>
-                        <div className="text-sm text-muted-foreground pl-6">
-                          <span className="capitalize">{details.category} Resource</span>
-                        </div>
-                      </div>
-                    )}
-                    {details.duration && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiTimeLine className="w-4 h-4" aria-hidden />
-                          Duration
-                        </h4>
-                        <div className="text-sm text-muted-foreground pl-6">
-                          <span>{details.duration}</span>
-                        </div>
-                      </div>
-                    )}
-                    {details.metrics?.viewCount !== undefined && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiEyeLine className="w-4 h-4" aria-hidden />
-                          Statistics
-                        </h4>
-                        <div className="text-sm text-muted-foreground pl-6">
-                          <span>{details.metrics.viewCount} views</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {/* Resource — one section; these were three boxes holding a single value each */}
+                {hasResourceDetails && (
+                  <DetailSection
+                    icon={
+                      detailsAny.category === 'video' ? RiVideoLine
+                        : detailsAny.category === 'audio' ? RiHeadphoneLine
+                        : RiFileLine
+                    }
+                    title="Resource details"
+                  >
+                    <DetailGrid>
+                      {details.category && (
+                        <DetailItem label="Type">
+                          <span className="capitalize">{details.category}</span>
+                        </DetailItem>
+                      )}
+                      {details.duration && <DetailItem label="Duration">{details.duration}</DetailItem>}
+                      {details.metrics?.viewCount !== undefined && (
+                        <DetailItem label="Views">{details.metrics.viewCount.toLocaleString()}</DetailItem>
+                      )}
+                    </DetailGrid>
+                  </DetailSection>
                 )}
 
                 {/* Action Button */}
-                <div className="pt-2">
+                <div className="pt-1">
                   {contentKind === 'opportunity' && (() => {
                     const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? detailsAny.externalUrl ?? detailsAny.externalLink ?? item.url ?? item.applicationLink ?? item.externalUrl ?? item.externalLink
                     if (applyUrl) {
@@ -1417,10 +1300,10 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                         <Button
                           asChild
                           size="sm"
-                          className={detailsAny.isPremium ? "w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-full shadow-md font-semibold" : cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
+                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
                         >
                           <a href={cleanUrl(detailsAny.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            {detailsAny.isPremium ? <><RiVipCrownLine className="w-4 h-4" aria-hidden /> Purchase Premium</> : <>Sign up <RiExternalLinkLine className="w-4 h-4" aria-hidden /></>}
+                            Sign up <RiExternalLinkLine className="w-4 h-4" aria-hidden />
                           </a>
                         </Button>
                       ) : detailsAny.fileUrl ? (
@@ -1435,19 +1318,17 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                               <RiExternalLinkLine className="w-4 h-4" aria-hidden />
                             </a>
                           </Button>
-                          {!detailsAny.isPremium && (
-                            <Button
-                              asChild
-                              variant="outline"
-                              size="sm"
-                              className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
-                            >
-                              <a href={detailsAny.fileUrl} download className="flex items-center justify-center gap-2">
-                                <RiDownloadLine className="w-4 h-4" aria-hidden />
-                                Download
-                              </a>
-                            </Button>
-                          )}
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
+                          >
+                            <a href={detailsAny.fileUrl} download className="flex items-center justify-center gap-2">
+                              <RiDownloadLine className="w-4 h-4" aria-hidden />
+                              Download
+                            </a>
+                          </Button>
                         </>
                       ) : (detailsAny.resourceType === 'file' || detailsAny.hasFile) ? (
                         // Uploaded (file) resources are viewed in-platform — open the resource page.

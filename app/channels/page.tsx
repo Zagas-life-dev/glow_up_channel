@@ -1,46 +1,30 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useState } from "react"
-import AdSlot from "@/components/ad-slot"
+import { Fragment, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
-import { hasPremiumAccess } from "@/lib/roles"
-import ApiClient, { Channel, type PremiumPlaylistSummary } from "@/lib/api-client"
+import ApiClient, { Channel } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { PageShell } from "@/components/layout/page-shell"
 import { Hash, AlertTriangle, Plus } from "lucide-react"
-import { RiVipCrownLine } from "react-icons/ri"
 import { ChannelsSurface } from "./_components/channels-surface"
 
-type FilterTab = "all" | "public" | "private" | "pro" | "mine"
-
-const PREMIUM_FETCH_LIMIT = 100
-const PREMIUM_PAGE_SIZE = 20
+type FilterTab = "all" | "public" | "private" | "mine"
 
 export default function ChannelsPage() {
-  const { isAuthenticated, user } = useAuth()
-  const canCreateChannel = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
-  /** Pro tab + premium playlists: paying subscribers only (not admins without premium). */
-  const isPremiumSubscriber = user?.isPremium === true
-  const canShowProTab = isAuthenticated && isPremiumSubscriber
+  const { isAuthenticated } = useAuth()
+  const canCreateChannel = isAuthenticated
 
-  const filterTabs = useMemo(() => {
-    const rows: { id: FilterTab; label: string; short: string }[] = [
-      { id: "all", label: "All", short: "All" },
-      { id: "public", label: "Public", short: "Public" },
-      { id: "private", label: "Private", short: "Private" },
-    ]
-    if (canShowProTab) {
-      rows.push({ id: "pro", label: "Pro", short: "Pro" })
-    }
-    rows.push({ id: "mine", label: "Mine", short: "Mine" })
-    return rows
-  }, [canShowProTab])
+  const filterTabs: { id: FilterTab; label: string; short: string }[] = [
+    { id: "all", label: "All", short: "All" },
+    { id: "public", label: "Public", short: "Public" },
+    { id: "private", label: "Private", short: "Private" },
+    { id: "mine", label: "Mine", short: "Mine" },
+  ]
 
   const [channels, setChannels] = useState<Channel[]>([])
-  const [premiumPlaylists, setPremiumPlaylists] = useState<PremiumPlaylistSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
@@ -49,49 +33,10 @@ export default function ChannelsPage() {
   const [filter, setFilter] = useState<FilterTab>("all")
 
   useEffect(() => {
-    if (filter === "pro" && !canShowProTab) {
-      setFilter("all")
-      setPage(1)
-    }
-  }, [filter, canShowProTab])
-
-  useEffect(() => {
     setPage(1)
   }, [search, filter])
 
   useEffect(() => {
-    if (filter !== "pro") return
-    let cancelled = false
-    const loadPremium = async () => {
-      if (!canShowProTab) {
-        setPremiumPlaylists([])
-        setLoading(false)
-        return
-      }
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await ApiClient.getPremiumPlaylists({ page: 1, limit: PREMIUM_FETCH_LIMIT })
-        if (!cancelled) {
-          setPremiumPlaylists(data.playlists || [])
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError((err as { message?: string })?.message || "Failed to load premium playlists")
-          setPremiumPlaylists([])
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    loadPremium()
-    return () => {
-      cancelled = true
-    }
-  }, [filter, canShowProTab])
-
-  useEffect(() => {
-    if (filter === "pro") return
     let cancelled = false
     const loadChannels = async () => {
       try {
@@ -122,37 +67,14 @@ export default function ChannelsPage() {
     }
   }, [page, filter, search])
 
-  const filteredPremiumPlaylists = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return premiumPlaylists
-    return premiumPlaylists.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description || "").toLowerCase().includes(q) ||
-        (p.hashtags || []).some((h) => h.toLowerCase().includes(q)),
-    )
-  }, [premiumPlaylists, search])
-
-  const premiumListTotalPages = Math.max(1, Math.ceil(filteredPremiumPlaylists.length / PREMIUM_PAGE_SIZE))
-
-  const paginatedPremiumPlaylists = useMemo(() => {
-    const start = (page - 1) * PREMIUM_PAGE_SIZE
-    return filteredPremiumPlaylists.slice(start, start + PREMIUM_PAGE_SIZE)
-  }, [filteredPremiumPlaylists, page])
-
-  useEffect(() => {
-    if (filter !== "pro") return
-    if (page > premiumListTotalPages) setPage(Math.max(1, premiumListTotalPages))
-  }, [filter, page, premiumListTotalPages])
-
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setPage(1)
   }
 
-  const showPagination = filter === "pro" ? premiumListTotalPages > 1 : totalPages > 1
+  const showPagination = totalPages > 1
   const paginationPage = page
-  const paginationTotal = filter === "pro" ? premiumListTotalPages : totalPages
+  const paginationTotal = totalPages
 
   return (
     <ChannelsSurface withAtmosphere>
@@ -168,9 +90,7 @@ export default function ChannelsPage() {
                   Channels
                 </h1>
                 <p className="mt-2 max-w-lg text-sm leading-snug text-muted-foreground">
-                  {filter === "pro"
-                    ? "Premium playlists curated for subscribers — open any list to explore items."
-                    : "Topic-focused spaces for conversations, posts, and members who care about the same things."}
+                  Topic-focused spaces for conversations, posts, and members who care about the same things.
                 </p>
               </div>
               {isAuthenticated && canCreateChannel ? (
@@ -230,7 +150,7 @@ export default function ChannelsPage() {
 
             <form onSubmit={onSearchSubmit} className="mt-3">
               <Input
-                placeholder={filter === "pro" ? "Search premium playlists…" : "Search channels…"}
+                placeholder="Search channels…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-11 rounded-2xl border-border/70 bg-card/80 text-base sm:text-sm"
@@ -253,99 +173,6 @@ export default function ChannelsPage() {
                 <h2 className="text-xl font-bold tracking-tight text-foreground">Something went wrong</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{error}</p>
               </div>
-            ) : filter === "pro" ? (
-              paginatedPremiumPlaylists.length === 0 ? (
-                <div className="rounded-[1.35rem] border border-border/70 bg-card/90 px-6 py-12 text-center backdrop-blur-sm animate-fade-in-up">
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10">
-                    <RiVipCrownLine className="h-7 w-7 text-amber-600 dark:text-amber-400" aria-hidden />
-                  </div>
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">No premium playlists</h2>
-                  <p className="mx-auto mt-3 max-w-sm text-sm text-muted-foreground">
-                    {search.trim()
-                      ? "Nothing matches your search. Try different keywords."
-                      : "There are no premium playlists yet. Check back later."}
-                  </p>
-                  <Button type="button" asChild variant="outline" className="mt-8 h-11 rounded-2xl">
-                    <Link href="/playlists?tab=premium">Open in Playlists</Link>
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <ul className="space-y-3 sm:space-y-4">
-                    {paginatedPremiumPlaylists.map((pl, index) => (
-                      <Fragment key={pl._id}>
-                      <li
-                        className="animate-fade-in-up"
-                        style={{
-                          animationDelay: `${Math.min(index, 10) * 40}ms`,
-                          animationFillMode: "both",
-                        }}
-                      >
-                        <Link
-                          href={`/playlists/${encodeURIComponent(pl._id)}`}
-                          className="group flex min-h-[4.5rem] items-center gap-3 rounded-[1.25rem] border border-border/60 bg-card/70 p-3 backdrop-blur-sm transition-all duration-200 active:scale-[0.99] sm:gap-4 sm:p-4 sm:hover:border-amber-500/30 sm:hover:bg-card"
-                        >
-                          <div className="relative h-14 w-14 shrink-0 sm:h-[3.75rem] sm:w-[3.75rem]">
-                            <div className="absolute left-0 top-1.5 h-11 w-11 rounded-2xl border border-border/60 bg-muted/70 sm:h-12 sm:w-12" />
-                            <div className="absolute left-1.5 top-0.5 h-11 w-11 rounded-2xl border border-amber-500/25 bg-amber-500/10 sm:h-12 sm:w-12" />
-                            <div className="absolute left-3 top-0 flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/35 bg-gradient-to-br from-amber-500/25 to-amber-600/5 shadow-sm transition-transform duration-200 group-hover:scale-[1.04] sm:h-12 sm:w-12">
-                              <RiVipCrownLine className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden />
-                            </div>
-                          </div>
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="text-base font-bold text-foreground transition-colors group-hover:text-primary sm:text-lg">
-                                <span className="line-clamp-1">{pl.name}</span>
-                              </h2>
-                              <span className="rounded-lg border border-amber-500/40 bg-amber-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-400">
-                                Premium
-                              </span>
-                            </div>
-                            {pl.description ? (
-                              <p className="line-clamp-2 text-sm text-muted-foreground sm:line-clamp-1">{pl.description}</p>
-                            ) : null}
-                            <p className="text-xs tabular-nums text-muted-foreground">
-                              {pl.itemCount} item{pl.itemCount === 1 ? "" : "s"}
-                              {pl.createdBy?.firstName ? ` · ${pl.createdBy.firstName}` : ""}
-                            </p>
-                          </div>
-                        </Link>
-                      </li>
-                      {(index + 1) % 5 === 0 && (
-                        <li>
-                          <AdSlot variant="banner" />
-                        </li>
-                      )}
-                      </Fragment>
-                    ))}
-                  </ul>
-                  {showPagination ? (
-                    <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={paginationPage <= 1}
-                        onClick={() => setPage((p) => p - 1)}
-                        className="h-11 min-w-[6.5rem] rounded-xl border-border/70"
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-sm tabular-nums text-muted-foreground">
-                        {paginationPage} / {paginationTotal}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={paginationPage >= paginationTotal}
-                        onClick={() => setPage((p) => p + 1)}
-                        className="h-11 min-w-[6.5rem] rounded-xl border-border/70"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  ) : null}
-                </>
-              )
             ) : channels.length === 0 ? (
               <div className="rounded-[1.35rem] border border-border/70 bg-card/90 px-6 py-12 text-center backdrop-blur-sm animate-fade-in-up">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
@@ -361,14 +188,6 @@ export default function ChannelsPage() {
                   <Button type="button" asChild className="mt-8 h-11 rounded-2xl px-8">
                     <Link href="/channels/create">Create a channel</Link>
                   </Button>
-                ) : null}
-                {isAuthenticated && !canCreateChannel ? (
-                  <p className="mt-6 text-xs text-muted-foreground">
-                    <Link href="/premium" className="font-medium text-primary hover:underline">
-                      Upgrade to Premium
-                    </Link>{" "}
-                    to create channels.
-                  </p>
                 ) : null}
               </div>
             ) : (
@@ -426,11 +245,6 @@ export default function ChannelsPage() {
                         </div>
                       </Link>
                     </li>
-                    {(index + 1) % 5 === 0 && (
-                      <li>
-                        <AdSlot variant="banner" />
-                      </li>
-                    )}
                     </Fragment>
                   ))}
                 </ul>

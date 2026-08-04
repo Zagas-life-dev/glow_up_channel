@@ -426,7 +426,6 @@ export default function ProviderSettings() {
         onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
         totalPostings={0}
         postingLimit={20}
-        hasPremium
       />
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         <header className="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-border/70">

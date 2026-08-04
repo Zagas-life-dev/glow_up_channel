@@ -16,7 +16,6 @@ import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
 import { getPostingLimit } from "@/lib/posting-limits"
-import { hasPremiumAccess } from "@/lib/roles"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import PromotionButton from '@/components/promotion/PromotionButton'
@@ -56,6 +55,7 @@ import {
   LayoutDashboard,
   MoreVertical,
 } from 'lucide-react'
+import { canPublishContent } from '@/lib/roles'
 
 interface ProviderStats {
   totalOpportunities: number
@@ -388,14 +388,14 @@ export default function ProviderDashboard() {
 
   // Check if user has provider permissions
   useEffect(() => {
-    if (!authLoading && user && user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
+    if (!authLoading && user && !canPublishContent(user.role)) {
       toast.error('You need to be an opportunity provider to access this dashboard')
     }
   }, [authLoading, user])
 
   // Load provider dashboard data function
   const loadProviderData = useCallback(async () => {
-    if (!user || (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin')) return
+    if (!user || (!canPublishContent(user.role))) return
     
     setIsLoading(true)
     setError('')
@@ -662,7 +662,7 @@ export default function ProviderDashboard() {
     )
   }
 
-  if (user.role !== 'opportunity_poster' && user.role !== 'admin' && user.role !== 'super_admin') {
+  if (!canPublishContent(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] px-4">
         <div className="text-center max-w-md rounded-[1.25rem] border border-border/70 bg-card/80 p-6 backdrop-blur-sm">
@@ -696,8 +696,7 @@ export default function ProviderDashboard() {
   ]
 
   const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
-  const postingLimit = user ? getPostingLimit(user?.isPremium, user?.role) : 0
-  const premiumPostingAccess = hasPremiumAccess({ isPremium: user?.isPremium, role: user?.role })
+  const postingLimit = user ? getPostingLimit(user?.role) : 0
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
@@ -711,7 +710,6 @@ export default function ProviderDashboard() {
           onTabChange={setActiveTab}
           totalPostings={totalPostings}
           postingLimit={postingLimit}
-          hasPremium={premiumPostingAccess}
         />
 
         {/* Main Content Area */}
@@ -950,7 +948,7 @@ export default function ProviderDashboard() {
                         {totalPostings} of {postingLimit}
                       </span>
                     }
-                    hint={premiumPostingAccess ? "20 max (Premium)" : "5 max (Free)"}
+                    hint={`${postingLimit} max`}
                     icon={FileText}
                     iconWrapClassName="border-primary/20 bg-primary/10"
                     iconClassName="text-primary"

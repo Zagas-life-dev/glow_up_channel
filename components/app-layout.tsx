@@ -7,9 +7,6 @@ import { useCleanupPastContent } from '@/hooks/use-cleanup-past-content'
 import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
-import SocialBarAd from './social-bar-ad'
-import PopunderAd from './popunder-ad'
-import LockedInIndicator from './locked-in-indicator'
 import PushPromptBanner from './push-prompt-banner'
 import SignUpBetterExperiencePopup from './sign-up-better-experience-popup'
 
@@ -56,15 +53,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
   // Full screen pages (no nav) — top padding + safe area for notch
   if (!shouldShowNav || isAuthPage) {
     return (
-      <div className="min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full pt-4 pt-safe">
+      <div className="min-h-screen bg-page text-foreground overflow-x-clip w-full max-w-full pt-4 pt-safe">
         {children}
-        <LockedInIndicator />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-page text-foreground overflow-x-hidden w-full max-w-full">
+    <div className="flex min-h-screen bg-page text-foreground overflow-x-clip w-full max-w-full">
       {/* Desktop Sidebar */}
       <aside
         className="hidden lg:block flex-shrink-0 fixed left-0 top-0 bottom-0 z-40 transition-[width] duration-300 ease-in-out"
@@ -80,8 +76,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Content Area */}
       <div
-        className="flex-1 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden transition-[margin-left] duration-300 ease-in-out"
-        style={{ marginLeft: contentMarginLeft }}
+        className="flex-1 min-h-screen flex flex-col w-full max-w-full overflow-x-clip transition-[margin-left] duration-300 ease-in-out"
+        style={
+          {
+            marginLeft: contentMarginLeft,
+            // Custom properties inherit even through position:fixed, so page-level
+            // fixed chrome (the feed tab bar) can align to the content column
+            // instead of spanning the viewport and covering the sidebar.
+            "--app-content-left": `${contentMarginLeft}px`,
+          } as React.CSSProperties
+        }
       >
         {/* Mobile only: empty top bar for spacing / safe area */}
         <div className="lg:hidden">
@@ -92,7 +96,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           className={
             isChannelFullBleed
               ? "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden pt-4 pt-safe pb-0 w-full max-w-full"
-              : "flex-1 pb-24 lg:pb-8 pt-4 pt-safe w-full max-w-full overflow-x-hidden"
+              : "flex-1 pb-24 lg:pb-8 pt-4 pt-safe w-full max-w-full overflow-x-clip"
           }
         >
           {children}
@@ -103,9 +107,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AppBottomNav />
       <PushPromptBanner />
       <SignUpBetterExperiencePopup />
-      <LockedInIndicator />
-      <SocialBarAd />
-      <PopunderAd />
     </div>
   )
 }

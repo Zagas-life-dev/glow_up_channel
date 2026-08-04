@@ -1,13 +1,11 @@
 "use client"
 
 import { Fragment, useState, useEffect, Suspense } from "react"
-import AdSlot from "@/components/ad-slot"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from "@/contexts/playlist-context"
 import { useAuth } from "@/lib/auth-context"
-import { canViewPremiumPlaylist } from "@/lib/roles"
 import { cn } from "@/lib/utils"
 import PlaylistModal from "@/components/playlist-modal"
 import {
@@ -21,8 +19,6 @@ import {
   RiBookmarkLine,
   RiGlobalLine,
   RiLockLine,
-  RiStarLine,
-  RiVipCrownLine,
   RiPlayList2Fill,
 } from "react-icons/ri"
 import {
@@ -34,20 +30,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PageShell } from "@/components/layout/page-shell"
 
-type TabType = "my" | "shared" | "saved" | "public" | "premium"
+type TabType = "my" | "shared" | "saved" | "public"
 
 const TAB_CONFIG: {
   id: TabType
   label: string
   shortLabel: string
   icon: typeof RiPlayList2Fill
-  count?: (ctx: { playlists: Playlist[]; sharedPlaylists: Playlist[]; savedPlaylists: Playlist[]; premiumPlaylists: Playlist[] }) => number
+  count?: (ctx: { playlists: Playlist[]; sharedPlaylists: Playlist[]; savedPlaylists: Playlist[] }) => number
   authOnly?: boolean
-  premiumOnly?: boolean
 }[] = [
   { id: "public", label: "Discover", shortLabel: "Discover", icon: RiGlobalLine },
   { id: "saved", label: "Saved", shortLabel: "Saved", icon: RiBookmarkLine, count: (c) => c.savedPlaylists.length, authOnly: true },
-  { id: "premium", label: "Premium", shortLabel: "Pro", icon: RiVipCrownLine, count: (c) => c.premiumPlaylists.length, authOnly: true, premiumOnly: true },
   { id: "my", label: "Mine", shortLabel: "Mine", icon: RiPlayList2Fill, count: (c) => c.playlists.length, authOnly: true },
   { id: "shared", label: "Shared", shortLabel: "Shared", icon: RiUserAddLine, count: (c) => c.sharedPlaylists.length, authOnly: true },
 ]
@@ -60,36 +54,23 @@ function PlaylistsPageInner() {
     publicPlaylists,
     sharedPlaylists,
     savedPlaylists,
-    premiumPlaylists,
     isLoading,
     deletePlaylist,
     fetchPublicPlaylists,
     fetchPlaylists,
     fetchSavedPlaylists,
-    fetchPremiumPlaylists,
     isPlaylistSaved,
     savePlaylist,
     unsavePlaylist,
   } = usePlaylist()
-  const { isAuthenticated, user, normalizedUser } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>("public")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const canViewPremium = canViewPremiumPlaylist(normalizedUser?.isPremium ?? user?.isPremium, user?.role)
-
   useEffect(() => {
     const tabParam = searchParams.get("tab")
-    if (tabParam === "premium") {
-      if (canViewPremium) {
-        setActiveTab("premium")
-      } else {
-        setActiveTab("public")
-        router.replace("/playlists")
-      }
-      return
-    }
     if (tabParam === "my" || tabParam === "shared" || tabParam === "saved") {
       if (isAuthenticated) {
         setActiveTab(tabParam as TabType)
@@ -99,10 +80,11 @@ function PlaylistsPageInner() {
       }
       return
     }
-    if (tabParam === "public" || tabParam === null) {
-      setActiveTab("public")
+    setActiveTab("public")
+    if (tabParam !== null && tabParam !== "public") {
+      router.replace("/playlists")
     }
-  }, [searchParams, canViewPremium, isAuthenticated, router])
+  }, [searchParams, isAuthenticated, router])
 
   useEffect(() => {
     fetchPublicPlaylists()
@@ -111,12 +93,6 @@ function PlaylistsPageInner() {
       fetchSavedPlaylists()
     }
   }, [fetchPublicPlaylists, fetchPlaylists, fetchSavedPlaylists, isAuthenticated])
-
-  useEffect(() => {
-    if (activeTab === "premium" && canViewPremium) {
-      fetchPremiumPlaylists()
-    }
-  }, [activeTab, canViewPremium, fetchPremiumPlaylists])
 
   const handleDelete = async (playlist: Playlist) => {
     if (!confirm(`Delete "${playlist.name}"? This action cannot be undone.`)) return
@@ -131,41 +107,24 @@ function PlaylistsPageInner() {
     }
   }
 
-  const getCurrentPlaylists = () => {
-    let list: Playlist[]
+  const getCurrentPlaylists = (): Playlist[] => {
     switch (activeTab) {
       case "my":
-        list = playlists
-        break
+        return playlists
       case "shared":
-        list = sharedPlaylists
-        break
+        return sharedPlaylists
       case "saved":
-        list = savedPlaylists
-        break
+        return savedPlaylists
       case "public":
-        list = publicPlaylists
-        break
-      case "premium":
-        list = canViewPremium ? premiumPlaylists : []
-        break
+        return publicPlaylists
       default:
-        list = []
+        return []
     }
-    if (!canViewPremium && (activeTab === "public" || activeTab === "saved")) {
-      return list.filter((p) => !p.isPremiumPlaylist)
-    }
-    return list
   }
 
   const setTab = (tab: TabType) => {
     setActiveTab(tab)
-    if (tab === "premium") {
-      router.replace("/playlists?tab=premium")
-    } else {
-      const path = tab === "public" ? "/playlists" : `/playlists?tab=${tab}`
-      router.replace(path)
-    }
+    router.replace(tab === "public" ? "/playlists" : `/playlists?tab=${tab}`)
   }
 
   const currentPlaylists = getCurrentPlaylists()
@@ -175,12 +134,8 @@ function PlaylistsPageInner() {
     return user._id === playlist.createdBy._id || user.email === playlist.createdBy.email
   }
 
-  const countCtx = { playlists, sharedPlaylists, savedPlaylists, premiumPlaylists }
-  const visibleTabs = TAB_CONFIG.filter((t) => {
-    if (t.authOnly && !isAuthenticated) return false
-    if (t.premiumOnly && !canViewPremium) return false
-    return true
-  })
+  const countCtx = { playlists, sharedPlaylists, savedPlaylists }
+  const visibleTabs = TAB_CONFIG.filter((t) => !(t.authOnly && !isAuthenticated))
 
   return (
     <PageShell fullWidth className="font-sans">
@@ -320,8 +275,6 @@ function PlaylistsPageInner() {
                   <RiUserAddLine className="h-7 w-7 text-primary" />
                 ) : activeTab === "saved" ? (
                   <RiBookmarkLine className="h-7 w-7 text-primary" />
-                ) : activeTab === "premium" ? (
-                  <RiVipCrownLine className="h-7 w-7 text-amber-500" />
                 ) : (
                   <RiGlobalLine className="h-7 w-7 text-primary" />
                 )}
@@ -333,9 +286,7 @@ function PlaylistsPageInner() {
                     ? "No shared playlists yet"
                     : activeTab === "saved"
                       ? "Nothing saved yet"
-                      : activeTab === "premium"
-                        ? "No premium lists yet"
-                        : "Nothing in Discover yet"}
+                      : "Nothing in Discover yet"}
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem]">
                 {activeTab === "my"
@@ -344,9 +295,7 @@ function PlaylistsPageInner() {
                     ? "When someone invites you to collaborate, it will show up here."
                     : activeTab === "saved"
                       ? "Save public playlists you love—they will live here for quick access."
-                      : activeTab === "premium"
-                        ? "Premium playlists you can access will appear here."
-                        : "Community playlists here are non-premium. Public premium lists live under Premium."}
+                      : "Public playlists shared by the community will show up here."}
               </p>
               {isAuthenticated && activeTab !== "shared" && activeTab !== "saved" ? (
                 <Button
@@ -365,16 +314,12 @@ function PlaylistsPageInner() {
                 const acceptedCollaborators =
                   playlist.collaborators?.filter((c) => c.status === "accepted") || []
                 const canManage = activeTab === "my" && isOwner(playlist)
-                const premium = playlist.isPremiumPlaylist
 
                 return (
                   <Fragment key={playlist._id}>
                   <li
                     className={cn(
-                      "group animate-fade-in-up rounded-[1.35rem] border transition-all duration-200",
-                      premium
-                        ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.06] to-transparent"
-                        : "border-border/60 bg-card/70 backdrop-blur-sm",
+                      "group animate-fade-in-up rounded-[1.35rem] border border-border/60 bg-card/70 backdrop-blur-sm transition-all duration-200",
                       deletingId === playlist._id && "pointer-events-none opacity-45",
                     )}
                     style={{
@@ -390,33 +335,10 @@ function PlaylistsPageInner() {
                           aria-label={`Open ${playlist.name}`}
                         >
                           <div className="relative h-[4.5rem] w-[4.5rem] sm:h-[5rem] sm:w-[5rem]">
-                            <div
-                              className={cn(
-                                "absolute left-0 top-2 h-[3.25rem] w-[3.25rem] rotate-[-6deg] rounded-2xl border sm:h-14 sm:w-14",
-                                premium
-                                  ? "border-amber-500/30 bg-amber-500/15"
-                                  : "border-border/50 bg-muted/80",
-                              )}
-                            />
-                            <div
-                              className={cn(
-                                "absolute left-2 top-1 h-[3.25rem] w-[3.25rem] rotate-[4deg] rounded-2xl border sm:h-14 sm:w-14",
-                                premium
-                                  ? "border-amber-500/35 bg-amber-500/20"
-                                  : "border-primary/25 bg-primary/10",
-                              )}
-                            />
-                            <div
-                              className={cn(
-                                "absolute left-3 top-0 flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-2xl border shadow-sm transition-transform duration-200 group-hover/cover:scale-[1.03] sm:h-14 sm:w-14",
-                                premium
-                                  ? "border-amber-500/40 bg-gradient-to-br from-amber-500/30 to-amber-600/15"
-                                  : "border-primary/30 bg-gradient-to-br from-primary/25 to-primary/5",
-                              )}
-                            >
-                              <RiPlayList2Fill
-                                className={cn("h-7 w-7 sm:h-8 sm:w-8", premium ? "text-amber-400" : "text-primary")}
-                              />
+                            <div className="absolute left-0 top-2 h-[3.25rem] w-[3.25rem] rotate-[-6deg] rounded-2xl border border-border/50 bg-muted/80 sm:h-14 sm:w-14" />
+                            <div className="absolute left-2 top-1 h-[3.25rem] w-[3.25rem] rotate-[4deg] rounded-2xl border border-primary/25 bg-primary/10 sm:h-14 sm:w-14" />
+                            <div className="absolute left-3 top-0 flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/25 to-primary/5 shadow-sm transition-transform duration-200 group-hover/cover:scale-[1.03] sm:h-14 sm:w-14">
+                              <RiPlayList2Fill className="h-7 w-7 text-primary sm:h-8 sm:w-8" />
                             </div>
                           </div>
                         </Link>
@@ -473,12 +395,7 @@ function PlaylistsPageInner() {
                           </div>
 
                           <div className="mt-3 flex flex-wrap items-center gap-1.5 gap-y-2">
-                            {premium ? (
-                              <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                                <RiStarLine className="h-3 w-3" />
-                                Premium
-                              </span>
-                            ) : playlist.isPublic ? (
+                            {playlist.isPublic ? (
                               <span className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                                 <RiGlobalLine className="h-3 w-3" />
                                 Public
@@ -534,7 +451,7 @@ function PlaylistsPageInner() {
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-stretch gap-2 border-t border-border/40 pt-4 sm:flex-nowrap">
-                        {(activeTab === "public" || activeTab === "premium") && isAuthenticated ? (
+                        {activeTab === "public" && isAuthenticated ? (
                           <Button
                             type="button"
                             variant="outline"
@@ -569,11 +486,6 @@ function PlaylistsPageInner() {
                       </div>
                     </div>
                   </li>
-                  {(index + 1) % 5 === 0 && (
-                    <li className="md:col-span-2">
-                      <AdSlot variant="banner" />
-                    </li>
-                  )}
                   </Fragment>
                 )
               })}

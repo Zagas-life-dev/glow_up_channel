@@ -10,11 +10,6 @@ export interface NormalizedUser {
   createdAt: string;
   approvedAt?: string;
 
-  // Premium membership (mirrors user fields where present)
-  isPremium?: boolean;
-  premiumExpiresAt?: string | null;
-  premiumPlanId?: string;
-
   // Basic identity
   firstName?: string;
   lastName?: string;
@@ -164,10 +159,6 @@ export function normalizeUser(user: User | null, profile: UserProfile | null): N
     socialLinks: profile?.socialLinks,
     isPrivate: profile?.isPrivate,
     showConnections: profile?.showConnections,
-
-    isPremium: user?.isPremium,
-    premiumExpiresAt: (user as any)?.premiumExpiresAt ?? null,
-    premiumPlanId: (user as any)?.premiumPlanId,
 
     _rawUser: user,
     _rawProfile: profile,
