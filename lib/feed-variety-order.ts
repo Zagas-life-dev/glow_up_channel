@@ -22,11 +22,26 @@
  * going to be shown anyway*, and the mix of strong and weak matches is
  * unchanged.
  *
+ * **Promoted content gets a third dial: its own pool.**
+ *
+ * Score alone could not carry paid placement, and the reason is right there in
+ * the odds above. `secondHighest` holds bucket 0 — the 100-91 band — at 0.20,
+ * against 0.75 for the 90-61 band beneath it. A boost strong enough to reach
+ * the top band therefore moved an item to *worse* odds than it started with:
+ * promoting a listing could bury it.
+ *
+ * So paid placement is not expressed as score here at all. Promoted items sit
+ * in their score category like everything else AND in a `promoted` pool holding
+ * a reserved share of the picks, first emission winning and later duplicates
+ * skipped. That puts a floor under how often promotions are seen without
+ * letting them displace the organic mix above that floor.
+ *
  * Synchronous and fast enough for a feed page: category choice is O(1), the
  * weighted pluck is O(pool) with an incrementally maintained total.
  */
 
 import { actionableDateOf } from "@/lib/ranking/signals"
+import { isPromoted, promotionWeight } from "@/lib/promotion-boost"
 
 export type VarietyFeedItem = { _id: string; score?: number; createdAt?: string; [key: string]: unknown }
 
@@ -48,6 +63,28 @@ const CATEGORY_ODDS: Record<CategoryName, number> = {
 }
 
 const CATEGORY_ORDER: CategoryName[] = ["highest", "secondHighest", "mid", "low"]
+
+/**
+ * Share of picks reserved for paid placements.
+ *
+ * Renormalised against whichever categories still have stock, so with
+ * promotions in play roughly one item in five is promoted — and with none, the
+ * category odds are exactly what they were before.
+ *
+ * Kept in step with `PROMOTED_SHARE` in the backend's scatterRankingService, so
+ * a feed ordered on the server and one ordered here feel the same.
+ */
+const PROMOTED_SHARE = 0.2
+
+/**
+ * Minimum organic items between two promoted ones.
+ *
+ * The share above is an average, and averages clump: three promotions in a row
+ * reads as an ad break even when the overall rate is modest. The promoted pool
+ * sits out the draw until the gap is met, which spreads paid placements without
+ * changing how many there are.
+ */
+const PROMOTED_MIN_GAP = 3
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -74,6 +111,17 @@ const TIME_BIAS = 1.6
  * get buried under anything with a date on it.
  */
 const UNDATED_WEIGHT = 0.12
+
+/**
+ * How much a promoted item's own deadline is allowed to move it.
+ *
+ * Raw deadline pressure spans orders of magnitude, which is right for organic
+ * content and far too harsh for a slot someone paid for: an undated promoted
+ * resource would be effectively unpickable against anything with a date on it.
+ * Compressing into [this, 1] keeps urgency meaningful without erasing the
+ * placement. Mirrors `DEADLINE_FLOOR` in the backend service.
+ */
+const PROMOTED_DEADLINE_FLOOR = 0.4
 
 /**
  * Floor for a live listing, whatever its deadline. Reached around 48 days out,
@@ -197,8 +245,42 @@ export function applyVarietyOrder<T extends VarietyFeedItem>(items: T[], now: nu
     low: buildPool(CATEGORIES.low.flatMap(idx => buckets[idx]), now),
   }
 
+  // 1b. The promoted pool. Holds the *same item objects* as the category pools,
+  //     not copies — whichever pool reaches an item first emits it, and the
+  //     other's copy is discarded when drawn. That is what makes the reserved
+  //     share a floor rather than a quota: a promoted item that genuinely
+  //     scores well can still be picked early by its category.
+  //
+  //     Weight is the server's campaign weight (tier, opening burst, closing
+  //     ramp, delivery pacing) times the listing's own deadline pressure,
+  //     softened so a paid slot for an undated resource stays reachable.
+  const promotedItems = items.filter(isPromoted)
+  const promotedPool: Pool<T> | null = promotedItems.length
+    ? (() => {
+        const weights = promotedItems.map(
+          (item) => promotionWeight(item) * (PROMOTED_DEADLINE_FLOOR +
+            (1 - PROMOTED_DEADLINE_FLOOR) * Math.sqrt(timePressure(item, now))),
+        )
+        return {
+          items: promotedItems.slice(),
+          weights,
+          total: weights.reduce((sum, weight) => sum + weight, 0),
+        }
+      })()
+    : null
+
   const finalOrder: T[] = []
   const totalItems = items.length
+
+  // Every item sits in exactly one category pool, and promoted ones sit in the
+  // promoted pool as well. `emitted` is what stops that double-placing them.
+  const emitted = new Set<T>()
+
+  // Starts satisfied so the very first slot may be promoted.
+  let sinceLastPromoted = PROMOTED_MIN_GAP
+
+  // Promoted items drawn before the spacing gap allows, waiting for a slot.
+  const deferredPromoted: T[] = []
 
   // 2. The Picking Loop.
   //
@@ -210,22 +292,65 @@ export function applyVarietyOrder<T extends VarietyFeedItem>(items: T[], now: nu
   // *ratios* intact whatever is in stock, so `low` stays ~1 pick in 76 against
   // `highest` alone.
   while (finalOrder.length < totalItems) {
-    let available = 0
+    // A promoted item drawn too soon after the last one waits here rather than
+    // being placed. Holding the pool back is not enough on its own: promoted
+    // items sit in their score category too, so one can arrive through the
+    // organic draw and land right beside a paid slot. Spacing has to be
+    // enforced where items are *emitted*, not only where they are drawn.
+    if (deferredPromoted.length > 0 && sinceLastPromoted >= PROMOTED_MIN_GAP) {
+      finalOrder.push(deferredPromoted.shift() as T)
+      sinceLastPromoted = 0
+      continue
+    }
+
+    // The promoted pool joins the draw only once the spacing gap is met.
+    const promotedInPlay =
+      promotedPool !== null &&
+      promotedPool.items.length > 0 &&
+      sinceLastPromoted >= PROMOTED_MIN_GAP
+
+    let available = promotedInPlay ? PROMOTED_SHARE : 0
     for (const name of CATEGORY_ORDER) {
       if (catPools[name].items.length > 0) available += CATEGORY_ODDS[name]
     }
-    if (available <= 0) break // every pool drained
+
+    if (available <= 0) {
+      // Nothing organic left, so there is nothing to space against any more:
+      // release what is held and drain the promoted pool.
+      if (deferredPromoted.length > 0) {
+        finalOrder.push(deferredPromoted.shift() as T)
+        sinceLastPromoted = 0
+        continue
+      }
+      if (promotedPool !== null && promotedPool.items.length > 0) {
+        const held = pluckWeighted(promotedPool)
+        if (!held) break
+        if (emitted.has(held)) continue
+        emitted.add(held)
+        finalOrder.push(held)
+        sinceLastPromoted = 0
+        continue
+      }
+      break // every pool drained
+    }
 
     let target = Math.random() * available
     let chosenItem: T | null = null
 
-    for (const name of CATEGORY_ORDER) {
-      const pool = catPools[name]
-      if (pool.items.length === 0) continue
-      target -= CATEGORY_ODDS[name]
-      if (target <= 0) {
-        chosenItem = pluckWeighted(pool)
-        break
+    if (promotedInPlay && promotedPool) {
+      target -= PROMOTED_SHARE
+      if (target <= 0) chosenItem = pluckWeighted(promotedPool)
+    }
+
+    if (!chosenItem) {
+      for (const name of CATEGORY_ORDER) {
+        const pool = catPools[name]
+        if (pool.items.length === 0) continue
+        target -= CATEGORY_ODDS[name]
+        if (target <= 0) {
+          chosenItem = pluckWeighted(pool)
+          break
+        }
       }
     }
 
@@ -241,7 +366,29 @@ export function applyVarietyOrder<T extends VarietyFeedItem>(items: T[], now: nu
     }
 
     if (!chosenItem) break
+
+    // Second sighting of an item already placed — or already waiting — because
+    // the other pool holds it too. Drop it and draw again; both pools shrink on
+    // every pluck, so this terminates.
+    if (emitted.has(chosenItem)) continue
+
+    // Claim it now, whether it is placed or held, so the duplicate check above
+    // catches the other pool's copy either way.
+    emitted.add(chosenItem)
+
+    if (isPromoted(chosenItem) && sinceLastPromoted < PROMOTED_MIN_GAP) {
+      deferredPromoted.push(chosenItem)
+      continue
+    }
+
     finalOrder.push(chosenItem)
+    sinceLastPromoted = isPromoted(chosenItem) ? 0 : sinceLastPromoted + 1
+  }
+
+  // Anything still held when the loop ran out of slots (it cannot run out of
+  // items — `emitted` and `finalOrder` disagree by exactly what is held here).
+  while (deferredPromoted.length > 0) {
+    finalOrder.push(deferredPromoted.shift() as T)
   }
 
   return finalOrder

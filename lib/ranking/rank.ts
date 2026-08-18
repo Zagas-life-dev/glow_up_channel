@@ -12,6 +12,7 @@
  */
 
 import { resolveFeedContentKind } from "@/lib/feed-content-type"
+import { applyPromotionLift, isPromoted } from "@/lib/promotion-boost"
 import { sharedTags } from "@/lib/nlp/similarity"
 import { profileContent, type TextProfile } from "@/lib/nlp/profile-text"
 import { contentLanguage } from "@/lib/nlp/detect-language"
@@ -148,6 +149,18 @@ export function scoreItem<T extends Record<string, unknown>>(
   // interleave with scored ones instead of sinking to the bottom as a block.
   const normalized = totalWeight > 0 ? weighted / totalWeight : 0.5
 
+  // Paid placement is applied *after* the honest signals, never as one of them.
+  //
+  // It has to happen here rather than being inherited from the backend, because
+  // this function recomputes `score` from scratch — so before this line, every
+  // client-side re-rank quietly discarded the boost the promoter had paid for
+  // and the promotion survived only as a badge on the card.
+  //
+  // Keeping it outside the weighted sum also keeps `breakdown` honest: it still
+  // reports what the item genuinely matched on, so a promoted listing cannot
+  // manufacture a "matches your interests" reason it did not earn.
+  const promoted = applyPromotionLift(normalized * 100, item)
+
   const place = {
     city: typeof item.city === "string" ? item.city : undefined,
     country: typeof item.country === "string" ? item.country : undefined,
@@ -155,7 +168,7 @@ export function scoreItem<T extends Record<string, unknown>>(
 
   return {
     item,
-    score: Math.round(normalized * 100),
+    score: Math.round(promoted),
     reasons: buildReasons(
       breakdown,
       context.interests.tags,
@@ -199,7 +212,16 @@ export function rankItems<T extends Record<string, unknown>>(
     ranked.push({ ...scored, order })
   })
 
-  ranked.sort((a, b) => b.score - a.score || a.order - b.order)
+  // Ties break to the paid item, then to the backend's original order. Rounding
+  // to whole points makes ties common enough for this to matter: without it a
+  // promotion could be beaten by an unpromoted item it had genuinely outscored
+  // before the round.
+  ranked.sort(
+    (a, b) =>
+      b.score - a.score ||
+      Number(isPromoted(b.item)) - Number(isPromoted(a.item)) ||
+      a.order - b.order,
+  )
 
   const trimmed = limit ? ranked.slice(0, limit) : ranked
   return trimmed.map(({ order: _order, ...rest }) => rest)

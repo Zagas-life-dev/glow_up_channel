@@ -163,7 +163,13 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   useEffect(() => {
     if (!backendUrl) return
     const id = setTimeout(() => {
-      fetch(`${backendUrl}/api/promoted/${type}?limit=20`)
+      // Optional auth: with a token the category rail ranks promotions against
+      // the reader's profile; without one it still answers, unpersonalised.
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const headers: HeadersInit = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      fetch(`${backendUrl}/api/promoted/${type}?limit=20`, { headers })
         .then((res) => (res.ok ? res.json() : { success: false }))
         .then((data) => {
           const rows = data?.success ? data?.data?.[type] : null

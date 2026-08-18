@@ -266,16 +266,15 @@ export default function LandingPage() {
             Get access. Get UP.
           </h1>
           <p className="mt-6 max-w-2xl text-[18px] leading-[1.5] text-[var(--paper)]/70 sm:text-[22px]">
-            Real scholarships, jobs, grants, and events, matched to you and moving as fast as
-            you are.
+            Real opportunities, resources and support for young Africans preparing to lead the future of global work.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
             <PrimaryCta href="/signup">Get Access</PrimaryCta>
             <Link
-              href="/opportunities"
+              href="/work-with-us"
               className="font-up-display inline-flex h-14 items-center justify-center gap-2 rounded-full border border-[var(--paper)]/25 px-8 text-[16px] font-semibold text-[var(--paper)] transition-colors hover:border-[var(--paper)]/60"
             >
-              See UP in Action
+              Work With US
               <RiArrowRightLine className="h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -310,21 +309,34 @@ export default function LandingPage() {
               Talent is everywhere. Access isn&rsquo;t.
             </p>
             <p>
-              There is no shortage of ambition, talent or potential among young Africans. What too often gets in the way is knowing where to look, what to pursue, how to get there, and who can help you along the way.
+              Africa is home to one of the world's youngest and fastest-growing populations. As the global workforce evolves, African talent will play an increasingly important role in shaping the future of work.
+            </p>
+            <p>
+              But potential alone isn't enough.
+            </p>
+            <p>
+              Young Africans need access to opportunity, a map for where to go, and the support to get there.
             </p>
             <p className="font-medium text-[var(--ink)]">
-              UP exists to close that gap. <br />
+              That's why UP exists. <br />
 
               
             </p>
                         <p className="font-medium text-[var(--ink)]">
-              We bring opportunities, resources, community and guidance into one place;  giving you access to what&rsquo;s possible, a map for where to go, and the tools to help you get there.
+              We bring together the opportunities, events, jobs, resources and guidance that help young Africans discover what's possible, navigate what's next, and prepare for the world they're stepping into.
             </p>
+            <p className="font-medium text-[var(--ink)]">
+              From scholarships and grants to internships and jobs. From conferences and webinars to courses, guides and practical resources.
+            </p>
+            <p className="font-medium text-[var(--ink)]">UP is building the access layer for the next generation of African talent.</p>
             <p>
               Because access changes what's possible.
-Direction changes where you go.
-And with the right support behind you, the only way is UP.
+A map gives you direction.
+Support helps you keep moving
             </p>
+             <p className="font-medium text-[var(--ink)]">
+              And when you have all three, the only way is UP.
+             </p>
              <p className="font-medium text-[var(--ink)]">
               Get access. Get UP.
              </p>
@@ -497,6 +509,13 @@ And with the right support behind you, the only way is UP.
           >
             Get Access
           </Link>
+               <Link
+              href="/work-with-us"
+              className="font-up-display inline-flex h-14 items-center justify-center gap-2 rounded-full border border-[var(--paper)]/25 px-8 text-[16px] font-semibold text-[var(--paper)] transition-colors hover:border-[var(--paper)]/60"
+            >
+              Work With US
+              <RiArrowRightLine className="h-4 w-4" aria-hidden />
+            </Link>
         </div>
       </section>
 

@@ -407,7 +407,17 @@ export default function Home() {
   useEffect(() => {
     if (!backendUrl) return
     const id = setTimeout(() => {
-      fetch(`${backendUrl}/api/promoted/feed?limit=20`)
+      // The token is optional but worth sending: with it the rail ranks each
+      // promotion against this reader's profile instead of serving everyone the
+      // same draw. Without it the endpoint still answers, unpersonalised.
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const headers: HeadersInit = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      // Same seed the main feed uses, so the promoted draw is stable for the
+      // length of a browsing session and redrawn on refresh — matching how the
+      // organic order behaves rather than reshuffling under the reader.
+      fetch(`${backendUrl}/api/promoted/feed?limit=20&seed=${getFeedSessionSeed()}`, { headers })
         .then((res) => (res.ok ? res.json() : { success: false }))
         .then((data) => {
           if (data?.success && Array.isArray(data?.data?.feed)) {
