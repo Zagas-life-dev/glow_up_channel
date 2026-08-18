@@ -554,7 +554,7 @@ function LockedInPageContent() {
                     </Button>
                   </div>
                   <p className="max-w-[220px] text-[11px] text-muted-foreground">
-                    You can browse anywhere in GlowUp while this runs. If you close the app or browser, we&apos;ll pause the timer and resume when you return—use “End session” to save it to your history.
+                    You can browse anywhere in UP while this runs. If you close the app or browser, we&apos;ll pause the timer and resume when you return—use “End session” to save it to your history.
                   </p>
                 </div>
               </>
@@ -570,7 +570,7 @@ function LockedInPageContent() {
               Why “Locked In” matters
             </h2>
             <p className="text-xs text-muted-foreground">
-              GlowUp sessions are built for deep focus. Every minute you log helps you see
+              UP sessions are built for deep focus. Every minute you log helps you see
               how often you’re really showing up for your goals.
             </p>
             <ul className="space-y-1.5 text-xs text-muted-foreground">
@@ -642,7 +642,7 @@ function LockedInPageContent() {
         </Dialog>
 
         <p className="text-sm text-white/50 text-center max-w-xs">
-          You can leave this page and keep using GlowUp; the timer will keep running. If you close the app or browser, we&apos;ll pause your session and resume it when you come back. Only ending the session will save it to your history.
+          You can leave this page and keep using UP; the timer will keep running. If you close the app or browser, we&apos;ll pause your session and resume it when you come back. Only ending the session will save it to your history.
         </p>
         <Link href="/locked-in/history" className="text-sm text-white/70 hover:text-white underline">
           View session history

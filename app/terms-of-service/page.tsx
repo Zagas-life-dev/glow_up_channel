@@ -1,8 +1,8 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: { absolute: "Terms of Service | GlowUp" },
-  description: "Terms and conditions governing the use of the GlowUp platform.",
+  title: { absolute: "Terms of Service | UP" },
+  description: "Terms and conditions governing the use of the UP platform.",
 }
 
 export default function TermsOfServicePage() {
@@ -19,7 +19,7 @@ export default function TermsOfServicePage() {
 
       <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
         <p>
-          Welcome to GlowUp ("we", "us", "our"). By accessing or using our platform, tools, and services (collectively, the "Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
+          Welcome to UP ("we", "us", "our"). By accessing or using our platform, tools, and services (collectively, the "Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
         </p>
 
         <section className="space-y-2">
@@ -27,7 +27,7 @@ export default function TermsOfServicePage() {
             1. Use of the Service
           </h2>
           <p>
-            GlowUp provides a platform for opportunity discovery, productivity tracking, and professional networking. You must be at least 13 years old to use the Service. You agree to use the Service only for lawful purposes and in a manner that does not infringe the rights of, restrict, or inhibit anyone else's use of the Service.
+            UP provides a platform for opportunity discovery, productivity tracking, and professional networking. You must be at least 13 years old to use the Service. You agree to use the Service only for lawful purposes and in a manner that does not infringe the rights of, restrict, or inhibit anyone else's use of the Service.
           </p>
         </section>
 
@@ -54,7 +54,7 @@ export default function TermsOfServicePage() {
             4. Provided Opportunities and Job Listings
           </h2>
           <p>
-            GlowUp aggregrates and hosts opportunities such as jobs, events, and scholarships. While we strive to verify our providers, we do not guarantee the validity, safety, or quality of any third-party opportunity. Users are encouraged to exercise due diligence before engaging with any external organization or listing.
+            UP aggregrates and hosts opportunities such as jobs, events, and scholarships. While we strive to verify our providers, we do not guarantee the validity, safety, or quality of any third-party opportunity. Users are encouraged to exercise due diligence before engaging with any external organization or listing.
           </p>
         </section>
 
@@ -63,7 +63,7 @@ export default function TermsOfServicePage() {
             5. Intellectual Property
           </h2>
           <p>
-            The software, design, text, graphics, and other materials on the Service are owned by or licensed to GlowUp and are protected by intellectual property laws. You may not copy, modify, distribute, or reproduce any part of the Service without our prior written consent.
+            The software, design, text, graphics, and other materials on the Service are owned by or licensed to UP and are protected by intellectual property laws. You may not copy, modify, distribute, or reproduce any part of the Service without our prior written consent.
           </p>
         </section>
 
@@ -72,7 +72,7 @@ export default function TermsOfServicePage() {
             6. Third-Party Links and Advertising
           </h2>
           <p>
-            The Service may contain links to third-party websites or services that are not owned or controlled by GlowUp. This includes advertisements served by third-party networks (e.g., Adsterra). We assume no responsibility for the content, privacy policies, or practices of any third-party websites. Interaction with any such third party is solely between you and them.
+            The Service may contain links to third-party websites or services that are not owned or controlled by UP. This includes advertisements served by third-party networks (e.g., Adsterra). We assume no responsibility for the content, privacy policies, or practices of any third-party websites. Interaction with any such third party is solely between you and them.
           </p>
         </section>
 
@@ -81,7 +81,7 @@ export default function TermsOfServicePage() {
             7. Limitation of Liability
           </h2>
           <p>
-            To the maximum extent permitted by law, GlowUp shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from your access to or use of or inability to access or use the Service.
+            To the maximum extent permitted by law, UP shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from your access to or use of or inability to access or use the Service.
           </p>
         </section>
         
@@ -102,7 +102,7 @@ export default function TermsOfServicePage() {
             For any questions or concerns regarding these Terms of Service, please contact us at:
           </p>
           <p className="text-foreground">
-            GlowUp<br />
+            UP<br />
             Email:{" "}
             <a
               href="mailto:glowupchannel.info@gmail.com"

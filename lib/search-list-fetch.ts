@@ -1,7 +1,8 @@
 /**
  * Search uses the same public list APIs as the home page tabs:
  *   GET /api/opportunities|events|jobs|resources?limit=20&search=…&lastId=…
- * No extra query filters (location, industry, etc.) — only the keyword.
+ * Optional narrowing filters (country, city, type, dates, remote, paid) ride
+ * along as extra query params — see `SearchFilters`.
  */
 
 import {
@@ -9,6 +10,7 @@ import {
   type HomeListItem,
   type HomeListPageResult,
   type HomeListType,
+  type SearchFilters,
 } from "@/lib/fetch-home-list-page"
 import { normalizeFeedListItem } from "@/lib/feed-content-type"
 
@@ -20,6 +22,16 @@ export const SEARCH_CATEGORIES: HomeListType[] = [
 ]
 
 export type SearchTab = "all" | HomeListType
+
+export type { SearchFilters }
+
+/** True when at least one filter would actually narrow the results. */
+export function hasActiveFilters(filters?: SearchFilters): boolean {
+  if (!filters) return false
+  return Object.values(filters).some((value) =>
+    typeof value === "string" ? value.trim().length > 0 : value !== undefined,
+  )
+}
 
 export function searchTabToListType(tab: SearchTab): HomeListType | null {
   return tab === "all" ? null : tab
@@ -82,9 +94,11 @@ export async function fetchSearchCategoryPage(params: {
   cursorLastId: string | null
   backendUrl: string
   search: string
+  filters?: SearchFilters
 }): Promise<HomeListPageResult> {
   const term = params.search.trim()
-  if (!term) {
+  // Filters alone are a valid query — you can browse a country without a keyword.
+  if (!term && !hasActiveFilters(params.filters)) {
     return { items: [], lastId: null, hasMore: false }
   }
 
@@ -92,7 +106,7 @@ export async function fetchSearchCategoryPage(params: {
     type: params.type,
     cursorLastId: params.cursorLastId,
     backendUrl: params.backendUrl,
-    query: { search: term },
+    query: { search: term, filters: params.filters },
   })
 
   return {
@@ -111,6 +125,7 @@ export async function fetchSearchAllCategoriesPage(params: {
   cursors: SearchCursors
   hasMoreByType: SearchHasMoreByType
   reset: boolean
+  filters?: SearchFilters
 }): Promise<{
   items: HomeListItem[]
   cursors: SearchCursors
@@ -118,7 +133,7 @@ export async function fetchSearchAllCategoriesPage(params: {
   hasMore: boolean
 }> {
   const term = params.search.trim()
-  if (!term) {
+  if (!term && !hasActiveFilters(params.filters)) {
     return {
       items: [],
       cursors: createInitialSearchCursors(),
@@ -144,7 +159,7 @@ export async function fetchSearchAllCategoriesPage(params: {
         type,
         cursorLastId: params.reset ? null : cursors[type],
         backendUrl: params.backendUrl,
-        query: { search: term },
+        query: { search: term, filters: params.filters },
       })
 
       cursors[type] = page.lastId

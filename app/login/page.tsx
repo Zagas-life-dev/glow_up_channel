@@ -43,7 +43,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Secure GlowUp login
+              Secure UP login
             </span>
           </div>
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Welcome back to{" "}
               <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                GlowUp
+                UP
               </span>
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md">
@@ -98,7 +98,7 @@ export default function LoginPage() {
               Sign in
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Enter your details to access your GlowUp dashboard.
+              Enter your details to access your UP dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

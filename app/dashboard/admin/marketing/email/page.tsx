@@ -320,7 +320,7 @@ export default function MarketingEmailDesignerPage() {
                   <Input
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="GlowUp: Fresh opportunities for this week"
+                    placeholder="UP: Fresh opportunities for this week"
                     className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground rounded-xl"
                   />
                 </div>

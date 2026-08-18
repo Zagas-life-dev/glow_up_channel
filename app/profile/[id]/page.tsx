@@ -1,13 +1,20 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { usePlaylist } from '@/contexts/playlist-context'
+import { usePlaylist, findSavedPlaylist, type Playlist as PlaylistWithItems } from '@/contexts/playlist-context'
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
+import {
+  typeConfigFor,
+  playlistItemHref,
+  typeIconClass,
+  typeBadgeSmallClass,
+} from '@/lib/playlist-item-display'
 import EditProfileModal from '@/components/edit-profile-modal'
 import PostCard from '@/components/post-card'
 import ConnectionRequestsModal from '@/components/connection-requests-modal'
@@ -277,7 +284,14 @@ export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  const { savedPlaylists, fetchSavedPlaylists } = usePlaylist()
+  const {
+    savedPlaylists,
+    fetchSavedPlaylists,
+    playlists: myPlaylists,
+    isLoading: myPlaylistsLoading,
+    fetchPlaylists: refreshMyPlaylists,
+    getPlaylistById,
+  } = usePlaylist()
   const userId = params.id as string
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
@@ -292,6 +306,13 @@ export default function ProfilePage() {
   const [bookmarks, setBookmarks] = useState<Post[]>([])
   const [loadingPlaylists, setLoadingPlaylists] = useState(false)
   const [loadingBookmarks, setLoadingBookmarks] = useState(false)
+
+  // The permanent "Saved" playlist — what the bookmark button on feed cards fills.
+  const [savedList, setSavedList] = useState<PlaylistWithItems | null>(null)
+  const [loadingSavedList, setLoadingSavedList] = useState(false)
+  const [savedListError, setSavedListError] = useState<string | null>(null)
+  const savedListFetchedForRef = useRef<string | null>(null)
+  const myPlaylistsRefreshedRef = useRef(false)
 
   // Profile completion (only for own profile)
   const [completionPercentage, setCompletionPercentage] = useState(0)
@@ -376,6 +397,32 @@ export default function ProfilePage() {
       setLoadingBookmarks(false)
     }
   }, [isOwner, getAuthHeaders])
+
+  // Saves live in the account's own "Saved" playlist, so it only resolves on your own profile.
+  const savedPlaylistSummary = useMemo(
+    () => (isOwner ? findSavedPlaylist(myPlaylists) : undefined),
+    [isOwner, myPlaylists],
+  )
+
+  // Fetch the Saved playlist's contents (owner only)
+  const fetchSavedList = useCallback(async () => {
+    if (!savedPlaylistSummary) return
+
+    setLoadingSavedList(true)
+    setSavedListError(null)
+    try {
+      // `/api/playlists/my` is a listing; read the playlist itself so every item is present.
+      const full = await getPlaylistById(savedPlaylistSummary._id)
+      setSavedList(full ?? savedPlaylistSummary)
+    } catch (err) {
+      console.error('Error fetching saved items:', err)
+      // Fall back to whatever the listing already carried rather than showing nothing.
+      setSavedList(savedPlaylistSummary)
+      setSavedListError('Could not refresh your saved items.')
+    } finally {
+      setLoadingSavedList(false)
+    }
+  }, [savedPlaylistSummary, getPlaylistById])
 
   // Calculate profile completion percentage based on the same checklist used for the UI
   const calculateProfileCompletion = useCallback((profileData: ProfileData | null): number => {
@@ -473,6 +520,35 @@ export default function ProfilePage() {
     fetchPlaylists,
     fetchBookmarks,
     fetchSavedPlaylists
+  ])
+
+  // Pull the Saved playlist's contents the first time its tab is opened. The provider
+  // loads the user's playlists on mount, so the list this keys off can arrive late —
+  // hence keying the guard on the id rather than a "have I run" flag.
+  useEffect(() => {
+    if (activeTab !== 'bookmarks' || !isOwner) return
+
+    const savedId = savedPlaylistSummary?._id
+    if (savedId) {
+      if (savedListFetchedForRef.current === savedId) return
+      savedListFetchedForRef.current = savedId
+      void fetchSavedList()
+      return
+    }
+
+    // Not in the cached listing: the Saved list may have been created after the provider
+    // loaded (a first-ever save), so refresh once before concluding there is nothing.
+    if (!myPlaylistsRefreshedRef.current && !myPlaylistsLoading) {
+      myPlaylistsRefreshedRef.current = true
+      void refreshMyPlaylists()
+    }
+  }, [
+    activeTab,
+    isOwner,
+    savedPlaylistSummary,
+    fetchSavedList,
+    myPlaylistsLoading,
+    refreshMyPlaylists,
   ])
 
   // Show skeleton immediately while loading
@@ -1100,44 +1176,171 @@ export default function ProfilePage() {
             })()}
           </TabsContent>
 
-          {/* Bookmarks Tab (owner only) */}
+          {/* Saved Tab (owner only) */}
           {isOwner && (
             <TabsContent value="bookmarks" className="mt-4">
-              {loadingBookmarks ? (
-                <div className="space-y-4 py-8 animate-pulse">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="rounded-2xl bg-card border border-border p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-muted" />
-                        <div className="h-4 bg-muted rounded w-32" />
+              {(() => {
+                const savedItems = savedList?.items ?? []
+                // Until the provider's playlist fetch lands there is no way to tell
+                // "no Saved list" apart from "not loaded yet", so keep the placeholders up.
+                const savedPending =
+                  loadingSavedList || (!savedPlaylistSummary && myPlaylistsLoading)
+
+                return (
+                  <div className="space-y-8">
+                    {/* Saved content — the account's permanent "Saved" playlist */}
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
+                          <RiBookmarkLine className="h-4 w-4 text-orange-400" aria-hidden />
+                          Saved items
+                          {savedItems.length > 0 && (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              {savedItems.length}
+                            </span>
+                          )}
+                        </h3>
+                        {savedPlaylistSummary && (
+                          <Link
+                            href={`/playlists/${savedPlaylistSummary._id}`}
+                            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            Open list
+                          </Link>
+                        )}
                       </div>
-                      <div className="h-4 bg-muted rounded w-full mb-2" />
-                      <div className="h-4 bg-muted rounded w-5/6" />
-                    </div>
-                  ))}
-                </div>
-              ) : bookmarks.length === 0 ? (
-                <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
-                    <RiBookmarkLine className="h-7 w-7 text-muted-foreground" aria-hidden />
+
+                      {savedListError && (
+                        <p className="text-xs text-muted-foreground">{savedListError}</p>
+                      )}
+
+                      {savedPending ? (
+                        <div className="space-y-2" role="status" aria-busy="true">
+                          <span className="sr-only">Loading your saved items…</span>
+                          {[...Array(4)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="flex min-h-[4.5rem] animate-pulse items-center gap-3 rounded-[1.15rem] border border-border/70 bg-card/70 p-3 sm:gap-4 sm:p-4"
+                            >
+                              <div className="h-12 w-12 shrink-0 rounded-2xl bg-muted" />
+                              <div className="min-w-0 flex-1 space-y-2">
+                                <div className="h-3 w-20 rounded-full bg-muted" />
+                                <div className="h-4 w-3/4 rounded-full bg-muted" />
+                                <div className="h-3 w-1/3 rounded-full bg-muted" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : savedItems.length === 0 ? (
+                        <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
+                          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                            <RiBookmarkLine className="h-7 w-7 text-muted-foreground" aria-hidden />
+                          </div>
+                          <p className="text-body-sm font-bold text-foreground">No saved items</p>
+                          <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
+                            Tap the bookmark on any opportunity, job, event, or resource and it lands here.
+                          </p>
+                          <Link href="/">
+                            <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                              Browse content
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {savedItems.map((item) => {
+                            const config = typeConfigFor(item.contentType)
+                            const Icon = config.icon
+                            const source = item.company || item.organization || item.author
+                            const addedAt = item.addedAt ? new Date(item.addedAt) : null
+                            const addedLabel =
+                              addedAt && !Number.isNaN(addedAt.getTime())
+                                ? addedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                : null
+
+                            return (
+                              <Link
+                                key={item._id}
+                                href={playlistItemHref(item)}
+                                className="group flex min-h-[4.5rem] items-center gap-3 rounded-[1.15rem] border border-border/70 bg-card/70 p-3 transition-all duration-200 hover:border-primary/20 hover:bg-muted/40 active:scale-[0.99] sm:gap-4 sm:p-4"
+                              >
+                                <div
+                                  className={cn(
+                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br',
+                                    config.gradient,
+                                  )}
+                                >
+                                  <Icon className={cn('h-6 w-6', typeIconClass(config.color))} aria-hidden />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <Badge variant="outline" className={typeBadgeSmallClass(config.color)}>
+                                    {config.label}
+                                  </Badge>
+                                  <h4 className="mt-1 truncate font-medium text-foreground transition-colors group-hover:text-orange-400">
+                                    {item.title}
+                                  </h4>
+                                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                                    {source && (
+                                      <span className="flex min-w-0 items-center gap-1">
+                                        <RiBuildingLine className="h-3 w-3 shrink-0" aria-hidden />
+                                        <span className="truncate">{source}</span>
+                                      </span>
+                                    )}
+                                    {item.location && (
+                                      <span className="flex min-w-0 items-center gap-1">
+                                        <RiMapPinLine className="h-3 w-3 shrink-0" aria-hidden />
+                                        <span className="truncate">{item.location}</span>
+                                      </span>
+                                    )}
+                                    {addedLabel && (
+                                      <span className="flex items-center gap-1">
+                                        <RiTimeLine className="h-3 w-3 shrink-0" aria-hidden />
+                                        {addedLabel}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <RiArrowRightLine className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </section>
+
+                    {/* Bookmarked community posts — a different kind of save, kept separate */}
+                    {(loadingBookmarks || bookmarks.length > 0) && (
+                      <section className="space-y-3">
+                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
+                          <RiBookmarkLine className="h-4 w-4 text-orange-400" aria-hidden />
+                          Saved posts
+                        </h3>
+                        {loadingBookmarks ? (
+                          <div className="space-y-4 animate-pulse" role="status" aria-busy="true">
+                            <span className="sr-only">Loading your saved posts…</span>
+                            {[...Array(3)].map((_, i) => (
+                              <div key={i} className="rounded-2xl bg-card border border-border p-5">
+                                <div className="flex items-center gap-3 mb-3">
+                                  <div className="w-10 h-10 rounded-full bg-muted" />
+                                  <div className="h-4 bg-muted rounded w-32" />
+                                </div>
+                                <div className="h-4 bg-muted rounded w-full mb-2" />
+                                <div className="h-4 bg-muted rounded w-5/6" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {bookmarks.map((post) => (
+                              <PostCard key={post._id} post={post} onUpdate={fetchBookmarks} />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )}
                   </div>
-                  <p className="text-body-sm font-bold text-foreground">No saved posts</p>
-                  <p className="mx-auto mt-2 max-w-xs text-caption leading-relaxed text-muted-foreground">
-                    Bookmarked posts show up here.
-                  </p>
-                  <Link href="/community">
-                    <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
-                      Explore feed
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {bookmarks.map((post) => (
-                    <PostCard key={post._id} post={post} onUpdate={fetchBookmarks} />
-                  ))}
-                </div>
-              )}
+                )
+              })()}
             </TabsContent>
           )}
         </Tabs>

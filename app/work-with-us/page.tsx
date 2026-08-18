@@ -8,16 +8,18 @@ import { toast } from "sonner"
 
 import { PageShell } from "@/components/layout/page-shell"
 import { Button } from "@/components/ui/button"
+import { PARTNER_PROGRAMME_ENABLED } from "@/lib/feature-flags"
 
 import { CONTACT, buildOrder, naira, type SubmissionPayload } from "./config"
+import { HERO, HOW_IT_WORKS, MODEL, PROOF, REVIEW, SELECTOR, SUCCESS, WHY_UP } from "./copy"
 import PartnerTrack from "./partner-track"
 import PromoteTrack from "./promote-track"
 import SubmitTrack from "./submit-track"
-import { Choice, Step } from "./ui"
+import { Choice, Step, TalkToUs } from "./ui"
 
 type Screen = "welcome" | "choose" | "submit" | "promote" | "partner" | "review" | "done"
 
-type Result = { ref: string; amountNg: number; paid: boolean }
+type Result = { ref: string; amountNg: number; paid: boolean; track: string }
 
 function Flow() {
   const searchParams = useSearchParams()
@@ -25,6 +27,7 @@ function Flow() {
   const [draft, setDraft] = useState<SubmissionPayload | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
+  const [audience, setAudience] = useState<number | null>(null)
   const [confirming, setConfirming] = useState(false)
   const confirmed = useRef(false)
 
@@ -54,7 +57,7 @@ function Flow() {
         return json
       })
       .then((json) => {
-        setResult({ ref: json.ref, amountNg: json.amountNg, paid: true })
+        setResult({ ref: json.ref, amountNg: json.amountNg, paid: true, track: json.track ?? "" })
         setStack(["done"])
       })
       .catch((error: unknown) => {
@@ -68,6 +71,22 @@ function Flow() {
         window.history.replaceState({}, "", url.toString())
       })
   }, [searchParams])
+
+  // Proof copy has to be a real number or absent — never a placeholder.
+  useEffect(() => {
+    let cancelled = false
+    fetch("/work-with-us/api/stats")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json) => {
+        if (!cancelled && typeof json?.users === "number" && json.users > 0) {
+          setAudience(json.users)
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const review = (payload: SubmissionPayload) => {
     setDraft(payload)
@@ -90,7 +109,7 @@ function Flow() {
         window.location.href = json.authorizationUrl
         return
       }
-      setResult({ ref: json.ref, amountNg: 0, paid: false })
+      setResult({ ref: json.ref, amountNg: 0, paid: false, track: draft.kind })
       setStack(["done"])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong")
@@ -114,51 +133,87 @@ function Flow() {
     )
   }
 
+  // --- The commercial landing page ------------------------------------------
   if (screen === "welcome") {
     return (
-      <Step
-        title="Work with us"
-        description="This is where you bring us what you have — an opportunity for the community, something you want promoted, or a longer partnership."
-      >
-        <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-5 text-sm">
-          <p className="font-medium">In a few minutes you can:</p>
-          <ul className="space-y-2 text-muted-foreground">
-            <li>· Put an opportunity, job, event or resource in front of our community</li>
-            <li>· Promote what you are building across the platform and our socials</li>
-            <li>· Become a partner and stop paying per listing</li>
-          </ul>
-          <p className="text-muted-foreground">
-            You pick what you need, fill one form, and pay if there is anything to pay. Our team
-            reviews everything before it goes live.
-          </p>
+      <div className="mx-auto w-full max-w-2xl space-y-10">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{HERO.title}</h1>
+          <p className="text-lg text-muted-foreground">{HERO.body}</p>
+          <p className="font-medium">{HERO.promise}</p>
         </div>
+
+        <div className="space-y-3">
+          <Button size="lg" className="w-full" onClick={() => go("choose")}>
+            {HERO.cta}
+          </Button>
+          <TalkToUs>{HERO.secondary}</TalkToUs>
+        </div>
+
+        {audience !== null && (
+          <div className="rounded-2xl border border-border/70 bg-card/60 p-5 text-sm">
+            <p className="text-muted-foreground">{PROOF.intro}</p>
+            <p className="mt-2 font-medium">{PROOF.figure(audience)}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold">{MODEL.title}</h2>
+          <p className="text-muted-foreground">{MODEL.body}</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {WHY_UP.map((benefit) => (
+            <div key={benefit.title} className="rounded-2xl border border-border/70 bg-card/60 p-4">
+              <p className="font-medium">{benefit.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{benefit.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-5">
+          <h2 className="font-medium">How it works</h2>
+          <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
+            {HOW_IT_WORKS.map((step, index) => (
+              <li key={step} className="flex gap-3">
+                <span className="font-medium text-foreground tabular-nums">{index + 1}.</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <Button size="lg" className="w-full" onClick={() => go("choose")}>
-          Get started
+          {HERO.cta}
         </Button>
-      </Step>
+      </div>
     )
   }
 
+  // --- Outcome-first product selector ---------------------------------------
   if (screen === "choose") {
     return (
-      <Step title="What would you like to do?" onBack={back}>
+      <Step title={SELECTOR.title} description={SELECTOR.microcopy} onBack={back}>
         <div className="space-y-3">
           <Choice
-            label="Submit an opportunity, job, event or resource"
-            blurb="Opportunities and free events are free. Jobs, paid events and resources have their own terms."
+            label={SELECTOR.submit.label}
+            blurb={SELECTOR.submit.blurb}
             onClick={() => go("submit")}
           />
           <Choice
-            label="Promotion"
-            blurb="Get in front of the community on the platform, in our socials and in our compilations."
+            label={SELECTOR.promote.label}
+            blurb={SELECTOR.promote.blurb}
             onClick={() => go("promote")}
           />
-          <Choice
-            label="Become a partner"
-            blurb="Unlimited listings and a long-term arrangement with us."
-            onClick={() => go("partner")}
-          />
+          {PARTNER_PROGRAMME_ENABLED && (
+            <Choice
+              label={SELECTOR.partner.label}
+              blurb={SELECTOR.partner.blurb}
+              onClick={() => go("partner")}
+            />
+          )}
         </div>
+        <TalkToUs>{SELECTOR.help}</TalkToUs>
       </Step>
     )
   }
@@ -171,15 +226,20 @@ function Flow() {
     return <PromoteTrack onDone={review} onExit={back} />
   }
 
-  if (screen === "partner") {
+  // Nothing can reach this while the programme is off — the choice that pushes
+  // "partner" is gated above. Gated here too so the flag is the single switch:
+  // if it is off, the track cannot render by any route, and a stale screen falls
+  // through to the "start again" step at the bottom.
+  if (screen === "partner" && PARTNER_PROGRAMME_ENABLED) {
     return <PartnerTrack onExit={back} />
   }
 
+  // --- Review before payment ------------------------------------------------
   if (screen === "review" && draft) {
     const order = buildOrder(draft)
     return (
       <Step
-        title="Check it over"
+        title={REVIEW.title}
         description={order.total > 0 ? "Here is what it comes to." : "Nothing to pay for this one."}
         onBack={back}
       >
@@ -230,50 +290,86 @@ function Flow() {
           </div>
         )}
 
+        <div className="rounded-2xl border border-border/70 bg-muted/40 p-4 text-sm">
+          <p>{REVIEW.notice}</p>
+          <p className="mt-3 text-muted-foreground">{REVIEW.terms}</p>
+        </div>
+
         <p className="text-sm text-muted-foreground">
-          We will send updates to <span className="font-medium text-foreground">{draft.contact.email}</span>.
+          We will send everything to{" "}
+          <span className="font-medium text-foreground">{draft.contact.email}</span>, including a
+          copy of this order.
         </p>
 
         <Button size="lg" className="w-full" onClick={send} disabled={busy}>
-          {busy ? "Please wait…" : order.total > 0 ? `Pay ${naira(order.total)}` : "Send it in"}
+          {busy ? "Please wait…" : order.total > 0 ? REVIEW.payCta : REVIEW.freeCta}
         </Button>
         {order.total > 0 && (
-          <p className="text-center text-xs text-muted-foreground">
-            You will be taken to Paystack to pay, then brought straight back here.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">{REVIEW.paystackNote}</p>
         )}
       </Step>
     )
   }
 
+  // --- Payment success / order confirmation ---------------------------------
   if (screen === "done" && result) {
+    const crossSell =
+      result.track === "promotion" ? SUCCESS.crossSell.promotion : SUCCESS.crossSell.listing
+
     return (
-      <Step title={result.paid ? "Payment received" : "That is in"}>
+      <Step title={result.paid ? SUCCESS.paidTitle : SUCCESS.freeTitle}>
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6">
           <RiCheckboxCircleFill className="h-8 w-8 text-primary" aria-hidden />
-          <p className="mt-4 text-sm">
-            {result.paid
-              ? `We have your ${naira(result.amountNg)} payment and your submission.`
-              : "We have your submission."}{" "}
-            Our team reviews everything before it goes live, and we will email you either way.
-          </p>
+          <p className="mt-4 text-sm">{result.paid ? SUCCESS.paidBody : SUCCESS.freeBody}</p>
+
+          <dl className="mt-5 space-y-1.5 border-t border-primary/20 pt-4 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Order ID</dt>
+              <dd className="font-semibold tabular-nums">{result.ref}</dd>
+            </div>
+            {result.paid && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Amount paid</dt>
+                <dd className="font-medium tabular-nums">{naira(result.amountNg)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Status</dt>
+              <dd className="font-medium">
+                {result.paid ? "Paid — awaiting review" : "Awaiting review"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-5">
+          <p className="font-medium">What happens next</p>
+          <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
+            {SUCCESS.next.map((step, index) => (
+              <li key={step} className="flex gap-3">
+                <span className="font-medium text-foreground tabular-nums">{index + 1}.</span>
+                {step}
+              </li>
+            ))}
+          </ol>
           <p className="mt-4 text-sm text-muted-foreground">
-            Your reference is <span className="font-semibold text-foreground">{result.ref}</span> —
-            quote it if you get in touch.
+            A copy of everything is on its way to your email. No action is needed from you right now.
           </p>
         </div>
+
+        <p className="text-sm text-muted-foreground">{crossSell}</p>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button variant="outline" className="flex-1" onClick={startOver}>
             Submit something else
           </Button>
           <Button asChild className="flex-1">
-            <Link href="/">Back to GlowUp</Link>
+            <Link href="/">Back to UP</Link>
           </Button>
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Questions?{" "}
+          {SUCCESS.support}{" "}
           <a href={`mailto:${CONTACT.email}`} className="font-medium text-primary hover:underline">
             {CONTACT.email}
           </a>{" "}

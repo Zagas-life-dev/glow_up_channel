@@ -161,7 +161,7 @@ function FounderBatchContent() {
             Founder Batch
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Publish on Glow Up
+            Publish on UP
           </h1>
 
           {status?.isFounder ? (

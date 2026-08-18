@@ -1,5 +1,7 @@
 // Utility functions for onboarding data transformation
 
+import { lookupCountry } from '@/lib/geo/countries';
+
 // Map frontend form data to backend-expected format
 export function transformOnboardingData(formData: any) {
   // Map career stages from frontend to backend format
@@ -50,10 +52,21 @@ export function transformOnboardingData(formData: any) {
     'entrepreneurship-support': 'Entrepreneurship support'
   };
 
+  // Normalize the country to one canonical spelling plus its ISO code. Free
+  // text used to arrive as "nigeria" / "Nigeria " / "NGA", which filtering and
+  // location ranking treated as three different places.
+  const country = lookupCountry(formData.country);
+
   return {
-    country: formData.country || '',
+    country: country?.name || formData.country || '',
+    countryCode: country?.code,
     province: formData.province || '',
     city: formData.city || undefined,
+    // Only present when the user opted into precise location. Lets the backend
+    // rank by real distance rather than by country match alone.
+    latitude: typeof formData.latitude === 'number' ? formData.latitude : undefined,
+    longitude: typeof formData.longitude === 'number' ? formData.longitude : undefined,
+    preferredLanguage: formData.preferredLanguage || undefined,
     careerStage: careerStageMap[formData.careerStage] || formData.careerStage,
     interests: (formData.interests || []).map((interest: string) => 
       interestsMap[interest] || interest

@@ -1,8 +1,8 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: { absolute: "Cookie Policy | GlowUp" },
-  description: "Learn how GlowUp uses cookies and tracking technologies.",
+  title: { absolute: "Cookie Policy | UP" },
+  description: "Learn how UP uses cookies and tracking technologies.",
 }
 
 export default function CookiePolicyPage() {
@@ -19,7 +19,7 @@ export default function CookiePolicyPage() {
 
       <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
         <p>
-          This Cookie Policy explains how GlowUp ("we", "us", or "our") uses cookies and similar tracking technologies on our website and application. It outlines what these technologies are, why we use them, and your rights in controlling our use of them.
+          This Cookie Policy explains how UP ("we", "us", or "our") uses cookies and similar tracking technologies on our website and application. It outlines what these technologies are, why we use them, and your rights in controlling our use of them.
         </p>
 
         <section className="space-y-2">

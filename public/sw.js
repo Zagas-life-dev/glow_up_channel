@@ -1,4 +1,4 @@
-/* GlowUp PWA Service Worker – push notifications */
+/* UP PWA Service Worker – push notifications */
 const CACHE_NAME = "glowup-sw-v1"
 
 self.addEventListener("install", (event) => {
@@ -11,14 +11,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("push", (event) => {
   if (!event.data) return
-  let payload = { title: "GlowUp", body: "", url: "/" }
+  let payload = { title: "UP", body: "", url: "/" }
   try {
     payload = { ...payload, ...event.data.json() }
   } catch {
     payload.body = event.data.text()
   }
   event.waitUntil(
-    self.registration.showNotification(payload.title || "GlowUp", {
+    self.registration.showNotification(payload.title || "UP", {
       body: payload.body || "",
       icon: "/images/Yellow and Black Modern Media Company Logo (14).png",
       badge: "/images/Yellow and Black Modern Media Company Logo (14).png",

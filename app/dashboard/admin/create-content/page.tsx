@@ -188,7 +188,7 @@ export default function AdminCreateContentPage() {
         const start = startDate ? new Date(startDate).toISOString() : new Date().toISOString()
         await ApiClient.createEvent({
           ...basePayload,
-          organizer: organizer.trim() || "GlowUp Diaries",
+          organizer: organizer.trim() || "UP",
           type: eventType,
           eventType,
           isPaid,
@@ -222,7 +222,7 @@ export default function AdminCreateContentPage() {
         const hasAmount = oppAmount.trim() !== ""
         await ApiClient.createOpportunity({
           ...basePayload,
-          provider: provider.trim() || "GlowUp Diaries",
+          provider: provider.trim() || "UP",
           category: opportunityCategory,
           type: opportunityCategory,
           location: { isRemote: oppRemote, city: oppCity.trim() || undefined },
@@ -239,7 +239,7 @@ export default function AdminCreateContentPage() {
         await ApiClient.createResource({
           title: basePayload.title,
           description: basePayload.description,
-          author: author.trim() || "GlowUp Diaries",
+          author: author.trim() || "UP",
           category: resourceCategory,
           url: basePayload.url,
           paymentLink: basePayload.url,

@@ -65,7 +65,7 @@ export default function ProviderDashboardSidebar({
           <Link href="/" className="group relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-muted/40 ring-1 ring-border/60 transition-transform duration-300 hover:scale-[1.04]">
             <Image
               src="/images/Yellow and Black Modern Media Company Logo (14).png"
-              alt="GlowUp"
+              alt="UP"
               fill
               className="object-contain p-1"
             />

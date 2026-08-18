@@ -32,7 +32,7 @@ export default function Footer() {
             <div className="mb-4 sm:mb-6 flex justify-center sm:justify-start">
               <Image
                 src="/images/Yellow and Black Modern Media Company Logo (14).png"
-                alt="GlowUp"
+                alt="UP"
                 width={120}
                 height={50}
                 className="sm:w-32 md:w-36 lg:w-40 object-contain"
@@ -151,7 +151,7 @@ export default function Footer() {
         <div className="border-t border-gray-700 mt-8 sm:mt-12 pt-6 sm:pt-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
             <div className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
-              <p>&copy; 2025 GlowUp. All rights reserved.</p>
+              <p>&copy; 2025 UP. All rights reserved.</p>
             </div>
             <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6 text-xs sm:text-sm">
               <Link href="/privacy-policy" className="text-gray-400 hover:text-orange-400 transition-colors touch-manipulation">

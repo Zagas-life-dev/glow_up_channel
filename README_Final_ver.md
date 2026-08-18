@@ -32,9 +32,9 @@
 - **Authentication**: JWT 
 - **File Storage**: Cloudinary for media uploads
 
-**MongoDB Connection String**:
+**MongoDB Connection String**: set `MONGODB_URI` in `.env` (never commit it).
 ```
-mongodb+srv://admin_db_user:QpAHY8MwWdvHfx0u@glowup-channel.vhcmgft.mongodb.net/?retryWrites=true&w=majority&appName=glowup-channel
+mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
 ```
 
 **Required MongoDB Package**:

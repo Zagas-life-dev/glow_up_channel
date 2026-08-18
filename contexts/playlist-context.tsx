@@ -66,6 +66,24 @@ export interface Playlist {
   isSaved?: boolean
 }
 
+/**
+ * Locate the account's permanent "Saved" playlist among its own playlists — the list the
+ * bookmark button on feed cards writes into. It is identified by its reserved name; a
+ * backend-side flag is honoured too if one is ever returned, and a `Saved…` prefix is the
+ * last resort so a renamed-in-place list still resolves.
+ */
+export function findSavedPlaylist<T extends { name?: string }>(playlists: T[]): T | undefined {
+  const normalized = (name?: string) => (name ?? '').trim().toLowerCase()
+  return (
+    playlists.find((p) => normalized(p.name) === 'saved') ??
+    playlists.find((p) => {
+      const flags = p as { isDefault?: boolean; isSystem?: boolean; slug?: string; type?: string }
+      return flags.slug === 'saved' || flags.type === 'saved' || flags.isSystem === true || flags.isDefault === true
+    }) ??
+    playlists.find((p) => normalized(p.name).startsWith('saved'))
+  )
+}
+
 interface PlaylistContextType {
   playlists: Playlist[]
   publicPlaylists: Playlist[]

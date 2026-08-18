@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Lock, UserPlus, LogIn } from "lucide-react";
 
 /** Icon component that accepts className (Lucide or react-icons). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type IconComponent = React.ComponentType<any>;
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

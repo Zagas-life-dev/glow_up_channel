@@ -1,8 +1,8 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: { absolute: "Privacy Policy | GlowUp" },
-  description: "How GlowUp collects, uses, shares, and protects your information.",
+  title: { absolute: "Privacy Policy | UP" },
+  description: "How UP collects, uses, shares, and protects your information.",
 }
 
 export default function PrivacyPolicyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
 
       <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
         <p>
-          This Privacy Policy describes how GlowUp (&quot;we&quot;, &quot;us&quot;, or
+          This Privacy Policy describes how UP (&quot;we&quot;, &quot;us&quot;, or
           &quot;our&quot;) collects, uses, shares, and protects your information when you
           use our website, apps, and related services (collectively, the &quot;Service&quot;).
           By using the Service, you agree to the practices described in this Privacy Policy.
@@ -207,7 +207,7 @@ export default function PrivacyPolicyPage() {
             or our data practices, please contact us at:
           </p>
           <p className="text-foreground">
-            GlowUp<br />
+            UP<br />
             Email:{" "}
             <a
               href="mailto:support@glowup.example"

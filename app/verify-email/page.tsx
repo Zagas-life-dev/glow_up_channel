@@ -124,12 +124,12 @@ function VerifyEmailContent() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Verify your{" "}
               <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                GlowUp email
+                UP email
               </span>
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md">
               We&apos;ve sent a 6-digit code to your email. Enter it on the right to confirm it&apos;s really you
-              and unlock your personalized GlowUp experience.
+              and unlock your personalized UP experience.
             </p>
           </div>
 
@@ -149,7 +149,7 @@ function VerifyEmailContent() {
                 <span className="font-medium">Check the right inbox</span>
               </div>
               <p className="text-muted-foreground">
-                Look in your primary inbox and spam folder for the GlowUp code email.
+                Look in your primary inbox and spam folder for the UP code email.
               </p>
             </div>
             <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">

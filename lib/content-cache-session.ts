@@ -8,7 +8,25 @@
 
 import { getBootId } from "@/lib/page-state-session"
 
-export type ContentCacheType = "opportunities" | "events" | "jobs" | "resources" | "posts" | "unified" | "unified_auth"
+/**
+ * The `hub_*` keys are the public hub pages (/opportunities, /jobs, …), kept
+ * separate from the home tab keys of the same content type on purpose: a hub
+ * page caches its items already shuffled by `public-hub-order`, and the home
+ * tabs show them in the API's own deadline order. Sharing one key would leak
+ * whichever page was visited first into the other.
+ */
+export type ContentCacheType =
+  | "opportunities"
+  | "events"
+  | "jobs"
+  | "resources"
+  | "posts"
+  | "unified"
+  | "unified_auth"
+  | "hub_opportunities"
+  | "hub_events"
+  | "hub_jobs"
+  | "hub_resources"
 
 /** Must match CONTENT_CACHE_PREFIX in page-state-session so clear on refresh removes these keys */
 const PREFIX = "glowup_content_"

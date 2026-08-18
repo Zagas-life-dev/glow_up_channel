@@ -87,7 +87,7 @@ export default function SignupPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Create your GlowUp account
+              Create your UP account
             </span>
           </div>
 
@@ -99,7 +99,7 @@ export default function SignupPage() {
               </span>
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-              Build your profile once, then use GlowUp to find opportunities, track your
+              Build your profile once, then use UP to find opportunities, track your
               progress, and stay focused with Locked In sessions.
             </p>
           </div>
@@ -139,7 +139,7 @@ export default function SignupPage() {
         <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
           <CardHeader className="space-y-1 text-left pb-4">
             <CardTitle className="text-2xl font-bold tracking-tight">
-              Create your GlowUp account
+              Create your UP account
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               It takes less than a minute to get set up.

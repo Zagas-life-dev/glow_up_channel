@@ -1,0 +1,358 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@400..900&display=swap">
+  <style>
+    body { margin: 0; background: #0b1222; }
+    a { color: #ff6700; text-decoration: none; }
+    a:hover { color: #ff8a3d; text-decoration: underline; }
+
+    .s-root {
+      --acc: #ff6700;
+      position: relative;
+      width: 1180px;
+      min-height: 1560px;
+      overflow: hidden;
+      background: #0b1222;
+      color: #eff1f6;
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .s-ground {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(700px 500px at 88% -6%, rgba(255,103,0,.18), transparent 62%),
+        radial-gradient(600px 460px at 0% 8%, rgba(58,86,190,.16), transparent 60%);
+    }
+    .s-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+
+    .diamond { width: 7px; height: 7px; background: var(--acc); transform: rotate(45deg); flex: none; }
+    .hatch {
+      height: 8px; flex: 1 1 auto;
+      background-image: repeating-linear-gradient(115deg, var(--acc) 0 1.5px, transparent 1.5px 9px);
+      opacity: .7;
+    }
+    .hairline { height: 1px; flex: 1 1 auto; background: #1b2641; }
+
+    .bracket { position: relative; }
+    .bracket::before, .bracket::after {
+      content: ""; position: absolute; width: 20px; height: 20px;
+      border: 2px solid var(--acc); pointer-events: none; opacity: .85;
+    }
+    .bracket::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 15px; }
+    .bracket::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 15px; }
+
+    .panel {
+      position: relative; border-radius: 16px; border: 1px solid #1b2641;
+      background: linear-gradient(158deg, rgba(24,34,57,.84) 0%, rgba(18,26,43,.70) 100%);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 26px 60px -34px rgba(0,0,0,.95);
+    }
+    .panel-hover {
+      border-color: rgba(255,103,0,.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 34px 74px -34px rgba(255,103,0,.42);
+    }
+    .panel-on { border-color: var(--acc); background: linear-gradient(158deg, rgba(255,103,0,.15) 0%, rgba(18,26,43,.78) 100%); }
+
+    .ghostnum {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 900; font-size: 66px; line-height: .82; letter-spacing: -.05em;
+      color: transparent; -webkit-text-stroke: 1.5px rgba(255,103,0,.55);
+      font-variant-numeric: tabular-nums;
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .18em; color: #7583a3;
+    }
+    .sect {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 800; font-size: 26px; letter-spacing: -.03em; margin: 0;
+    }
+    .mono {
+      font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+      font-size: 12px; letter-spacing: -.01em; color: #7583a3;
+    }
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      height: 56px; padding: 0 30px; border: 0; border-radius: 8px; cursor: pointer;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: #fff;
+      background: linear-gradient(180deg, #ff7d21 0%, #ff6700 55%, #e65c00 100%);
+      box-shadow: 0 0 0 1px rgba(255,103,0,.42), 0 14px 34px -12px rgba(255,103,0,.6), inset 0 1px 0 rgba(255,255,255,.28);
+    }
+    .cta-hover { box-shadow: 0 0 0 1px rgba(255,103,0,.72), 0 20px 48px -12px rgba(255,103,0,.78), inset 0 1px 0 rgba(255,255,255,.34); transform: translateY(-2px); }
+    .cta-quiet {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      height: 56px; padding: 0 24px; border-radius: 8px; cursor: pointer;
+      border: 1px solid #1b2641; background: rgba(24,34,57,.6); color: #eff1f6;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 600;
+    }
+    .plate {
+      display: inline-flex; align-items: center; gap: 9px; padding: 7px 13px;
+      border: 1px solid rgba(255,103,0,.36); border-radius: 7px; background: rgba(255,103,0,.07);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 13px; font-weight: 700; color: #ffb98a; font-variant-numeric: tabular-nums;
+    }
+    .field {
+      width: 100%; height: 48px; box-sizing: border-box; padding: 0 14px;
+      border-radius: 8px; border: 1px solid #1b2641; background: rgba(11,18,34,.72); color: #eff1f6;
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; font-size: 15px;
+    }
+    .field::placeholder { color: #4d5a78; }
+    .field-focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(255,103,0,.16); }
+    .swatch { height: 76px; border-radius: 12px; border: 1px solid rgba(255,255,255,.07); }
+    .grain-demo {
+      position: absolute; inset: 0; opacity: .5; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</helmet>
+
+<div class="s-root">
+  <div class="s-ground"></div>
+  <div class="s-grid"></div>
+
+  <div style="position: relative; padding: 56px 56px 80px 56px;">
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span class="eyebrow">Work with us — design system</span>
+      <span class="diamond"></span>
+      <span class="hatch"></span>
+    </div>
+    <h1 style="font-family: Inter, sans-serif; font-weight: 800; font-size: 52px; letter-spacing: -.04em; margin: 22px 0 0 0;">Deep Ornament</h1>
+    <p style="margin: 14px 0 0 0; max-width: 680px; font-size: 16px; line-height: 1.6; color: #b9c2d6;">
+      UP&#39;s existing tokens, unchanged, carrying a maximalist layer on top: an atmospheric ground, ornamental rules and brackets, outlined numerals, and price plates. Nothing below invents a hue — everything derives from <span class="mono" style="color: #eff1f6;">#ff6700</span> and <span class="mono" style="color: #eff1f6;">#0b1222</span>.
+    </p>
+
+    <!-- PALETTE -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 56px 0 22px 0;">
+      <h2 class="sect">Palette</h2><span class="hatch"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+      <sc-for list="{{palette}}" as="tone" hint-placeholder-count="6">
+        <div>
+          <div class="swatch" style="background: {{tone.hex}};"></div>
+          <div style="margin-top: 11px; font-family: Inter, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: -.015em;">{{tone.name}}</div>
+          <div class="mono" style="margin-top: 3px;">{{tone.hex}}</div>
+          <div class="mono" style="margin-top: 2px; color: #4d5a78;">{{tone.token}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- TYPE -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 56px 0 22px 0;">
+      <h2 class="sect">Type</h2><span class="hatch"></span>
+      <span class="mono">Inter — display &amp; CTA &nbsp;·&nbsp; Bricolage Grotesque — body</span>
+    </div>
+    <div class="panel" style="padding: 8px 32px 14px 32px;">
+      <sc-for list="{{typeRamp}}" as="row" hint-placeholder-count="6">
+        <div style="display: flex; align-items: baseline; gap: 28px; padding: 20px 0; border-bottom: 1px solid rgba(27,38,65,.75);">
+          <span class="mono" style="width: 132px; flex: none;">{{row.spec}}</span>
+          <span style="flex: 1 1 auto; min-width: 0; font-family: {{row.family}}; font-size: {{row.size}}; font-weight: {{row.weight}}; letter-spacing: {{row.tracking}}; line-height: 1.1;">{{row.sample}}</span>
+          <span class="mono" style="flex: none; color: #4d5a78;">{{row.use}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ORNAMENT -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 56px 0 22px 0;">
+      <h2 class="sect">Ornament</h2><span class="hatch"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+
+      <div class="panel" style="padding: 24px 22px;">
+        <div class="eyebrow">Hatch rule</div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 76px;">
+          <span class="diamond"></span><span class="hatch"></span>
+        </div>
+        <div class="mono">repeating-linear-gradient(115deg, acc 0 1.5px, transparent 1.5px 9px)</div>
+      </div>
+
+      <div class="panel bracket" style="padding: 24px 22px;">
+        <div class="eyebrow">Corner brackets</div>
+        <div style="height: 76px; display: flex; align-items: center;">
+          <span style="font-size: 14px; color: #97a3bd;">Two diagonal L-corners, 20px, 2px stroke — the panel&#39;s signature.</span>
+        </div>
+        <div class="mono">.bracket::before / ::after</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px;">
+        <div class="eyebrow">Outlined numeral</div>
+        <div style="height: 76px; display: flex; align-items: center; gap: 14px;">
+          <span class="ghostnum">01</span><span class="ghostnum" style="font-size: 40px;">02</span>
+        </div>
+        <div class="mono">-webkit-text-stroke: 1.5px rgba(255,103,0,.55)</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px;">
+        <div class="eyebrow">Price plate</div>
+        <div style="height: 76px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="plate">Free</span><span class="plate">&#8358;10,000</span>
+        </div>
+        <div class="mono">tabular-nums, 1px acc/36, bg acc/07</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px; overflow: hidden;">
+        <div class="eyebrow">Atmosphere</div>
+        <div style="position: relative; height: 76px; margin-top: 10px; border-radius: 10px; overflow: hidden; background: radial-gradient(200px 140px at 80% 0%, rgba(255,103,0,.34), transparent 62%), radial-gradient(180px 130px at 5% 90%, rgba(58,86,190,.34), transparent 60%), #0b1222;"></div>
+        <div class="mono" style="margin-top: 10px;">4 radial stops · orange, indigo, violet</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px; overflow: hidden;">
+        <div class="eyebrow">Blueprint grid</div>
+        <div style="height: 76px; margin-top: 10px; border-radius: 10px; background-color: #0b1222; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 28px 28px;"></div>
+        <div class="mono" style="margin-top: 10px;">56px cells at 3.5% white</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px; overflow: hidden;">
+        <div class="eyebrow">Grain</div>
+        <div style="position: relative; height: 76px; margin-top: 10px; border-radius: 10px; background: #182239; overflow: hidden;">
+          <div class="grain-demo"></div>
+        </div>
+        <div class="mono" style="margin-top: 10px;">feTurbulence, overlay, 16%</div>
+      </div>
+
+      <div class="panel" style="padding: 24px 22px;">
+        <div class="eyebrow">Medallion</div>
+        <div style="height: 76px; margin-top: 10px; display: flex; align-items: center; justify-content: center;">
+          <svg width="72" height="72" viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="41" fill="none" stroke="#ff6700" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="2 9" stroke-linecap="round"></circle>
+            <circle cx="42" cy="42" r="31" fill="none" stroke="#ff6700" stroke-opacity=".28" stroke-width="1"></circle>
+            <line x1="42" y1="2" x2="42" y2="10" stroke="#ff6700" stroke-width="1.4"></line>
+            <line x1="42" y1="74" x2="42" y2="82" stroke="#ff6700" stroke-width="1.4"></line>
+            <line x1="2" y1="42" x2="10" y2="42" stroke="#ff6700" stroke-width="1.4"></line>
+            <line x1="74" y1="42" x2="82" y2="42" stroke="#ff6700" stroke-width="1.4"></line>
+          </svg>
+        </div>
+        <div class="mono" style="margin-top: 10px;">Dashed ring, 64s rotation</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 56px 0 22px 0;">
+      <h2 class="sect">Controls</h2><span class="hatch"></span>
+      <span class="mono">Heights match the shipped primitives: CTA 56 · field 48 · stepper 44</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+      <div class="panel" style="padding: 26px 24px;">
+        <div class="eyebrow">Primary — rest / hover</div>
+        <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 18px;">
+          <button class="cta">Choose a distribution option</button>
+          <button class="cta cta-hover">Choose a distribution option</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding: 26px 24px;">
+        <div class="eyebrow">Secondary &amp; field</div>
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 18px;">
+          <button class="cta-quiet">Talk to UP</button>
+          <input class="field" type="text" placeholder="you@organisation.com">
+          <input class="field field-focus" type="text" value="you@organisation.com">
+        </div>
+      </div>
+
+      <div class="panel" style="padding: 26px 24px;">
+        <div class="eyebrow">Quantity stepper</div>
+        <div style="display: flex; align-items: center; gap: 16px; margin-top: 22px;">
+          <div style="display: inline-flex; align-items: center; border: 1px solid #1b2641; border-radius: 8px; overflow: hidden;">
+            <span style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #eff1f6;">&minus;</span>
+            <span style="width: 44px; text-align: center; font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;">2</span>
+            <span style="width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #ff6700;">+</span>
+          </div>
+          <span class="mono">44px targets, max 20</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 26px;">
+          <span class="eyebrow">Total</span><span class="hairline"></span>
+          <span style="font-family: Inter, sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.035em; color: #ff6700; font-variant-numeric: tabular-nums;">&#8358;40,000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL STATES -->
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px;">
+      <sc-for list="{{panelStates}}" as="state" hint-placeholder-count="3">
+        <div class="panel bracket {{state.cls}}" style="padding: 26px 24px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;">
+            <span class="ghostnum" style="font-size: 44px;">01</span>
+            <span class="plate">From free</span>
+          </div>
+          <div style="margin-top: 18px; font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -.02em;">Choice panel</div>
+          <div style="margin-top: 8px; font-size: 14px; line-height: 1.5; color: #97a3bd;">{{state.note}}</div>
+          <div class="mono" style="margin-top: 16px;">{{state.label}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- IMPLEMENTATION -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 56px 0 22px 0;">
+      <h2 class="sect">Where this lands in the codebase</h2><span class="hatch"></span>
+    </div>
+    <div class="panel" style="padding: 10px 32px 16px 32px;">
+      <sc-for list="{{mapping}}" as="row" hint-placeholder-count="5">
+        <div style="display: flex; align-items: flex-start; gap: 28px; padding: 18px 0; border-bottom: 1px solid rgba(27,38,65,.75);">
+          <span class="mono" style="width: 300px; flex: none; color: #ffb98a;">{{row.file}}</span>
+          <span style="flex: 1 1 auto; font-size: 14px; line-height: 1.5; color: #b9c2d6;">{{row.change}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      palette: [
+        { name: 'Ground', hex: '#0b1222', token: '--background (dark)' },
+        { name: 'Card', hex: '#121a2b', token: '--card (dark)' },
+        { name: 'Lift', hex: '#182239', token: '--muted (dark)' },
+        { name: 'Line', hex: '#1b2641', token: '--border (dark)' },
+        { name: 'Muted ink', hex: '#7583a3', token: '--muted-foreground' },
+        { name: 'Accent', hex: '#ff6700', token: '--primary' }
+      ],
+
+      typeRamp: [
+        { spec: '88 / 800 / -.042em', family: 'Inter, sans-serif', size: '44px', weight: '800', tracking: '-.042em', sample: 'Have something valuable', use: 'Hero H1' },
+        { spec: '62 / 800 / -.04em', family: 'Inter, sans-serif', size: '34px', weight: '800', tracking: '-.04em', sample: 'What are you trying to achieve?', use: 'Step H1' },
+        { spec: '44 / 800 / -.035em', family: 'Inter, sans-serif', size: '28px', weight: '800', tracking: '-.035em', sample: 'You already have something', use: 'Section H2' },
+        { spec: '21 / 700 / -.02em', family: 'Inter, sans-serif', size: '21px', weight: '700', tracking: '-.02em', sample: 'A relevant audience', use: 'Panel H3' },
+        { spec: '17 / 400 / body', family: 'Bricolage Grotesque, sans-serif', size: '17px', weight: '400', tracking: '0', sample: 'Pick a product and pay online.', use: 'Body' },
+        { spec: '11 / 600 / .18em', family: 'Bricolage Grotesque, sans-serif', size: '11px', weight: '600', tracking: '.18em', sample: 'STEP 01 / OUTCOME', use: 'Eyebrow' }
+      ],
+
+      panelStates: [
+        { cls: '', label: '.panel', note: 'Translucent card over the mesh, 14px blur, inset top highlight.' },
+        { cls: 'panel-hover', label: '.panel:hover', note: 'Accent border, 2px lift, warm shadow bloom.' },
+        { cls: 'panel-on', label: '.panel-on', note: 'Selected: full accent border and an orange wash in the gradient.' }
+      ],
+
+      mapping: [
+        { file: 'app/globals.css', change: 'Add the ornament layer as utilities — .up-ground, .up-hatch, .up-bracket, .up-ghostnum, .up-plate. No token changes: the dark palette already matches.' },
+        { file: 'app/work-with-us/layout.tsx', change: 'Force the dark surface for this route and opt into the brand type pair (font-up-display / font-up-body), rather than inheriting the app theme.' },
+        { file: 'app/work-with-us/ui.tsx', change: 'Step, Choice, ProductCard and QuantityStepper take the panel/bracket treatment. Choice gains the outlined numeral and price plate.' },
+        { file: 'app/work-with-us/page.tsx', change: 'Welcome screen rebuilds as the full-bleed hero, price ladder, asymmetric Why-UP grid and numeral ladder. Column widens from max-w-2xl to the 1120px shell.' },
+        { file: 'app/work-with-us/submit-track.tsx, promote-track.tsx', change: 'Two-column layout: the track on the left, a running order rail on the right, docked to a bottom bar under lg.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

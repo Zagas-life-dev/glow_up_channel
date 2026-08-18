@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const designList = EMAIL_TEMPLATES.map((t) => `"${t.id}" (${t.name}: ${t.description})`).join("; ")
 
     const userPrompt = `
-Generate a marketing email for GlowUp (a platform for youth opportunities, growth, and community). 
+Generate a marketing email for UP (a platform for youth opportunities, growth, and community). 
 
 Current draft (you may improve or replace):
 - Subject: ${subject || "(none)"}

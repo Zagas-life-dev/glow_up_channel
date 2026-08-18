@@ -229,7 +229,7 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
         intro: "To install this app:",
         steps: [
           "Use your browser's menu (e.g. ⋮ or File) and look for the Share or Install option",
-          'Find "Install GlowUp", "Add to Home screen", or "Create shortcut"',
+          'Find "Install UP", "Add to Home screen", or "Create shortcut"',
           "Follow the prompts to add the app",
         ],
       }
@@ -368,7 +368,7 @@ export default function PwaInstallBanner() {
             />
           </div>
           <h2 id="pwa-install-title" className="mt-4 text-xl font-bold text-foreground">
-            Get the GlowUp app
+            Get the UP app
           </h2>
           <p id="pwa-install-desc" className="mt-1 text-sm text-muted-foreground">
             {isIos()

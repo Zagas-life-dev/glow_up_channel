@@ -70,7 +70,7 @@ export function ProviderSidebar({
           <Link href="/" className="relative w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden">
             <Image
               src="/images/Yellow and Black Modern Media Company Logo (14).png"
-              alt="GlowUp"
+              alt="UP"
               fill
               className="object-contain"
             />

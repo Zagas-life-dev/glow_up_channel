@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,9 @@ import ApiClient from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { RiBriefcaseLine, RiCalendarLine, RiFileLine, RiBookOpenLine, RiStarLine, RiFilterLine } from "react-icons/ri"
+import { usePersonalizedRanking } from "@/hooks/use-personalized-ranking"
+import LocationPermissionCard from "@/components/location-permission-card"
+import { useLocale } from "@/lib/i18n/context"
 
 interface RecommendationItem {
   _id: string
@@ -70,6 +73,33 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
   useEffect(() => {
     loadRecommendations()
   }, [isAuthenticated, filters])
+
+  /**
+   * Re-rank the backend's results locally.
+   *
+   * The backend scores on interests, career stage and engagement history; it has
+   * no idea which city this browser is in or which language this reader chose.
+   * `rankForFeed` blends its score back in as one signal among several, so this
+   * sharpens the server's ordering rather than replacing it.
+   */
+  const {
+    rankForFeed,
+    location,
+    personalised,
+    locationPermission,
+    requestPreciseLocation,
+  } = usePersonalizedRanking(userProfile)
+
+  const ranked = useMemo(
+    () =>
+      rankForFeed(recommendations as unknown as Record<string, unknown>[], {
+        minScore: filters.minScore,
+      }) as unknown as RecommendationItem[],
+    [rankForFeed, recommendations, filters.minScore],
+  )
+
+  const { t } = useLocale()
+  const locationLabel = [location.city, location.country].filter(Boolean).join(', ')
 
   const getContentIcon = (contentType: string) => {
     switch (contentType) {
@@ -179,14 +209,29 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
           </div>
 
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Showing {recommendations.length} of {total} recommendations
+            <div className="text-sm text-muted-foreground">
+              Showing {ranked.length} of {total} recommendations
             </div>
             <Button onClick={loadRecommendations} disabled={loading} size="sm">
               <FlaticonIcon name="spinner" className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} aria-hidden />
               Refresh
             </Button>
           </div>
+
+          {/* What the local re-rank is actually using, so the ordering is not a
+              black box while this is being tuned. */}
+          {personalised && (
+            <p className="text-xs text-muted-foreground">
+              {locationLabel
+                ? t('feed.basedOn') + ` — ${locationLabel}`
+                : t('feed.basedOnInterests')}
+            </p>
+          )}
+
+          <LocationPermissionCard
+            permission={locationPermission}
+            onRequest={requestPreciseLocation}
+          />
         </CardContent>
       </Card>
 
@@ -197,14 +242,15 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
             <FlaticonIcon name="spinner" className="h-8 w-8 animate-spin mx-auto mb-4" aria-hidden />
             <p>Loading recommendations...</p>
           </div>
-        ) : recommendations.length === 0 ? (
+        ) : ranked.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
-              <p className="text-gray-500">No recommendations found with current filters.</p>
+              <p className="text-muted-foreground">{t('feed.noResults')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('feed.noResultsHint')}</p>
             </CardContent>
           </Card>
         ) : (
-          recommendations.map((item, index) => (
+          ranked.map((item, index) => (
             <Card key={`${item.contentType}-${item._id}`} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -250,8 +296,8 @@ const UnifiedRecommendations: React.FC<UnifiedRecommendationsProps> = ({ classNa
                 )}
 
                 {item.reasons && item.reasons.length > 0 && (
-                  <div className="text-sm text-gray-500">
-                    <strong>Why recommended:</strong> {item.reasons.join(', ')}
+                  <div className="text-sm text-muted-foreground">
+                    <strong>{t('feed.whyThis')}</strong> {item.reasons.join(' · ')}
                   </div>
                 )}
               </CardContent>

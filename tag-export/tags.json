@@ -1,0 +1,9373 @@
+{
+  "generatedAt": "2026-08-17T12:22:18.225Z",
+  "source": {
+    "database": "glowup_channel",
+    "taxonomyFile": "lib/nlp/taxonomy.ts"
+  },
+  "curatedTaxonomy": {
+    "note": "Controlled vocabulary used by the ranking layer. Multilingual aliases (en/fr/es/pt) are the labelled training signal.",
+    "count": 22,
+    "categories": [
+      "interest",
+      "industry",
+      "format",
+      "support",
+      "audience"
+    ],
+    "tags": [
+      {
+        "id": "jobs-careers",
+        "label": "Jobs & Career Opportunities",
+        "category": "interest",
+        "related": [
+          "remote-digital-skills",
+          "skill-development"
+        ],
+        "aliases": {
+          "en": [
+            "job",
+            "jobs",
+            "career",
+            "careers",
+            "employment",
+            "hiring",
+            "vacancy",
+            "vacancies",
+            "position",
+            "recruitment",
+            "full time",
+            "part time",
+            "graduate role"
+          ],
+          "fr": [
+            "emploi",
+            "emplois",
+            "carriere",
+            "carrieres",
+            "poste",
+            "recrutement",
+            "embauche",
+            "offre d'emploi",
+            "travail",
+            "temps plein",
+            "temps partiel"
+          ],
+          "es": [
+            "empleo",
+            "empleos",
+            "trabajo",
+            "carrera",
+            "carreras",
+            "puesto",
+            "vacante",
+            "vacantes",
+            "contratacion",
+            "reclutamiento",
+            "tiempo completo"
+          ],
+          "pt": [
+            "emprego",
+            "empregos",
+            "trabalho",
+            "carreira",
+            "carreiras",
+            "vaga",
+            "vagas",
+            "recrutamento",
+            "contratacao",
+            "tempo integral"
+          ]
+        }
+      },
+      {
+        "id": "scholarships-grants",
+        "label": "Scholarships & Grants",
+        "category": "interest",
+        "related": [
+          "research-academic",
+          "international-programs"
+        ],
+        "aliases": {
+          "en": [
+            "scholarship",
+            "scholarships",
+            "grant",
+            "grants",
+            "bursary",
+            "bursaries",
+            "funding",
+            "financial aid",
+            "tuition",
+            "stipend",
+            "fully funded"
+          ],
+          "fr": [
+            "bourse",
+            "bourses",
+            "bourse d'etudes",
+            "subvention",
+            "subventions",
+            "financement",
+            "aide financiere",
+            "frais de scolarite",
+            "entierement financee"
+          ],
+          "es": [
+            "beca",
+            "becas",
+            "subvencion",
+            "subvenciones",
+            "financiacion",
+            "ayuda financiera",
+            "matricula",
+            "totalmente financiada"
+          ],
+          "pt": [
+            "bolsa",
+            "bolsas",
+            "bolsa de estudos",
+            "subvencao",
+            "financiamento",
+            "auxilio financeiro",
+            "mensalidade",
+            "totalmente financiada"
+          ]
+        }
+      },
+      {
+        "id": "training-workshops",
+        "label": "Training & Workshops",
+        "category": "interest",
+        "related": [
+          "skill-development",
+          "education-training"
+        ],
+        "aliases": {
+          "en": [
+            "training",
+            "workshop",
+            "workshops",
+            "bootcamp",
+            "course",
+            "courses",
+            "masterclass",
+            "seminar",
+            "certification",
+            "upskilling",
+            "short course"
+          ],
+          "fr": [
+            "formation",
+            "formations",
+            "atelier",
+            "ateliers",
+            "cours",
+            "seminaire",
+            "certification",
+            "perfectionnement",
+            "stage de formation"
+          ],
+          "es": [
+            "formacion",
+            "capacitacion",
+            "taller",
+            "talleres",
+            "curso",
+            "cursos",
+            "seminario",
+            "certificacion",
+            "perfeccionamiento"
+          ],
+          "pt": [
+            "formacao",
+            "capacitacao",
+            "treinamento",
+            "oficina",
+            "curso",
+            "cursos",
+            "seminario",
+            "certificacao",
+            "aperfeicoamento"
+          ]
+        }
+      },
+      {
+        "id": "networking-events",
+        "label": "Networking Events",
+        "category": "interest",
+        "related": [
+          "mentorship"
+        ],
+        "aliases": {
+          "en": [
+            "networking",
+            "meetup",
+            "conference",
+            "summit",
+            "forum",
+            "mixer",
+            "symposium",
+            "convention",
+            "expo"
+          ],
+          "fr": [
+            "reseautage",
+            "rencontre",
+            "conference",
+            "sommet",
+            "forum",
+            "colloque",
+            "salon",
+            "congres"
+          ],
+          "es": [
+            "networking",
+            "encuentro",
+            "conferencia",
+            "cumbre",
+            "foro",
+            "congreso",
+            "simposio",
+            "feria"
+          ],
+          "pt": [
+            "networking",
+            "encontro",
+            "conferencia",
+            "cupula",
+            "forum",
+            "congresso",
+            "simposio",
+            "feira"
+          ]
+        }
+      },
+      {
+        "id": "volunteering",
+        "label": "Volunteering & Community Service",
+        "category": "interest",
+        "related": [
+          "government-public"
+        ],
+        "aliases": {
+          "en": [
+            "volunteer",
+            "volunteering",
+            "community service",
+            "ngo",
+            "nonprofit",
+            "non profit",
+            "charity",
+            "social impact",
+            "humanitarian"
+          ],
+          "fr": [
+            "benevolat",
+            "benevole",
+            "volontariat",
+            "service communautaire",
+            "ong",
+            "association",
+            "impact social",
+            "humanitaire"
+          ],
+          "es": [
+            "voluntariado",
+            "voluntario",
+            "servicio comunitario",
+            "ong",
+            "sin fines de lucro",
+            "impacto social",
+            "humanitario"
+          ],
+          "pt": [
+            "voluntariado",
+            "voluntario",
+            "servico comunitario",
+            "ong",
+            "sem fins lucrativos",
+            "impacto social",
+            "humanitario"
+          ]
+        }
+      },
+      {
+        "id": "entrepreneurship-funding",
+        "label": "Entrepreneurship & Funding",
+        "category": "interest",
+        "related": [
+          "business-finance",
+          "competition"
+        ],
+        "aliases": {
+          "en": [
+            "entrepreneurship",
+            "entrepreneur",
+            "startup",
+            "startups",
+            "founder",
+            "incubator",
+            "accelerator",
+            "venture capital",
+            "seed funding",
+            "pitch",
+            "investment",
+            "small business"
+          ],
+          "fr": [
+            "entrepreneuriat",
+            "entrepreneur",
+            "startup",
+            "fondateur",
+            "incubateur",
+            "accelerateur",
+            "capital risque",
+            "amorcage",
+            "levee de fonds",
+            "investissement",
+            "petite entreprise"
+          ],
+          "es": [
+            "emprendimiento",
+            "emprendedor",
+            "startup",
+            "fundador",
+            "incubadora",
+            "aceleradora",
+            "capital riesgo",
+            "capital semilla",
+            "inversion",
+            "pequena empresa"
+          ],
+          "pt": [
+            "empreendedorismo",
+            "empreendedor",
+            "startup",
+            "fundador",
+            "incubadora",
+            "aceleradora",
+            "capital de risco",
+            "capital semente",
+            "investimento",
+            "pequena empresa"
+          ]
+        }
+      },
+      {
+        "id": "remote-digital-skills",
+        "label": "Remote Work & Digital Skills",
+        "category": "interest",
+        "related": [
+          "technology",
+          "jobs-careers"
+        ],
+        "aliases": {
+          "en": [
+            "remote",
+            "remote work",
+            "work from home",
+            "digital skills",
+            "freelance",
+            "telecommute",
+            "online",
+            "virtual",
+            "hybrid",
+            "distributed team"
+          ],
+          "fr": [
+            "teletravail",
+            "a distance",
+            "travail a distance",
+            "competences numeriques",
+            "freelance",
+            "en ligne",
+            "virtuel",
+            "hybride"
+          ],
+          "es": [
+            "remoto",
+            "teletrabajo",
+            "trabajo remoto",
+            "habilidades digitales",
+            "freelance",
+            "en linea",
+            "virtual",
+            "hibrido"
+          ],
+          "pt": [
+            "remoto",
+            "teletrabalho",
+            "trabalho remoto",
+            "habilidades digitais",
+            "freelancer",
+            "online",
+            "virtual",
+            "hibrido"
+          ]
+        }
+      },
+      {
+        "id": "research-academic",
+        "label": "Research & Academic Opportunities",
+        "category": "interest",
+        "related": [
+          "scholarships-grants",
+          "education-training",
+          "fellowship"
+        ],
+        "aliases": {
+          "en": [
+            "research",
+            "academic",
+            "phd",
+            "doctorate",
+            "postdoc",
+            "thesis",
+            "dissertation",
+            "laboratory",
+            "publication",
+            "call for papers"
+          ],
+          "fr": [
+            "recherche",
+            "academique",
+            "doctorat",
+            "these",
+            "postdoctoral",
+            "laboratoire",
+            "publication",
+            "appel a communications"
+          ],
+          "es": [
+            "investigacion",
+            "academico",
+            "doctorado",
+            "tesis",
+            "posdoctoral",
+            "laboratorio",
+            "publicacion",
+            "convocatoria de articulos"
+          ],
+          "pt": [
+            "pesquisa",
+            "academico",
+            "doutorado",
+            "tese",
+            "pos doutorado",
+            "laboratorio",
+            "publicacao",
+            "chamada de trabalhos"
+          ]
+        }
+      },
+      {
+        "id": "international-programs",
+        "label": "International Exchange Programs",
+        "category": "interest",
+        "related": [
+          "scholarships-grants"
+        ],
+        "aliases": {
+          "en": [
+            "exchange",
+            "international",
+            "abroad",
+            "study abroad",
+            "mobility",
+            "visa",
+            "erasmus",
+            "global program",
+            "overseas"
+          ],
+          "fr": [
+            "echange",
+            "international",
+            "a l'etranger",
+            "etudes a l'etranger",
+            "mobilite",
+            "visa",
+            "erasmus",
+            "programme mondial"
+          ],
+          "es": [
+            "intercambio",
+            "internacional",
+            "en el extranjero",
+            "estudiar en el extranjero",
+            "movilidad",
+            "visa",
+            "erasmus",
+            "programa global"
+          ],
+          "pt": [
+            "intercambio",
+            "internacional",
+            "no exterior",
+            "estudar no exterior",
+            "mobilidade",
+            "visto",
+            "erasmus",
+            "programa global"
+          ]
+        }
+      },
+      {
+        "id": "technology",
+        "label": "Technology",
+        "category": "industry",
+        "related": [
+          "remote-digital-skills"
+        ],
+        "aliases": {
+          "en": [
+            "technology",
+            "tech",
+            "software",
+            "engineering",
+            "developer",
+            "programming",
+            "data science",
+            "artificial intelligence",
+            "machine learning",
+            "cybersecurity",
+            "cloud",
+            "web development"
+          ],
+          "fr": [
+            "technologie",
+            "informatique",
+            "logiciel",
+            "ingenierie",
+            "developpeur",
+            "programmation",
+            "science des donnees",
+            "intelligence artificielle",
+            "apprentissage automatique",
+            "cybersecurite",
+            "infonuagique"
+          ],
+          "es": [
+            "tecnologia",
+            "informatica",
+            "software",
+            "ingenieria",
+            "desarrollador",
+            "programacion",
+            "ciencia de datos",
+            "inteligencia artificial",
+            "aprendizaje automatico",
+            "ciberseguridad",
+            "nube"
+          ],
+          "pt": [
+            "tecnologia",
+            "informatica",
+            "software",
+            "engenharia",
+            "desenvolvedor",
+            "programacao",
+            "ciencia de dados",
+            "inteligencia artificial",
+            "aprendizado de maquina",
+            "ciberseguranca",
+            "nuvem"
+          ]
+        }
+      },
+      {
+        "id": "creative-media",
+        "label": "Creative Arts & Media",
+        "category": "industry",
+        "aliases": {
+          "en": [
+            "creative",
+            "arts",
+            "media",
+            "design",
+            "film",
+            "music",
+            "photography",
+            "writing",
+            "journalism",
+            "content creation",
+            "fashion",
+            "animation"
+          ],
+          "fr": [
+            "creatif",
+            "arts",
+            "medias",
+            "design",
+            "cinema",
+            "musique",
+            "photographie",
+            "ecriture",
+            "journalisme",
+            "creation de contenu",
+            "mode",
+            "animation"
+          ],
+          "es": [
+            "creativo",
+            "artes",
+            "medios",
+            "diseno",
+            "cine",
+            "musica",
+            "fotografia",
+            "escritura",
+            "periodismo",
+            "creacion de contenido",
+            "moda",
+            "animacion"
+          ],
+          "pt": [
+            "criativo",
+            "artes",
+            "midia",
+            "design",
+            "cinema",
+            "musica",
+            "fotografia",
+            "escrita",
+            "jornalismo",
+            "criacao de conteudo",
+            "moda",
+            "animacao"
+          ]
+        }
+      },
+      {
+        "id": "business-finance",
+        "label": "Business & Finance",
+        "category": "industry",
+        "related": [
+          "entrepreneurship-funding"
+        ],
+        "aliases": {
+          "en": [
+            "business",
+            "finance",
+            "banking",
+            "accounting",
+            "marketing",
+            "sales",
+            "consulting",
+            "economics",
+            "management",
+            "fintech",
+            "supply chain"
+          ],
+          "fr": [
+            "affaires",
+            "finance",
+            "banque",
+            "comptabilite",
+            "marketing",
+            "ventes",
+            "conseil",
+            "economie",
+            "gestion",
+            "chaine d'approvisionnement"
+          ],
+          "es": [
+            "negocios",
+            "finanzas",
+            "banca",
+            "contabilidad",
+            "marketing",
+            "ventas",
+            "consultoria",
+            "economia",
+            "gestion",
+            "cadena de suministro"
+          ],
+          "pt": [
+            "negocios",
+            "financas",
+            "bancario",
+            "contabilidade",
+            "marketing",
+            "vendas",
+            "consultoria",
+            "economia",
+            "gestao",
+            "cadeia de suprimentos"
+          ]
+        }
+      },
+      {
+        "id": "health-sciences",
+        "label": "Healthcare & Sciences",
+        "category": "industry",
+        "aliases": {
+          "en": [
+            "health",
+            "healthcare",
+            "medical",
+            "medicine",
+            "nursing",
+            "public health",
+            "biology",
+            "chemistry",
+            "pharmacy",
+            "science",
+            "biotechnology"
+          ],
+          "fr": [
+            "sante",
+            "medical",
+            "medecine",
+            "soins infirmiers",
+            "sante publique",
+            "biologie",
+            "chimie",
+            "pharmacie",
+            "science",
+            "biotechnologie"
+          ],
+          "es": [
+            "salud",
+            "sanitario",
+            "medico",
+            "medicina",
+            "enfermeria",
+            "salud publica",
+            "biologia",
+            "quimica",
+            "farmacia",
+            "ciencia",
+            "biotecnologia"
+          ],
+          "pt": [
+            "saude",
+            "medico",
+            "medicina",
+            "enfermagem",
+            "saude publica",
+            "biologia",
+            "quimica",
+            "farmacia",
+            "ciencia",
+            "biotecnologia"
+          ]
+        }
+      },
+      {
+        "id": "education-training",
+        "label": "Education & Training",
+        "category": "industry",
+        "related": [
+          "training-workshops"
+        ],
+        "aliases": {
+          "en": [
+            "education",
+            "teaching",
+            "teacher",
+            "school",
+            "university",
+            "curriculum",
+            "pedagogy",
+            "e learning",
+            "tutor",
+            "lecturer"
+          ],
+          "fr": [
+            "education",
+            "enseignement",
+            "enseignant",
+            "ecole",
+            "universite",
+            "programme scolaire",
+            "pedagogie",
+            "tuteur",
+            "professeur"
+          ],
+          "es": [
+            "educacion",
+            "ensenanza",
+            "docente",
+            "escuela",
+            "universidad",
+            "curriculo",
+            "pedagogia",
+            "tutor",
+            "profesor"
+          ],
+          "pt": [
+            "educacao",
+            "ensino",
+            "professor",
+            "escola",
+            "universidade",
+            "curriculo",
+            "pedagogia",
+            "tutor",
+            "docente"
+          ]
+        }
+      },
+      {
+        "id": "government-public",
+        "label": "Government & Public Service",
+        "category": "industry",
+        "related": [
+          "volunteering"
+        ],
+        "aliases": {
+          "en": [
+            "government",
+            "public service",
+            "public policy",
+            "civic",
+            "governance",
+            "diplomacy",
+            "public sector",
+            "administration",
+            "united nations"
+          ],
+          "fr": [
+            "gouvernement",
+            "service public",
+            "politique publique",
+            "civique",
+            "gouvernance",
+            "diplomatie",
+            "secteur public",
+            "administration",
+            "nations unies"
+          ],
+          "es": [
+            "gobierno",
+            "servicio publico",
+            "politica publica",
+            "civico",
+            "gobernanza",
+            "diplomacia",
+            "sector publico",
+            "administracion",
+            "naciones unidas"
+          ],
+          "pt": [
+            "governo",
+            "servico publico",
+            "politica publica",
+            "civico",
+            "governanca",
+            "diplomacia",
+            "setor publico",
+            "administracao",
+            "nacoes unidas"
+          ]
+        }
+      },
+      {
+        "id": "agriculture-environment",
+        "label": "Agriculture & Environment",
+        "category": "industry",
+        "aliases": {
+          "en": [
+            "agriculture",
+            "farming",
+            "agribusiness",
+            "environment",
+            "climate",
+            "sustainability",
+            "renewable energy",
+            "conservation",
+            "green economy"
+          ],
+          "fr": [
+            "agriculture",
+            "agroalimentaire",
+            "environnement",
+            "climat",
+            "durabilite",
+            "energie renouvelable",
+            "conservation",
+            "economie verte"
+          ],
+          "es": [
+            "agricultura",
+            "agronegocio",
+            "medio ambiente",
+            "clima",
+            "sostenibilidad",
+            "energia renovable",
+            "conservacion",
+            "economia verde"
+          ],
+          "pt": [
+            "agricultura",
+            "agronegocio",
+            "meio ambiente",
+            "clima",
+            "sustentabilidade",
+            "energia renovavel",
+            "conservacao",
+            "economia verde"
+          ]
+        }
+      },
+      {
+        "id": "internship",
+        "label": "Internship",
+        "category": "format",
+        "related": [
+          "jobs-careers",
+          "training-workshops"
+        ],
+        "aliases": {
+          "en": [
+            "internship",
+            "intern",
+            "trainee",
+            "placement",
+            "apprenticeship",
+            "graduate scheme"
+          ],
+          "fr": [
+            "stage",
+            "stagiaire",
+            "alternance",
+            "apprentissage",
+            "contrat de professionnalisation"
+          ],
+          "es": [
+            "pasantia",
+            "practicas",
+            "becario",
+            "aprendizaje",
+            "practicas profesionales"
+          ],
+          "pt": [
+            "estagio",
+            "estagiario",
+            "aprendizagem",
+            "programa de trainee"
+          ]
+        }
+      },
+      {
+        "id": "fellowship",
+        "label": "Fellowship",
+        "category": "format",
+        "related": [
+          "research-academic",
+          "scholarships-grants"
+        ],
+        "aliases": {
+          "en": [
+            "fellowship",
+            "fellow",
+            "residency",
+            "leadership program"
+          ],
+          "fr": [
+            "bourse de recherche",
+            "boursier",
+            "residence",
+            "programme de leadership"
+          ],
+          "es": [
+            "beca de investigacion",
+            "residencia",
+            "programa de liderazgo"
+          ],
+          "pt": [
+            "bolsa de pesquisa",
+            "residencia",
+            "programa de lideranca"
+          ]
+        }
+      },
+      {
+        "id": "competition",
+        "label": "Competition",
+        "category": "format",
+        "related": [
+          "entrepreneurship-funding"
+        ],
+        "aliases": {
+          "en": [
+            "competition",
+            "contest",
+            "challenge",
+            "hackathon",
+            "award",
+            "prize",
+            "pitch competition",
+            "call for applications"
+          ],
+          "fr": [
+            "concours",
+            "competition",
+            "defi",
+            "hackathon",
+            "prix",
+            "appel a candidatures"
+          ],
+          "es": [
+            "competencia",
+            "concurso",
+            "desafio",
+            "hackathon",
+            "premio",
+            "convocatoria"
+          ],
+          "pt": [
+            "competicao",
+            "concurso",
+            "desafio",
+            "hackathon",
+            "premio",
+            "chamada de inscricoes"
+          ]
+        }
+      },
+      {
+        "id": "mentorship",
+        "label": "Mentorship & Guidance",
+        "category": "support",
+        "related": [
+          "networking-events",
+          "skill-development"
+        ],
+        "aliases": {
+          "en": [
+            "mentorship",
+            "mentor",
+            "coaching",
+            "guidance",
+            "advisor",
+            "career advice"
+          ],
+          "fr": [
+            "mentorat",
+            "mentor",
+            "coaching",
+            "accompagnement",
+            "conseiller",
+            "orientation professionnelle"
+          ],
+          "es": [
+            "mentoria",
+            "mentor",
+            "coaching",
+            "orientacion",
+            "asesor",
+            "orientacion profesional"
+          ],
+          "pt": [
+            "mentoria",
+            "mentor",
+            "coaching",
+            "orientacao",
+            "conselheiro",
+            "orientacao profissional"
+          ]
+        }
+      },
+      {
+        "id": "skill-development",
+        "label": "Skill Development",
+        "category": "support",
+        "related": [
+          "training-workshops"
+        ],
+        "aliases": {
+          "en": [
+            "skill",
+            "skills",
+            "upskill",
+            "professional development",
+            "capacity building",
+            "leadership",
+            "soft skills"
+          ],
+          "fr": [
+            "competence",
+            "competences",
+            "developpement professionnel",
+            "renforcement des capacites",
+            "leadership",
+            "competences douces"
+          ],
+          "es": [
+            "habilidad",
+            "habilidades",
+            "desarrollo profesional",
+            "fortalecimiento de capacidades",
+            "liderazgo",
+            "habilidades blandas"
+          ],
+          "pt": [
+            "habilidade",
+            "habilidades",
+            "desenvolvimento profissional",
+            "capacitacao profissional",
+            "lideranca",
+            "habilidades interpessoais"
+          ]
+        }
+      },
+      {
+        "id": "youth-women-inclusion",
+        "label": "Youth, Women & Inclusion",
+        "category": "audience",
+        "aliases": {
+          "en": [
+            "youth",
+            "young people",
+            "women",
+            "girls",
+            "gender",
+            "inclusion",
+            "diversity",
+            "underrepresented",
+            "disability"
+          ],
+          "fr": [
+            "jeunesse",
+            "jeunes",
+            "femmes",
+            "filles",
+            "genre",
+            "inclusion",
+            "diversite",
+            "sous represente",
+            "handicap"
+          ],
+          "es": [
+            "juventud",
+            "jovenes",
+            "mujeres",
+            "ninas",
+            "genero",
+            "inclusion",
+            "diversidad",
+            "subrepresentado",
+            "discapacidad"
+          ],
+          "pt": [
+            "juventude",
+            "jovens",
+            "mulheres",
+            "meninas",
+            "genero",
+            "inclusao",
+            "diversidade",
+            "sub representado",
+            "deficiencia"
+          ]
+        }
+      }
+    ]
+  },
+  "contentTags": {
+    "note": "Free-text tags authored on content documents.",
+    "distinct": 117,
+    "all": [
+      [
+        "program",
+        72
+      ],
+      [
+        "general",
+        67
+      ],
+      [
+        "conference",
+        54
+      ],
+      [
+        "bootcamps",
+        48
+      ],
+      [
+        "training",
+        48
+      ],
+      [
+        "remote",
+        43
+      ],
+      [
+        "full-time",
+        39
+      ],
+      [
+        "internship",
+        27
+      ],
+      [
+        "grants",
+        26
+      ],
+      [
+        "workshop",
+        19
+      ],
+      [
+        "contract",
+        17
+      ],
+      [
+        "senior",
+        16
+      ],
+      [
+        "internships",
+        15
+      ],
+      [
+        "other",
+        15
+      ],
+      [
+        "scholarship",
+        15
+      ],
+      [
+        "exhibition",
+        14
+      ],
+      [
+        "fellowship",
+        12
+      ],
+      [
+        "grant",
+        11
+      ],
+      [
+        "business",
+        9
+      ],
+      [
+        "engineering",
+        9
+      ],
+      [
+        "junior",
+        8
+      ],
+      [
+        "management",
+        8
+      ],
+      [
+        "permanent",
+        8
+      ],
+      [
+        "award",
+        7
+      ],
+      [
+        "networking",
+        7
+      ],
+      [
+        "seminar",
+        7
+      ],
+      [
+        "mid-level",
+        6
+      ],
+      [
+        "technology",
+        6
+      ],
+      [
+        "administration",
+        5
+      ],
+      [
+        "scholarships",
+        5
+      ],
+      [
+        "call-for-applications",
+        4
+      ],
+      [
+        "competition",
+        4
+      ],
+      [
+        "fellowships",
+        4
+      ],
+      [
+        "innovation",
+        4
+      ],
+      [
+        "certification",
+        3
+      ],
+      [
+        "customer-service",
+        3
+      ],
+      [
+        "expo",
+        3
+      ],
+      [
+        "it",
+        3
+      ],
+      [
+        "jobs",
+        3
+      ],
+      [
+        "tech",
+        3
+      ],
+      [
+        "AI",
+        2
+      ],
+      [
+        "contests",
+        2
+      ],
+      [
+        "education",
+        2
+      ],
+      [
+        "entertainment",
+        2
+      ],
+      [
+        "entry-level",
+        2
+      ],
+      [
+        "executive",
+        2
+      ],
+      [
+        "executives",
+        2
+      ],
+      [
+        "finance",
+        2
+      ],
+      [
+        "future",
+        2
+      ],
+      [
+        "ghana",
+        2
+      ],
+      [
+        "graphics-design",
+        2
+      ],
+      [
+        "Lagos",
+        2
+      ],
+      [
+        "leadership",
+        2
+      ],
+      [
+        "nigeria",
+        2
+      ],
+      [
+        "part-time",
+        2
+      ],
+      [
+        "party",
+        2
+      ],
+      [
+        "sales",
+        2
+      ],
+      [
+        "social-media",
+        2
+      ],
+      [
+        "Technology",
+        2
+      ],
+      [
+        "ui/ux-design",
+        2
+      ],
+      [
+        "algeria",
+        1
+      ],
+      [
+        "Art",
+        1
+      ],
+      [
+        "Artofpitching",
+        1
+      ],
+      [
+        "Blockchain",
+        1
+      ],
+      [
+        "career",
+        1
+      ],
+      [
+        "Christianity",
+        1
+      ],
+      [
+        "coding",
+        1
+      ],
+      [
+        "Creatives",
+        1
+      ],
+      [
+        "Culture",
+        1
+      ],
+      [
+        "data-analysis",
+        1
+      ],
+      [
+        "digital",
+        1
+      ],
+      [
+        "digital media",
+        1
+      ],
+      [
+        "Digital Transformation",
+        1
+      ],
+      [
+        "digitalconference",
+        1
+      ],
+      [
+        "egypt",
+        1
+      ],
+      [
+        "energy",
+        1
+      ],
+      [
+        "entrepreneurship",
+        1
+      ],
+      [
+        "Event",
+        1
+      ],
+      [
+        "festival",
+        1
+      ],
+      [
+        "Finance",
+        1
+      ],
+      [
+        "Founders",
+        1
+      ],
+      [
+        "freelancers",
+        1
+      ],
+      [
+        "full-stack-development",
+        1
+      ],
+      [
+        "gaming",
+        1
+      ],
+      [
+        "graphic_design",
+        1
+      ],
+      [
+        "investment",
+        1
+      ],
+      [
+        "lagos",
+        1
+      ],
+      [
+        "Leadership",
+        1
+      ],
+      [
+        "learning",
+        1
+      ],
+      [
+        "Management",
+        1
+      ],
+      [
+        "marketers",
+        1
+      ],
+      [
+        "Networking",
+        1
+      ],
+      [
+        "Nigeria",
+        1
+      ],
+      [
+        "Nigerian Event Hostess",
+        1
+      ],
+      [
+        "OpenGov",
+        1
+      ],
+      [
+        "parenting",
+        1
+      ],
+      [
+        "parenting conference",
+        1
+      ],
+      [
+        "private capital",
+        1
+      ],
+      [
+        "product-design",
+        1
+      ],
+      [
+        "Salespeople",
+        1
+      ],
+      [
+        "shoe",
+        1
+      ],
+      [
+        "Showcase",
+        1
+      ],
+      [
+        "skillbuilding",
+        1
+      ],
+      [
+        "social",
+        1
+      ],
+      [
+        "startup",
+        1
+      ],
+      [
+        "startups",
+        1
+      ],
+      [
+        "strategy",
+        1
+      ],
+      [
+        "study abroad",
+        1
+      ],
+      [
+        "summit",
+        1
+      ],
+      [
+        "talk",
+        1
+      ],
+      [
+        "Testimony of Faith",
+        1
+      ],
+      [
+        "Theology",
+        1
+      ],
+      [
+        "theultimatepitchdeck",
+        1
+      ],
+      [
+        "wealth",
+        1
+      ],
+      [
+        "womenempowerment",
+        1
+      ],
+      [
+        "womenintech",
+        1
+      ],
+      [
+        "Workshop",
+        1
+      ]
+    ],
+    "byType": {
+      "opportunities": [
+        [
+          "program",
+          72
+        ],
+        [
+          "bootcamps",
+          48
+        ],
+        [
+          "training",
+          46
+        ],
+        [
+          "grants",
+          26
+        ],
+        [
+          "internship",
+          18
+        ],
+        [
+          "scholarship",
+          15
+        ],
+        [
+          "fellowship",
+          12
+        ],
+        [
+          "grant",
+          11
+        ],
+        [
+          "award",
+          7
+        ],
+        [
+          "internships",
+          6
+        ],
+        [
+          "workshop",
+          6
+        ],
+        [
+          "scholarships",
+          5
+        ],
+        [
+          "call-for-applications",
+          4
+        ],
+        [
+          "competition",
+          4
+        ],
+        [
+          "fellowships",
+          4
+        ],
+        [
+          "conference",
+          3
+        ],
+        [
+          "contests",
+          2
+        ],
+        [
+          "career",
+          1
+        ],
+        [
+          "egypt",
+          1
+        ],
+        [
+          "ghana",
+          1
+        ],
+        [
+          "skillbuilding",
+          1
+        ],
+        [
+          "womenempowerment",
+          1
+        ],
+        [
+          "womenintech",
+          1
+        ]
+      ],
+      "jobs": [
+        [
+          "general",
+          67
+        ],
+        [
+          "remote",
+          43
+        ],
+        [
+          "full-time",
+          39
+        ],
+        [
+          "contract",
+          17
+        ],
+        [
+          "senior",
+          16
+        ],
+        [
+          "engineering",
+          9
+        ],
+        [
+          "internship",
+          9
+        ],
+        [
+          "internships",
+          9
+        ],
+        [
+          "junior",
+          8
+        ],
+        [
+          "permanent",
+          8
+        ],
+        [
+          "management",
+          6
+        ],
+        [
+          "mid-level",
+          6
+        ],
+        [
+          "administration",
+          5
+        ],
+        [
+          "customer-service",
+          3
+        ],
+        [
+          "jobs",
+          3
+        ],
+        [
+          "entry-level",
+          2
+        ],
+        [
+          "graphics-design",
+          2
+        ],
+        [
+          "part-time",
+          2
+        ],
+        [
+          "social-media",
+          2
+        ],
+        [
+          "ui/ux-design",
+          2
+        ],
+        [
+          "algeria",
+          1
+        ],
+        [
+          "data-analysis",
+          1
+        ],
+        [
+          "finance",
+          1
+        ],
+        [
+          "full-stack-development",
+          1
+        ],
+        [
+          "ghana",
+          1
+        ],
+        [
+          "product-design",
+          1
+        ]
+      ],
+      "events": [
+        [
+          "conference",
+          51
+        ],
+        [
+          "other",
+          15
+        ],
+        [
+          "exhibition",
+          14
+        ],
+        [
+          "workshop",
+          13
+        ],
+        [
+          "business",
+          9
+        ],
+        [
+          "networking",
+          7
+        ],
+        [
+          "seminar",
+          7
+        ],
+        [
+          "technology",
+          6
+        ],
+        [
+          "innovation",
+          4
+        ],
+        [
+          "expo",
+          3
+        ],
+        [
+          "it",
+          3
+        ],
+        [
+          "tech",
+          3
+        ],
+        [
+          "entertainment",
+          2
+        ],
+        [
+          "future",
+          2
+        ],
+        [
+          "Lagos",
+          2
+        ],
+        [
+          "leadership",
+          2
+        ],
+        [
+          "nigeria",
+          2
+        ],
+        [
+          "party",
+          2
+        ],
+        [
+          "sales",
+          2
+        ],
+        [
+          "Technology",
+          2
+        ],
+        [
+          "training",
+          2
+        ],
+        [
+          "AI",
+          1
+        ],
+        [
+          "Art",
+          1
+        ],
+        [
+          "Blockchain",
+          1
+        ],
+        [
+          "Christianity",
+          1
+        ],
+        [
+          "coding",
+          1
+        ],
+        [
+          "Culture",
+          1
+        ],
+        [
+          "digital media",
+          1
+        ],
+        [
+          "Digital Transformation",
+          1
+        ],
+        [
+          "digitalconference",
+          1
+        ],
+        [
+          "education",
+          1
+        ],
+        [
+          "energy",
+          1
+        ],
+        [
+          "Event",
+          1
+        ],
+        [
+          "festival",
+          1
+        ],
+        [
+          "gaming",
+          1
+        ],
+        [
+          "graphic_design",
+          1
+        ],
+        [
+          "investment",
+          1
+        ],
+        [
+          "lagos",
+          1
+        ],
+        [
+          "Leadership",
+          1
+        ],
+        [
+          "learning",
+          1
+        ],
+        [
+          "Networking",
+          1
+        ],
+        [
+          "Nigeria",
+          1
+        ],
+        [
+          "Nigerian Event Hostess",
+          1
+        ],
+        [
+          "OpenGov",
+          1
+        ],
+        [
+          "parenting",
+          1
+        ],
+        [
+          "parenting conference",
+          1
+        ],
+        [
+          "private capital",
+          1
+        ],
+        [
+          "shoe",
+          1
+        ],
+        [
+          "Showcase",
+          1
+        ],
+        [
+          "social",
+          1
+        ],
+        [
+          "startup",
+          1
+        ],
+        [
+          "startups",
+          1
+        ],
+        [
+          "study abroad",
+          1
+        ],
+        [
+          "summit",
+          1
+        ],
+        [
+          "talk",
+          1
+        ],
+        [
+          "Testimony of Faith",
+          1
+        ],
+        [
+          "Theology",
+          1
+        ],
+        [
+          "wealth",
+          1
+        ],
+        [
+          "Workshop",
+          1
+        ]
+      ],
+      "resources": [
+        [
+          "certification",
+          3
+        ],
+        [
+          "executive",
+          2
+        ],
+        [
+          "executives",
+          2
+        ],
+        [
+          "management",
+          2
+        ],
+        [
+          "AI",
+          1
+        ],
+        [
+          "Artofpitching",
+          1
+        ],
+        [
+          "Creatives",
+          1
+        ],
+        [
+          "digital",
+          1
+        ],
+        [
+          "education",
+          1
+        ],
+        [
+          "entrepreneurship",
+          1
+        ],
+        [
+          "finance",
+          1
+        ],
+        [
+          "Finance",
+          1
+        ],
+        [
+          "Founders",
+          1
+        ],
+        [
+          "freelancers",
+          1
+        ],
+        [
+          "Management",
+          1
+        ],
+        [
+          "marketers",
+          1
+        ],
+        [
+          "Salespeople",
+          1
+        ],
+        [
+          "strategy",
+          1
+        ],
+        [
+          "theultimatepitchdeck",
+          1
+        ]
+      ]
+    }
+  },
+  "contentFacets": {
+    "category": [
+      [
+        "bootcamps",
+        48
+      ],
+      [
+        "course",
+        30
+      ],
+      [
+        "grants",
+        26
+      ],
+      [
+        "internships",
+        6
+      ],
+      [
+        "Course",
+        5
+      ],
+      [
+        "scholarships",
+        5
+      ],
+      [
+        "Tool",
+        5
+      ],
+      [
+        "call-for-applications",
+        4
+      ],
+      [
+        "fellowships",
+        4
+      ],
+      [
+        "contests",
+        2
+      ],
+      [
+        "E-book",
+        2
+      ],
+      [
+        "article",
+        1
+      ],
+      [
+        "egypt",
+        1
+      ],
+      [
+        "ghana",
+        1
+      ],
+      [
+        "grant",
+        1
+      ],
+      [
+        "Guide",
+        1
+      ],
+      [
+        "other",
+        1
+      ],
+      [
+        "scholarship",
+        1
+      ],
+      [
+        "Template",
+        1
+      ],
+      [
+        "Tutorial",
+        1
+      ]
+    ],
+    "industrySectors": [
+      [
+        "Technology",
+        228
+      ],
+      [
+        "Arts",
+        114
+      ],
+      [
+        "Media",
+        100
+      ],
+      [
+        "Education",
+        96
+      ],
+      [
+        "Finance",
+        92
+      ],
+      [
+        "Energy",
+        65
+      ],
+      [
+        "Business",
+        64
+      ],
+      [
+        "Healthcare",
+        37
+      ],
+      [
+        "media",
+        11
+      ],
+      [
+        "Agriculture",
+        10
+      ],
+      [
+        "tech",
+        10
+      ],
+      [
+        "arts",
+        6
+      ],
+      [
+        "energy",
+        3
+      ],
+      [
+        "government",
+        2
+      ],
+      [
+        "commerce",
+        1
+      ],
+      [
+        "finance",
+        1
+      ]
+    ],
+    "targetAudience": [
+      [
+        "Professionals",
+        127
+      ],
+      [
+        "Students",
+        98
+      ],
+      [
+        "Youth",
+        70
+      ],
+      [
+        "Entrepreneurs",
+        48
+      ],
+      [
+        "Researchers",
+        40
+      ],
+      [
+        "Women",
+        18
+      ],
+      [
+        "executives",
+        5
+      ],
+      [
+        "entrepreneurs",
+        4
+      ],
+      [
+        "professionals",
+        3
+      ],
+      [
+        "creatives",
+        1
+      ],
+      [
+        "Developers",
+        1
+      ],
+      [
+        "investors",
+        1
+      ],
+      [
+        "juniors",
+        1
+      ]
+    ]
+  },
+  "hashtagRegistry": {
+    "note": "User-generated hashtags and skills; usageCount/skillUsageCount are real frequency signal.",
+    "count": 159,
+    "tags": [
+      {
+        "name": "communication",
+        "displayName": "Communication",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 404,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "teammanagement",
+        "displayName": "Team management",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 385,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "problemsolver",
+        "displayName": "Problem Solver",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 197,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "theonlywayisup",
+        "displayName": "theonlywayisup",
+        "type": "hashtag",
+        "usageCount": 167,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "glowup",
+        "displayName": "glowup",
+        "type": "hashtag",
+        "usageCount": 125,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "problemsolving",
+        "displayName": "Problem Solving",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 94,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "dataentry",
+        "displayName": "Data Entry",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 77,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "contentcreation",
+        "displayName": "content creation",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 75,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "microsoftexcel",
+        "displayName": "Microsoft excel",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 72,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "calendarmanagement",
+        "displayName": "calendar management",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 69,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "emailoptimization",
+        "displayName": "email optimization",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 65,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "financialanalyst",
+        "displayName": "Financial analyst",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 61,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "leadgeneration",
+        "displayName": "Lead generation",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 55,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "videoeditor",
+        "displayName": "Video editor",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 49,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "projectmanagement",
+        "displayName": "Project Management",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 44,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "socialmediadesign",
+        "displayName": "Social media Design",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 44,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "doinghardthing",
+        "displayName": "doinghardthing",
+        "type": "hashtag",
+        "usageCount": 42,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "videographer",
+        "displayName": "Videographer",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 42,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "storytelling",
+        "displayName": "Story telling",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 40,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "cheatcode",
+        "displayName": "cheatcode",
+        "type": "hashtag",
+        "usageCount": 38,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "learntocode",
+        "displayName": "learntocode",
+        "type": "hashtag",
+        "usageCount": 38,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "adaptability",
+        "displayName": "Adaptability",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 38,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "leadership",
+        "displayName": "Leadership",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 37,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "capcut",
+        "displayName": "CapCut",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 33,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "canva",
+        "displayName": "canva",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 33,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "webdev",
+        "displayName": "webdev",
+        "type": "both",
+        "usageCount": 23,
+        "skillUsageCount": 8,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "softwareengineering",
+        "displayName": "softwareengineering",
+        "type": "both",
+        "usageCount": 21,
+        "skillUsageCount": 7,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "programming",
+        "displayName": "programming",
+        "type": "both",
+        "usageCount": 21,
+        "skillUsageCount": 7,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "contentwriting",
+        "displayName": "Content Writing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 26,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "goggledoc",
+        "displayName": "Goggle doc",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 26,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "lockedin",
+        "displayName": "lockedin",
+        "type": "hashtag",
+        "usageCount": 24,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "skillbuilding",
+        "displayName": "skillbuilding",
+        "type": "both",
+        "usageCount": 21,
+        "skillUsageCount": 3,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "photoediting",
+        "displayName": "photo editing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 24,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "communicationmanager",
+        "displayName": "Communication manager",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 23,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "coding",
+        "displayName": "coding",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "100daysofcode",
+        "displayName": "100daysofcode",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "tech2026",
+        "displayName": "tech2026",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "nextlevel",
+        "displayName": "nextlevel",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "activeincome",
+        "displayName": "activeincome",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "therighttimeisnow",
+        "displayName": "therighttimeisnow",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "careerstrategy",
+        "displayName": "careerstrategy",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "quantumleap",
+        "displayName": "quantumleap",
+        "type": "hashtag",
+        "usageCount": 21,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "connectmarketing",
+        "displayName": "Connect marketing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 21,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "trello",
+        "displayName": "trello",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 21,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "leadership&coordination",
+        "displayName": "Leadership&Coordination",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 21,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "marketing",
+        "displayName": "Marketing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 20,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "videoediting",
+        "displayName": "Video Editing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 18,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "photography",
+        "displayName": "Photography",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 18,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "nileonline",
+        "displayName": "nileonline",
+        "type": "hashtag",
+        "usageCount": 17,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "teamwork",
+        "displayName": "Teamwork",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 17,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "growthengine",
+        "displayName": "growthengine",
+        "type": "hashtag",
+        "usageCount": 16,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "research",
+        "displayName": "Research",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 16,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "activeincomegirlies",
+        "displayName": "activeincomegirlies",
+        "type": "hashtag",
+        "usageCount": 16,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "accessforafricans",
+        "displayName": "accessforafricans",
+        "type": "both",
+        "usageCount": 15,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "videography",
+        "displayName": "Videography",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 16,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "internationalwomensmonth",
+        "displayName": "internationalwomensmonth",
+        "type": "hashtag",
+        "usageCount": 15,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "eventsinnmarch",
+        "displayName": "eventsinnmarch",
+        "type": "hashtag",
+        "usageCount": 15,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "womenempowerment",
+        "displayName": "womenempowerment",
+        "type": "hashtag",
+        "usageCount": 15,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "womenevents",
+        "displayName": "womenevents",
+        "type": "hashtag",
+        "usageCount": 15,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "nutritionalscience",
+        "displayName": "Nutritional Science",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 14,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "writing",
+        "displayName": "writing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 13,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "up",
+        "displayName": "up",
+        "type": "hashtag",
+        "usageCount": 11,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "welcome",
+        "displayName": "welcome",
+        "type": "hashtag",
+        "usageCount": 11,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "productivity",
+        "displayName": "productivity",
+        "type": "both",
+        "usageCount": 8,
+        "skillUsageCount": 3,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "salesclosing",
+        "displayName": "Sales closing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 11,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "innovation",
+        "displayName": "innovation",
+        "type": "both",
+        "usageCount": 9,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "socialmedia",
+        "displayName": "Social Media",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 10,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "javascript",
+        "displayName": "JavaScript",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 9,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "iwd",
+        "displayName": "iwd",
+        "type": "hashtag",
+        "usageCount": 9,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "givetogain",
+        "displayName": "givetogain",
+        "type": "hashtag",
+        "usageCount": 9,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "theultimatepitchdeck",
+        "displayName": "theultimatepitchdeck",
+        "type": "hashtag",
+        "usageCount": 8,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "doinghardthings",
+        "displayName": "doinghardthings",
+        "type": "hashtag",
+        "usageCount": 8,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "app",
+        "displayName": "app",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "job",
+        "displayName": "job",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "upupwego",
+        "displayName": "upupwego",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "graphicdesign",
+        "displayName": "Graphic Design",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 7,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "grateful",
+        "displayName": "grateful",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "thankgoditsfriday",
+        "displayName": "thankgoditsfriday",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "gratitudefriday",
+        "displayName": "gratitudefriday",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "mindset",
+        "displayName": "mindset",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "manifesting",
+        "displayName": "manifesting",
+        "type": "hashtag",
+        "usageCount": 7,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "contentstrategist",
+        "displayName": "Content strategist",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 7,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "contentmarketing",
+        "displayName": "Content Marketing",
+        "type": "both",
+        "usageCount": 1,
+        "skillUsageCount": 5,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "networking",
+        "displayName": "networking",
+        "type": "both",
+        "usageCount": 1,
+        "skillUsageCount": 5,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "trip",
+        "displayName": "trip",
+        "type": "hashtag",
+        "usageCount": 6,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "wanderlust",
+        "displayName": "wanderlust",
+        "type": "hashtag",
+        "usageCount": 6,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "sales",
+        "displayName": "Sales",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 6,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "executiveassisting",
+        "displayName": "Executive Assisting",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 5,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "businessowners",
+        "displayName": "businessowners",
+        "type": "both",
+        "usageCount": 4,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "hospitality",
+        "displayName": "Hospitality",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 4,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "accounting",
+        "displayName": "Accounting",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 4,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "makeup",
+        "displayName": "makeup",
+        "type": "both",
+        "usageCount": 2,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "graphicsdesign",
+        "displayName": "graphics design",
+        "type": "both",
+        "usageCount": 1,
+        "skillUsageCount": 3,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "lockin",
+        "displayName": "lockin",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "students",
+        "displayName": "students",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "lock",
+        "displayName": "lock",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "proficiencyinmicrosoft",
+        "displayName": "Proficiency in Microsoft",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 4,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "storywriting",
+        "displayName": "Story Writing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 4,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "businessexpansion",
+        "displayName": "businessexpansion",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "startups",
+        "displayName": "startups",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "techfounders",
+        "displayName": "techfounders",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "entrepreneurship",
+        "displayName": "entrepreneurship",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "businessinwestafrica",
+        "displayName": "businessinwestafrica",
+        "type": "hashtag",
+        "usageCount": 4,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "entertainment",
+        "displayName": "entertainment",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "savings",
+        "displayName": "savings",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "interior",
+        "displayName": "interior",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "learning",
+        "displayName": "learning",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "recipe",
+        "displayName": "recipe",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "communitymanager",
+        "displayName": "Community manager",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 3,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "hackaton",
+        "displayName": "hackaton",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "dataanalysis",
+        "displayName": "Data Analysis",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 3,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "growth",
+        "displayName": "growth",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "beprepared",
+        "displayName": "beprepared",
+        "type": "hashtag",
+        "usageCount": 3,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "money",
+        "displayName": "money",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "outfit",
+        "displayName": "outfit",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "goals",
+        "displayName": "goals",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "beauty",
+        "displayName": "beauty",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "meditation",
+        "displayName": "meditation",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "inspiration",
+        "displayName": "inspiration",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "travel",
+        "displayName": "travel",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "digital",
+        "displayName": "digital",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "home",
+        "displayName": "home",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "personaldevelopment",
+        "displayName": "personaldevelopment",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "sports",
+        "displayName": "sports",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "leadreport",
+        "displayName": "Lead report",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "futureofafrica",
+        "displayName": "futureofafrica",
+        "type": "hashtag",
+        "usageCount": 2,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "administrativeassistant",
+        "displayName": "Administrative Assistant",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "customerservice",
+        "displayName": "Customer Service",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "recordkeeping",
+        "displayName": "Record Keeping",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "python",
+        "displayName": "Python",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "sql",
+        "displayName": "SQL",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "technicalwriting",
+        "displayName": "Technical writing",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "excel",
+        "displayName": "Excel",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 2,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "finance",
+        "displayName": "finance",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "wellness",
+        "displayName": "wellness",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "career",
+        "displayName": "career",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "education",
+        "displayName": "education",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "love",
+        "displayName": "love",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "baking",
+        "displayName": "baking",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "habits",
+        "displayName": "habits",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "study",
+        "displayName": "study",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "motivation",
+        "displayName": "motivation",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "style",
+        "displayName": "style",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "gaming",
+        "displayName": "gaming",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "explore",
+        "displayName": "explore",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "workout",
+        "displayName": "workout",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "medicin",
+        "displayName": "medicin",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "jalingo",
+        "displayName": "jalingo",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "womenintech",
+        "displayName": "womenintech",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "newbeginnings",
+        "displayName": "newbeginnings",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "the",
+        "displayName": "the",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "upway",
+        "displayName": "upway",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "humanresourcesmanagement",
+        "displayName": "Human Resources Management",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "letusgoup",
+        "displayName": "letusgoup",
+        "type": "hashtag",
+        "usageCount": 1,
+        "skillUsageCount": 0,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "hairstylist",
+        "displayName": "Hair Stylist",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "leadgeneralcounsel",
+        "displayName": "lead general counsel",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "healthandsafetymanager",
+        "displayName": "Health and Safety manager",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "aitools",
+        "displayName": "Ai tools",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      },
+      {
+        "name": "automation",
+        "displayName": "automation",
+        "type": "skill",
+        "usageCount": 0,
+        "skillUsageCount": 1,
+        "categories": [],
+        "synonyms": []
+      }
+    ]
+  },
+  "profileVocabulary": {
+    "note": "Drawn from 1764 user profiles (profile fields merged with onboarding.*).",
+    "interests": [
+      [
+        "Jobs & Career Opportunities",
+        1593
+      ],
+      [
+        "Networking Events",
+        1566
+      ],
+      [
+        "Remote Work & Digital Skills",
+        1518
+      ],
+      [
+        "Scholarships & Grants",
+        1383
+      ],
+      [
+        "Training & Workshops",
+        1361
+      ],
+      [
+        "Volunteering & Community Service",
+        1245
+      ],
+      [
+        "Entrepreneurship & Funding",
+        1170
+      ],
+      [
+        "program",
+        401
+      ],
+      [
+        "internship",
+        344
+      ],
+      [
+        "training",
+        337
+      ],
+      [
+        "bootcamps",
+        307
+      ],
+      [
+        "grants",
+        257
+      ],
+      [
+        "scholarship",
+        200
+      ],
+      [
+        "conference",
+        165
+      ],
+      [
+        "general",
+        157
+      ],
+      [
+        "fellowship",
+        142
+      ],
+      [
+        "networking",
+        142
+      ],
+      [
+        "full-time",
+        138
+      ],
+      [
+        "workshop",
+        114
+      ],
+      [
+        "award",
+        94
+      ],
+      [
+        "internships",
+        94
+      ],
+      [
+        "Research & Academic Opportunities",
+        92
+      ],
+      [
+        "International Exchange Programs",
+        90
+      ],
+      [
+        "it",
+        86
+      ],
+      [
+        "permanent",
+        81
+      ],
+      [
+        "scholarships",
+        79
+      ],
+      [
+        "management",
+        77
+      ],
+      [
+        "remote",
+        77
+      ],
+      [
+        "grant",
+        70
+      ],
+      [
+        "senior",
+        68
+      ],
+      [
+        "competition",
+        65
+      ],
+      [
+        "Event",
+        61
+      ],
+      [
+        "exhibition",
+        60
+      ],
+      [
+        "other",
+        50
+      ],
+      [
+        "business",
+        48
+      ],
+      [
+        "contract",
+        46
+      ],
+      [
+        "fellowships",
+        40
+      ],
+      [
+        "call-for-applications",
+        35
+      ],
+      [
+        "jobs",
+        29
+      ],
+      [
+        "gaming",
+        25
+      ],
+      [
+        "mid-level",
+        25
+      ],
+      [
+        "sales",
+        23
+      ],
+      [
+        "startups",
+        20
+      ],
+      [
+        "mentorship",
+        18
+      ],
+      [
+        "administration",
+        17
+      ],
+      [
+        "tech",
+        17
+      ],
+      [
+        "coding",
+        16
+      ],
+      [
+        "data",
+        15
+      ],
+      [
+        "engineering",
+        15
+      ],
+      [
+        "junior",
+        15
+      ],
+      [
+        "talent",
+        15
+      ],
+      [
+        "seminar",
+        13
+      ],
+      [
+        "social-media",
+        13
+      ],
+      [
+        "contests",
+        12
+      ],
+      [
+        "customer-service",
+        11
+      ],
+      [
+        "graphics-design",
+        11
+      ],
+      [
+        "executives",
+        10
+      ],
+      [
+        "meetup",
+        10
+      ],
+      [
+        "energyevents",
+        9
+      ],
+      [
+        "abujaevents",
+        8
+      ],
+      [
+        "certification",
+        8
+      ],
+      [
+        "entry-level",
+        8
+      ],
+      [
+        "Finance",
+        8
+      ],
+      [
+        "product-design",
+        8
+      ],
+      [
+        "theultimatepitchdeck",
+        8
+      ],
+      [
+        "agruiculture",
+        7
+      ],
+      [
+        "Artofpitching",
+        7
+      ],
+      [
+        "entrepreneurship",
+        7
+      ],
+      [
+        "Founders",
+        7
+      ],
+      [
+        "journalist",
+        7
+      ],
+      [
+        "Leadership",
+        7
+      ],
+      [
+        "media",
+        7
+      ],
+      [
+        "nigeria",
+        7
+      ],
+      [
+        "photography",
+        7
+      ],
+      [
+        "women empowernment",
+        7
+      ],
+      [
+        "ghana",
+        6
+      ],
+      [
+        "music",
+        6
+      ],
+      [
+        "senegal",
+        6
+      ],
+      [
+        "west africa",
+        6
+      ],
+      [
+        "climate",
+        5
+      ],
+      [
+        "Creatives",
+        5
+      ],
+      [
+        "education",
+        5
+      ],
+      [
+        "environmental",
+        5
+      ],
+      [
+        "executive",
+        5
+      ],
+      [
+        "freelancers",
+        5
+      ],
+      [
+        "phd",
+        5
+      ],
+      [
+        "Salespeople",
+        5
+      ],
+      [
+        "brunch",
+        4
+      ],
+      [
+        "energy",
+        4
+      ],
+      [
+        "growth",
+        4
+      ],
+      [
+        "innovation",
+        4
+      ],
+      [
+        "legacy",
+        4
+      ],
+      [
+        "social",
+        4
+      ],
+      [
+        "technology",
+        4
+      ],
+      [
+        "women",
+        4
+      ],
+      [
+        "women empowerment",
+        4
+      ],
+      [
+        "ai",
+        3
+      ],
+      [
+        "AI",
+        3
+      ],
+      [
+        "demo",
+        3
+      ],
+      [
+        "festival",
+        3
+      ],
+      [
+        "finance",
+        3
+      ],
+      [
+        "graphic_design",
+        3
+      ],
+      [
+        "Management",
+        3
+      ],
+      [
+        "marketers",
+        3
+      ],
+      [
+        "Technology",
+        3
+      ],
+      [
+        "Challenge",
+        2
+      ],
+      [
+        "development",
+        2
+      ],
+      [
+        "educational",
+        2
+      ],
+      [
+        "egypt",
+        2
+      ],
+      [
+        "entertainment",
+        2
+      ],
+      [
+        "Expo",
+        2
+      ],
+      [
+        "hackathon",
+        2
+      ],
+      [
+        "Marketplace",
+        2
+      ],
+      [
+        "Online",
+        2
+      ],
+      [
+        "panel",
+        2
+      ],
+      [
+        "strategy",
+        2
+      ],
+      [
+        "womenempowerment",
+        2
+      ],
+      [
+        "womenevents",
+        2
+      ],
+      [
+        "#EnuguGamingConference2026",
+        1
+      ],
+      [
+        "abuja",
+        1
+      ],
+      [
+        "art",
+        1
+      ],
+      [
+        "backend",
+        1
+      ],
+      [
+        "competitions",
+        1
+      ],
+      [
+        "concert",
+        1
+      ],
+      [
+        "confrence",
+        1
+      ],
+      [
+        "cybersecurity",
+        1
+      ],
+      [
+        "Data Analysis",
+        1
+      ],
+      [
+        "digital education",
+        1
+      ],
+      [
+        "expo",
+        1
+      ],
+      [
+        "fashion",
+        1
+      ],
+      [
+        "frontend",
+        1
+      ],
+      [
+        "Git",
+        1
+      ],
+      [
+        "Graphic Design",
+        1
+      ],
+      [
+        "investment",
+        1
+      ],
+      [
+        "JavaScript",
+        1
+      ],
+      [
+        "lagos",
+        1
+      ],
+      [
+        "Lagos",
+        1
+      ],
+      [
+        "leadership",
+        1
+      ],
+      [
+        "machine learning",
+        1
+      ],
+      [
+        "masters",
+        1
+      ],
+      [
+        "money",
+        1
+      ],
+      [
+        "Networking",
+        1
+      ],
+      [
+        "private capital",
+        1
+      ],
+      [
+        "react",
+        1
+      ],
+      [
+        "React",
+        1
+      ],
+      [
+        "research",
+        1
+      ],
+      [
+        "sewing",
+        1
+      ],
+      [
+        "simpleend",
+        1
+      ],
+      [
+        "skillbuilding",
+        1
+      ],
+      [
+        "sports",
+        1
+      ],
+      [
+        "startup",
+        1
+      ],
+      [
+        "summer",
+        1
+      ],
+      [
+        "talk",
+        1
+      ],
+      [
+        "traning",
+        1
+      ],
+      [
+        "ui/ux-design",
+        1
+      ],
+      [
+        "Web Development",
+        1
+      ],
+      [
+        "webinar",
+        1
+      ],
+      [
+        "Workshop",
+        1
+      ]
+    ],
+    "skills": [
+      [
+        "Communication",
+        728
+      ],
+      [
+        "Leadership",
+        359
+      ],
+      [
+        "Project Management",
+        265
+      ],
+      [
+        "Problem Solving",
+        181
+      ],
+      [
+        "Content Writing",
+        169
+      ],
+      [
+        "Teamwork",
+        128
+      ],
+      [
+        "Customer Service",
+        111
+      ],
+      [
+        "content creation",
+        91
+      ],
+      [
+        "Video Editing",
+        91
+      ],
+      [
+        "Social Media",
+        89
+      ],
+      [
+        "Graphic Design",
+        81
+      ],
+      [
+        "Python",
+        76
+      ],
+      [
+        "Research",
+        66
+      ],
+      [
+        "Public Speaking",
+        65
+      ],
+      [
+        "Critical Thinking",
+        57
+      ],
+      [
+        "Time Management",
+        56
+      ],
+      [
+        "Data Analysis",
+        54
+      ],
+      [
+        "JavaScript",
+        53
+      ],
+      [
+        "Digital Marketing",
+        48
+      ],
+      [
+        "Content Marketing",
+        43
+      ],
+      [
+        "Copywriting",
+        40
+      ],
+      [
+        "React",
+        40
+      ],
+      [
+        "Administrative Assistant",
+        34
+      ],
+      [
+        "Data Entry",
+        31
+      ],
+      [
+        "Networking",
+        30
+      ],
+      [
+        "Sales",
+        30
+      ],
+      [
+        "Web Development",
+        30
+      ],
+      [
+        "Marketing",
+        29
+      ],
+      [
+        "Microsoft excel",
+        29
+      ],
+      [
+        "Adaptability",
+        28
+      ],
+      [
+        "SQL",
+        26
+      ],
+      [
+        "Photography",
+        25
+      ],
+      [
+        "Proficiency in Microsoft",
+        24
+      ],
+      [
+        "AI",
+        22
+      ],
+      [
+        "finance",
+        22
+      ],
+      [
+        "HTML",
+        22
+      ],
+      [
+        "Team management",
+        22
+      ],
+      [
+        "Data Science",
+        21
+      ],
+      [
+        "graphics design",
+        20
+      ],
+      [
+        "Leadership&Coordination",
+        20
+      ],
+      [
+        "CSS",
+        19
+      ],
+      [
+        "Accounting",
+        18
+      ],
+      [
+        "Content creation",
+        18
+      ],
+      [
+        "Social media management",
+        18
+      ],
+      [
+        "Teaching",
+        18
+      ],
+      [
+        "Virtual assistant",
+        18
+      ],
+      [
+        "Digital marketing",
+        17
+      ],
+      [
+        "Story Writing",
+        17
+      ],
+      [
+        "webdev",
+        17
+      ],
+      [
+        "Excel",
+        16
+      ],
+      [
+        "networking",
+        16
+      ],
+      [
+        "Public speaking",
+        16
+      ],
+      [
+        "writing",
+        16
+      ],
+      [
+        "entrepreneurship",
+        15
+      ],
+      [
+        "productivity",
+        15
+      ],
+      [
+        "Community manager",
+        14
+      ],
+      [
+        "Human Resources Management",
+        14
+      ],
+      [
+        "Executive Assisting",
+        13
+      ],
+      [
+        "Node.js",
+        13
+      ],
+      [
+        "canva",
+        12
+      ],
+      [
+        "UI/UX Design",
+        12
+      ],
+      [
+        "Analytics",
+        11
+      ],
+      [
+        "calendar management",
+        11
+      ],
+      [
+        "Communication manager",
+        11
+      ],
+      [
+        "learning",
+        11
+      ],
+      [
+        "Storytelling",
+        10
+      ],
+      [
+        "TypeScript",
+        10
+      ],
+      [
+        "Video editing",
+        10
+      ],
+      [
+        "virtual assistant",
+        10
+      ],
+      [
+        "Virtual Assistant",
+        10
+      ],
+      [
+        "Blockchain",
+        9
+      ],
+      [
+        "Critical thinking",
+        9
+      ],
+      [
+        "Data entry",
+        9
+      ],
+      [
+        "photo editing",
+        9
+      ],
+      [
+        "Social media manager",
+        9
+      ],
+      [
+        "Videographer",
+        9
+      ],
+      [
+        "Virtual Assistance",
+        9
+      ],
+      [
+        "Writing",
+        9
+      ],
+      [
+        "businessowners",
+        8
+      ],
+      [
+        "digital",
+        8
+      ],
+      [
+        "Social media marketing",
+        8
+      ],
+      [
+        "Technical writing",
+        8
+      ],
+      [
+        "Time management",
+        8
+      ],
+      [
+        "Ai tools",
+        7
+      ],
+      [
+        "Content strategist",
+        7
+      ],
+      [
+        "Graphic design",
+        7
+      ],
+      [
+        "Hair Stylist",
+        7
+      ],
+      [
+        "programming",
+        7
+      ],
+      [
+        "Record Keeping",
+        7
+      ],
+      [
+        "Video editor",
+        7
+      ],
+      [
+        "Business",
+        6
+      ],
+      [
+        "Data analysis",
+        6
+      ],
+      [
+        "entertainment",
+        6
+      ],
+      [
+        "innovation",
+        6
+      ],
+      [
+        "PostgreSQL",
+        6
+      ],
+      [
+        "Problem Solver",
+        6
+      ],
+      [
+        "Product management",
+        6
+      ],
+      [
+        "Social Media Management",
+        6
+      ],
+      [
+        "Story telling",
+        6
+      ],
+      [
+        "Virtual assistance",
+        6
+      ],
+      [
+        "womenintech",
+        6
+      ],
+      [
+        "C++",
+        5
+      ],
+      [
+        "CapCut",
+        5
+      ],
+      [
+        "careerstrategy",
+        5
+      ],
+      [
+        "Content strategy",
+        5
+      ],
+      [
+        "education",
+        5
+      ],
+      [
+        "Executive Assistant",
+        5
+      ],
+      [
+        "Fashion designer",
+        5
+      ],
+      [
+        "Google Workspace",
+        5
+      ],
+      [
+        "Hospitality",
+        5
+      ],
+      [
+        "makeup",
+        5
+      ],
+      [
+        "Microsoft office",
+        5
+      ],
+      [
+        "personaldevelopment",
+        5
+      ],
+      [
+        "Problem solving",
+        5
+      ],
+      [
+        "Project management",
+        5
+      ],
+      [
+        "Sales closing",
+        5
+      ],
+      [
+        "skillbuilding",
+        5
+      ],
+      [
+        "Videography",
+        5
+      ],
+      [
+        "Acting",
+        4
+      ],
+      [
+        "Attention to Detail",
+        4
+      ],
+      [
+        "Automation",
+        4
+      ],
+      [
+        "business",
+        4
+      ],
+      [
+        "communication",
+        4
+      ],
+      [
+        "Community management",
+        4
+      ],
+      [
+        "Connect marketing",
+        4
+      ],
+      [
+        "Content Creation",
+        4
+      ],
+      [
+        "Content creator",
+        4
+      ],
+      [
+        "Creative writing",
+        4
+      ],
+      [
+        "css",
+        4
+      ],
+      [
+        "Cybersecurity",
+        4
+      ],
+      [
+        "Entrepreneur",
+        4
+      ],
+      [
+        "Entrepreneurship",
+        4
+      ],
+      [
+        "Event planning",
+        4
+      ],
+      [
+        "Fashion",
+        4
+      ],
+      [
+        "Finance",
+        4
+      ],
+      [
+        "Git",
+        4
+      ],
+      [
+        "Java",
+        4
+      ],
+      [
+        "Law",
+        4
+      ],
+      [
+        "Machine Learning",
+        4
+      ],
+      [
+        "Mobile Development",
+        4
+      ],
+      [
+        "MongoDB",
+        4
+      ],
+      [
+        "Photo editing",
+        4
+      ],
+      [
+        "PowerPoint",
+        4
+      ],
+      [
+        "Slack",
+        4
+      ],
+      [
+        "Social media",
+        4
+      ],
+      [
+        "Social media Design",
+        4
+      ],
+      [
+        "softwareengineering",
+        4
+      ],
+      [
+        "Tailoring",
+        4
+      ],
+      [
+        "adaptability",
+        3
+      ],
+      [
+        "Administrative support",
+        3
+      ],
+      [
+        "Advertising",
+        3
+      ],
+      [
+        "automation",
+        3
+      ],
+      [
+        "baking",
+        3
+      ],
+      [
+        "Baking",
+        3
+      ],
+      [
+        "Blogging",
+        3
+      ],
+      [
+        "Brand strategy",
+        3
+      ],
+      [
+        "Calendar Management",
+        3
+      ],
+      [
+        "coding",
+        3
+      ],
+      [
+        "Community building",
+        3
+      ],
+      [
+        "Content marketing",
+        3
+      ],
+      [
+        "Copywriter",
+        3
+      ],
+      [
+        "CRM",
+        3
+      ],
+      [
+        "Crocheting",
+        3
+      ],
+      [
+        "Customer support",
+        3
+      ],
+      [
+        "data entry",
+        3
+      ],
+      [
+        "Email Management",
+        3
+      ],
+      [
+        "email optimization",
+        3
+      ],
+      [
+        "executive assistant",
+        3
+      ],
+      [
+        "Fashion design",
+        3
+      ],
+      [
+        "Fashion designing",
+        3
+      ],
+      [
+        "Fashion illustration",
+        3
+      ],
+      [
+        "Fast learner",
+        3
+      ],
+      [
+        "Financial analysis",
+        3
+      ],
+      [
+        "Ghostwriting",
+        3
+      ],
+      [
+        "Graphics design",
+        3
+      ],
+      [
+        "Health",
+        3
+      ],
+      [
+        "Health and Safety manager",
+        3
+      ],
+      [
+        "html",
+        3
+      ],
+      [
+        "Html",
+        3
+      ],
+      [
+        "Interior design",
+        3
+      ],
+      [
+        "Lead generation",
+        3
+      ],
+      [
+        "Lead report",
+        3
+      ],
+      [
+        "Microsoft Excel",
+        3
+      ],
+      [
+        "Microsoft word",
+        3
+      ],
+      [
+        "Microsoft Word",
+        3
+      ],
+      [
+        "Negotiation",
+        3
+      ],
+      [
+        "Php",
+        3
+      ],
+      [
+        "Power Bi",
+        3
+      ],
+      [
+        "Proactive",
+        3
+      ],
+      [
+        "public speaking",
+        3
+      ],
+      [
+        "Research skills",
+        3
+      ],
+      [
+        "SEO",
+        3
+      ],
+      [
+        "social media management",
+        3
+      ],
+      [
+        "social media manager",
+        3
+      ],
+      [
+        "social media marketing",
+        3
+      ],
+      [
+        "Speaking",
+        3
+      ],
+      [
+        "Strategic thinking",
+        3
+      ],
+      [
+        "Tech",
+        3
+      ],
+      [
+        "tech2026",
+        3
+      ],
+      [
+        "trello",
+        3
+      ],
+      [
+        "WordPress",
+        3
+      ],
+      [
+        "accounting",
+        2
+      ],
+      [
+        "Active listening",
+        2
+      ],
+      [
+        "Admin support",
+        2
+      ],
+      [
+        "Administrative assistant",
+        2
+      ],
+      [
+        "AI automation",
+        2
+      ],
+      [
+        "Analytical thinking",
+        2
+      ],
+      [
+        "Analytical Thinking",
+        2
+      ],
+      [
+        "Attention to detail",
+        2
+      ],
+      [
+        "Audit",
+        2
+      ],
+      [
+        "beauty",
+        2
+      ],
+      [
+        "Brand marketing",
+        2
+      ],
+      [
+        "Business development",
+        2
+      ],
+      [
+        "Business Development",
+        2
+      ],
+      [
+        "Business management",
+        2
+      ],
+      [
+        "business manager",
+        2
+      ],
+      [
+        "Business planning",
+        2
+      ],
+      [
+        "Canva",
+        2
+      ],
+      [
+        "Catering",
+        2
+      ],
+      [
+        "content creator",
+        2
+      ],
+      [
+        "content marketing",
+        2
+      ],
+      [
+        "Content writer",
+        2
+      ],
+      [
+        "creative direction",
+        2
+      ],
+      [
+        "Creative thinking",
+        2
+      ],
+      [
+        "critical thinking",
+        2
+      ],
+      [
+        "Css",
+        2
+      ],
+      [
+        "customer support",
+        2
+      ],
+      [
+        "Cyber security",
+        2
+      ],
+      [
+        "Data analyst",
+        2
+      ],
+      [
+        "Data analytics",
+        2
+      ],
+      [
+        "Data science",
+        2
+      ],
+      [
+        "digital marketing",
+        2
+      ],
+      [
+        "Digital skills",
+        2
+      ],
+      [
+        "Editing",
+        2
+      ],
+      [
+        "Efficiency",
+        2
+      ],
+      [
+        "Email management",
+        2
+      ],
+      [
+        "Emotional intelligence",
+        2
+      ],
+      [
+        "entrepreneur",
+        2
+      ],
+      [
+        "Ethical Hacking",
+        2
+      ],
+      [
+        "Executive Assistance",
+        2
+      ],
+      [
+        "fashion designing",
+        2
+      ],
+      [
+        "Fiction writing",
+        2
+      ],
+      [
+        "Financial analyst",
+        2
+      ],
+      [
+        "Frontend development",
+        2
+      ],
+      [
+        "Ghost writing",
+        2
+      ],
+      [
+        "Goggle doc",
+        2
+      ],
+      [
+        "google workspace",
+        2
+      ],
+      [
+        "Google workspace",
+        2
+      ],
+      [
+        "Graphic designing",
+        2
+      ],
+      [
+        "Hairstyling",
+        2
+      ],
+      [
+        "Health writing",
+        2
+      ],
+      [
+        "Healthcare",
+        2
+      ],
+      [
+        "Investment",
+        2
+      ],
+      [
+        "lead generation",
+        2
+      ],
+      [
+        "Lead Generation",
+        2
+      ],
+      [
+        "Legal research",
+        2
+      ],
+      [
+        "linux",
+        2
+      ],
+      [
+        "marketing",
+        2
+      ],
+      [
+        "Media buying",
+        2
+      ],
+      [
+        "Microsoft",
+        2
+      ],
+      [
+        "Microsoft Office",
+        2
+      ],
+      [
+        "Mobile videography",
+        2
+      ],
+      [
+        "Modeling",
+        2
+      ],
+      [
+        "money",
+        2
+      ],
+      [
+        "motivation",
+        2
+      ],
+      [
+        "Notion",
+        2
+      ],
+      [
+        "Nursing",
+        2
+      ],
+      [
+        "Nutritional Science",
+        2
+      ],
+      [
+        "Organisation",
+        2
+      ],
+      [
+        "Organization",
+        2
+      ],
+      [
+        "Personal assistant",
+        2
+      ],
+      [
+        "Piano",
+        2
+      ],
+      [
+        "Power BI",
+        2
+      ],
+      [
+        "Powerpoint",
+        2
+      ],
+      [
+        "problem solving",
+        2
+      ],
+      [
+        "Product design",
+        2
+      ],
+      [
+        "Product Design",
+        2
+      ],
+      [
+        "Project Coordination",
+        2
+      ],
+      [
+        "project management",
+        2
+      ],
+      [
+        "Public speaker",
+        2
+      ],
+      [
+        "python",
+        2
+      ],
+      [
+        "Reading",
+        2
+      ],
+      [
+        "Reliability",
+        2
+      ],
+      [
+        "rust",
+        2
+      ],
+      [
+        "Sales and marketing",
+        2
+      ],
+      [
+        "Script writing",
+        2
+      ],
+      [
+        "Self development",
+        2
+      ],
+      [
+        "SMM",
+        2
+      ],
+      [
+        "Social Media Strategy",
+        2
+      ],
+      [
+        "sports",
+        2
+      ],
+      [
+        "Sql",
+        2
+      ],
+      [
+        "strategic planning",
+        2
+      ],
+      [
+        "Strategist",
+        2
+      ],
+      [
+        "Styling",
+        2
+      ],
+      [
+        "Team collaboration",
+        2
+      ],
+      [
+        "Team player",
+        2
+      ],
+      [
+        "Team work",
+        2
+      ],
+      [
+        "Travel planning",
+        2
+      ],
+      [
+        "UI/UX design",
+        2
+      ],
+      [
+        "video editing",
+        2
+      ],
+      [
+        "virtual assistance",
+        2
+      ],
+      [
+        "virtual Assistant",
+        2
+      ],
+      [
+        "Volunteer",
+        2
+      ],
+      [
+        "Website design",
+        2
+      ],
+      [
+        "wellness",
+        2
+      ],
+      [
+        "Workflow Automation",
+        2
+      ],
+      [
+        "\"AI automation\"",
+        1
+      ],
+      [
+        "\"AI prompt Specialist\"",
+        1
+      ],
+      [
+        "\"communication\"",
+        1
+      ],
+      [
+        "\"creative writing\"",
+        1
+      ],
+      [
+        "\"Customer Support\"",
+        1
+      ],
+      [
+        "\"Data analytics\"",
+        1
+      ],
+      [
+        "\"Learning and Improvement\"",
+        1
+      ],
+      [
+        "\"Product management\"",
+        1
+      ],
+      [
+        "\"Technical writing\"",
+        1
+      ],
+      [
+        "3d visualization",
+        1
+      ],
+      [
+        "A good listener and problem solver. A therapist",
+        1
+      ],
+      [
+        "Ability to communicate effectively",
+        1
+      ],
+      [
+        "Academic proficiency",
+        1
+      ],
+      [
+        "accessforafricans",
+        1
+      ],
+      [
+        "Accountability officer",
+        1
+      ],
+      [
+        "Accounting & Financial Statement Analysis",
+        1
+      ],
+      [
+        "active listener",
+        1
+      ],
+      [
+        "activeincome",
+        1
+      ],
+      [
+        "Adaptability and resilience",
+        1
+      ],
+      [
+        "administration",
+        1
+      ],
+      [
+        "administrative",
+        1
+      ],
+      [
+        "Administrative & Office Management",
+        1
+      ],
+      [
+        "Administrative assistance",
+        1
+      ],
+      [
+        "Administrative officer",
+        1
+      ],
+      [
+        "Administrative skills",
+        1
+      ],
+      [
+        "Administrative Support",
+        1
+      ],
+      [
+        "Administrative virtual assistant",
+        1
+      ],
+      [
+        "Ads",
+        1
+      ],
+      [
+        "Ads management",
+        1
+      ],
+      [
+        "advertising",
+        1
+      ],
+      [
+        "advertising strategist",
+        1
+      ],
+      [
+        "Advocacy",
+        1
+      ],
+      [
+        "advocay",
+        1
+      ],
+      [
+        "Affilate marketing",
+        1
+      ],
+      [
+        "Affiliate marketer",
+        1
+      ],
+      [
+        "Affliate marketing",
+        1
+      ],
+      [
+        "Agriculture",
+        1
+      ],
+      [
+        "Ai",
+        1
+      ],
+      [
+        "Ai Automation",
+        1
+      ],
+      [
+        "Ai content",
+        1
+      ],
+      [
+        "Ai content creation",
+        1
+      ],
+      [
+        "AI engineering",
+        1
+      ],
+      [
+        "Ai Governance",
+        1
+      ],
+      [
+        "AI prompt engineer",
+        1
+      ],
+      [
+        "AI Tools",
+        1
+      ],
+      [
+        "AI Tools & Automation",
+        1
+      ],
+      [
+        "AI-Powered Content Creation",
+        1
+      ],
+      [
+        "AI/Ml",
+        1
+      ],
+      [
+        "Analytical / Structured Thinking",
+        1
+      ],
+      [
+        "Analytical & Critical Thinking",
+        1
+      ],
+      [
+        "Analytical & Problem-Solving Skills",
+        1
+      ],
+      [
+        "Analytical Problem-Solving",
+        1
+      ],
+      [
+        "Analytical skills",
+        1
+      ],
+      [
+        "analytical thinking",
+        1
+      ],
+      [
+        "andragogy",
+        1
+      ],
+      [
+        "Animal health",
+        1
+      ],
+      [
+        "Animation",
+        1
+      ],
+      [
+        "Animations",
+        1
+      ],
+      [
+        "Animator",
+        1
+      ],
+      [
+        "App Design",
+        1
+      ],
+      [
+        "App development",
+        1
+      ],
+      [
+        "Architect",
+        1
+      ],
+      [
+        "Architectural design",
+        1
+      ],
+      [
+        "Architectural Design",
+        1
+      ],
+      [
+        "Architectural drafting",
+        1
+      ],
+      [
+        "Architectural modeling",
+        1
+      ],
+      [
+        "Art",
+        1
+      ],
+      [
+        "Article writing",
+        1
+      ],
+      [
+        "Artificial Intelligence",
+        1
+      ],
+      [
+        "Artificial Intelligence (AI) & Machine Learning",
+        1
+      ],
+      [
+        "Artist",
+        1
+      ],
+      [
+        "Arts and crafts",
+        1
+      ],
+      [
+        "Asana",
+        1
+      ],
+      [
+        "Aspen Hysys",
+        1
+      ],
+      [
+        "Aspiring Chartered Accountant",
+        1
+      ],
+      [
+        "astrologer",
+        1
+      ],
+      [
+        "attention to detail",
+        1
+      ],
+      [
+        "attention to details",
+        1
+      ],
+      [
+        "Attention to details",
+        1
+      ],
+      [
+        "Audiing",
+        1
+      ],
+      [
+        "auditing",
+        1
+      ],
+      [
+        "Automation Setup",
+        1
+      ],
+      [
+        "Avid reader",
+        1
+      ],
+      [
+        "Awareness Campaigns & Online Promotions",
+        1
+      ],
+      [
+        "aws",
+        1
+      ],
+      [
+        "AWS",
+        1
+      ],
+      [
+        "backend developer",
+        1
+      ],
+      [
+        "Bag maker",
+        1
+      ],
+      [
+        "Baisc Web Design",
+        1
+      ],
+      [
+        "Baking of cake and pastries making",
+        1
+      ],
+      [
+        "Banking",
+        1
+      ],
+      [
+        "Basic AI Tools",
+        1
+      ],
+      [
+        "Basic computing",
+        1
+      ],
+      [
+        "Basic content creation",
+        1
+      ],
+      [
+        "Basic digital skills",
+        1
+      ],
+      [
+        "Basic French",
+        1
+      ],
+      [
+        "Basic Web Development",
+        1
+      ],
+      [
+        "Beading making",
+        1
+      ],
+      [
+        "Beautification",
+        1
+      ],
+      [
+        "Beauty, Self-Care & Personal Branding",
+        1
+      ],
+      [
+        "Biotechnology",
+        1
+      ],
+      [
+        "Blender",
+        1
+      ],
+      [
+        "blockchain development",
+        1
+      ],
+      [
+        "Book publishing",
+        1
+      ],
+      [
+        "Book writer",
+        1
+      ],
+      [
+        "bootstrap",
+        1
+      ],
+      [
+        "Brand Building",
+        1
+      ],
+      [
+        "Brand communication",
+        1
+      ],
+      [
+        "Brand Design",
+        1
+      ],
+      [
+        "Brand development",
+        1
+      ],
+      [
+        "Brand identity design",
+        1
+      ],
+      [
+        "Brand Identity Development",
+        1
+      ],
+      [
+        "brand management",
+        1
+      ],
+      [
+        "Brand Strategy",
+        1
+      ],
+      [
+        "Brand strategy and development",
+        1
+      ],
+      [
+        "Brand to Revenue strategist",
+        1
+      ],
+      [
+        "branding",
+        1
+      ],
+      [
+        "Branding",
+        1
+      ],
+      [
+        "Breeding",
+        1
+      ],
+      [
+        "Budgeting",
+        1
+      ],
+      [
+        "Budgeting and budgetary control",
+        1
+      ],
+      [
+        "Budgeting and control",
+        1
+      ],
+      [
+        "Building design",
+        1
+      ],
+      [
+        "Business & Money Mastery",
+        1
+      ],
+      [
+        "Business adviser",
+        1
+      ],
+      [
+        "Business analyst",
+        1
+      ],
+      [
+        "Business Analytics",
+        1
+      ],
+      [
+        "Business anslysis",
+        1
+      ],
+      [
+        "business development",
+        1
+      ],
+      [
+        "Business Development & Strategy",
+        1
+      ],
+      [
+        "Business development management",
+        1
+      ],
+      [
+        "Business growth consultation",
+        1
+      ],
+      [
+        "Business idea generation",
+        1
+      ],
+      [
+        "business management",
+        1
+      ],
+      [
+        "Business manager",
+        1
+      ],
+      [
+        "business oriented",
+        1
+      ],
+      [
+        "Business owner",
+        1
+      ],
+      [
+        "Business Process Automation",
+        1
+      ],
+      [
+        "Business start up",
+        1
+      ],
+      [
+        "Business strategist",
+        1
+      ],
+      [
+        "Business strategy",
+        1
+      ],
+      [
+        "businessexpansion",
+        1
+      ],
+      [
+        "businessinwestafrica",
+        1
+      ],
+      [
+        "C#",
+        1
+      ],
+      [
+        "Cad design",
+        1
+      ],
+      [
+        "CAD DESIGN",
+        1
+      ],
+      [
+        "Calendar management",
+        1
+      ],
+      [
+        "calender management",
+        1
+      ],
+      [
+        "Campaign management",
+        1
+      ],
+      [
+        "Canva design",
+        1
+      ],
+      [
+        "capacity building",
+        1
+      ],
+      [
+        "capcut",
+        1
+      ],
+      [
+        "Carbon accounting",
+        1
+      ],
+      [
+        "Cardio Pulmonary Resuscitation",
+        1
+      ],
+      [
+        "Career Growth",
+        1
+      ],
+      [
+        "caregiver skills",
+        1
+      ],
+      [
+        "Caregiving",
+        1
+      ],
+      [
+        "Certified Accounting Technician(AAT)",
+        1
+      ],
+      [
+        "Chatbot Automation",
+        1
+      ],
+      [
+        "Chef",
+        1
+      ],
+      [
+        "Chemical analyst",
+        1
+      ],
+      [
+        "Cinematography",
+        1
+      ],
+      [
+        "Circuit analysis",
+        1
+      ],
+      [
+        "Clerical",
+        1
+      ],
+      [
+        "Client acquisition",
+        1
+      ],
+      [
+        "Client Communication",
+        1
+      ],
+      [
+        "Client Relations",
+        1
+      ],
+      [
+        "climate change analysts",
+        1
+      ],
+      [
+        "Clinical experience",
+        1
+      ],
+      [
+        "Clinical nutrition",
+        1
+      ],
+      [
+        "cloud computing",
+        1
+      ],
+      [
+        "Cloud computing",
+        1
+      ],
+      [
+        "cloud engineering",
+        1
+      ],
+      [
+        "CMS management",
+        1
+      ],
+      [
+        "Coaching",
+        1
+      ],
+      [
+        "Coil Tubing",
+        1
+      ],
+      [
+        "Cold Calling",
+        1
+      ],
+      [
+        "Collaborative",
+        1
+      ],
+      [
+        "Commercial Strategy",
+        1
+      ],
+      [
+        "Commitment",
+        1
+      ],
+      [
+        "Communication & Pitching",
+        1
+      ],
+      [
+        "Communication & Stakeholder Management",
+        1
+      ],
+      [
+        "Communication skill",
+        1
+      ],
+      [
+        "Communication, Leadership",
+        1
+      ],
+      [
+        "Community Building",
+        1
+      ],
+      [
+        "Community engagement",
+        1
+      ],
+      [
+        "Community Management",
+        1
+      ],
+      [
+        "Community moderation",
+        1
+      ],
+      [
+        "community organizer",
+        1
+      ],
+      [
+        "community strategy",
+        1
+      ],
+      [
+        "Company registration",
+        1
+      ],
+      [
+        "Compliance",
+        1
+      ],
+      [
+        "Compliance Adherence",
+        1
+      ],
+      [
+        "Computer engineering",
+        1
+      ],
+      [
+        "Computer literacy",
+        1
+      ],
+      [
+        "Computer literate",
+        1
+      ],
+      [
+        "Computer operator",
+        1
+      ],
+      [
+        "computer proficient",
+        1
+      ],
+      [
+        "computer science",
+        1
+      ],
+      [
+        "Concept developer  and  script  writer",
+        1
+      ],
+      [
+        "confidence and hardworking",
+        1
+      ],
+      [
+        "Conflict Awareness",
+        1
+      ],
+      [
+        "conflict resolution",
+        1
+      ],
+      [
+        "Conflict resolving",
+        1
+      ],
+      [
+        "conservation",
+        1
+      ],
+      [
+        "Construction",
+        1
+      ],
+      [
+        "Construction site manager",
+        1
+      ],
+      [
+        "Construction site supervision",
+        1
+      ],
+      [
+        "consultant",
+        1
+      ],
+      [
+        "Content  creator",
+        1
+      ],
+      [
+        "Content & Brand Strategy",
+        1
+      ],
+      [
+        "Content creating",
+        1
+      ],
+      [
+        "Content Creator / Videograper",
+        1
+      ],
+      [
+        "Content curator",
+        1
+      ],
+      [
+        "content development",
+        1
+      ],
+      [
+        "Content directing and scripting",
+        1
+      ],
+      [
+        "Content planning",
+        1
+      ],
+      [
+        "Content planning ,  scheduling & Management",
+        1
+      ],
+      [
+        "Content Strategist",
+        1
+      ],
+      [
+        "content strategy",
+        1
+      ],
+      [
+        "Content writer and strategy",
+        1
+      ],
+      [
+        "Content writing",
+        1
+      ],
+      [
+        "contractor",
+        1
+      ],
+      [
+        "Coordination",
+        1
+      ],
+      [
+        "copy writing",
+        1
+      ],
+      [
+        "Copy writing",
+        1
+      ],
+      [
+        "Copyrighting",
+        1
+      ],
+      [
+        "copywriting",
+        1
+      ],
+      [
+        "Coreldraw",
+        1
+      ],
+      [
+        "Corporate and public relations",
+        1
+      ],
+      [
+        "Corporate Law",
+        1
+      ],
+      [
+        "Crafts",
+        1
+      ],
+      [
+        "Creative",
+        1
+      ],
+      [
+        "Creative ability",
+        1
+      ],
+      [
+        "Creative and Leather work",
+        1
+      ],
+      [
+        "Creative Arts",
+        1
+      ],
+      [
+        "Creative design",
+        1
+      ],
+      [
+        "Creative Design",
+        1
+      ],
+      [
+        "Creative direction",
+        1
+      ],
+      [
+        "Creative Direction",
+        1
+      ],
+      [
+        "creative director",
+        1
+      ],
+      [
+        "Creative ideation",
+        1
+      ],
+      [
+        "Creative problem-solving",
+        1
+      ],
+      [
+        "Creative Product Ideation",
+        1
+      ],
+      [
+        "Creative Reasoning",
+        1
+      ],
+      [
+        "Creative skills",
+        1
+      ],
+      [
+        "Creative Storytelling",
+        1
+      ],
+      [
+        "creative strategy",
+        1
+      ],
+      [
+        "Creative Writing",
+        1
+      ],
+      [
+        "creativity",
+        1
+      ],
+      [
+        "Creativity & Vision",
+        1
+      ],
+      [
+        "Creator",
+        1
+      ],
+      [
+        "Creator Economy / UGC Knowledge",
+        1
+      ],
+      [
+        "Crisis management",
+        1
+      ],
+      [
+        "Critical thinking and problem solving",
+        1
+      ],
+      [
+        "CRM data maintenance",
+        1
+      ],
+      [
+        "crm tools",
+        1
+      ],
+      [
+        "CRM tools",
+        1
+      ],
+      [
+        "CRM Tools",
+        1
+      ],
+      [
+        "CRM Tools Management",
+        1
+      ],
+      [
+        "Crochet",
+        1
+      ],
+      [
+        "Cross-Functional Collaboration",
+        1
+      ],
+      [
+        "Crypto",
+        1
+      ],
+      [
+        "curious to learn",
+        1
+      ],
+      [
+        "Customer Relations & Adaptability",
+        1
+      ],
+      [
+        "customer relationship management",
+        1
+      ],
+      [
+        "Customer relationship management",
+        1
+      ],
+      [
+        "Customer Relationship Management",
+        1
+      ],
+      [
+        "Customer representative",
+        1
+      ],
+      [
+        "customer service",
+        1
+      ],
+      [
+        "Customer service",
+        1
+      ],
+      [
+        "Customer service & client relationship Management",
+        1
+      ],
+      [
+        "Customer service representative",
+        1
+      ],
+      [
+        "Customer Service Representative",
+        1
+      ],
+      [
+        "Customer Support",
+        1
+      ],
+      [
+        "Customer/Patient relations",
+        1
+      ],
+      [
+        "cybersecurity",
+        1
+      ],
+      [
+        "Dancing",
+        1
+      ],
+      [
+        "Dashboard visualization",
+        1
+      ],
+      [
+        "data analysis",
+        1
+      ],
+      [
+        "Data Analysis & Reporting",
+        1
+      ],
+      [
+        "Data Analysis tools",
+        1
+      ],
+      [
+        "data analytics",
+        1
+      ],
+      [
+        "Data Analytics",
+        1
+      ],
+      [
+        "Data collection",
+        1
+      ],
+      [
+        "Data entry and visualisation",
+        1
+      ],
+      [
+        "Data entry specialist",
+        1
+      ],
+      [
+        "Data Formatting",
+        1
+      ],
+      [
+        "Data inventory",
+        1
+      ],
+      [
+        "Data organization and research",
+        1
+      ],
+      [
+        "Data science and analytics",
+        1
+      ],
+      [
+        "Data scientist",
+        1
+      ],
+      [
+        "Database Management",
+        1
+      ],
+      [
+        "Datacom",
+        1
+      ],
+      [
+        "Dental Technology",
+        1
+      ],
+      [
+        "Design  thinking",
+        1
+      ],
+      [
+        "Design and simulations",
+        1
+      ],
+      [
+        "detail oriented",
+        1
+      ],
+      [
+        "Detail-oriented",
+        1
+      ],
+      [
+        "Devops",
+        1
+      ],
+      [
+        "DI Press Engineer",
+        1
+      ],
+      [
+        "Diagnostic technician",
+        1
+      ],
+      [
+        "digital advertising",
+        1
+      ],
+      [
+        "Digital art",
+        1
+      ],
+      [
+        "digital communications",
+        1
+      ],
+      [
+        "Digital content",
+        1
+      ],
+      [
+        "digital creator",
+        1
+      ],
+      [
+        "Digital creator",
+        1
+      ],
+      [
+        "digital literacy",
+        1
+      ],
+      [
+        "Digital Literacy",
+        1
+      ],
+      [
+        "digital marketer",
+        1
+      ],
+      [
+        "Digital marketer",
+        1
+      ],
+      [
+        "Digital Marketer",
+        1
+      ],
+      [
+        "Digital promotion",
+        1
+      ],
+      [
+        "Dispensation",
+        1
+      ],
+      [
+        "Document editing",
+        1
+      ],
+      [
+        "Documentarian",
+        1
+      ],
+      [
+        "Documentation",
+        1
+      ],
+      [
+        "Drawing",
+        1
+      ],
+      [
+        "driving",
+        1
+      ],
+      [
+        "Dropshipping Agent",
+        1
+      ],
+      [
+        "Dropshipping expert",
+        1
+      ],
+      [
+        "E-commerce",
+        1
+      ],
+      [
+        "Ecommerce",
+        1
+      ],
+      [
+        "ECONOMICS",
+        1
+      ],
+      [
+        "Economists",
+        1
+      ],
+      [
+        "editing",
+        1
+      ],
+      [
+        "Editing and proofreading",
+        1
+      ],
+      [
+        "Education & Pedagogy",
+        1
+      ],
+      [
+        "Effective communication.",
+        1
+      ],
+      [
+        "Efficient Budgeting",
+        1
+      ],
+      [
+        "Electrical engineering",
+        1
+      ],
+      [
+        "Email & calendar management",
+        1
+      ],
+      [
+        "Email & Calendar management",
+        1
+      ],
+      [
+        "Email and Task Management",
+        1
+      ],
+      [
+        "email management",
+        1
+      ],
+      [
+        "Email marketing",
+        1
+      ],
+      [
+        "email Scheduling",
+        1
+      ],
+      [
+        "Emergency management",
+        1
+      ],
+      [
+        "Emotional Intelligence and Adaptability",
+        1
+      ],
+      [
+        "emotional intelligience",
+        1
+      ],
+      [
+        "empathy",
+        1
+      ],
+      [
+        "Empathy",
+        1
+      ],
+      [
+        "Empowerment",
+        1
+      ],
+      [
+        "Energy",
+        1
+      ],
+      [
+        "Engineering",
+        1
+      ],
+      [
+        "Engineering communication",
+        1
+      ],
+      [
+        "Enscape",
+        1
+      ],
+      [
+        "Enterprureship",
+        1
+      ],
+      [
+        "Entrepreneur,nail and lash tech",
+        1
+      ],
+      [
+        "entrepreneurship & business skills",
+        1
+      ],
+      [
+        "entry-level remote jobs",
+        1
+      ],
+      [
+        "Environmental advocacy",
+        1
+      ],
+      [
+        "Environmentalist",
+        1
+      ],
+      [
+        "Equipment Inspection",
+        1
+      ],
+      [
+        "Equity research and analysis",
+        1
+      ],
+      [
+        "ESG reporting",
+        1
+      ],
+      [
+        "ethical hacking",
+        1
+      ],
+      [
+        "Event coordination",
+        1
+      ],
+      [
+        "Event coverage",
+        1
+      ],
+      [
+        "event decorator",
+        1
+      ],
+      [
+        "Event management",
+        1
+      ],
+      [
+        "Event planning and decoration",
+        1
+      ],
+      [
+        "eventsinnmarch",
+        1
+      ],
+      [
+        "excel",
+        1
+      ],
+      [
+        "Excel Mastery",
+        1
+      ],
+      [
+        "excellence driven",
+        1
+      ],
+      [
+        "Excellent organization skills",
+        1
+      ],
+      [
+        "Execitive Virtual Assistant",
+        1
+      ],
+      [
+        "Execution management",
+        1
+      ],
+      [
+        "Executive assistant",
+        1
+      ],
+      [
+        "explore",
+        1
+      ],
+      [
+        "express",
+        1
+      ],
+      [
+        "Express",
+        1
+      ],
+      [
+        "Express.js",
+        1
+      ],
+      [
+        "Eye for detail",
+        1
+      ],
+      [
+        "Facebook and Instagram ad manager",
+        1
+      ],
+      [
+        "farmer",
+        1
+      ],
+      [
+        "Fashion branding",
+        1
+      ],
+      [
+        "Fashion Design",
+        1
+      ],
+      [
+        "fashion designer",
+        1
+      ],
+      [
+        "Fashion Designer",
+        1
+      ],
+      [
+        "Fashion enthusiasts",
+        1
+      ],
+      [
+        "Fashion influencing",
+        1
+      ],
+      [
+        "Fashion Sketching,",
+        1
+      ],
+      [
+        "Fashion strategy",
+        1
+      ],
+      [
+        "Fashion styling",
+        1
+      ],
+      [
+        "Fashion, writing,dancing ,music",
+        1
+      ],
+      [
+        "Feature writing",
+        1
+      ],
+      [
+        "Feminine Body Language & Etiquette",
+        1
+      ],
+      [
+        "Figma",
+        1
+      ],
+      [
+        "Figma product design",
+        1
+      ],
+      [
+        "File management",
+        1
+      ],
+      [
+        "File Organization",
+        1
+      ],
+      [
+        "Film making",
+        1
+      ],
+      [
+        "Financial",
+        1
+      ],
+      [
+        "Financial  Analysis",
+        1
+      ],
+      [
+        "Financial Calculation & Accuracy",
+        1
+      ],
+      [
+        "Financial Literacy",
+        1
+      ],
+      [
+        "financial modeling",
+        1
+      ],
+      [
+        "Financial modeling",
+        1
+      ],
+      [
+        "Financial Modeling & Valuation",
+        1
+      ],
+      [
+        "Financial reporting",
+        1
+      ],
+      [
+        "Financial Reporting",
+        1
+      ],
+      [
+        "fishery",
+        1
+      ],
+      [
+        "flexibility",
+        1
+      ],
+      [
+        "Flexibility",
+        1
+      ],
+      [
+        "Fluent english",
+        1
+      ],
+      [
+        "Forex",
+        1
+      ],
+      [
+        "Forex trader",
+        1
+      ],
+      [
+        "Founder",
+        1
+      ],
+      [
+        "Framer",
+        1
+      ],
+      [
+        "Freelance writer",
+        1
+      ],
+      [
+        "freelancer",
+        1
+      ],
+      [
+        "Freelancers",
+        1
+      ],
+      [
+        "Full stack engineering",
+        1
+      ],
+      [
+        "Full-stack engineering",
+        1
+      ],
+      [
+        "Full-Stack Web Development",
+        1
+      ],
+      [
+        "Funnel building",
+        1
+      ],
+      [
+        "Furniture making",
+        1
+      ],
+      [
+        "futureofafrica",
+        1
+      ],
+      [
+        "Garment construction",
+        1
+      ],
+      [
+        "General office Tasks",
+        1
+      ],
+      [
+        "General Secretary",
+        1
+      ],
+      [
+        "Geologist",
+        1
+      ],
+      [
+        "geophysics",
+        1
+      ],
+      [
+        "ghostwriting",
+        1
+      ],
+      [
+        "Ghostwriting/Copy Writing",
+        1
+      ],
+      [
+        "Good listener",
+        1
+      ],
+      [
+        "Good working skills",
+        1
+      ],
+      [
+        "Google",
+        1
+      ],
+      [
+        "Google business expert",
+        1
+      ],
+      [
+        "Google doc",
+        1
+      ],
+      [
+        "Google drive",
+        1
+      ],
+      [
+        "Google Forms",
+        1
+      ],
+      [
+        "Google Meet",
+        1
+      ],
+      [
+        "Google sheets",
+        1
+      ],
+      [
+        "graphic designer",
+        1
+      ],
+      [
+        "Guitar",
+        1
+      ],
+      [
+        "Hair making",
+        1
+      ],
+      [
+        "Hairdressing",
+        1
+      ],
+      [
+        "Hazard and Risk management",
+        1
+      ],
+      [
+        "Health & Wellness",
+        1
+      ],
+      [
+        "Health advocacy",
+        1
+      ],
+      [
+        "health and safety compliance",
+        1
+      ],
+      [
+        "Health care service delivery",
+        1
+      ],
+      [
+        "health education",
+        1
+      ],
+      [
+        "Health Education",
+        1
+      ],
+      [
+        "Health informatics",
+        1
+      ],
+      [
+        "Health safety and environment",
+        1
+      ],
+      [
+        "Health technology",
+        1
+      ],
+      [
+        "Healthcare services",
+        1
+      ],
+      [
+        "Host",
+        1
+      ],
+      [
+        "Hosting",
+        1
+      ],
+      [
+        "HSE",
+        1
+      ],
+      [
+        "HSE Compliance",
+        1
+      ],
+      [
+        "Human resources",
+        1
+      ],
+      [
+        "human resources manager HR",
+        1
+      ],
+      [
+        "Humor-infused communication",
+        1
+      ],
+      [
+        "ICT support",
+        1
+      ],
+      [
+        "Illustration",
+        1
+      ],
+      [
+        "Important",
+        1
+      ],
+      [
+        "Importations",
+        1
+      ],
+      [
+        "Inbound CRM",
+        1
+      ],
+      [
+        "Inbound marketing",
+        1
+      ],
+      [
+        "Inbox management",
+        1
+      ],
+      [
+        "incident identification",
+        1
+      ],
+      [
+        "Incident Management",
+        1
+      ],
+      [
+        "Industrial documentation",
+        1
+      ],
+      [
+        "Industrial Engineering",
+        1
+      ],
+      [
+        "Initiative and creativity",
+        1
+      ],
+      [
+        "Innovative",
+        1
+      ],
+      [
+        "Innovator",
+        1
+      ],
+      [
+        "Intern",
+        1
+      ],
+      [
+        "Interpersonal skills",
+        1
+      ],
+      [
+        "Inventory management",
+        1
+      ],
+      [
+        "jalingo",
+        1
+      ],
+      [
+        "javascript",
+        1
+      ],
+      [
+        "Javascript",
+        1
+      ],
+      [
+        "Jewellery making",
+        1
+      ],
+      [
+        "Jewelry sculpting",
+        1
+      ],
+      [
+        "Jira",
+        1
+      ],
+      [
+        "Journalist",
+        1
+      ],
+      [
+        "Knitting",
+        1
+      ],
+      [
+        "KPI Tracking",
+        1
+      ],
+      [
+        "kubernetes",
+        1
+      ],
+      [
+        "Laserfiche",
+        1
+      ],
+      [
+        "lash technician",
+        1
+      ],
+      [
+        "Latex",
+        1
+      ],
+      [
+        "law",
+        1
+      ],
+      [
+        "Lead gen",
+        1
+      ],
+      [
+        "Lead Generation & Outreach Strategy",
+        1
+      ],
+      [
+        "leadership",
+        1
+      ],
+      [
+        "leadership and communication",
+        1
+      ],
+      [
+        "Leadership and community engagement",
+        1
+      ],
+      [
+        "leadership potential",
+        1
+      ],
+      [
+        "Leadership, communication",
+        1
+      ],
+      [
+        "learntocode",
+        1
+      ],
+      [
+        "legal",
+        1
+      ],
+      [
+        "Legal administration",
+        1
+      ],
+      [
+        "Legal advice",
+        1
+      ],
+      [
+        "Legal analysis",
+        1
+      ],
+      [
+        "legal assistant",
+        1
+      ],
+      [
+        "Legal assistant",
+        1
+      ],
+      [
+        "legal drafting",
+        1
+      ],
+      [
+        "Legal drafting",
+        1
+      ],
+      [
+        "Legal representation",
+        1
+      ],
+      [
+        "legal research",
+        1
+      ],
+      [
+        "Legal Research",
+        1
+      ],
+      [
+        "Legal researcher",
+        1
+      ],
+      [
+        "Legal va",
+        1
+      ],
+      [
+        "Legal writing",
+        1
+      ],
+      [
+        "Legal Writing",
+        1
+      ],
+      [
+        "Linux",
+        1
+      ],
+      [
+        "listening",
+        1
+      ],
+      [
+        "Listening",
+        1
+      ],
+      [
+        "Literary & Publishing Knowledge",
+        1
+      ],
+      [
+        "Livestock production",
+        1
+      ],
+      [
+        "logo design",
+        1
+      ],
+      [
+        "Lumion",
+        1
+      ],
+      [
+        "M&A & Restructuring Knowledge",
+        1
+      ],
+      [
+        "machine learning",
+        1
+      ],
+      [
+        "Machine learning",
+        1
+      ],
+      [
+        "Maintenance",
+        1
+      ],
+      [
+        "maintenance support",
+        1
+      ],
+      [
+        "Make",
+        1
+      ],
+      [
+        "Management",
+        1
+      ],
+      [
+        "mangodb",
+        1
+      ],
+      [
+        "Market research",
+        1
+      ],
+      [
+        "Market Research & Validation",
+        1
+      ],
+      [
+        "marketer",
+        1
+      ],
+      [
+        "Marketing and sales",
+        1
+      ],
+      [
+        "marketing coordination",
+        1
+      ],
+      [
+        "Marketing strategist",
+        1
+      ],
+      [
+        "Marketplace Thinking",
+        1
+      ],
+      [
+        "Mechanical engineering",
+        1
+      ],
+      [
+        "Media and communications",
+        1
+      ],
+      [
+        "Media Communication",
+        1
+      ],
+      [
+        "media director",
+        1
+      ],
+      [
+        "Media management",
+        1
+      ],
+      [
+        "Medical virtual assistance",
+        1
+      ],
+      [
+        "medicin",
+        1
+      ],
+      [
+        "meditation",
+        1
+      ],
+      [
+        "Meeting Preparation",
+        1
+      ],
+      [
+        "Mental health professional",
+        1
+      ],
+      [
+        "Mentoring",
+        1
+      ],
+      [
+        "Meta business suite",
+        1
+      ],
+      [
+        "Microsoft  Excel",
+        1
+      ],
+      [
+        "Microsoft office suite",
+        1
+      ],
+      [
+        "Microsoft Office Suite (Word, Excel, PowerPoint)",
+        1
+      ],
+      [
+        "Microsoft skills",
+        1
+      ],
+      [
+        "Microsoft suite",
+        1
+      ],
+      [
+        "mindset",
+        1
+      ],
+      [
+        "Mindset & Emotional Intelligence",
+        1
+      ],
+      [
+        "Mobile app devepment",
+        1
+      ],
+      [
+        "Mobile Application design",
+        1
+      ],
+      [
+        "Mobile journalism",
+        1
+      ],
+      [
+        "Mobile photographer and videographer",
+        1
+      ],
+      [
+        "Modelling",
+        1
+      ],
+      [
+        "Motion design",
+        1
+      ],
+      [
+        "Motion designer",
+        1
+      ],
+      [
+        "Motion graphics design",
+        1
+      ],
+      [
+        "Ms excel",
+        1
+      ],
+      [
+        "ms word",
+        1
+      ],
+      [
+        "Ms word",
+        1
+      ],
+      [
+        "Multitasking",
+        1
+      ],
+      [
+        "Music",
+        1
+      ],
+      [
+        "Musical artist",
+        1
+      ],
+      [
+        "Musician",
+        1
+      ],
+      [
+        "mysql",
+        1
+      ],
+      [
+        "negotiation",
+        1
+      ],
+      [
+        "Negotiation skills",
+        1
+      ],
+      [
+        "NestJs",
+        1
+      ],
+      [
+        "Networking  maintenance",
+        1
+      ],
+      [
+        "Next.js",
+        1
+      ],
+      [
+        "Nextjs",
+        1
+      ],
+      [
+        "notion",
+        1
+      ],
+      [
+        "Novel writing",
+        1
+      ],
+      [
+        "Nurse",
+        1
+      ],
+      [
+        "Nursing care",
+        1
+      ],
+      [
+        "Nutrition",
+        1
+      ],
+      [
+        "Nutrition and Dietetics",
+        1
+      ],
+      [
+        "Nutritionist",
+        1
+      ],
+      [
+        "Objection Handling",
+        1
+      ],
+      [
+        "Occupational health and safety",
+        1
+      ],
+      [
+        "Occupational health surveillance",
+        1
+      ],
+      [
+        "office assistant",
+        1
+      ],
+      [
+        "Operations",
+        1
+      ],
+      [
+        "Operations management",
+        1
+      ],
+      [
+        "Operations Support",
+        1
+      ],
+      [
+        "Opportunity driven",
+        1
+      ],
+      [
+        "Optical services",
+        1
+      ],
+      [
+        "Organization & Time management",
+        1
+      ],
+      [
+        "Organizational skill",
+        1
+      ],
+      [
+        "Organizational structure",
+        1
+      ],
+      [
+        "organizing",
+        1
+      ],
+      [
+        "Organizing skills",
+        1
+      ],
+      [
+        "Outreach VA",
+        1
+      ],
+      [
+        "P",
+        1
+      ],
+      [
+        "Painting",
+        1
+      ],
+      [
+        "Partnership",
+        1
+      ],
+      [
+        "Partnership and Sales Communication",
+        1
+      ],
+      [
+        "Partnership and Sponsorship",
+        1
+      ],
+      [
+        "Passionate learner",
+        1
+      ],
+      [
+        "Pdf",
+        1
+      ],
+      [
+        "Peace keeping",
+        1
+      ],
+      [
+        "Peer Collaboration",
+        1
+      ],
+      [
+        "Penetration Testing",
+        1
+      ],
+      [
+        "People management",
+        1
+      ],
+      [
+        "Performance marketing",
+        1
+      ],
+      [
+        "Personal branding",
+        1
+      ],
+      [
+        "personnel management",
+        1
+      ],
+      [
+        "Persuasive communication",
+        1
+      ],
+      [
+        "Petrel",
+        1
+      ],
+      [
+        "Pharmacy technician",
+        1
+      ],
+      [
+        "PharmD student",
+        1
+      ],
+      [
+        "Phlebotomy",
+        1
+      ],
+      [
+        "Phone etiquette",
+        1
+      ],
+      [
+        "Phone photography",
+        1
+      ],
+      [
+        "Photo and video editor",
+        1
+      ],
+      [
+        "Photoediting",
+        1
+      ],
+      [
+        "Photoshop",
+        1
+      ],
+      [
+        "Physical skills",
+        1
+      ],
+      [
+        "Planning",
+        1
+      ],
+      [
+        "Planning and development",
+        1
+      ],
+      [
+        "Planning and structuring",
+        1
+      ],
+      [
+        "plant operations",
+        1
+      ],
+      [
+        "Podcasting",
+        1
+      ],
+      [
+        "Poetry",
+        1
+      ],
+      [
+        "Poetry writing",
+        1
+      ],
+      [
+        "Policy Analysis",
+        1
+      ],
+      [
+        "Politics",
+        1
+      ],
+      [
+        "Portrait photography",
+        1
+      ],
+      [
+        "poultry farmer",
+        1
+      ],
+      [
+        "Power bi",
+        1
+      ],
+      [
+        "Power point designer",
+        1
+      ],
+      [
+        "Powerbi",
+        1
+      ],
+      [
+        "PowerPoint / Pitch Deck Creation",
+        1
+      ],
+      [
+        "Presentation",
+        1
+      ],
+      [
+        "Presenter",
+        1
+      ],
+      [
+        "proactive",
+        1
+      ],
+      [
+        "Problem solving.",
+        1
+      ],
+      [
+        "Problem-Solving",
+        1
+      ],
+      [
+        "Process documentation",
+        1
+      ],
+      [
+        "Process Optimization",
+        1
+      ],
+      [
+        "Product & Feature Design",
+        1
+      ],
+      [
+        "product creation",
+        1
+      ],
+      [
+        "Product knowledge",
+        1
+      ],
+      [
+        "product management",
+        1
+      ],
+      [
+        "Product Management",
+        1
+      ],
+      [
+        "Product research",
+        1
+      ],
+      [
+        "Product Sales",
+        1
+      ],
+      [
+        "Production management",
+        1
+      ],
+      [
+        "production supervisor",
+        1
+      ],
+      [
+        "Professionalism",
+        1
+      ],
+      [
+        "Proficient with google workspace tools",
+        1
+      ],
+      [
+        "program assistance",
+        1
+      ],
+      [
+        "Program management",
+        1
+      ],
+      [
+        "Program Planning",
+        1
+      ],
+      [
+        "project assistant",
+        1
+      ],
+      [
+        "Project coordination",
+        1
+      ],
+      [
+        "Project Coordination & Management",
+        1
+      ],
+      [
+        "Project coordinator",
+        1
+      ],
+      [
+        "Project management and CRM tools",
+        1
+      ],
+      [
+        "Project manager",
+        1
+      ],
+      [
+        "promotional creator",
+        1
+      ],
+      [
+        "proofreading and editing",
+        1
+      ],
+      [
+        "Proteus",
+        1
+      ],
+      [
+        "PTW basics",
+        1
+      ],
+      [
+        "Public health",
+        1
+      ],
+      [
+        "Public health advocacy and education",
+        1
+      ],
+      [
+        "public health practitioner",
+        1
+      ],
+      [
+        "Public health professional",
+        1
+      ],
+      [
+        "public relations officer",
+        1
+      ],
+      [
+        "Public relations technology",
+        1
+      ],
+      [
+        "QA",
+        1
+      ],
+      [
+        "QA engineer",
+        1
+      ],
+      [
+        "Quality assurance",
+        1
+      ],
+      [
+        "quantumleap",
+        1
+      ],
+      [
+        "Quick to grasp",
+        1
+      ],
+      [
+        "Quickbooks",
+        1
+      ],
+      [
+        "QuickBooks",
+        1
+      ],
+      [
+        "Rapport Building",
+        1
+      ],
+      [
+        "react",
+        1
+      ],
+      [
+        "React native",
+        1
+      ],
+      [
+        "Real estate",
+        1
+      ],
+      [
+        "Red cross",
+        1
+      ],
+      [
+        "Registered Community health practitional (CHEW)",
+        1
+      ],
+      [
+        "Relationship building",
+        1
+      ],
+      [
+        "Relationship Management",
+        1
+      ],
+      [
+        "Remote Assistance",
+        1
+      ],
+      [
+        "reporting",
+        1
+      ],
+      [
+        "Research & learning skills",
+        1
+      ],
+      [
+        "Research & Policy Analysis",
+        1
+      ],
+      [
+        "Research and Analysis",
+        1
+      ],
+      [
+        "Research and brand growth strategy",
+        1
+      ],
+      [
+        "Research and Lead Generation",
+        1
+      ],
+      [
+        "Research Skills",
+        1
+      ],
+      [
+        "Researcher",
+        1
+      ],
+      [
+        "Researching",
+        1
+      ],
+      [
+        "Resilience",
+        1
+      ],
+      [
+        "Resin art",
+        1
+      ],
+      [
+        "Resin Art Craft",
+        1
+      ],
+      [
+        "resourceful",
+        1
+      ],
+      [
+        "Resourceful",
+        1
+      ],
+      [
+        "Revit",
+        1
+      ],
+      [
+        "risk management",
+        1
+      ],
+      [
+        "Sage",
+        1
+      ],
+      [
+        "sales",
+        1
+      ],
+      [
+        "Sales & Marketing",
+        1
+      ],
+      [
+        "sales and marketing",
+        1
+      ],
+      [
+        "Sales and Marketing",
+        1
+      ],
+      [
+        "sales and persuasion",
+        1
+      ],
+      [
+        "Sales Communication",
+        1
+      ],
+      [
+        "savings",
+        1
+      ],
+      [
+        "scheduling",
+        1
+      ],
+      [
+        "Scheduling and organization",
+        1
+      ],
+      [
+        "Scheduling and Organization",
+        1
+      ],
+      [
+        "Scheduling and task coordination",
+        1
+      ],
+      [
+        "Science",
+        1
+      ],
+      [
+        "Script and concept development",
+        1
+      ],
+      [
+        "Scripter",
+        1
+      ],
+      [
+        "sdg",
+        1
+      ],
+      [
+        "SDG's Advocacy",
+        1
+      ],
+      [
+        "Secretariat",
+        1
+      ],
+      [
+        "secretary",
+        1
+      ],
+      [
+        "Self awareness",
+        1
+      ],
+      [
+        "self reflection and growth mindset",
+        1
+      ],
+      [
+        "server engineering",
+        1
+      ],
+      [
+        "Sewing",
+        1
+      ],
+      [
+        "Sewing/garment construction",
+        1
+      ],
+      [
+        "Shell Scripting/Linux command",
+        1
+      ],
+      [
+        "Shopify",
+        1
+      ],
+      [
+        "Shopify Dropshipping",
+        1
+      ],
+      [
+        "Shopify expert",
+        1
+      ],
+      [
+        "Shopify website",
+        1
+      ],
+      [
+        "Shopify website builder",
+        1
+      ],
+      [
+        "Siemens TIA portal",
+        1
+      ],
+      [
+        "Singing",
+        1
+      ],
+      [
+        "Sketchup",
+        1
+      ],
+      [
+        "slack",
+        1
+      ],
+      [
+        "Small business management",
+        1
+      ],
+      [
+        "Smartphone Technician",
+        1
+      ],
+      [
+        "social  media manager",
+        1
+      ],
+      [
+        "social media",
+        1
+      ],
+      [
+        "social media design",
+        1
+      ],
+      [
+        "Social Media management",
+        1
+      ],
+      [
+        "Social media Manager",
+        1
+      ],
+      [
+        "Social Media Manager",
+        1
+      ],
+      [
+        "Social Media Manager and strategist",
+        1
+      ],
+      [
+        "social media marketer",
+        1
+      ],
+      [
+        "Social Media Marketing",
+        1
+      ],
+      [
+        "social media strategy",
+        1
+      ],
+      [
+        "Sociology",
+        1
+      ],
+      [
+        "Soft Communication skills",
+        1
+      ],
+      [
+        "Soft skills",
+        1
+      ],
+      [
+        "Software engineering",
+        1
+      ],
+      [
+        "software proficiency",
+        1
+      ],
+      [
+        "Songwriting",
+        1
+      ],
+      [
+        "Space Science Promotion",
+        1
+      ],
+      [
+        "Spatial planning",
+        1
+      ],
+      [
+        "Spss",
+        1
+      ],
+      [
+        "SPSS",
+        1
+      ],
+      [
+        "sql",
+        1
+      ],
+      [
+        "Stakeholder Engagement",
+        1
+      ],
+      [
+        "Startup & Venture Building Skills",
+        1
+      ],
+      [
+        "Startup Ecosystem",
+        1
+      ],
+      [
+        "Still figuring it out",
+        1
+      ],
+      [
+        "story telling",
+        1
+      ],
+      [
+        "Storyteller",
+        1
+      ],
+      [
+        "Strategic Communication",
+        1
+      ],
+      [
+        "Strategic HR thinking",
+        1
+      ],
+      [
+        "Strategic Planning",
+        1
+      ],
+      [
+        "Strategic procurement",
+        1
+      ],
+      [
+        "strategic thinking",
+        1
+      ],
+      [
+        "Strong Business acumen",
+        1
+      ],
+      [
+        "strong communication",
+        1
+      ],
+      [
+        "Strong organizational and multitasking",
+        1
+      ],
+      [
+        "Structural Design",
+        1
+      ],
+      [
+        "students",
+        1
+      ],
+      [
+        "study",
+        1
+      ],
+      [
+        "style",
+        1
+      ],
+      [
+        "Stylist",
+        1
+      ],
+      [
+        "supervisor",
+        1
+      ],
+      [
+        "supply chain",
+        1
+      ],
+      [
+        "System Operations",
+        1
+      ],
+      [
+        "Systems Thinking & Organization",
+        1
+      ],
+      [
+        "Tableau",
+        1
+      ],
+      [
+        "Task prioritization",
+        1
+      ],
+      [
+        "Taxation",
+        1
+      ],
+      [
+        "teaching",
+        1
+      ],
+      [
+        "Teaching and facilitation",
+        1
+      ],
+      [
+        "Teaching/ facilitation",
+        1
+      ],
+      [
+        "Team Collaboration",
+        1
+      ],
+      [
+        "Team lead",
+        1
+      ],
+      [
+        "Team leadership",
+        1
+      ],
+      [
+        "Team Management",
+        1
+      ],
+      [
+        "Team player and a good listener",
+        1
+      ],
+      [
+        "team work",
+        1
+      ],
+      [
+        "teamwork",
+        1
+      ],
+      [
+        "Teamwork & Client Management",
+        1
+      ],
+      [
+        "tech curiosity",
+        1
+      ],
+      [
+        "tech enthusiast",
+        1
+      ],
+      [
+        "Tech sales",
+        1
+      ],
+      [
+        "techfounders",
+        1
+      ],
+      [
+        "technical skills",
+        1
+      ],
+      [
+        "technical Writing",
+        1
+      ],
+      [
+        "Technical Writing",
+        1
+      ],
+      [
+        "Technology",
+        1
+      ],
+      [
+        "Television production",
+        1
+      ],
+      [
+        "terraform",
+        1
+      ],
+      [
+        "theultimatepitchdeck",
+        1
+      ],
+      [
+        "Thought leadership",
+        1
+      ],
+      [
+        "thrift business owner",
+        1
+      ],
+      [
+        "TikTok Ads expert",
+        1
+      ],
+      [
+        "time management",
+        1
+      ],
+      [
+        "Time management and organization",
+        1
+      ],
+      [
+        "Timemanagement",
+        1
+      ],
+      [
+        "Tracking",
+        1
+      ],
+      [
+        "trading",
+        1
+      ],
+      [
+        "Trading",
+        1
+      ],
+      [
+        "Transcription",
+        1
+      ],
+      [
+        "Transcriptionist",
+        1
+      ],
+      [
+        "Travel Coordination & itinerary planning",
+        1
+      ],
+      [
+        "Trello",
+        1
+      ],
+      [
+        "Trend & Opportunity Awareness",
+        1
+      ],
+      [
+        "Trend research and adaptation",
+        1
+      ],
+      [
+        "Troubleshooting",
+        1
+      ],
+      [
+        "Trust Building",
+        1
+      ],
+      [
+        "Typing",
+        1
+      ],
+      [
+        "UI/ UX Design",
+        1
+      ],
+      [
+        "UI/UX",
+        1
+      ],
+      [
+        "UI/UX Thinking",
+        1
+      ],
+      [
+        "User Experience Design",
+        1
+      ],
+      [
+        "User Generated Content (UGC)",
+        1
+      ],
+      [
+        "User Interface Design",
+        1
+      ],
+      [
+        "UX design",
+        1
+      ],
+      [
+        "vendors management",
+        1
+      ],
+      [
+        "Verbal and written communication",
+        1
+      ],
+      [
+        "Verbal and written communication skills",
+        1
+      ],
+      [
+        "Very strong listener and team player",
+        1
+      ],
+      [
+        "Vibe coding",
+        1
+      ],
+      [
+        "video editor",
+        1
+      ],
+      [
+        "videography",
+        1
+      ],
+      [
+        "Virtua assistant",
+        1
+      ],
+      [
+        "Virtual assistant and web developer (html)",
+        1
+      ],
+      [
+        "Virtual Assisting",
+        1
+      ],
+      [
+        "virtual event management",
+        1
+      ],
+      [
+        "Virtual process",
+        1
+      ],
+      [
+        "Visual storytelling",
+        1
+      ],
+      [
+        "Vlogging",
+        1
+      ],
+      [
+        "Voice Acting",
+        1
+      ],
+      [
+        "Voice Over Artist",
+        1
+      ],
+      [
+        "Voice overs",
+        1
+      ],
+      [
+        "Voiceover artist",
+        1
+      ],
+      [
+        "Volunteer management",
+        1
+      ],
+      [
+        "Volunteering",
+        1
+      ],
+      [
+        "Vray",
+        1
+      ],
+      [
+        "Vue",
+        1
+      ],
+      [
+        "Web 3",
+        1
+      ],
+      [
+        "web design",
+        1
+      ],
+      [
+        "Web design",
+        1
+      ],
+      [
+        "Web developer intern",
+        1
+      ],
+      [
+        "Web development",
+        1
+      ],
+      [
+        "Web3",
+        1
+      ],
+      [
+        "web3 expert",
+        1
+      ],
+      [
+        "Website and web app development",
+        1
+      ],
+      [
+        "Website Design",
+        1
+      ],
+      [
+        "Website developer",
+        1
+      ],
+      [
+        "Website development",
+        1
+      ],
+      [
+        "Welfarism",
+        1
+      ],
+      [
+        "WhatsApp marketing",
+        1
+      ],
+      [
+        "willingness to learn",
+        1
+      ],
+      [
+        "womenempowerment",
+        1
+      ],
+      [
+        "Wordpress",
+        1
+      ],
+      [
+        "Worked in an automobile workshop",
+        1
+      ],
+      [
+        "workflow automation",
+        1
+      ],
+      [
+        "Workflow management",
+        1
+      ],
+      [
+        "workout",
+        1
+      ],
+      [
+        "Writer",
+        1
+      ],
+      [
+        "Writing and editing",
+        1
+      ],
+      [
+        "Youtube scriptwriter",
+        1
+      ],
+      [
+        "Zapier",
+        1
+      ]
+    ],
+    "industrySectors": [
+      [
+        "Business & Finance",
+        1257
+      ],
+      [
+        "Technology",
+        1203
+      ],
+      [
+        "Creative Arts & Media",
+        1091
+      ],
+      [
+        "Education & Training",
+        902
+      ],
+      [
+        "Government & Public Service",
+        834
+      ],
+      [
+        "Healthcare & Sciences",
+        744
+      ],
+      [
+        "Finance & Business",
+        3
+      ],
+      [
+        "NGO & Social Impact",
+        3
+      ],
+      [
+        "Education & Research",
+        2
+      ],
+      [
+        "BNX",
+        1
+      ]
+    ],
+    "aspirations": [
+      [
+        "Access to career opportunities",
+        1649
+      ],
+      [
+        "Networking & professional connections",
+        1646
+      ],
+      [
+        "Skill development",
+        1544
+      ],
+      [
+        "Mentorship & guidance",
+        1455
+      ],
+      [
+        "Entrepreneurship support",
+        1148
+      ],
+      [
+        "Start or grow a business",
+        5
+      ],
+      [
+        "Build leadership & influence",
+        4
+      ],
+      [
+        "Training & upskilling",
+        4
+      ],
+      [
+        "Access to funding/scholarships",
+        3
+      ],
+      [
+        "Inspiration & motivation",
+        3
+      ],
+      [
+        "Community & belonging",
+        2
+      ],
+      [
+        "Secure a job or internship",
+        2
+      ]
+    ],
+    "careerStage": [
+      [
+        "Entry-Level (0-2 years)",
+        827
+      ],
+      [
+        "Student",
+        698
+      ],
+      [
+        "Mid-Career (3-7 years)",
+        206
+      ],
+      [
+        "Senior/Executive (8+ years)",
+        23
+      ]
+    ],
+    "fieldOfStudy": [
+      [
+        "Other",
+        783
+      ],
+      [
+        "Medicine",
+        245
+      ],
+      [
+        "Arts",
+        209
+      ],
+      [
+        "Business",
+        207
+      ],
+      [
+        "Technology",
+        168
+      ],
+      [
+        "Engineering",
+        128
+      ],
+      [
+        "Computer Science",
+        2
+      ],
+      [
+        "Accounting",
+        1
+      ],
+      [
+        "Economics",
+        1
+      ],
+      [
+        "History and International Relations mm",
+        1
+      ],
+      [
+        "History and international studies",
+        1
+      ],
+      [
+        "Law",
+        1
+      ],
+      [
+        "Nursing",
+        1
+      ],
+      [
+        "Peace Studies",
+        1
+      ],
+      [
+        "Public Health",
+        1
+      ],
+      [
+        "Software Engineering",
+        1
+      ]
+    ]
+  },
+  "popularItems": []
+}

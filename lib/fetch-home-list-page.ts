@@ -14,6 +14,41 @@ import { normalizeFeedListItem } from "@/lib/feed-content-type"
 
 export const HOME_LIST_PAGE_SIZE = 20
 
+/**
+ * The filters the search UI offers, on top of the keyword. Every field is
+ * optional — an absent field means "do not narrow on this".
+ *
+ * These are sent to the list APIs verbatim as query params, so the names here
+ * are the backend's names.
+ */
+export type SearchFilters = {
+  country?: string
+  city?: string
+  /** Opportunity/event/job category, whichever applies to the list being fetched. */
+  type?: string
+  /** ISO dates, inclusive. */
+  dateFrom?: string
+  dateTo?: string
+  isRemote?: boolean
+  isPaid?: boolean
+}
+
+/** Drops empty values so a blank filter never reaches the query string. */
+function filterQueryParams(filters?: SearchFilters): [string, string][] {
+  if (!filters) return []
+  const out: [string, string][] = []
+  for (const [key, value] of Object.entries(filters)) {
+    if (value === undefined || value === null) continue
+    if (typeof value === "string") {
+      const trimmed = value.trim()
+      if (trimmed) out.push([key, trimmed])
+    } else {
+      out.push([key, String(value)])
+    }
+  }
+  return out
+}
+
 /** Tabs that use the home feed list APIs */
 export type HomeListType = Extract<
   ContentCacheType,
@@ -73,6 +108,11 @@ function parseApiListPage(type: HomeListType, payload: ApiListPayload): HomeList
 export type HomeListFetchOptions = {
   /** Keyword search (title, description, tags, etc.) — `search` query param on list APIs */
   search?: string
+  /**
+   * Narrowing filters, passed straight through as query params. Anything left
+   * undefined is simply not sent, so an empty object is the same as no filter.
+   */
+  filters?: SearchFilters
 }
 
 export async function fetchHomeListPage(params: {
@@ -81,13 +121,43 @@ export async function fetchHomeListPage(params: {
   backendUrl: string
   headers?: HeadersInit
   query?: HomeListFetchOptions
+  /**
+   * Read and write the shared session cache for this type. Default true.
+   *
+   * The public hub pages pass false: they reorder every page through
+   * `public-hub-order` before display, so they cache the ordered result under
+   * their own `hub_*` key instead. Sharing this one would mean the home tab and
+   * the hub page each serving the other's ordering.
+   */
+  cache?: boolean
+  /**
+   * Throw when the request fails instead of resolving to an empty page.
+   * Default false, so existing callers keep degrading quietly.
+   *
+   * The hub pages pass true: an empty page and a failed request look identical
+   * once the error is swallowed, and they need to tell them apart to offer a
+   * retry rather than claim there is nothing listed.
+   */
+  throwOnError?: boolean
 }): Promise<HomeListPageResult> {
-  const { type, cursorLastId, backendUrl, headers = {}, query } = params
+  const {
+    type,
+    cursorLastId,
+    backendUrl,
+    headers = {},
+    query,
+    cache = true,
+    throwOnError = false,
+  } = params
   const isFirstPage = !cursorLastId
   const searchTerm = query?.search?.trim() ?? ""
-  const hasListQuery = Boolean(searchTerm)
+  const filterParams = filterQueryParams(query?.filters)
+  // A filtered page is a different result set from the cached unfiltered one,
+  // so any active filter has to bypass the cache the same way a search does.
+  const hasListQuery = Boolean(searchTerm) || filterParams.length > 0
+  const useCache = cache && !hasListQuery
 
-  if (isFirstPage && !hasListQuery) {
+  if (isFirstPage && useCache) {
     const cached = getContentCache<HomeListItem>(type)
     if (cached?.items?.length) {
       const items = cached.items.map((item) =>
@@ -113,6 +183,9 @@ export async function fetchHomeListPage(params: {
   if (searchTerm) {
     searchParams.set("search", searchTerm)
   }
+  for (const [key, value] of filterParams) {
+    searchParams.set(key, value)
+  }
 
   try {
     const response = await fetch(
@@ -121,16 +194,22 @@ export async function fetchHomeListPage(params: {
     )
 
     if (!response.ok) {
+      if (throwOnError) {
+        throw new Error(`Failed to load ${type} (${response.status})`)
+      }
       return { items: [], lastId: null, hasMore: false }
     }
 
     const payload = (await response.json()) as ApiListPayload
     const parsed = parseApiListPage(type, payload)
     if (!parsed) {
+      if (throwOnError) {
+        throw new Error(`Unexpected ${type} response`)
+      }
       return { items: [], lastId: null, hasMore: false }
     }
 
-    if (isFirstPage && !hasListQuery) {
+    if (isFirstPage && useCache) {
       setContentCache(type, {
         items: parsed.items,
         lastId: parsed.lastId,
@@ -140,6 +219,7 @@ export async function fetchHomeListPage(params: {
 
     return parsed
   } catch (error) {
+    if (throwOnError) throw error
     console.error(`Error fetching ${type}:`, error)
     return { items: [], lastId: null, hasMore: false }
   }

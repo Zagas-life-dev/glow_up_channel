@@ -10,18 +10,10 @@ import {
   RiBriefcaseLine,
   RiCalendarLine,
   RiBookLine,
-  RiArrowUpLine,
-  RiArrowDownLine,
+  RiArrowRightLine,
   RiMapPinLine,
   RiTimeLine,
   RiMoneyDollarCircleLine,
-  RiFileLine,
-  RiCheckboxCircleLine,
-  RiGroupLine,
-  RiExternalLinkLine,
-  RiVipCrownLine,
-  RiStarLine,
-  RiDownloadLine,
   RiHeartLine,
   RiHeartFill,
   RiBookmarkLine,
@@ -30,8 +22,6 @@ import {
   RiShareLine,
   RiShareFill,
   RiChat1Line,
-  RiVideoLine,
-  RiHeadphoneLine,
   RiEyeLine,
 } from 'react-icons/ri'
 import { useAuth } from '@/lib/auth-context'
@@ -39,7 +29,6 @@ import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-pop
 import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
-import { cleanUrl } from '@/lib/url-utils'
 import { trackLike, trackSave, trackShare, trackContentView } from '@/lib/tracking'
 import {
   resolveFeedContentKind,
@@ -100,10 +89,8 @@ interface FeedCardProps {
     duration?: string
   }
   onEngage?: () => void
-  isExpanded?: boolean
-  onExpand?: () => void
-  /** When provided (e.g. in sponsored slot), called when user clicks Show more so promotion budget can be charged. */
-  onPromotionShowMore?: () => void
+  /** When provided (e.g. in sponsored slot), called when user opens the post so promotion budget can be charged. */
+  onPromotionReadMore?: () => void
 }
 
 // One colour per content kind. `--primary` is hsl(24 100% 50%) — an orange —
@@ -118,6 +105,7 @@ const typeConfig = {
     bg: 'bg-orange-500/10',
     border: 'border-orange-500/20',
     label: 'Opportunity',
+    path: 'opportunities',
     buttonColor: 'bg-orange-500 hover:bg-orange-600'
   },
   job: {
@@ -128,6 +116,7 @@ const typeConfig = {
     bg: 'bg-sky-500/10',
     border: 'border-sky-500/20',
     label: 'Job',
+    path: 'jobs',
     buttonColor: 'bg-sky-500 hover:bg-sky-600'
   },
   event: {
@@ -138,6 +127,7 @@ const typeConfig = {
     bg: 'bg-emerald-500/10',
     border: 'border-emerald-500/20',
     label: 'Event',
+    path: 'events',
     buttonColor: 'bg-emerald-500 hover:bg-emerald-600'
   },
   resource: {
@@ -148,95 +138,12 @@ const typeConfig = {
     bg: 'bg-violet-500/10',
     border: 'border-violet-500/20',
     label: 'Resource',
+    path: 'resources',
     buttonColor: 'bg-violet-500 hover:bg-violet-600'
   }
 }
 
-/*
- * "Show more" panel primitives.
- *
- * Every content kind (opportunity / job / event / resource) renders its extra
- * data through these four, so the expanded panel keeps one rhythm instead of
- * each block inventing its own indentation, icon and label style.
- */
-
-/** Titled, boxed group. One per topic (Requirements, Dates, Compensation…). */
-function DetailSection({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-xl border border-border/60 bg-muted/25 px-3.5 py-3">
-      <h4 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden />
-        {title}
-      </h4>
-      <div className="mt-2.5">{children}</div>
-    </section>
-  )
-}
-
-/** Label-above-value grid: one column on phones, two from `sm` up. */
-function DetailGrid({ children }: { children: React.ReactNode }) {
-  return <dl className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">{children}</dl>
-}
-
-/** Single field inside a DetailGrid. `wide` spans both columns for prose. */
-function DetailItem({
-  label,
-  wide = false,
-  children,
-}: {
-  label: string
-  wide?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div className={cn('min-w-0', wide && 'sm:col-span-2')}>
-      <dt className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-sm text-foreground/90 break-words">{children}</dd>
-    </div>
-  )
-}
-
-/** Bulleted list for free-form arrays (requirements, benefits, prerequisites). */
-function DetailList({ items }: { items: string[] }) {
-  return (
-    <ul className="space-y-1.5">
-      {items.map((entry, index) => (
-        <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" aria-hidden />
-          <span className="min-w-0 break-words">{entry}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-/** Short keyword arrays (skills, equipment) read better as chips than a list. */
-function DetailChips({ items }: { items: string[] }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {items.map((entry, index) => (
-        <span
-          key={index}
-          className="rounded-full border border-border/60 bg-background/60 px-2 py-0.5 text-[11px] text-muted-foreground"
-        >
-          {entry}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromotionShowMore }: FeedCardProps) {
+export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCardProps) {
   const { isAuthenticated } = useAuth()
   const [isLiked, setIsLiked] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
@@ -250,18 +157,14 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const [showShareComposer, setShowShareComposer] = useState(false)
   const [justShared, setJustShared] = useState(false)
-  const [fullDetails, setFullDetails] = useState<any>(null)
-  const [loadingDetails, setLoadingDetails] = useState(false)
   const [engagementStatusLoaded, setEngagementStatusLoaded] = useState(false)
-
-  // Use controlled expanded state if provided, otherwise use local state
-  const [localExpanded, setLocalExpanded] = useState(false)
-  const expanded = isExpanded !== undefined ? isExpanded : localExpanded
 
   const contentKind: FeedContentKind = resolveFeedContentKind(item.type)
   const engagementApiType = toEngagementApiPlural(contentKind)
   const config = typeConfig[contentKind] || typeConfig.opportunity
   const TypeIcon = config.icon
+  /** The post's own page — everything about this item lives there. */
+  const detailHref = `/${config.path}/${item._id}`
 
   // Load engagement status (like/save) when component mounts
   useEffect(() => {
@@ -335,65 +238,6 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
 
       // For other errors, silently fail and keep default state
       // Don't log to console to avoid noise
-    }
-  }
-
-  // Load full details when expanded
-  useEffect(() => {
-    if (expanded && !fullDetails && !loadingDetails) {
-      loadFullDetails()
-    }
-  }, [expanded])
-
-  const loadFullDetails = async () => {
-    setLoadingDetails(true)
-    try {
-      let response
-      switch (contentKind) {
-        case 'opportunity':
-          response = await ApiClient.getOpportunityById(item._id)
-          break
-        case 'job':
-          response = await ApiClient.getJobById(item._id)
-          break
-        case 'event':
-          response = await ApiClient.getEventById(item._id)
-          break
-        case 'resource':
-          response = await ApiClient.getResourceById(item._id)
-          break
-      }
-
-      if (response?.success) {
-        const data = contentKind === 'opportunity' ? response.data.opportunity
-          : contentKind === 'job' ? response.data.job
-            : contentKind === 'event' ? response.data.event
-              : response.data.resource
-        setFullDetails(data)
-        const m = data?.metrics
-        if (m && typeof m === 'object') {
-          const vc = m.viewCount
-          if (typeof vc === 'number' && !Number.isNaN(vc)) {
-            setViewCount((prev) => Math.max(prev, vc))
-          }
-          const sc = m.shareCount
-          if (typeof sc === 'number' && !Number.isNaN(sc)) {
-            setShareCount((prev) => Math.max(prev, sc))
-          }
-          const sv = m.saveCount
-          if (typeof sv === 'number' && !Number.isNaN(sv)) {
-            setSaveCount((prev) => Math.max(prev, sv))
-          }
-          const pl = m.playlistAddCount ?? m.playlistCount
-          if (typeof pl === 'number' && !Number.isNaN(pl)) {
-            setPlaylistAddCount((prev) => Math.max(prev, pl))
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading full details:', error)
-    } finally {
-      setLoadingDetails(false)
     }
   }
 
@@ -576,31 +420,24 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     setShowPlaylistModal(true)
   }
 
-  const handleExpand = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!isAuthenticated) dispatchGuestEngaged()
-    const newExpanded = isExpanded !== undefined ? !isExpanded : !localExpanded
-    if (newExpanded) {
-      onPromotionShowMore?.()
-      ApiClient.recordPromotionClick(item._id, contentKind, 'show_more').catch(() => {})
-      // Valid view: first "Show more" expand per item per browser session (authenticated)
-      if (isAuthenticated && typeof sessionStorage !== 'undefined') {
-        const key = feedViewSessionKey()
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1')
-          setViewCount((v) => v + 1)
-          void recordAuthenticatedFeedView('feed_show_more')
-        }
-      }
-    }
-    if (onExpand) {
-      onExpand()
-    } else {
-      // Fallback for backward compatibility - local state management
-      setLocalExpanded(newExpanded)
-      if (newExpanded && !fullDetails && !loadingDetails) {
-        loadFullDetails()
+  /**
+   * Opening the post carries the same intent the old in-place expand did, so it
+   * bills and counts the same way. The `show_more` / `feed_show_more` names stay
+   * as they are: they are the backend's contract, not a description of this UI.
+   *
+   * Deliberately no `preventDefault` — the link must be allowed to navigate — and
+   * no guest popup, since reading the page is not a blocked action for guests.
+   */
+  const handleReadMore = () => {
+    onPromotionReadMore?.()
+    ApiClient.recordPromotionClick(item._id, contentKind, 'show_more').catch(() => {})
+    // Valid view: first open per item per browser session (authenticated)
+    if (isAuthenticated && typeof sessionStorage !== 'undefined') {
+      const key = feedViewSessionKey()
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        setViewCount((v) => v + 1)
+        void recordAuthenticatedFeedView('feed_show_more')
       }
     }
   }
@@ -712,43 +549,6 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
     }
 
   }
-
-  const details = fullDetails || item
-  // Show "Show more" if description is long OR if there are additional details to show
-  const detailsAny = details as any
-  const hasMoreDetails = (item.description && item.description.length > 150) ||
-    (contentKind === 'opportunity' && (detailsAny.requirements || detailsAny.financial || detailsAny.dates)) ||
-    (contentKind === 'event' && (detailsAny.dates || detailsAny.location || detailsAny.capacity || detailsAny.requirements)) ||
-    (contentKind === 'job' && (detailsAny.requirements || detailsAny.benefits || detailsAny.pay || detailsAny.dates)) ||
-    (contentKind === 'resource' && (detailsAny.category || detailsAny.duration))
-
-  // A section is only worth boxing up when it actually holds values — scraped
-  // items often carry an empty `requirements`/`dates` object, and an empty
-  // bordered card is what made the expanded view read as noise.
-  const oppRequirements = contentKind === 'opportunity' ? detailsAny.requirements : null
-  const hasOppRequirements = Boolean(oppRequirements && (
-    oppRequirements.educationLevel || oppRequirements.careerStage || oppRequirements.experience ||
-    oppRequirements.ageRange || oppRequirements.citizenship || oppRequirements.other ||
-    oppRequirements.skills?.length
-  ))
-  const oppDates = contentKind === 'opportunity' ? detailsAny.dates : null
-  const hasOppDates = Boolean(oppDates && (oppDates.startDate || oppDates.endDate || oppDates.duration))
-  const eventDates = contentKind === 'event' ? detailsAny.dates : null
-  const hasEventSchedule = Boolean(eventDates && (
-    (eventDates.startDate && eventDates.endDate) || eventDates.registrationDeadline || eventDates.timezone
-  ))
-  const eventRequirements = contentKind === 'event' ? detailsAny.requirements : null
-  const hasEventRequirements = Boolean(eventRequirements && (
-    eventRequirements.ageRange || eventRequirements.skillLevel ||
-    eventRequirements.prerequisites?.length || eventRequirements.equipment?.length
-  ))
-  const jobLocation = contentKind === 'job' && detailsAny.location && typeof detailsAny.location === 'object' && !detailsAny.location.isRemote
-    ? detailsAny.location
-    : null
-  const hasJobLocation = Boolean(jobLocation && (jobLocation.city || jobLocation.country || jobLocation.address))
-  const hasResourceDetails = contentKind === 'resource' && Boolean(
-    detailsAny.category || detailsAny.duration || detailsAny.metrics?.viewCount !== undefined
-  )
 
   return (
     <>
@@ -864,36 +664,26 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
         {/* Description */}
         {item.description && (
           <div className="mb-4">
-            <p className={cn(
-              "text-sm text-muted-foreground leading-relaxed",
-              !expanded && "line-clamp-2"
-            )}>
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
               {item.description}
             </p>
           </div>
         )}
 
-        {/* Show More Button - appears if there are additional details */}
-        {hasMoreDetails && (
-          <div className="mb-4">
-            <button
-              onClick={handleExpand}
-              className="text-xs font-medium flex items-center gap-1 text-orange-500 hover:text-orange-400"
-            >
-              {expanded ? (
-                <>
-                  <RiArrowUpLine className="w-3 h-3" aria-hidden />
-                  Show less
-                </>
-              ) : (
-                <>
-                  <RiArrowDownLine className="w-3 h-3" aria-hidden />
-                  Show more
-                </>
-              )}
-            </button>
-          </div>
-        )}
+        {/* Opens the post's own page, where the full detail lives */}
+        <div className="mb-4">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-full border-border/70 px-4 text-xs font-semibold text-foreground hover:border-border hover:bg-muted/60"
+          >
+            <Link href={detailHref} onClick={handleReadMore}>
+              Read more
+              <RiArrowRightLine className="w-3.5 h-3.5" aria-hidden />
+            </Link>
+          </Button>
+        </div>
 
         {/* Meta Pills */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -940,414 +730,6 @@ export default function FeedCard({ item, onEngage, isExpanded, onExpand, onPromo
                 +{item.tags.length - 4}
               </span>
             )}
-          </div>
-        )}
-
-        {/* Action buttons (Apply, Register, Access resource, etc.) show only after "Show more" — see expanded section below */}
-
-        {/* Expanded Details */}
-        {expanded && (
-          <div className="mt-4 pt-4 border-t border-border/50 space-y-2.5">
-            {loadingDetails ? (
-              // Skeleton mirrors the boxed sections below so the panel doesn't jump
-              <div className="space-y-2.5 animate-pulse">
-                <div className="h-24 rounded-xl border border-border/40 bg-muted/40" />
-                <div className="h-16 rounded-xl border border-border/40 bg-muted/40" />
-                <div className="h-9 rounded-full bg-muted/40" />
-              </div>
-            ) : details ? (
-              <>
-                {/* Opportunity — Requirements */}
-                {hasOppRequirements && (
-                  <DetailSection icon={RiFocus3Line} title="Requirements">
-                    <DetailGrid>
-                      {oppRequirements.educationLevel && (
-                        <DetailItem label="Education level">{oppRequirements.educationLevel}</DetailItem>
-                      )}
-                      {oppRequirements.careerStage && (
-                        <DetailItem label="Career stage">{oppRequirements.careerStage}</DetailItem>
-                      )}
-                      {oppRequirements.experience && (
-                        <DetailItem label="Experience">{oppRequirements.experience}</DetailItem>
-                      )}
-                      {oppRequirements.ageRange && (
-                        <DetailItem label="Age range">{oppRequirements.ageRange}</DetailItem>
-                      )}
-                      {oppRequirements.citizenship && (
-                        <DetailItem label="Citizenship">{oppRequirements.citizenship}</DetailItem>
-                      )}
-                      {oppRequirements.skills?.length > 0 && (
-                        <DetailItem label="Skills" wide>
-                          <DetailChips items={oppRequirements.skills} />
-                        </DetailItem>
-                      )}
-                      {oppRequirements.other && (
-                        <DetailItem label="Other" wide>
-                          <span className="block leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                            {oppRequirements.other}
-                          </span>
-                        </DetailItem>
-                      )}
-                    </DetailGrid>
-                  </DetailSection>
-                )}
-
-                {/* Benefits — financial perks only; the paid/amount pill already sits in the preview */}
-                {details.financial?.benefits?.length > 0 && (
-                  <DetailSection icon={RiCheckboxCircleLine} title="Benefits">
-                    <DetailList items={details.financial.benefits} />
-                  </DetailSection>
-                )}
-
-                {/* Opportunity — dates beyond the deadline shown in the preview */}
-                {hasOppDates && (
-                  <DetailSection icon={RiCalendarLine} title="Key dates">
-                    <DetailGrid>
-                      {oppDates.startDate && (
-                        <DetailItem label="Starts">{formatDate(oppDates.startDate)}</DetailItem>
-                      )}
-                      {oppDates.endDate && (
-                        <DetailItem label="Ends">{formatDate(oppDates.endDate)}</DetailItem>
-                      )}
-                      {oppDates.duration && (
-                        <DetailItem label="Duration">{oppDates.duration}</DetailItem>
-                      )}
-                    </DetailGrid>
-                  </DetailSection>
-                )}
-
-                {/* Opportunity — location detail not covered by the city/country pill */}
-                {contentKind === 'opportunity' && details.location?.address && (
-                  <DetailSection icon={RiMapPinLine} title="Location">
-                    <DetailGrid>
-                      <DetailItem label="Address" wide>{details.location.address}</DetailItem>
-                    </DetailGrid>
-                  </DetailSection>
-                )}
-
-                {/* Job */}
-                {contentKind === 'job' && (
-                  <>
-                    {details.requirements?.length > 0 && (
-                      <DetailSection icon={RiCheckboxCircleLine} title="Requirements">
-                        <DetailList items={details.requirements} />
-                      </DetailSection>
-                    )}
-                    {details.benefits?.length > 0 && (
-                      <DetailSection icon={RiStarLine} title="Benefits">
-                        <DetailList items={details.benefits} />
-                      </DetailSection>
-                    )}
-                    {details.pay?.amount && (
-                      <DetailSection icon={RiMoneyDollarCircleLine} title="Compensation">
-                        <DetailGrid>
-                          <DetailItem label="Pay">
-                            {details.pay.currency || 'NGN'} {details.pay.amount}
-                            {details.pay.period && (
-                              <span className="text-muted-foreground"> / {details.pay.period}</span>
-                            )}
-                          </DetailItem>
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-                    {hasJobLocation && (
-                      <DetailSection icon={RiMapPinLine} title="Location">
-                        <DetailGrid>
-                          {jobLocation.city && <DetailItem label="City">{jobLocation.city}</DetailItem>}
-                          {jobLocation.country && <DetailItem label="Country">{jobLocation.country}</DetailItem>}
-                          {jobLocation.address && (
-                            <DetailItem label="Address" wide>{jobLocation.address}</DetailItem>
-                          )}
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-                    {details.dates?.applicationDeadline && (
-                      <DetailSection icon={RiCalendarLine} title="Key dates">
-                        <DetailGrid>
-                          <DetailItem label="Application deadline">
-                            {formatDate(details.dates.applicationDeadline)}
-                          </DetailItem>
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-                  </>
-                )}
-
-                {/* Event */}
-                {contentKind === 'event' && (
-                  <>
-                    {/* Schedule — dates beyond the start date shown in the preview */}
-                    {hasEventSchedule && (
-                      <DetailSection icon={RiCalendarLine} title="Schedule">
-                        <DetailGrid>
-                          {eventDates.startDate && eventDates.endDate && (
-                            <DetailItem label="Ends">
-                              {formatDate(eventDates.endDate)}
-                              <span className="text-muted-foreground">
-                                {' · '}
-                                {(() => {
-                                  const start = new Date(eventDates.startDate)
-                                  const end = new Date(eventDates.endDate)
-                                  const diffTime = Math.abs(end.getTime() - start.getTime())
-                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-                                  return `${diffDays} day${diffDays > 1 ? 's' : ''}`
-                                })()}
-                              </span>
-                            </DetailItem>
-                          )}
-                          {eventDates.registrationDeadline && (
-                            <DetailItem label="Registration deadline">
-                              <span className="inline-flex flex-wrap items-center gap-1.5">
-                                {formatDate(eventDates.registrationDeadline)}
-                                {new Date(eventDates.registrationDeadline) < new Date() && (
-                                  <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-400">
-                                    Closed
-                                  </span>
-                                )}
-                              </span>
-                            </DetailItem>
-                          )}
-                          {eventDates.timezone && (
-                            <DetailItem label="Timezone">{eventDates.timezone}</DetailItem>
-                          )}
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-
-                    {/* Location — address only; city/country already sits in the preview pill */}
-                    {details.location?.address && (
-                      <DetailSection icon={RiMapPinLine} title="Location">
-                        <DetailGrid>
-                          <DetailItem label="Address" wide>{details.location.address}</DetailItem>
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-
-                    {/* Event Capacity */}
-                    {/* {details.capacity && (
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <RiGroupLine className="w-4 h-4" aria-hidden />
-                          Capacity
-                        </h4>
-                        <div className="space-y-1.5 text-sm text-muted-foreground pl-6">
-                          {details.capacity.maxAttendees && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Max Attendees: </span>
-                              <span>{details.capacity.maxAttendees}</span>
-                            </div>
-                          )}
-                          {details.capacity.currentAttendees !== undefined && (
-                            <div>
-                              <span className="font-medium text-foreground/90">Current Attendees: </span>
-                              <span>{details.capacity.currentAttendees}</span>
-                            </div>
-                          )}
-                          {details.capacity.isFull && (
-                            <div className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-medium inline-block">
-                              Event Full
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )} */}
-
-                    {/* Requirements — scalar fields in the grid, lists underneath */}
-                    {hasEventRequirements && (
-                      <DetailSection icon={RiCheckboxCircleLine} title="Requirements">
-                        <DetailGrid>
-                          {eventRequirements.ageRange && (
-                            <DetailItem label="Age range">{eventRequirements.ageRange}</DetailItem>
-                          )}
-                          {eventRequirements.skillLevel && (
-                            <DetailItem label="Skill level">{eventRequirements.skillLevel}</DetailItem>
-                          )}
-                          {eventRequirements.prerequisites?.length > 0 && (
-                            <DetailItem label="Prerequisites" wide>
-                              <DetailList items={eventRequirements.prerequisites} />
-                            </DetailItem>
-                          )}
-                          {eventRequirements.equipment?.length > 0 && (
-                            <DetailItem label="Equipment needed" wide>
-                              <DetailChips items={eventRequirements.equipment} />
-                            </DetailItem>
-                          )}
-                        </DetailGrid>
-                      </DetailSection>
-                    )}
-
-                    {/* Agenda — free text from some sources, a timed list from others */}
-                    {details.agenda && (
-                      <DetailSection icon={RiFileLine} title="Agenda">
-                        {typeof details.agenda === 'string' ? (
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                            {details.agenda}
-                          </p>
-                        ) : Array.isArray(details.agenda) ? (
-                          <ol className="space-y-2.5">
-                            {details.agenda.map((entry: any, index: number) => (
-                              <li key={index} className="flex gap-3 text-sm">
-                                <span className="w-16 shrink-0 pt-px text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
-                                  {entry.time || `${index + 1}.`}
-                                </span>
-                                <span className="min-w-0 border-l border-border/60 pl-3">
-                                  <span className="block text-foreground/90 break-words">
-                                    {entry.title || (typeof entry === 'string' ? entry : '')}
-                                  </span>
-                                  {entry.description && (
-                                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground break-words">
-                                      {entry.description}
-                                    </span>
-                                  )}
-                                </span>
-                              </li>
-                            ))}
-                          </ol>
-                        ) : null}
-                      </DetailSection>
-                    )}
-                  </>
-                )}
-
-                {/* Resource — one section; these were three boxes holding a single value each */}
-                {hasResourceDetails && (
-                  <DetailSection
-                    icon={
-                      detailsAny.category === 'video' ? RiVideoLine
-                        : detailsAny.category === 'audio' ? RiHeadphoneLine
-                        : RiFileLine
-                    }
-                    title="Resource details"
-                  >
-                    <DetailGrid>
-                      {details.category && (
-                        <DetailItem label="Type">
-                          <span className="capitalize">{details.category}</span>
-                        </DetailItem>
-                      )}
-                      {details.duration && <DetailItem label="Duration">{details.duration}</DetailItem>}
-                      {details.metrics?.viewCount !== undefined && (
-                        <DetailItem label="Views">{details.metrics.viewCount.toLocaleString()}</DetailItem>
-                      )}
-                    </DetailGrid>
-                  </DetailSection>
-                )}
-
-                {/* Action Button */}
-                <div className="pt-1">
-                  {contentKind === 'opportunity' && (() => {
-                    const applyUrl = detailsAny.url ?? detailsAny.applicationLink ?? (detailsAny as { application_link?: string }).application_link ?? detailsAny.externalUrl ?? detailsAny.externalLink ?? item.url ?? item.applicationLink ?? item.externalUrl ?? item.externalLink
-                    if (applyUrl) {
-                      return (
-                        <Button
-                          asChild
-                          size="sm"
-                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                        >
-                          <a href={cleanUrl(applyUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            Apply Now
-                            <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                          </a>
-                        </Button>
-                      )
-                    }
-                    return (
-                      <Button
-                        asChild
-                        size="sm"
-                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                      >
-                        <Link href={`/opportunities/${item._id}`} className="flex items-center justify-center gap-2">
-                          View & apply
-                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                        </Link>
-                      </Button>
-                    )
-                  })()}
-                  {contentKind === 'event' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink) && (() => {
-                    const eventUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink;
-                    return (
-                      <Button
-                        asChild
-                        size="sm"
-                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                      >
-                        <a href={cleanUrl(eventUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                          Register
-                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                        </a>
-                      </Button>
-                    );
-                  })()}
-                  {contentKind === 'job' && (details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink) && (() => {
-                    const jobUrl = details.url || details.externalUrl || details.externalLink || item.url || item.externalUrl || item.externalLink || details.applicationLink || item.applicationLink;
-                    return (
-                      <Button
-                        asChild
-                        size="sm"
-                        className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                      >
-                        <a href={cleanUrl(jobUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                          Apply
-                          <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                        </a>
-                      </Button>
-                    );
-                  })()}
-                  {contentKind === 'resource' && (
-                    <div className="flex flex-col gap-2">
-                      {detailsAny.paymentLink ? (
-                        <Button
-                          asChild
-                          size="sm"
-                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                        >
-                          <a href={cleanUrl(detailsAny.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                            Sign up <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                          </a>
-                        </Button>
-                      ) : detailsAny.fileUrl ? (
-                        <>
-                          <Button
-                            asChild
-                            size="sm"
-                            className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                          >
-                            <a href={cleanUrl(detailsAny.fileUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                              Access Resource
-                              <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                            </a>
-                          </Button>
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full"
-                          >
-                            <a href={detailsAny.fileUrl} download className="flex items-center justify-center gap-2">
-                              <RiDownloadLine className="w-4 h-4" aria-hidden />
-                              Download
-                            </a>
-                          </Button>
-                        </>
-                      ) : (detailsAny.resourceType === 'file' || detailsAny.hasFile) ? (
-                        // Uploaded (file) resources are viewed in-platform — open the resource page.
-                        <Button
-                          asChild
-                          size="sm"
-                          className={cn("w-full rounded-full text-white shadow-md font-semibold", config.buttonColor)}
-                        >
-                          <Link href={`/resources/${item._id}`} className="flex items-center justify-center gap-2">
-                            View Resource
-                            <RiExternalLinkLine className="w-4 h-4" aria-hidden />
-                          </Link>
-                        </Button>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
           </div>
         )}
 

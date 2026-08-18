@@ -102,11 +102,11 @@ export default function ProductPage() {
         </div>
         
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-tight">
-          How GlowUp is rewiring access for African talent
+          How UP is rewiring access for African talent
         </h1>
         
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-12 pb-12 border-b border-border/50">
-          <span>By The GlowUp Team</span>
+          <span>By The UP Team</span>
           <span>•</span>
           <span>Updated 2024</span>
         </div>
@@ -114,17 +114,17 @@ export default function ProductPage() {
         <div className="prose prose-invert max-w-none text-muted-foreground leading-relaxed space-y-6">
           <p className="text-xl text-foreground font-medium">
             Brilliant African talent has always existed. What's been missing is a central nervous system for access. 
-            GlowUp stitches opportunities, resources, and deep-focus tools into one place so you can move with intention.
+            UP stitches opportunities, resources, and deep-focus tools into one place so you can move with intention.
           </p>
           <p>
             Whether you are searching for your first internship, applying to global fellowships, or trying to find remote work, 
-            navigating the internet can feel like screaming into the void. GlowUp was designed specifically to fix the "discovery problem".
+            navigating the internet can feel like screaming into the void. UP was designed specifically to fix the "discovery problem".
             We are not just a job board; we are an ecosystem combining productivity tracking with curated opportunities.
           </p>
           
           <h2 className="text-2xl font-bold text-foreground mt-12 mb-6">Designed as a Practice, Not a One-Off Win</h2>
           <p>
-            The old way of applying for things was haphazard. With GlowUp's new <strong>Sessions</strong> feature (currently in Beta), 
+            The old way of applying for things was haphazard. With UP's new <strong>Sessions</strong> feature (currently in Beta), 
             you don't just browse opportunities — you get to track the time you spend building your career.
           </p>
 
@@ -133,7 +133,7 @@ export default function ProductPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                    Feature Spotlight: GlowUp session
+                    Feature Spotlight: UP session
                   </p>
                   <p className="text-base text-foreground mt-1 font-medium">
                     Stay locked in on one goal at a time.
@@ -164,13 +164,13 @@ export default function ProductPage() {
           </div>
 
           <p>
-            We enforce strict quality standards. Any provider posting on GlowUp goes through verification processes to ensure 
+            We enforce strict quality standards. Any provider posting on UP goes through verification processes to ensure 
             opportunities are legitimate and actionable. If you are a provider, this means you reach a highly engaged, vetted talent pool.
           </p>
 
           <h2 className="text-2xl font-bold text-foreground mt-12 mb-6">The Content Engine</h2>
           <p>
-            GlowUp breaks down growth into four main tracks. Here is what you'll find when you plug into the feed:
+            UP breaks down growth into four main tracks. Here is what you'll find when you plug into the feed:
           </p>
 
           <div className="grid sm:grid-cols-2 gap-4 not-prose my-8">

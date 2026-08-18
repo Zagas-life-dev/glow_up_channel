@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Search",
-  description: "Search opportunities, jobs, events, resources, and people on GlowUp.",
+  description: "Search opportunities, jobs, events, resources, and people on UP.",
 }
 
 export default function SearchLayout({ children }: { children: React.ReactNode }) {

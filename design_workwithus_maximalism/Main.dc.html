@@ -1,0 +1,1039 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@400..900&display=swap">
+  <style>
+    body { margin: 0; background: #0b1222; }
+    a { color: #ff6700; text-decoration: none; }
+    a:hover { color: #ff8a3d; text-decoration: underline; }
+
+    .up-root {
+      --acc: #ff6700;
+      --orn: 1;
+      --ink: #eff1f6;
+      --dim: #7583a3;
+      --line: #1b2641;
+      --card: #121a2b;
+      --lift: #182239;
+      position: relative;
+      width: 1280px;
+      min-height: 3260px;
+      overflow: hidden;
+      background: #0b1222;
+      color: #eff1f6;
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Atmosphere: mesh, blueprint grid, grain */
+    .ground {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(880px 620px at 80% -8%, rgba(255,103,0,.22), transparent 62%),
+        radial-gradient(760px 540px at 2% 10%, rgba(58,86,190,.20), transparent 60%),
+        radial-gradient(700px 460px at 96% 46%, rgba(120,86,255,.10), transparent 62%),
+        radial-gradient(1100px 720px at 46% 104%, rgba(255,103,0,.13), transparent 60%);
+      opacity: calc(.35 + .65 * var(--orn));
+    }
+    .gridlines {
+      position: absolute; inset: 0; pointer-events: none; opacity: var(--orn);
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+    .grain {
+      position: absolute; inset: 0; pointer-events: none;
+      opacity: calc(.16 * var(--orn)); mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .ghostword {
+      position: absolute; top: 300px; right: -44px; pointer-events: none;
+      writing-mode: vertical-rl;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 900; font-size: 190px; line-height: 1; letter-spacing: -.05em;
+      color: transparent; -webkit-text-stroke: 1.5px rgba(255,103,0,.15);
+      opacity: var(--orn);
+    }
+
+    /* Ornament primitives */
+    .diamond { width: 7px; height: 7px; background: var(--acc); transform: rotate(45deg); flex: none; }
+    .diamond-sm { width: 5px; height: 5px; background: var(--acc); transform: rotate(45deg); flex: none; }
+    .hatch {
+      height: 8px; flex: 1 1 auto; opacity: calc(.7 * var(--orn));
+      background-image: repeating-linear-gradient(115deg, var(--acc) 0 1.5px, transparent 1.5px 9px);
+    }
+    .hairline { height: 1px; flex: 1 1 auto; background: #1b2641; }
+
+    .bracket { position: relative; }
+    .bracket::before, .bracket::after {
+      content: ""; position: absolute; width: 20px; height: 20px;
+      border: 2px solid var(--acc); pointer-events: none;
+      opacity: calc(.85 * var(--orn));
+    }
+    .bracket::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 15px; }
+    .bracket::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 15px; }
+
+    .panel {
+      position: relative; border-radius: 16px; border: 1px solid #1b2641;
+      background: linear-gradient(158deg, rgba(24,34,57,.84) 0%, rgba(18,26,43,.70) 100%);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 26px 60px -34px rgba(0,0,0,.95);
+      transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+    .panel-hit { cursor: pointer; text-align: left; width: 100%; font: inherit; color: inherit; display: block; }
+    .panel-hit:hover {
+      border-color: rgba(255,103,0,.5); transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 34px 74px -34px rgba(255,103,0,.42);
+    }
+    .panel-on { border-color: var(--acc); background: linear-gradient(158deg, rgba(255,103,0,.15) 0%, rgba(18,26,43,.78) 100%); }
+
+    .ghostnum {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 900; font-size: 66px; line-height: .82; letter-spacing: -.05em;
+      color: transparent; -webkit-text-stroke: 1.5px rgba(255,103,0,.55);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      height: 56px; padding: 0 30px; border: 0; border-radius: 8px; cursor: pointer;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: #fff;
+      background: linear-gradient(180deg, #ff7d21 0%, #ff6700 55%, #e65c00 100%);
+      box-shadow: 0 0 0 1px rgba(255,103,0,.42), 0 14px 34px -12px rgba(255,103,0,.6), inset 0 1px 0 rgba(255,255,255,.28);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,103,0,.72), 0 20px 48px -12px rgba(255,103,0,.78), inset 0 1px 0 rgba(255,255,255,.34); }
+
+    .cta-quiet {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      height: 56px; padding: 0 24px; border-radius: 8px; cursor: pointer;
+      border: 1px solid #1b2641; background: rgba(24,34,57,.6); color: #eff1f6;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 600;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .cta-quiet:hover { border-color: rgba(255,103,0,.55); background: rgba(255,103,0,.09); }
+
+    .plate {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 7px 13px; border: 1px solid rgba(255,103,0,.36); border-radius: 7px;
+      background: rgba(255,103,0,.07);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: -.01em; color: #ffb98a;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .eyebrow {
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .18em; color: #7583a3;
+    }
+
+    .h1 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 800; font-size: 88px; line-height: .94; letter-spacing: -.042em; margin: 0;
+    }
+    .h2 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 800; font-size: 44px; line-height: 1.04; letter-spacing: -.035em; margin: 0;
+    }
+    .h3 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 700; font-size: 21px; line-height: 1.2; letter-spacing: -.02em; margin: 0;
+    }
+
+    .ticker {
+      position: relative; display: flex; align-items: center; gap: 20px;
+      height: 42px; padding: 0 26px; overflow: hidden;
+      border-bottom: 1px solid #1b2641;
+      background: rgba(11,18,34,.7); backdrop-filter: blur(8px);
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: .2em;
+      text-transform: uppercase; color: #7583a3; white-space: nowrap;
+    }
+
+    .ring-rot { animation: up-spin 64s linear infinite; }
+    @keyframes up-spin { to { transform: rotate(360deg); } }
+
+    .field {
+      width: 100%; height: 48px; box-sizing: border-box;
+      padding: 0 14px; border-radius: 8px; border: 1px solid #1b2641;
+      background: rgba(11,18,34,.72); color: #eff1f6;
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; font-size: 15px;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .field::placeholder { color: #4d5a78; }
+    .field:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px rgba(255,103,0,.16); }
+    .field-tall { height: 108px; padding: 12px 14px; resize: none; line-height: 1.5; }
+
+    .step-btn {
+      width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid #1b2641; background: rgba(11,18,34,.6); color: #eff1f6;
+      cursor: pointer; font-size: 17px; line-height: 1; transition: border-color .18s, color .18s;
+    }
+    .step-btn:hover { border-color: var(--acc); color: var(--acc); }
+
+    .back {
+      display: inline-flex; align-items: center; gap: 8px; background: none; border: 0;
+      cursor: pointer; padding: 0; color: #7583a3;
+      font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; font-size: 14px;
+      transition: color .18s;
+    }
+    .back:hover { color: #eff1f6; }
+  </style>
+</helmet>
+
+<div class="up-root" style="--acc: {{accent}}; --orn: {{orn}}">
+  <div class="ground"></div>
+  <div class="gridlines"></div>
+  <div class="ghostword">DISTRIBUTION</div>
+  <div class="grain"></div>
+
+  <div class="ticker">
+    <span>Work with UP</span><span class="diamond-sm"></span>
+    <span>No sales call</span><span class="diamond-sm"></span>
+    <span>Pay online</span><span class="diamond-sm"></span>
+    <span>Reviewed before it goes live</span><span class="diamond-sm"></span>
+    <span>Jobs</span><span class="diamond-sm"></span>
+    <span>Opportunities</span><span class="diamond-sm"></span>
+    <span>Events</span><span class="diamond-sm"></span>
+    <span>Resources</span><span class="diamond-sm"></span>
+    <span>Work with UP</span>
+  </div>
+
+  <div style="position: relative; width: 1120px; margin: 0 auto; padding: 0 0 120px 0;">
+
+    <!-- =============== WELCOME ============================================ -->
+    <sc-if value="{{isWelcome}}" hint-placeholder-val="{{true}}">
+    <div>
+      <div style="display: flex; align-items: center; gap: 14px; padding: 58px 0 34px 0;">
+        <span class="eyebrow">Distribution</span>
+        <span class="diamond"></span>
+        <span class="hatch"></span>
+        <span class="eyebrow">Since day one, useful first</span>
+      </div>
+
+      <div style="display: flex; gap: 40px; align-items: flex-start;">
+        <div style="width: 712px; flex: none;">
+          <h1 class="h1">
+            Have something<br>
+            <span style="color: {{accent}}; text-shadow: 0 0 44px rgba(255,103,0,.42);">valuable</span> to put<br>
+            in front of<br>
+            young Africans?
+          </h1>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin: 30px 0 26px 0;">
+            <span class="diamond"></span><span class="hatch"></span>
+          </div>
+
+          <p style="margin: 0; max-width: 620px; font-size: 18px; line-height: 1.62; color: #b9c2d6;">
+            UP helps organisations distribute jobs, opportunities, events and relevant initiatives to a young African audience through our platform, community and social channels.
+          </p>
+
+          <div class="panel bracket" style="margin-top: 26px; padding: 20px 24px; max-width: 620px;">
+            <p style="margin: 0; font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; line-height: 1.55; letter-spacing: -.012em;">
+              Choose what you need. Pay online. Send us the details. We&#39;ll handle the distribution.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: 30px;">
+            <button class="cta" onClick="{{goChoose}}">
+              Choose a distribution option
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+            <a class="cta-quiet" href="#" style="text-decoration: none;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"></path></svg>
+              Not sure what you need? Talk to UP
+            </a>
+          </div>
+        </div>
+
+        <div style="position: relative; width: 368px; height: 368px; flex: none; margin-top: 18px;">
+          <svg class="ring-rot" width="368" height="368" viewBox="0 0 368 368" style="position: absolute; inset: 0;">
+            <circle cx="184" cy="184" r="182" fill="none" stroke="{{accent}}" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="2 11" stroke-linecap="round"></circle>
+          </svg>
+          <svg width="368" height="368" viewBox="0 0 368 368" style="position: absolute; inset: 0;">
+            <circle cx="184" cy="184" r="163" fill="none" stroke="#1b2641" stroke-width="1"></circle>
+            <circle cx="184" cy="184" r="126" fill="none" stroke="{{accent}}" stroke-opacity=".28" stroke-width="1"></circle>
+            <line x1="184" y1="8" x2="184" y2="30" stroke="{{accent}}" stroke-width="1.5"></line>
+            <line x1="184" y1="338" x2="184" y2="360" stroke="{{accent}}" stroke-width="1.5"></line>
+            <line x1="8" y1="184" x2="30" y2="184" stroke="{{accent}}" stroke-width="1.5"></line>
+            <line x1="338" y1="184" x2="360" y2="184" stroke="{{accent}}" stroke-width="1.5"></line>
+          </svg>
+          <div style="position: absolute; inset: 76px; border-radius: 999px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 24px; background: radial-gradient(circle at 50% 30%, rgba(255,103,0,.16), rgba(11,18,34,.86) 70%); border: 1px solid rgba(255,103,0,.22);">
+            <span class="eyebrow" style="font-size: 10px;">Audience</span>
+            <span style="margin-top: 8px; font-family: Inter, sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -.035em; line-height: 1; color: {{accent}}; font-variant-numeric: tabular-nums;">[LIVE COUNT]+</span>
+            <span style="margin-top: 9px; font-size: 13px; line-height: 1.45; color: #b9c2d6;">people on UP</span>
+            <span style="margin-top: 12px; font-size: 11px; line-height: 1.45; color: #7583a3;">Counted at request time. Never hard-coded.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model band + real price ladder -->
+      <div style="display: flex; align-items: center; gap: 14px; margin: 86px 0 34px 0;">
+        <span class="hatch"></span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <div style="display: flex; gap: 56px; align-items: flex-start;">
+        <h2 class="h2" style="width: 520px; flex: none;">You already have something our audience needs.</h2>
+        <p style="margin: 0; padding-top: 6px; font-size: 17px; line-height: 1.62; color: #b9c2d6;">
+          Whether you&#39;re listing an opportunity, pushing it further on UP, reaching the community or creating social content, you choose the level of distribution that fits your goal.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 34px;">
+        <sc-for list="{{ladder}}" as="rung" hint-placeholder-count="5">
+          <div class="panel" style="padding: 18px 16px 20px 16px;">
+            <div class="eyebrow" style="font-size: 10px;">{{rung.kicker}}</div>
+            <div style="margin-top: 12px; font-family: Inter, sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -.035em; color: {{accent}}; font-variant-numeric: tabular-nums;">{{rung.price}}</div>
+            <div style="margin-top: 6px; font-size: 13px; line-height: 1.45; color: #7583a3;">{{rung.label}}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Why UP: asymmetric 2 / 3 grid -->
+      <div style="display: flex; align-items: center; gap: 14px; margin: 86px 0 30px 0;">
+        <span class="eyebrow">Why UP</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+        <sc-for list="{{whyUp}}" as="benefit" hint-placeholder-count="5">
+          <div class="panel bracket" style="grid-column: span {{benefit.span}}; padding: 26px 24px 28px 24px;">
+            <div class="ghostnum">{{benefit.num}}</div>
+            <h3 class="h3" style="margin-top: 18px;">{{benefit.title}}</h3>
+            <p style="margin: 10px 0 0 0; font-size: 15px; line-height: 1.55; color: #97a3bd;">{{benefit.body}}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- How it works: ornamental ladder -->
+      <div style="display: flex; align-items: center; gap: 14px; margin: 86px 0 30px 0;">
+        <span class="eyebrow">How it works</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <div class="panel" style="padding: 8px 36px 12px 36px;">
+        <sc-for list="{{howItWorks}}" as="step" hint-placeholder-count="6">
+          <div style="display: flex; align-items: center; gap: 28px; padding: 22px 0; border-bottom: 1px solid rgba(27,38,65,.75);">
+            <span class="ghostnum" style="font-size: 46px; width: 62px; flex: none;">{{step.num}}</span>
+            <span style="font-family: Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -.02em;">{{step.text}}</span>
+            <span class="hairline"></span>
+            <span class="diamond-sm"></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Closing slab -->
+      <div class="panel bracket" style="margin-top: 60px; padding: 52px 48px; text-align: center; background: linear-gradient(158deg, rgba(255,103,0,.13) 0%, rgba(18,26,43,.8) 100%); border-color: rgba(255,103,0,.3);">
+        <h2 class="h2" style="font-size: 38px;">Pick a product and pay online.<br>Nothing here is priced behind a conversation.</h2>
+        <div style="display: flex; justify-content: center; gap: 14px; margin-top: 32px;">
+          <button class="cta" onClick="{{goChoose}}">
+            Choose a distribution option
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 26px; margin-top: 26px;">
+          <a href="#" style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 6.5 8.5 6 8.5-6"></path></svg>
+            hello@up.example
+          </a>
+          <a href="#" style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"></path></svg>
+            WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- =============== CHOOSE ============================================= -->
+    <sc-if value="{{isChoose}}" hint-placeholder-val="{{true}}">
+    <div style="padding-top: 52px;">
+      <button class="back" onClick="{{goWelcome}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6"></path><path d="m12 19-7-7 7-7"></path></svg>
+        Back
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin: 34px 0 22px 0;">
+        <span class="eyebrow">Step 01 &nbsp;/&nbsp; Outcome</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <h1 class="h1" style="font-size: 62px; max-width: 860px;">What are you trying to achieve?</h1>
+      <p style="margin: 20px 0 0 0; max-width: 640px; font-size: 17px; line-height: 1.6; color: #b9c2d6;">
+        Start with what you&#39;re trying to do — we&#39;ll show you the simplest option that fits.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 44px;">
+        <button class="panel panel-hit bracket" style="padding: 34px 30px 30px 30px; min-height: 300px; display: flex; flex-direction: column;" onClick="{{goSubmit}}">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+            <span class="ghostnum">01</span>
+            <span class="plate">From free</span>
+          </div>
+          <h3 class="h3" style="margin-top: 26px; font-size: 26px;">Get an opportunity, job or event onto UP</h3>
+          <p style="margin: 12px 0 0 0; font-size: 15px; line-height: 1.55; color: #97a3bd; flex: 1 1 auto;">
+            Listed on the platform with its own page and application link. Opportunities and free events cost nothing.
+          </p>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 22px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; color: {{accent}};">
+            List it on UP
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </div>
+        </button>
+
+        <button class="panel panel-hit bracket" style="padding: 34px 30px 30px 30px; min-height: 300px; display: flex; flex-direction: column;" onClick="{{goPromote}}">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+            <span class="ghostnum">02</span>
+            <span class="plate">From &#8358;7,500</span>
+          </div>
+          <h3 class="h3" style="margin-top: 26px; font-size: 26px;">Reach more people with something</h3>
+          <p style="margin: 12px 0 0 0; font-size: 15px; line-height: 1.55; color: #97a3bd; flex: 1 1 auto;">
+            Feature it on the platform, push it to the community, or have us make social content for it.
+          </p>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 22px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; color: {{accent}};">
+            Choose my distribution
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </div>
+        </button>
+      </div>
+
+      <div style="margin-top: 20px; padding: 22px 26px; border: 1px dashed rgba(117,131,163,.4); border-radius: 16px; display: flex; align-items: center; gap: 18px;">
+        <span class="eyebrow" style="color: #4d5a78;">Slot 03 — not rendered</span>
+        <span class="hairline"></span>
+        <span style="font-size: 14px; color: #7583a3;">
+          &ldquo;Distribute with us regularly&rdquo; stays hidden while <span style="font-family: Inter, sans-serif; color: #b9c2d6;">PARTNER_PROGRAMME_ENABLED</span> is false. The grid is built for three.
+        </span>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 44px;">
+        <span style="font-size: 15px; color: #7583a3;">Not sure which is right? Talk to UP</span>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"></path></svg>
+          WhatsApp
+        </a>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 6.5 8.5 6 8.5-6"></path></svg>
+          Email
+        </a>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- =============== SUBMIT ============================================= -->
+    <sc-if value="{{isSubmit}}" hint-placeholder-val="{{true}}">
+    <div style="padding-top: 52px;">
+      <button class="back" onClick="{{goChoose}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6"></path><path d="m12 19-7-7 7-7"></path></svg>
+        Back
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin: 34px 0 22px 0;">
+        <span class="eyebrow">Step 02 &nbsp;/&nbsp; List it on UP</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <h1 class="h1" style="font-size: 56px; max-width: 780px;">What are you putting on UP?</h1>
+
+      <div style="display: flex; gap: 40px; align-items: flex-start; margin-top: 40px;">
+        <div style="width: 740px; flex: none;">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+            <sc-for list="{{submitOptions}}" as="opt" hint-placeholder-count="4">
+              <button class="panel panel-hit {{opt.cls}}" style="padding: 24px 22px 26px 22px; display: flex; flex-direction: column;" onClick="{{opt.pick}}">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;">
+                  <h3 class="h3">{{opt.label}}</h3>
+                  <span class="plate" style="flex: none;">{{opt.price}}</span>
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.5; color: #97a3bd; flex: 1 1 auto;">{{opt.blurb}}</p>
+                <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(27,38,65,.85);">
+                  <sc-for list="{{opt.includes}}" as="line" hint-placeholder-count="3">
+                    <span style="display: flex; align-items: center; gap: 9px; font-size: 13px; color: #b9c2d6;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5.2 5.2L20 7"></path></svg>
+                      {{line}}
+                    </span>
+                  </sc-for>
+                </div>
+                <span class="eyebrow" style="margin-top: 16px; font-size: 10px;">{{opt.timing}}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{needsDuration}}" hint-placeholder-val="{{true}}">
+            <div class="panel bracket" style="margin-top: 20px; padding: 26px 24px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="eyebrow">How long should it run?</span><span class="hatch"></span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px;">
+                <sc-for list="{{durations}}" as="tier" hint-placeholder-count="2">
+                  <button class="panel panel-hit {{tier.cls}}" style="padding: 18px 18px 20px 18px;" onClick="{{tier.pick}}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                      <span style="font-family: Inter, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -.02em;">{{tier.label}}</span>
+                      <span class="plate">{{tier.price}}</span>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.5; color: #97a3bd;">{{tier.blurb}}</p>
+                  </button>
+                </sc-for>
+              </div>
+              <p style="margin: 16px 0 0 0; font-size: 13px; color: #7583a3;">
+                Five or more standard listings drop to the pack rate of &#8358;4,000 each.
+              </p>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; align-items: center; gap: 14px; margin: 44px 0 22px 0;">
+            <span class="eyebrow">The details</span><span class="diamond"></span><span class="hatch"></span>
+          </div>
+
+          <div class="panel" style="padding: 28px 26px;">
+            <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.55; color: #97a3bd;">
+              You don&#39;t need to write a perfect brief. Accurate information, a working link and the assets we ask for is plenty.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Title</label>
+                <input class="field" type="text" placeholder="Name of the opportunity">
+              </div>
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Details</label>
+                <textarea class="field field-tall" placeholder="What it is, who it is for, how to apply"></textarea>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+                <div>
+                  <label class="eyebrow" style="display: block; margin-bottom: 8px;">Application link</label>
+                  <input class="field" type="text" placeholder="https://">
+                </div>
+                <div>
+                  <label class="eyebrow" style="display: block; margin-bottom: 8px;">Deadline <span style="color: #4d5a78;">(optional)</span></label>
+                  <input class="field" type="text" placeholder="dd / mm / yyyy">
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin: 28px 0 22px 0;">
+              <span class="eyebrow">Where we send it</span><span class="hatch"></span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Your name</label>
+                <input class="field" type="text">
+              </div>
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Organisation <span style="color: #4d5a78;">(optional)</span></label>
+                <input class="field" type="text">
+              </div>
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Email</label>
+                <input class="field" type="text">
+              </div>
+              <div>
+                <label class="eyebrow" style="display: block; margin-bottom: 8px;">Phone</label>
+                <input class="field" type="text">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order rail -->
+        <div style="width: 340px; flex: none;">
+          <div class="panel bracket" style="padding: 26px 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="eyebrow">Your order</span><span class="hatch"></span>
+            </div>
+            <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 14px;">
+              <sc-for list="{{orderLines}}" as="line" hint-placeholder-count="1">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;">
+                  <span style="font-size: 14px; line-height: 1.45; color: #b9c2d6;">{{line.label}}</span>
+                  <span style="font-family: Inter, sans-serif; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none;">{{line.amount}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(27,38,65,.9);">
+              <span class="eyebrow">Total</span>
+              <span style="font-family: Inter, sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -.035em; color: {{accent}}; font-variant-numeric: tabular-nums;">{{totalLabel}}</span>
+            </div>
+            <button class="cta" style="width: 100%; margin-top: 22px;" onClick="{{goReview}}">
+              Check it over
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+            <p style="margin: 16px 0 0 0; font-size: 12px; line-height: 1.5; color: #7583a3;">
+              We review paid distribution before it goes live. It&#39;s how we protect the quality of what we put in front of the UP audience.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- =============== PROMOTE ============================================ -->
+    <sc-if value="{{isPromote}}" hint-placeholder-val="{{true}}">
+    <div style="padding-top: 52px;">
+      <button class="back" onClick="{{goChoose}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6"></path><path d="m12 19-7-7 7-7"></path></svg>
+        Back
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin: 34px 0 22px 0;">
+        <span class="eyebrow">Step 02 &nbsp;/&nbsp; Distribution</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <h1 class="h1" style="font-size: 56px; max-width: 820px;">How far should this travel?</h1>
+
+      <div style="display: flex; gap: 40px; align-items: flex-start; margin-top: 40px;">
+        <div style="width: 740px; flex: none;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <span class="eyebrow">Bundles</span><span class="hatch"></span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+            <sc-for list="{{bundles}}" as="bundle" hint-placeholder-count="3">
+              <button class="panel panel-hit bracket {{bundle.cls}}" style="padding: 26px 20px 24px 20px; display: flex; flex-direction: column;" onClick="{{bundle.pick}}">
+                <span style="font-family: Inter, sans-serif; font-size: 13px; font-weight: 800; letter-spacing: .16em; color: {{accent}};">{{bundle.label}}</span>
+                <span style="margin-top: 14px; font-family: Inter, sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -.035em; font-variant-numeric: tabular-nums;">{{bundle.price}}</span>
+                <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.5; color: #b9c2d6;">{{bundle.blurb}}</p>
+                <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(27,38,65,.85); flex: 1 1 auto;">
+                  <sc-for list="{{bundle.contents}}" as="line" hint-placeholder-count="3">
+                    <span style="display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.4; color: #97a3bd;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 3px; flex: none;"><path d="m4 12.5 5.2 5.2L20 7"></path></svg>
+                      {{line}}
+                    </span>
+                  </sc-for>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px; margin: 44px 0 22px 0;">
+            <span class="eyebrow">Or build it yourself</span><span class="diamond"></span><span class="hatch"></span>
+          </div>
+
+          <sc-for list="{{promoGroups}}" as="group" hint-placeholder-count="3">
+            <div class="panel" style="padding: 22px 24px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="diamond-sm"></span>
+                <span style="font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -.015em;">{{group.name}}</span>
+                <span class="hairline"></span>
+              </div>
+              <div style="display: flex; flex-direction: column; margin-top: 6px;">
+                <sc-for list="{{group.items}}" as="item" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 18px; padding: 16px 0; border-bottom: 1px solid rgba(27,38,65,.6);">
+                    <div style="flex: 1 1 auto; min-width: 0;">
+                      <div style="font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -.015em;">{{item.label}}</div>
+                      <div style="margin-top: 3px; font-size: 13px; line-height: 1.45; color: #7583a3;">{{item.blurb}}</div>
+                    </div>
+                    <span class="plate" style="flex: none;">{{item.price}}</span>
+                    <div style="display: flex; align-items: center; border: 1px solid #1b2641; border-radius: 8px; overflow: hidden; flex: none;">
+                      <button class="step-btn" style="border: 0;" onClick="{{item.dec}}">&minus;</button>
+                      <span style="width: 40px; text-align: center; font-family: Inter, sans-serif; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;">{{item.qty}}</span>
+                      <button class="step-btn" style="border: 0;" onClick="{{item.inc}}">+</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- Order rail -->
+        <div style="width: 340px; flex: none;">
+          <div class="panel bracket" style="padding: 26px 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="eyebrow">Your order</span><span class="hatch"></span>
+            </div>
+            <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 14px;">
+              <sc-for list="{{orderLines}}" as="line" hint-placeholder-count="2">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;">
+                  <span style="font-size: 14px; line-height: 1.45; color: #b9c2d6;">{{line.label}}</span>
+                  <span style="font-family: Inter, sans-serif; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none;">{{line.amount}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(27,38,65,.9);">
+              <span class="eyebrow">Total</span>
+              <span style="font-family: Inter, sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -.035em; color: {{accent}}; font-variant-numeric: tabular-nums;">{{totalLabel}}</span>
+            </div>
+            <button class="cta" style="width: 100%; margin-top: 22px;" onClick="{{goReview}}">
+              Check it over
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+            <p style="margin: 16px 0 0 0; font-size: 12px; line-height: 1.5; color: #7583a3;">
+              A bundle replaces the individual items. Picking one clears anything you built by hand.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- =============== REVIEW ============================================= -->
+    <sc-if value="{{isReview}}" hint-placeholder-val="{{true}}">
+    <div style="padding-top: 52px; max-width: 800px;">
+      <button class="back" onClick="{{goBackFromReview}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6"></path><path d="m12 19-7-7 7-7"></path></svg>
+        Back
+      </button>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin: 34px 0 22px 0;">
+        <span class="eyebrow">Step 03 &nbsp;/&nbsp; Confirm</span><span class="diamond"></span><span class="hatch"></span>
+      </div>
+
+      <h1 class="h1" style="font-size: 62px;">Check it over</h1>
+      <p style="margin: 18px 0 0 0; font-size: 17px; color: #b9c2d6;">{{reviewLead}}</p>
+
+      <div class="panel bracket" style="margin-top: 36px; padding: 32px 30px;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <sc-for list="{{orderLines}}" as="line" hint-placeholder-count="2">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;">
+              <span style="font-size: 15px; line-height: 1.5; color: #dbe1ec;">{{line.label}}</span>
+              <span style="font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none;">{{line.amount}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; margin: 26px 0;">
+          <span class="hatch"></span><span class="diamond"></span><span class="hatch"></span>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px;">
+          <span class="eyebrow">Total</span>
+          <span style="font-family: Inter, sans-serif; font-size: 52px; font-weight: 800; letter-spacing: -.04em; color: {{accent}}; font-variant-numeric: tabular-nums; line-height: 1;">{{totalLabel}}</span>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 18px; padding: 24px 26px; background: rgba(24,34,57,.5);">
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #dbe1ec;">
+          Please check your details carefully. Once payment is completed, your order goes into UP&#39;s review and fulfilment process.
+        </p>
+        <p style="margin: 14px 0 0 0; font-size: 13px; line-height: 1.6; color: #7583a3;">
+          By continuing you confirm the information is accurate, and you understand that payment confirms your order but does not guarantee publication if the submission does not meet UP&#39;s review standards.
+        </p>
+      </div>
+
+      <p style="margin: 22px 0 0 0; font-size: 15px; color: #97a3bd;">
+        We will send everything to <span style="font-family: Inter, sans-serif; font-weight: 700; color: #eff1f6;">you@organisation.com</span>, including a copy of this order.
+      </p>
+
+      <button class="cta" style="width: 100%; margin-top: 26px;" onClick="{{goDone}}">
+        {{payCta}}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </button>
+      <p style="margin: 14px 0 0 0; text-align: center; font-size: 13px; color: #7583a3;">
+        Payment is processed securely through Paystack, then you come straight back here.
+      </p>
+    </div>
+    </sc-if>
+
+    <!-- =============== DONE =============================================== -->
+    <sc-if value="{{isDone}}" hint-placeholder-val="{{true}}">
+    <div style="padding-top: 76px; max-width: 800px;">
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; border-radius: 999px; background: radial-gradient(circle at 50% 35%, rgba(255,103,0,.32), rgba(11,18,34,.7) 70%); border: 1px solid rgba(255,103,0,.45); box-shadow: 0 0 60px -10px rgba(255,103,0,.5);">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5.2 5.2L20 7"></path></svg>
+      </div>
+
+      <h1 class="h1" style="font-size: 62px; margin-top: 34px;">{{doneTitle}}</h1>
+      <p style="margin: 20px 0 0 0; font-size: 17px; line-height: 1.6; color: #b9c2d6; max-width: 620px;">{{doneBody}}</p>
+
+      <div class="panel bracket" style="margin-top: 38px; padding: 30px 28px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+            <span class="eyebrow">Order ID</span>
+            <span style="font-family: Inter, sans-serif; font-size: 18px; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums;">UP-8K42-QD19</span>
+          </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+            <span class="eyebrow">Amount paid</span>
+            <span style="font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; color: {{accent}};">{{totalLabel}}</span>
+          </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+            <span class="eyebrow">Status</span>
+            <span style="font-family: Inter, sans-serif; font-size: 15px; font-weight: 600;">{{doneStatus}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 18px; padding: 8px 28px 12px 28px;">
+        <sc-for list="{{nextSteps}}" as="step" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 22px; padding: 18px 0; border-bottom: 1px solid rgba(27,38,65,.7);">
+            <span class="ghostnum" style="font-size: 34px; width: 44px; flex: none;">{{step.num}}</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #dbe1ec;">{{step.text}}</span>
+            <span class="hairline"></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <p style="margin: 24px 0 0 0; font-size: 15px; line-height: 1.6; color: #97a3bd;">
+        A copy of everything is on its way to your email. No action is needed from you right now.
+      </p>
+
+      <div style="display: flex; gap: 14px; margin-top: 30px;">
+        <button class="cta-quiet" style="flex: 1 1 0;" onClick="{{goChoose}}">Submit something else</button>
+        <button class="cta" style="flex: 1 1 0;" onClick="{{goWelcome}}">Back to UP</button>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#ff6700","options":["#ff6700","#ff8a3d","#f04e23","#ffa53d"],"section":"Brand"},"ornament":{"editor":"range","default":100,"min":0,"max":100,"step":5,"unit":"%","section":"Maximalism"},"startScreen":{"editor":"enum","default":"welcome","options":["welcome","choose","submit","promote","review","done"],"section":"Prototype"}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: null, kind: null, duration: 'standard', bundleId: null, qty: {} };
+  }
+
+  naira(amount) {
+    return '₦' + Number(amount || 0).toLocaleString('en-NG');
+  }
+
+  tiers() {
+    return {
+      standard: { label: 'Standard', days: 7, price: 5000, blurb: '7 days on the platform, with its own page and an application link.' },
+      extended: { label: 'Extended', days: 30, price: 15000, blurb: '30 days on the platform, with priority placement in the database.' }
+    };
+  }
+
+  submitCatalogue() {
+    return [
+      { kind: 'free-opportunity', label: 'Opportunity', price: 'Free', paid: false,
+        blurb: 'Get a scholarship, grant, fellowship or competition in front of people looking for one.',
+        includes: ['Its own opportunity page', 'Application link', 'Indexed in the database'],
+        timing: 'Live once we have reviewed it' },
+      { kind: 'free-event', label: 'Free event', price: 'Free', paid: false,
+        blurb: 'Fill a room, or a call, with people who want to be there.',
+        includes: ['Event page', 'Registration link', 'Indexed in the database'],
+        timing: 'Live once we have reviewed it' },
+      { kind: 'job', label: 'Job', price: 'From ₦4,000', paid: true,
+        blurb: 'Put a role in front of young Africans who are actively looking for work.',
+        includes: ['Role page', 'Application link', 'Indexed in the database'],
+        timing: '7 or 30 days, your choice' },
+      { kind: 'paid-event', label: 'Paid event', price: 'From ₦4,000', paid: true,
+        blurb: 'Sell tickets to an audience that turns up for things worth attending.',
+        includes: ['Event page', 'Ticket link', 'Indexed in the database'],
+        timing: '7 or 30 days, your choice' },
+      { kind: 'resource', label: 'Resource', price: 'Revenue share', paid: false,
+        blurb: 'Sell a course, guide, template or toolkit to people who need it.',
+        includes: ['Resource page', 'Checkout through UP', 'Payouts on what it earns'],
+        timing: 'Listed once we have reviewed it' }
+    ];
+  }
+
+  promotionCatalogue() {
+    return [
+      { id: 'boost-7', group: 'On the platform', label: '7-day boost', price: 10000, blurb: 'Featured and pinned across the platform for a week.' },
+      { id: 'boost-14', group: 'On the platform', label: '14-day boost', price: 17500, blurb: 'The same featured placement, for two weeks.' },
+      { id: 'feature-30', group: 'On the platform', label: '30-day feature', price: 30000, blurb: 'Continuous featured placement for a month.' },
+      { id: 'community-push', group: 'In the community', label: 'Community push', price: 10000, blurb: 'One dedicated push to the UP community.' },
+      { id: 'community-monthly', group: 'In the community', label: 'Monthly community package', price: 30000, blurb: 'Up to four scheduled pushes across one month.' },
+      { id: 'social-story', group: 'On social media', label: 'Story push', price: 7500, blurb: 'A dedicated story, up to three slides.' },
+      { id: 'social-feed-story', group: 'On social media', label: 'Feed feature + story', price: 17500, blurb: 'A feed feature plus a story.' },
+      { id: 'social-carousel', group: 'On social media', label: 'Dedicated carousel', price: 30000, blurb: 'A multi-slide carousel made for you. Comes with a collaboration.' },
+      { id: 'social-video', group: 'On social media', label: 'Dedicated video', price: 75000, blurb: 'A short-form video made for you. Comes with a collaboration.' }
+    ];
+  }
+
+  bundleCatalogue() {
+    return [
+      { id: 'bundle-boost', label: 'BOOST', price: 40000, blurb: 'Get one thing seen.',
+        contents: ['Platform listing', '7-day platform boost', 'One community push'] },
+      { id: 'bundle-distribute', label: 'DISTRIBUTE', price: 100000, blurb: 'Reach the community everywhere it is.',
+        contents: ['Platform listing', '14-day feature', 'Two community pushes', 'Story push', 'Weekly roundup inclusion'] },
+      { id: 'bundle-campaign', label: 'CAMPAIGN', price: 250000, blurb: 'Drive applications, registrations or sales.',
+        contents: ['Platform listing', '30-day featured placement', 'Four community pushes', 'Dedicated carousel', 'Two story pushes', 'Roundup inclusion'] }
+    ];
+  }
+
+  /** Mirrors buildOrder() in app/work-with-us/config.ts. */
+  order(state) {
+    var lines = [];
+    var total = 0;
+    var tiers = this.tiers();
+
+    if (state.kind) {
+      var opt = this.submitCatalogue().filter(function (o) { return o.kind === state.kind; })[0];
+      if (opt && opt.paid) {
+        var tier = tiers[state.duration] || tiers.standard;
+        lines.push({ label: tier.label + ' ' + opt.label.toLowerCase() + ' listing · ' + tier.days + ' days', amount: this.naira(tier.price) });
+        total += tier.price;
+      } else if (opt) {
+        lines.push({ label: opt.label + ' listing', amount: opt.kind === 'resource' ? 'Revenue share' : 'Free' });
+      }
+    }
+
+    if (state.bundleId) {
+      var bundle = this.bundleCatalogue().filter(function (b) { return b.id === state.bundleId; })[0];
+      if (bundle) {
+        lines.push({ label: bundle.label + ' bundle', amount: this.naira(bundle.price) });
+        total += bundle.price;
+      }
+    } else {
+      var qty = state.qty || {};
+      var self = this;
+      this.promotionCatalogue().forEach(function (item) {
+        var count = qty[item.id] || 0;
+        if (count > 0) {
+          lines.push({
+            label: item.label + (count > 1 ? ' × ' + count : ''),
+            amount: self.naira(item.price * count)
+          });
+          total += item.price * count;
+        }
+      });
+    }
+
+    if (lines.length === 0) lines.push({ label: 'Nothing chosen yet', amount: '—' });
+    return { lines: lines, total: total };
+  }
+
+  renderVals() {
+    var self = this;
+    var state = this.state || {};
+    var screen = state.screen || this.props.startScreen || 'welcome';
+    var accent = this.props.accent || '#ff6700';
+    var orn = (this.props.ornament == null ? 100 : this.props.ornament) / 100;
+    var order = this.order(state);
+
+    var go = function (next) { return function () { self.setState({ screen: next }); }; };
+
+    var pickKind = function (kind) {
+      return function () { self.setState({ kind: kind, bundleId: null, qty: {} }); };
+    };
+    var pickDuration = function (key) { return function () { self.setState({ duration: key }); }; };
+    var pickBundle = function (id) {
+      return function () { self.setState({ bundleId: state.bundleId === id ? null : id, qty: {}, kind: null }); };
+    };
+    var bump = function (id, delta) {
+      return function () {
+        var next = Object.assign({}, state.qty || {});
+        var value = Math.max(0, Math.min(20, (next[id] || 0) + delta));
+        if (value === 0) { delete next[id]; } else { next[id] = value; }
+        self.setState({ qty: next, bundleId: null });
+      };
+    };
+
+    var chosen = this.submitCatalogue().filter(function (o) { return o.kind === state.kind; })[0];
+    var tiers = this.tiers();
+
+    var groupNames = [];
+    this.promotionCatalogue().forEach(function (item) {
+      if (groupNames.indexOf(item.group) === -1) groupNames.push(item.group);
+    });
+
+    return {
+      accent: accent,
+      orn: orn,
+
+      isWelcome: screen === 'welcome',
+      isChoose: screen === 'choose',
+      isSubmit: screen === 'submit',
+      isPromote: screen === 'promote',
+      isReview: screen === 'review',
+      isDone: screen === 'done',
+
+      goWelcome: go('welcome'),
+      goChoose: go('choose'),
+      goSubmit: go('submit'),
+      goPromote: go('promote'),
+      goReview: go('review'),
+      goDone: go('done'),
+      goBackFromReview: go(state.bundleId || Object.keys(state.qty || {}).length ? 'promote' : 'submit'),
+
+      ladder: [
+        { kicker: 'Opportunities & free events', price: 'Free', label: 'Own page, application link, indexed' },
+        { kicker: 'Jobs & paid events', price: '₦4,000', label: 'Per listing, at the pack rate of five' },
+        { kicker: 'Platform boost', price: '₦10,000', label: 'Featured and pinned for seven days' },
+        { kicker: 'BOOST bundle', price: '₦40,000', label: 'Listing, boost and a community push' },
+        { kicker: 'CAMPAIGN bundle', price: '₦250,000', label: 'Thirty days across every surface' }
+      ],
+
+      whyUp: [
+        { num: '01', span: 3, title: 'A relevant audience', body: 'Young Africans actively looking for opportunities, growth, work, learning and useful information.' },
+        { num: '02', span: 3, title: 'Several surfaces', body: 'The UP platform, the community and our social channels, depending on what you choose.' },
+        { num: '03', span: 2, title: 'No sales call', body: 'Pick a product and pay online. Nothing here is priced behind a conversation.' },
+        { num: '04', span: 2, title: 'Useful-first, not an ad feed', body: 'The audience is here for opportunities and resources, so that is what lands well.' },
+        { num: '05', span: 2, title: 'A defined scope', body: 'Every product states exactly what you get, so you know what you are buying.' }
+      ],
+
+      howItWorks: [
+        { num: '01', text: 'Choose what you need.' },
+        { num: '02', text: 'Tell us what you’re promoting.' },
+        { num: '03', text: 'Check it over and pay securely.' },
+        { num: '04', text: 'We review the submission before anything goes live.' },
+        { num: '05', text: 'We publish or distribute exactly what you bought.' },
+        { num: '06', text: 'We confirm when it’s done.' }
+      ],
+
+      submitOptions: this.submitCatalogue().map(function (opt) {
+        return {
+          label: opt.label,
+          price: opt.price,
+          blurb: opt.blurb,
+          includes: opt.includes,
+          timing: opt.timing,
+          cls: state.kind === opt.kind ? 'panel-on' : '',
+          pick: pickKind(opt.kind)
+        };
+      }),
+
+      needsDuration: !!(chosen && chosen.paid),
+      durations: ['standard', 'extended'].map(function (key) {
+        return {
+          label: tiers[key].label + ' · ' + tiers[key].days + ' days',
+          price: self.naira(tiers[key].price),
+          blurb: tiers[key].blurb,
+          cls: (state.duration || 'standard') === key ? 'panel-on' : '',
+          pick: pickDuration(key)
+        };
+      }),
+
+      bundles: this.bundleCatalogue().map(function (bundle) {
+        return {
+          label: bundle.label,
+          price: self.naira(bundle.price),
+          blurb: bundle.blurb,
+          contents: bundle.contents,
+          cls: state.bundleId === bundle.id ? 'panel-on' : '',
+          pick: pickBundle(bundle.id)
+        };
+      }),
+
+      promoGroups: groupNames.map(function (name) {
+        return {
+          name: name,
+          items: self.promotionCatalogue().filter(function (i) { return i.group === name; }).map(function (item) {
+            return {
+              label: item.label,
+              blurb: item.blurb,
+              price: self.naira(item.price),
+              qty: (state.qty || {})[item.id] || 0,
+              inc: bump(item.id, 1),
+              dec: bump(item.id, -1)
+            };
+          })
+        };
+      }),
+
+      orderLines: order.lines,
+      totalLabel: order.total > 0 ? this.naira(order.total) : 'Free',
+      reviewLead: order.total > 0 ? 'Here is what it comes to.' : 'Nothing to pay for this one.',
+      payCta: order.total > 0 ? 'Continue to secure payment' : 'Send it in',
+
+      doneTitle: order.total > 0 ? 'Payment received. Your order is in.' : 'That’s in.',
+      doneBody: order.total > 0
+        ? 'Thanks — we have your payment and the details you submitted. Your order is now with UP for review.'
+        : 'Thanks — we have your submission. It’s now with UP for review.',
+      doneStatus: order.total > 0 ? 'Paid — awaiting review' : 'Awaiting review',
+
+      nextSteps: [
+        { num: '01', text: 'We review the submission and assets.' },
+        { num: '02', text: 'If anything needs clarification, we’ll contact you.' },
+        { num: '03', text: 'Once approved, we move it into delivery.' },
+        { num: '04', text: 'We confirm when the purchased deliverable is complete.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

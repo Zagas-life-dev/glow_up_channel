@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { PARTNER_PROGRAMME_ENABLED } from "@/lib/feature-flags"
 import { cn } from "@/lib/utils"
 
 import { CONTACT, PARTNER, naira, type Contact, type DetailField } from "./config"
@@ -79,6 +80,56 @@ export function Choice({
         {selected && <RiCheckLine className="h-5 w-5 text-primary" aria-hidden />}
       </span>
     </button>
+  )
+}
+
+/**
+ * A product card in the pipeline's formula (§4.1): name, one-line outcome,
+ * price, what's included, timing, one CTA — in that order. The outcome sits
+ * above the deliverables on purpose; the buyer decides on the outcome.
+ */
+export function ProductCard({
+  label,
+  outcome,
+  price,
+  includes,
+  timing,
+  cta,
+  onClick,
+}: {
+  label: string
+  outcome: string
+  price: string
+  includes: string[]
+  timing: string
+  cta: string
+  onClick: () => void
+}) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card/80 p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="font-medium">{label}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{outcome}</p>
+        </div>
+        <span className="flex-shrink-0 text-sm font-semibold text-primary">{price}</span>
+      </div>
+
+      <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
+        {includes.map((line) => (
+          <li key={line} className="flex gap-2">
+            <RiCheckLine className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
+            {line}
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-3 text-xs text-muted-foreground">{timing}</p>
+
+      <Button className="mt-4 w-full" variant="outline" onClick={onClick}>
+        {cta}
+      </Button>
+    </div>
   )
 }
 
@@ -216,6 +267,35 @@ export function DetailFields({
   )
 }
 
+/**
+ * The "Talk to UP" path. The pipeline is specific that this sits *beside* the
+ * primary CTA, never instead of it — it recovers buyers who need help choosing
+ * without turning a ₦5,000 listing into a sales call.
+ */
+export function TalkToUs({ children }: { children: string }) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
+      <span className="text-muted-foreground">{children}</span>
+      <a
+        href={`https://wa.me/${CONTACT.whatsapp}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+      >
+        <RiWhatsappLine className="h-4 w-4" aria-hidden />
+        WhatsApp
+      </a>
+      <a
+        href={`mailto:${CONTACT.email}`}
+        className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+      >
+        <RiMailLine className="h-4 w-4" aria-hidden />
+        Email
+      </a>
+    </div>
+  )
+}
+
 /** Shown wherever someone might need more than the menu offers. */
 export function NeedMore({ children }: { children: string }) {
   return (
@@ -246,13 +326,15 @@ export function NeedMore({ children }: { children: string }) {
           WhatsApp
         </a>
       </div>
-      <p className="mt-3 text-muted-foreground">
-        Listing a lot?{" "}
-        <Link href={PARTNER.href} className="font-medium text-primary hover:underline">
-          Become a partner
-        </Link>{" "}
-        for unlimited listings — {naira(PARTNER.price)}.
-      </p>
+      {PARTNER_PROGRAMME_ENABLED && (
+        <p className="mt-3 text-muted-foreground">
+          Listing a lot?{" "}
+          <Link href={PARTNER.href} className="font-medium text-primary hover:underline">
+            Become a partner
+          </Link>{" "}
+          for unlimited listings — {naira(PARTNER.price)}.
+        </p>
+      )}
     </div>
   )
 }

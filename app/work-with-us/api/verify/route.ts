@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       ref: result.ref,
       amountNg: result.amountNg,
       alreadyPaid: result.alreadyPaid,
+      track: result.track,
     })
   } catch (error) {
     console.error("work-with-us verify failed:", error)

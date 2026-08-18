@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Submit",
-  description: "Submit content or listings to GlowUp.",
+  description: "Submit content or listings to UP.",
 }
 
 export default function SubmitLayout({ children }: { children: React.ReactNode }) {

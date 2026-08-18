@@ -24,8 +24,8 @@ export const EMAIL_TEMPLATES: EmailTemplateMetadata[] = [
   },
   {
     id: "glowup",
-    name: "GlowUp branded",
-    description: "GlowUp-style gradient header and brand-forward layout.",
+    name: "UP branded",
+    description: "UP-style gradient header and brand-forward layout.",
   },
 ]
 
@@ -79,7 +79,7 @@ function renderMinimal(ctx: TemplateContext): string {
     <tr>
       <td style="padding:20px 24px 12px 24px; background-color:#020617;">
         <p style="margin:0 0 8px 0; font-size:11px; text-transform:uppercase; letter-spacing:0.18em; color:#9ca3af; font-weight:600;">
-          GlowUp Campaign
+          UP Campaign
         </p>
         <h1 style="margin:0; font-size:22px; line-height:1.3; color:#f9fafb;">
           ${escapeHtml(ctx.subject)}
@@ -113,7 +113,7 @@ function renderBold(ctx: TemplateContext): string {
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse;">
           <tr>
             <td style="font-size:20px; font-weight:800; color:#0b0b0f;">
-              GlowUp
+              UP
             </td>
             <td align="right">
               <span style="display:inline-block; padding:6px 12px; border-radius:999px; background-color:rgba(15,23,42,0.8); color:#fef3c7; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.18em;">
@@ -164,7 +164,7 @@ function renderNewsletter(ctx: TemplateContext): string {
     <tr>
       <td style="padding:18px 24px; background-color:#020617; border-bottom:1px solid #111827;">
         <p style="margin:0 0 4px 0; font-size:11px; text-transform:uppercase; letter-spacing:0.18em; color:#9ca3af; font-weight:600;">
-          GlowUp Weekly
+          UP Weekly
         </p>
         <h1 style="margin:0; font-size:20px; line-height:1.4; color:#f9fafb;">
           ${escapeHtml(ctx.subject)}
@@ -183,7 +183,7 @@ function renderNewsletter(ctx: TemplateContext): string {
         </div>
         <hr style="border:none; border-top:1px solid #111827; margin:18px 0;" />
         <p style="margin:0; font-size:11px; color:#6b7280;">
-          You are receiving this because you’re part of the GlowUp community. For more stories, resources, and opportunities, visit
+          You are receiving this because you’re part of the UP community. For more stories, resources, and opportunities, visit
           <a href="https://glowupchannel.com/" style="color:#f97316; text-decoration:none;">glowupchannel.com</a>.
         </p>
       </td>
@@ -209,7 +209,7 @@ function renderGlowup(ctx: TemplateContext): string {
                 </div>
                 <div>
                   <p style="margin:0; font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#0b0b0f;">
-                    GlowUp
+                    UP
                   </p>
                   <p style="margin:0; font-size:11px; color:#111827; font-weight:500;">
                     Opportunities · Community · Focus
@@ -248,7 +248,7 @@ function renderGlowup(ctx: TemplateContext): string {
             href="https://glowupchannel.com/"
             style="display:inline-block; padding:10px 18px; border-radius:999px; background-color:#f97316; color:#0b0b0f; font-size:13px; font-weight:700; text-decoration:none; margin-right:6px;"
           >
-            Visit GlowUp
+            Visit UP
           </a>
           <a
             href="https://whatsapp.com/channel/0029Vanm1p0InlqII9gDQl0i"

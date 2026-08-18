@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Set a new password for your GlowUp account.",
+  description: "Set a new password for your UP account.",
   robots: { index: false, follow: false },
 }
 

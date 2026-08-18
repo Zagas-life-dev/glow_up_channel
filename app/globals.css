@@ -114,6 +114,16 @@
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0);
   }
+
+  /* Brand typography (Master Copy Library §1.2): Inter carries headlines and
+     CTAs, Bricolage Grotesque carries body copy. Opt-in per surface. */
+  .font-up-display {
+    font-family: var(--font-up-display), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .font-up-body {
+    font-family: var(--font-up-body), ui-sans-serif, system-ui, sans-serif;
+  }
 }
 
 /* Custom Scrollbar - Deep Blue Theme */

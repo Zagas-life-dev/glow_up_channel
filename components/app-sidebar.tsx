@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { usePlaylist } from "@/contexts/playlist-context"
 import { cn } from "@/lib/utils"
 import { showPwaInstallPrompt } from "@/components/pwa-install-banner"
+import LanguageSwitcher from "@/components/language-switcher"
 import {
   RiHomeLine,
   RiGlobalLine,
@@ -23,13 +24,26 @@ import {
   RiDownloadLine,
 } from "react-icons/ri"
 import { canPublishContent } from '@/lib/roles'
+import { useGoBack } from "@/hooks/use-go-back"
+import { useNavAudience } from "@/hooks/use-nav-audience"
 
+/** Signed-in navigation — the app's primary routes. */
 const mainNavItems = [
   { name: "Home", icon: RiHomeLine, path: "/" },
   { name: "Playlist", icon: RiPlayList2Fill, path: "/playlists" },
   { name: "Search", icon: RiSearchLine, path: "/search" },
   { name: "Settings", icon: RiSettingsLine, path: "/profile/settings" },
 ]
+
+/**
+ * Signed-out navigation.
+ *
+ * Every route above is gated or empty without an account, so offering them as
+ * the primary nav gives a visitor four login walls. Back and Profile replace
+ * them; Sign in and Sign up already sit in the footer below, so the full
+ * signed-out set is present without duplicating those two here.
+ */
+const guestNavItems = [{ name: "Profile", icon: RiUserLine, path: "/login" }]
 
 interface AppSidebarProps {
   isCollapsed: boolean
@@ -70,6 +84,12 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
   const { user, logout } = useAuth()
   const { playlists } = usePlaylist()
   const isStandalone = useIsStandalone()
+  const goBack = useGoBack()
+  // Which nav set to show. Keyed off this rather than `user` so a signed-in
+  // member does not watch the visitor nav sit there for a round trip and then
+  // rearrange — see `useNavAudience`. The sections below stay on `user`, since
+  // they render real profile data that genuinely is not available yet.
+  const { isMember } = useNavAudience()
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/"
@@ -100,7 +120,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted/40 ring-1 ring-border/60 transition-transform duration-300 group-hover:scale-[1.04]">
             <Image
               src="/images/Yellow and Black Modern Media Company Logo (14).png"
-              alt="GlowUp"
+              alt="UP"
               fill
               className="object-contain p-1"
               priority
@@ -108,7 +128,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
-              <p className="text-display-sm font-bold tracking-tight text-foreground">Glow Up</p>
+              <p className="text-display-sm font-bold tracking-tight text-foreground">UP</p>
               <p className="text-caption text-muted-foreground">Your growth hub</p>
             </div>
           )}
@@ -117,7 +137,21 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
 
       <nav className={cn("relative z-[1] flex-1 overflow-y-auto scrollbar-hide", isCollapsed ? "px-2 py-3" : "px-3 py-3")}>
         <div className="space-y-1">
-          {mainNavItems.map((item) => {
+          {/* Back leads the signed-out nav: a visitor usually landed here from a
+              shared link or a search result, so the way out is the control they
+              reach for first. */}
+          {!isMember && (
+            <button
+              type="button"
+              onClick={goBack}
+              title={isCollapsed ? "Back" : undefined}
+              className={cn(navLinkClass({ isCollapsed, active: false }), "w-full")}
+            >
+              <RiArrowLeftLine className="h-5 w-5 shrink-0" aria-hidden />
+              {!isCollapsed && <span className="truncate">Back</span>}
+            </button>
+          )}
+          {(isMember ? mainNavItems : guestNavItems).map((item) => {
             const active = isActive(item.path)
             const Icon = item.icon
             return (
@@ -227,6 +261,13 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
       </nav>
 
       <div className={cn("relative z-[1] flex-shrink-0 border-t border-border/60 bg-card/40 backdrop-blur-sm", isCollapsed ? "px-2 py-3" : "px-3 py-4")}>
+        {/* Language applies to signed-out visitors too, so it sits outside the
+            `user` branch. Hidden when collapsed — the trigger needs its label. */}
+        {!isCollapsed && (
+          <div className="mb-2">
+            <LanguageSwitcher variant="outline" className="w-full justify-start" />
+          </div>
+        )}
         {user ? (
           <div className="space-y-1">
             <button

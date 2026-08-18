@@ -138,7 +138,7 @@ function ResetPasswordContent() {
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground max-w-md">
                 Your password has been updated. Use your new details next time you sign in to keep your
-                GlowUp journey secure.
+                UP journey secure.
               </p>
             </div>
           </div>
@@ -195,7 +195,7 @@ function ResetPasswordContent() {
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md">
               Enter the 6-digit code we sent to your email and choose a strong new password to protect
-              your GlowUp account.
+              your UP account.
             </p>
           </div>
         </div>

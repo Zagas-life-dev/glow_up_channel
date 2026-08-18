@@ -59,6 +59,7 @@ import {
 } from 'lucide-react'
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 import ApiClient from '@/lib/api-client'
+import { PARTNER_PROGRAMME_ENABLED } from '@/lib/feature-flags'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
@@ -730,8 +731,9 @@ export default function SettingsPage() {
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
           <div className="space-y-6">
-            {/* Founder Batch upsell — only when the account cannot already publish */}
-            {!canPublishContent(user?.role) && (
+            {/* Founder Batch upsell — only when the account cannot already publish,
+                and only while the programme is being offered */}
+            {PARTNER_PROGRAMME_ENABLED && !canPublishContent(user?.role) && (
               <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/40 flex items-center justify-center">
@@ -1364,39 +1366,46 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Founder Batch</h3>
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {canPublishContent(user?.role)
-                        ? 'You can publish content'
-                        : 'Publish your own opportunities and events'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {canPublishContent(user?.role)
-                        ? 'Manage your content and promotions in Provider Hub.'
-                        : 'Join Founder Batch — ₦80,000 for 12 months.'}
-                    </p>
-                  </div>
-                  {(canPublishContent(user?.role)) ? (
-                    <Link href="/dashboard/provider">
-                      <Button className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2">
+              {/* Two jobs in one block: Provider Hub for members, the join pitch
+                  for everyone else. While the programme is hidden only the first
+                  half has anything to say, so non-members lose the block entirely
+                  rather than being shown a heading with no action under it —
+                  members keep their route into Provider Hub either way. */}
+              {(canPublishContent(user?.role) || PARTNER_PROGRAMME_ENABLED) && (
+                <div className="border-t border-border pt-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Founder Batch</h3>
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm">
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {canPublishContent(user?.role)
+                          ? 'You can publish content'
+                          : 'Publish your own opportunities and events'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {canPublishContent(user?.role)
+                          ? 'Manage your content and promotions in Provider Hub.'
+                          : 'Join Founder Batch — ₦80,000 for 12 months.'}
+                      </p>
+                    </div>
+                    {(canPublishContent(user?.role)) ? (
+                      <Link href="/dashboard/provider">
+                        <Button className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2">
+                          <Crown className="h-4 w-4" />
+                          Provider Hub
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button
+                        onClick={() => router.push('/founder-batch')}
+                        className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2"
+                      >
                         <Crown className="h-4 w-4" />
-                        Provider Hub
+                        Join Founder Batch
                       </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      onClick={() => router.push('/founder-batch')}
-                      className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl gap-2"
-                    >
-                      <Crown className="h-4 w-4" />
-                      Join Founder Batch
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Sign Out</h3>

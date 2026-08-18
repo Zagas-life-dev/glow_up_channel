@@ -34,7 +34,7 @@ export default function AdminSettings() {
   
   // Settings state
   const [settings, setSettings] = useState({
-    platformName: "GlowUp",
+    platformName: "UP",
     platformDescription: "Connecting young ambitious people to opportunities that accelerate personal and professional growth.",
     supportEmail: "support@glowupchannel.com",
     adminEmail: "admin@glowupchannel.com",

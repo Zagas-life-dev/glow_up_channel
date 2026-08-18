@@ -767,7 +767,7 @@ export default function PostersDetailsPage() {
                           <h5 className="text-sm font-medium text-gray-700">Organization Logo</h5>
                           {poster.organizationLogoUrl ? (
                             <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
-                              <Image className="w-4 h-4 text-green-600" />
+                              <Image className="w-4 h-4 text-green-600" aria-hidden />
                               <span className="text-sm text-green-800 flex-1">Logo uploaded</span>
                               <Button
                                 size="sm"

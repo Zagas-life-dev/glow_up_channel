@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GlowUp",
-    short_name: "GlowUp",
+    name: "UP",
+    short_name: "UP",
     description: "Connect young ambitious people to opportunities, events, and free resources.",
     start_url: "/",
     display: "standalone",

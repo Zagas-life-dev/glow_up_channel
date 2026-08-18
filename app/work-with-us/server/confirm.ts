@@ -1,23 +1,23 @@
-import { submissions } from "./db"
+import { items, orders } from "./db"
 import { notifySubmitter, notifyTeam } from "./notify"
 import { verifyPayment } from "./paystack"
 
 export type ConfirmResult =
-  | { ok: true; ref: string; amountNg: number; alreadyPaid: boolean }
+  | { ok: true; ref: string; amountNg: number; alreadyPaid: boolean; track: string }
   | { ok: false; status: number; error: string }
 
 /**
- * Marks a submission paid once Paystack agrees it was. Called both when the
- * person lands back on the site and from the webhook, so it has to be safe to
- * run twice for the same reference.
+ * Marks an order paid once Paystack agrees it was, and releases its items into
+ * the review queue. Called both when the person lands back on the site and from
+ * the webhook, so it has to be safe to run twice for the same reference.
  */
 export async function confirmPayment(reference: string): Promise<ConfirmResult> {
-  const collection = await submissions()
+  const collection = await orders()
   const doc = await collection.findOne({ ref: reference })
   if (!doc) return { ok: false, status: 404, error: "We could not find that payment" }
 
   if (doc.status === "paid") {
-    return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true }
+    return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true, track: doc.track }
   }
 
   const result = await verifyPayment(reference)
@@ -41,11 +41,18 @@ export async function confirmPayment(reference: string): Promise<ConfirmResult> 
     { $set: { status: "paid", payment, updatedAt: new Date() } },
   )
   if (updated.modifiedCount === 0) {
-    return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true }
+    return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true, track: doc.track }
   }
 
-  const paid = { ...doc, status: "paid" as const, payment }
-  await Promise.all([notifyTeam(paid), notifySubmitter(paid)])
+  const itemCollection = await items()
+  await itemCollection.updateMany(
+    { orderRef: doc.ref, status: "awaiting_payment" },
+    { $set: { status: "pending_review", updatedAt: new Date() } },
+  )
+  const itemDocs = await itemCollection.find({ orderRef: doc.ref }).toArray()
 
-  return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: false }
+  const paid = { ...doc, status: "paid" as const, payment }
+  await Promise.all([notifyTeam(paid, itemDocs), notifySubmitter(paid, itemDocs)])
+
+  return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: false, track: doc.track }
 }

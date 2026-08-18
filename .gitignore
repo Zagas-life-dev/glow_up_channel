@@ -39,3 +39,7 @@ nul
 latest-glowup-channel/
 
 .md
+# Only pnpm-lock.yaml is the source of truth here; npm leaves a rival lockfile
+# behind if anyone runs `npm install`, and the two disagreeing is what breaks
+# installs (pnpm refuses to reuse a tree it thinks npm owns).
+package-lock.json

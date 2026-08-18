@@ -99,7 +99,7 @@ export function AdminLayout({
             </div>
             <div>
               <h1 className="text-base font-bold text-foreground">Admin Hub</h1>
-              <p className="text-xs text-muted-foreground">GlowUp</p>
+              <p className="text-xs text-muted-foreground">UP</p>
             </div>
           </div>
           <div className="p-3.5 rounded-2xl bg-muted/50 dark:bg-muted/30 border border-border/50">

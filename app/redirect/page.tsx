@@ -24,7 +24,7 @@ export default function RedirectPage() {
           <div className="relative w-32 h-32 sm:w-40 sm:h-40">
             <Image
               src="/images/Yellow and Black Modern Media Company Logo (14).png"
-              alt="Glow Up Channel"
+              alt="UP"
               fill
               className="object-contain"
               priority

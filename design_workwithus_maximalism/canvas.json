@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Work with us — desktop", "x": 0, "y": 0, "w": 1280, "h": 3260 },
+    { "file": "Mobile.dc.html", "title": "Work with us — mobile", "x": 1400, "y": 0, "w": 390, "h": 2560 },
+    { "file": "System.dc.html", "title": "Deep Ornament — system", "x": 1900, "y": 0, "w": 1180, "h": 1560 }
+  ],
+  "annotations": [
+    {
+      "id": "prototype-note",
+      "x": 1900,
+      "y": 1640,
+      "w": 520,
+      "text": "Both flow artboards are live.\n\nClick through: welcome -> choose -> submit or promote -> review -> done. Selecting a listing type, a duration, a bundle or a quantity recomputes the order rail and the total for real -- the pricing logic mirrors buildOrder() in app/work-with-us/config.ts, including the 5,000 / 15,000 tiers and the 4,000 pack rate.\n\nThe audience figure is the one deliberate placeholder: copy.ts forbids hard-coded numbers, so it stays [LIVE COUNT] until /work-with-us/api/stats answers."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

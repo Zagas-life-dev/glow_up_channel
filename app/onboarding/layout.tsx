@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Onboarding",
-  description: "Complete your GlowUp profile setup.",
+  description: "Complete your UP profile setup.",
   robots: { index: false, follow: false },
 }
 

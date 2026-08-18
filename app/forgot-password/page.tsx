@@ -146,7 +146,7 @@ export default function ForgotPasswordPage() {
               </span>
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-              Enter the email linked to your GlowUp account and we&#39;ll send you a secure 6-digit
+              Enter the email linked to your UP account and we&#39;ll send you a secure 6-digit
               code to reset your password.
             </p>
           </div>

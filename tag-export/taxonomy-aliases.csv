@@ -1,0 +1,755 @@
+alias,language,tag_id,tag_label,category
+job,en,jobs-careers,Jobs & Career Opportunities,interest
+jobs,en,jobs-careers,Jobs & Career Opportunities,interest
+career,en,jobs-careers,Jobs & Career Opportunities,interest
+careers,en,jobs-careers,Jobs & Career Opportunities,interest
+employment,en,jobs-careers,Jobs & Career Opportunities,interest
+hiring,en,jobs-careers,Jobs & Career Opportunities,interest
+vacancy,en,jobs-careers,Jobs & Career Opportunities,interest
+vacancies,en,jobs-careers,Jobs & Career Opportunities,interest
+position,en,jobs-careers,Jobs & Career Opportunities,interest
+recruitment,en,jobs-careers,Jobs & Career Opportunities,interest
+full time,en,jobs-careers,Jobs & Career Opportunities,interest
+part time,en,jobs-careers,Jobs & Career Opportunities,interest
+graduate role,en,jobs-careers,Jobs & Career Opportunities,interest
+emploi,fr,jobs-careers,Jobs & Career Opportunities,interest
+emplois,fr,jobs-careers,Jobs & Career Opportunities,interest
+carriere,fr,jobs-careers,Jobs & Career Opportunities,interest
+carrieres,fr,jobs-careers,Jobs & Career Opportunities,interest
+poste,fr,jobs-careers,Jobs & Career Opportunities,interest
+recrutement,fr,jobs-careers,Jobs & Career Opportunities,interest
+embauche,fr,jobs-careers,Jobs & Career Opportunities,interest
+offre d'emploi,fr,jobs-careers,Jobs & Career Opportunities,interest
+travail,fr,jobs-careers,Jobs & Career Opportunities,interest
+temps plein,fr,jobs-careers,Jobs & Career Opportunities,interest
+temps partiel,fr,jobs-careers,Jobs & Career Opportunities,interest
+empleo,es,jobs-careers,Jobs & Career Opportunities,interest
+empleos,es,jobs-careers,Jobs & Career Opportunities,interest
+trabajo,es,jobs-careers,Jobs & Career Opportunities,interest
+carrera,es,jobs-careers,Jobs & Career Opportunities,interest
+carreras,es,jobs-careers,Jobs & Career Opportunities,interest
+puesto,es,jobs-careers,Jobs & Career Opportunities,interest
+vacante,es,jobs-careers,Jobs & Career Opportunities,interest
+vacantes,es,jobs-careers,Jobs & Career Opportunities,interest
+contratacion,es,jobs-careers,Jobs & Career Opportunities,interest
+reclutamiento,es,jobs-careers,Jobs & Career Opportunities,interest
+tiempo completo,es,jobs-careers,Jobs & Career Opportunities,interest
+emprego,pt,jobs-careers,Jobs & Career Opportunities,interest
+empregos,pt,jobs-careers,Jobs & Career Opportunities,interest
+trabalho,pt,jobs-careers,Jobs & Career Opportunities,interest
+carreira,pt,jobs-careers,Jobs & Career Opportunities,interest
+carreiras,pt,jobs-careers,Jobs & Career Opportunities,interest
+vaga,pt,jobs-careers,Jobs & Career Opportunities,interest
+vagas,pt,jobs-careers,Jobs & Career Opportunities,interest
+recrutamento,pt,jobs-careers,Jobs & Career Opportunities,interest
+contratacao,pt,jobs-careers,Jobs & Career Opportunities,interest
+tempo integral,pt,jobs-careers,Jobs & Career Opportunities,interest
+scholarship,en,scholarships-grants,Scholarships & Grants,interest
+scholarships,en,scholarships-grants,Scholarships & Grants,interest
+grant,en,scholarships-grants,Scholarships & Grants,interest
+grants,en,scholarships-grants,Scholarships & Grants,interest
+bursary,en,scholarships-grants,Scholarships & Grants,interest
+bursaries,en,scholarships-grants,Scholarships & Grants,interest
+funding,en,scholarships-grants,Scholarships & Grants,interest
+financial aid,en,scholarships-grants,Scholarships & Grants,interest
+tuition,en,scholarships-grants,Scholarships & Grants,interest
+stipend,en,scholarships-grants,Scholarships & Grants,interest
+fully funded,en,scholarships-grants,Scholarships & Grants,interest
+bourse,fr,scholarships-grants,Scholarships & Grants,interest
+bourses,fr,scholarships-grants,Scholarships & Grants,interest
+bourse d'etudes,fr,scholarships-grants,Scholarships & Grants,interest
+subvention,fr,scholarships-grants,Scholarships & Grants,interest
+subventions,fr,scholarships-grants,Scholarships & Grants,interest
+financement,fr,scholarships-grants,Scholarships & Grants,interest
+aide financiere,fr,scholarships-grants,Scholarships & Grants,interest
+frais de scolarite,fr,scholarships-grants,Scholarships & Grants,interest
+entierement financee,fr,scholarships-grants,Scholarships & Grants,interest
+beca,es,scholarships-grants,Scholarships & Grants,interest
+becas,es,scholarships-grants,Scholarships & Grants,interest
+subvencion,es,scholarships-grants,Scholarships & Grants,interest
+subvenciones,es,scholarships-grants,Scholarships & Grants,interest
+financiacion,es,scholarships-grants,Scholarships & Grants,interest
+ayuda financiera,es,scholarships-grants,Scholarships & Grants,interest
+matricula,es,scholarships-grants,Scholarships & Grants,interest
+totalmente financiada,es,scholarships-grants,Scholarships & Grants,interest
+bolsa,pt,scholarships-grants,Scholarships & Grants,interest
+bolsas,pt,scholarships-grants,Scholarships & Grants,interest
+bolsa de estudos,pt,scholarships-grants,Scholarships & Grants,interest
+subvencao,pt,scholarships-grants,Scholarships & Grants,interest
+financiamento,pt,scholarships-grants,Scholarships & Grants,interest
+auxilio financeiro,pt,scholarships-grants,Scholarships & Grants,interest
+mensalidade,pt,scholarships-grants,Scholarships & Grants,interest
+totalmente financiada,pt,scholarships-grants,Scholarships & Grants,interest
+training,en,training-workshops,Training & Workshops,interest
+workshop,en,training-workshops,Training & Workshops,interest
+workshops,en,training-workshops,Training & Workshops,interest
+bootcamp,en,training-workshops,Training & Workshops,interest
+course,en,training-workshops,Training & Workshops,interest
+courses,en,training-workshops,Training & Workshops,interest
+masterclass,en,training-workshops,Training & Workshops,interest
+seminar,en,training-workshops,Training & Workshops,interest
+certification,en,training-workshops,Training & Workshops,interest
+upskilling,en,training-workshops,Training & Workshops,interest
+short course,en,training-workshops,Training & Workshops,interest
+formation,fr,training-workshops,Training & Workshops,interest
+formations,fr,training-workshops,Training & Workshops,interest
+atelier,fr,training-workshops,Training & Workshops,interest
+ateliers,fr,training-workshops,Training & Workshops,interest
+cours,fr,training-workshops,Training & Workshops,interest
+seminaire,fr,training-workshops,Training & Workshops,interest
+certification,fr,training-workshops,Training & Workshops,interest
+perfectionnement,fr,training-workshops,Training & Workshops,interest
+stage de formation,fr,training-workshops,Training & Workshops,interest
+formacion,es,training-workshops,Training & Workshops,interest
+capacitacion,es,training-workshops,Training & Workshops,interest
+taller,es,training-workshops,Training & Workshops,interest
+talleres,es,training-workshops,Training & Workshops,interest
+curso,es,training-workshops,Training & Workshops,interest
+cursos,es,training-workshops,Training & Workshops,interest
+seminario,es,training-workshops,Training & Workshops,interest
+certificacion,es,training-workshops,Training & Workshops,interest
+perfeccionamiento,es,training-workshops,Training & Workshops,interest
+formacao,pt,training-workshops,Training & Workshops,interest
+capacitacao,pt,training-workshops,Training & Workshops,interest
+treinamento,pt,training-workshops,Training & Workshops,interest
+oficina,pt,training-workshops,Training & Workshops,interest
+curso,pt,training-workshops,Training & Workshops,interest
+cursos,pt,training-workshops,Training & Workshops,interest
+seminario,pt,training-workshops,Training & Workshops,interest
+certificacao,pt,training-workshops,Training & Workshops,interest
+aperfeicoamento,pt,training-workshops,Training & Workshops,interest
+networking,en,networking-events,Networking Events,interest
+meetup,en,networking-events,Networking Events,interest
+conference,en,networking-events,Networking Events,interest
+summit,en,networking-events,Networking Events,interest
+forum,en,networking-events,Networking Events,interest
+mixer,en,networking-events,Networking Events,interest
+symposium,en,networking-events,Networking Events,interest
+convention,en,networking-events,Networking Events,interest
+expo,en,networking-events,Networking Events,interest
+reseautage,fr,networking-events,Networking Events,interest
+rencontre,fr,networking-events,Networking Events,interest
+conference,fr,networking-events,Networking Events,interest
+sommet,fr,networking-events,Networking Events,interest
+forum,fr,networking-events,Networking Events,interest
+colloque,fr,networking-events,Networking Events,interest
+salon,fr,networking-events,Networking Events,interest
+congres,fr,networking-events,Networking Events,interest
+networking,es,networking-events,Networking Events,interest
+encuentro,es,networking-events,Networking Events,interest
+conferencia,es,networking-events,Networking Events,interest
+cumbre,es,networking-events,Networking Events,interest
+foro,es,networking-events,Networking Events,interest
+congreso,es,networking-events,Networking Events,interest
+simposio,es,networking-events,Networking Events,interest
+feria,es,networking-events,Networking Events,interest
+networking,pt,networking-events,Networking Events,interest
+encontro,pt,networking-events,Networking Events,interest
+conferencia,pt,networking-events,Networking Events,interest
+cupula,pt,networking-events,Networking Events,interest
+forum,pt,networking-events,Networking Events,interest
+congresso,pt,networking-events,Networking Events,interest
+simposio,pt,networking-events,Networking Events,interest
+feira,pt,networking-events,Networking Events,interest
+volunteer,en,volunteering,Volunteering & Community Service,interest
+volunteering,en,volunteering,Volunteering & Community Service,interest
+community service,en,volunteering,Volunteering & Community Service,interest
+ngo,en,volunteering,Volunteering & Community Service,interest
+nonprofit,en,volunteering,Volunteering & Community Service,interest
+non profit,en,volunteering,Volunteering & Community Service,interest
+charity,en,volunteering,Volunteering & Community Service,interest
+social impact,en,volunteering,Volunteering & Community Service,interest
+humanitarian,en,volunteering,Volunteering & Community Service,interest
+benevolat,fr,volunteering,Volunteering & Community Service,interest
+benevole,fr,volunteering,Volunteering & Community Service,interest
+volontariat,fr,volunteering,Volunteering & Community Service,interest
+service communautaire,fr,volunteering,Volunteering & Community Service,interest
+ong,fr,volunteering,Volunteering & Community Service,interest
+association,fr,volunteering,Volunteering & Community Service,interest
+impact social,fr,volunteering,Volunteering & Community Service,interest
+humanitaire,fr,volunteering,Volunteering & Community Service,interest
+voluntariado,es,volunteering,Volunteering & Community Service,interest
+voluntario,es,volunteering,Volunteering & Community Service,interest
+servicio comunitario,es,volunteering,Volunteering & Community Service,interest
+ong,es,volunteering,Volunteering & Community Service,interest
+sin fines de lucro,es,volunteering,Volunteering & Community Service,interest
+impacto social,es,volunteering,Volunteering & Community Service,interest
+humanitario,es,volunteering,Volunteering & Community Service,interest
+voluntariado,pt,volunteering,Volunteering & Community Service,interest
+voluntario,pt,volunteering,Volunteering & Community Service,interest
+servico comunitario,pt,volunteering,Volunteering & Community Service,interest
+ong,pt,volunteering,Volunteering & Community Service,interest
+sem fins lucrativos,pt,volunteering,Volunteering & Community Service,interest
+impacto social,pt,volunteering,Volunteering & Community Service,interest
+humanitario,pt,volunteering,Volunteering & Community Service,interest
+entrepreneurship,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+entrepreneur,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+startup,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+startups,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+founder,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+incubator,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+accelerator,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+venture capital,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+seed funding,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+pitch,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+investment,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+small business,en,entrepreneurship-funding,Entrepreneurship & Funding,interest
+entrepreneuriat,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+entrepreneur,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+startup,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+fondateur,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+incubateur,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+accelerateur,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+capital risque,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+amorcage,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+levee de fonds,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+investissement,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+petite entreprise,fr,entrepreneurship-funding,Entrepreneurship & Funding,interest
+emprendimiento,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+emprendedor,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+startup,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+fundador,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+incubadora,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+aceleradora,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+capital riesgo,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+capital semilla,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+inversion,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+pequena empresa,es,entrepreneurship-funding,Entrepreneurship & Funding,interest
+empreendedorismo,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+empreendedor,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+startup,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+fundador,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+incubadora,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+aceleradora,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+capital de risco,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+capital semente,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+investimento,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+pequena empresa,pt,entrepreneurship-funding,Entrepreneurship & Funding,interest
+remote,en,remote-digital-skills,Remote Work & Digital Skills,interest
+remote work,en,remote-digital-skills,Remote Work & Digital Skills,interest
+work from home,en,remote-digital-skills,Remote Work & Digital Skills,interest
+digital skills,en,remote-digital-skills,Remote Work & Digital Skills,interest
+freelance,en,remote-digital-skills,Remote Work & Digital Skills,interest
+telecommute,en,remote-digital-skills,Remote Work & Digital Skills,interest
+online,en,remote-digital-skills,Remote Work & Digital Skills,interest
+virtual,en,remote-digital-skills,Remote Work & Digital Skills,interest
+hybrid,en,remote-digital-skills,Remote Work & Digital Skills,interest
+distributed team,en,remote-digital-skills,Remote Work & Digital Skills,interest
+teletravail,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+a distance,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+travail a distance,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+competences numeriques,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+freelance,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+en ligne,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+virtuel,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+hybride,fr,remote-digital-skills,Remote Work & Digital Skills,interest
+remoto,es,remote-digital-skills,Remote Work & Digital Skills,interest
+teletrabajo,es,remote-digital-skills,Remote Work & Digital Skills,interest
+trabajo remoto,es,remote-digital-skills,Remote Work & Digital Skills,interest
+habilidades digitales,es,remote-digital-skills,Remote Work & Digital Skills,interest
+freelance,es,remote-digital-skills,Remote Work & Digital Skills,interest
+en linea,es,remote-digital-skills,Remote Work & Digital Skills,interest
+virtual,es,remote-digital-skills,Remote Work & Digital Skills,interest
+hibrido,es,remote-digital-skills,Remote Work & Digital Skills,interest
+remoto,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+teletrabalho,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+trabalho remoto,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+habilidades digitais,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+freelancer,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+online,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+virtual,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+hibrido,pt,remote-digital-skills,Remote Work & Digital Skills,interest
+research,en,research-academic,Research & Academic Opportunities,interest
+academic,en,research-academic,Research & Academic Opportunities,interest
+phd,en,research-academic,Research & Academic Opportunities,interest
+doctorate,en,research-academic,Research & Academic Opportunities,interest
+postdoc,en,research-academic,Research & Academic Opportunities,interest
+thesis,en,research-academic,Research & Academic Opportunities,interest
+dissertation,en,research-academic,Research & Academic Opportunities,interest
+laboratory,en,research-academic,Research & Academic Opportunities,interest
+publication,en,research-academic,Research & Academic Opportunities,interest
+call for papers,en,research-academic,Research & Academic Opportunities,interest
+recherche,fr,research-academic,Research & Academic Opportunities,interest
+academique,fr,research-academic,Research & Academic Opportunities,interest
+doctorat,fr,research-academic,Research & Academic Opportunities,interest
+these,fr,research-academic,Research & Academic Opportunities,interest
+postdoctoral,fr,research-academic,Research & Academic Opportunities,interest
+laboratoire,fr,research-academic,Research & Academic Opportunities,interest
+publication,fr,research-academic,Research & Academic Opportunities,interest
+appel a communications,fr,research-academic,Research & Academic Opportunities,interest
+investigacion,es,research-academic,Research & Academic Opportunities,interest
+academico,es,research-academic,Research & Academic Opportunities,interest
+doctorado,es,research-academic,Research & Academic Opportunities,interest
+tesis,es,research-academic,Research & Academic Opportunities,interest
+posdoctoral,es,research-academic,Research & Academic Opportunities,interest
+laboratorio,es,research-academic,Research & Academic Opportunities,interest
+publicacion,es,research-academic,Research & Academic Opportunities,interest
+convocatoria de articulos,es,research-academic,Research & Academic Opportunities,interest
+pesquisa,pt,research-academic,Research & Academic Opportunities,interest
+academico,pt,research-academic,Research & Academic Opportunities,interest
+doutorado,pt,research-academic,Research & Academic Opportunities,interest
+tese,pt,research-academic,Research & Academic Opportunities,interest
+pos doutorado,pt,research-academic,Research & Academic Opportunities,interest
+laboratorio,pt,research-academic,Research & Academic Opportunities,interest
+publicacao,pt,research-academic,Research & Academic Opportunities,interest
+chamada de trabalhos,pt,research-academic,Research & Academic Opportunities,interest
+exchange,en,international-programs,International Exchange Programs,interest
+international,en,international-programs,International Exchange Programs,interest
+abroad,en,international-programs,International Exchange Programs,interest
+study abroad,en,international-programs,International Exchange Programs,interest
+mobility,en,international-programs,International Exchange Programs,interest
+visa,en,international-programs,International Exchange Programs,interest
+erasmus,en,international-programs,International Exchange Programs,interest
+global program,en,international-programs,International Exchange Programs,interest
+overseas,en,international-programs,International Exchange Programs,interest
+echange,fr,international-programs,International Exchange Programs,interest
+international,fr,international-programs,International Exchange Programs,interest
+a l'etranger,fr,international-programs,International Exchange Programs,interest
+etudes a l'etranger,fr,international-programs,International Exchange Programs,interest
+mobilite,fr,international-programs,International Exchange Programs,interest
+visa,fr,international-programs,International Exchange Programs,interest
+erasmus,fr,international-programs,International Exchange Programs,interest
+programme mondial,fr,international-programs,International Exchange Programs,interest
+intercambio,es,international-programs,International Exchange Programs,interest
+internacional,es,international-programs,International Exchange Programs,interest
+en el extranjero,es,international-programs,International Exchange Programs,interest
+estudiar en el extranjero,es,international-programs,International Exchange Programs,interest
+movilidad,es,international-programs,International Exchange Programs,interest
+visa,es,international-programs,International Exchange Programs,interest
+erasmus,es,international-programs,International Exchange Programs,interest
+programa global,es,international-programs,International Exchange Programs,interest
+intercambio,pt,international-programs,International Exchange Programs,interest
+internacional,pt,international-programs,International Exchange Programs,interest
+no exterior,pt,international-programs,International Exchange Programs,interest
+estudar no exterior,pt,international-programs,International Exchange Programs,interest
+mobilidade,pt,international-programs,International Exchange Programs,interest
+visto,pt,international-programs,International Exchange Programs,interest
+erasmus,pt,international-programs,International Exchange Programs,interest
+programa global,pt,international-programs,International Exchange Programs,interest
+technology,en,technology,Technology,industry
+tech,en,technology,Technology,industry
+software,en,technology,Technology,industry
+engineering,en,technology,Technology,industry
+developer,en,technology,Technology,industry
+programming,en,technology,Technology,industry
+data science,en,technology,Technology,industry
+artificial intelligence,en,technology,Technology,industry
+machine learning,en,technology,Technology,industry
+cybersecurity,en,technology,Technology,industry
+cloud,en,technology,Technology,industry
+web development,en,technology,Technology,industry
+technologie,fr,technology,Technology,industry
+informatique,fr,technology,Technology,industry
+logiciel,fr,technology,Technology,industry
+ingenierie,fr,technology,Technology,industry
+developpeur,fr,technology,Technology,industry
+programmation,fr,technology,Technology,industry
+science des donnees,fr,technology,Technology,industry
+intelligence artificielle,fr,technology,Technology,industry
+apprentissage automatique,fr,technology,Technology,industry
+cybersecurite,fr,technology,Technology,industry
+infonuagique,fr,technology,Technology,industry
+tecnologia,es,technology,Technology,industry
+informatica,es,technology,Technology,industry
+software,es,technology,Technology,industry
+ingenieria,es,technology,Technology,industry
+desarrollador,es,technology,Technology,industry
+programacion,es,technology,Technology,industry
+ciencia de datos,es,technology,Technology,industry
+inteligencia artificial,es,technology,Technology,industry
+aprendizaje automatico,es,technology,Technology,industry
+ciberseguridad,es,technology,Technology,industry
+nube,es,technology,Technology,industry
+tecnologia,pt,technology,Technology,industry
+informatica,pt,technology,Technology,industry
+software,pt,technology,Technology,industry
+engenharia,pt,technology,Technology,industry
+desenvolvedor,pt,technology,Technology,industry
+programacao,pt,technology,Technology,industry
+ciencia de dados,pt,technology,Technology,industry
+inteligencia artificial,pt,technology,Technology,industry
+aprendizado de maquina,pt,technology,Technology,industry
+ciberseguranca,pt,technology,Technology,industry
+nuvem,pt,technology,Technology,industry
+creative,en,creative-media,Creative Arts & Media,industry
+arts,en,creative-media,Creative Arts & Media,industry
+media,en,creative-media,Creative Arts & Media,industry
+design,en,creative-media,Creative Arts & Media,industry
+film,en,creative-media,Creative Arts & Media,industry
+music,en,creative-media,Creative Arts & Media,industry
+photography,en,creative-media,Creative Arts & Media,industry
+writing,en,creative-media,Creative Arts & Media,industry
+journalism,en,creative-media,Creative Arts & Media,industry
+content creation,en,creative-media,Creative Arts & Media,industry
+fashion,en,creative-media,Creative Arts & Media,industry
+animation,en,creative-media,Creative Arts & Media,industry
+creatif,fr,creative-media,Creative Arts & Media,industry
+arts,fr,creative-media,Creative Arts & Media,industry
+medias,fr,creative-media,Creative Arts & Media,industry
+design,fr,creative-media,Creative Arts & Media,industry
+cinema,fr,creative-media,Creative Arts & Media,industry
+musique,fr,creative-media,Creative Arts & Media,industry
+photographie,fr,creative-media,Creative Arts & Media,industry
+ecriture,fr,creative-media,Creative Arts & Media,industry
+journalisme,fr,creative-media,Creative Arts & Media,industry
+creation de contenu,fr,creative-media,Creative Arts & Media,industry
+mode,fr,creative-media,Creative Arts & Media,industry
+animation,fr,creative-media,Creative Arts & Media,industry
+creativo,es,creative-media,Creative Arts & Media,industry
+artes,es,creative-media,Creative Arts & Media,industry
+medios,es,creative-media,Creative Arts & Media,industry
+diseno,es,creative-media,Creative Arts & Media,industry
+cine,es,creative-media,Creative Arts & Media,industry
+musica,es,creative-media,Creative Arts & Media,industry
+fotografia,es,creative-media,Creative Arts & Media,industry
+escritura,es,creative-media,Creative Arts & Media,industry
+periodismo,es,creative-media,Creative Arts & Media,industry
+creacion de contenido,es,creative-media,Creative Arts & Media,industry
+moda,es,creative-media,Creative Arts & Media,industry
+animacion,es,creative-media,Creative Arts & Media,industry
+criativo,pt,creative-media,Creative Arts & Media,industry
+artes,pt,creative-media,Creative Arts & Media,industry
+midia,pt,creative-media,Creative Arts & Media,industry
+design,pt,creative-media,Creative Arts & Media,industry
+cinema,pt,creative-media,Creative Arts & Media,industry
+musica,pt,creative-media,Creative Arts & Media,industry
+fotografia,pt,creative-media,Creative Arts & Media,industry
+escrita,pt,creative-media,Creative Arts & Media,industry
+jornalismo,pt,creative-media,Creative Arts & Media,industry
+criacao de conteudo,pt,creative-media,Creative Arts & Media,industry
+moda,pt,creative-media,Creative Arts & Media,industry
+animacao,pt,creative-media,Creative Arts & Media,industry
+business,en,business-finance,Business & Finance,industry
+finance,en,business-finance,Business & Finance,industry
+banking,en,business-finance,Business & Finance,industry
+accounting,en,business-finance,Business & Finance,industry
+marketing,en,business-finance,Business & Finance,industry
+sales,en,business-finance,Business & Finance,industry
+consulting,en,business-finance,Business & Finance,industry
+economics,en,business-finance,Business & Finance,industry
+management,en,business-finance,Business & Finance,industry
+fintech,en,business-finance,Business & Finance,industry
+supply chain,en,business-finance,Business & Finance,industry
+affaires,fr,business-finance,Business & Finance,industry
+finance,fr,business-finance,Business & Finance,industry
+banque,fr,business-finance,Business & Finance,industry
+comptabilite,fr,business-finance,Business & Finance,industry
+marketing,fr,business-finance,Business & Finance,industry
+ventes,fr,business-finance,Business & Finance,industry
+conseil,fr,business-finance,Business & Finance,industry
+economie,fr,business-finance,Business & Finance,industry
+gestion,fr,business-finance,Business & Finance,industry
+chaine d'approvisionnement,fr,business-finance,Business & Finance,industry
+negocios,es,business-finance,Business & Finance,industry
+finanzas,es,business-finance,Business & Finance,industry
+banca,es,business-finance,Business & Finance,industry
+contabilidad,es,business-finance,Business & Finance,industry
+marketing,es,business-finance,Business & Finance,industry
+ventas,es,business-finance,Business & Finance,industry
+consultoria,es,business-finance,Business & Finance,industry
+economia,es,business-finance,Business & Finance,industry
+gestion,es,business-finance,Business & Finance,industry
+cadena de suministro,es,business-finance,Business & Finance,industry
+negocios,pt,business-finance,Business & Finance,industry
+financas,pt,business-finance,Business & Finance,industry
+bancario,pt,business-finance,Business & Finance,industry
+contabilidade,pt,business-finance,Business & Finance,industry
+marketing,pt,business-finance,Business & Finance,industry
+vendas,pt,business-finance,Business & Finance,industry
+consultoria,pt,business-finance,Business & Finance,industry
+economia,pt,business-finance,Business & Finance,industry
+gestao,pt,business-finance,Business & Finance,industry
+cadeia de suprimentos,pt,business-finance,Business & Finance,industry
+health,en,health-sciences,Healthcare & Sciences,industry
+healthcare,en,health-sciences,Healthcare & Sciences,industry
+medical,en,health-sciences,Healthcare & Sciences,industry
+medicine,en,health-sciences,Healthcare & Sciences,industry
+nursing,en,health-sciences,Healthcare & Sciences,industry
+public health,en,health-sciences,Healthcare & Sciences,industry
+biology,en,health-sciences,Healthcare & Sciences,industry
+chemistry,en,health-sciences,Healthcare & Sciences,industry
+pharmacy,en,health-sciences,Healthcare & Sciences,industry
+science,en,health-sciences,Healthcare & Sciences,industry
+biotechnology,en,health-sciences,Healthcare & Sciences,industry
+sante,fr,health-sciences,Healthcare & Sciences,industry
+medical,fr,health-sciences,Healthcare & Sciences,industry
+medecine,fr,health-sciences,Healthcare & Sciences,industry
+soins infirmiers,fr,health-sciences,Healthcare & Sciences,industry
+sante publique,fr,health-sciences,Healthcare & Sciences,industry
+biologie,fr,health-sciences,Healthcare & Sciences,industry
+chimie,fr,health-sciences,Healthcare & Sciences,industry
+pharmacie,fr,health-sciences,Healthcare & Sciences,industry
+science,fr,health-sciences,Healthcare & Sciences,industry
+biotechnologie,fr,health-sciences,Healthcare & Sciences,industry
+salud,es,health-sciences,Healthcare & Sciences,industry
+sanitario,es,health-sciences,Healthcare & Sciences,industry
+medico,es,health-sciences,Healthcare & Sciences,industry
+medicina,es,health-sciences,Healthcare & Sciences,industry
+enfermeria,es,health-sciences,Healthcare & Sciences,industry
+salud publica,es,health-sciences,Healthcare & Sciences,industry
+biologia,es,health-sciences,Healthcare & Sciences,industry
+quimica,es,health-sciences,Healthcare & Sciences,industry
+farmacia,es,health-sciences,Healthcare & Sciences,industry
+ciencia,es,health-sciences,Healthcare & Sciences,industry
+biotecnologia,es,health-sciences,Healthcare & Sciences,industry
+saude,pt,health-sciences,Healthcare & Sciences,industry
+medico,pt,health-sciences,Healthcare & Sciences,industry
+medicina,pt,health-sciences,Healthcare & Sciences,industry
+enfermagem,pt,health-sciences,Healthcare & Sciences,industry
+saude publica,pt,health-sciences,Healthcare & Sciences,industry
+biologia,pt,health-sciences,Healthcare & Sciences,industry
+quimica,pt,health-sciences,Healthcare & Sciences,industry
+farmacia,pt,health-sciences,Healthcare & Sciences,industry
+ciencia,pt,health-sciences,Healthcare & Sciences,industry
+biotecnologia,pt,health-sciences,Healthcare & Sciences,industry
+education,en,education-training,Education & Training,industry
+teaching,en,education-training,Education & Training,industry
+teacher,en,education-training,Education & Training,industry
+school,en,education-training,Education & Training,industry
+university,en,education-training,Education & Training,industry
+curriculum,en,education-training,Education & Training,industry
+pedagogy,en,education-training,Education & Training,industry
+e learning,en,education-training,Education & Training,industry
+tutor,en,education-training,Education & Training,industry
+lecturer,en,education-training,Education & Training,industry
+education,fr,education-training,Education & Training,industry
+enseignement,fr,education-training,Education & Training,industry
+enseignant,fr,education-training,Education & Training,industry
+ecole,fr,education-training,Education & Training,industry
+universite,fr,education-training,Education & Training,industry
+programme scolaire,fr,education-training,Education & Training,industry
+pedagogie,fr,education-training,Education & Training,industry
+tuteur,fr,education-training,Education & Training,industry
+professeur,fr,education-training,Education & Training,industry
+educacion,es,education-training,Education & Training,industry
+ensenanza,es,education-training,Education & Training,industry
+docente,es,education-training,Education & Training,industry
+escuela,es,education-training,Education & Training,industry
+universidad,es,education-training,Education & Training,industry
+curriculo,es,education-training,Education & Training,industry
+pedagogia,es,education-training,Education & Training,industry
+tutor,es,education-training,Education & Training,industry
+profesor,es,education-training,Education & Training,industry
+educacao,pt,education-training,Education & Training,industry
+ensino,pt,education-training,Education & Training,industry
+professor,pt,education-training,Education & Training,industry
+escola,pt,education-training,Education & Training,industry
+universidade,pt,education-training,Education & Training,industry
+curriculo,pt,education-training,Education & Training,industry
+pedagogia,pt,education-training,Education & Training,industry
+tutor,pt,education-training,Education & Training,industry
+docente,pt,education-training,Education & Training,industry
+government,en,government-public,Government & Public Service,industry
+public service,en,government-public,Government & Public Service,industry
+public policy,en,government-public,Government & Public Service,industry
+civic,en,government-public,Government & Public Service,industry
+governance,en,government-public,Government & Public Service,industry
+diplomacy,en,government-public,Government & Public Service,industry
+public sector,en,government-public,Government & Public Service,industry
+administration,en,government-public,Government & Public Service,industry
+united nations,en,government-public,Government & Public Service,industry
+gouvernement,fr,government-public,Government & Public Service,industry
+service public,fr,government-public,Government & Public Service,industry
+politique publique,fr,government-public,Government & Public Service,industry
+civique,fr,government-public,Government & Public Service,industry
+gouvernance,fr,government-public,Government & Public Service,industry
+diplomatie,fr,government-public,Government & Public Service,industry
+secteur public,fr,government-public,Government & Public Service,industry
+administration,fr,government-public,Government & Public Service,industry
+nations unies,fr,government-public,Government & Public Service,industry
+gobierno,es,government-public,Government & Public Service,industry
+servicio publico,es,government-public,Government & Public Service,industry
+politica publica,es,government-public,Government & Public Service,industry
+civico,es,government-public,Government & Public Service,industry
+gobernanza,es,government-public,Government & Public Service,industry
+diplomacia,es,government-public,Government & Public Service,industry
+sector publico,es,government-public,Government & Public Service,industry
+administracion,es,government-public,Government & Public Service,industry
+naciones unidas,es,government-public,Government & Public Service,industry
+governo,pt,government-public,Government & Public Service,industry
+servico publico,pt,government-public,Government & Public Service,industry
+politica publica,pt,government-public,Government & Public Service,industry
+civico,pt,government-public,Government & Public Service,industry
+governanca,pt,government-public,Government & Public Service,industry
+diplomacia,pt,government-public,Government & Public Service,industry
+setor publico,pt,government-public,Government & Public Service,industry
+administracao,pt,government-public,Government & Public Service,industry
+nacoes unidas,pt,government-public,Government & Public Service,industry
+agriculture,en,agriculture-environment,Agriculture & Environment,industry
+farming,en,agriculture-environment,Agriculture & Environment,industry
+agribusiness,en,agriculture-environment,Agriculture & Environment,industry
+environment,en,agriculture-environment,Agriculture & Environment,industry
+climate,en,agriculture-environment,Agriculture & Environment,industry
+sustainability,en,agriculture-environment,Agriculture & Environment,industry
+renewable energy,en,agriculture-environment,Agriculture & Environment,industry
+conservation,en,agriculture-environment,Agriculture & Environment,industry
+green economy,en,agriculture-environment,Agriculture & Environment,industry
+agriculture,fr,agriculture-environment,Agriculture & Environment,industry
+agroalimentaire,fr,agriculture-environment,Agriculture & Environment,industry
+environnement,fr,agriculture-environment,Agriculture & Environment,industry
+climat,fr,agriculture-environment,Agriculture & Environment,industry
+durabilite,fr,agriculture-environment,Agriculture & Environment,industry
+energie renouvelable,fr,agriculture-environment,Agriculture & Environment,industry
+conservation,fr,agriculture-environment,Agriculture & Environment,industry
+economie verte,fr,agriculture-environment,Agriculture & Environment,industry
+agricultura,es,agriculture-environment,Agriculture & Environment,industry
+agronegocio,es,agriculture-environment,Agriculture & Environment,industry
+medio ambiente,es,agriculture-environment,Agriculture & Environment,industry
+clima,es,agriculture-environment,Agriculture & Environment,industry
+sostenibilidad,es,agriculture-environment,Agriculture & Environment,industry
+energia renovable,es,agriculture-environment,Agriculture & Environment,industry
+conservacion,es,agriculture-environment,Agriculture & Environment,industry
+economia verde,es,agriculture-environment,Agriculture & Environment,industry
+agricultura,pt,agriculture-environment,Agriculture & Environment,industry
+agronegocio,pt,agriculture-environment,Agriculture & Environment,industry
+meio ambiente,pt,agriculture-environment,Agriculture & Environment,industry
+clima,pt,agriculture-environment,Agriculture & Environment,industry
+sustentabilidade,pt,agriculture-environment,Agriculture & Environment,industry
+energia renovavel,pt,agriculture-environment,Agriculture & Environment,industry
+conservacao,pt,agriculture-environment,Agriculture & Environment,industry
+economia verde,pt,agriculture-environment,Agriculture & Environment,industry
+internship,en,internship,Internship,format
+intern,en,internship,Internship,format
+trainee,en,internship,Internship,format
+placement,en,internship,Internship,format
+apprenticeship,en,internship,Internship,format
+graduate scheme,en,internship,Internship,format
+stage,fr,internship,Internship,format
+stagiaire,fr,internship,Internship,format
+alternance,fr,internship,Internship,format
+apprentissage,fr,internship,Internship,format
+contrat de professionnalisation,fr,internship,Internship,format
+pasantia,es,internship,Internship,format
+practicas,es,internship,Internship,format
+becario,es,internship,Internship,format
+aprendizaje,es,internship,Internship,format
+practicas profesionales,es,internship,Internship,format
+estagio,pt,internship,Internship,format
+estagiario,pt,internship,Internship,format
+aprendizagem,pt,internship,Internship,format
+programa de trainee,pt,internship,Internship,format
+fellowship,en,fellowship,Fellowship,format
+fellow,en,fellowship,Fellowship,format
+residency,en,fellowship,Fellowship,format
+leadership program,en,fellowship,Fellowship,format
+bourse de recherche,fr,fellowship,Fellowship,format
+boursier,fr,fellowship,Fellowship,format
+residence,fr,fellowship,Fellowship,format
+programme de leadership,fr,fellowship,Fellowship,format
+beca de investigacion,es,fellowship,Fellowship,format
+residencia,es,fellowship,Fellowship,format
+programa de liderazgo,es,fellowship,Fellowship,format
+bolsa de pesquisa,pt,fellowship,Fellowship,format
+residencia,pt,fellowship,Fellowship,format
+programa de lideranca,pt,fellowship,Fellowship,format
+competition,en,competition,Competition,format
+contest,en,competition,Competition,format
+challenge,en,competition,Competition,format
+hackathon,en,competition,Competition,format
+award,en,competition,Competition,format
+prize,en,competition,Competition,format
+pitch competition,en,competition,Competition,format
+call for applications,en,competition,Competition,format
+concours,fr,competition,Competition,format
+competition,fr,competition,Competition,format
+defi,fr,competition,Competition,format
+hackathon,fr,competition,Competition,format
+prix,fr,competition,Competition,format
+appel a candidatures,fr,competition,Competition,format
+competencia,es,competition,Competition,format
+concurso,es,competition,Competition,format
+desafio,es,competition,Competition,format
+hackathon,es,competition,Competition,format
+premio,es,competition,Competition,format
+convocatoria,es,competition,Competition,format
+competicao,pt,competition,Competition,format
+concurso,pt,competition,Competition,format
+desafio,pt,competition,Competition,format
+hackathon,pt,competition,Competition,format
+premio,pt,competition,Competition,format
+chamada de inscricoes,pt,competition,Competition,format
+mentorship,en,mentorship,Mentorship & Guidance,support
+mentor,en,mentorship,Mentorship & Guidance,support
+coaching,en,mentorship,Mentorship & Guidance,support
+guidance,en,mentorship,Mentorship & Guidance,support
+advisor,en,mentorship,Mentorship & Guidance,support
+career advice,en,mentorship,Mentorship & Guidance,support
+mentorat,fr,mentorship,Mentorship & Guidance,support
+mentor,fr,mentorship,Mentorship & Guidance,support
+coaching,fr,mentorship,Mentorship & Guidance,support
+accompagnement,fr,mentorship,Mentorship & Guidance,support
+conseiller,fr,mentorship,Mentorship & Guidance,support
+orientation professionnelle,fr,mentorship,Mentorship & Guidance,support
+mentoria,es,mentorship,Mentorship & Guidance,support
+mentor,es,mentorship,Mentorship & Guidance,support
+coaching,es,mentorship,Mentorship & Guidance,support
+orientacion,es,mentorship,Mentorship & Guidance,support
+asesor,es,mentorship,Mentorship & Guidance,support
+orientacion profesional,es,mentorship,Mentorship & Guidance,support
+mentoria,pt,mentorship,Mentorship & Guidance,support
+mentor,pt,mentorship,Mentorship & Guidance,support
+coaching,pt,mentorship,Mentorship & Guidance,support
+orientacao,pt,mentorship,Mentorship & Guidance,support
+conselheiro,pt,mentorship,Mentorship & Guidance,support
+orientacao profissional,pt,mentorship,Mentorship & Guidance,support
+skill,en,skill-development,Skill Development,support
+skills,en,skill-development,Skill Development,support
+upskill,en,skill-development,Skill Development,support
+professional development,en,skill-development,Skill Development,support
+capacity building,en,skill-development,Skill Development,support
+leadership,en,skill-development,Skill Development,support
+soft skills,en,skill-development,Skill Development,support
+competence,fr,skill-development,Skill Development,support
+competences,fr,skill-development,Skill Development,support
+developpement professionnel,fr,skill-development,Skill Development,support
+renforcement des capacites,fr,skill-development,Skill Development,support
+leadership,fr,skill-development,Skill Development,support
+competences douces,fr,skill-development,Skill Development,support
+habilidad,es,skill-development,Skill Development,support
+habilidades,es,skill-development,Skill Development,support
+desarrollo profesional,es,skill-development,Skill Development,support
+fortalecimiento de capacidades,es,skill-development,Skill Development,support
+liderazgo,es,skill-development,Skill Development,support
+habilidades blandas,es,skill-development,Skill Development,support
+habilidade,pt,skill-development,Skill Development,support
+habilidades,pt,skill-development,Skill Development,support
+desenvolvimento profissional,pt,skill-development,Skill Development,support
+capacitacao profissional,pt,skill-development,Skill Development,support
+lideranca,pt,skill-development,Skill Development,support
+habilidades interpessoais,pt,skill-development,Skill Development,support
+youth,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+young people,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+women,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+girls,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+gender,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+inclusion,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+diversity,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+underrepresented,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+disability,en,youth-women-inclusion,"Youth, Women & Inclusion",audience
+jeunesse,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+jeunes,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+femmes,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+filles,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+genre,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+inclusion,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+diversite,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+sous represente,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+handicap,fr,youth-women-inclusion,"Youth, Women & Inclusion",audience
+juventud,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+jovenes,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+mujeres,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+ninas,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+genero,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+inclusion,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+diversidad,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+subrepresentado,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+discapacidad,es,youth-women-inclusion,"Youth, Women & Inclusion",audience
+juventude,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+jovens,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+mulheres,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+meninas,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+genero,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+inclusao,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+diversidade,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+sub representado,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience
+deficiencia,pt,youth-women-inclusion,"Youth, Women & Inclusion",audience

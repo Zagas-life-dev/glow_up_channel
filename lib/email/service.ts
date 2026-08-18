@@ -140,7 +140,7 @@ ${safeMessage}
 export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<EmailResult> {
   const { to, name } = params
 
-  const subject = "Welcome to GlowUp"
+  const subject = "Welcome to UP"
 
   const greetingName = name || "there"
 
@@ -148,7 +148,7 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<Emai
     <html>
       <body>
         <h1>Welcome, ${greetingName} 👋</h1>
-        <p>Thanks for joining GlowUp. We're excited to be part of your journey.</p>
+        <p>Thanks for joining UP. We're excited to be part of your journey.</p>
         <p>You&apos;ll start receiving curated opportunities, resources, and tools to help you grow.</p>
       </body>
     </html>
@@ -156,7 +156,7 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<Emai
 
   const textBody = `Welcome, ${greetingName}!
 
-Thanks for joining GlowUp. We're excited to be part of your journey.
+Thanks for joining UP. We're excited to be part of your journey.
 
 You'll start receiving curated opportunities, resources, and tools to help you grow.
 `

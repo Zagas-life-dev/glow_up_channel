@@ -1,5 +1,11 @@
 import type { Metadata } from "next"
-import { buildResourceMetadata } from "@/lib/content-metadata"
+import { JsonLd } from "@/components/seo/json-ld"
+import { buildResourceMetadata } from "@/lib/seo/metadata"
+import { getResource } from "@/lib/seo/fetch-content"
+import {
+  buildBreadcrumbJsonLd,
+  buildResourceJsonLd,
+} from "@/lib/seo/structured-data"
 
 export async function generateMetadata({
   params,
@@ -10,6 +16,35 @@ export async function generateMetadata({
   return buildResourceMetadata(id)
 }
 
-export default function ResourceDetailLayout({ children }: { children: React.ReactNode }) {
-  return children
+/**
+ * Server-rendered LearningResource data for a client-rendered page; see the
+ * note in the events layout.
+ */
+export default async function ResourceDetailLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const resource = await getResource(id)
+
+  return (
+    <>
+      {resource?.title && (
+        <JsonLd
+          data={[
+            buildResourceJsonLd(resource, id),
+            buildBreadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Resources", path: "/resources" },
+              { name: resource.title, path: `/resources/${id}` },
+            ]),
+          ]}
+        />
+      )}
+      {children}
+    </>
+  )
 }

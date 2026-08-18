@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Locked In",
-  description: "Track streaks and stay consistent with your goals on GlowUp.",
+  description: "Track streaks and stay consistent with your goals on UP.",
 }
 
 export default function LockedInLayout({ children }: { children: React.ReactNode }) {

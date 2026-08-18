@@ -1,40 +1,33 @@
 "use client"
 
-import { ReactNode, useState } from 'react'
+import { ReactNode } from 'react'
 import FeedCard from './feed-card'
 import { RiInboxLine, RiSparklingLine } from 'react-icons/ri'
 
 interface FeedContainerProps {
   items: any[]
   loading?: boolean
+  /** How many placeholder cards to show while loading. */
+  skeletonCount?: number
+  /** Announced to screen readers while the placeholders are up. */
+  loadingMessage?: string
   emptyMessage?: string
   emptyIcon?: ReactNode
-  /** Session-restored expanded card id */
-  initialExpandedId?: string | null
-  /** Notify parent when expanded id changes (for session save) */
-  onExpandedIdChange?: (id: string | null) => void
 }
 
 export default function FeedContainer({
   items,
   loading = false,
+  skeletonCount = 5,
+  loadingMessage = "Loading content…",
   emptyMessage = "No content found",
   emptyIcon,
-  initialExpandedId = null,
-  onExpandedIdChange,
 }: FeedContainerProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(initialExpandedId ?? null)
-
-  const handleExpand = (id: string) => {
-    const next = expandedId === id ? null : id
-    setExpandedId(next)
-    onExpandedIdChange?.(next)
-  }
-
   if (loading) {
     return (
-      <div className="space-y-5 w-full max-w-full">
-        {[...Array(5)].map((_, i) => (
+      <div className="space-y-5 w-full max-w-full" role="status" aria-busy="true">
+        <span className="sr-only">{loadingMessage}</span>
+        {[...Array(skeletonCount)].map((_, i) => (
           <div key={i} className="w-full max-w-full relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden animate-pulse">
             <div className="p-6 w-full max-w-full overflow-hidden">
               <div>
@@ -93,12 +86,7 @@ export default function FeedContainer({
   return (
     <div className="space-y-5 w-full max-w-full">
       {items.map((post) => (
-        <FeedCard
-          key={post._id}
-          item={post}
-          isExpanded={expandedId === post._id}
-          onExpand={() => handleExpand(post._id)}
-        />
+        <FeedCard key={post._id} item={post} />
       ))}
     </div>
   )

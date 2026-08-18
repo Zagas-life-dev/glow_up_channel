@@ -1,0 +1,1421 @@
+canonical_term,source,frequency,taxonomy_tag,variants
+program,contentTags,72,,program
+general,contentTags,67,,general
+conference,contentTags,54,networking-events,conference
+bootcamps,contentTags,48,training-workshops,bootcamps
+training,contentTags,48,training-workshops,training
+remote,contentTags,43,remote-digital-skills,remote
+internship,contentTags,42,internship,internship | internships
+full-time,contentTags,39,jobs-careers,full-time
+grants,contentTags,37,scholarships-grants,grants | grant
+workshop,contentTags,20,training-workshops,workshop | Workshop
+scholarship,contentTags,20,scholarships-grants,scholarship | scholarships
+contract,contentTags,17,,contract
+senior,contentTags,16,,senior
+fellowship,contentTags,16,fellowship,fellowship | fellowships
+other,contentTags,15,,other
+exhibition,contentTags,14,,exhibition
+business,contentTags,9,business-finance,business
+engineering,contentTags,9,technology,engineering
+management,contentTags,9,business-finance,management | Management
+junior,contentTags,8,,junior
+permanent,contentTags,8,,permanent
+networking,contentTags,8,networking-events,networking | Networking
+technology,contentTags,8,technology,technology | Technology
+award,contentTags,7,competition,award
+seminar,contentTags,7,training-workshops,seminar
+mid-level,contentTags,6,,mid-level
+administration,contentTags,5,government-public,administration
+call-for-applications,contentTags,4,competition,call-for-applications
+competition,contentTags,4,competition,competition
+innovation,contentTags,4,,innovation
+executive,contentTags,4,,executive | executives
+certification,contentTags,3,training-workshops,certification
+customer-service,contentTags,3,,customer-service
+expo,contentTags,3,networking-events,expo
+it,contentTags,3,,it
+jobs,contentTags,3,jobs-careers,jobs
+tech,contentTags,3,technology,tech
+finance,contentTags,3,business-finance,finance | Finance
+graphics-design,contentTags,3,,graphics-design | graphic_design
+Lagos,contentTags,3,,Lagos | lagos
+leadership,contentTags,3,skill-development,leadership | Leadership
+nigeria,contentTags,3,,nigeria | Nigeria
+AI,contentTags,2,,AI
+contests,contentTags,2,competition,contests
+education,contentTags,2,education-training,education
+entertainment,contentTags,2,,entertainment
+entry-level,contentTags,2,,entry-level
+future,contentTags,2,,future
+ghana,contentTags,2,,ghana
+part-time,contentTags,2,jobs-careers,part-time
+party,contentTags,2,,party
+sales,contentTags,2,business-finance,sales
+social-media,contentTags,2,,social-media
+ui/ux-design,contentTags,2,,ui/ux-design
+startup,contentTags,2,entrepreneurship-funding,startup | startups
+algeria,contentTags,1,,algeria
+Art,contentTags,1,creative-media,Art
+Artofpitching,contentTags,1,,Artofpitching
+Blockchain,contentTags,1,,Blockchain
+career,contentTags,1,jobs-careers,career
+Christianity,contentTags,1,,Christianity
+coding,contentTags,1,,coding
+Creatives,contentTags,1,creative-media,Creatives
+Culture,contentTags,1,,Culture
+data-analysis,contentTags,1,,data-analysis
+digital,contentTags,1,,digital
+digital media,contentTags,1,,digital media
+Digital Transformation,contentTags,1,,Digital Transformation
+digitalconference,contentTags,1,,digitalconference
+egypt,contentTags,1,,egypt
+energy,contentTags,1,,energy
+entrepreneurship,contentTags,1,entrepreneurship-funding,entrepreneurship
+Event,contentTags,1,,Event
+festival,contentTags,1,,festival
+Founders,contentTags,1,entrepreneurship-funding,Founders
+freelancers,contentTags,1,remote-digital-skills,freelancers
+full-stack-development,contentTags,1,,full-stack-development
+gaming,contentTags,1,,gaming
+investment,contentTags,1,entrepreneurship-funding,investment
+learning,contentTags,1,,learning
+marketers,contentTags,1,,marketers
+Nigerian Event Hostess,contentTags,1,,Nigerian Event Hostess
+OpenGov,contentTags,1,,OpenGov
+parenting,contentTags,1,,parenting
+parenting conference,contentTags,1,,parenting conference
+private capital,contentTags,1,,private capital
+product-design,contentTags,1,,product-design
+Salespeople,contentTags,1,,Salespeople
+shoe,contentTags,1,,shoe
+Showcase,contentTags,1,,Showcase
+skillbuilding,contentTags,1,,skillbuilding
+social,contentTags,1,,social
+strategy,contentTags,1,,strategy
+study abroad,contentTags,1,international-programs,study abroad
+summit,contentTags,1,networking-events,summit
+talk,contentTags,1,,talk
+Testimony of Faith,contentTags,1,,Testimony of Faith
+Theology,contentTags,1,,Theology
+theultimatepitchdeck,contentTags,1,,theultimatepitchdeck
+wealth,contentTags,1,,wealth
+womenempowerment,contentTags,1,,womenempowerment
+womenintech,contentTags,1,,womenintech
+bootcamps,contentCategory,48,training-workshops,bootcamps
+course,contentCategory,35,training-workshops,course | Course
+grants,contentCategory,27,scholarships-grants,grants | grant
+internships,contentCategory,6,internship,internships
+scholarships,contentCategory,6,scholarships-grants,scholarships | scholarship
+Tool,contentCategory,5,,Tool
+call-for-applications,contentCategory,4,competition,call-for-applications
+fellowships,contentCategory,4,fellowship,fellowships
+contests,contentCategory,2,competition,contests
+E-book,contentCategory,2,,E-book
+article,contentCategory,1,,article
+egypt,contentCategory,1,,egypt
+ghana,contentCategory,1,,ghana
+Guide,contentCategory,1,,Guide
+other,contentCategory,1,,other
+Template,contentCategory,1,,Template
+Tutorial,contentCategory,1,,Tutorial
+Technology,contentSectors,228,technology,Technology
+Arts,contentSectors,120,creative-media,Arts | arts
+Media,contentSectors,111,creative-media,Media | media
+Education,contentSectors,96,education-training,Education
+Finance,contentSectors,93,business-finance,Finance | finance
+Energy,contentSectors,68,,Energy | energy
+Business,contentSectors,64,business-finance,Business
+Healthcare,contentSectors,37,health-sciences,Healthcare
+Agriculture,contentSectors,10,agriculture-environment,Agriculture
+tech,contentSectors,10,technology,tech
+government,contentSectors,2,government-public,government
+commerce,contentSectors,1,,commerce
+Professionals,contentAudience,130,,Professionals | professionals
+Students,contentAudience,98,,Students
+Youth,contentAudience,70,youth-women-inclusion,Youth
+Entrepreneurs,contentAudience,52,entrepreneurship-funding,Entrepreneurs | entrepreneurs
+Researchers,contentAudience,40,,Researchers
+Women,contentAudience,18,youth-women-inclusion,Women
+executives,contentAudience,5,,executives
+creatives,contentAudience,1,creative-media,creatives
+Developers,contentAudience,1,technology,Developers
+investors,contentAudience,1,,investors
+juniors,contentAudience,1,,juniors
+Jobs & Career Opportunities,profileInterests,1593,jobs-careers,Jobs & Career Opportunities
+Networking Events,profileInterests,1566,networking-events,Networking Events
+Remote Work & Digital Skills,profileInterests,1518,remote-digital-skills,Remote Work & Digital Skills
+Scholarships & Grants,profileInterests,1383,scholarships-grants,Scholarships & Grants
+Training & Workshops,profileInterests,1361,training-workshops,Training & Workshops
+Volunteering & Community Service,profileInterests,1245,volunteering,Volunteering & Community Service
+Entrepreneurship & Funding,profileInterests,1170,entrepreneurship-funding,Entrepreneurship & Funding
+internship,profileInterests,438,internship,internship | internships
+program,profileInterests,401,,program
+training,profileInterests,337,training-workshops,training
+grants,profileInterests,327,scholarships-grants,grants | grant
+bootcamps,profileInterests,307,training-workshops,bootcamps
+scholarship,profileInterests,279,scholarships-grants,scholarship | scholarships
+fellowship,profileInterests,182,fellowship,fellowship | fellowships
+conference,profileInterests,165,networking-events,conference
+general,profileInterests,157,,general
+networking,profileInterests,143,networking-events,networking | Networking
+full-time,profileInterests,138,jobs-careers,full-time
+workshop,profileInterests,115,training-workshops,workshop | Workshop
+award,profileInterests,94,competition,award
+Research & Academic Opportunities,profileInterests,92,research-academic,Research & Academic Opportunities
+International Exchange Programs,profileInterests,90,international-programs,International Exchange Programs
+it,profileInterests,86,,it
+permanent,profileInterests,81,,permanent
+management,profileInterests,80,business-finance,management | Management
+remote,profileInterests,77,remote-digital-skills,remote
+senior,profileInterests,68,,senior
+competition,profileInterests,66,competition,competition | competitions
+Event,profileInterests,61,,Event
+exhibition,profileInterests,60,,exhibition
+other,profileInterests,50,,other
+business,profileInterests,48,business-finance,business
+contract,profileInterests,46,,contract
+call-for-applications,profileInterests,35,competition,call-for-applications
+jobs,profileInterests,29,jobs-careers,jobs
+gaming,profileInterests,25,,gaming
+mid-level,profileInterests,25,,mid-level
+sales,profileInterests,23,business-finance,sales
+startups,profileInterests,21,entrepreneurship-funding,startups | startup
+mentorship,profileInterests,18,mentorship,mentorship
+administration,profileInterests,17,government-public,administration
+tech,profileInterests,17,technology,tech
+coding,profileInterests,16,,coding
+data,profileInterests,15,,data
+engineering,profileInterests,15,technology,engineering
+junior,profileInterests,15,,junior
+talent,profileInterests,15,,talent
+graphics-design,profileInterests,15,,graphics-design | graphic_design | Graphic Design
+executives,profileInterests,15,,executives | executive
+seminar,profileInterests,13,training-workshops,seminar
+social-media,profileInterests,13,,social-media
+contests,profileInterests,12,competition,contests
+customer-service,profileInterests,11,,customer-service
+Finance,profileInterests,11,business-finance,Finance | finance
+meetup,profileInterests,10,networking-events,meetup
+energyevents,profileInterests,9,,energyevents
+abujaevents,profileInterests,8,,abujaevents
+certification,profileInterests,8,training-workshops,certification
+entry-level,profileInterests,8,,entry-level
+product-design,profileInterests,8,,product-design
+theultimatepitchdeck,profileInterests,8,,theultimatepitchdeck
+Leadership,profileInterests,8,skill-development,Leadership | leadership
+agruiculture,profileInterests,7,,agruiculture
+Artofpitching,profileInterests,7,,Artofpitching
+entrepreneurship,profileInterests,7,entrepreneurship-funding,entrepreneurship
+Founders,profileInterests,7,entrepreneurship-funding,Founders
+journalist,profileInterests,7,,journalist
+media,profileInterests,7,creative-media,media
+nigeria,profileInterests,7,,nigeria
+photography,profileInterests,7,creative-media,photography
+women empowernment,profileInterests,7,,women empowernment
+technology,profileInterests,7,technology,technology | Technology
+ghana,profileInterests,6,,ghana
+music,profileInterests,6,creative-media,music
+senegal,profileInterests,6,,senegal
+west africa,profileInterests,6,,west africa
+women empowerment,profileInterests,6,,women empowerment | womenempowerment
+ai,profileInterests,6,,ai | AI
+climate,profileInterests,5,agriculture-environment,climate
+Creatives,profileInterests,5,creative-media,Creatives
+education,profileInterests,5,education-training,education
+environmental,profileInterests,5,,environmental
+freelancers,profileInterests,5,remote-digital-skills,freelancers
+phd,profileInterests,5,research-academic,phd
+Salespeople,profileInterests,5,,Salespeople
+brunch,profileInterests,4,,brunch
+energy,profileInterests,4,,energy
+growth,profileInterests,4,,growth
+innovation,profileInterests,4,,innovation
+legacy,profileInterests,4,,legacy
+social,profileInterests,4,,social
+women,profileInterests,4,youth-women-inclusion,women
+demo,profileInterests,3,,demo
+festival,profileInterests,3,,festival
+marketers,profileInterests,3,,marketers
+Expo,profileInterests,3,networking-events,Expo | expo
+Challenge,profileInterests,2,competition,Challenge
+development,profileInterests,2,,development
+educational,profileInterests,2,,educational
+egypt,profileInterests,2,,egypt
+entertainment,profileInterests,2,,entertainment
+hackathon,profileInterests,2,competition,hackathon
+Marketplace,profileInterests,2,,Marketplace
+Online,profileInterests,2,remote-digital-skills,Online
+panel,profileInterests,2,,panel
+strategy,profileInterests,2,,strategy
+womenevents,profileInterests,2,,womenevents
+lagos,profileInterests,2,,lagos | Lagos
+react,profileInterests,2,,react | React
+#EnuguGamingConference2026,profileInterests,1,,#EnuguGamingConference2026
+abuja,profileInterests,1,,abuja
+art,profileInterests,1,creative-media,art
+backend,profileInterests,1,,backend
+concert,profileInterests,1,,concert
+confrence,profileInterests,1,,confrence
+cybersecurity,profileInterests,1,technology,cybersecurity
+Data Analysis,profileInterests,1,,Data Analysis
+digital education,profileInterests,1,,digital education
+fashion,profileInterests,1,creative-media,fashion
+frontend,profileInterests,1,,frontend
+Git,profileInterests,1,,Git
+investment,profileInterests,1,entrepreneurship-funding,investment
+JavaScript,profileInterests,1,,JavaScript
+machine learning,profileInterests,1,technology,machine learning
+masters,profileInterests,1,,masters
+money,profileInterests,1,,money
+private capital,profileInterests,1,,private capital
+research,profileInterests,1,research-academic,research
+sewing,profileInterests,1,,sewing
+simpleend,profileInterests,1,,simpleend
+skillbuilding,profileInterests,1,,skillbuilding
+sports,profileInterests,1,,sports
+summer,profileInterests,1,,summer
+talk,profileInterests,1,,talk
+traning,profileInterests,1,,traning
+ui/ux-design,profileInterests,1,,ui/ux-design
+Web Development,profileInterests,1,technology,Web Development
+webinar,profileInterests,1,,webinar
+Communication,profileSkills,733,,"Communication | communication | ""communication"""
+Leadership,profileSkills,360,skill-development,Leadership | leadership
+Project Management,profileSkills,272,,Project Management | Project management | project management
+Problem Solving,profileSkills,190,,Problem Solving | Problem solving | problem solving | Problem solving. | Problem-Solving
+Content Writing,profileSkills,170,,Content Writing | Content writing
+Teamwork,profileSkills,132,,Teamwork | Team work | team work | teamwork
+Customer Service,profileSkills,113,,Customer Service | customer service | Customer service
+content creation,profileSkills,113,creative-media,content creation | Content creation | Content Creation
+Graphic Design,profileSkills,111,,Graphic Design | graphics design | Graphic design | Graphics design
+Video Editing,profileSkills,103,,Video Editing | Video editing | video editing
+Social Media,profileSkills,94,,Social Media | Social media | social media
+Public Speaking,profileSkills,84,,Public Speaking | Public speaking | public speaking
+Python,profileSkills,78,,Python | python
+Critical Thinking,profileSkills,68,,Critical Thinking | Critical thinking | critical thinking
+Digital Marketing,profileSkills,67,,Digital Marketing | Digital marketing | digital marketing
+Research,profileSkills,66,research-academic,Research
+Time Management,profileSkills,66,,Time Management | Time management | time management | Timemanagement
+Data Analysis,profileSkills,61,,Data Analysis | Data analysis | data analysis
+JavaScript,profileSkills,55,,JavaScript | javascript | Javascript
+Content Marketing,profileSkills,48,,Content Marketing | Content marketing | content marketing
+Networking,profileSkills,46,networking-events,Networking | networking
+Copywriting,profileSkills,43,,Copywriting | copy writing | Copy writing | copywriting
+Data Entry,profileSkills,43,,Data Entry | Data entry | data entry
+React,profileSkills,41,,React | react
+Virtual assistant,profileSkills,40,,Virtual assistant | virtual assistant | Virtual Assistant | virtual Assistant
+Administrative Assistant,profileSkills,36,,Administrative Assistant | Administrative assistant
+Microsoft excel,profileSkills,33,,Microsoft excel | Microsoft Excel | Microsoft  Excel
+Sales,profileSkills,31,business-finance,Sales | sales
+Web Development,profileSkills,31,technology,Web Development | Web development
+Marketing,profileSkills,31,business-finance,Marketing | marketing
+Adaptability,profileSkills,31,,Adaptability | adaptability
+SQL,profileSkills,29,,SQL | Sql | sql
+HTML,profileSkills,28,,HTML | html | Html
+Social media management,profileSkills,28,,Social media management | Social Media Management | social media management | Social Media management
+finance,profileSkills,26,business-finance,finance | Finance
+Photography,profileSkills,25,creative-media,Photography
+CSS,profileSkills,25,,CSS | css | Css
+writing,profileSkills,25,creative-media,writing | Writing
+Proficiency in Microsoft,profileSkills,24,,Proficiency in Microsoft
+AI,profileSkills,23,,AI | Ai
+Team management,profileSkills,23,,Team management | Team Management
+Data Science,profileSkills,23,technology,Data Science | Data science
+Leadership&Coordination,profileSkills,20,,Leadership&Coordination
+Accounting,profileSkills,20,business-finance,Accounting | accounting
+Teaching,profileSkills,19,education-training,Teaching | teaching
+entrepreneurship,profileSkills,19,entrepreneurship-funding,entrepreneurship | Entrepreneurship
+Story Writing,profileSkills,17,,Story Writing
+webdev,profileSkills,17,,webdev
+Excel,profileSkills,17,,Excel | excel
+Storytelling,profileSkills,17,,Storytelling | Story telling | story telling
+Virtual Assistance,profileSkills,17,,Virtual Assistance | Virtual assistance | virtual assistance
+productivity,profileSkills,15,,productivity
+UI/UX Design,profileSkills,15,,UI/UX Design | UI/UX design | UI/ UX Design
+calendar management,profileSkills,15,,calendar management | Calendar Management | Calendar management
+Social media manager,profileSkills,15,,Social media manager | social media manager | social  media manager | Social media Manager | Social Media Manager
+Community manager,profileSkills,14,,Community manager
+Human Resources Management,profileSkills,14,,Human Resources Management
+canva,profileSkills,14,,canva | Canva
+photo editing,profileSkills,14,,photo editing | Photo editing | Photoediting
+Executive Assisting,profileSkills,13,,Executive Assisting
+Node.js,profileSkills,13,,Node.js
+Social media marketing,profileSkills,12,,Social media marketing | social media marketing | Social Media Marketing
+Analytics,profileSkills,11,,Analytics
+Communication manager,profileSkills,11,,Communication manager
+learning,profileSkills,11,,learning
+Technical writing,profileSkills,11,,"Technical writing | ""Technical writing"" | technical Writing | Technical Writing"
+TypeScript,profileSkills,10,,TypeScript
+Business,profileSkills,10,business-finance,Business | business
+Blockchain,profileSkills,9,,Blockchain
+Videographer,profileSkills,9,,Videographer
+businessowners,profileSkills,9,,businessowners | Business owner
+Product management,profileSkills,9,,"Product management | ""Product management"" | product management | Product Management"
+Executive Assistant,profileSkills,9,,Executive Assistant | executive assistant | Executive assistant
+Google Workspace,profileSkills,9,,Google Workspace | google workspace | Google workspace
+Attention to Detail,profileSkills,9,,Attention to Detail | Attention to detail | attention to detail | attention to details | Attention to details
+digital,profileSkills,8,,digital
+Ai tools,profileSkills,8,,Ai tools | AI Tools
+Content strategist,profileSkills,8,,Content strategist | Content Strategist
+Video editor,profileSkills,8,,Video editor | video editor
+Hair Stylist,profileSkills,7,,Hair Stylist
+programming,profileSkills,7,technology,programming
+Record Keeping,profileSkills,7,,Record Keeping
+Fashion designer,profileSkills,7,,Fashion designer | fashion designer | Fashion Designer
+Microsoft office,profileSkills,7,,Microsoft office | Microsoft Office
+Automation,profileSkills,7,,Automation | automation
+Content creator,profileSkills,7,,Content creator | content creator | Content  creator
+Cybersecurity,profileSkills,7,technology,Cybersecurity | Cyber security | cybersecurity
+Customer support,profileSkills,7,,"Customer support | customer support | ""Customer Support"" | Customer Support"
+Lead generation,profileSkills,7,,Lead generation | lead generation | Lead Generation
+Power Bi,profileSkills,7,,Power Bi | Power BI | Power bi | Powerbi
+entertainment,profileSkills,6,,entertainment
+innovation,profileSkills,6,,innovation
+PostgreSQL,profileSkills,6,,PostgreSQL
+Problem Solver,profileSkills,6,,Problem Solver
+womenintech,profileSkills,6,,womenintech
+C++,profileSkills,6,,C++ | C#
+CapCut,profileSkills,6,,CapCut | capcut
+Content strategy,profileSkills,6,,Content strategy | content strategy
+Videography,profileSkills,6,,Videography | videography
+Creative writing,profileSkills,6,,"Creative writing | ""creative writing"" | Creative Writing"
+Entrepreneur,profileSkills,6,entrepreneurship-funding,Entrepreneur | entrepreneur
+Machine Learning,profileSkills,6,technology,Machine Learning | machine learning | Machine learning
+PowerPoint,profileSkills,6,,PowerPoint | Powerpoint
+baking,profileSkills,6,,baking | Baking
+Email Management,profileSkills,6,,Email Management | Email management | email management
+Ghostwriting,profileSkills,6,,Ghostwriting | Ghost writing | ghostwriting
+Microsoft word,profileSkills,6,,Microsoft word | Microsoft Word
+careerstrategy,profileSkills,5,,careerstrategy
+education,profileSkills,5,education-training,education
+Hospitality,profileSkills,5,,Hospitality
+makeup,profileSkills,5,,makeup
+personaldevelopment,profileSkills,5,,personaldevelopment
+Sales closing,profileSkills,5,,Sales closing
+skillbuilding,profileSkills,5,,skillbuilding
+Community management,profileSkills,5,,Community management | Community Management
+Law,profileSkills,5,,Law | law
+Slack,profileSkills,5,,Slack | slack
+Social media Design,profileSkills,5,,Social media Design | social media design
+softwareengineering,profileSkills,5,,softwareengineering | Software engineering
+Fashion designing,profileSkills,5,,Fashion designing | fashion designing
+Analytical thinking,profileSkills,5,,Analytical thinking | Analytical Thinking | analytical thinking
+Business development,profileSkills,5,,Business development | Business Development | business development
+Data analytics,profileSkills,5,,"Data analytics | ""Data analytics"" | data analytics | Data Analytics"
+Acting,profileSkills,4,,Acting
+Connect marketing,profileSkills,4,,Connect marketing
+Event planning,profileSkills,4,,Event planning
+Fashion,profileSkills,4,creative-media,Fashion
+Git,profileSkills,4,,Git
+Java,profileSkills,4,,Java
+Mobile Development,profileSkills,4,,Mobile Development
+MongoDB,profileSkills,4,,MongoDB
+Tailoring,profileSkills,4,,Tailoring
+Administrative support,profileSkills,4,,Administrative support | Administrative Support
+Advertising,profileSkills,4,,Advertising | advertising
+Brand strategy,profileSkills,4,,Brand strategy | Brand Strategy
+Community building,profileSkills,4,,Community building | Community Building
+Fashion design,profileSkills,4,,Fashion design | Fashion Design
+Financial analysis,profileSkills,4,,Financial analysis | Financial  Analysis
+Negotiation,profileSkills,4,,Negotiation | negotiation
+Proactive,profileSkills,4,,Proactive | proactive
+Research skills,profileSkills,4,,Research skills | Research Skills
+Strategic thinking,profileSkills,4,,Strategic thinking | strategic thinking
+trello,profileSkills,4,,trello | Trello
+WordPress,profileSkills,4,,WordPress | Wordpress
+AI automation,profileSkills,4,,"AI automation | ""AI automation"" | Ai Automation"
+creative direction,profileSkills,4,,creative direction | Creative direction | Creative Direction
+Legal research,profileSkills,4,,Legal research | legal research | Legal Research
+Product design,profileSkills,4,,Product design | Product Design
+Sales and marketing,profileSkills,4,,Sales and marketing | sales and marketing | Sales and Marketing
+Blogging,profileSkills,3,,Blogging
+coding,profileSkills,3,,coding
+Copywriter,profileSkills,3,,Copywriter
+CRM,profileSkills,3,,CRM
+Crocheting,profileSkills,3,,Crocheting
+email optimization,profileSkills,3,,email optimization
+Fashion illustration,profileSkills,3,,Fashion illustration
+Fast learner,profileSkills,3,,Fast learner
+Health,profileSkills,3,health-sciences,Health
+Health and Safety manager,profileSkills,3,,Health and Safety manager
+Interior design,profileSkills,3,,Interior design
+Lead report,profileSkills,3,,Lead report
+Php,profileSkills,3,,Php
+SEO,profileSkills,3,,SEO
+Speaking,profileSkills,3,,Speaking
+Tech,profileSkills,3,technology,Tech
+tech2026,profileSkills,3,,tech2026
+Business management,profileSkills,3,,Business management | business management
+business manager,profileSkills,3,,business manager | Business manager
+Editing,profileSkills,3,,Editing | editing
+Ethical Hacking,profileSkills,3,,Ethical Hacking | ethical hacking
+linux,profileSkills,3,,linux | Linux
+Notion,profileSkills,3,,Notion | notion
+Project Coordination,profileSkills,3,,Project Coordination | Project coordination
+Social Media Strategy,profileSkills,3,,Social Media Strategy | social media strategy
+strategic planning,profileSkills,3,,strategic planning | Strategic Planning
+Team collaboration,profileSkills,3,,Team collaboration | Team Collaboration
+Website design,profileSkills,3,,Website design | Website Design
+Workflow Automation,profileSkills,3,,Workflow Automation | workflow automation
+crm tools,profileSkills,3,,crm tools | CRM tools | CRM Tools
+customer relationship management,profileSkills,3,,customer relationship management | Customer relationship management | Customer Relationship Management
+digital marketer,profileSkills,3,,digital marketer | Digital marketer | Digital Marketer
+Active listening,profileSkills,2,,Active listening
+Admin support,profileSkills,2,,Admin support
+Audit,profileSkills,2,,Audit
+beauty,profileSkills,2,,beauty
+Brand marketing,profileSkills,2,,Brand marketing
+Business planning,profileSkills,2,,Business planning
+Catering,profileSkills,2,,Catering
+Content writer,profileSkills,2,,Content writer
+Creative thinking,profileSkills,2,,Creative thinking
+Data analyst,profileSkills,2,,Data analyst
+Digital skills,profileSkills,2,remote-digital-skills,Digital skills
+Efficiency,profileSkills,2,,Efficiency
+Emotional intelligence,profileSkills,2,,Emotional intelligence
+Executive Assistance,profileSkills,2,,Executive Assistance
+Fiction writing,profileSkills,2,,Fiction writing
+Financial analyst,profileSkills,2,,Financial analyst
+Frontend development,profileSkills,2,,Frontend development
+Goggle doc,profileSkills,2,,Goggle doc
+Graphic designing,profileSkills,2,,Graphic designing
+Hairstyling,profileSkills,2,,Hairstyling
+Health writing,profileSkills,2,,Health writing
+Healthcare,profileSkills,2,health-sciences,Healthcare
+Investment,profileSkills,2,entrepreneurship-funding,Investment
+Media buying,profileSkills,2,,Media buying
+Microsoft,profileSkills,2,,Microsoft
+Mobile videography,profileSkills,2,,Mobile videography
+Modeling,profileSkills,2,,Modeling
+money,profileSkills,2,,money
+motivation,profileSkills,2,,motivation
+Nursing,profileSkills,2,health-sciences,Nursing
+Nutritional Science,profileSkills,2,,Nutritional Science
+Organisation,profileSkills,2,,Organisation
+Organization,profileSkills,2,,Organization
+Personal assistant,profileSkills,2,,Personal assistant
+Piano,profileSkills,2,,Piano
+Public speaker,profileSkills,2,,Public speaker
+Reading,profileSkills,2,,Reading
+Reliability,profileSkills,2,,Reliability
+rust,profileSkills,2,,rust
+Script writing,profileSkills,2,,Script writing
+Self development,profileSkills,2,,Self development
+SMM,profileSkills,2,,SMM
+sports,profileSkills,2,,sports
+Strategist,profileSkills,2,,Strategist
+Styling,profileSkills,2,,Styling
+Team player,profileSkills,2,,Team player
+Travel planning,profileSkills,2,,Travel planning
+Volunteer,profileSkills,2,volunteering,Volunteer
+wellness,profileSkills,2,,wellness
+Animation,profileSkills,2,creative-media,Animation | Animations
+Architectural design,profileSkills,2,,Architectural design | Architectural Design
+aws,profileSkills,2,,aws | AWS
+branding,profileSkills,2,,branding | Branding
+Cad design,profileSkills,2,,Cad design | CAD DESIGN
+cloud computing,profileSkills,2,,cloud computing | Cloud computing
+Creative design,profileSkills,2,,Creative design | Creative Design
+Customer service representative,profileSkills,2,,Customer service representative | Customer Service Representative
+detail oriented,profileSkills,2,,detail oriented | Detail-oriented
+digital creator,profileSkills,2,,digital creator | Digital creator
+digital literacy,profileSkills,2,,digital literacy | Digital Literacy
+E-commerce,profileSkills,2,,E-commerce | Ecommerce
+Email & calendar management,profileSkills,2,,Email & calendar management | Email & Calendar management
+empathy,profileSkills,2,,empathy | Empathy
+express,profileSkills,2,,express | Express
+financial modeling,profileSkills,2,,financial modeling | Financial modeling
+Financial reporting,profileSkills,2,,Financial reporting | Financial Reporting
+flexibility,profileSkills,2,,flexibility | Flexibility
+freelancer,profileSkills,2,remote-digital-skills,freelancer | Freelancers
+Full stack engineering,profileSkills,2,,Full stack engineering | Full-stack engineering
+health education,profileSkills,2,,health education | Health Education
+legal assistant,profileSkills,2,,legal assistant | Legal assistant
+legal drafting,profileSkills,2,,legal drafting | Legal drafting
+Legal writing,profileSkills,2,,Legal writing | Legal Writing
+listening,profileSkills,2,,listening | Listening
+ms word,profileSkills,2,,ms word | Ms word
+Quickbooks,profileSkills,2,,Quickbooks | QuickBooks
+resourceful,profileSkills,2,,resourceful | Resourceful
+Scheduling and organization,profileSkills,2,,Scheduling and organization | Scheduling and Organization
+Spss,profileSkills,2,,Spss | SPSS
+trading,profileSkills,2,,trading | Trading
+Voice Over Artist,profileSkills,2,,Voice Over Artist | Voiceover artist
+Web 3,profileSkills,2,,Web 3 | Web3
+web design,profileSkills,2,,web design | Web design
+"""AI prompt Specialist""",profileSkills,1,,"""AI prompt Specialist"""
+"""Learning and Improvement""",profileSkills,1,,"""Learning and Improvement"""
+3d visualization,profileSkills,1,,3d visualization
+A good listener and problem solver. A therapist,profileSkills,1,,A good listener and problem solver. A therapist
+Ability to communicate effectively,profileSkills,1,,Ability to communicate effectively
+Academic proficiency,profileSkills,1,,Academic proficiency
+accessforafricans,profileSkills,1,,accessforafricans
+Accountability officer,profileSkills,1,,Accountability officer
+Accounting & Financial Statement Analysis,profileSkills,1,,Accounting & Financial Statement Analysis
+active listener,profileSkills,1,,active listener
+activeincome,profileSkills,1,,activeincome
+Adaptability and resilience,profileSkills,1,,Adaptability and resilience
+administration,profileSkills,1,government-public,administration
+administrative,profileSkills,1,,administrative
+Administrative & Office Management,profileSkills,1,,Administrative & Office Management
+Administrative assistance,profileSkills,1,,Administrative assistance
+Administrative officer,profileSkills,1,,Administrative officer
+Administrative skills,profileSkills,1,,Administrative skills
+Administrative virtual assistant,profileSkills,1,,Administrative virtual assistant
+Ads,profileSkills,1,,Ads
+Ads management,profileSkills,1,,Ads management
+advertising strategist,profileSkills,1,,advertising strategist
+Advocacy,profileSkills,1,,Advocacy
+advocay,profileSkills,1,,advocay
+Affilate marketing,profileSkills,1,,Affilate marketing
+Affiliate marketer,profileSkills,1,,Affiliate marketer
+Affliate marketing,profileSkills,1,,Affliate marketing
+Agriculture,profileSkills,1,agriculture-environment,Agriculture
+Ai content,profileSkills,1,,Ai content
+Ai content creation,profileSkills,1,,Ai content creation
+AI engineering,profileSkills,1,,AI engineering
+Ai Governance,profileSkills,1,,Ai Governance
+AI prompt engineer,profileSkills,1,,AI prompt engineer
+AI Tools & Automation,profileSkills,1,,AI Tools & Automation
+AI-Powered Content Creation,profileSkills,1,,AI-Powered Content Creation
+AI/Ml,profileSkills,1,,AI/Ml
+Analytical / Structured Thinking,profileSkills,1,,Analytical / Structured Thinking
+Analytical & Critical Thinking,profileSkills,1,,Analytical & Critical Thinking
+Analytical & Problem-Solving Skills,profileSkills,1,,Analytical & Problem-Solving Skills
+Analytical Problem-Solving,profileSkills,1,,Analytical Problem-Solving
+Analytical skills,profileSkills,1,,Analytical skills
+andragogy,profileSkills,1,,andragogy
+Animal health,profileSkills,1,,Animal health
+Animator,profileSkills,1,,Animator
+App Design,profileSkills,1,,App Design
+App development,profileSkills,1,,App development
+Architect,profileSkills,1,,Architect
+Architectural drafting,profileSkills,1,,Architectural drafting
+Architectural modeling,profileSkills,1,,Architectural modeling
+Art,profileSkills,1,creative-media,Art
+Article writing,profileSkills,1,,Article writing
+Artificial Intelligence,profileSkills,1,technology,Artificial Intelligence
+Artificial Intelligence (AI) & Machine Learning,profileSkills,1,,Artificial Intelligence (AI) & Machine Learning
+Artist,profileSkills,1,,Artist
+Arts and crafts,profileSkills,1,,Arts and crafts
+Asana,profileSkills,1,,Asana
+Aspen Hysys,profileSkills,1,,Aspen Hysys
+Aspiring Chartered Accountant,profileSkills,1,,Aspiring Chartered Accountant
+astrologer,profileSkills,1,,astrologer
+Audiing,profileSkills,1,,Audiing
+auditing,profileSkills,1,,auditing
+Automation Setup,profileSkills,1,,Automation Setup
+Avid reader,profileSkills,1,,Avid reader
+Awareness Campaigns & Online Promotions,profileSkills,1,,Awareness Campaigns & Online Promotions
+backend developer,profileSkills,1,,backend developer
+Bag maker,profileSkills,1,,Bag maker
+Baisc Web Design,profileSkills,1,,Baisc Web Design
+Baking of cake and pastries making,profileSkills,1,,Baking of cake and pastries making
+Banking,profileSkills,1,business-finance,Banking
+Basic AI Tools,profileSkills,1,,Basic AI Tools
+Basic computing,profileSkills,1,,Basic computing
+Basic content creation,profileSkills,1,,Basic content creation
+Basic digital skills,profileSkills,1,,Basic digital skills
+Basic French,profileSkills,1,,Basic French
+Basic Web Development,profileSkills,1,,Basic Web Development
+Beading making,profileSkills,1,,Beading making
+Beautification,profileSkills,1,,Beautification
+"Beauty, Self-Care & Personal Branding",profileSkills,1,,"Beauty, Self-Care & Personal Branding"
+Biotechnology,profileSkills,1,health-sciences,Biotechnology
+Blender,profileSkills,1,,Blender
+blockchain development,profileSkills,1,,blockchain development
+Book publishing,profileSkills,1,,Book publishing
+Book writer,profileSkills,1,,Book writer
+bootstrap,profileSkills,1,,bootstrap
+Brand Building,profileSkills,1,,Brand Building
+Brand communication,profileSkills,1,,Brand communication
+Brand Design,profileSkills,1,,Brand Design
+Brand development,profileSkills,1,,Brand development
+Brand identity design,profileSkills,1,,Brand identity design
+Brand Identity Development,profileSkills,1,,Brand Identity Development
+brand management,profileSkills,1,,brand management
+Brand strategy and development,profileSkills,1,,Brand strategy and development
+Brand to Revenue strategist,profileSkills,1,,Brand to Revenue strategist
+Breeding,profileSkills,1,,Breeding
+Budgeting,profileSkills,1,,Budgeting
+Budgeting and budgetary control,profileSkills,1,,Budgeting and budgetary control
+Budgeting and control,profileSkills,1,,Budgeting and control
+Building design,profileSkills,1,,Building design
+Business & Money Mastery,profileSkills,1,,Business & Money Mastery
+Business adviser,profileSkills,1,,Business adviser
+Business analyst,profileSkills,1,,Business analyst
+Business Analytics,profileSkills,1,,Business Analytics
+Business anslysis,profileSkills,1,,Business anslysis
+Business Development & Strategy,profileSkills,1,,Business Development & Strategy
+Business development management,profileSkills,1,,Business development management
+Business growth consultation,profileSkills,1,,Business growth consultation
+Business idea generation,profileSkills,1,,Business idea generation
+business oriented,profileSkills,1,,business oriented
+Business Process Automation,profileSkills,1,,Business Process Automation
+Business start up,profileSkills,1,,Business start up
+Business strategist,profileSkills,1,,Business strategist
+Business strategy,profileSkills,1,,Business strategy
+businessexpansion,profileSkills,1,,businessexpansion
+businessinwestafrica,profileSkills,1,,businessinwestafrica
+calender management,profileSkills,1,,calender management
+Campaign management,profileSkills,1,,Campaign management
+Canva design,profileSkills,1,,Canva design
+capacity building,profileSkills,1,skill-development,capacity building
+Carbon accounting,profileSkills,1,,Carbon accounting
+Cardio Pulmonary Resuscitation,profileSkills,1,,Cardio Pulmonary Resuscitation
+Career Growth,profileSkills,1,,Career Growth
+caregiver skills,profileSkills,1,,caregiver skills
+Caregiving,profileSkills,1,,Caregiving
+Certified Accounting Technician(AAT),profileSkills,1,,Certified Accounting Technician(AAT)
+Chatbot Automation,profileSkills,1,,Chatbot Automation
+Chef,profileSkills,1,,Chef
+Chemical analyst,profileSkills,1,,Chemical analyst
+Cinematography,profileSkills,1,,Cinematography
+Circuit analysis,profileSkills,1,,Circuit analysis
+Clerical,profileSkills,1,,Clerical
+Client acquisition,profileSkills,1,,Client acquisition
+Client Communication,profileSkills,1,,Client Communication
+Client Relations,profileSkills,1,,Client Relations
+climate change analysts,profileSkills,1,,climate change analysts
+Clinical experience,profileSkills,1,,Clinical experience
+Clinical nutrition,profileSkills,1,,Clinical nutrition
+cloud engineering,profileSkills,1,,cloud engineering
+CMS management,profileSkills,1,,CMS management
+Coaching,profileSkills,1,mentorship,Coaching
+Coil Tubing,profileSkills,1,,Coil Tubing
+Cold Calling,profileSkills,1,,Cold Calling
+Collaborative,profileSkills,1,,Collaborative
+Commercial Strategy,profileSkills,1,,Commercial Strategy
+Commitment,profileSkills,1,,Commitment
+Communication & Pitching,profileSkills,1,,Communication & Pitching
+Communication & Stakeholder Management,profileSkills,1,,Communication & Stakeholder Management
+Communication skill,profileSkills,1,,Communication skill
+"Communication, Leadership",profileSkills,1,,"Communication, Leadership"
+Community engagement,profileSkills,1,,Community engagement
+Community moderation,profileSkills,1,,Community moderation
+community organizer,profileSkills,1,,community organizer
+community strategy,profileSkills,1,,community strategy
+Company registration,profileSkills,1,,Company registration
+Compliance,profileSkills,1,,Compliance
+Compliance Adherence,profileSkills,1,,Compliance Adherence
+Computer engineering,profileSkills,1,,Computer engineering
+Computer literacy,profileSkills,1,,Computer literacy
+Computer literate,profileSkills,1,,Computer literate
+Computer operator,profileSkills,1,,Computer operator
+computer proficient,profileSkills,1,,computer proficient
+computer science,profileSkills,1,,computer science
+Concept developer  and  script  writer,profileSkills,1,,Concept developer  and  script  writer
+confidence and hardworking,profileSkills,1,,confidence and hardworking
+Conflict Awareness,profileSkills,1,,Conflict Awareness
+conflict resolution,profileSkills,1,,conflict resolution
+Conflict resolving,profileSkills,1,,Conflict resolving
+conservation,profileSkills,1,agriculture-environment,conservation
+Construction,profileSkills,1,,Construction
+Construction site manager,profileSkills,1,,Construction site manager
+Construction site supervision,profileSkills,1,,Construction site supervision
+consultant,profileSkills,1,,consultant
+Content & Brand Strategy,profileSkills,1,,Content & Brand Strategy
+Content creating,profileSkills,1,,Content creating
+Content Creator / Videograper,profileSkills,1,,Content Creator / Videograper
+Content curator,profileSkills,1,,Content curator
+content development,profileSkills,1,,content development
+Content directing and scripting,profileSkills,1,,Content directing and scripting
+Content planning,profileSkills,1,,Content planning
+"Content planning ,  scheduling & Management",profileSkills,1,,"Content planning ,  scheduling & Management"
+Content writer and strategy,profileSkills,1,,Content writer and strategy
+contractor,profileSkills,1,,contractor
+Coordination,profileSkills,1,,Coordination
+Copyrighting,profileSkills,1,,Copyrighting
+Coreldraw,profileSkills,1,,Coreldraw
+Corporate and public relations,profileSkills,1,,Corporate and public relations
+Corporate Law,profileSkills,1,,Corporate Law
+Crafts,profileSkills,1,,Crafts
+Creative,profileSkills,1,creative-media,Creative
+Creative ability,profileSkills,1,,Creative ability
+Creative and Leather work,profileSkills,1,,Creative and Leather work
+Creative Arts,profileSkills,1,,Creative Arts
+creative director,profileSkills,1,,creative director
+Creative ideation,profileSkills,1,,Creative ideation
+Creative problem-solving,profileSkills,1,,Creative problem-solving
+Creative Product Ideation,profileSkills,1,,Creative Product Ideation
+Creative Reasoning,profileSkills,1,,Creative Reasoning
+Creative skills,profileSkills,1,,Creative skills
+Creative Storytelling,profileSkills,1,,Creative Storytelling
+creative strategy,profileSkills,1,,creative strategy
+creativity,profileSkills,1,,creativity
+Creativity & Vision,profileSkills,1,,Creativity & Vision
+Creator,profileSkills,1,,Creator
+Creator Economy / UGC Knowledge,profileSkills,1,,Creator Economy / UGC Knowledge
+Crisis management,profileSkills,1,,Crisis management
+Critical thinking and problem solving,profileSkills,1,,Critical thinking and problem solving
+CRM data maintenance,profileSkills,1,,CRM data maintenance
+CRM Tools Management,profileSkills,1,,CRM Tools Management
+Crochet,profileSkills,1,,Crochet
+Cross-Functional Collaboration,profileSkills,1,,Cross-Functional Collaboration
+Crypto,profileSkills,1,,Crypto
+curious to learn,profileSkills,1,,curious to learn
+Customer Relations & Adaptability,profileSkills,1,,Customer Relations & Adaptability
+Customer representative,profileSkills,1,,Customer representative
+Customer service & client relationship Management,profileSkills,1,,Customer service & client relationship Management
+Customer/Patient relations,profileSkills,1,,Customer/Patient relations
+Dancing,profileSkills,1,,Dancing
+Dashboard visualization,profileSkills,1,,Dashboard visualization
+Data Analysis & Reporting,profileSkills,1,,Data Analysis & Reporting
+Data Analysis tools,profileSkills,1,,Data Analysis tools
+Data collection,profileSkills,1,,Data collection
+Data entry and visualisation,profileSkills,1,,Data entry and visualisation
+Data entry specialist,profileSkills,1,,Data entry specialist
+Data Formatting,profileSkills,1,,Data Formatting
+Data inventory,profileSkills,1,,Data inventory
+Data organization and research,profileSkills,1,,Data organization and research
+Data science and analytics,profileSkills,1,,Data science and analytics
+Data scientist,profileSkills,1,,Data scientist
+Database Management,profileSkills,1,,Database Management
+Datacom,profileSkills,1,,Datacom
+Dental Technology,profileSkills,1,,Dental Technology
+Design  thinking,profileSkills,1,,Design  thinking
+Design and simulations,profileSkills,1,,Design and simulations
+Devops,profileSkills,1,,Devops
+DI Press Engineer,profileSkills,1,,DI Press Engineer
+Diagnostic technician,profileSkills,1,,Diagnostic technician
+digital advertising,profileSkills,1,,digital advertising
+Digital art,profileSkills,1,,Digital art
+digital communications,profileSkills,1,,digital communications
+Digital content,profileSkills,1,,Digital content
+Digital promotion,profileSkills,1,,Digital promotion
+Dispensation,profileSkills,1,,Dispensation
+Document editing,profileSkills,1,,Document editing
+Documentarian,profileSkills,1,,Documentarian
+Documentation,profileSkills,1,,Documentation
+Drawing,profileSkills,1,,Drawing
+driving,profileSkills,1,,driving
+Dropshipping Agent,profileSkills,1,,Dropshipping Agent
+Dropshipping expert,profileSkills,1,,Dropshipping expert
+ECONOMICS,profileSkills,1,business-finance,ECONOMICS
+Economists,profileSkills,1,,Economists
+Editing and proofreading,profileSkills,1,,Editing and proofreading
+Education & Pedagogy,profileSkills,1,,Education & Pedagogy
+Effective communication.,profileSkills,1,,Effective communication.
+Efficient Budgeting,profileSkills,1,,Efficient Budgeting
+Electrical engineering,profileSkills,1,,Electrical engineering
+Email and Task Management,profileSkills,1,,Email and Task Management
+Email marketing,profileSkills,1,,Email marketing
+email Scheduling,profileSkills,1,,email Scheduling
+Emergency management,profileSkills,1,,Emergency management
+Emotional Intelligence and Adaptability,profileSkills,1,,Emotional Intelligence and Adaptability
+emotional intelligience,profileSkills,1,,emotional intelligience
+Empowerment,profileSkills,1,,Empowerment
+Energy,profileSkills,1,,Energy
+Engineering,profileSkills,1,technology,Engineering
+Engineering communication,profileSkills,1,,Engineering communication
+Enscape,profileSkills,1,,Enscape
+Enterprureship,profileSkills,1,,Enterprureship
+"Entrepreneur,nail and lash tech",profileSkills,1,,"Entrepreneur,nail and lash tech"
+entrepreneurship & business skills,profileSkills,1,,entrepreneurship & business skills
+entry-level remote jobs,profileSkills,1,,entry-level remote jobs
+Environmental advocacy,profileSkills,1,,Environmental advocacy
+Environmentalist,profileSkills,1,,Environmentalist
+Equipment Inspection,profileSkills,1,,Equipment Inspection
+Equity research and analysis,profileSkills,1,,Equity research and analysis
+ESG reporting,profileSkills,1,,ESG reporting
+Event coordination,profileSkills,1,,Event coordination
+Event coverage,profileSkills,1,,Event coverage
+event decorator,profileSkills,1,,event decorator
+Event management,profileSkills,1,,Event management
+Event planning and decoration,profileSkills,1,,Event planning and decoration
+eventsinnmarch,profileSkills,1,,eventsinnmarch
+Excel Mastery,profileSkills,1,,Excel Mastery
+excellence driven,profileSkills,1,,excellence driven
+Excellent organization skills,profileSkills,1,,Excellent organization skills
+Execitive Virtual Assistant,profileSkills,1,,Execitive Virtual Assistant
+Execution management,profileSkills,1,,Execution management
+explore,profileSkills,1,,explore
+Express.js,profileSkills,1,,Express.js
+Eye for detail,profileSkills,1,,Eye for detail
+Facebook and Instagram ad manager,profileSkills,1,,Facebook and Instagram ad manager
+farmer,profileSkills,1,,farmer
+Fashion branding,profileSkills,1,,Fashion branding
+Fashion enthusiasts,profileSkills,1,,Fashion enthusiasts
+Fashion influencing,profileSkills,1,,Fashion influencing
+"Fashion Sketching,",profileSkills,1,,"Fashion Sketching,"
+Fashion strategy,profileSkills,1,,Fashion strategy
+Fashion styling,profileSkills,1,,Fashion styling
+"Fashion, writing,dancing ,music",profileSkills,1,,"Fashion, writing,dancing ,music"
+Feature writing,profileSkills,1,,Feature writing
+Feminine Body Language & Etiquette,profileSkills,1,,Feminine Body Language & Etiquette
+Figma,profileSkills,1,,Figma
+Figma product design,profileSkills,1,,Figma product design
+File management,profileSkills,1,,File management
+File Organization,profileSkills,1,,File Organization
+Film making,profileSkills,1,,Film making
+Financial,profileSkills,1,,Financial
+Financial Calculation & Accuracy,profileSkills,1,,Financial Calculation & Accuracy
+Financial Literacy,profileSkills,1,,Financial Literacy
+Financial Modeling & Valuation,profileSkills,1,,Financial Modeling & Valuation
+fishery,profileSkills,1,,fishery
+Fluent english,profileSkills,1,,Fluent english
+Forex,profileSkills,1,,Forex
+Forex trader,profileSkills,1,,Forex trader
+Founder,profileSkills,1,entrepreneurship-funding,Founder
+Framer,profileSkills,1,,Framer
+Freelance writer,profileSkills,1,,Freelance writer
+Full-Stack Web Development,profileSkills,1,,Full-Stack Web Development
+Funnel building,profileSkills,1,,Funnel building
+Furniture making,profileSkills,1,,Furniture making
+futureofafrica,profileSkills,1,,futureofafrica
+Garment construction,profileSkills,1,,Garment construction
+General office Tasks,profileSkills,1,,General office Tasks
+General Secretary,profileSkills,1,,General Secretary
+Geologist,profileSkills,1,,Geologist
+geophysics,profileSkills,1,,geophysics
+Ghostwriting/Copy Writing,profileSkills,1,,Ghostwriting/Copy Writing
+Good listener,profileSkills,1,,Good listener
+Good working skills,profileSkills,1,,Good working skills
+Google,profileSkills,1,,Google
+Google business expert,profileSkills,1,,Google business expert
+Google doc,profileSkills,1,,Google doc
+Google drive,profileSkills,1,,Google drive
+Google Forms,profileSkills,1,,Google Forms
+Google Meet,profileSkills,1,,Google Meet
+Google sheets,profileSkills,1,,Google sheets
+graphic designer,profileSkills,1,,graphic designer
+Guitar,profileSkills,1,,Guitar
+Hair making,profileSkills,1,,Hair making
+Hairdressing,profileSkills,1,,Hairdressing
+Hazard and Risk management,profileSkills,1,,Hazard and Risk management
+Health & Wellness,profileSkills,1,,Health & Wellness
+Health advocacy,profileSkills,1,,Health advocacy
+health and safety compliance,profileSkills,1,,health and safety compliance
+Health care service delivery,profileSkills,1,,Health care service delivery
+Health informatics,profileSkills,1,,Health informatics
+Health safety and environment,profileSkills,1,,Health safety and environment
+Health technology,profileSkills,1,,Health technology
+Healthcare services,profileSkills,1,,Healthcare services
+Host,profileSkills,1,,Host
+Hosting,profileSkills,1,,Hosting
+HSE,profileSkills,1,,HSE
+HSE Compliance,profileSkills,1,,HSE Compliance
+Human resources,profileSkills,1,,Human resources
+human resources manager HR,profileSkills,1,,human resources manager HR
+Humor-infused communication,profileSkills,1,,Humor-infused communication
+ICT support,profileSkills,1,,ICT support
+Illustration,profileSkills,1,,Illustration
+Important,profileSkills,1,,Important
+Importations,profileSkills,1,,Importations
+Inbound CRM,profileSkills,1,,Inbound CRM
+Inbound marketing,profileSkills,1,,Inbound marketing
+Inbox management,profileSkills,1,,Inbox management
+incident identification,profileSkills,1,,incident identification
+Incident Management,profileSkills,1,,Incident Management
+Industrial documentation,profileSkills,1,,Industrial documentation
+Industrial Engineering,profileSkills,1,,Industrial Engineering
+Initiative and creativity,profileSkills,1,,Initiative and creativity
+Innovative,profileSkills,1,,Innovative
+Innovator,profileSkills,1,,Innovator
+Intern,profileSkills,1,internship,Intern
+Interpersonal skills,profileSkills,1,,Interpersonal skills
+Inventory management,profileSkills,1,,Inventory management
+jalingo,profileSkills,1,,jalingo
+Jewellery making,profileSkills,1,,Jewellery making
+Jewelry sculpting,profileSkills,1,,Jewelry sculpting
+Jira,profileSkills,1,,Jira
+Journalist,profileSkills,1,,Journalist
+Knitting,profileSkills,1,,Knitting
+KPI Tracking,profileSkills,1,,KPI Tracking
+kubernetes,profileSkills,1,,kubernetes
+Laserfiche,profileSkills,1,,Laserfiche
+lash technician,profileSkills,1,,lash technician
+Latex,profileSkills,1,,Latex
+Lead gen,profileSkills,1,,Lead gen
+Lead Generation & Outreach Strategy,profileSkills,1,,Lead Generation & Outreach Strategy
+leadership and communication,profileSkills,1,,leadership and communication
+Leadership and community engagement,profileSkills,1,,Leadership and community engagement
+leadership potential,profileSkills,1,,leadership potential
+"Leadership, communication",profileSkills,1,,"Leadership, communication"
+learntocode,profileSkills,1,,learntocode
+legal,profileSkills,1,,legal
+Legal administration,profileSkills,1,,Legal administration
+Legal advice,profileSkills,1,,Legal advice
+Legal analysis,profileSkills,1,,Legal analysis
+Legal representation,profileSkills,1,,Legal representation
+Legal researcher,profileSkills,1,,Legal researcher
+Legal va,profileSkills,1,,Legal va
+Literary & Publishing Knowledge,profileSkills,1,,Literary & Publishing Knowledge
+Livestock production,profileSkills,1,,Livestock production
+logo design,profileSkills,1,,logo design
+Lumion,profileSkills,1,,Lumion
+M&A & Restructuring Knowledge,profileSkills,1,,M&A & Restructuring Knowledge
+Maintenance,profileSkills,1,,Maintenance
+maintenance support,profileSkills,1,,maintenance support
+Make,profileSkills,1,,Make
+Management,profileSkills,1,business-finance,Management
+mangodb,profileSkills,1,,mangodb
+Market research,profileSkills,1,,Market research
+Market Research & Validation,profileSkills,1,,Market Research & Validation
+marketer,profileSkills,1,,marketer
+Marketing and sales,profileSkills,1,,Marketing and sales
+marketing coordination,profileSkills,1,,marketing coordination
+Marketing strategist,profileSkills,1,,Marketing strategist
+Marketplace Thinking,profileSkills,1,,Marketplace Thinking
+Mechanical engineering,profileSkills,1,,Mechanical engineering
+Media and communications,profileSkills,1,,Media and communications
+Media Communication,profileSkills,1,,Media Communication
+media director,profileSkills,1,,media director
+Media management,profileSkills,1,,Media management
+Medical virtual assistance,profileSkills,1,,Medical virtual assistance
+medicin,profileSkills,1,,medicin
+meditation,profileSkills,1,,meditation
+Meeting Preparation,profileSkills,1,,Meeting Preparation
+Mental health professional,profileSkills,1,,Mental health professional
+Mentoring,profileSkills,1,,Mentoring
+Meta business suite,profileSkills,1,,Meta business suite
+Microsoft office suite,profileSkills,1,,Microsoft office suite
+"Microsoft Office Suite (Word, Excel, PowerPoint)",profileSkills,1,,"Microsoft Office Suite (Word, Excel, PowerPoint)"
+Microsoft skills,profileSkills,1,,Microsoft skills
+Microsoft suite,profileSkills,1,,Microsoft suite
+mindset,profileSkills,1,,mindset
+Mindset & Emotional Intelligence,profileSkills,1,,Mindset & Emotional Intelligence
+Mobile app devepment,profileSkills,1,,Mobile app devepment
+Mobile Application design,profileSkills,1,,Mobile Application design
+Mobile journalism,profileSkills,1,,Mobile journalism
+Mobile photographer and videographer,profileSkills,1,,Mobile photographer and videographer
+Modelling,profileSkills,1,,Modelling
+Motion design,profileSkills,1,,Motion design
+Motion designer,profileSkills,1,,Motion designer
+Motion graphics design,profileSkills,1,,Motion graphics design
+Ms excel,profileSkills,1,,Ms excel
+Multitasking,profileSkills,1,,Multitasking
+Music,profileSkills,1,creative-media,Music
+Musical artist,profileSkills,1,,Musical artist
+Musician,profileSkills,1,,Musician
+mysql,profileSkills,1,,mysql
+Negotiation skills,profileSkills,1,,Negotiation skills
+NestJs,profileSkills,1,,NestJs
+Networking  maintenance,profileSkills,1,,Networking  maintenance
+Next.js,profileSkills,1,,Next.js
+Nextjs,profileSkills,1,,Nextjs
+Novel writing,profileSkills,1,,Novel writing
+Nurse,profileSkills,1,,Nurse
+Nursing care,profileSkills,1,,Nursing care
+Nutrition,profileSkills,1,,Nutrition
+Nutrition and Dietetics,profileSkills,1,,Nutrition and Dietetics
+Nutritionist,profileSkills,1,,Nutritionist
+Objection Handling,profileSkills,1,,Objection Handling
+Occupational health and safety,profileSkills,1,,Occupational health and safety
+Occupational health surveillance,profileSkills,1,,Occupational health surveillance
+office assistant,profileSkills,1,,office assistant
+Operations,profileSkills,1,,Operations
+Operations management,profileSkills,1,,Operations management
+Operations Support,profileSkills,1,,Operations Support
+Opportunity driven,profileSkills,1,,Opportunity driven
+Optical services,profileSkills,1,,Optical services
+Organization & Time management,profileSkills,1,,Organization & Time management
+Organizational skill,profileSkills,1,,Organizational skill
+Organizational structure,profileSkills,1,,Organizational structure
+organizing,profileSkills,1,,organizing
+Organizing skills,profileSkills,1,,Organizing skills
+Outreach VA,profileSkills,1,,Outreach VA
+P,profileSkills,1,,P
+Painting,profileSkills,1,,Painting
+Partnership,profileSkills,1,,Partnership
+Partnership and Sales Communication,profileSkills,1,,Partnership and Sales Communication
+Partnership and Sponsorship,profileSkills,1,,Partnership and Sponsorship
+Passionate learner,profileSkills,1,,Passionate learner
+Pdf,profileSkills,1,,Pdf
+Peace keeping,profileSkills,1,,Peace keeping
+Peer Collaboration,profileSkills,1,,Peer Collaboration
+Penetration Testing,profileSkills,1,,Penetration Testing
+People management,profileSkills,1,,People management
+Performance marketing,profileSkills,1,,Performance marketing
+Personal branding,profileSkills,1,,Personal branding
+personnel management,profileSkills,1,,personnel management
+Persuasive communication,profileSkills,1,,Persuasive communication
+Petrel,profileSkills,1,,Petrel
+Pharmacy technician,profileSkills,1,,Pharmacy technician
+PharmD student,profileSkills,1,,PharmD student
+Phlebotomy,profileSkills,1,,Phlebotomy
+Phone etiquette,profileSkills,1,,Phone etiquette
+Phone photography,profileSkills,1,,Phone photography
+Photo and video editor,profileSkills,1,,Photo and video editor
+Photoshop,profileSkills,1,,Photoshop
+Physical skills,profileSkills,1,,Physical skills
+Planning,profileSkills,1,,Planning
+Planning and development,profileSkills,1,,Planning and development
+Planning and structuring,profileSkills,1,,Planning and structuring
+plant operations,profileSkills,1,,plant operations
+Podcasting,profileSkills,1,,Podcasting
+Poetry,profileSkills,1,,Poetry
+Poetry writing,profileSkills,1,,Poetry writing
+Policy Analysis,profileSkills,1,,Policy Analysis
+Politics,profileSkills,1,,Politics
+Portrait photography,profileSkills,1,,Portrait photography
+poultry farmer,profileSkills,1,,poultry farmer
+Power point designer,profileSkills,1,,Power point designer
+PowerPoint / Pitch Deck Creation,profileSkills,1,,PowerPoint / Pitch Deck Creation
+Presentation,profileSkills,1,,Presentation
+Presenter,profileSkills,1,,Presenter
+Process documentation,profileSkills,1,,Process documentation
+Process Optimization,profileSkills,1,,Process Optimization
+Product & Feature Design,profileSkills,1,,Product & Feature Design
+product creation,profileSkills,1,,product creation
+Product knowledge,profileSkills,1,,Product knowledge
+Product research,profileSkills,1,,Product research
+Product Sales,profileSkills,1,,Product Sales
+Production management,profileSkills,1,,Production management
+production supervisor,profileSkills,1,,production supervisor
+Professionalism,profileSkills,1,,Professionalism
+Proficient with google workspace tools,profileSkills,1,,Proficient with google workspace tools
+program assistance,profileSkills,1,,program assistance
+Program management,profileSkills,1,,Program management
+Program Planning,profileSkills,1,,Program Planning
+project assistant,profileSkills,1,,project assistant
+Project Coordination & Management,profileSkills,1,,Project Coordination & Management
+Project coordinator,profileSkills,1,,Project coordinator
+Project management and CRM tools,profileSkills,1,,Project management and CRM tools
+Project manager,profileSkills,1,,Project manager
+promotional creator,profileSkills,1,,promotional creator
+proofreading and editing,profileSkills,1,,proofreading and editing
+Proteus,profileSkills,1,,Proteus
+PTW basics,profileSkills,1,,PTW basics
+Public health,profileSkills,1,health-sciences,Public health
+Public health advocacy and education,profileSkills,1,,Public health advocacy and education
+public health practitioner,profileSkills,1,,public health practitioner
+Public health professional,profileSkills,1,,Public health professional
+public relations officer,profileSkills,1,,public relations officer
+Public relations technology,profileSkills,1,,Public relations technology
+QA,profileSkills,1,,QA
+QA engineer,profileSkills,1,,QA engineer
+Quality assurance,profileSkills,1,,Quality assurance
+quantumleap,profileSkills,1,,quantumleap
+Quick to grasp,profileSkills,1,,Quick to grasp
+Rapport Building,profileSkills,1,,Rapport Building
+React native,profileSkills,1,,React native
+Real estate,profileSkills,1,,Real estate
+Red cross,profileSkills,1,,Red cross
+Registered Community health practitional (CHEW),profileSkills,1,,Registered Community health practitional (CHEW)
+Relationship building,profileSkills,1,,Relationship building
+Relationship Management,profileSkills,1,,Relationship Management
+Remote Assistance,profileSkills,1,,Remote Assistance
+reporting,profileSkills,1,,reporting
+Research & learning skills,profileSkills,1,,Research & learning skills
+Research & Policy Analysis,profileSkills,1,,Research & Policy Analysis
+Research and Analysis,profileSkills,1,,Research and Analysis
+Research and brand growth strategy,profileSkills,1,,Research and brand growth strategy
+Research and Lead Generation,profileSkills,1,,Research and Lead Generation
+Researcher,profileSkills,1,,Researcher
+Researching,profileSkills,1,,Researching
+Resilience,profileSkills,1,,Resilience
+Resin art,profileSkills,1,,Resin art
+Resin Art Craft,profileSkills,1,,Resin Art Craft
+Revit,profileSkills,1,,Revit
+risk management,profileSkills,1,,risk management
+Sage,profileSkills,1,,Sage
+Sales & Marketing,profileSkills,1,,Sales & Marketing
+sales and persuasion,profileSkills,1,,sales and persuasion
+Sales Communication,profileSkills,1,,Sales Communication
+savings,profileSkills,1,,savings
+scheduling,profileSkills,1,,scheduling
+Scheduling and task coordination,profileSkills,1,,Scheduling and task coordination
+Science,profileSkills,1,health-sciences,Science
+Script and concept development,profileSkills,1,,Script and concept development
+Scripter,profileSkills,1,,Scripter
+sdg,profileSkills,1,,sdg
+SDG's Advocacy,profileSkills,1,,SDG's Advocacy
+Secretariat,profileSkills,1,,Secretariat
+secretary,profileSkills,1,,secretary
+Self awareness,profileSkills,1,,Self awareness
+self reflection and growth mindset,profileSkills,1,,self reflection and growth mindset
+server engineering,profileSkills,1,,server engineering
+Sewing,profileSkills,1,,Sewing
+Sewing/garment construction,profileSkills,1,,Sewing/garment construction
+Shell Scripting/Linux command,profileSkills,1,,Shell Scripting/Linux command
+Shopify,profileSkills,1,,Shopify
+Shopify Dropshipping,profileSkills,1,,Shopify Dropshipping
+Shopify expert,profileSkills,1,,Shopify expert
+Shopify website,profileSkills,1,,Shopify website
+Shopify website builder,profileSkills,1,,Shopify website builder
+Siemens TIA portal,profileSkills,1,,Siemens TIA portal
+Singing,profileSkills,1,,Singing
+Sketchup,profileSkills,1,,Sketchup
+Small business management,profileSkills,1,,Small business management
+Smartphone Technician,profileSkills,1,,Smartphone Technician
+Social Media Manager and strategist,profileSkills,1,,Social Media Manager and strategist
+social media marketer,profileSkills,1,,social media marketer
+Sociology,profileSkills,1,,Sociology
+Soft Communication skills,profileSkills,1,,Soft Communication skills
+Soft skills,profileSkills,1,skill-development,Soft skills
+software proficiency,profileSkills,1,,software proficiency
+Songwriting,profileSkills,1,,Songwriting
+Space Science Promotion,profileSkills,1,,Space Science Promotion
+Spatial planning,profileSkills,1,,Spatial planning
+Stakeholder Engagement,profileSkills,1,,Stakeholder Engagement
+Startup & Venture Building Skills,profileSkills,1,,Startup & Venture Building Skills
+Startup Ecosystem,profileSkills,1,,Startup Ecosystem
+Still figuring it out,profileSkills,1,,Still figuring it out
+Storyteller,profileSkills,1,,Storyteller
+Strategic Communication,profileSkills,1,,Strategic Communication
+Strategic HR thinking,profileSkills,1,,Strategic HR thinking
+Strategic procurement,profileSkills,1,,Strategic procurement
+Strong Business acumen,profileSkills,1,,Strong Business acumen
+strong communication,profileSkills,1,,strong communication
+Strong organizational and multitasking,profileSkills,1,,Strong organizational and multitasking
+Structural Design,profileSkills,1,,Structural Design
+students,profileSkills,1,,students
+study,profileSkills,1,,study
+style,profileSkills,1,,style
+Stylist,profileSkills,1,,Stylist
+supervisor,profileSkills,1,,supervisor
+supply chain,profileSkills,1,business-finance,supply chain
+System Operations,profileSkills,1,,System Operations
+Systems Thinking & Organization,profileSkills,1,,Systems Thinking & Organization
+Tableau,profileSkills,1,,Tableau
+Task prioritization,profileSkills,1,,Task prioritization
+Taxation,profileSkills,1,,Taxation
+Teaching and facilitation,profileSkills,1,,Teaching and facilitation
+Teaching/ facilitation,profileSkills,1,,Teaching/ facilitation
+Team lead,profileSkills,1,,Team lead
+Team leadership,profileSkills,1,,Team leadership
+Team player and a good listener,profileSkills,1,,Team player and a good listener
+Teamwork & Client Management,profileSkills,1,,Teamwork & Client Management
+tech curiosity,profileSkills,1,,tech curiosity
+tech enthusiast,profileSkills,1,,tech enthusiast
+Tech sales,profileSkills,1,,Tech sales
+techfounders,profileSkills,1,,techfounders
+technical skills,profileSkills,1,,technical skills
+Technology,profileSkills,1,technology,Technology
+Television production,profileSkills,1,,Television production
+terraform,profileSkills,1,,terraform
+theultimatepitchdeck,profileSkills,1,,theultimatepitchdeck
+Thought leadership,profileSkills,1,,Thought leadership
+thrift business owner,profileSkills,1,,thrift business owner
+TikTok Ads expert,profileSkills,1,,TikTok Ads expert
+Time management and organization,profileSkills,1,,Time management and organization
+Tracking,profileSkills,1,,Tracking
+Transcription,profileSkills,1,,Transcription
+Transcriptionist,profileSkills,1,,Transcriptionist
+Travel Coordination & itinerary planning,profileSkills,1,,Travel Coordination & itinerary planning
+Trend & Opportunity Awareness,profileSkills,1,,Trend & Opportunity Awareness
+Trend research and adaptation,profileSkills,1,,Trend research and adaptation
+Troubleshooting,profileSkills,1,,Troubleshooting
+Trust Building,profileSkills,1,,Trust Building
+Typing,profileSkills,1,,Typing
+UI/UX,profileSkills,1,,UI/UX
+UI/UX Thinking,profileSkills,1,,UI/UX Thinking
+User Experience Design,profileSkills,1,,User Experience Design
+User Generated Content (UGC),profileSkills,1,,User Generated Content (UGC)
+User Interface Design,profileSkills,1,,User Interface Design
+UX design,profileSkills,1,,UX design
+vendors management,profileSkills,1,,vendors management
+Verbal and written communication,profileSkills,1,,Verbal and written communication
+Verbal and written communication skills,profileSkills,1,,Verbal and written communication skills
+Very strong listener and team player,profileSkills,1,,Very strong listener and team player
+Vibe coding,profileSkills,1,,Vibe coding
+Virtua assistant,profileSkills,1,,Virtua assistant
+Virtual assistant and web developer (html),profileSkills,1,,Virtual assistant and web developer (html)
+Virtual Assisting,profileSkills,1,,Virtual Assisting
+virtual event management,profileSkills,1,,virtual event management
+Virtual process,profileSkills,1,,Virtual process
+Visual storytelling,profileSkills,1,,Visual storytelling
+Vlogging,profileSkills,1,,Vlogging
+Voice Acting,profileSkills,1,,Voice Acting
+Voice overs,profileSkills,1,,Voice overs
+Volunteer management,profileSkills,1,,Volunteer management
+Volunteering,profileSkills,1,volunteering,Volunteering
+Vray,profileSkills,1,,Vray
+Vue,profileSkills,1,,Vue
+Web developer intern,profileSkills,1,,Web developer intern
+web3 expert,profileSkills,1,,web3 expert
+Website and web app development,profileSkills,1,,Website and web app development
+Website developer,profileSkills,1,,Website developer
+Website development,profileSkills,1,,Website development
+Welfarism,profileSkills,1,,Welfarism
+WhatsApp marketing,profileSkills,1,,WhatsApp marketing
+willingness to learn,profileSkills,1,,willingness to learn
+womenempowerment,profileSkills,1,,womenempowerment
+Worked in an automobile workshop,profileSkills,1,,Worked in an automobile workshop
+Workflow management,profileSkills,1,,Workflow management
+workout,profileSkills,1,,workout
+Writer,profileSkills,1,,Writer
+Writing and editing,profileSkills,1,,Writing and editing
+Youtube scriptwriter,profileSkills,1,,Youtube scriptwriter
+Zapier,profileSkills,1,,Zapier
+Business & Finance,profileSectors,1257,business-finance,Business & Finance
+Technology,profileSectors,1203,technology,Technology
+Creative Arts & Media,profileSectors,1091,creative-media,Creative Arts & Media
+Education & Training,profileSectors,902,education-training,Education & Training
+Government & Public Service,profileSectors,834,government-public,Government & Public Service
+Healthcare & Sciences,profileSectors,744,health-sciences,Healthcare & Sciences
+Finance & Business,profileSectors,3,,Finance & Business
+NGO & Social Impact,profileSectors,3,,NGO & Social Impact
+Education & Research,profileSectors,2,,Education & Research
+BNX,profileSectors,1,,BNX
+Access to career opportunities,profileAspirations,1649,,Access to career opportunities
+Networking & professional connections,profileAspirations,1646,,Networking & professional connections
+Skill development,profileAspirations,1544,skill-development,Skill development
+Mentorship & guidance,profileAspirations,1455,mentorship,Mentorship & guidance
+Entrepreneurship support,profileAspirations,1148,,Entrepreneurship support
+Start or grow a business,profileAspirations,5,,Start or grow a business
+Build leadership & influence,profileAspirations,4,,Build leadership & influence
+Training & upskilling,profileAspirations,4,,Training & upskilling
+Access to funding/scholarships,profileAspirations,3,,Access to funding/scholarships
+Inspiration & motivation,profileAspirations,3,,Inspiration & motivation
+Community & belonging,profileAspirations,2,,Community & belonging
+Secure a job or internship,profileAspirations,2,,Secure a job or internship
+communication,hashtags,404,,communication
+teammanagement,hashtags,385,,teammanagement
+problemsolver,hashtags,197,,problemsolver
+theonlywayisup,hashtags,167,,theonlywayisup
+glowup,hashtags,125,,glowup
+problemsolving,hashtags,94,,problemsolving
+dataentry,hashtags,77,,dataentry
+contentcreation,hashtags,75,creative-media,contentcreation
+microsoftexcel,hashtags,72,,microsoftexcel
+calendarmanagement,hashtags,69,,calendarmanagement
+emailoptimization,hashtags,65,,emailoptimization
+financialanalyst,hashtags,61,,financialanalyst
+leadgeneration,hashtags,55,,leadgeneration
+doinghardthing,hashtags,50,,doinghardthing | doinghardthings
+videoeditor,hashtags,49,,videoeditor
+projectmanagement,hashtags,44,,projectmanagement
+socialmediadesign,hashtags,44,,socialmediadesign
+videographer,hashtags,42,,videographer
+storytelling,hashtags,40,,storytelling
+cheatcode,hashtags,38,,cheatcode
+learntocode,hashtags,38,,learntocode
+adaptability,hashtags,38,,adaptability
+leadership,hashtags,37,skill-development,leadership
+capcut,hashtags,33,,capcut
+canva,hashtags,33,,canva
+webdev,hashtags,31,,webdev
+softwareengineering,hashtags,28,,softwareengineering
+programming,hashtags,28,technology,programming
+contentwriting,hashtags,26,,contentwriting
+goggledoc,hashtags,26,,goggledoc
+lockedin,hashtags,24,,lockedin
+skillbuilding,hashtags,24,,skillbuilding
+photoediting,hashtags,24,,photoediting
+communicationmanager,hashtags,23,,communicationmanager
+coding,hashtags,21,,coding
+100daysofcode,hashtags,21,,100daysofcode
+tech2026,hashtags,21,,tech2026
+nextlevel,hashtags,21,,nextlevel
+activeincome,hashtags,21,,activeincome
+therighttimeisnow,hashtags,21,,therighttimeisnow
+careerstrategy,hashtags,21,,careerstrategy
+quantumleap,hashtags,21,,quantumleap
+connectmarketing,hashtags,21,,connectmarketing
+trello,hashtags,21,,trello
+leadership&coordination,hashtags,21,,leadership&coordination
+marketing,hashtags,20,business-finance,marketing
+videoediting,hashtags,18,,videoediting
+photography,hashtags,18,creative-media,photography
+nileonline,hashtags,17,,nileonline
+teamwork,hashtags,17,,teamwork
+growthengine,hashtags,16,,growthengine
+research,hashtags,16,research-academic,research
+activeincomegirlies,hashtags,16,,activeincomegirlies
+accessforafricans,hashtags,16,,accessforafricans
+videography,hashtags,16,,videography
+internationalwomensmonth,hashtags,15,,internationalwomensmonth
+eventsinnmarch,hashtags,15,,eventsinnmarch
+womenempowerment,hashtags,15,,womenempowerment
+womenevents,hashtags,15,,womenevents
+nutritionalscience,hashtags,14,,nutritionalscience
+writing,hashtags,13,creative-media,writing
+up,hashtags,11,,up
+welcome,hashtags,11,,welcome
+productivity,hashtags,11,,productivity
+salesclosing,hashtags,11,,salesclosing
+innovation,hashtags,10,,innovation
+socialmedia,hashtags,10,,socialmedia
+javascript,hashtags,9,,javascript
+iwd,hashtags,9,,iwd
+givetogain,hashtags,9,,givetogain
+theultimatepitchdeck,hashtags,8,,theultimatepitchdeck
+app,hashtags,7,,app
+job,hashtags,7,jobs-careers,job
+upupwego,hashtags,7,,upupwego
+graphicdesign,hashtags,7,,graphicdesign
+grateful,hashtags,7,,grateful
+thankgoditsfriday,hashtags,7,,thankgoditsfriday
+gratitudefriday,hashtags,7,,gratitudefriday
+mindset,hashtags,7,,mindset
+manifesting,hashtags,7,,manifesting
+contentstrategist,hashtags,7,,contentstrategist
+contentmarketing,hashtags,6,,contentmarketing
+networking,hashtags,6,networking-events,networking
+trip,hashtags,6,,trip
+wanderlust,hashtags,6,,wanderlust
+sales,hashtags,6,business-finance,sales
+executiveassisting,hashtags,5,,executiveassisting
+businessowners,hashtags,5,,businessowners
+hospitality,hashtags,4,,hospitality
+accounting,hashtags,4,business-finance,accounting
+makeup,hashtags,4,,makeup
+graphicsdesign,hashtags,4,,graphicsdesign
+lockin,hashtags,4,,lockin
+students,hashtags,4,,students
+lock,hashtags,4,,lock
+proficiencyinmicrosoft,hashtags,4,,proficiencyinmicrosoft
+storywriting,hashtags,4,,storywriting
+businessexpansion,hashtags,4,,businessexpansion
+startups,hashtags,4,entrepreneurship-funding,startups
+techfounders,hashtags,4,,techfounders
+entrepreneurship,hashtags,4,entrepreneurship-funding,entrepreneurship
+businessinwestafrica,hashtags,4,,businessinwestafrica
+entertainment,hashtags,3,,entertainment
+savings,hashtags,3,,savings
+interior,hashtags,3,,interior
+learning,hashtags,3,,learning
+recipe,hashtags,3,,recipe
+communitymanager,hashtags,3,,communitymanager
+hackaton,hashtags,3,,hackaton
+dataanalysis,hashtags,3,,dataanalysis
+growth,hashtags,3,,growth
+beprepared,hashtags,3,,beprepared
+money,hashtags,2,,money
+outfit,hashtags,2,,outfit
+goals,hashtags,2,,goals
+beauty,hashtags,2,,beauty
+meditation,hashtags,2,,meditation
+inspiration,hashtags,2,,inspiration
+travel,hashtags,2,,travel
+digital,hashtags,2,,digital
+home,hashtags,2,,home
+personaldevelopment,hashtags,2,,personaldevelopment
+sports,hashtags,2,,sports
+leadreport,hashtags,2,,leadreport
+futureofafrica,hashtags,2,,futureofafrica
+administrativeassistant,hashtags,2,,administrativeassistant
+customerservice,hashtags,2,,customerservice
+recordkeeping,hashtags,2,,recordkeeping
+python,hashtags,2,,python
+sql,hashtags,2,,sql
+technicalwriting,hashtags,2,,technicalwriting
+excel,hashtags,2,,excel
+finance,hashtags,1,business-finance,finance
+wellness,hashtags,1,,wellness
+career,hashtags,1,jobs-careers,career
+education,hashtags,1,education-training,education
+love,hashtags,1,,love
+baking,hashtags,1,,baking
+habits,hashtags,1,,habits
+study,hashtags,1,,study
+motivation,hashtags,1,,motivation
+style,hashtags,1,,style
+gaming,hashtags,1,,gaming
+explore,hashtags,1,,explore
+workout,hashtags,1,,workout
+medicin,hashtags,1,,medicin
+jalingo,hashtags,1,,jalingo
+womenintech,hashtags,1,,womenintech
+newbeginnings,hashtags,1,,newbeginnings
+the,hashtags,1,,the
+upway,hashtags,1,,upway
+humanresourcesmanagement,hashtags,1,,humanresourcesmanagement
+letusgoup,hashtags,1,,letusgoup
+hairstylist,hashtags,1,,hairstylist
+leadgeneralcounsel,hashtags,1,,leadgeneralcounsel
+healthandsafetymanager,hashtags,1,,healthandsafetymanager
+aitools,hashtags,1,,aitools
+automation,hashtags,1,,automation
