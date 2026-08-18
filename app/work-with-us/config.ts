@@ -6,11 +6,24 @@
  * The numbers follow UP's Official Pricing & Services Guide, sections 2–7.
  */
 
+import {
+  CONTACT_PHONE,
+  CONTACT_PHONE_INTL,
+  SUPPORT_EMAIL,
+  WHATSAPP_NUMBER,
+} from "@/lib/contact"
+
+/**
+ * Contact details come from NEXT_PUBLIC_* env vars, via `lib/contact`. This
+ * flow answers on the support address rather than the general one.
+ */
 export const CONTACT = {
-  email: "support@mail.glowupchannel.com",
-  phone: "08102539906",
+  email: SUPPORT_EMAIL,
+  phone: CONTACT_PHONE,
+  /** International format, for `tel:` links that dial from anywhere. */
+  phoneIntl: CONTACT_PHONE_INTL,
   /** Same number in international format, for wa.me links. */
-  whatsapp: "2348102539906",
+  whatsapp: WHATSAPP_NUMBER,
 }
 
 export type Track = "listing" | "resource" | "promotion"

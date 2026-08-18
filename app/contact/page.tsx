@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { toast } from "sonner"
+import { CONTACT_EMAIL, WHATSAPP_CHANNEL_URL, mailtoHref } from "@/lib/contact"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -154,7 +155,9 @@ export default function ContactPage() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center text-foreground">
                     <FlaticonIcon name="envelope" className="h-5 w-5 mr-2 text-primary" aria-hidden />
-                    <span>glowupchannel.info@gmail.com</span>
+                    <a href={mailtoHref()} className="break-all hover:text-primary transition-colors">
+                      {CONTACT_EMAIL}
+                    </a>
                   </div>
                 </CardContent>
               </Card>
@@ -192,7 +195,7 @@ export default function ContactPage() {
                     Be part of a growing network of ambitious young people sharing opportunities and resources.
                   </p>
                   <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                    <a href="https://whatsapp.com/channel/0029Vanm1p0InlqII9gDQl0i" target="_blank" rel="noopener noreferrer">Join Now</a>
+                    <a href={WHATSAPP_CHANNEL_URL} target="_blank" rel="noopener noreferrer">Join Now</a>
                   </Button>
                 </CardContent>
               </Card>

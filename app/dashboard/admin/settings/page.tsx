@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ADMIN_EMAIL, SUPPORT_EMAIL } from "@/lib/contact"
 import { 
   Settings, 
   Shield, 
@@ -36,8 +37,8 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState({
     platformName: "UP",
     platformDescription: "Connecting young ambitious people to opportunities that accelerate personal and professional growth.",
-    supportEmail: "support@glowupchannel.com",
-    adminEmail: "admin@glowupchannel.com",
+    supportEmail: SUPPORT_EMAIL,
+    adminEmail: ADMIN_EMAIL,
     maxFileSize: "10",
     allowedFileTypes: "jpg,jpeg,png,pdf,doc,docx",
     emailNotifications: true,

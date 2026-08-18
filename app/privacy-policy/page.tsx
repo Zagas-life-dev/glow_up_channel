@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SUPPORT_EMAIL, mailtoHref } from "@/lib/contact"
 
 export const metadata = {
   title: { absolute: "Privacy Policy | UP" },
@@ -210,10 +211,10 @@ export default function PrivacyPolicyPage() {
             UP<br />
             Email:{" "}
             <a
-              href="mailto:support@glowup.example"
+              href={mailtoHref(SUPPORT_EMAIL)}
               className="text-primary hover:underline"
             >
-              support@glowup.example
+              {SUPPORT_EMAIL}
             </a>
           </p>
         </section>

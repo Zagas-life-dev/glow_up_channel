@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { CONTACT_EMAIL, mailtoHref } from "@/lib/contact"
 
 export const metadata = {
   title: { absolute: "Terms of Service | UP" },
@@ -105,10 +106,10 @@ export default function TermsOfServicePage() {
             UP<br />
             Email:{" "}
             <a
-              href="mailto:glowupchannel.info@gmail.com"
+              href={mailtoHref()}
               className="text-primary hover:underline"
             >
-              glowupchannel.info@gmail.com
+              {CONTACT_EMAIL}
             </a>
           </p>
         </section>

@@ -310,7 +310,7 @@ export function NeedMore({ children }: { children: string }) {
           {CONTACT.email}
         </a>
         <a
-          href={`tel:${CONTACT.phone}`}
+          href={`tel:${CONTACT.phoneIntl}`}
           className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
         >
           <RiPhoneLine className="h-4 w-4" aria-hidden />

@@ -1,3 +1,5 @@
+import { WHATSAPP_CHANNEL_URL } from "@/lib/contact"
+
 export type EmailTemplateId = "minimal" | "bold" | "newsletter" | "glowup"
 
 export type EmailTemplateMetadata = {
@@ -251,7 +253,7 @@ function renderGlowup(ctx: TemplateContext): string {
             Visit UP
           </a>
           <a
-            href="https://whatsapp.com/channel/0029Vanm1p0InlqII9gDQl0i"
+            href="${WHATSAPP_CHANNEL_URL}"
             style="display:inline-block; padding:9px 16px; border-radius:999px; border:1px solid #374151; color:#e5e7eb; font-size:13px; font-weight:500; text-decoration:none;"
           >
             Join the community

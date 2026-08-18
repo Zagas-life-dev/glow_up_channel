@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { CONTACT_EMAIL, mailtoHref } from "@/lib/contact"
 
 export const metadata = {
   title: { absolute: "Cookie Policy | UP" },
@@ -72,7 +73,7 @@ export default function CookiePolicyPage() {
             5. Contact Us
           </h2>
           <p>
-            If you have any questions about our use of cookies or other technologies, please email us at: <a href="mailto:glowupchannel.info@gmail.com" className="text-primary hover:underline">glowupchannel.info@gmail.com</a>.
+            If you have any questions about our use of cookies or other technologies, please email us at: <a href={mailtoHref()} className="text-primary hover:underline">{CONTACT_EMAIL}</a>.
           </p>
         </section>
 

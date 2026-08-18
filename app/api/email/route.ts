@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { NOREPLY_EMAIL } from '@/lib/contact'
 
 // Initialize Resend lazily to avoid build-time errors when API key is missing
 function getResend() {
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
 
     const resend = getResend()
     const data = await resend.emails.send({
-      from: 'UP <noreply@updates.glowupchannel.com>',
+      from: `UP <${NOREPLY_EMAIL}>`,
       to: [to],
       subject: subject,
       html: htmlContent,

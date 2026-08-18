@@ -511,7 +511,7 @@ Support helps you keep moving
           </Link>
                <Link
               href="/work-with-us"
-              className="font-up-display inline-flex h-14 items-center justify-center gap-2 rounded-full border border-[var(--paper)]/25 px-8 text-[16px] font-semibold text-[var(--paper)] transition-colors hover:border-[var(--paper)]/60"
+              className="ml-2 font-up-display inline-flex h-14 items-center justify-center gap-2 rounded-full border border-[var(--paper)]/25 px-8 text-[16px] font-semibold text-[var(--paper)] transition-colors hover:border-[var(--paper)]/60"
             >
               Work With US
               <RiArrowRightLine className="h-4 w-4" aria-hidden />

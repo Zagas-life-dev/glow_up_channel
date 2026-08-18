@@ -374,7 +374,7 @@ function Flow() {
             {CONTACT.email}
           </a>{" "}
           or{" "}
-          <a href={`tel:${CONTACT.phone}`} className="font-medium text-primary hover:underline">
+          <a href={`tel:${CONTACT.phoneIntl}`} className="font-medium text-primary hover:underline">
             {CONTACT.phone}
           </a>
           .
