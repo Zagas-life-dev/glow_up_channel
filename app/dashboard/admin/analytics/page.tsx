@@ -24,6 +24,7 @@ import {
   RiUserFollowLine,
   RiStackLine,
   RiPulseLine,
+  RiUserAddLine,
 } from "react-icons/ri"
 import { toast } from "sonner"
 
@@ -50,8 +51,10 @@ interface DailyStats {
   totals: {
     activeUsers: number
     visitors: number
+    signups: number
     peakActiveUsers: number
     peakVisitors: number
+    peakSignups: number
   }
 }
 
@@ -174,6 +177,9 @@ export default function AdminAnalytics() {
   const avgVisitors = daily?.series.length
     ? Math.round(daily.totals.visitors / daily.series.length)
     : 0
+  const avgSignups = daily?.series.length
+    ? Math.round(daily.totals.signups / daily.series.length)
+    : 0
 
   return (
     <AdminShell
@@ -210,7 +216,7 @@ export default function AdminAnalytics() {
           loading={loading && !daily}
           description={
             daily
-              ? `${daily.range.start} to ${daily.range.end} · averaging ${avgVisitors.toLocaleString()} visitors and ${avgActive.toLocaleString()} active users per day`
+              ? `${daily.range.start} to ${daily.range.end} · averaging ${avgVisitors.toLocaleString()} visitors, ${avgActive.toLocaleString()} active users and ${avgSignups.toLocaleString()} signups per day`
               : undefined
           }
         />
@@ -232,17 +238,17 @@ export default function AdminAnalytics() {
               icon={RiUserFollowLine}
             />
             <AdminStat
-              label="Total content"
-              value={totalContent.toLocaleString()}
-              hint="Live across all types"
-              icon={RiStackLine}
+              label="Peak signups"
+              value={(daily?.totals.peakSignups ?? 0).toLocaleString()}
+              hint={`${(daily?.totals.signups ?? 0).toLocaleString()} new accounts in ${RANGE_DAYS[timeRange]} days`}
+              icon={RiUserAddLine}
+              emphasis="positive"
             />
             <AdminStat
-              label="Activation rate"
-              value={`${activationRate}%`}
-              hint={`${(stats?.activeUsers || 0).toLocaleString()} of ${(stats?.totalUsers || 0).toLocaleString()} users active`}
-              icon={RiUserLine}
-              emphasis="positive"
+              label="Total content"
+              value={totalContent.toLocaleString()}
+              hint={`${activationRate}% of ${(stats?.totalUsers || 0).toLocaleString()} users active`}
+              icon={RiStackLine}
             />
           </AdminStatGrid>
         )}

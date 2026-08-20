@@ -28,12 +28,18 @@ export interface ActivityPoint {
   date: string
   activeUsers: number
   visitors: number
+  signups: number
 }
 
-/** Fixed slot order — colour follows the series, never its current rank. */
+/**
+ * Fixed slot order — colour follows the series, never its current rank, so adding signups did
+ * not repaint visitors or active users. All three pairs were validated together (not just
+ * adjacent ones) since all three lines share the plot.
+ */
 const SERIES = [
   { key: "visitors" as const, label: "Visitors", color: "#3b82f6" },
   { key: "activeUsers" as const, label: "Active users", color: "#d95f00" },
+  { key: "signups" as const, label: "New signups", color: "#0d9488" },
 ]
 
 function formatDay(date: string) {
@@ -148,6 +154,7 @@ export function ActivityChart({
                   <th className="px-3 py-2 text-xs font-semibold text-muted-foreground">Date</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">Visitors</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">Active users</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">New signups</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -159,6 +166,9 @@ export function ActivityChart({
                     </td>
                     <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground">
                       {row.activeUsers.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground">
+                      {row.signups.toLocaleString()}
                     </td>
                   </tr>
                 ))}

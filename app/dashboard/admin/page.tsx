@@ -27,6 +27,7 @@ import {
   RiMegaphoneLine,
   RiBarChartBoxLine,
   RiArchiveLine,
+  RiUserAddLine,
 } from "react-icons/ri"
 import type { IconType } from "react-icons"
 import { toast } from "sonner"
@@ -190,9 +191,16 @@ export default function AdminDashboard() {
             </h2>
             <AdminStatGrid>
               <AdminStat label="Total users" value={num(stats?.totalUsers)} icon={RiUserLine} />
+              <AdminStat
+                label="New signups"
+                value={num(stats?.recentRegistrations)}
+                hint="Last 30 days"
+                icon={RiUserAddLine}
+                emphasis="positive"
+                href="/dashboard/admin/analytics"
+              />
               <AdminStat label="Opportunity seekers" value={num(stats?.totalOpportunitySeekers)} icon={RiUserLine} />
               <AdminStat label="Posters" value={num(stats?.totalPosters)} icon={RiUserFollowLine} />
-              <AdminStat label="Pending users" value={num(pendingUsers)} icon={RiTimeLine} />
             </AdminStatGrid>
           </section>
 

@@ -1546,17 +1546,19 @@ export class ApiClient {
   }
 
   /**
-   * Daily active users and visitors over a window, oldest day first. Backed by the
+   * Daily active users, visitors, and new signups over a window, oldest day first. Backed by the
    * `platform_daily_stats` rollup, so this returns real history rather than just today.
    */
   static async getDailyStats(days: number = 30): Promise<{
-    series: { date: string; activeUsers: number; visitors: number }[];
+    series: { date: string; activeUsers: number; visitors: number; signups: number }[];
     range: { start: string; end: string; days: number };
     totals: {
       activeUsers: number;
       visitors: number;
+      signups: number;
       peakActiveUsers: number;
       peakVisitors: number;
+      peakSignups: number;
     };
   }> {
     const response = await this.makeAuthenticatedRequest(
