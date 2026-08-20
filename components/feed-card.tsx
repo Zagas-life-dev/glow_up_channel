@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
+import type { IconType } from 'react-icons'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -141,6 +142,45 @@ const typeConfig = {
     path: 'resources',
     buttonColor: 'bg-violet-500 hover:bg-violet-600'
   }
+}
+
+/**
+ * One engagement control. Counts sit beside the icon and the background only appears on hover
+ * or when active, so a feed of twenty cards is not a wall of filled pills.
+ */
+function FeedAction({
+  icon: Icon,
+  count,
+  label,
+  onClick,
+  active = false,
+  activeClass = 'text-foreground',
+  hoverClass = 'hover:text-foreground',
+}: {
+  icon: IconType
+  count: number
+  label: string
+  onClick: (event: React.MouseEvent) => void
+  active?: boolean
+  activeClass?: string
+  hoverClass?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={active}
+      className={cn(
+        'inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors',
+        active ? activeClass : cn('text-muted-foreground', hoverClass),
+        'hover:bg-muted'
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden />
+      {count > 0 ? <span className="tabular-nums">{count.toLocaleString()}</span> : null}
+    </button>
+  )
 }
 
 export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCardProps) {
@@ -550,280 +590,166 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
   }
 
+  /**
+   * Deadline urgency, escalating. The old card fired a glowing, pulsing badge that floated
+   * outside its own bounds for 2-3 days out, and showed nothing at all for 4-7 days — so the
+   * one thing this product is actually about (a closing date) was either shouting or silent.
+   */
+  const urgency: 'urgent' | 'soon' | 'upcoming' | null = !deadlineInfo
+    ? null
+    : deadlineInfo.isUrgent
+      ? 'urgent'
+      : deadlineInfo.daysLeft <= 3
+        ? 'soon'
+        : deadlineInfo.daysLeft <= 7
+          ? 'upcoming'
+          : null
+
+  const deadlineLabel =
+    urgency === 'urgent' && timeRemaining !== null
+      ? `${formatCountdown(timeRemaining, contentKind)} left`
+      : deadlineInfo
+        ? `${deadlineInfo.daysLeft} ${deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left`
+        : null
+
+  /** Facts read as one quiet line instead of a row of bordered chips. */
+  const metaParts: React.ReactNode[] = []
+  if (getLocationString()) metaParts.push(<span key="loc">{getLocationString()}</span>)
+  if (!urgency && getDateString()) metaParts.push(<span key="date">{getDateString()}</span>)
+  if (item.financial?.isPaid || item.isPaid) {
+    metaParts.push(
+      <span key="paid" className="font-medium text-emerald-600 dark:text-emerald-400">
+        {item.financial?.amount || item.price || 'Paid'}
+      </span>
+    )
+  }
+  if (typeof item.score === 'number') {
+    metaParts.push(
+      <span key="score" className="font-medium text-primary">{Math.round(item.score)}% match</span>
+    )
+  }
+  if (viewCount > 0) metaParts.push(<span key="views">{viewCount.toLocaleString()} views</span>)
+
   return (
     <>
-      <article className={cn(
-        "w-full max-w-full relative p-4 rounded-2xl border transition-all duration-300",
-        "bg-card/80 backdrop-blur-sm border-border/70 hover:bg-card hover:border-border/90 hover:shadow-sm",
-        // Hot card effects for events/opportunities/jobs approaching deadline
-        deadlineInfo?.isHot && "shadow-[0_0_20px_rgba(234,179,8,0.4)] border-yellow-500/40",
-        deadlineInfo?.isUrgent && "shadow-[0_0_30px_rgba(239,68,68,0.5)] border-red-500/50 bg-red-500/5"
-      )}>
-        {/* Hot Card Badge - 2-3 days left */}
-        {deadlineInfo?.isHot && !deadlineInfo.isUrgent && (
-          <div className="absolute -top-2 -right-2 z-10 flex flex-col items-end gap-1.5">
-            <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-              "bg-gradient-to-r from-yellow-500 to-yellow-600 text-smoke-500",
-              "shadow-lg shadow-yellow-100/50 animate-pulse"
-            )}>
-              {deadlineInfo.daysLeft} {deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left to {contentKind === 'event' ? 'sign up' : contentKind === 'opportunity' ? 'apply' : 'apply'}
-            </div>
-            {/* Match Score Badge - Below hot card tag */}
-            {typeof item.score === 'number' && (
-              <div className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-                "shadow-lg shadow-primary/30"
-              )}>
-                {Math.round(item.score)}% Match
-              </div>
+      <article
+        className={cn(
+          'group relative w-full overflow-hidden rounded-2xl border bg-card transition-colors duration-200',
+          'border-border hover:bg-muted/30',
+          urgency === 'urgent' && 'border-red-500/40'
+        )}
+      >
+        {/* Urgency reads as a thin rail rather than a coloured glow around the whole card. */}
+        {urgency === 'urgent' || urgency === 'soon' ? (
+          <span
+            aria-hidden
+            className={cn(
+              'absolute inset-y-0 left-0 w-[3px]',
+              urgency === 'urgent' ? 'bg-red-500' : 'bg-amber-500'
             )}
-          </div>
-        )}
+          />
+        ) : null}
 
-        {/* Urgent Countdown Timer - 1 day or less */}
-        {deadlineInfo?.isUrgent && timeRemaining !== null && (
-          <div className="absolute -top-2 -right-2 z-10 flex flex-col items-end gap-1.5">
-            <div className={cn(
-              "px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap",
-              "bg-gradient-to-r from-red-600 to-red-700 text-foreground",
-              "shadow-lg shadow-red-600/60 animate-pulse border border-red-400/50"
-            )}>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-card animate-pulse" />
-                <span>{formatCountdown(timeRemaining, contentKind)} left to {contentKind === 'event' ? 'sign up' : contentKind === 'opportunity' ? 'apply' : 'submit'}</span>
-              </div>
-            </div>
-            {/* Match Score Badge - Below urgent timer */}
-            {typeof item.score === 'number' && (
-              <div className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-                "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-                "shadow-lg shadow-primary/30"
-              )}>
-                {Math.round(item.score)}% Match
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Match Score Badge - Only show if not a hot card or urgent */}
-        {typeof item.score === 'number' && !deadlineInfo?.isHot && !deadlineInfo?.isUrgent && (
-          <div className="absolute -top-2 -right-2 z-10">
-            <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-              "bg-gradient-to-r from-orange-500 to-orange-600 text-foreground",
-              "shadow-lg shadow-primary/30"
-            )}>
-              {Math.round(item.score)}% Match
-            </div>
-          </div>
-        )}
-
-        {/* Header Row */}
-        <div className="flex items-start gap-4 mb-4">
-          {/* Type Icon */}
-          {(() => {
-            const Icon = config.icon
-            return (
-              <div className={cn(
-                "w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border",
-                config.bg,
-                config.border
-              )}>
-                <Icon className={cn("w-5 h-5", config.accent)} aria-hidden />
-              </div>
-            )
-          })()}
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {/* Type & Provider */}
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className={cn("text-xs font-medium", config.accent)}>
-                {config.label}
-              </span>
-              {getProviderName() && (
+        <div className="p-4">
+          {/* Type, provider, and how long is left */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-1.5 text-xs">
+              <TypeIcon className={cn('h-3.5 w-3.5 shrink-0', config.accent)} aria-hidden />
+              <span className={cn('font-medium', config.accent)}>{config.label}</span>
+              {getProviderName() ? (
                 <>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {getProviderName()}
-                  </span>
+                  <span className="text-muted-foreground/40" aria-hidden>·</span>
+                  <span className="truncate text-muted-foreground">{getProviderName()}</span>
                 </>
-              )}
+              ) : null}
             </div>
 
-            {/* Title */}
-            <h3 className="text-base font-semibold text-foreground leading-snug">
-              {item.title}
-            </h3>
+            {urgency && deadlineLabel ? (
+              <span
+                className={cn(
+                  'shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
+                  urgency === 'urgent' && 'bg-red-500/10 text-red-600 dark:text-red-400',
+                  urgency === 'soon' && 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+                  urgency === 'upcoming' && 'bg-muted text-muted-foreground'
+                )}
+              >
+                {deadlineLabel}
+              </span>
+            ) : null}
           </div>
-        </div>
 
-        {/* Description */}
-        {item.description && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+          {/* The title is the link — the old card spent a whole row on a "Read more" button
+              that went to the same place. */}
+          <h3 className="mt-2 text-[15px] font-semibold leading-snug text-foreground sm:text-base">
+            <Link
+              href={detailHref}
+              onClick={handleReadMore}
+              className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-primary"
+            >
+              {item.title}
+            </Link>
+          </h3>
+
+          {item.description ? (
+            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
               {item.description}
             </p>
-          </div>
-        )}
+          ) : null}
 
-        {/* Opens the post's own page, where the full detail lives */}
-        <div className="mb-4">
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-full border-border/70 px-4 text-xs font-semibold text-foreground hover:border-border hover:bg-muted/60"
-          >
-            <Link href={detailHref} onClick={handleReadMore}>
-              Read more
-              <RiArrowRightLine className="w-3.5 h-3.5" aria-hidden />
-            </Link>
-          </Button>
-        </div>
-
-        {/* Meta Pills */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {/* <div
-            // className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/60 text-muted-foreground text-[11px]"
-            title="Views from Show more and likes on the feed"
-          >
-            {/* <RiEyeLine className="w-3 h-3 shrink-0" aria-hidden />
-            <span>{viewCount.toLocaleString()} views</span> 
-          </div> */}
-          {getLocationString() && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[11px]">
-              <RiMapPinLine className="w-3 h-3" aria-hidden />
-              <span>{getLocationString()}</span>
+          {metaParts.length > 0 ? (
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+              {metaParts.map((part, index) => (
+                <Fragment key={index}>
+                  {index > 0 ? <span className="text-muted-foreground/40" aria-hidden>·</span> : null}
+                  {part}
+                </Fragment>
+              ))}
             </div>
-          )}
-          {getDateString() && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-muted-foreground text-[11px]">
-              <RiTimeLine className="w-3 h-3" aria-hidden />
-              <span>{getDateString()}</span>
-            </div>
-          )}
-          {(item.financial?.isPaid || item.isPaid) && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
-              <RiMoneyDollarCircleLine className="w-3 h-3" aria-hidden />
-              <span>{item.financial?.amount || item.price || 'Paid'}</span>
-            </div>
-          )}
-        </div>
+          ) : null}
 
-        {/* Tags */}
-        {item.tags && item.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {item.tags.slice(0, 4).map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-muted/60 border border-border/60 text-muted-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-            {item.tags.length > 4 && (
-              <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-muted/60 border border-border/60 text-muted-foreground">
-                +{item.tags.length - 4}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Action Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-border/50">
-          <div className="flex items-center gap-1">
-            {/* Like */}
-            {/* View Counter */}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground">
-              <RiEyeLine className="w-4 h-4" aria-hidden />
-              {viewCount}
-            </span>
-            <button
+          {/* Actions sit above the title's stretched link */}
+          <div className="relative z-10 mt-3 flex items-center gap-0.5 border-t border-border/60 pt-2.5">
+            <FeedAction
               onClick={handleLike}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                isLiked
-                  ? "text-red-500 bg-red-500/10"
-                  : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-              )}
-            >
-              {isLiked ? (
-                <RiHeartFill className="w-4 h-4 text-current" aria-hidden />
-              ) : (
-                <RiHeartLine className="w-4 h-4" aria-hidden />
-              )}
-              {likeCount > 0 && <span className="text-xs">{likeCount}</span>}
-            </button>
-
-            {/* Save */}
-            <button
-              type="button"
+              active={isLiked}
+              activeClass="text-red-500"
+              hoverClass="hover:text-red-500"
+              icon={isLiked ? RiHeartFill : RiHeartLine}
+              count={likeCount}
+              label="Like"
+            />
+            <FeedAction
               onClick={handleSave}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                isSaved
-                  ? "text-orange-500 bg-primary/10"
-                  : "text-muted-foreground hover:text-orange-500 hover:bg-primary/10"
-              )}
-              title="Saves"
-            >
-              {isSaved ? (
-                <RiBookmarkFill className="w-4 h-4 text-current" aria-hidden />
-              ) : (
-                <RiBookmarkLine className="w-4 h-4" aria-hidden />
-              )}
-              <span className="text-xs tabular-nums">{saveCount}</span>
-            </button>
-
-            {/* Add to Playlist */}
-            {isAuthenticated && (
-              <button
-                type="button"
+              active={isSaved}
+              activeClass="text-primary"
+              hoverClass="hover:text-primary"
+              icon={isSaved ? RiBookmarkFill : RiBookmarkLine}
+              count={saveCount}
+              label="Save"
+            />
+            {isAuthenticated ? (
+              <FeedAction
                 onClick={handleAddToPlaylist}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-violet-400 hover:bg-violet-500/10 transition-all duration-200"
-                title="Playlist adds (not saves)"
-              >
-                <RiListOrdered className="w-5 h-5" aria-hidden />
-                <span className="text-xs tabular-nums">{playlistAddCount}</span>
-              </button>
-            )}
-
-            {/* Share */}
-            <button
-              type="button"
+                hoverClass="hover:text-violet-500"
+                icon={RiListOrdered}
+                count={playlistAddCount}
+                label="Add to playlist"
+              />
+            ) : null}
+            <FeedAction
               onClick={handleShare}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                justShared ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-              title="Share taps (completed share or copy)"
-            >
-              {justShared ? (
-                <RiShareFill className="w-4 h-4" aria-hidden />
-              ) : (
-                <RiShareLine className="w-4 h-4" aria-hidden />
-              )}
-              <span className="text-xs tabular-nums">{shareCount}</span>
-            </button>
+              active={justShared}
+              activeClass="text-foreground"
+              hoverClass="hover:text-foreground"
+              icon={justShared ? RiShareFill : RiShareLine}
+              count={shareCount}
+              label="Share"
+            />
 
-            {/* Post About This */}
-            {/* {isAuthenticated && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setShowShareComposer(true)
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-orange-400 hover:bg-primary/10 transition-all duration-200"
-              >
-                <RiChat1Line className="w-4 h-4" aria-hidden />
-                <span className="hidden sm:inline">Post</span>
-              </button>
-            )} */}
+            <RiArrowRightLine
+              className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
+              aria-hidden
+            />
           </div>
         </div>
       </article>

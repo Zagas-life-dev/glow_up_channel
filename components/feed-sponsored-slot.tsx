@@ -1,9 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import FeedCard from "@/components/feed-card"
-import { Button } from "@/components/ui/button"
 
 export type PromotedContentItem = {
   _id: string
@@ -19,6 +17,14 @@ interface FeedSponsoredSlotProps {
   className?: string
 }
 
+/**
+ * A promoted item in the feed.
+ *
+ * It renders the ordinary feed card with a disclosure label above it, rather than boxing the
+ * card inside a second bordered card with its own "Open" button — that nested the same border
+ * twice and duplicated a link the card's own title already provides. Promoted items should
+ * read as the same kind of thing as everything around them, just labelled.
+ */
 export default function FeedSponsoredSlot({
   kind,
   content,
@@ -30,44 +36,17 @@ export default function FeedSponsoredSlot({
     return null
   }
 
-  const detailHref =
-    content.type === "opportunity"
-      ? `/opportunities/${content._id}`
-      : content.type === "job"
-        ? `/jobs/${content._id}`
-        : content.type === "event"
-          ? `/events/${content._id}`
-          : `/resources/${content._id}`
-
   return (
-    <div
-      className={cn(
-        "w-full rounded-2xl border border-border/70 bg-card/80 overflow-hidden min-h-[120px]",
-        className
-      )}
-    >
-      <div className="px-3 pt-2 pb-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Sponsored
-        </span>
-      </div>
-      <div className="px-3 pb-3 space-y-3">
-        <div className="space-y-3">
-          <FeedCard
-            item={{
-              ...content,
-              type: content.type as "opportunity" | "job" | "event" | "resource",
-            }}
-          />
-          <div className="flex justify-end">
-            <Button asChild size="sm" className="rounded-full">
-              <Link href={detailHref}>
-                Open
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className={cn("w-full", className)}>
+      <p className="mb-1.5 pl-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
+        Sponsored
+      </p>
+      <FeedCard
+        item={{
+          ...content,
+          type: content.type as "opportunity" | "job" | "event" | "resource",
+        }}
+      />
     </div>
   )
 }

@@ -2,7 +2,8 @@
 
 import { ReactNode } from 'react'
 import FeedCard from './feed-card'
-import { RiInboxLine, RiSparklingLine } from 'react-icons/ri'
+import { FeedCardSkeleton } from './skeletons/feed-card-skeleton'
+import { RiInboxLine } from 'react-icons/ri'
 
 interface FeedContainerProps {
   items: any[]
@@ -15,6 +16,12 @@ interface FeedContainerProps {
   emptyIcon?: ReactNode
 }
 
+/**
+ * The list every non-personalised feed renders through (opportunities, jobs, events,
+ * resources). It shares the card and the skeleton with the For You feed so all five tabs
+ * have the same geometry — the placeholder used to describe a card layout that no longer
+ * existed, which made every load shift the page.
+ */
 export default function FeedContainer({
   items,
   loading = false,
@@ -25,45 +32,10 @@ export default function FeedContainer({
 }: FeedContainerProps) {
   if (loading) {
     return (
-      <div className="space-y-5 w-full max-w-full" role="status" aria-busy="true">
+      <div className="w-full max-w-full space-y-3" role="status" aria-busy="true">
         <span className="sr-only">{loadingMessage}</span>
         {[...Array(skeletonCount)].map((_, i) => (
-          <div key={i} className="w-full max-w-full relative rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm overflow-hidden animate-pulse">
-            <div className="p-6 w-full max-w-full overflow-hidden">
-              <div>
-                {/* Header Row - matches FeedCard structure */}
-                <div className="flex items-start gap-4 mb-5">
-                  {/* Type Icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-muted/60 flex-shrink-0" />
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    {/* Type & Provider */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-3 bg-muted/60 rounded-full w-20" />
-                      <div className="h-3 bg-muted/60 rounded-full w-24" />
-                    </div>
-
-                    {/* Title */}
-                    <div className="h-5 bg-muted/60 rounded-full w-4/5" />
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mb-5 space-y-2">
-                  <div className="h-3 bg-muted/60 rounded-full w-full" />
-                  <div className="h-3 bg-muted/60 rounded-full w-5/6" />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <div className="h-8 bg-muted/60 rounded-full w-24" />
-                  <div className="h-8 bg-muted/60 rounded-full w-20" />
-                  <div className="h-8 bg-muted/60 rounded-full w-20" />
-                </div>
-              </div>
-            </div>
-          </div>
+          <FeedCardSkeleton key={i} />
         ))}
       </div>
     )
@@ -71,20 +43,20 @@ export default function FeedContainer({
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border px-6 py-20 text-center">
         {emptyIcon || (
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500/15 to-rose-500/10 border border-orange-500/20 flex items-center justify-center mb-6">
-            <RiInboxLine className="w-9 h-9 text-orange-400/60" aria-hidden />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+            <RiInboxLine className="h-5 w-5 text-muted-foreground" aria-hidden />
           </div>
         )}
-        <h3 className="text-xl font-bold text-foreground mb-2">Nothing here yet</h3>
-        <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">{emptyMessage}</p>
+        <h3 className="text-base font-semibold text-foreground">Nothing here yet</h3>
+        <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">{emptyMessage}</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-5 w-full max-w-full">
+    <div className="w-full max-w-full space-y-3">
       {items.map((post) => (
         <FeedCard key={post._id} item={post} />
       ))}

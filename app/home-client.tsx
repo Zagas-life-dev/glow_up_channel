@@ -36,7 +36,6 @@ import { cn } from "@/lib/utils"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { PageShell } from "@/components/layout/page-shell"
-import { SectionCard } from "@/components/layout/section-card"
 import { TabStrip } from "@/components/layout/tab-strip"
 import CountrySelector from "@/components/country-selector"
 import LandingPage from "@/components/landing/landing-page"
@@ -507,39 +506,35 @@ export default function Home() {
 
       {/* Feed Content */}
       <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
-        {/* Placeholder for the greeting card. Same card, same geometry, so the real
-            one swaps in without shifting the feed down. */}
-        {activeTab === "all" && feedLoading && (
-          <SectionCard
-            emphasized
-            aria-hidden
-            className="mb-4 animate-pulse"
-            title={<span className="block h-4 w-32 rounded-full bg-muted/60" />}
-            description={<span className="block h-3 w-48 max-w-full rounded-full bg-muted/60" />}
-            icon={<span className="block w-5 h-5 rounded-full bg-muted/60" />}
-          />
-        )}
-
-        {!feedLoading && activeTab === "all" && (allContent.length > 0 || !isAuthenticated) && (
-          <SectionCard
-            emphasized
-            className="mb-4"
-            title={
-              isAuthenticated
-                ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}!`
-                : "Discover Opportunities"
-            }
-            description={
-              isAuthenticated
-                ? "Here are picks to help you Glow Up."
-                : "Sign in to get personalized recommendations."
-            }
-            icon={<RiStarLine className="w-5 h-5 text-orange-500" aria-hidden />}
-          />
+        {/* The greeting used to be a full emphasised card pushing the first result below the
+            fold. It says the same thing in one line, and reserves its own height so the feed
+            never shifts when it swaps in. */}
+        {activeTab === "all" && (
+          <div className="mb-4 min-h-[2.75rem]">
+            {feedLoading ? (
+              <div className="animate-pulse space-y-2" aria-hidden>
+                <div className="h-5 w-40 rounded-full bg-muted/60" />
+                <div className="h-3 w-56 max-w-full rounded-full bg-muted/60" />
+              </div>
+            ) : allContent.length > 0 || !isAuthenticated ? (
+              <>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                  {isAuthenticated
+                    ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}`
+                    : "Discover opportunities"}
+                </h1>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {isAuthenticated
+                    ? "Picks to help you glow up."
+                    : "Sign in to get personalised recommendations."}
+                </p>
+              </>
+            ) : null}
+          </div>
         )}
 
         {activeTab === "all" && allContent.length > 0 ? (
-          <div className="space-y-5 w-full max-w-full">
+          <div className="w-full max-w-full space-y-3">
             {buildFeedWithSponsored(allContent, promotedFeed, { postsBetween: 4 }).map((item) =>
               item.type === "post" ? (
                 <FeedCard key={item.post._id} item={item.post} />
@@ -579,7 +574,7 @@ export default function Home() {
 
         {/* Loading more: show skeleton cards */}
         {isLoading && allContent.length > 0 && (
-          <div className="space-y-4 pt-4">
+          <div className="space-y-3 pt-3">
             <FeedCardSkeleton />
             <FeedCardSkeleton />
           </div>
@@ -587,8 +582,8 @@ export default function Home() {
 
         {/* End of feed message */}
         {!hasMore && allContent.length > 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            You've reached the end
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            You&apos;ve reached the end
           </div>
         )}
       </div>
