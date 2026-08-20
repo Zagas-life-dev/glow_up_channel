@@ -5,7 +5,8 @@ import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
 import ApiClient from "@/lib/api-client"
-import { AdminLayout } from "@/components/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
+import { AdminSection } from "@/components/admin/ui"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -279,37 +280,23 @@ export default function AdminCreateContentPage() {
   }
 
   return (
-    <AdminLayout
-      pageTitle="Create content"
-      pageSubtitle="Post event, job, opportunity, or resource"
-      PageIcon={RiAddCircleLine}
-      backHref="/dashboard/admin"
+    <AdminShell
+      title="Create content"
+      description="Post a new event, job, opportunity, or resource."
+      width="narrow"
     >
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <RiAddCircleLine className="h-5 w-5 text-primary" />
-              Post new content
-            </CardTitle>
-            <CardDescription>
-              Create an event, job, opportunity, or resource. Add a link so viewers can access the main resource (registration, application, or content).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Content type selector - aligned with provider posting UI */}
-            <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                What would you like to post?
-              </p>
-              <PostTypeSelector<ContentType>
-                types={ADMIN_POST_TYPES}
-                selectedType={contentType}
-                onSelect={(id) => setContentType(id)}
-              />
-            </div>
+      <div className="space-y-5">
+        <AdminSection title="What are you posting?">
+          <PostTypeSelector<ContentType>
+            types={ADMIN_POST_TYPES}
+            selectedType={contentType}
+            onSelect={(id) => setContentType(id)}
+          />
+        </AdminSection>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <AdminSection title="Basics">
+               <div className="space-y-5">
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
@@ -337,8 +324,12 @@ export default function AdminCreateContentPage() {
                 />
               </div>
 
-              {/* Link to main resource — prominent */}
-              <div className="space-y-2 p-4 rounded-xl bg-primary/5 border border-primary/20">
+               </div>
+              </AdminSection>
+
+              <AdminSection title="Link">
+              {/* Where viewers actually get the thing — the field most often left vague */}
+              <div className="space-y-2">
                 <Label htmlFor="resourceLink" className="flex items-center gap-2 text-foreground">
                   <RiExternalLinkLine className="h-4 w-4 text-primary" />
                   Link where viewers access the main resource *
@@ -360,7 +351,11 @@ export default function AdminCreateContentPage() {
                 </p>
               </div>
 
+              </AdminSection>
+
               {/* Type-specific fields */}
+              <AdminSection title="Details">
+               <div className="space-y-5">
               {contentType === "event" && (
                 <div className="space-y-4 rounded-xl border border-border p-4">
                   <h4 className="text-sm font-semibold text-foreground">Event details</h4>
@@ -579,28 +574,30 @@ export default function AdminCreateContentPage() {
                 </div>
               )}
 
+               </div>
+              </AdminSection>
+
               {success && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-700 dark:text-emerald-400">
                   <RiCheckboxCircleLine className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-sm">Content created. You can post another or go to Content to moderate.</span>
+                  <span className="text-sm">Content created. Post another, or open Moderation to review it.</span>
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-3">
-                <Button type="submit" disabled={submitting} className="rounded-xl bg-primary hover:bg-primary/90">
+              {/* Submit stays reachable at the bottom of a long form */}
+              <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t border-border bg-page/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+                <Button type="submit" disabled={submitting} className="h-10 rounded-xl">
                   {submitting ? "Creating…" : "Create"}
                 </Button>
-                <Button type="button" variant="outline" className="rounded-xl" asChild>
-                  <Link href="/dashboard/admin/content">View content</Link>
-                </Button>
-                <Button type="button" variant="ghost" className="rounded-xl" onClick={resetForm}>
+                <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={resetForm}>
                   Clear form
+                </Button>
+                <Button type="button" variant="outline" className="ml-auto h-10 rounded-xl" asChild>
+                  <Link href="/dashboard/admin/content">View content</Link>
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }

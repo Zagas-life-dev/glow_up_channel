@@ -52,6 +52,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { AdminShell } from "@/components/admin/admin-shell"
 
 interface PosterData {
   _id: string
@@ -234,19 +235,19 @@ export default function PostersDetailsPage() {
 
   const getStatusBadge = (poster: PosterData) => {
     if (poster.isOnboardingCompleted) {
-      return <Badge className="bg-green-100 text-green-800">Onboarding Complete</Badge>
+      return <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Onboarding Complete</Badge>
     } else if (poster.completionPercentage > 0) {
-      return <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>
+      return <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">In Progress</Badge>
     } else {
-      return <Badge className="bg-gray-100 text-gray-800">Not Started</Badge>
+      return <Badge className="bg-muted text-foreground">Not Started</Badge>
     }
   }
 
   const getApprovalBadge = (poster: PosterData) => {
     if (poster.isApproved) {
-      return <Badge className="bg-green-100 text-green-800">Approved</Badge>
+      return <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Approved</Badge>
     } else {
-      return <Badge className="bg-orange-100 text-orange-800">Pending Approval</Badge>
+      return <Badge className="bg-primary/10 text-primary border border-primary/30">Pending Approval</Badge>
     }
   }
 
@@ -388,42 +389,25 @@ export default function PostersDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
             <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <p className="text-lg text-gray-600">Loading poster details...</p>
+          <p className="text-lg text-muted-foreground">Loading poster details...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-card border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Users className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-foreground">Posters Details</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/admin">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Admin Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminShell
+      title="Poster details"
+      description="Opportunity posters, their onboarding status, uploaded documents, and approval state."
+      requireSuperAdmin
+      width="wide"
+    >
+      <div>
         {/* Stats Overview */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
@@ -432,7 +416,7 @@ export default function PostersDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <Users className="w-5 h-5 text-orange-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Total Posters</p>
+                    <p className="text-sm text-muted-foreground">Total Posters</p>
                     <p className="text-2xl font-bold text-orange-600">{stats.total}</p>
                   </div>
                 </div>
@@ -443,7 +427,7 @@ export default function PostersDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Approved</p>
+                    <p className="text-sm text-muted-foreground">Approved</p>
                     <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
                   </div>
                 </div>
@@ -454,7 +438,7 @@ export default function PostersDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <Clock className="w-5 h-5 text-orange-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Pending</p>
+                    <p className="text-sm text-muted-foreground">Pending</p>
                     <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
                   </div>
                 </div>
@@ -465,7 +449,7 @@ export default function PostersDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="text-sm text-gray-600">Onboarding Complete</p>
+                    <p className="text-sm text-muted-foreground">Onboarding Complete</p>
                     <p className="text-2xl font-bold text-primary">{stats.onboardingCompleted}</p>
                   </div>
                 </div>
@@ -476,7 +460,7 @@ export default function PostersDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <FileText className="w-5 h-5 text-purple-600" />
                   <div>
-                    <p className="text-sm text-gray-600">With Documents</p>
+                    <p className="text-sm text-muted-foreground">With Documents</p>
                     <p className="text-2xl font-bold text-purple-600">{stats.hasDocuments}</p>
                   </div>
                 </div>
@@ -496,7 +480,7 @@ export default function PostersDetailsPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search posters..."
                   value={searchTerm}
@@ -544,7 +528,7 @@ export default function PostersDetailsPage() {
                   <X className="h-4 w-4 mr-2" />
                   Clear Filters
                 </Button>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   Showing {filteredPosters.length} of {posters.length} posters
                 </span>
               </div>
@@ -557,8 +541,8 @@ export default function PostersDetailsPage() {
           {filteredPosters.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
                   {posters.length === 0 
                     ? 'No poster data found. Posters will appear here once users register as opportunity posters.'
                     : 'No posters match your search criteria.'
@@ -570,7 +554,7 @@ export default function PostersDetailsPage() {
             filteredPosters.map((poster) => (
               <Card key={poster._id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <CardHeader 
-                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="cursor-pointer hover:bg-muted/40 transition-colors"
                   onClick={() => toggleFolder(poster._id)}
                 >
                   <div className="flex items-center justify-between">
@@ -580,7 +564,7 @@ export default function PostersDetailsPage() {
                       }`} />
                       <div>
                         <CardTitle className="text-lg">{poster.organizationName}</CardTitle>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {poster.contactPersonName} {poster.providerType && `• ${poster.providerType}`}
                         </p>
                       </div>
@@ -604,39 +588,39 @@ export default function PostersDetailsPage() {
                         </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-gray-400" />
+                            <User className="w-4 h-4 text-muted-foreground" />
                             <span className="font-medium">Contact Person:</span>
                             <span>{poster.contactPersonName} {poster.contactPersonRole && `(${poster.contactPersonRole})`}</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Mail className="w-4 h-4 text-gray-400" />
+                            <Mail className="w-4 h-4 text-muted-foreground" />
                             <span className="font-medium">Email:</span>
                             <span>{poster.officialEmail}</span>
                           </div>
                           {poster.phoneNumber && (
                             <div className="flex items-center space-x-2">
-                              <Phone className="w-4 h-4 text-gray-400" />
+                              <Phone className="w-4 h-4 text-muted-foreground" />
                               <span className="font-medium">Phone:</span>
                               <span>{poster.phoneNumber}</span>
                             </div>
                           )}
                           {poster.stateOfOperation && (
                             <div className="flex items-center space-x-2">
-                              <MapPin className="w-4 h-4 text-gray-400" />
+                              <MapPin className="w-4 h-4 text-muted-foreground" />
                               <span className="font-medium">State:</span>
                               <span>{poster.stateOfOperation}</span>
                             </div>
                           )}
                           {poster.yearEstablished && (
                             <div className="flex items-center space-x-2">
-                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
                               <span className="font-medium">Established:</span>
                               <span>{poster.yearEstablished}</span>
                             </div>
                           )}
                           {poster.website && (
                             <div className="flex items-center space-x-2">
-                              <ExternalLink className="w-4 h-4 text-gray-400" />
+                              <ExternalLink className="w-4 h-4 text-muted-foreground" />
                               <span className="font-medium">Website:</span>
                               <a 
                                 href={poster.website} 
@@ -732,7 +716,7 @@ export default function PostersDetailsPage() {
 
                         {/* Verification Document */}
                         <div className="space-y-2">
-                          <h5 className="text-sm font-medium text-gray-700">Verification Document</h5>
+                          <h5 className="text-sm font-medium text-foreground">Verification Document</h5>
                           {poster.verificationDocumentUrl ? (
                             <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
                               <FileText className="w-4 h-4 text-green-600" />
@@ -755,16 +739,16 @@ export default function PostersDetailsPage() {
                               </Button>
                             </div>
                           ) : (
-                            <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                              <XCircle className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">No document uploaded</span>
+                            <div className="flex items-center space-x-2 p-3 bg-muted/40 rounded-lg">
+                              <XCircle className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">No document uploaded</span>
                             </div>
                           )}
                         </div>
 
                         {/* Organization Logo */}
                         <div className="space-y-2">
-                          <h5 className="text-sm font-medium text-gray-700">Organization Logo</h5>
+                          <h5 className="text-sm font-medium text-foreground">Organization Logo</h5>
                           {poster.organizationLogoUrl ? (
                             <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
                               <Image className="w-4 h-4 text-green-600" aria-hidden />
@@ -787,9 +771,9 @@ export default function PostersDetailsPage() {
                               </Button>
                             </div>
                           ) : (
-                            <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                              <XCircle className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600">No logo uploaded</span>
+                            <div className="flex items-center space-x-2 p-3 bg-muted/40 rounded-lg">
+                              <XCircle className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">No logo uploaded</span>
                             </div>
                           )}
                         </div>
@@ -797,15 +781,15 @@ export default function PostersDetailsPage() {
                         {/* About Organization */}
                         {poster.aboutOrganization && (
                           <div className="space-y-2">
-                            <h5 className="text-sm font-medium text-gray-700">About Organization</h5>
-                            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                            <h5 className="text-sm font-medium text-foreground">About Organization</h5>
+                            <p className="text-sm text-muted-foreground bg-muted/40 p-3 rounded-lg">
                               {poster.aboutOrganization}
                             </p>
                           </div>
                         )}
 
                         {/* Timestamps */}
-                        <div className="pt-4 border-t text-xs text-gray-500 space-y-1">
+                        <div className="pt-4 border-t text-xs text-muted-foreground space-y-1">
                           {poster.onboardingCreatedAt && (
                             <p>Onboarding Started: {formatDate(poster.onboardingCreatedAt)}</p>
                           )}
@@ -911,7 +895,7 @@ export default function PostersDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminShell>
   )
 }
 

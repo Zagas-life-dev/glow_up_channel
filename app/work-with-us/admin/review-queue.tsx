@@ -12,7 +12,7 @@ import {
 } from "react-icons/ri"
 import { toast } from "sonner"
 
-import { AdminLayout } from "@/components/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -155,9 +155,9 @@ export default function ReviewQueue() {
 
   if (!authLoading && !allowed) {
     return (
-      <AdminLayout pageTitle="Work with us" backHref="/dashboard/admin">
+      <AdminShell title="Work with us">
         <p className="p-8 text-center text-sm text-muted-foreground">Access denied.</p>
-      </AdminLayout>
+      </AdminShell>
     )
   }
 
@@ -208,20 +208,14 @@ export default function ReviewQueue() {
   }
 
   return (
-    <AdminLayout pageTitle="Work with us" pageSubtitle="Review" backHref="/dashboard/admin">
-      <div className="space-y-6 p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">Work with us</h1>
-            <p className="text-sm text-muted-foreground">
-              Everything submitted through the public flow. Approving a listing publishes it.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RiRefreshLine className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} aria-hidden />
-            Refresh
-          </Button>
-        </div>
+    <AdminShell
+      title="Work with us"
+      description="Everything submitted through the public flow. Approving a listing publishes it."
+      onRefresh={load}
+      refreshing={loading}
+      width="wide"
+    >
+      <div className="space-y-6">
 
         <div className="flex flex-wrap gap-2">
           {TABS.map((entry) => (
@@ -390,6 +384,6 @@ export default function ReviewQueue() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }

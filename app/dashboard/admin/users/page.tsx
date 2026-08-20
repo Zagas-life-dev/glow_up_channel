@@ -9,7 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { AdminLayout } from "@/components/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
+import {
+  AdminStat,
+  AdminStatGrid,
+  AdminToolbar,
+  AdminEmpty,
+  AdminSkeletonRows,
+} from "@/components/admin/ui"
 import { AuthRequiredCard } from "@/components/auth-required-card"
 import {
   Select,
@@ -366,7 +373,7 @@ export default function UserManagement() {
     const roleColors: Record<string, string> = {
       'opportunity_seeker': 'bg-primary/20 text-primary border-primary/30',
       'founder_batch': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'opportunity_poster': 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+      'opportunity_poster': 'bg-slate-500/20 text-muted-foreground border-slate-500/30',
       'admin': 'bg-primary/20 text-orange-400 border-orange-500/30',
       'super_admin': 'bg-red-500/20 text-red-400 border-red-500/30'
     }
@@ -416,63 +423,25 @@ export default function UserManagement() {
 
   return (
     <>
-    <AdminLayout
-      pageTitle="Users"
-      pageSubtitle={`${totalCount} total`}
-      PageIcon={RiUserLine}
+    <AdminShell
+      title="Users"
+      description={`${totalCount} registered users.`}
       onRefresh={fetchUsers}
-      refreshLoading={loading}
-      backHref="/dashboard/admin"
+      refreshing={loading}
+      requireSuperAdmin
+      width="wide"
+      actions={
+        <Button
+          variant="outline"
+          onClick={() => handleDownload('excel')}
+          disabled={loading}
+          className="h-10 rounded-xl"
+        >
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          Export Excel
+        </Button>
+      }
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-            {/* Desktop Header */}
-            <div className="hidden lg:flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  <Link href="/dashboard/admin" className="flex items-center gap-2">
-                    <ChevronLeft className="h-4 w-4" />
-                    Back
-                  </Link>
-                </Button>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-md">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-                    <p className="text-sm text-muted-foreground">{totalCount} total users</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload('excel')}
-                  disabled={loading}
-                  className="rounded-2xl border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export Excel
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchUsers()}
-                  disabled={loading}
-                  className="rounded-2xl border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
-                  Refresh
-                </Button>
-              </div>
-            </div>
-
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
@@ -483,153 +452,80 @@ export default function UserManagement() {
               </div>
             )}
 
-            {/* Stats - Bento Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="rounded-xl border p-4 bg-gradient-to-br from-primary/20 to-primary/10 border-primary/30 hover:opacity-90 transition-opacity">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Total Users</p>
-                    <p className="text-2xl font-bold text-primary">{stats.total.toLocaleString()}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-primary/50" />
-                </div>
-              </div>
+            {/* Monochrome tiles: four equally-weighted numbers in four colours had no hierarchy */}
+            <AdminStatGrid className="mb-5">
+              <AdminStat label="Total users" value={stats.total.toLocaleString()} icon={Users} />
+              <AdminStat
+                label="Pending"
+                value={stats.pending.toLocaleString()}
+                icon={Clock}
+                emphasis={stats.pending > 0 ? "attention" : "none"}
+                href={stats.pending > 0 ? "/dashboard/admin/users/pending" : undefined}
+              />
+              <AdminStat label="Approved" value={stats.approved.toLocaleString()} icon={CheckCircle} emphasis="positive" />
+              <AdminStat label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} />
+            </AdminStatGrid>
 
-              <div className="rounded-xl border p-4 bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/30 hover:opacity-90 transition-opacity">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Pending</p>
-                    <p className="text-2xl font-bold text-yellow-400">{stats.pending.toLocaleString()}</p>
-                  </div>
-                  <Clock className="w-8 h-8 text-yellow-400/50" />
-                </div>
-              </div>
+            <AdminToolbar
+              search={searchQuery}
+              onSearchChange={(value) => { setSearchQuery(value); setCurrentPage(1) }}
+              searchPlaceholder="Search by email…"
+              className="mb-3"
+            >
+              <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setCurrentPage(1) }}>
+                <SelectTrigger className="h-10 w-[165px] rounded-xl">
+                  <SelectValue placeholder="All roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="opportunity_seeker">Opportunity seeker</SelectItem>
+                  <SelectItem value="founder_batch">Founder batch</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="super_admin">Super admin</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <div className="rounded-xl border p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 hover:opacity-90 transition-opacity">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Approved</p>
-                    <p className="text-2xl font-bold text-emerald-400">{stats.approved.toLocaleString()}</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-emerald-400/50" />
-                </div>
-              </div>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1) }}>
+                <SelectTrigger className="h-10 w-[150px] rounded-xl">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <div className="rounded-xl border p-4 bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/30 hover:opacity-90 transition-opacity">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Rejected</p>
-                    <p className="text-2xl font-bold text-red-400">{stats.rejected.toLocaleString()}</p>
-                  </div>
-                  <XCircle className="w-8 h-8 text-red-400/50" />
-                </div>
-              </div>
-            </div>
+              {(searchQuery || roleFilter !== "all" || statusFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setRoleFilter("all")
+                    setStatusFilter("all")
+                    setCurrentPage(1)
+                  }}
+                  className="h-10 rounded-xl text-muted-foreground"
+                >
+                  Clear
+                </Button>
+              )}
+            </AdminToolbar>
 
-            {/* Filters */}
-            <Card className="mb-6 bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Filter className="h-5 w-5 text-orange-400" />
-                  <span>Filters</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">Role</label>
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
-                      <SelectTrigger className="bg-muted border-border text-foreground">
-                        <SelectValue placeholder="All roles" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-surface border-border">
-                        <SelectItem value="all">All roles</SelectItem>
-                        <SelectItem value="opportunity_seeker">Opportunity Seeker</SelectItem>
-                        <SelectItem value="founder_batch">Founder Batch</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">Status</label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="bg-muted border-border text-foreground">
-                        <SelectValue placeholder="All statuses" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-surface border-border">
-                        <SelectItem value="all">All statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-end">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSearchQuery("")
-                        setRoleFilter("all")
-                        setStatusFilter("all")
-                        setCurrentPage(1)
-                      }}
-                      className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Results Summary */}
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {users.length} of {totalCount} users
-              </p>
-            </div>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Showing {users.length} of {totalCount.toLocaleString()} users
+            </p>
 
             {/* Users List - Card Based for Mobile */}
             {loading && users.length === 0 ? (
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <Card key={i} className="bg-card border-border">
-                    <CardContent className="p-4">
-                    <div className="animate-pulse space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="h-4 bg-muted rounded w-32" />
-                        <div className="h-6 bg-muted rounded w-16" />
-                      </div>
-                      <div className="h-3 bg-muted rounded w-24" />
-                    </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <AdminSkeletonRows rows={5} />
             ) : users.length === 0 ? (
-              <Card className="bg-card border-border">
-                <CardContent className="p-12 text-center">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No users found</h3>
-                  <p className="text-muted-foreground">Try adjusting your filters or search criteria.</p>
-                </CardContent>
-              </Card>
+              <AdminEmpty
+                title="No users found"
+                description="Try adjusting your filters or search criteria."
+                icon={Users}
+              />
             ) : (
               <div className="space-y-3">
                 {users.map((userItem) => (
@@ -780,8 +676,7 @@ export default function UserManagement() {
                 </div>
               </div>
             )}
-          </div>
-    </AdminLayout>
+    </AdminShell>
 
       {/* Role Swap Dialog */}
       <Dialog

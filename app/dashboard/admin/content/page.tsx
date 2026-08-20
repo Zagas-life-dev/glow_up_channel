@@ -49,7 +49,14 @@ import {
   RiExternalLinkLine,
   RiDeleteBinLine,
 } from "react-icons/ri"
-import { AdminLayout } from "@/components/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
+import {
+  AdminStat,
+  AdminStatGrid,
+  AdminToolbar,
+  AdminTabs,
+  AdminEmpty,
+} from "@/components/admin/ui"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
@@ -220,7 +227,7 @@ function jobTypeToDisplayFormat(apiValue: string | undefined): string {
 
 function AdminContentCardSkeleton() {
   return (
-    <article className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-sm flex min-h-[140px] animate-pulse">
+    <article className="rounded-2xl border border-border/80 bg-card dark:bg-card overflow-hidden shadow-sm flex min-h-[140px] animate-pulse">
       <div className="w-16 sm:w-20 flex-shrink-0 bg-muted" />
       <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col gap-4 border-l-4 border-l-transparent">
         <div className="flex gap-2">
@@ -960,14 +967,14 @@ export default function AdminContent() {
     const isInactive = item.status === "inactive"
     if (isLive) return <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-0">Live</Badge>
     if (isPending) return <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-0">Pending</Badge>
-    if (isDraft) return <Badge className="bg-gray-500/20 text-gray-600 dark:text-gray-400 border-0">Draft</Badge>
+    if (isDraft) return <Badge className="bg-gray-500/20 text-muted-foreground dark:text-muted-foreground border-0">Draft</Badge>
     if (isInactive) return <Badge className="bg-red-500/20 text-red-600 dark:text-red-400 border-0">Inactive</Badge>
     return null
   }
 
   const getPaymentBadge = (item: ContentItem) => {
     if (!item.paymentStatus || item.paymentStatus === "not_required")
-      return <Badge className="bg-gray-500/15 text-gray-600 dark:text-gray-400 border-0 text-xs">No payment</Badge>
+      return <Badge className="bg-gray-500/15 text-muted-foreground dark:text-muted-foreground border-0 text-xs">No payment</Badge>
     if (item.paymentStatus === "awaiting_payment")
       return <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-0 text-xs">Awaiting</Badge>
     if (item.paymentStatus === "payment_uploaded")
@@ -1019,46 +1026,24 @@ export default function AdminContent() {
 
   return (
     <>
-    <AdminLayout
-      pageTitle="Content"
-      pageSubtitle="Moderate"
-      PageIcon={RiFileLine}
+    <AdminShell
+      title="Content moderation"
+      description="Review, approve, and manage platform content."
       onRefresh={fetchFirstPage}
-      refreshLoading={loading}
-      backHref="/dashboard/admin"
+      refreshing={loading}
+      width="wide"
+      actions={
+        <Button
+          variant="outline"
+          onClick={runCleanup}
+          disabled={cleanupLoading || loading}
+          className="h-10 rounded-xl"
+        >
+          <RiDeleteBinLine className={cn("mr-2 h-4 w-4", cleanupLoading && "animate-pulse")} />
+          Clean up
+        </Button>
+      }
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-            {/* Page title + back (desktop) */}
-            <div className="hidden lg:flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <Button asChild variant="ghost" size="sm" className="rounded-2xl text-muted-foreground hover:text-foreground">
-                  <Link href="/dashboard/admin" className="flex items-center gap-2">
-                    <RiArrowLeftLine className="w-4 h-4" />
-                    Back
-                  </Link>
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Content moderation</h1>
-                  <p className="text-sm text-muted-foreground">Review, approve, and manage platform content (live + opportunity-inactive, events-inactive, jobs-inactive, resources-inactive)</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={runCleanup}
-                  disabled={cleanupLoading || loading}
-                  className="rounded-2xl border-border"
-                >
-                  <RiDeleteBinLine className={cn("w-4 h-4 mr-2", cleanupLoading && "animate-pulse")} />
-                  Clean up
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => fetchFirstPage()} disabled={loading} className="rounded-2xl border-border">
-                  <RiRefreshLine className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
-                  Refresh
-                </Button>
-              </div>
-            </div>
 
             {error && (
               <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
@@ -1067,144 +1052,45 @@ export default function AdminContent() {
               </div>
             )}
 
-            {/* Stats — bento style, one dark "Total" card */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="rounded-2xl border border-border/80 bg-white dark:bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live</span>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                    <RiCheckboxCircleLine className="w-5 h-5 text-emerald-500" />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.live}</p>
-                <p className="text-xs text-muted-foreground mt-1">Active & approved</p>
-              </div>
-              <div className="rounded-2xl border border-border/80 bg-white dark:bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending</span>
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                    <RiTimeLine className="w-5 h-5 text-amber-500" />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
-                <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
-              </div>
-              <div className="rounded-2xl border border-border/80 bg-white dark:bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Drafts</span>
-                  <div className="w-10 h-10 rounded-xl bg-gray-500/15 flex items-center justify-center">
-                    <RiFileLine className="w-5 h-5 text-gray-500" />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">{stats.drafts}</p>
-                <p className="text-xs text-muted-foreground mt-1">Unpublished</p>
-              </div>
-              <div className="rounded-2xl bg-gradient-to-br from-orange-600 to-amber-600 p-5 shadow-lg text-white border-0">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-white/80 uppercase tracking-wider">Total</span>
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                    <RiBarChartBoxLine className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-white">{totalCount.toLocaleString()}</p>
-                <p className="text-xs text-white/80 mt-1">All content</p>
-              </div>
-            </div>
+            <AdminStatGrid className="mb-5">
+              <AdminStat label="Live" value={stats.live.toLocaleString()} hint="Active & approved" icon={RiCheckboxCircleLine} emphasis="positive" />
+              <AdminStat
+                label="Pending"
+                value={stats.pending.toLocaleString()}
+                hint="Awaiting review"
+                icon={RiTimeLine}
+                emphasis={stats.pending > 0 ? "attention" : "none"}
+              />
+              <AdminStat label="Drafts" value={stats.drafts.toLocaleString()} hint="Unpublished" icon={RiFileLine} />
+              <AdminStat label="Total" value={totalCount.toLocaleString()} hint="All content" icon={RiBarChartBoxLine} />
+            </AdminStatGrid>
 
-            {/* Search + filter system — chip-based */}
-            <div className="rounded-2xl border border-border/80 bg-white dark:bg-card p-4 sm:p-5 shadow-sm mb-6">
-              {/* Search bar — prominent */}
-              <div className="relative mb-5">
-                <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Search content by title or description..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-10 h-12 rounded-2xl border-border/80 bg-muted/30 dark:bg-muted/20 text-foreground placeholder:text-muted-foreground text-base"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
-                  >
-                    <RiCloseLine className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+            {/* One toolbar row, then the three filter dimensions as labelled chip rows */}
+            <div className="mb-5 space-y-3">
+              <AdminToolbar
+                search={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder="Search content by title or description…"
+              >
+                {hasActiveFilters ? (
+                  <Button variant="ghost" onClick={clearAllFilters} className="h-10 rounded-xl text-muted-foreground">
+                    Clear filters
+                  </Button>
+                ) : null}
+              </AdminToolbar>
 
-              {/* Filter chips */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Type</p>
-                  <div className="flex flex-wrap gap-2">
-                    {TYPE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setTypeFilter(opt.value)}
-                        className={cn(
-                          "px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                          typeFilter === opt.value
-                            ? "bg-primary text-white shadow-md"
-                            : "bg-muted/50 dark:bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Type</span>
+                  <AdminTabs value={typeFilter} onChange={setTypeFilter} options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Status</p>
-                  <div className="flex flex-wrap gap-2">
-                    {STATUS_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setStatusFilter(opt.value)}
-                        className={cn(
-                          "px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                          statusFilter === opt.value
-                            ? "bg-primary text-white shadow-md"
-                            : "bg-muted/50 dark:bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Status</span>
+                  <AdminTabs value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Payment</p>
-                    <div className="flex flex-wrap gap-2">
-                      {PAYMENT_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setPaymentFilter(opt.value)}
-                          className={cn(
-                            "px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                            paymentFilter === opt.value
-                              ? "bg-primary text-white shadow-md"
-                              : "bg-muted/50 dark:bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {hasActiveFilters && (
-                    <button
-                      type="button"
-                      onClick={clearAllFilters}
-                      className="ml-auto self-end px-4 py-2 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 border border-red-500/20 transition-colors"
-                    >
-                      Clear all
-                    </button>
-                  )}
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Payment</span>
+                  <AdminTabs value={paymentFilter} onChange={setPaymentFilter} options={PAYMENT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
                 </div>
               </div>
             </div>
@@ -1219,14 +1105,12 @@ export default function AdminContent() {
             )}
 
             {!loading && content.length === 0 && (
-              <div className="rounded-2xl border border-border/80 bg-white dark:bg-card p-16 text-center shadow-sm">
-                <div className="w-16 h-16 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <RiFileLine className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">No content found</h3>
-                <p className="text-sm text-muted-foreground mb-4">Try changing filters or search.</p>
-                <Button variant="outline" onClick={clearAllFilters} className="rounded-2xl">Clear filters</Button>
-              </div>
+              <AdminEmpty
+                title="No content found"
+                description="Try changing the filters or search."
+                icon={RiFileLine}
+                action={<Button variant="outline" onClick={clearAllFilters} className="h-10 rounded-xl">Clear filters</Button>}
+              />
             )}
 
             {/* Content list — ticket-style cards with left gradient rail */}
@@ -1237,7 +1121,7 @@ export default function AdminContent() {
                   return (
                     <article
                       key={item._id}
-                      className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-sm hover:shadow-lg transition-all flex min-h-[140px]"
+                      className="rounded-2xl border border-border/80 bg-card dark:bg-card overflow-hidden shadow-sm hover:shadow-lg transition-all flex min-h-[140px]"
                     >
                       {/* Left rail — gradient by type + icon */}
                       <div
@@ -1381,12 +1265,11 @@ export default function AdminContent() {
                 You&apos;ve reached the end · {content.length} of {totalCount} loaded
               </div>
             )}
-          </div>
-    </AdminLayout>
+    </AdminShell>
 
       {/* Review dialog */}
       <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="rounded-3xl border-border bg-white dark:bg-card shadow-2xl max-w-md">
+        <DialogContent className="rounded-3xl border-border bg-card dark:bg-card shadow-2xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">
               {reviewAction === "approve" ? "Approve content" : "Reject content"}
@@ -1436,7 +1319,7 @@ export default function AdminContent() {
 
       {/* Payment dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="rounded-3xl border-border bg-white dark:bg-card shadow-2xl max-w-md">
+        <DialogContent className="rounded-3xl border-border bg-card dark:bg-card shadow-2xl max-w-md">
           <DialogHeader>
             <DialogTitle>
               {selectedContent?.paymentStatus === "payment_uploaded" ? "Verify payment" : "Request payment"}
@@ -1477,7 +1360,7 @@ export default function AdminContent() {
 
       {/* Details dialog — full details, payment link, inline edit */}
       <Dialog open={showDetailsDialog} onOpenChange={(open) => { if (!open) setDetailsEditMode(false); setShowDetailsDialog(open); if (!open) setSelectedContent(null) }}>
-        <DialogContent className="rounded-3xl border-border bg-white dark:bg-card shadow-2xl max-w-2xl max-h-[90vh] overflow-hidden p-0 flex flex-col" aria-describedby={undefined}>
+        <DialogContent className="rounded-3xl border-border bg-card dark:bg-card shadow-2xl max-w-2xl max-h-[90vh] overflow-hidden p-0 flex flex-col" aria-describedby={undefined}>
           {selectedContent && (
             <>
               <DialogTitle className="sr-only">View: {selectedContent.title}</DialogTitle>

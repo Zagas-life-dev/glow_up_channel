@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
-import { AdminLayout } from "@/components/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -213,34 +213,12 @@ export default function MarketingEmailDesignerPage() {
   }
 
   return (
-    <AdminLayout
-      pageTitle="Marketing email"
-      pageSubtitle="Design & test"
-      PageIcon={RiMailLine}
-      backHref="/dashboard/admin"
+    <AdminShell
+      title="Marketing email"
+      description="Draft, preview, and send test versions of your email campaigns."
+      requireSuperAdmin
+      width="wide"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="hidden lg:flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Link href="/dashboard/admin" className="flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-wide">Back</span>
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Marketing email designer</h1>
-              <p className="text-sm text-muted-foreground">
-                Draft, preview, and send test versions of your email campaigns.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Editor */}
           <div className="space-y-5">
@@ -409,8 +387,7 @@ export default function MarketingEmailDesignerPage() {
             </div>
           </div>
         </div>
-      </div>
-    </AdminLayout>
+    </AdminShell>
   )
 }
 

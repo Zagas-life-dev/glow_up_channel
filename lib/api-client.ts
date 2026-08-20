@@ -1545,6 +1545,26 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Daily active users and visitors over a window, oldest day first. Backed by the
+   * `platform_daily_stats` rollup, so this returns real history rather than just today.
+   */
+  static async getDailyStats(days: number = 30): Promise<{
+    series: { date: string; activeUsers: number; visitors: number }[];
+    range: { start: string; end: string; days: number };
+    totals: {
+      activeUsers: number;
+      visitors: number;
+      peakActiveUsers: number;
+      peakVisitors: number;
+    };
+  }> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/admin/stats/daily?days=${days}`
+    );
+    return this.handleResponse(response);
+  }
+
   // Past Posts API methods
   static async getPastPostsStats(): Promise<{
     pastOpportunities: number;

@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { AdminShell } from "@/components/admin/admin-shell"
 
 interface PendingUser {
   _id: string
@@ -140,10 +141,10 @@ export default function PendingUsers() {
   const getRoleBadge = (role: string) => {
     const roleColors = {
       'opportunity_seeker': 'bg-primary/10 text-foreground',
-      'founder_batch': 'bg-purple-100 text-purple-800',
-      'opportunity_poster': 'bg-slate-100 text-slate-800',
-      'admin': 'bg-orange-100 text-orange-800',
-      'super_admin': 'bg-red-100 text-red-800'
+      'founder_batch': 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/30',
+      'opportunity_poster': 'bg-muted text-foreground',
+      'admin': 'bg-primary/10 text-primary border border-primary/30',
+      'super_admin': 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30'
     }
     
     const roleDisplay = role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -156,12 +157,12 @@ export default function PendingUsers() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
             <Clock className="w-8 h-8 text-orange-600 animate-pulse" />
           </div>
-          <p className="text-lg text-gray-600">Loading pending users...</p>
+          <p className="text-lg text-muted-foreground">Loading pending users...</p>
         </div>
       </div>
     )
@@ -169,13 +170,13 @@ export default function PendingUsers() {
 
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'super_admin')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             You need admin or super admin privileges to access this page.
           </p>
           <Button asChild>
@@ -187,34 +188,13 @@ export default function PendingUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-card border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard/admin/users">
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Back to Users
-                </Link>
-              </Button>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-8 w-8 text-orange-600" />
-                <h1 className="text-2xl font-bold text-foreground">Pending Users</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" onClick={fetchPendingUsers}>
-                <Clock className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminShell
+      title="Pending approvals"
+      description="Registrations awaiting review."
+      requireSuperAdmin
+      width="wide"
+    >
+      <div>
         {/* Filter */}
         <Card className="mb-6">
           <CardHeader>
@@ -253,7 +233,7 @@ export default function PendingUsers() {
 
         {/* Results Summary */}
         <div className="mb-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {totalCount} user{totalCount !== 1 ? 's' : ''} pending approval
           </p>
         </div>
@@ -265,34 +245,34 @@ export default function PendingUsers() {
               <div className="text-center py-12">
                 <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No pending users</h3>
-                <p className="text-gray-600">All users have been reviewed and processed.</p>
+                <p className="text-muted-foreground">All users have been reviewed and processed.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-muted/40 border-b">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         User
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Requested
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-card divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-border">
                     {pendingUsers.map((pendingUser) => (
-                      <tr key={pendingUser._id} className="hover:bg-gray-50">
+                      <tr key={pendingUser._id} className="hover:bg-muted/40">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-foreground">{pendingUser.email}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">
                               ID: {pendingUser._id}
                             </div>
                           </div>
@@ -300,7 +280,7 @@ export default function PendingUsers() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getRoleBadge(pendingUser.role)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                           {new Date(pendingUser.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -347,7 +327,7 @@ export default function PendingUsers() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex space-x-2">
@@ -385,7 +365,7 @@ export default function PendingUsers() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
+              <label className="text-sm font-medium text-foreground mb-2 block">
                 Rejection Reason
               </label>
               <Textarea
@@ -417,6 +397,6 @@ export default function PendingUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminShell>
   )
 }
