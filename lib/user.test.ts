@@ -1,3 +1,4 @@
+import { it } from 'vitest';
 import { normalizeUser, type NormalizedUser } from './user';
 import type { User, UserProfile } from './api-client';
 
@@ -72,3 +73,9 @@ export function runNormalizeUserTests(): void {
   );
 }
 
+
+// The assertions above predate a test runner and nothing called them, so they
+// had never actually executed. This is the one line that runs them.
+it('normalizeUser merges user and profile correctly', () => {
+  runNormalizeUserTests();
+});

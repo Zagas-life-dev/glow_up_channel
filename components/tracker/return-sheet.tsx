@@ -14,13 +14,12 @@
  * question into a toll, and the answer it extracts is worthless.
  */
 
-import { useState } from "react"
-import { RiArrowLeftLine } from "react-icons/ri"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useEffect, useState } from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { RiArrowLeftLine, RiCloseLine } from "react-icons/ri"
 import { useTracker } from "@/contexts/tracker-context"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
+import { scheduleBodyLockRelease } from "@/lib/dom/body-lock-guard"
 import {
   REASON_LABELS,
   REASON_OPTIONS,
@@ -53,6 +52,13 @@ function formatAway(awayMs: number | null): string | null {
 
   const days = Math.round(hours / 24)
   return `you left this ${days} day${days === 1 ? "" : "s"} ago`
+}
+
+/** The accessible name of the sheet, matching the visible heading. */
+function titleFor(entry: TrackerEntry): string {
+  if (entry.contentType === "resource") return "Did you get what you needed?"
+  if (entry.contentType === "event") return "Did you register?"
+  return "Did you get it in?"
 }
 
 function subtitleFor(entry: TrackerEntry): string {
@@ -229,7 +235,6 @@ function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
  */
 export function TrackerReturnSheet() {
   const { activeEntry, answer, dismiss } = useTracker()
-  const isMobile = useIsMobile()
 
   /**
    * The entry the sheet is currently rendering.
@@ -248,12 +253,34 @@ export function TrackerReturnSheet() {
   /**
    * Closing is driven by this prop, never by unmounting.
    *
-   * Radix and vaul both put `pointer-events: none` on the body while open and
-   * restore it on the close transition. Unmounting an open dialog skips that
-   * cleanup and leaves the whole page unclickable, which is exactly what
-   * answering the sheet used to do.
+   * Radix puts `pointer-events: none` on the body while a modal is open and
+   * releases it through ordinary effect cleanup, which runs correctly when
+   * `open` flips. Tearing the whole tree out instead skips that and leaves the
+   * page unclickable.
+   *
+   * This deliberately does NOT use vaul's Drawer for the phone layout. vaul
+   * pins the body to `position: fixed !important` on iOS and only undoes it
+   * from inside its own onOpenChange — which never fires for a parent-driven
+   * close like this one, leaving the page frozen on every iPhone. One Radix
+   * tree, restyled per breakpoint, also means no component swap at 768px that
+   * could unmount a dialog mid-open.
    */
   const open = Boolean(activeEntry)
+
+  /**
+   * Safety net for the freeze this component caused in production twice.
+   *
+   * Closing correctly is the actual fix; this only catches the case where some
+   * overlay teardown does not run on a device we cannot reproduce. It is inert
+   * whenever anything is legitimately open, and inert when the body is clean.
+   */
+  useEffect(() => {
+    if (open) return
+    return scheduleBodyLockRelease((result) => {
+      // Worth knowing about: it means a teardown path is still misbehaving.
+      console.warn("[tracker] released an orphaned body lock:", result.cleared.join(", "))
+    })
+  }, [open])
 
   if (!rendered) return null
 
@@ -277,32 +304,63 @@ export function TrackerReturnSheet() {
     if (!next && activeEntry) handleDismiss()
   }
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="border-border">
-          <DrawerTitle className="sr-only">Did you apply?</DrawerTitle>
-          <SheetBody key={entry._id} entry={entry} onAnswer={handleAnswer} onDismiss={handleDismiss} />
-        </DrawerContent>
-      </Drawer>
-    )
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "max-w-[440px] gap-0 overflow-hidden rounded-3xl p-0",
-          // The stock close button sits over the heading at this padding.
-          "[&>button]:right-4 [&>button]:top-4",
-        )}
-      >
-        <DialogTitle className="sr-only">Did you apply?</DialogTitle>
-        <div className="pt-6">
-          <SheetBody key={entry._id} entry={entry} onAnswer={handleAnswer} onDismiss={handleDismiss} />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          className={cn(
+            "fixed inset-0 z-50 bg-black/60",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          )}
+        />
+        <DialogPrimitive.Content
+          className={cn(
+            "fixed z-50 border border-border bg-card text-card-foreground shadow-2xl focus:outline-none",
+            // Phone: a bottom sheet, clear of the home indicator.
+            "inset-x-0 bottom-0 rounded-t-3xl pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+            // An exit animation is load-bearing, not decoration: Radix's Presence
+            // keeps the content mounted until it finishes, and that is what runs
+            // the effect cleanup restoring the body's pointer-events.
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=closed]:slide-out-to-bottom",
+            // Desktop: a centred dialog.
+            "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-[440px]",
+            "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:pb-0",
+            "sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95",
+            "sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:fade-out-0",
+          )}
+        >
+          <DialogPrimitive.Title className="sr-only">{titleFor(entry)}</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">
+            {entry.contentTitle
+              ? `About ${entry.contentTitle}. Your answer is private and only shapes what you get shown.`
+              : "Your answer is private and only shapes what you get shown."}
+          </DialogPrimitive.Description>
+
+          {/* Grab handle. Decorative on desktop, so it goes away there. */}
+          <div className="flex justify-center pt-2.5 sm:hidden" aria-hidden>
+            <div className="h-1 w-9 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          <DialogPrimitive.Close
+            className="absolute right-4 top-4 hidden rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:block"
+            aria-label="Ask me later"
+          >
+            <RiCloseLine className="h-4 w-4" aria-hidden />
+          </DialogPrimitive.Close>
+
+          <div className="pt-4 sm:pt-6">
+            <SheetBody
+              key={entry._id}
+              entry={entry}
+              onAnswer={handleAnswer}
+              onDismiss={handleDismiss}
+            />
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 

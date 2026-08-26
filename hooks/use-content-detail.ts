@@ -9,7 +9,7 @@
  * there is still one implementation of each.
  */
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { usePersonalizedRanking } from "@/hooks/use-personalized-ranking"
 import { fetchHomeListPage, type HomeListItem, type HomeListType } from "@/lib/fetch-home-list-page"
@@ -79,28 +79,61 @@ export function useSimilarContent(
   },
 ): HomeListItem[] {
   const [similar, setSimilar] = useState<HomeListItem[]>([])
+
   const getDeadline = options?.getDeadline
+
+  /**
+   * `item` and `getDeadline` are read through refs rather than depended on.
+   *
+   * Every caller passes the options object — and the callback inside it —
+   * as a literal, so both are new identities on every single render. With
+   * `getDeadline` in the dependency array this effect re-ran each render:
+   * fetch, setSimilar with a fresh array, re-render, fetch again. It measured
+   * ~2,300 requests in 400ms, which pins the main thread and is exactly the
+   * "wait for page to respond" hang.
+   *
+   * Telling callers to wrap it in useCallback would not be a fix — it would be
+   * a rule nobody remembers on the fourth page. The hook is responsible for
+   * being safe to call the obvious way.
+   */
+  const itemRef = useRef(item)
+  const getDeadlineRef = useRef(getDeadline)
+
+  useEffect(() => {
+    itemRef.current = item
+    getDeadlineRef.current = getDeadline
+  })
+
+  /**
+   * The dependencies that genuinely mean "fetch again": a different listing,
+   * a different type, or a changed tag set. All primitives, all stable.
+   */
+  const itemId = typeof item?._id === "string" ? item._id : null
+  const tagsKey = useMemo(() => {
+    const tags = Array.isArray(item?.tags) ? item.tags : []
+    return tags.map((tag: unknown) => String(tag).toLowerCase()).sort().join("|")
+  }, [item])
 
   useEffect(() => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
-    if (!item || !backendUrl) return
+    if (!itemId || !backendUrl) return
 
-    let cancelled = false
-    const tags = new Set(
-      (Array.isArray(item.tags) ? item.tags : []).map((tag: string) => String(tag).toLowerCase()),
-    )
     // No tags means no basis for "similar" — an untagged listing gets no list
     // rather than three arbitrary ones.
-    if (tags.size === 0) return
+    if (!tagsKey) return
+
+    let cancelled = false
+    const tags = new Set(tagsKey.split("|"))
 
     fetchHomeListPage({ type, cursorLastId: null, backendUrl })
       .then(({ items }) => {
         if (cancelled) return
+        const getRowDeadline = getDeadlineRef.current
         const matches = items
-          .filter((row) => row._id !== item._id)
+          .filter((row) => row._id !== itemId)
           .filter((row) => {
-            if (!getDeadline) return true
-            const deadline = getDeadline(row)
+            if (!getRowDeadline) return true
+            const deadline = getRowDeadline(row)
             // Undated rows stay in: for most types a missing date means
             // "rolling", not "closed".
             if (!deadline) return true
@@ -118,7 +151,18 @@ export function useSimilarContent(
           .sort((a, b) => b.overlap - a.overlap)
           .slice(0, 3)
           .map(({ row }) => row)
-        setSimilar(matches)
+
+        // Bail out when nothing changed, so an identical result cannot start
+        // another render pass.
+        setSimilar((previous) => {
+          if (
+            previous.length === matches.length &&
+            previous.every((row, i) => row._id === matches[i]._id)
+          ) {
+            return previous
+          }
+          return matches
+        })
       })
       .catch(() => {
         // A missing "similar" list is not worth surfacing as an error.
@@ -127,7 +171,7 @@ export function useSimilarContent(
     return () => {
       cancelled = true
     }
-  }, [type, item, getDeadline])
+  }, [type, itemId, tagsKey])
 
   return similar
 }

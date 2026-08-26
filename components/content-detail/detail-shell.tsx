@@ -18,11 +18,17 @@ export interface ContentDetailShellProps {
   /** The article body. */
   children: ReactNode
   /**
-   * The primary outbound button. Rendered twice — in the desktop rail and in
-   * the phone bar — because a single element cannot be in both places, and
-   * duplicating the node is cheaper than a portal.
+   * The primary outbound button. Rendered three times — once inside the
+   * article (above the body on phones, below it from `lg`), once in the desktop
+   * rail and once in the phone bar — because a single element cannot be in
+   * several places, and duplicating the node is cheaper than a portal.
    */
   action?: ReactNode
+  /**
+   * Set false to drop the in-article copy of the action, leaving only the rail
+   * and the phone bar.
+   */
+  showInlineAction?: boolean
   /** Square button beside the action, e.g. add to playlist. */
   secondaryAction?: ReactNode
   /** Caption under the rail action, e.g. "Closes 12 Sep". */
@@ -41,8 +47,10 @@ export function ContentDetailShell({
   actionNote,
   rail,
   overlays,
+  showInlineAction = true,
 }: ContentDetailShellProps) {
   const hasActionBar = Boolean(action || secondaryAction)
+  const hasInlineAction = Boolean(action) && showInlineAction
 
   return (
     <div className="min-h-screen bg-page pb-24 lg:pb-12">
@@ -51,7 +59,28 @@ export function ContentDetailShell({
 
         <div className="relative -mt-5 rounded-t-[1.75rem] bg-page pt-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8 lg:rounded-none lg:bg-transparent lg:pt-0">
           <main className="mx-auto w-full max-w-[680px] space-y-7 px-5 lg:mx-0 lg:max-w-none lg:rounded-[1.5rem] lg:border lg:border-border/70 lg:bg-card/60 lg:p-8">
+            {/* Phones get the action before the read: the pinned bottom bar can sit under
+                browser chrome or a keyboard, so the exit is offered where the eye already is. */}
+            {hasInlineAction && (
+              <div className="space-y-2 lg:hidden">
+                {action}
+                {actionNote && (
+                  <p className="text-center text-[13px] text-muted-foreground">{actionNote}</p>
+                )}
+              </div>
+            )}
+
             {children}
+
+            {/* Desktop gets it after the read instead. The rail already holds the action level
+                with the top of the article, so repeating it there is noise — the useful place
+                is the end of the page, where someone who has finished reading lands. */}
+            {hasInlineAction && (
+              <div className="hidden space-y-2 lg:block lg:max-w-sm">
+                {action}
+                {actionNote && <p className="text-[13px] text-muted-foreground">{actionNote}</p>}
+              </div>
+            )}
           </main>
 
           {/* Desktop rail: the action stays in view while the body scrolls. */}
