@@ -147,6 +147,9 @@ export const en = {
     saved: "Saved",
     save: "Save",
     addToPlaylist: "Add to list",
+    fromTeam: "From the UP team — free for every member",
+    railNote: "Every member gets the same gifts. They never show up in your feed.",
+    added: "Added",
     backToGifts: "Back to gifts",
   },
 }

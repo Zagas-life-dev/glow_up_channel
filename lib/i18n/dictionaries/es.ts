@@ -129,6 +129,9 @@ export const es: Dictionary = {
     saved: "Guardado",
     save: "Guardar",
     addToPlaylist: "Añadir a una lista",
+    fromTeam: "Del equipo de UP: gratis para todos los miembros",
+    railNote: "Todos los miembros reciben los mismos regalos. Nunca aparecen en tu feed.",
+    added: "Añadido",
     backToGifts: "Volver a los regalos",
   },
 }

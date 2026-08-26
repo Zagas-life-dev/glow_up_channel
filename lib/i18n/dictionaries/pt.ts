@@ -129,6 +129,9 @@ export const pt: Dictionary = {
     saved: "Guardado",
     save: "Guardar",
     addToPlaylist: "Adicionar a uma lista",
+    fromTeam: "Da equipa UP — grátis para todos os membros",
+    railNote: "Todos os membros recebem os mesmos presentes. Nunca aparecem no seu feed.",
+    added: "Adicionado",
     backToGifts: "Voltar aos presentes",
   },
 }

@@ -3,26 +3,33 @@
 /**
  * Admin: gifts.
  *
- * Publishing here is the notification. There is no separate "send" step — the
- * moment a gift is created, every member's next announcement check finds a gift
- * newer than their last acknowledged one and the popup fires. That is why the
- * form warns before submitting rather than after.
+ * Publishing is the notification. The moment a gift is created, every member's
+ * next announcement check finds a gift newer than their last acknowledged one
+ * and the popup fires — which is why creating confirms first.
+ *
+ * Editing deliberately does not re-announce. The popup keys off `createdAt`,
+ * which an edit leaves alone, so fixing a typo or swapping a file is silent and
+ * members who already dismissed the announcement stay dismissed.
  */
 
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import {
   RiAddLine,
+  RiCloseLine,
   RiDeleteBinLine,
+  RiEditLine,
   RiEyeLine,
   RiGiftLine,
   RiHeartLine,
   RiLoader4Line,
+  RiSaveLine,
   RiUploadCloud2Line,
 } from "react-icons/ri"
 import { AdminShell } from "@/components/admin/admin-shell"
 import { AdminCard, AdminEmpty, AdminSkeletonRows } from "@/components/admin/ui"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -57,10 +64,23 @@ const EMPTY_FORM = {
   linkUrl: "",
 }
 
+/** What the gift currently holds, for the "leave blank to keep" hints. */
+function currentFileLabel(gift: Gift): string {
+  if (gift.giftType === "link") return gift.linkUrl ?? "external link"
+  const parts = [
+    (gift.fileType ?? "file").toUpperCase(),
+    gift.pageCount ? `${gift.pageCount} ${gift.pageCount === 1 ? "page" : "pages"}` : null,
+    formatGiftSize(gift.fileSize),
+  ].filter(Boolean)
+  return parts.join(" · ")
+}
+
 export default function AdminGiftsPage() {
   const [gifts, setGifts] = useState<Gift[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  /** Null while creating; the gift being changed while editing. */
+  const [editing, setEditing] = useState<Gift | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [confirmPublish, setConfirmPublish] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Gift | null>(null)
@@ -69,6 +89,7 @@ export default function AdminGiftsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [file, setFile] = useState<File | null>(null)
   const [coverImage, setCoverImage] = useState<File | null>(null)
+  const [removeCover, setRemoveCover] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -85,62 +106,119 @@ export default function AdminGiftsPage() {
     void load()
   }, [load])
 
-  const resetForm = useCallback(() => {
+  const closeForm = useCallback(() => {
     setForm(EMPTY_FORM)
     setFile(null)
     setCoverImage(null)
+    setRemoveCover(false)
     setMode("file")
+    setEditing(null)
+    setShowForm(false)
   }, [])
 
-  /** What's wrong with the draft, or null when it's ready to publish. */
+  /** Open the form prefilled with an existing gift. */
+  const startEdit = useCallback((gift: Gift) => {
+    setEditing(gift)
+    setForm({
+      title: gift.title,
+      description: gift.description,
+      category: gift.category || "guide",
+      tags: gift.tags.join(", "),
+      linkUrl: gift.linkUrl ?? "",
+    })
+    setMode(gift.giftType)
+    setFile(null)
+    setCoverImage(null)
+    setRemoveCover(false)
+    setShowForm(true)
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [])
+
+  const startCreate = useCallback(() => {
+    setEditing(null)
+    setForm(EMPTY_FORM)
+    setFile(null)
+    setCoverImage(null)
+    setRemoveCover(false)
+    setMode("file")
+    setShowForm(true)
+  }, [])
+
+  /**
+   * What's wrong with the draft, or null when it's ready.
+   *
+   * The file and link rules differ between create and edit: on an edit the gift
+   * already has content, so leaving both blank means "keep what's there".
+   */
   const validationError = (): string | null => {
     if (!form.title.trim()) return "Give the gift a title."
     if (!form.description.trim()) return "Add a description — it shows in the popup."
-    if (mode === "file" && !file) return "Choose the file to give away."
-    if (mode === "link" && !/^https?:\/\//i.test(form.linkUrl.trim())) {
-      return "The link must start with http:// or https://"
+
+    if (mode === "link") {
+      const url = form.linkUrl.trim()
+      // A link gift always needs a URL; switching a file gift to a link needs one too.
+      if (!/^https?:\/\//i.test(url)) return "The link must start with http:// or https://"
+      return null
+    }
+
+    // File mode. A new gift must carry a file; an edit may keep its existing one,
+    // but a gift being converted from a link has nothing to fall back on.
+    if (!file) {
+      if (!editing) return "Choose the file to give away."
+      if (editing.giftType === "link") return "Upload a file, or switch back to External link."
     }
     return null
   }
 
-  const handlePublishClick = () => {
+  const handleSubmit = () => {
     const error = validationError()
     if (error) {
       toast.error(error)
       return
     }
-    setConfirmPublish(true)
+    // Creating notifies everybody, so it confirms. Editing is silent — no gate.
+    if (editing) void save()
+    else setConfirmPublish(true)
   }
 
-  const publish = async () => {
+  const save = async () => {
     setConfirmPublish(false)
     setSubmitting(true)
+
+    // Shared between create and edit. In file mode `file` may be null on an
+    // edit, which the API reads as "keep the existing document".
+    const draft = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      category: form.category,
+      tags: form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      ...(mode === "link" ? { linkUrl: form.linkUrl.trim() } : { file }),
+      coverImage,
+    }
+
     try {
-      await createGift({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category: form.category,
-        tags: form.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
-        ...(mode === "link" ? { linkUrl: form.linkUrl.trim() } : { file }),
-        coverImage,
-      })
-      toast.success("Gift published — every member will be notified")
-      resetForm()
-      setShowForm(false)
+      if (editing) {
+        await updateGift(editing._id, { ...draft, removeCoverImage: removeCover })
+        toast.success("Gift updated — members were not re-notified")
+      } else {
+        await createGift(draft)
+        toast.success("Gift published — every member will be notified")
+      }
+      closeForm()
       await load()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Couldn't publish that gift")
+      toast.error(error instanceof Error ? error.message : "Couldn't save that gift")
     } finally {
       setSubmitting(false)
     }
   }
 
   /**
-   * Toggling a gift off hides it everywhere and stops it being announced;
-   * it does not re-announce when switched back on, because members who already
+   * Toggling a gift off hides it everywhere and stops it being announced; it
+   * does not re-announce when switched back on, because members who already
    * acknowledged a newer gift have moved past it.
    */
   const toggleActive = async (gift: Gift) => {
@@ -161,35 +239,46 @@ export default function AdminGiftsPage() {
     try {
       await deleteGift(target._id)
       setGifts((prev) => prev.filter((g) => g._id !== target._id))
+      if (editing?._id === target._id) closeForm()
       toast.success("Gift deleted")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't delete that gift")
     }
   }
 
+  const isEdit = editing !== null
+
   return (
     <AdminShell
       title="Gifts"
-      description="Free resources handed to every member. Publishing one notifies everybody."
+      description="Free resources handed to every member. Publishing one notifies everybody; editing one does not."
       width="wide"
       onRefresh={load}
       refreshing={loading}
       actions={
         <Button
           type="button"
-          onClick={() => setShowForm((open) => !open)}
+          onClick={() => (showForm ? closeForm() : startCreate())}
           className="rounded-xl"
         >
-          <RiAddLine className="mr-1.5 h-4 w-4" aria-hidden />
+          {showForm ? (
+            <RiCloseLine className="mr-1.5 h-4 w-4" aria-hidden />
+          ) : (
+            <RiAddLine className="mr-1.5 h-4 w-4" aria-hidden />
+          )}
           {showForm ? "Close" : "Add gift"}
         </Button>
       }
     >
       {showForm && (
         <AdminCard className="mb-6 p-5">
-          <h2 className="mb-1 text-sm font-semibold text-foreground">New gift</h2>
+          <h2 className="mb-1 text-sm font-semibold text-foreground">
+            {isEdit ? `Edit "${editing.title}"` : "New gift"}
+          </h2>
           <p className="mb-5 text-xs text-muted-foreground">
-            Every member gets a popup with the title, description, and cover art below.
+            {isEdit
+              ? "Changes go live immediately. Nobody is notified again — the announcement already went out when this gift was published."
+              : "Every member gets a popup with the title, description, and cover art below."}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -271,11 +360,26 @@ export default function AdminGiftsPage() {
                   External link
                 </Button>
               </div>
+              {isEdit && mode !== editing.giftType && (
+                <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-500">
+                  {mode === "link"
+                    ? "Switching to a link deletes the uploaded file permanently."
+                    : "Switching to a file replaces the link."}
+                </p>
+              )}
             </div>
 
             {mode === "file" ? (
               <div className="sm:col-span-2">
-                <Label htmlFor="gift-file">File *</Label>
+                <Label htmlFor="gift-file">
+                  File {isEdit && editing.giftType === "file" ? "" : "*"}
+                </Label>
+                {isEdit && editing.giftType === "file" && (
+                  <p className="mb-1.5 mt-1 text-[11px] text-muted-foreground">
+                    Currently: <span className="font-medium text-foreground">{currentFileLabel(editing)}</span>.
+                    Leave blank to keep it.
+                  </p>
+                )}
                 <Input
                   id="gift-file"
                   type="file"
@@ -303,35 +407,58 @@ export default function AdminGiftsPage() {
 
             <div className="sm:col-span-2">
               <Label htmlFor="gift-cover">Cover image</Label>
+              {isEdit && editing.image && (
+                <div className="mb-2 mt-1.5 flex items-center gap-3">
+                  <img
+                    src={editing.image}
+                    alt="Current cover"
+                    className="h-12 w-12 rounded-lg object-cover"
+                  />
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={removeCover}
+                      onCheckedChange={(checked) => {
+                        const next = checked === true
+                        setRemoveCover(next)
+                        // Removing and replacing are mutually exclusive.
+                        if (next) setCoverImage(null)
+                      }}
+                    />
+                    Remove current cover
+                  </label>
+                </div>
+              )}
               <Input
                 id="gift-cover"
                 type="file"
                 accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
+                disabled={removeCover}
                 onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
                 className="mt-1.5"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Optional. Shown in the popup and on the gift card; a gift mark is used without one.
+                {isEdit
+                  ? "Optional. Leave blank to keep the current one."
+                  : "Optional. Shown in the popup and on the gift card; a gift mark is used without one."}
               </p>
             </div>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button type="button" onClick={handlePublishClick} disabled={submitting} className="rounded-xl">
+            <Button type="button" onClick={handleSubmit} disabled={submitting} className="rounded-xl">
               {submitting ? (
                 <RiLoader4Line className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />
+              ) : isEdit ? (
+                <RiSaveLine className="mr-1.5 h-4 w-4" aria-hidden />
               ) : (
                 <RiUploadCloud2Line className="mr-1.5 h-4 w-4" aria-hidden />
               )}
-              Publish and notify everyone
+              {isEdit ? "Save changes" : "Publish and notify everyone"}
             </Button>
             <Button
               type="button"
               variant="ghost"
-              onClick={() => {
-                resetForm()
-                setShowForm(false)
-              }}
+              onClick={closeForm}
               disabled={submitting}
               className="rounded-xl"
             >
@@ -349,7 +476,7 @@ export default function AdminGiftsPage() {
           title="No gifts yet"
           description="Publish one and every member gets a popup announcing it."
           action={
-            <Button type="button" onClick={() => setShowForm(true)} className="rounded-xl">
+            <Button type="button" onClick={startCreate} className="rounded-xl">
               <RiAddLine className="mr-1.5 h-4 w-4" aria-hidden />
               Add gift
             </Button>
@@ -358,7 +485,12 @@ export default function AdminGiftsPage() {
       ) : (
         <div className="space-y-2">
           {gifts.map((gift) => (
-            <AdminCard key={gift._id} className="flex flex-wrap items-center gap-4 p-4">
+            <AdminCard
+              key={gift._id}
+              className={`flex flex-wrap items-center gap-4 p-4 ${
+                editing?._id === gift._id ? "ring-2 ring-primary/40" : ""
+              }`}
+            >
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
                 {gift.image ? (
                   <img src={gift.image} alt="" className="h-full w-full object-cover" />
@@ -377,6 +509,9 @@ export default function AdminGiftsPage() {
                   <span>{gift.giftType === "link" ? "Link" : (gift.fileType ?? "file").toUpperCase()}</span>
                   {formatGiftSize(gift.fileSize) && <span>{formatGiftSize(gift.fileSize)}</span>}
                   <span>{new Date(gift.createdAt).toLocaleDateString()}</span>
+                  {gift.updatedAt !== gift.createdAt && (
+                    <span>edited {new Date(gift.updatedAt).toLocaleDateString()}</span>
+                  )}
                 </div>
               </div>
 
@@ -391,11 +526,21 @@ export default function AdminGiftsPage() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Switch checked={gift.isActive} onCheckedChange={() => toggleActive(gift)} />
                   {gift.isActive ? "Live" : "Hidden"}
                 </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Edit ${gift.title}`}
+                  onClick={() => startEdit(gift)}
+                  className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
+                >
+                  <RiEditLine className="h-4 w-4" />
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -423,7 +568,7 @@ export default function AdminGiftsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={publish}>Publish</AlertDialogAction>
+            <AlertDialogAction onClick={save}>Publish</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

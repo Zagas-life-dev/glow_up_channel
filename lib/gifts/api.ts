@@ -145,6 +145,8 @@ function draftToFormData(draft: Partial<GiftDraft>): FormData {
   if (draft.linkUrl) form.append("linkUrl", draft.linkUrl)
   if (draft.file) form.append("file", draft.file)
   if (draft.coverImage) form.append("coverImage", draft.coverImage)
+  // Only sent when true: the backend treats an absent flag as "keep the cover".
+  if (draft.removeCoverImage) form.append("removeCoverImage", "true")
   return form
 }
 
@@ -166,6 +168,10 @@ export async function createGift(draft: GiftDraft): Promise<Gift> {
   return data.gift
 }
 
+/**
+ * Edit a published gift. Does not re-announce — the popup keys off createdAt,
+ * which an edit leaves alone.
+ */
 export async function updateGift(id: string, draft: Partial<GiftDraft>): Promise<Gift> {
   const response = await ApiClient.makeAuthenticatedFormRequest(
     `${API_BASE_URL}/api/gifts/${id}`,

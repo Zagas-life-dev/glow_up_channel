@@ -68,7 +68,13 @@ export interface GiftListPage {
   }
 }
 
-/** Fields the admin form submits. `file` and `linkUrl` are mutually exclusive. */
+/**
+ * Fields the admin form submits. `file` and `linkUrl` are mutually exclusive.
+ *
+ * On an edit, every field is optional and omitting one leaves it untouched —
+ * which is why removing a cover image needs its own flag rather than sending an
+ * empty `coverImage`.
+ */
 export interface GiftDraft {
   title: string
   description: string
@@ -77,6 +83,8 @@ export interface GiftDraft {
   linkUrl?: string
   file?: File | null
   coverImage?: File | null
+  /** Explicitly clear the existing cover image. */
+  removeCoverImage?: boolean
   isActive?: boolean
 }
 

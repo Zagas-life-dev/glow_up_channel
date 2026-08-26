@@ -130,6 +130,9 @@ export const fr: Dictionary = {
     saved: "Enregistré",
     save: "Enregistrer",
     addToPlaylist: "Ajouter à une liste",
+    fromTeam: "De l'équipe UP — gratuit pour tous les membres",
+    railNote: "Tous les membres reçoivent les mêmes cadeaux. Ils n'apparaissent jamais dans votre fil.",
+    added: "Ajouté le",
     backToGifts: "Retour aux cadeaux",
   },
 }
