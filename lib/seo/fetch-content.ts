@@ -30,14 +30,27 @@ function backendBase(): string | null {
   return process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || null
 }
 
+/**
+ * Fetch with one retry.
+ *
+ * A single blip here used to cost a whole content type: `crawlList` stops on a
+ * null page and the empty result is then cached for an hour, so one slow
+ * response silently removes every URL of that type from the sitemap. Retrying
+ * once makes that far less likely, and the warning below makes it visible when
+ * it still happens.
+ */
 async function fetchJson<T>(url: string, revalidate: number): Promise<T | null> {
-  try {
-    const res = await fetch(url, { next: { revalidate } })
-    if (!res.ok) return null
-    return (await res.json()) as T
-  } catch {
-    return null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, { next: { revalidate } })
+      if (res.ok) return (await res.json()) as T
+      // 4xx will not fix itself on a retry; 5xx and network errors might.
+      if (res.status < 500) return null
+    } catch {
+      // fall through to the retry
+    }
   }
+  return null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -112,7 +125,14 @@ async function crawlList(path: string, key: string): Promise<SitemapItem[]> {
       `${base}/api/${path}?${params.toString()}`,
       SITEMAP_REVALIDATE_SEC,
     )
-    if (!json?.success) break
+    if (!json?.success) {
+      // Surfaces in the deploy logs; the alternative is a silently short sitemap.
+      console.warn(
+        `[sitemap] ${path}: list request failed after ${items.length} items; ` +
+          `the sitemap will be incomplete for this type.`,
+      )
+      break
+    }
 
     const docs = json.data?.[key]
     if (!Array.isArray(docs) || docs.length === 0) break
@@ -132,6 +152,10 @@ async function crawlList(path: string, key: string): Promise<SitemapItem[]> {
     if (!pagination?.hasMore || !pagination.lastId) break
     if (pagination.lastId === lastId) break // defensive: never loop forever
     lastId = pagination.lastId
+  }
+
+  if (items.length === 0) {
+    console.warn(`[sitemap] ${path}: no items collected.`)
   }
 
   return items.slice(0, SITEMAP_MAX_ITEMS)

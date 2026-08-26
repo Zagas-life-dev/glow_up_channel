@@ -78,6 +78,8 @@ export function transformOnboardingData(formData: any) {
     fieldOfStudy: formData.fieldOfStudy || undefined,
     institution: formData.institution || undefined,
     skills: formData.skills || [],
+    // Collected on its own step now, stored E.164 (dial code + national digits, no trunk zero).
+    phoneNumber: formData.phoneNumber || undefined,
     aspirations: (formData.aspirations || []).map((aspiration: string) => 
       aspirationsMap[aspiration] || aspiration
     )
@@ -90,6 +92,8 @@ export function validateOnboardingData(data: any): { isValid: boolean; errors: s
 
   if (!data.country) errors.push('Country is required');
   if (!data.province) errors.push('Province/State is required');
+  if (!data.phoneNumber) errors.push('Phone number is required');
+  if (!data.skills || data.skills.length === 0) errors.push('At least one skill is required');
   if (!data.careerStage) errors.push('Career stage is required');
   if (!data.interests || data.interests.length === 0) errors.push('At least one interest is required');
   if (!data.industrySectors || data.industrySectors.length === 0) errors.push('At least one industry sector is required');

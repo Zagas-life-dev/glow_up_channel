@@ -1,66 +1,81 @@
 'use client'
 
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { RiCloseLine } from 'react-icons/ri'
+
 import SkillsInput from '@/components/ui/skills-input'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { RiStarLine } from 'react-icons/ri'
+import { StepField, StepHeader, StepPayoff } from './step-shell'
+
+const POPULAR = ['JavaScript', 'Python', 'React', 'Project Management', 'Communication', 'Leadership']
 
 interface SkillsStepProps {
   onSubmit: (data: { skills: string[] }) => void
   initialData?: any
+  onValidityChange?: (valid: boolean) => void
 }
 
-const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData }, ref) => {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(initialData?.skills || [])
+const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData, onValidityChange }, ref) => {
+  const [skills, setSkills] = useState<string[]>(initialData?.skills || [])
+
+  const isValid = skills.length >= 1
+
+  useEffect(() => {
+    onValidityChange?.(isValid)
+  }, [isValid, onValidityChange])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
-      onSubmit({ skills: selectedSkills })
-    }
+      if (!isValid) return
+      onSubmit({ skills })
+    },
   }))
 
+  const addSkill = (skill: string) => {
+    setSkills((prev) => (prev.includes(skill) ? prev : [...prev, skill]))
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="flex items-center justify-center mb-4">
-          <RiStarLine className="h-8 w-8 text-orange-500 mr-2" />
-          <h3 className="text-2xl font-semibold text-foreground">What are your current skills?</h3>
-        </div>
-        <p className="text-gray-600 mb-2">Type your skills and we'll help you find the right ones.</p>
-        <div className="flex items-center justify-center text-sm text-gray-500">
-          <FlaticonIcon name="lightbulb" className="h-4 w-4 mr-1" aria-hidden />
-          <span>Press Enter to add a skill, or click on suggestions</span>
-        </div>
-      </div>
+    <div>
+      <StepHeader
+        title="What can you do?"
+        description="Skills are matched against listing requirements directly. Add at least one."
+      />
 
-      <div className="max-w-2xl mx-auto">
-        <SkillsInput
-          value={selectedSkills}
-          onChange={setSelectedSkills}
-          placeholder="Start typing your skills..."
-          maxSkills={15}
-        />
-      </div>
+      <div className="space-y-5">
+        <StepField label="Your skills">
+          <SkillsInput
+            value={skills}
+            onChange={setSkills}
+            placeholder="Start typing a skill…"
+            maxSkills={15}
+          />
+        </StepField>
 
-      {/* Popular Skills Quick Add */}
-      {selectedSkills.length === 0 && (
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-4">
-            <p className="text-sm text-gray-500 mb-3">Popular skills to get you started:</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {["JavaScript", "Python", "React", "Project Management", "Communication", "Leadership"].map(skill => (
+        {/* Suggestions stay available after the first skill — the old step hid them once you
+            had one, which is exactly when people are still thinking of more. */}
+        {skills.length < 15 && (
+          <StepField label="Common ones" optional>
+            <div className="flex flex-wrap gap-2">
+              {POPULAR.filter((skill) => !skills.includes(skill)).map((skill) => (
                 <button
                   key={skill}
-                  onClick={() => setSelectedSkills(prev => [...prev, skill])}
-                  className="px-3 py-1 text-xs bg-gray-100 hover:bg-orange-100 text-gray-700 hover:text-orange-700 rounded-full transition-colors"
+                  type="button"
+                  onClick={() => addSkill(skill)}
+                  className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                 >
                   + {skill}
                 </button>
               ))}
             </div>
-          </div>
-        </div>
-      )}
+          </StepField>
+        )}
+
+        <StepPayoff value={skills.length ? String(skills.length) : undefined}>
+          {skills.length
+            ? 'skills on file. Listings that ask for them will rank higher for you.'
+            : 'Add at least one skill to continue.'}
+        </StepPayoff>
+      </div>
     </div>
   )
 })

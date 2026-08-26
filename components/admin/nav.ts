@@ -13,6 +13,7 @@ import {
   RiBarChartBoxLine,
   RiMailSendLine,
   RiSettings3Line,
+  RiGiftLine,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -45,6 +46,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Moderation", href: "/dashboard/admin/content", icon: RiFileTextLine },
       { label: "Create content", href: "/dashboard/admin/create-content", icon: RiAddCircleLine },
+      { label: "Gifts", href: "/dashboard/admin/gifts", icon: RiGiftLine },
       { label: "Past posts", href: "/dashboard/admin/past-posts", icon: RiArchiveLine },
       { label: "Work with us", href: "/dashboard/admin/work-with-us", icon: RiInboxUnarchiveLine },
     ],

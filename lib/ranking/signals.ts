@@ -16,6 +16,7 @@ import {
 } from "@/lib/nlp/detect-language"
 import type { TextProfile } from "@/lib/nlp/profile-text"
 import { semanticSimilarity } from "@/lib/nlp/similarity"
+import type { TrackerHistory } from "@/lib/tracker/history"
 import type { SignalValue } from "@/lib/ranking/types"
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -270,4 +271,78 @@ export function baseScoreSignal(item: Record<string, unknown>): SignalValue {
   const score = item.score
   if (typeof score !== "number" || !Number.isFinite(score)) return null
   return Math.max(0, Math.min(1, score / 100))
+}
+
+/**
+ * What this person actually did, last time they met something like this.
+ *
+ * The only signal here built from first-party outcome data rather than a guess.
+ * Everything else scores what a listing *looks* like; this scores what the user
+ * did about it when they last had the chance.
+ *
+ * Returns `null` — costing nothing, per the drop-don't-zero rule — whenever
+ * there is no history bearing on the item. Most users start there and earn the
+ * signal one answer at a time.
+ */
+export function historySignal(
+  history: TrackerHistory | undefined,
+  item: Record<string, unknown>,
+): SignalValue {
+  if (!history || history.size === 0) return null
+
+  const id = firstString(item._id, item.id)
+  const own = id ? history.byContentId.get(id) : undefined
+
+  if (own) {
+    switch (own) {
+      // They meant to finish this and did not. Re-surfacing it is the single
+      // most useful thing the feed can do with a tracker answer.
+      case "started":
+        return 0.95
+
+      // They said no. Scored to the floor rather than filtered out — the user
+      // asked for a preference, not a blocklist, and a hard filter would make
+      // one tap permanently invisible in a way they never agreed to.
+      case "not_for_me":
+      case "not_useful":
+        return 0
+
+      // Already dealt with. Not a rejection, but there is no value in pushing
+      // it back up a feed they have already acted on.
+      case "submitted":
+      case "accepted":
+      case "declined":
+      case "no_response":
+      case "used":
+        return 0.1
+
+      // Asked and never answered. No verdict to apply, so fall through to the
+      // category and provider affinities below.
+      default:
+        break
+    }
+  }
+
+  const category = firstString(item.category, item.type)?.trim().toLowerCase()
+  const provider = firstString(
+    item.organization,
+    item.provider,
+    item.company,
+  )?.trim().toLowerCase()
+
+  const parts: number[] = []
+  if (category) {
+    const value = history.byCategory.get(category)
+    if (value !== undefined) parts.push(value)
+  }
+  if (provider) {
+    const value = history.byProvider.get(provider)
+    if (value !== undefined) parts.push(value)
+  }
+
+  if (parts.length === 0) return null
+
+  // Affinities run -1..1; the signal scale is 0..1, with 0.5 as "no opinion".
+  const mean = parts.reduce((sum, value) => sum + value, 0) / parts.length
+  return Math.max(0, Math.min(1, (mean + 1) / 2))
 }

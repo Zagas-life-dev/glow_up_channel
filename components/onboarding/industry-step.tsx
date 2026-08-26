@@ -1,67 +1,53 @@
 'use client'
 
-import { useState, forwardRef, useImperativeHandle } from 'react'
-import { Button } from '@/components/ui/button'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { cn } from '@/lib/utils'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
-const industriesList = [
-  "Technology",
-  "Creative Arts & Media",
-  "Business & Finance",
-  "Healthcare & Sciences",
-  "Education & Training",
-  "Government & Public Service"
-]
+import { OptionGrid, StepHeader, StepPayoff } from './step-shell'
 
-interface IndustryStepProps {
+const OPTIONS = [
+  { value: "Technology", label: "Technology" },
+  { value: "Creative Arts & Media", label: "Creative Arts & Media" },
+  { value: "Business & Finance", label: "Business & Finance" },
+  { value: "Healthcare & Sciences", label: "Healthcare & Sciences" },
+  { value: "Education & Training", label: "Education & Training" },
+  { value: "Government & Public Service", label: "Government & Public Service" },
+] as const
+
+interface Props {
   onSubmit: (data: { industrySectors: string[] }) => void
   initialData?: any
+  onValidityChange?: (valid: boolean) => void
 }
 
-const IndustryStep = forwardRef<any, IndustryStepProps>(({ onSubmit, initialData }, ref) => {
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialData?.industrySectors || [])
+const IndustryStep = forwardRef<any, Props>(({ onSubmit, initialData, onValidityChange }, ref) => {
+  const [selected, setSelected] = useState<string[]>(initialData?.industrySectors || [])
 
-  const toggleIndustry = (industry: string) => {
-    setSelectedIndustries(prev =>
-      prev.includes(industry)
-        ? prev.filter(item => item !== industry)
-        : [...prev, industry]
-    )
-  }
+  const isValid = selected.length >= 1
+
+  useEffect(() => {
+    onValidityChange?.(isValid)
+  }, [isValid, onValidityChange])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
-      onSubmit({ industrySectors: selectedIndustries })
-    }
+      if (!isValid) return
+      onSubmit({ industrySectors: selected })
+    },
   }))
 
+  const toggle = (value: string) =>
+    setSelected((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-semibold text-foreground">What industry are you in or interested in?</h3>
-        <p className="mt-2 text-gray-600">This helps us recommend relevant content.</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {industriesList.map(industry => (
-          <button
-            key={industry}
-            onClick={() => toggleIndustry(industry)}
-            className={cn(
-              "relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200",
-              selectedIndustries.includes(industry)
-                ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                : "bg-card hover:bg-gray-50 border-gray-200 text-gray-700"
-            )}
-          >
-            {selectedIndustries.includes(industry) && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-foreground rounded-full flex items-center justify-center">
-                <FlaticonIcon name="check" className="h-3 w-3" aria-hidden />
-              </div>
-            )}
-            {industry}
-          </button>
-        ))}
+    <div>
+      <StepHeader title={'Which industries?'} description={'We use this to filter out the listings that were never meant for you.'} />
+
+      <div className="space-y-5">
+        <OptionGrid options={OPTIONS} selected={selected} onToggle={toggle} columns={2} />
+
+        <StepPayoff value={selected.length ? String(selected.length) : undefined}>
+          {selected.length ? 'sectors selected. Everything else drops down your feed.' : 'Pick at least one to continue.'}
+        </StepPayoff>
       </div>
     </div>
   )
@@ -69,4 +55,4 @@ const IndustryStep = forwardRef<any, IndustryStepProps>(({ onSubmit, initialData
 
 IndustryStep.displayName = 'IndustryStep'
 
-export default IndustryStep 
+export default IndustryStep

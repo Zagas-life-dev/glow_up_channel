@@ -18,6 +18,9 @@ import { getSiteUrl } from "@/lib/site-url"
 /** Paths that must never be indexed, regardless of crawler. */
 const PRIVATE_PATHS = [
   "/dashboard/",
+  // Google has an /admin/login result indexed from before this rule existed.
+  "/admin/",
+  "/admin",
   "/api/",
   "/login",
   "/signup",
@@ -29,6 +32,10 @@ const PRIVATE_PATHS = [
   "/under-construction",
   "/promotions-demo",
   "/profile/settings",
+  // Gifts are members-only. The route also sends noindex headers; this keeps
+  // crawlers from spending requests on a subtree they can only get a sign-in
+  // wall from.
+  "/gifts",
 ]
 
 /**

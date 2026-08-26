@@ -27,6 +27,10 @@ export const DEFAULT_WEIGHTS: Weights = {
   urgency: 0.12,
   freshness: 0.1,
   engagement: 0.08,
+  // The only signal built from what this person actually did rather than what
+  // a listing looks like. Weighted above engagement — which is everyone else's
+  // behaviour — but below meaning and place, which still decide most of a feed.
+  history: 0.16,
   baseScore: 0.06,
 }
 

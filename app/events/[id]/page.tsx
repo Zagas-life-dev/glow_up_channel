@@ -1,43 +1,111 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
-  RiArrowLeftLine,
   RiExternalLinkLine,
   RiCalendarLine,
-  RiMapPinLine,
   RiTimeLine,
-  RiMoneyDollarCircleLine,
   RiGroupLine,
   RiCheckboxCircleLine,
-  RiFileLine,
+  RiAddLine,
 } from 'react-icons/ri'
+import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
-import AuthGuard from '@/components/auth-guard'
+import AddToPlaylistModal from '@/components/add-to-playlist-modal'
+import { DetailHero } from '@/components/content-detail/detail-hero'
+import { ContentDetailShell } from '@/components/content-detail/detail-shell'
+import {
+  DetailProse,
+  DetailSection,
+  Fact,
+  FactList,
+  SimilarList,
+  TagRow,
+  WhyCard,
+} from '@/components/content-detail/sections'
+import {
+  composeTiles,
+  deadlineTile,
+  formatDate,
+  formatShortDate,
+  locationLine,
+  applyHost,
+  type StatTile,
+} from '@/lib/content-detail/format'
+import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { toast } from 'sonner'
 import { trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
+import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type EventPageProps = { params: Promise<{ id: string }> }
 
+const ACCENT_ICON = 'text-emerald-500'
+
+/** The registration deadline, or the start date when there is no separate one. */
+function closingDate(event: any): string | undefined {
+  return event?.dates?.registrationDeadline || event?.dates?.startDate || undefined
+}
+
+/**
+ * The three numbers worth reading before anything else.
+ *
+ * Built only from what the listing actually carries, so a sparse scraped record
+ * renders fewer tiles rather than confident-looking guesses.
+ */
+function buildStatTiles(event: any): StatTile[] {
+  const optional: StatTile[] = []
+
+  if (event.dates?.startDate) {
+    optional.push({ label: 'Starts', value: formatShortDate(event.dates.startDate) })
+  }
+
+  const place = locationLine(event.location)
+  if (place) optional.push({ label: 'Where', value: place })
+
+  if (event.isPaid && event.price) {
+    optional.push({ label: 'Price', value: `${event.currency || 'NGN'} ${event.price}` })
+  } else if (event.isPaid === false || (!event.isPaid && !event.price)) {
+    optional.push({ label: 'Price', value: 'Free' })
+  }
+
+  const spots = event.capacity?.maxAttendees
+  if (typeof spots === 'number' && spots > 0) {
+    optional.push({ label: 'Spots', value: String(spots) })
+  }
+
+  return composeTiles(optional, deadlineTile(closingDate(event)))
+}
+
 function EventPageContent({ params }: EventPageProps) {
-  const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
+  const tracker = useOptionalTracker()
+
+  /**
+   * Shared by the rail and phone-bar register buttons.
+   *
+   * Registering is an exit like any other, so it arms the tracker too — the
+   * question on the way back just becomes "did you register?" rather than
+   * "did you get it in?".
+   */
+  const handleRegisterClick = useCallback(() => {
+    ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})
+    void tracker?.startTracking('event', id, 'register_button')
+  }, [id, tracker])
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
@@ -66,6 +134,24 @@ function EventPageContent({ params }: EventPageProps) {
     ApiClient.recordPromotionClick(id, 'event', 'view').catch(() => {})
   }, [isAuthenticated, id, event])
 
+  const { reasons, glow, personalised } = useContentRanking(event)
+  const similar = useSimilarContent('events', event, { getDeadline: (row) => closingDate(row) })
+
+  const handleShare = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event?.title ?? 'Event', url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied')
+      }
+    } catch {
+      // dismissed or clipboard denied — nothing to report
+    }
+  }, [event])
+
   if (loading) return <ContentDetailSkeleton />
   if (error || !event) {
     return (
@@ -75,204 +161,292 @@ function EventPageContent({ params }: EventPageProps) {
     )
   }
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
-
-  const getLocationString = () => {
-    if (!event.location) return 'Location TBD'
-    if (typeof event.location === 'string') return event.location
-    if (event.location.isRemote) return 'Remote'
-    const parts = [event.location.city, event.location.country].filter(Boolean)
-    return parts.join(', ') || 'Location TBD'
-  }
+  const registrationUrl =
+    event.url || event.registrationLink || event.externalUrl || event.externalLink
 
   const isRegistrationOpen = () => {
     if (!event.dates?.registrationDeadline) return true
     return new Date(event.dates.registrationDeadline) > new Date()
   }
 
-  const metaParts = []
-  if (event.dates?.startDate) metaParts.push(formatDate(event.dates.startDate))
-  if (event.location) metaParts.push(getLocationString())
-  metaParts.push(event.isPaid ? 'Paid' : 'Free')
-  const metaLine = metaParts.join(' · ')
+  const registrationOpen = isRegistrationOpen()
+  const host = applyHost(registrationUrl)
+  const place = locationLine(event.location)
+
+  const eyebrow = [
+    String(event.category || 'Event'),
+    event.dates?.startDate ? `Starts ${formatShortDate(event.dates.startDate)}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const subtitle = [event.organizer, place].filter(Boolean).join(' · ')
+  const tiles = buildStatTiles(event)
+
+  const registerButton = !registrationUrl ? (
+    <p className="py-4 text-center text-sm text-muted-foreground">
+      No registration link on this listing yet.
+    </p>
+  ) : !registrationOpen ? (
+    <p className="py-4 text-center text-sm text-muted-foreground">
+      Registration closed {formatDate(event.dates.registrationDeadline)}.
+    </p>
+  ) : !isAuthenticated ? (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`}>
+        Sign in to register
+        <RiExternalLinkLine className="h-4 w-4" aria-hidden />
+      </Link>
+    </Button>
+  ) : (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <a
+        href={cleanUrl(registrationUrl)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleRegisterClick}
+      >
+        <span className="truncate">{host ? `Register on ${host}` : 'Register'}</span>
+        <RiExternalLinkLine className="h-4 w-4 flex-shrink-0" aria-hidden />
+      </a>
+    </Button>
+  )
+
+  const addToPlaylistButton = isAuthenticated ? (
+    <button
+      type="button"
+      onClick={() => setShowPlaylistModal(true)}
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      aria-label="Add to a playlist"
+    >
+      <RiAddLine className="h-5 w-5" aria-hidden />
+    </button>
+  ) : null
+
+  const similarRows = similar.map((row) => {
+    const rowAny = row as any
+    const starts = rowAny.dates?.startDate
+    return {
+      _id: row._id,
+      title: String(rowAny.title ?? 'Untitled'),
+      meta: starts ? `starts ${formatShortDate(starts)}` : null,
+    }
+  })
 
   return (
-    <div className="min-h-screen bg-page pb-28">
-      <header className="sticky top-0 z-30 bg-page/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <RiArrowLeftLine className="h-5 w-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-foreground">Event</span>
-          <div className="w-9" />
-        </div>
-      </header>
-
-      <main className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 border-x border-border min-h-screen xl:grid xl:grid-cols-[1fr_320px] xl:gap-12 2xl:gap-16">
-        <div className="min-w-0">
-        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center flex-shrink-0">
-            <RiCalendarLine className="w-6 h-6 text-white" />
+    <ContentDetailShell
+      hero={
+        <DetailHero
+          eyebrow={eyebrow}
+          title={event.title}
+          subtitle={subtitle}
+          tiles={tiles}
+          accent="emerald"
+          onShare={handleShare}
+        />
+      }
+      action={registerButton}
+      secondaryAction={addToPlaylistButton}
+      actionNote={
+        event.dates?.registrationDeadline && registrationOpen
+          ? `Registration closes ${formatDate(event.dates.registrationDeadline)}`
+          : null
+      }
+      rail={
+        similarRows.length > 0 ? (
+          <div className="rounded-[1.5rem] border border-border/70 bg-card/60 p-5">
+            <SimilarList items={similarRows} basePath="/events" label="Similar, also open" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-foreground truncate">{event.organizer || 'Event Organizer'}</p>
-            <p className="text-[13px] text-muted-foreground">Event</p>
-          </div>
-        </div>
+        ) : null
+      }
+      overlays={
+        <>
+          <AddToPlaylistModal
+            isOpen={showPlaylistModal}
+            onClose={() => setShowPlaylistModal(false)}
+            item={{
+              _id: event._id,
+              title: event.title,
+              type: 'event',
+              organization: event.organizer,
+              description: event.description,
+            }}
+            onItemAddedToPlaylist={() => {
+              void ApiClient.recordFeedPlaylistAdd('event', event._id)
+            }}
+          />
 
-        <div className="px-4 pb-4">
-          <h1 className="text-xl font-bold text-foreground leading-snug break-words">{event.title}</h1>
-          <p className="text-[13px] text-muted-foreground mt-2">{metaLine}</p>
-          {event.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {event.tags.map((tag: string, i: number) => (
-                <span key={i} className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">#{tag}</span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="px-4 py-3 flex items-center gap-1 border-y border-border">
-          {id && (
-            <EngagementActions
-              type="events"
-              id={id}
-              className="flex-shrink-0"
-              likeCount={event.metrics?.likeCount ?? 0}
-              onPostClick={() => setShowShareComposer(true)}
+          {showShareComposer && event && (
+            <ContentShareComposer
+              content={{
+                _id: event._id,
+                title: event.title,
+                description: event.description,
+                type: 'event',
+                organization: event.organizer,
+                location: event.location,
+                dates: event.dates,
+                isPaid: event.isPaid,
+                price: event.price,
+              }}
+              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
+              onClose={() => setShowShareComposer(false)}
             />
           )}
-        </div>
-
-        <div className="px-4 py-5 space-y-6 text-[15px]">
-          {event.description && <p className="text-foreground leading-relaxed whitespace-pre-wrap">{event.description}</p>}
-
-          {event.dates && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Schedule</p>
-              <ul className="text-muted-foreground text-sm space-y-1">
-                {event.dates.startDate && <li className="flex items-center gap-2"><RiCalendarLine className="w-4 h-4 text-emerald-500" /> Start: {formatDate(event.dates.startDate)}</li>}
-                {event.dates.endDate && <li className="flex items-center gap-2"><RiCalendarLine className="w-4 h-4 text-emerald-500" /> End: {formatDate(event.dates.endDate)}</li>}
-                {event.dates.registrationDeadline && (
-                  <li className="flex items-center gap-2">
-                    <RiTimeLine className="w-4 h-4 text-emerald-500" />
-                    Registration: {formatDate(event.dates.registrationDeadline)}
-                    {!isRegistrationOpen() && <Badge className="ml-2 bg-red-500/20 text-red-400 border-0 text-[10px]">Closed</Badge>}
-                  </li>
-                )}
-                {event.dates.timezone && <li className="flex items-center gap-2"><RiTimeLine className="w-4 h-4 text-emerald-500" /> {event.dates.timezone}</li>}
-              </ul>
-            </div>
-          )}
-
-          {event.location && typeof event.location === 'object' && !event.location.isRemote && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Location</p>
-              <p className="text-muted-foreground text-sm">{event.location.city && `${event.location.city}, `}{event.location.country}{event.location.address && ` · ${event.location.address}`}</p>
-            </div>
-          )}
-
-          {event.capacity && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Capacity</p>
-              <p className="text-muted-foreground text-sm">
-                {event.capacity.maxAttendees != null && `Max ${event.capacity.maxAttendees}`}
-                {event.capacity.currentAttendees != null && ` · ${event.capacity.currentAttendees} attending`}
-                {event.capacity.isFull && <Badge className="ml-2 bg-red-500/20 text-red-400 border-0 text-[10px]">Full</Badge>}
-              </p>
-            </div>
-          )}
-
-          {event.requirements && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requirements</p>
-              <div className="text-muted-foreground text-sm space-y-1">
-                {event.requirements.ageRange && <p><strong className="text-foreground">Age:</strong> {event.requirements.ageRange}</p>}
-                {event.requirements.skillLevel && <p><strong className="text-foreground">Skill:</strong> {event.requirements.skillLevel}</p>}
-                {event.requirements.prerequisites?.length > 0 && <p><strong className="text-foreground">Prerequisites:</strong> {event.requirements.prerequisites.join(', ')}</p>}
-                {event.requirements.equipment?.length > 0 && <p><strong className="text-foreground">Equipment:</strong> {event.requirements.equipment.join(', ')}</p>}
-              </div>
-            </div>
-          )}
-
-          {event.agenda && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Agenda</p>
-              <div className="text-muted-foreground text-sm">
-                {typeof event.agenda === 'string' ? <p className="whitespace-pre-wrap">{event.agenda}</p> : Array.isArray(event.agenda) ? (
-                  <ul className="space-y-2 list-none">
-                    {event.agenda.map((item: any, i: number) => (
-                      <li key={i} className="flex gap-2">
-                        <RiTimeLine className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                        <div>{item.time && <span className="font-medium text-foreground/90">{item.time} — </span>}{item.title || item}{item.description && <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>}</div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </div>
-          )}
-
-          {(event.isPaid || event.price) && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pricing</p>
-              <p className="text-muted-foreground text-sm">{event.isPaid ? 'Paid' : 'Free'}{event.price && ` · ${event.currency || 'NGN'} ${event.price}`}</p>
-            </div>
-          )}
-        </div>
-        </div>
-
-        {(event.url || event.registrationLink || event.externalUrl || event.externalLink) && isRegistrationOpen() && (
-          <>
-            <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
-              {!isAuthenticated ? (
-                <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full h-12 font-semibold text-[15px]">
-                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`} className="flex items-center justify-center gap-2">
-                    Sign in to register
-                    <RiExternalLinkLine className="w-4 h-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full h-12 font-semibold text-[15px]">
-                  <a href={cleanUrl(event.url || event.registrationLink || event.externalUrl || event.externalLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
-                    Register
-                    <RiExternalLinkLine className="w-4 h-4" />
-                  </a>
-                </Button>
-              )}
-            </div>
-            <aside className="hidden xl:block pt-4">
-              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
-                {!isAuthenticated ? (
-                  <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-semibold">
-                    <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`} className="flex items-center justify-center gap-2">
-                      Sign in to register
-                      <RiExternalLinkLine className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button asChild size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 font-semibold">
-                    <a href={cleanUrl(event.url || event.registrationLink || event.externalUrl || event.externalLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})}>
-                      Register
-                      <RiExternalLinkLine className="w-4 h-4" />
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </aside>
-          </>
-        )}
-      </main>
-
-      {showShareComposer && event && (
-        <ContentShareComposer
-          content={{ _id: event._id, title: event.title, description: event.description, type: 'event', organization: event.organizer, location: event.location, dates: event.dates, isPaid: event.isPaid, price: event.price }}
-          onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-          onClose={() => setShowShareComposer(false)}
+        </>
+      }
+    >
+      {personalised && (
+        <WhyCard
+          reasons={reasons}
+          glow={glow}
+          caveat={
+            !event.dates?.startDate
+              ? 'No start date published — check the source before you plan around it.'
+              : null
+          }
         />
       )}
-    </div>
+
+      {event.tags?.length > 0 && <TagRow tags={event.tags} />}
+
+      {event.description && (
+        <DetailSection label="About">
+          <DetailProse>{event.description}</DetailProse>
+        </DetailSection>
+      )}
+
+      {event.dates && (
+        <DetailSection label="Schedule">
+          <FactList>
+            {event.dates.startDate && (
+              <Fact icon={RiCalendarLine} label="Start" iconClassName={ACCENT_ICON}>
+                {formatDate(event.dates.startDate)}
+              </Fact>
+            )}
+            {event.dates.endDate && (
+              <Fact icon={RiCalendarLine} label="End" iconClassName={ACCENT_ICON}>
+                {formatDate(event.dates.endDate)}
+              </Fact>
+            )}
+            {event.dates.registrationDeadline && (
+              <Fact icon={RiTimeLine} label="Registration" iconClassName={ACCENT_ICON}>
+                {formatDate(event.dates.registrationDeadline)}
+                {!registrationOpen && (
+                  <Badge className="ml-2 border-0 bg-red-500/20 text-[10px] text-red-400">Closed</Badge>
+                )}
+              </Fact>
+            )}
+            {event.dates.timezone && (
+              <Fact icon={RiTimeLine} label="Timezone" iconClassName={ACCENT_ICON}>
+                {event.dates.timezone}
+              </Fact>
+            )}
+          </FactList>
+        </DetailSection>
+      )}
+
+      {event.agenda && (
+        <DetailSection label="Agenda">
+          {typeof event.agenda === 'string' ? (
+            <DetailProse>{event.agenda}</DetailProse>
+          ) : Array.isArray(event.agenda) ? (
+            <ul className="space-y-2 text-[15px]">
+              {event.agenda.map((item: any, i: number) => (
+                <li key={i} className="flex gap-2.5">
+                  <RiTimeLine className={`mt-0.5 h-4 w-4 flex-shrink-0 ${ACCENT_ICON}`} aria-hidden />
+                  <div className="min-w-0">
+                    {item.time && (
+                      <span className="font-medium text-foreground">{item.time} — </span>
+                    )}
+                    <span className="text-muted-foreground">{item.title || item}</span>
+                    {item.description && (
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">{item.description}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </DetailSection>
+      )}
+
+      {event.requirements && (
+        <DetailSection label="Requirements">
+          <FactList>
+            {event.requirements.ageRange && (
+              <Fact icon={RiGroupLine} label="Age" iconClassName={ACCENT_ICON}>
+                {event.requirements.ageRange}
+              </Fact>
+            )}
+            {event.requirements.skillLevel && (
+              <Fact icon={RiCheckboxCircleLine} label="Skill" iconClassName={ACCENT_ICON}>
+                {event.requirements.skillLevel}
+              </Fact>
+            )}
+            {event.requirements.prerequisites?.length > 0 && (
+              <Fact icon={RiCheckboxCircleLine} label="Prerequisites" iconClassName={ACCENT_ICON}>
+                {event.requirements.prerequisites.join(', ')}
+              </Fact>
+            )}
+            {event.requirements.equipment?.length > 0 && (
+              <Fact icon={RiCheckboxCircleLine} label="Equipment" iconClassName={ACCENT_ICON}>
+                {event.requirements.equipment.join(', ')}
+              </Fact>
+            )}
+          </FactList>
+        </DetailSection>
+      )}
+
+      {event.capacity && (
+        <DetailSection label="Capacity">
+          <p className="text-[15px] text-muted-foreground">
+            {event.capacity.maxAttendees != null && `Max ${event.capacity.maxAttendees}`}
+            {event.capacity.currentAttendees != null && ` · ${event.capacity.currentAttendees} attending`}
+            {event.capacity.isFull && (
+              <Badge className="ml-2 border-0 bg-red-500/20 text-[10px] text-red-400">Full</Badge>
+            )}
+          </p>
+        </DetailSection>
+      )}
+
+      {(event.isPaid || event.price) && (
+        <DetailSection label="Pricing">
+          <p className="text-[15px] text-muted-foreground">
+            {event.isPaid ? 'Paid' : 'Free'}
+            {event.price && ` · ${event.currency || 'NGN'} ${event.price}`}
+          </p>
+        </DetailSection>
+      )}
+
+      {event.location && typeof event.location === 'object' && !event.location.isRemote && (
+        <DetailSection label="Location">
+          <p className="text-[15px] text-muted-foreground">
+            {place || '—'}
+            {event.location.address && <span className="mt-1 block">{event.location.address}</span>}
+          </p>
+        </DetailSection>
+      )}
+
+      {/* Phones read the related list inline; desktop gets it in the rail. */}
+      <SimilarList
+        items={similarRows}
+        basePath="/events"
+        label="Similar, also open"
+        className="lg:hidden"
+      />
+
+      {id && (
+        <div className="border-t border-border/60 pt-4">
+          <EngagementActions
+            type="events"
+            id={id}
+            likeCount={event.metrics?.likeCount ?? 0}
+            onPostClick={() => setShowShareComposer(true)}
+          />
+        </div>
+      )}
+    </ContentDetailShell>
   )
 }
 

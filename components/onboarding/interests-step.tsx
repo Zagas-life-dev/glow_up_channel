@@ -1,68 +1,54 @@
 'use client'
 
-import { useState, forwardRef, useImperativeHandle } from 'react'
-import { Button } from '@/components/ui/button'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { cn } from '@/lib/utils'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
-const interestsList = [
-  "Jobs & Career Opportunities",
-  "Scholarships & Grants",
-  "Training & Workshops",
-  "Networking Events",
-  "Volunteering & Community Service",
-  "Entrepreneurship & Funding",
-  "Remote Work & Digital Skills",
-]
+import { OptionGrid, StepHeader, StepPayoff } from './step-shell'
 
-interface InterestsStepProps {
+const OPTIONS = [
+  { value: "Jobs & Career Opportunities", label: "Jobs & Career Opportunities" },
+  { value: "Scholarships & Grants", label: "Scholarships & Grants" },
+  { value: "Training & Workshops", label: "Training & Workshops" },
+  { value: "Networking Events", label: "Networking Events" },
+  { value: "Volunteering & Community Service", label: "Volunteering & Community Service" },
+  { value: "Entrepreneurship & Funding", label: "Entrepreneurship & Funding" },
+  { value: "Remote Work & Digital Skills", label: "Remote Work & Digital Skills" },
+] as const
+
+interface Props {
   onSubmit: (data: { interests: string[] }) => void
   initialData?: any
+  onValidityChange?: (valid: boolean) => void
 }
 
-const InterestsStep = forwardRef<any, InterestsStepProps>(({ onSubmit, initialData }, ref) => {
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(initialData?.interests || [])
+const InterestsStep = forwardRef<any, Props>(({ onSubmit, initialData, onValidityChange }, ref) => {
+  const [selected, setSelected] = useState<string[]>(initialData?.interests || [])
 
-  const toggleInterest = (interest: string) => {
-    setSelectedInterests(prev =>
-      prev.includes(interest)
-        ? prev.filter(item => item !== interest)
-        : [...prev, interest]
-    )
-  }
+  const isValid = selected.length >= 1
+
+  useEffect(() => {
+    onValidityChange?.(isValid)
+  }, [isValid, onValidityChange])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
-      onSubmit({ interests: selectedInterests })
-    }
+      if (!isValid) return
+      onSubmit({ interests: selected })
+    },
   }))
 
+  const toggle = (value: string) =>
+    setSelected((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-semibold text-foreground">What are you looking for?</h3>
-        <p className="mt-2 text-gray-600">Select all that apply. This will help us tailor content for you.</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {interestsList.map(interest => (
-          <button
-            key={interest}
-            onClick={() => toggleInterest(interest)}
-            className={cn(
-              "relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200",
-              selectedInterests.includes(interest)
-                ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                : "bg-card hover:bg-gray-50 border-gray-200 text-gray-700"
-            )}
-          >
-            {selectedInterests.includes(interest) && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-foreground rounded-full flex items-center justify-center">
-                <FlaticonIcon name="check" className="h-3 w-3" aria-hidden />
-              </div>
-            )}
-            {interest}
-          </button>
-        ))}
+    <div>
+      <StepHeader title={'What are you here for?'} description={'Pick everything that applies. This is the strongest signal in your feed ranking.'} />
+
+      <div className="space-y-5">
+        <OptionGrid options={OPTIONS} selected={selected} onToggle={toggle} columns={1} />
+
+        <StepPayoff value={selected.length ? String(selected.length) : undefined}>
+          {selected.length ? 'categories selected. Your feed is built from these first.' : 'Pick at least one to continue.'}
+        </StepPayoff>
       </div>
     </div>
   )
@@ -70,4 +56,4 @@ const InterestsStep = forwardRef<any, InterestsStepProps>(({ onSubmit, initialDa
 
 InterestsStep.displayName = 'InterestsStep'
 
-export default InterestsStep 
+export default InterestsStep

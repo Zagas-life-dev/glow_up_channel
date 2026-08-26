@@ -13,7 +13,7 @@
  * into a `TextProfile` — is cached by item id inside `rank.ts`.
  */
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { useViewingCountry } from "@/lib/geo/viewing-country"
 import { applyViewingSelection } from "@/lib/geo/viewing-location"
@@ -24,6 +24,8 @@ import { formatReasons } from "@/lib/ranking/reasons"
 import { rankItems, type RankOptions } from "@/lib/ranking/rank"
 import type { RankedItem, RankingContext } from "@/lib/ranking/types"
 import { useUserLocation, profileLocationReading } from "@/hooks/use-user-location"
+import { getSignals } from "@/lib/tracker/api"
+import { buildTrackerHistory, EMPTY_HISTORY, type TrackerHistory } from "@/lib/tracker/history"
 import type {
   GeolocationPermission,
   LocationReading,
@@ -117,6 +119,29 @@ export function usePersonalizedRanking(
     )
   }, [secondary, location.countryCode, locale])
 
+  /**
+   * Tracker outcomes, fetched once per mount.
+   *
+   * One request, not one per item: the payload is already denormalised on the
+   * backend precisely so this does not become another per-listing round trip.
+   * Until it lands the history is empty, which makes the signal unavailable
+   * rather than wrong — the first paint ranks on everything else and the
+   * re-rank folds outcomes in when they arrive.
+   */
+  const [history, setHistory] = useState<TrackerHistory>(EMPTY_HISTORY)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const signals = await getSignals()
+      if (cancelled || signals.length === 0) return
+      setHistory(buildTrackerHistory(signals))
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // `now` is bucketed to the minute so the context identity — and therefore the
   // memo below — does not change on every render.
   const now = useMemo(() => Math.floor(Date.now() / 60_000) * 60_000, [])
@@ -127,9 +152,10 @@ export function usePersonalizedRanking(
       language: locale,
       secondaryLanguages,
       interests,
+      history,
       now,
     }),
-    [location, locale, secondaryLanguages, interests, now],
+    [location, locale, secondaryLanguages, interests, history, now],
   )
 
   const rank = useCallback(

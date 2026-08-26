@@ -10,6 +10,7 @@ import type { ProximityTier } from "@/lib/geo/distance"
 import type { ResolvedLocation } from "@/lib/geo/types"
 import type { SupportedLanguage } from "@/lib/nlp/detect-language"
 import type { TextProfile } from "@/lib/nlp/profile-text"
+import type { TrackerHistory } from "@/lib/tracker/history"
 
 export type SignalName =
   | "semantic"
@@ -18,6 +19,7 @@ export type SignalName =
   | "urgency"
   | "freshness"
   | "engagement"
+  | "history"
   | "baseScore"
 
 /**
@@ -41,6 +43,12 @@ export type RankingContext = {
   secondaryLanguages: SupportedLanguage[]
   /** Their interests and skills, as tags and keywords. */
   interests: TextProfile
+  /**
+   * What they did with listings like this before, from the honesty tracker.
+   * Absent for a user who has never answered a prompt, in which case the
+   * signal is unavailable and costs nothing.
+   */
+  history?: TrackerHistory
   /** Reference point for freshness and deadlines. Injectable for testing. */
   now: number
 }

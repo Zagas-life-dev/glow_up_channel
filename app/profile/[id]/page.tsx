@@ -15,8 +15,9 @@ import {
   typeIconClass,
   typeBadgeSmallClass,
 } from '@/lib/playlist-item-display'
-import EditProfileModal from '@/components/edit-profile-modal'
 import PostCard from '@/components/post-card'
+import GiftList from '@/components/gifts/gift-list'
+import { GIFTS_TAB } from '@/lib/gifts/routes'
 import ConnectionRequestsModal from '@/components/connection-requests-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
 import {
@@ -45,10 +46,13 @@ import {
   RiLink,
   RiBuildingLine,
   RiLightbulbLine,
+  RiErrorWarningLine,
+  RiToolsLine,
   RiSettingsLine,
   RiTimeLine,
   RiUserAddLine,
   RiBookmarkLine,
+  RiGiftLine,
   RiGlobalLine,
   RiArrowRightLine,
   RiFocus3Line,
@@ -280,6 +284,59 @@ const socialConfig: Record<string, { icon: React.ReactNode; color: string; label
   },
 }
 
+/** One labelled row inside the About panel. */
+function AboutRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="px-4 py-3.5 sm:px-5">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-3 w-3" aria-hidden />
+        {label}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+/** A capped list of chips with a "+n" tail. */
+function ChipList({
+  items,
+  limit,
+  tone = "neutral",
+}: {
+  items: string[]
+  limit: number
+  tone?: "neutral" | "accent"
+}) {
+  const shown = items.slice(0, limit)
+  const rest = items.length - shown.length
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {shown.map((item, i) => (
+        <span
+          key={`${item}-${i}`}
+          className={cn(
+            "rounded-xl border px-2.5 py-1 text-caption font-medium",
+            tone === "accent"
+              ? "border-primary/20 bg-primary/10 text-primary"
+              : "border-border/70 bg-muted/50 text-foreground"
+          )}
+        >
+          {item}
+        </span>
+      ))}
+      {rest > 0 ? <span className="px-2.5 py-1 text-caption text-muted-foreground">+{rest}</span> : null}
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
@@ -307,6 +364,21 @@ export default function ProfilePage() {
   const [loadingPlaylists, setLoadingPlaylists] = useState(false)
   const [loadingBookmarks, setLoadingBookmarks] = useState(false)
 
+  /**
+   * Deep link into the Gifts tab.
+   *
+   * The gift popup's "View others" button lands here, so the query has to be
+   * honoured — but only for the profile owner, since the gift list is the
+   * viewer's own and the tab is not rendered on someone else's page. Read from
+   * `window.location` rather than useSearchParams to keep this page out of the
+   * Suspense boundary that hook would require.
+   */
+  useEffect(() => {
+    if (!isOwner) return
+    const requested = new URLSearchParams(window.location.search).get('tab')
+    if (requested === GIFTS_TAB) setActiveTab(GIFTS_TAB)
+  }, [isOwner])
+
   // The permanent "Saved" playlist — what the bookmark button on feed cards fills.
   const [savedList, setSavedList] = useState<PlaylistWithItems | null>(null)
   const [loadingSavedList, setLoadingSavedList] = useState(false)
@@ -319,7 +391,6 @@ export default function ProfilePage() {
   const [loadingCompletion, setLoadingCompletion] = useState(false)
 
   // Modals
-  const [showEditModal, setShowEditModal] = useState(false)
   const [showConnectionRequests, setShowConnectionRequests] = useState(false)
 
   // Connection action
@@ -770,26 +841,17 @@ export default function ProfilePage() {
             {/* Action buttons: in top container under join date */}
             <div className="mt-5 flex flex-wrap gap-2">
               {isOwner ? (
-                <>
+                /* Editing lives in Settings, which already holds every field the old modal did. */
+                <Link href="/profile/settings" className="min-w-0 flex-1">
                   <Button
                     type="button"
-                    onClick={() => setShowEditModal(true)}
                     variant="outline"
-                    className="h-11 min-h-11 min-w-[8rem] flex-1 rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
+                    className="h-11 min-h-11 w-full rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
                   >
+                    <RiSettingsLine className="mr-2 h-4 w-4" aria-hidden />
                     Edit profile
                   </Button>
-                  <Link href="/profile/settings" className="min-w-0 flex-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-11 min-h-11 w-full rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
-                    >
-                      <RiSettingsLine className="mr-2 h-4 w-4" aria-hidden />
-                      Settings
-                    </Button>
-                  </Link>
-                </>
+                </Link>
               ) : (
                 <>
                   <Button
@@ -833,177 +895,137 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Skills / Interests / Industries: soft glass block */}
-        {(() => {
-          const skills = profile.skills?.length > 0 ? profile.skills : profile.onboarding?.onboardingSkills || []
-          const hasInterests = profile.onboarding?.interests?.length
-          const hasIndustries = profile.onboarding?.industrySectors?.length
-          if (skills.length === 0 && !hasInterests && !hasIndustries) return null
+        {/* Complete your profile — owner only, and deliberately the loudest thing on the page.
+            Everything it asks for is edited in Settings, so every route out of here goes there. */}
+        {isOwner && completionPercentage < 100 && (() => {
+          const checklist = buildCompletionChecklist(profile)
+          const incomplete = checklist.filter((item) => !item.completed)
+          if (incomplete.length === 0) return null
+          const shown = incomplete.slice(0, 4)
+
           return (
-            <div className="mb-5 rounded-[1.25rem] border border-border/60 bg-card/70 p-4 backdrop-blur-sm sm:p-5">
-              {skills.length > 0 && (
-                <div className="mb-4 last:mb-0">
-                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    <RiSparkling2Line className="w-3 h-3" aria-hidden />
-                    Skills
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {skills.slice(0, 8).map((skill, i) => (
-                      <span
-                        key={i}
-                        className="rounded-xl border border-primary/20 bg-primary/10 px-2.5 py-1 text-caption font-medium text-primary"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                    {skills.length > 8 && <span className="px-2.5 py-1 text-muted-foreground text-xs">+{skills.length - 8}</span>}
-                  </div>
+            <section className="mb-5 overflow-hidden rounded-[1.25rem] border border-destructive/40 bg-destructive/5">
+              <div className="flex items-start gap-3 border-b border-destructive/25 p-4 sm:p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-destructive/15">
+                  <RiErrorWarningLine className="h-5 w-5 text-destructive" aria-hidden />
                 </div>
-              )}
-              {hasInterests && (
-                <div className="mb-4 last:mb-0">
-                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    <RiFocus3Line className="w-3 h-3" aria-hidden />
-                    Interests
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {profile.onboarding!.interests!.slice(0, 6).map((interest, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-xl bg-primary/10 text-primary text-xs border border-primary/20">
-                        {interest}
-                      </span>
-                    ))}
-                    {(profile.onboarding!.interests!.length ?? 0) > 6 && (
-                      <span className="px-2.5 py-1 text-muted-foreground text-xs">+{(profile.onboarding!.interests!.length ?? 0) - 6}</span>
-                    )}
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-body-sm font-bold text-destructive">Your profile is incomplete</h2>
+                  <p className="mt-0.5 text-caption text-muted-foreground">
+                    {incomplete.length} {incomplete.length === 1 ? 'thing is' : 'things are'} missing.
+                    Finishing this is how we match you to the right opportunities.
+                  </p>
                 </div>
-              )}
-              {hasIndustries && (
-                <div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    <RiBuildingLine className="w-3 h-3" aria-hidden />
-                    Industries
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {profile.onboarding!.industrySectors!.slice(0, 5).map((sector, i) => (
-                      <span
-                        key={i}
-                        className="rounded-xl border border-border/70 bg-muted/50 px-2.5 py-1 text-caption font-medium text-foreground"
-                      >
-                        {sector}
-                      </span>
-                    ))}
-                    {(profile.onboarding!.industrySectors!.length ?? 0) > 5 && (
-                      <span className="px-2.5 py-1 text-muted-foreground text-xs">+{(profile.onboarding!.industrySectors!.length ?? 0) - 5}</span>
-                    )}
-                  </div>
+                <span className="shrink-0 text-body-sm font-bold tabular-nums text-destructive">
+                  {completionPercentage}%
+                </span>
+              </div>
+
+              <div className="p-4 sm:p-5">
+                <div className="mb-4 h-2 overflow-hidden rounded-full bg-destructive/15">
+                  <div
+                    className="h-full rounded-full bg-destructive transition-all duration-500"
+                    style={{ width: `${completionPercentage}%` }}
+                  />
                 </div>
-              )}
-            </div>
+
+                <ul className="mb-4 space-y-2">
+                  {shown.map((item) => (
+                    <li key={item.id} className="flex items-center gap-2.5">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive/60" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate text-body-sm text-foreground">{item.label}</span>
+                    </li>
+                  ))}
+                  {incomplete.length > shown.length && (
+                    <li className="pl-4 text-caption text-muted-foreground">
+                      and {incomplete.length - shown.length} more
+                    </li>
+                  )}
+                </ul>
+
+                <Link href="/profile/settings" className="block">
+                  <Button
+                    type="button"
+                    className="h-11 w-full rounded-2xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Complete onboarding
+                    <RiArrowRightLine className="ml-1.5 h-4 w-4" aria-hidden />
+                  </Button>
+                </Link>
+              </div>
+            </section>
           )
         })()}
 
-        {/* Education: glass card */}
-        {profile.onboarding && (profile.onboarding.educationLevel || profile.onboarding.fieldOfStudy) && (
-          <div className="mb-5 p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm">
-            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              <RiGraduationCapLine className="w-3 h-3" aria-hidden />
-              Education
-            </div>
-            <div className="space-y-0.5">
-              {profile.onboarding.educationLevel && <p className="text-sm text-foreground">{profile.onboarding.educationLevel}</p>}
-              {profile.onboarding.fieldOfStudy && (
-                <p className="text-xs text-muted-foreground">
-                  {profile.onboarding.fieldOfStudy}
-                  {profile.onboarding.institution && ` at ${profile.onboarding.institution}`}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        {/* About — skills, interests, industries, education and aspirations were five separate
+            full-width cards stacked down the page. They are one idea, so they are one panel. */}
+        {(() => {
+          const skills = profile.skills?.length > 0 ? profile.skills : profile.onboarding?.onboardingSkills || []
+          const interests = profile.onboarding?.interests ?? []
+          const industries = profile.onboarding?.industrySectors ?? []
+          const aspirations = profile.onboarding?.aspirations ?? []
+          const hasEducation = Boolean(profile.onboarding?.educationLevel || profile.onboarding?.fieldOfStudy)
 
-        {/* Aspirations: glass card */}
-        {profile.onboarding?.aspirations && profile.onboarding.aspirations.length > 0 && (
-          <div className="mb-5 p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm">
-            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              <RiLightbulbLine className="w-3 h-3" aria-hidden />
-              Looking for
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {profile.onboarding.aspirations.map((aspiration, i) => (
-                <span key={i} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs border border-emerald-500/20">
-                  {aspiration}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+          if (
+            skills.length === 0 &&
+            interests.length === 0 &&
+            industries.length === 0 &&
+            aspirations.length === 0 &&
+            !hasEducation
+          ) {
+            return null
+          }
 
-        {/* Profile Completion: soft glass with checklist */}
-        {isOwner && completionPercentage < 100 && (
-          <div className="mb-5 rounded-[1.25rem] border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/5 p-4 backdrop-blur-sm sm:p-5">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/25 bg-primary/15">
-                <RiSparkling2Line className="h-5 w-5 text-primary" aria-hidden />
+          return (
+            <section className="mb-5 rounded-[1.25rem] border border-border/60 bg-card/70">
+              <div className="border-b border-border/60 px-4 py-3 sm:px-5">
+                <h2 className="text-body-sm font-bold text-foreground">About</h2>
               </div>
-              <div className="min-w-0">
-                <h3 className="text-body-sm font-bold text-foreground">Profile completion</h3>
-                <p className="text-caption text-muted-foreground">Finish these to reach 100%</p>
-              </div>
-            </div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-caption text-muted-foreground">{completionPercentage}% complete</span>
-              <span className="text-body-sm font-bold tabular-nums text-primary">{completionPercentage}%</span>
-            </div>
-            <div className="mb-3 h-2 overflow-hidden rounded-full bg-muted/80">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${completionPercentage}%` }}
-              />
-            </div>
 
-            {(() => {
-              const checklist = buildCompletionChecklist(profile)
-              const incomplete = checklist.filter(item => !item.completed)
-              if (incomplete.length === 0) return null
-              const toShow = incomplete.slice(0, 4)
-              return (
-                <div className="mb-3 space-y-1.5">
-                  {toShow.map(item => (
-                    <div key={item.id} className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-foreground truncate">{item.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{item.location}</p>
-                      </div>
-                      <Link
-                        href={item.href}
-                        className="whitespace-nowrap text-caption font-semibold text-primary hover:text-primary/80"
-                      >
-                        Open
-                      </Link>
+              <div className="divide-y divide-border/50">
+                {skills.length > 0 && (
+                  <AboutRow icon={RiToolsLine} label="Skills">
+                    <ChipList items={skills} limit={8} />
+                  </AboutRow>
+                )}
+
+                {interests.length > 0 && (
+                  <AboutRow icon={RiFocus3Line} label="Interests">
+                    <ChipList items={interests} limit={6} tone="accent" />
+                  </AboutRow>
+                )}
+
+                {industries.length > 0 && (
+                  <AboutRow icon={RiBuildingLine} label="Industries">
+                    <ChipList items={industries} limit={5} />
+                  </AboutRow>
+                )}
+
+                {hasEducation && (
+                  <AboutRow icon={RiGraduationCapLine} label="Education">
+                    <div className="space-y-0.5">
+                      {profile.onboarding?.educationLevel && (
+                        <p className="text-body-sm text-foreground">{profile.onboarding.educationLevel}</p>
+                      )}
+                      {profile.onboarding?.fieldOfStudy && (
+                        <p className="text-caption text-muted-foreground">
+                          {profile.onboarding.fieldOfStudy}
+                          {profile.onboarding.institution ? ` at ${profile.onboarding.institution}` : ''}
+                        </p>
+                      )}
                     </div>
-                  ))}
-                  {incomplete.length > toShow.length && (
-                    <p className="text-[11px] text-muted-foreground">
-                      +{incomplete.length - toShow.length} more fields in Settings
-                    </p>
-                  )}
-                </div>
-              )
-            })()}
+                  </AboutRow>
+                )}
 
-            <Link href="/onboarding">
-              <Button
-                type="button"
-                size="sm"
-                className="h-10 w-full rounded-2xl border border-primary/30 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Open onboarding
-                <RiArrowRightLine className="ml-1 h-3.5 w-3.5" aria-hidden />
-              </Button>
-            </Link>
-          </div>
-        )}
+                {aspirations.length > 0 && (
+                  <AboutRow icon={RiLightbulbLine} label="Looking for">
+                    <ChipList items={aspirations} limit={6} />
+                  </AboutRow>
+                )}
+              </div>
+            </section>
+          )
+        })()}
 
         {/* Follows You: soft pill */}
         {!isOwner && connectionStatus?.followsYou && (
@@ -1029,6 +1051,15 @@ export default function ProfilePage() {
               >
                 <RiBookmarkLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Saved
+              </TabsTrigger>
+              {/* Gifts are the same shared list for every member, but they are
+                  reached through your own profile, so the tab is owner-only. */}
+              <TabsTrigger
+                value={GIFTS_TAB}
+                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              >
+                <RiGiftLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
+                Gifts
               </TabsTrigger>
             </TabsList>
           )}
@@ -1343,19 +1374,16 @@ export default function ProfilePage() {
               })()}
             </TabsContent>
           )}
+
+          {/* Gifts — the same shared list for every member, reached from your
+              own profile. Owner-only, matching the trigger above. */}
+          {isOwner && (
+            <TabsContent value={GIFTS_TAB} className="mt-4">
+              <GiftList />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
-
-      {/* Modals */}
-      <EditProfileModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={profile}
-        onSuccess={(updatedProfile) => {
-          setProfile({ ...profile, ...updatedProfile })
-          setShowEditModal(false)
-        }}
-      />
 
       {isOwner && (
         <ConnectionRequestsModal

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
 // PDF viewer relies on browser-only APIs (pdf.js); load it client-side only.
@@ -16,49 +15,100 @@ const ResourceViewer = dynamic(() => import('@/components/resource/ResourceViewe
   ),
 })
 import {
-  RiArrowLeftLine,
   RiExternalLinkLine,
   RiBookLine,
-  RiCalendarLine,
   RiDownloadLine,
   RiEyeLine,
   RiTimeLine,
   RiFileLine,
-  RiVideoLine,
-  RiHeadphoneLine,
+  RiAddLine,
 } from 'react-icons/ri'
+import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
-import AuthGuard from '@/components/auth-guard'
+import AddToPlaylistModal from '@/components/add-to-playlist-modal'
+import { DetailHero } from '@/components/content-detail/detail-hero'
+import { ContentDetailShell } from '@/components/content-detail/detail-shell'
+import {
+  DetailProse,
+  DetailSection,
+  Fact,
+  FactList,
+  SimilarList,
+  TagRow,
+  WhyCard,
+} from '@/components/content-detail/sections'
+import {
+  applyHost,
+  composeTiles,
+  formatDate,
+  type StatTile,
+} from '@/lib/content-detail/format'
+import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
-import { toast } from 'sonner'
 import { trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
+import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type ResourcePageProps = { params: Promise<{ id: string }> }
 
-function getResourceTypeIcon(type: string) {
-  switch (type) {
-    case 'video': return <RiVideoLine className="w-4 h-4" />
-    case 'audio': return <RiHeadphoneLine className="w-4 h-4" />
-    case 'document': return <RiFileLine className="w-4 h-4" />
-    default: return <RiBookLine className="w-4 h-4" />
+const ACCENT_ICON = 'text-violet-500'
+
+/**
+ * The three numbers worth reading before anything else.
+ *
+ * Resources carry no deadline, so unlike the other three detail pages this one
+ * never shows the orange countdown tile — there is nothing to count down to.
+ */
+function buildStatTiles(resource: any): StatTile[] {
+  const optional: StatTile[] = []
+
+  if (resource.category) {
+    optional.push({ label: 'Type', value: String(resource.category) })
   }
+
+  if (resource.duration) {
+    optional.push({ label: 'Length', value: String(resource.duration) })
+  } else if (typeof resource.pageCount === 'number' && resource.pageCount > 0) {
+    optional.push({ label: 'Pages', value: String(resource.pageCount) })
+  }
+
+  if (typeof resource.metrics?.viewCount === 'number') {
+    optional.push({ label: 'Views', value: String(resource.metrics.viewCount) })
+  }
+
+  if (resource.isPremium) {
+    optional.push({ label: 'Access', value: 'Premium' })
+  }
+
+  return composeTiles(optional, null)
 }
 
 function ResourcePageContent({ params }: ResourcePageProps) {
-  const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [resource, setResource] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
+  const tracker = useOptionalTracker()
+
+  /**
+   * Only the off-platform resources arm the tracker.
+   *
+   * A file resource is read in the in-app viewer — the user never leaves, so
+   * there is no return to catch and no honest question to ask. The backend
+   * enforces this too and answers tracked:false for those, but not sending the
+   * call at all saves the round trip.
+   */
+  const handleResourceOpen = useCallback(() => {
+    void tracker?.startTracking('resource', id, 'resource_link')
+  }, [id, tracker])
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
@@ -87,6 +137,24 @@ function ResourcePageContent({ params }: ResourcePageProps) {
     ApiClient.recordPromotionClick(id, 'resource', 'view').catch(() => {})
   }, [isAuthenticated, id, resource])
 
+  const { reasons, glow, personalised } = useContentRanking(resource)
+  const similar = useSimilarContent('resources', resource)
+
+  const handleShare = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: resource?.title ?? 'Resource', url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied')
+      }
+    } catch {
+      // dismissed or clipboard denied — nothing to report
+    }
+  }, [resource])
+
   if (loading) return <ContentDetailSkeleton />
   if (error || !resource) {
     return (
@@ -96,170 +164,256 @@ function ResourcePageContent({ params }: ResourcePageProps) {
     )
   }
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
-  // Uploaded (file) resources are viewed in-platform; legacy link resources keep external links.
+  // Uploaded (file) resources are viewed in-platform; link resources go out.
   const isFileResource = resource.resourceType === 'file' || resource.hasFile === true
 
-  const metaParts = [`Published ${formatDate(resource.createdAt)}`]
-  if (resource.metrics?.viewCount != null) metaParts.push(`${resource.metrics.viewCount} views`)
-  if (resource.duration) metaParts.push(resource.duration)
-  const metaLine = metaParts.join(' · ')
+  /**
+   * Where "Access resource" points.
+   *
+   * Premium resources route through the payment link; a plain link resource
+   * goes straight to the file. The previous version of this page used
+   * `paymentLink` in both cases, which rendered a dead button on any link
+   * resource that was not premium — the `fileUrl` fallback is what fixes that.
+   */
+  const accessUrl = resource.paymentLink || (!isFileResource ? resource.fileUrl : null)
+  const host = applyHost(accessUrl)
+
+  const eyebrow = [String(resource.category || 'Resource'), resource.isPremium ? 'Premium' : null]
+    .filter(Boolean)
+    .join(' · ')
+
+  const subtitle = [resource.author, `Published ${formatDate(resource.createdAt)}`]
+    .filter(Boolean)
+    .join(' · ')
+
+  const tiles = buildStatTiles(resource)
+
+  const accessButton = !accessUrl ? null : !isAuthenticated ? (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>
+        Sign in to view
+        <RiExternalLinkLine className="h-4 w-4" aria-hidden />
+      </Link>
+    </Button>
+  ) : (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <a
+        href={cleanUrl(accessUrl)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleResourceOpen}
+      >
+        <span className="truncate">{host ? `Open on ${host}` : 'Access resource'}</span>
+        <RiExternalLinkLine className="h-4 w-4 flex-shrink-0" aria-hidden />
+      </a>
+    </Button>
+  )
+
+  /**
+   * A file resource has no outbound action at all — it is read right here in
+   * the viewer below, so the rail offers the sign-in prompt or nothing.
+   */
+  const action =
+    accessButton ??
+    (isFileResource && !isAuthenticated ? (
+      <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+        <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>
+          Sign in to read
+        </Link>
+      </Button>
+    ) : null)
+
+  const downloadButton =
+    isAuthenticated && !isFileResource && resource.fileUrl ? (
+      <Button
+        asChild
+        variant="outline"
+        size="lg"
+        className="h-12 w-full rounded-full border-border text-[15px] text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <a href={resource.fileUrl} download className="flex items-center justify-center gap-2">
+          <RiDownloadLine className="h-4 w-4" aria-hidden /> Download
+        </a>
+      </Button>
+    ) : null
+
+  const addToPlaylistButton = isAuthenticated ? (
+    <button
+      type="button"
+      onClick={() => setShowPlaylistModal(true)}
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      aria-label="Add to a playlist"
+    >
+      <RiAddLine className="h-5 w-5" aria-hidden />
+    </button>
+  ) : null
+
+  const similarRows = similar.map((row) => {
+    const rowAny = row as any
+    return {
+      _id: row._id,
+      title: String(rowAny.title ?? 'Untitled'),
+      meta: rowAny.category ? String(rowAny.category) : null,
+    }
+  })
 
   return (
-    <div className="min-h-screen bg-page pb-28">
-      <header className="sticky top-0 z-30 bg-page/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <RiArrowLeftLine className="h-5 w-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-foreground">Resource</span>
-          <div className="w-9" />
-        </div>
-      </header>
-
-      <main className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 border-x border-border min-h-screen xl:grid xl:grid-cols-[1fr_320px] xl:gap-12 2xl:gap-16">
-        <div className="min-w-0">
-        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white bg-gradient-to-br from-violet-500 to-purple-600">
-            {getResourceTypeIcon(resource.category || 'resource')}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-foreground truncate">{resource.author || 'Author'}</span>
-            </div>
-            <p className="text-[13px] text-muted-foreground capitalize">{resource.category || 'Resource'}</p>
-          </div>
-        </div>
-
-        <div className="px-4 pb-4">
-          <h1 className="text-xl font-bold text-foreground leading-snug break-words">{resource.title}</h1>
-          <p className="text-[13px] text-muted-foreground mt-2">{metaLine}</p>
-          {resource.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {resource.tags.map((tag: string, i: number) => (
-                <span key={i} className="text-[12px] text-violet-600 dark:text-violet-400 font-medium">#{tag}</span>
-              ))}
+    <ContentDetailShell
+      hero={
+        <DetailHero
+          eyebrow={eyebrow}
+          title={resource.title}
+          subtitle={subtitle}
+          tiles={tiles}
+          accent="violet"
+          onShare={handleShare}
+        />
+      }
+      action={action}
+      secondaryAction={addToPlaylistButton}
+      rail={
+        <>
+          {downloadButton && (
+            <div className="rounded-[1.5rem] border border-border/70 bg-card/60 p-5">
+              {downloadButton}
             </div>
           )}
-        </div>
+          {similarRows.length > 0 && (
+            <div className="rounded-[1.5rem] border border-border/70 bg-card/60 p-5">
+              <SimilarList items={similarRows} basePath="/resources" label="More like this" />
+            </div>
+          )}
+        </>
+      }
+      overlays={
+        <>
+          <AddToPlaylistModal
+            isOpen={showPlaylistModal}
+            onClose={() => setShowPlaylistModal(false)}
+            item={{
+              _id: resource._id,
+              title: resource.title,
+              type: 'resource',
+              author: resource.author,
+              description: resource.description,
+            }}
+            onItemAddedToPlaylist={() => {
+              void ApiClient.recordFeedPlaylistAdd('resource', resource._id)
+            }}
+          />
 
-        <div className="px-4 py-3 flex items-center gap-1 border-y border-border">
-          {id && (
-            <EngagementActions
-              type="resources"
-              id={id}
-              className="flex-shrink-0"
-              likeCount={resource.metrics?.likeCount ?? 0}
-              onPostClick={() => setShowShareComposer(true)}
+          {showShareComposer && resource && (
+            <ContentShareComposer
+              content={{
+                _id: resource._id,
+                title: resource.title,
+                description: resource.description,
+                type: 'resource',
+                author: resource.author,
+                category: resource.category,
+                duration: resource.duration,
+              }}
+              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
+              onClose={() => setShowShareComposer(false)}
             />
           )}
-        </div>
-
-        <div className="px-4 py-5 space-y-6 text-[15px]">
-          {isFileResource ? (
-            isAuthenticated ? (
-              <ResourceViewer resourceId={id} fileType={resource.fileType ?? null} initialPageCount={resource.pageCount ?? null} />
-            ) : (
-              <div className="rounded-2xl border border-border bg-card py-12 text-center">
-                <p className="text-sm text-muted-foreground mb-4">Sign in to view this resource.</p>
-                <Button asChild className="bg-violet-500 hover:bg-violet-600 text-white rounded-full">
-                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>Sign in to view</Link>
-                </Button>
-              </div>
-            )
-          ) : null}
-
-          {resource.description && <p className="text-foreground leading-relaxed whitespace-pre-wrap">{resource.description}</p>}
-
-          {resource.category && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Type</p>
-              <p className="text-muted-foreground text-sm capitalize">{resource.category} resource</p>
-            </div>
-          )}
-
-          {resource.duration && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Duration</p>
-              <p className="text-muted-foreground text-sm flex items-center gap-2"><RiTimeLine className="w-4 h-4 text-violet-500" /> {resource.duration}</p>
-            </div>
-          )}
-
-          {resource.metrics && (resource.metrics.viewCount != null || resource.metrics.likeCount != null || resource.metrics.saveCount != null) && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Stats</p>
-              <p className="text-muted-foreground text-sm flex items-center gap-2">
-                {resource.metrics.viewCount != null && <span><RiEyeLine className="w-4 h-4 text-violet-500 inline mr-1" />{resource.metrics.viewCount} views</span>}
-                {resource.metrics.likeCount != null && <span> · {resource.metrics.likeCount} likes</span>}
-                {resource.metrics.saveCount != null && <span> · {resource.metrics.saveCount} saves</span>}
-              </p>
-            </div>
-          )}
-        </div>
-        </div>
-
-        <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border space-y-2">
-          {!isAuthenticated ? (
-            <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-full h-12 font-semibold text-[15px]">
-              <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`} className="flex items-center justify-center gap-2">
-                Sign in to view
-                <RiExternalLinkLine className="w-4 h-4" />
+        </>
+      }
+    >
+      {/* The reader comes first: on a file resource it is the whole point of the page. */}
+      {isFileResource && (
+        isAuthenticated ? (
+          <ResourceViewer
+            resourceId={id}
+            fileType={resource.fileType ?? null}
+            initialPageCount={resource.pageCount ?? null}
+          />
+        ) : (
+          <div className="rounded-2xl border border-border bg-card py-12 text-center">
+            <p className="mb-4 text-sm text-muted-foreground">Sign in to read this resource.</p>
+            <Button asChild className="rounded-full">
+              <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>
+                Sign in to read
               </Link>
             </Button>
-          ) : resource.paymentLink ? (
-            <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-full h-12 font-semibold text-[15px]">
-              <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                Access resource
-                <RiExternalLinkLine className="w-4 h-4" />
-              </a>
-            </Button>
-          ) : null}
-          {isAuthenticated && !isFileResource && resource.fileUrl && (
-            <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-full h-12 text-[15px]">
-              <a href={resource.paymentLink} download className="flex items-center justify-center gap-2">
-                <RiDownloadLine className="w-4 h-4" /> Download
-              </a>
-            </Button>
-          )}
-        </div>
-        <aside className="hidden xl:block pt-4">
-          <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm space-y-2">
-            {!isAuthenticated ? (
-              <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-12 font-semibold text-[15px] shadow-sm">
-                <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`} className="flex items-center justify-center gap-2">
-                  Sign in to view
-                  <RiExternalLinkLine className="w-4 h-4" />
-                </Link>
-              </Button>
-            ) : !isFileResource && resource.fileUrl ? (
-              <Button asChild size="lg" className="w-full bg-violet-500 hover:bg-violet-600 text-white rounded-xl h-12 font-semibold">
-                <a href={cleanUrl(resource.paymentLink)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                  Access resource
-                  <RiExternalLinkLine className="w-4 h-4" />
-                </a>
-              </Button>
-            ) : null}
-            {isAuthenticated && !isFileResource && resource.fileUrl && (
-              <Button asChild variant="outline" size="lg" className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl h-12">
-                <a href={resource.paymentLink} download className="flex items-center justify-center gap-2">
-                  <RiDownloadLine className="w-4 h-4" /> Download
-                </a>
-              </Button>
-            )}
           </div>
-        </aside>
-      </main>
-
-      {showShareComposer && resource && (
-        <ContentShareComposer
-          content={{ _id: resource._id, title: resource.title, description: resource.description, type: 'resource', author: resource.author, category: resource.category, duration: resource.duration }}
-          onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-          onClose={() => setShowShareComposer(false)}
-        />
+        )
       )}
-    </div>
+
+      {personalised && <WhyCard reasons={reasons} glow={glow} />}
+
+      {resource.tags?.length > 0 && <TagRow tags={resource.tags} />}
+
+      {resource.description && (
+        <DetailSection label="About">
+          <DetailProse>{resource.description}</DetailProse>
+        </DetailSection>
+      )}
+
+      {(resource.category || resource.duration || resource.fileType) && (
+        <DetailSection label="Details">
+          <FactList>
+            {resource.category && (
+              <Fact icon={RiBookLine} label="Type" iconClassName={ACCENT_ICON}>
+                <span className="capitalize">{resource.category}</span>
+              </Fact>
+            )}
+            {resource.duration && (
+              <Fact icon={RiTimeLine} label="Duration" iconClassName={ACCENT_ICON}>
+                {resource.duration}
+              </Fact>
+            )}
+            {resource.fileType && (
+              <Fact icon={RiFileLine} label="Format" iconClassName={ACCENT_ICON}>
+                <span className="uppercase">{resource.fileType}</span>
+              </Fact>
+            )}
+          </FactList>
+        </DetailSection>
+      )}
+
+      {resource.metrics &&
+        (resource.metrics.viewCount != null ||
+          resource.metrics.likeCount != null ||
+          resource.metrics.saveCount != null) && (
+          <DetailSection label="Stats">
+            <FactList>
+              {resource.metrics.viewCount != null && (
+                <Fact icon={RiEyeLine} label="Views" iconClassName={ACCENT_ICON}>
+                  {resource.metrics.viewCount}
+                </Fact>
+              )}
+              {resource.metrics.saveCount != null && (
+                <Fact icon={RiBookLine} label="Saves" iconClassName={ACCENT_ICON}>
+                  {resource.metrics.saveCount}
+                </Fact>
+              )}
+            </FactList>
+          </DetailSection>
+        )}
+
+      {/* Phones get the download inline; desktop keeps it in the rail. */}
+      {downloadButton && <div className="lg:hidden">{downloadButton}</div>}
+
+      {/* Phones read the related list inline; desktop gets it in the rail. */}
+      <SimilarList
+        items={similarRows}
+        basePath="/resources"
+        label="More like this"
+        className="lg:hidden"
+      />
+
+      {id && (
+        <div className="border-t border-border/60 pt-4">
+          <EngagementActions
+            type="resources"
+            id={id}
+            likeCount={resource.metrics?.likeCount ?? 0}
+            onPostClick={() => setShowShareComposer(true)}
+          />
+        </div>
+      )}
+    </ContentDetailShell>
   )
 }
 

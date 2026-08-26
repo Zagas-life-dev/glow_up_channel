@@ -318,6 +318,34 @@ export class ApiClient {
   }
 
   /**
+   * Authenticated multipart request.
+   *
+   * `getAuthHeaders` forces `Content-Type: application/json`, which destroys the
+   * multipart boundary the browser must set for a FormData body — so this sends
+   * only Authorization and lets fetch fill in the content type, while keeping
+   * the 401-refresh-retry that makeAuthenticatedRequest provides.
+   */
+  public static async makeAuthenticatedFormRequest(
+    url: string,
+    method: 'POST' | 'PUT' | 'PATCH',
+    formData: FormData,
+  ): Promise<Response> {
+    const doFetch = () => {
+      const headers: Record<string, string> = {};
+      const token = this.getAccessToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return fetch(url, { method, headers, body: formData });
+    };
+
+    let response = await doFetch();
+    if (response.status === 401) {
+      const refreshed = await this.refreshTokenIfNeeded();
+      if (refreshed) response = await doFetch();
+    }
+    return response;
+  }
+
+  /**
    * Subscription endpoints: in the browser, call same-origin Next.js proxies under /api/subscriptions/*
    * so fetch does not cross origins (fixes CORS / "Failed to fetch" to localhost:3001).
    * On the server, use the configured backend URL directly.
@@ -1522,6 +1550,19 @@ export class ApiClient {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/users/${userId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ isActive }),
+    });
+    return this.handleResponse(response);
+  }
+
+  /**
+   * Change the signed-in user's password. The backend endpoint has always existed at
+   * POST /api/users/change-password; the settings form simply never called it.
+   */
+  static async changePassword(currentPassword: string, newPassword: string): Promise<{ message?: string }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
     return this.handleResponse(response);
   }

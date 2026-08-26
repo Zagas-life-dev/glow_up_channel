@@ -19,6 +19,10 @@ import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
 import { LockedInProvider } from "@/contexts/locked-in-context"
+import { TrackerProvider } from "@/contexts/tracker-context"
+import { GiftProvider } from "@/contexts/gift-context"
+import TrackerReturnSheet from "@/components/tracker/return-sheet"
+import GiftPopup from "@/components/gifts/gift-popup"
 import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
@@ -162,15 +166,30 @@ export default async function RootLayout({
               <AuthProvider>
                 <PlaylistProvider>
                   <LockedInProvider>
-                    <PageProvider>
-                      <AppLayout>
-                        <VisitTracker />
-                        <RegisterSw />
-                        <PwaInstallBanner />
-                        {children}
-                        <Toaster position="bottom-center" />
-                      </AppLayout>
-                    </PageProvider>
+                    {/* Inside AuthProvider: the tracker is member-only, and the
+                        return watcher must never arm for a signed-out visitor. */}
+                    <TrackerProvider>
+                      {/* Also inside AuthProvider: gift announcements are
+                          member-only, and the poll must not run for a
+                          signed-out visitor. */}
+                      <GiftProvider>
+                        <PageProvider>
+                          <AppLayout>
+                            <VisitTracker />
+                            <RegisterSw />
+                            <PwaInstallBanner />
+                            {children}
+                            <TrackerReturnSheet />
+                            {/* Mounted app-wide rather than per page: a gift can
+                                land while the user is anywhere, and the popup is
+                                fixed-position so it overlays whichever layout
+                                branch AppLayout took. */}
+                            <GiftPopup />
+                            <Toaster position="bottom-center" />
+                          </AppLayout>
+                        </PageProvider>
+                      </GiftProvider>
+                    </TrackerProvider>
                   </LockedInProvider>
                 </PlaylistProvider>
               </AuthProvider>

@@ -1,195 +1,137 @@
 'use client'
 
 /**
- * Where the user is — the single most load-bearing answer in onboarding, since
- * location is the second-heaviest signal in the ranking layer.
+ * Where the user is — the single most load-bearing answer in onboarding, since location is the
+ * second-heaviest signal in the ranking layer.
  *
- * Three changes from the plain text version this replaces:
- *
- *   1. Country is a picker backed by the real ISO list, so profiles stop
- *      arriving as "nigeria", "Nigeria ", and "NGA" — all of which used to be
- *      three different countries as far as filtering was concerned.
- *   2. Whatever the CDN already knows is offered as a one-tap prefill.
- *   3. Precise location is offered, explained, and entirely optional. Declining
- *      costs nothing here — the typed country still drives ranking.
+ * The country picker offers only `SUPPORTED_COUNTRIES`, not every country on earth. Someone
+ * outside our coverage picking their real country used to produce a profile we have nothing to
+ * rank for; restricting the list makes the platform's actual reach honest at the point of asking.
  */
 
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import LocationPermissionCard from '@/components/location-permission-card'
-import { countryNames, lookupCountry } from '@/lib/geo/countries'
-import { useUserLocation } from '@/hooks/use-user-location'
-import { useLocale } from '@/lib/i18n/context'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { SUPPORTED_GROUPS, type SupportedRegion } from '@/lib/geo/supported'
+import { lookupCountry } from '@/lib/geo/countries'
+import { flagEmoji } from '@/lib/geo/dial-codes'
+import { StepField, StepHeader, StepPayoff, stepInputClass } from './step-shell'
 
-const locationSchema = z.object({
-  country: z.string().min(2, 'Country is required'),
-  province: z.string().min(2, 'Province/State is required'),
-  city: z.string().optional(),
-  /** Captured only if the user opts in; sent to the backend for distance ranking. */
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
-})
-
-type LocationFormValues = z.infer<typeof locationSchema>
-
-interface LocationStepProps {
-  onSubmit: (data: LocationFormValues) => void
-  initialData?: any
+const REGION_LABELS: Record<SupportedRegion, string> = {
+  'west-africa': 'West Africa',
+  'east-africa': 'East Africa',
+  'southern-africa': 'Southern Africa',
+  'central-africa': 'Central Africa',
 }
 
-const LocationStep = forwardRef<any, LocationStepProps>(({ onSubmit, initialData }, ref) => {
-  const { t } = useLocale()
-  const { location, loading, permission, requestPrecise } = useUserLocation()
-  const [prefilled, setPrefilled] = useState(false)
+interface LocationStepProps {
+  onSubmit: (data: { country: string; countryCode: string; province: string; city?: string }) => void
+  initialData?: any
+  onValidityChange?: (valid: boolean) => void
+}
 
-  const countries = useMemo(() => countryNames(), [])
+const LocationStep = forwardRef<any, LocationStepProps>(({ onSubmit, initialData, onValidityChange }, ref) => {
+  // Old cached answers arrived as free text ("nigeria", "NGA"), so normalise to a code first.
+  const initialCode =
+    initialData?.countryCode || lookupCountry(initialData?.country)?.code || ''
 
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<LocationFormValues>({
-    resolver: zodResolver(locationSchema),
-    defaultValues: {
-      // Normalize whatever was cached from a previous attempt, so an old
-      // free-text answer still matches an option in the picker.
-      country: lookupCountry(initialData?.country)?.name || initialData?.country || '',
-      province: initialData?.province || '',
-      city: initialData?.city || '',
-      latitude: initialData?.latitude,
-      longitude: initialData?.longitude,
-    },
-  })
+  const [countryCode, setCountryCode] = useState<string>(initialCode)
+  const [province, setProvince] = useState<string>(initialData?.province || '')
+  const [city, setCity] = useState<string>(initialData?.city || '')
+  const [touched, setTouched] = useState(false)
 
-  const country = watch('country')
-
-  // Offer the detected place once, and only into empty fields — never overwrite
-  // something the user has typed.
-  const detectedName = location.country
-  const canPrefill = !prefilled && !loading && Boolean(detectedName) && !country
+  const country = countryCode ? lookupCountry(countryCode) : null
+  const isValid = Boolean(countryCode) && province.trim().length >= 2
 
   useEffect(() => {
-    if (location.coordinates) {
-      setValue('latitude', location.coordinates.lat)
-      setValue('longitude', location.coordinates.lng)
-    }
-  }, [location.coordinates, setValue])
-
-  const applyDetected = () => {
-    if (detectedName) setValue('country', detectedName, { shouldValidate: true })
-    if (location.region) setValue('province', location.region, { shouldValidate: true })
-    if (location.city) setValue('city', location.city)
-    setPrefilled(true)
-  }
+    onValidityChange?.(isValid)
+  }, [isValid, onValidityChange])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
-      handleSubmit(onSubmit)()
-    }
+      setTouched(true)
+      if (!isValid || !country) return
+      onSubmit({
+        country: country.name,
+        countryCode: country.code,
+        province: province.trim(),
+        city: city.trim() || undefined,
+      })
+    },
   }))
 
-  const detectedLabel = [location.city, location.region, location.country]
-    .filter(Boolean)
-    .join(', ')
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-semibold text-foreground">{t('location.title')}</h3>
-        <p className="mt-2 text-muted-foreground">{t('location.subtitle')}</p>
-      </div>
+    <div>
+      <StepHeader
+        title="Where are you based?"
+        description="Geo-locked opportunities are the biggest chunk of what we index."
+      />
 
-      {canPrefill && (
-        <button
-          type="button"
-          onClick={applyDetected}
-          className="flex w-full items-center gap-3 rounded-xl border border-border/70 bg-card/70 p-3 text-left transition-colors hover:border-primary/60"
-        >
-          <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-          <span className="flex-1 text-sm">
-            {t('location.detected', { place: detectedLabel })}
-          </span>
-          <span className="text-xs font-medium text-primary">
-            {t('location.useDetected')}
-          </span>
-        </button>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="country">{t('location.country')}</Label>
-          <Controller
-            name="country"
-            control={control}
-            render={({ field }) => (
-              <>
-                {/* A datalist keeps this a plain text input — free-text answers
-                    still work for anywhere the list misses — while steering the
-                    common case onto a canonical spelling. */}
-                <Input
-                  id="country"
-                  list="glowup-country-list"
-                  placeholder={t('location.countryPlaceholder')}
-                  autoComplete="country-name"
-                  {...field}
-                  onBlur={(event) => {
-                    field.onBlur()
-                    const match = lookupCountry(event.target.value)
-                    if (match) field.onChange(match.name)
-                  }}
-                />
-                <datalist id="glowup-country-list">
-                  {countries.map((name) => (
-                    <option key={name} value={name} />
+      <div className="space-y-5">
+        <StepField label="Country" error={touched && !countryCode ? 'Pick your country to continue' : undefined}>
+          <Select value={countryCode} onValueChange={(value) => { setCountryCode(value); setTouched(false) }}>
+            <SelectTrigger className={stepInputClass}>
+              <SelectValue placeholder="Select your country" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[18rem]">
+              {SUPPORTED_GROUPS.map((group) => (
+                <SelectGroup key={group.region}>
+                  <SelectLabel className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {REGION_LABELS[group.region]}
+                  </SelectLabel>
+                  {group.countries.map((entry) => (
+                    <SelectItem key={entry.code} value={entry.code}>
+                      <span className="mr-2" aria-hidden>{flagEmoji(entry.code)}</span>
+                      {entry.name}
+                    </SelectItem>
                   ))}
-                </datalist>
-              </>
-            )}
-          />
-          {errors.country && <p className="text-sm text-destructive">{errors.country.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="province">{t('location.province')}</Label>
-          <Controller
-            name="province"
-            control={control}
-            render={({ field }) => (
-              <Input
-                id="province"
-                placeholder={t('location.provincePlaceholder')}
-                autoComplete="address-level1"
-                {...field}
-              />
-            )}
-          />
-          {errors.province && <p className="text-sm text-destructive">{errors.province.message}</p>}
-        </div>
-      </div>
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+        </StepField>
 
-      <div className="space-y-2">
-        <Label htmlFor="city">
-          {t('location.city')}{' '}
-          <span className="text-muted-foreground">({t('common.optional')})</span>
-        </Label>
-        <Controller
-          name="city"
-          control={control}
-          render={({ field }) => (
-            <Input
-              id="city"
-              placeholder={t('location.cityPlaceholder')}
-              autoComplete="address-level2"
-              {...field}
-            />
-          )}
-        />
-      </div>
+        <StepField
+          label="State"
+          htmlFor="province"
+          error={touched && province.trim().length < 2 ? 'Tell us which state or province' : undefined}
+        >
+          <Input
+            id="province"
+            value={province}
+            onChange={(e) => { setProvince(e.target.value); setTouched(false) }}
+            placeholder="Lagos"
+            className={stepInputClass}
+          />
+        </StepField>
 
-      <LocationPermissionCard permission={permission} onRequest={requestPrecise} />
-    </form>
+        <StepField label="City" htmlFor="city" optional>
+          <Input
+            id="city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Yaba, Surulere…"
+            className={stepInputClass}
+          />
+        </StepField>
+
+        {country ? (
+          <StepPayoff>
+            <strong className="font-semibold">{country.name}</strong> listings unlock the moment you
+            answer this, and everything else gets ranked against where you are.
+          </StepPayoff>
+        ) : null}
+      </div>
+    </div>
   )
 })
 

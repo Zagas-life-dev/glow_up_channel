@@ -3,11 +3,22 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 
+/**
+ * What a playlist may hold. Mirrors PLAYLIST_ITEM_TYPES on the backend.
+ *
+ * `gift` is deliberately in this union and deliberately absent from the feed,
+ * share, and promotion unions elsewhere: a gift can sit in someone's list but
+ * can never be pushed onto a feed or promoted. The backend also strips gift
+ * items from playlists read by signed-out visitors, so a shared public list
+ * never exposes one.
+ */
+export type PlaylistContentType = 'opportunity' | 'job' | 'event' | 'resource' | 'gift'
+
 export interface PlaylistItem {
   _id: string
   contentId: string
   title: string
-  contentType: 'opportunity' | 'job' | 'event' | 'resource'
+  contentType: PlaylistContentType
   company?: string
   organization?: string
   author?: string
@@ -115,7 +126,7 @@ interface PlaylistContextType {
 /** Optional rows for POST /api/playlists — same shape as add-item, persisted with `addedBy` from the creator. */
 export interface PlaylistCreateInitialItem {
   contentId: string
-  contentType: 'opportunity' | 'job' | 'event' | 'resource'
+  contentType: PlaylistContentType
   title: string
   company?: string | null
   organization?: string | null
@@ -135,7 +146,7 @@ export interface CreatePlaylistData {
 interface AddToPlaylistItem {
   _id: string
   title: string
-  type: 'opportunity' | 'job' | 'event' | 'resource'
+  type: PlaylistContentType
   company?: string
   organization?: string
   author?: string

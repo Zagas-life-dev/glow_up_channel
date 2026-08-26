@@ -15,13 +15,14 @@ import {
   RiAddLine,
   RiSearchLine,
   RiUserLine,
-  RiSettingsLine,
+  
   RiVipCrownLine,
   RiLogoutBoxRLine,
   RiArrowLeftLine,
   RiArrowRightLine,
   RiPlayList2Fill,
   RiDownloadLine,
+  RiCheckboxCircleLine,
 } from "react-icons/ri"
 import { canPublishContent } from '@/lib/roles'
 import { useGoBack } from "@/hooks/use-go-back"
@@ -32,7 +33,7 @@ const mainNavItems = [
   { name: "Home", icon: RiHomeLine, path: "/" },
   { name: "Playlist", icon: RiPlayList2Fill, path: "/playlists" },
   { name: "Search", icon: RiSearchLine, path: "/search" },
-  { name: "Settings", icon: RiSettingsLine, path: "/profile/settings" },
+  { name: "Tracker", icon: RiCheckboxCircleLine, path: "/tracker" },
 ]
 
 /**

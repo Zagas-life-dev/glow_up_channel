@@ -94,6 +94,7 @@ export const en = {
    */
   reasons: {
     matchesInterests: "Matches your interests",
+    youStartedThis: "You started this",
     matchesTag: "Matches your interest in {tag}",
     inYourCity: "In {city}",
     inYourCountry: "In {country}",
@@ -115,6 +116,38 @@ export const en = {
     basedOn: "Based on your interests and location",
     basedOnLocation: "Based on your location",
     basedOnInterests: "Based on your interests",
+  },
+
+  /**
+   * Gifts: admin-published resources handed to every user at once. They never
+   * appear in a feed — the popup and the profile-page list are the only
+   * surfaces they exist on.
+   */
+  gifts: {
+    badge: "Gift",
+    popupTitle: "You've got a gift!",
+    view: "View",
+    viewOthers: "View others",
+    close: "Close",
+    oneMore: "+1 more new gift waiting",
+    moreWaiting: "+{count} more new gifts waiting",
+    tab: "Gifts",
+    listTitle: "Your gifts",
+    listSubtitle: "Free resources from the UP team. Everyone gets the same ones.",
+    empty: "No gifts yet",
+    emptyHint: "When the UP team sends one, it lands here and you'll hear about it.",
+    isNew: "New",
+    openGift: "Open gift",
+    openLink: "Open link",
+    signedInOnly: "Sign in to see your gifts",
+    loadError: "Couldn't load your gifts.",
+    viewOnly: "Viewing only — this gift can't be downloaded.",
+    liked: "Liked",
+    like: "Like",
+    saved: "Saved",
+    save: "Save",
+    addToPlaylist: "Add to list",
+    backToGifts: "Back to gifts",
   },
 }
 

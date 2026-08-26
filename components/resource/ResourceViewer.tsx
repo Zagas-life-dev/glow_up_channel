@@ -30,21 +30,91 @@ const IMAGE_FILE_TYPES = new Set(['jpeg', 'jpg', 'png', 'gif', 'webp', 'avif'])
 // large as possible on small screens; matches the `p-2` content padding below.
 const PAGE_GUTTER = 16
 
+/**
+ * Smallest width a page is allowed to render at under fit-width.
+ *
+ * Plain fit-width is wrong on a phone: squeezing an A4 page into a 360px column
+ * renders body text at roughly 5px, which is unreadable — the document is
+ * "visible" and useless. Below this width we stop shrinking and let the page
+ * overflow horizontally instead, so text stays legible and the reader pans. At
+ * 640px an A4 page lands near 10-11px body text.
+ *
+ * Only fit-width is floored. Fit-page is an explicit "show me the whole sheet"
+ * request, and zoom still scales freely in both directions from the floored
+ * base, so nothing here prevents deliberately zooming out.
+ */
+const MIN_LEGIBLE_WIDTH = 640
+
 const ZOOM_MIN = 0.5
 const ZOOM_MAX = 4
 const ZOOM_STEP = 0.2
 
+/** Zoom level a double-tap jumps to, and back from. */
+const DOUBLE_TAP_ZOOM = 2
+const DOUBLE_TAP_MS = 300
+
 type FitMode = 'width' | 'page'
 
+/**
+ * Where the viewer gets its bytes and (optionally) its reading position.
+ *
+ * Abstracted so resources and gifts share one viewer: they are the same kind of
+ * document behind different collections and different content proxies, and
+ * forking the viewer would have meant fixing the mobile scaling problem twice.
+ */
+export type ViewerSource = {
+  /** Stable identity for the document; state resets when it changes. */
+  id: string
+  /** Fetch the document bytes through whichever authenticated proxy owns it. */
+  loadContent: () => Promise<Blob>
+  /** Restore the last page read, if this source tracks progress. */
+  loadProgress?: () => Promise<number | null>
+  /** Persist the current page. Called debounced; failures are the caller's to swallow. */
+  saveProgress?: (page: number, pageCount: number | null) => void
+}
+
 type ResourceViewerProps = {
-  resourceId: string
+  /**
+   * Resource-backed shorthand. Supply this or `source`; `source` wins when both
+   * are given.
+   */
+  resourceId?: string
+  /** Generic document source — used by gifts, which are not resources. */
+  source?: ViewerSource
   fileType?: string | null
-  /** Total pages/slides if known up front (from resource metadata). */
+  /** Total pages/slides if known up front (from the document's metadata). */
   initialPageCount?: number | null
 }
 
-export default function ResourceViewer({ resourceId, fileType, initialPageCount = null }: ResourceViewerProps) {
+/** The default source: a resource, read through the resource content proxy. */
+function resourceSource(resourceId: string): ViewerSource {
+  return {
+    id: resourceId,
+    loadContent: () => ApiClient.getResourceContentBlob(resourceId),
+    loadProgress: async () => {
+      const progress = await ApiClient.getResourceProgress(resourceId)
+      return progress?.page ?? null
+    },
+    saveProgress: (page, pageCount) => {
+      ApiClient.saveResourceProgress(resourceId, page, pageCount ?? undefined).catch(() => {})
+    },
+  }
+}
+
+export default function ResourceViewer({
+  resourceId,
+  source,
+  fileType,
+  initialPageCount = null,
+}: ResourceViewerProps) {
   const isImage = IMAGE_FILE_TYPES.has(fileType ?? '')
+
+  // Memoised so the effects below key off a stable object across renders.
+  const activeSource = useMemo<ViewerSource | null>(() => {
+    if (source) return source
+    if (resourceId) return resourceSource(resourceId)
+    return null
+  }, [source, resourceId])
 
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number | null>(initialPageCount)
@@ -65,13 +135,17 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
   const contentRef = useRef<HTMLDivElement | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch the file bytes through the authenticated backend proxy (Cloudinary URL never exposed).
+  const sourceId = activeSource?.id ?? null
+
+  // Fetch the document bytes through the authenticated proxy (asset URL never exposed).
   useEffect(() => {
+    if (!activeSource) return
     let cancelled = false
     let createdUrl: string | null = null
     setLoadError(false)
     setObjectUrl(null)
-    ApiClient.getResourceContentBlob(resourceId)
+    activeSource
+      .loadContent()
       .then((b) => {
         if (cancelled) return
         createdUrl = URL.createObjectURL(b)
@@ -82,21 +156,24 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
       cancelled = true
       if (createdUrl) URL.revokeObjectURL(createdUrl)
     }
-  }, [resourceId])
+  }, [activeSource])
 
-  // Restore last reading position (PDF/doc only — images have no page concept).
+  // Restore last reading position (PDF/doc only — images have no page concept,
+  // and not every source tracks progress).
   useEffect(() => {
-    if (isImage) { setProgressRestored(true); return }
+    if (!activeSource) return
+    if (isImage || !activeSource.loadProgress) { setProgressRestored(true); return }
     let cancelled = false
-    ApiClient.getResourceProgress(resourceId)
-      .then((p) => {
+    activeSource
+      .loadProgress()
+      .then((restored) => {
         if (cancelled) return
-        if (p?.page && p.page > 0) setPage(p.page)
+        if (restored && restored > 0) setPage(restored)
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setProgressRestored(true) })
     return () => { cancelled = true }
-  }, [resourceId, isImage])
+  }, [activeSource, isImage])
 
   // Keep the editable page box in sync with the actual page.
   useEffect(() => { setPageInput(String(page)) }, [page])
@@ -134,12 +211,12 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
   // Persist reading progress (debounced, PDF/doc only).
   useEffect(() => {
     if (isImage || !progressRestored) return
+    const save = activeSource?.saveProgress
+    if (!save) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      ApiClient.saveResourceProgress(resourceId, page, numPages ?? undefined).catch(() => {})
-    }, 600)
+    saveTimer.current = setTimeout(() => save(page, numPages), 600)
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
-  }, [page, numPages, progressRestored, resourceId, isImage])
+  }, [page, numPages, progressRestored, activeSource, isImage])
 
   // Memoize so Document only reloads when the URL changes, not on page navigation.
   const fileProp = useMemo(
@@ -168,6 +245,69 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
     setFitMode((m) => (m === 'width' ? 'page' : 'width'))
   }, [])
   const rotate = useCallback(() => setRotation((r) => (r + 90) % 360), [])
+
+  /**
+   * Touch gestures: two-finger pinch, and double-tap to toggle zoom.
+   *
+   * Attached natively rather than through React props because the pinch handler
+   * has to call preventDefault to stop the browser zooming the whole page, and
+   * React's touch listeners are registered passive.
+   */
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+
+    let pinchStartDistance = 0
+    let pinchStartZoom = 1
+    let lastTapAt = 0
+
+    const distanceBetween = (touches: TouchList) => {
+      const dx = touches[0].clientX - touches[1].clientX
+      const dy = touches[0].clientY - touches[1].clientY
+      return Math.hypot(dx, dy)
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchStartDistance = distanceBetween(e.touches)
+        pinchStartZoom = zoom
+        return
+      }
+      if (e.touches.length === 1) {
+        const now = Date.now()
+        if (now - lastTapAt < DOUBLE_TAP_MS) {
+          // Snap between the fitted view and a readable close-up.
+          setZoom((z) => (z > 1.05 ? 1 : DOUBLE_TAP_ZOOM))
+          lastTapAt = 0
+        } else {
+          lastTapAt = now
+        }
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || pinchStartDistance === 0) return
+      e.preventDefault()
+      const ratio = distanceBetween(e.touches) / pinchStartDistance
+      const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, pinchStartZoom * ratio))
+      setZoom(Math.round(next * 100) / 100)
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinchStartDistance = 0
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [zoom])
 
   const commitPageInput = useCallback(() => {
     const n = parseInt(pageInput, 10)
@@ -203,20 +343,33 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
     }
   }, [goNext, goPrev, zoomIn, zoomOut, toggleFullscreen])
 
+  if (!activeSource) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
+        <RiErrorWarningLine className="h-8 w-8 text-red-500" />
+        <p className="text-sm text-muted-foreground">No document to display.</p>
+      </div>
+    )
+  }
+
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
         <RiErrorWarningLine className="h-8 w-8 text-red-500" />
-        <p className="text-sm text-muted-foreground">Couldn&apos;t load this resource. Please try again.</p>
+        <p className="text-sm text-muted-foreground">Couldn&apos;t load this document. Please try again.</p>
       </div>
     )
   }
 
   // Compute the rendered page width from fit mode + zoom + rotation.
   const effectiveAspect = aspect == null ? null : rotation % 180 === 0 ? aspect : 1 / aspect
-  const fitWidthBase = contentWidth - PAGE_GUTTER
+  const available = contentWidth - PAGE_GUTTER
+  // The legibility floor: never let fit-width shrink a page below readable size,
+  // and never let the floor inflate a page on a screen that is already wide
+  // enough (max, not a bare constant).
+  const fitWidthBase = Math.max(available, MIN_LEGIBLE_WIDTH)
   const availHeight = Math.max(240, contentHeight - PAGE_GUTTER)
-  const fitPageBase = effectiveAspect ? Math.min(fitWidthBase, effectiveAspect * availHeight) : fitWidthBase
+  const fitPageBase = effectiveAspect ? Math.min(available, effectiveAspect * availHeight) : available
   const base = fitMode === 'page' ? fitPageBase : fitWidthBase
   const pageWidth = Math.max(120, base * zoom)
 
@@ -301,14 +454,21 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
         </div>
       </div>
 
-      {/* Content — overflow-auto scrolls both axes when zoomed. The inner
+      {/* Content — overflow-auto scrolls both axes, which is what makes the
+          legibility floor usable: below MIN_LEGIBLE_WIDTH the page is wider than
+          the screen on purpose and the reader pans across it. The inner
           `mx-auto w-fit` centers the page when it's smaller than the viewport,
           but auto margins collapse to 0 when it's larger, keeping it left-anchored
-          and fully scrollable (flex `justify-center` would clip the left overflow). */}
+          and fully scrollable (flex `justify-center` would clip the left overflow).
+          `touch-action: pan-x pan-y` leaves one-finger panning to the browser
+          while the pinch handler claims two-finger gestures. */}
       <div
         ref={contentRef}
-        className={`overflow-auto ${isFullscreen ? 'flex-1' : ''}`}
-        style={isFullscreen ? undefined : { maxHeight: '85vh' }}
+        className={`overflow-auto overscroll-contain ${isFullscreen ? 'flex-1' : ''}`}
+        style={{
+          touchAction: 'pan-x pan-y',
+          ...(isFullscreen ? {} : { maxHeight: '85vh' }),
+        }}
       >
         <div className="mx-auto w-fit p-2">
           {!objectUrl ? (
@@ -318,7 +478,7 @@ export default function ResourceViewer({ resourceId, fileType, initialPageCount 
           ) : isImage ? (
             <img
               src={objectUrl}
-              alt="Resource"
+              alt="Document"
               className="h-auto max-w-full rounded-lg object-contain"
               style={{ maxHeight: isFullscreen ? 'calc(100vh - 64px)' : '78vh' }}
               draggable={false}

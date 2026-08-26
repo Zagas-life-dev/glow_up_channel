@@ -20,6 +20,7 @@ import {
   baseScoreSignal,
   engagementSignal,
   freshnessSignal,
+  historySignal,
   isExpired,
   languageSignal,
   locationSignal,
@@ -67,8 +68,15 @@ function buildReasons(
   contentTags: Map<string, number>,
   proximityTier: string,
   place: { city?: string; country?: string },
+  startedByUser: boolean,
 ): RankReason[] {
   const reasons: RankReason[] = []
+
+  // First, ahead of every inferred reason: this is the only one the user told
+  // us themselves, and it names something they already decided they wanted.
+  if (startedByUser) {
+    reasons.push({ key: "youStartedThis" })
+  }
 
   if ((breakdown.semantic ?? 0) >= REASON_THRESHOLD) {
     const top = sharedTags(userTags, contentTags)[0]
@@ -130,6 +138,7 @@ export function scoreItem<T extends Record<string, unknown>>(
     urgency: urgencySignal(item, context.now),
     freshness: freshnessSignal(item, context.now),
     engagement: engagementSignal(item),
+    history: historySignal(context.history, item),
     baseScore: baseScoreSignal(item),
   }
 
@@ -161,6 +170,9 @@ export function scoreItem<T extends Record<string, unknown>>(
   // manufacture a "matches your interests" reason it did not earn.
   const promoted = applyPromotionLift(normalized * 100, item)
 
+  const trackedId = typeof item._id === "string" ? item._id : String(item._id ?? "")
+  const trackedStatus = trackedId ? context.history?.byContentId.get(trackedId) : undefined
+
   const place = {
     city: typeof item.city === "string" ? item.city : undefined,
     country: typeof item.country === "string" ? item.country : undefined,
@@ -175,6 +187,7 @@ export function scoreItem<T extends Record<string, unknown>>(
       content.tags,
       location.proximity.tier,
       place,
+      trackedStatus === "started",
     ),
     breakdown,
     proximityTier: location.proximity.tier,

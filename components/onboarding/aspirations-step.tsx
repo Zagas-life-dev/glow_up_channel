@@ -1,66 +1,52 @@
 'use client'
 
-import { useState, forwardRef, useImperativeHandle } from 'react'
-import { Button } from '@/components/ui/button'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { cn } from '@/lib/utils'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
-const aspirationsList = [
-  "Access to career opportunities",
-  "Mentorship & guidance",
-  "Networking & professional connections",
-  "Skill development",
-  "Entrepreneurship support"
-]
+import { OptionGrid, StepHeader, StepPayoff } from './step-shell'
 
-interface AspirationsStepProps {
+const OPTIONS = [
+  { value: "Access to career opportunities", label: "Access to career opportunities" },
+  { value: "Mentorship & guidance", label: "Mentorship & guidance" },
+  { value: "Networking & professional connections", label: "Networking & professional connections" },
+  { value: "Skill development", label: "Skill development" },
+  { value: "Entrepreneurship support", label: "Entrepreneurship support" },
+] as const
+
+interface Props {
   onSubmit: (data: { aspirations: string[] }) => void
   initialData?: any
+  onValidityChange?: (valid: boolean) => void
 }
 
-const AspirationsStep = forwardRef<any, AspirationsStepProps>(({ onSubmit, initialData }, ref) => {
-  const [selectedAspirations, setSelectedAspirations] = useState<string[]>(initialData?.aspirations || [])
+const AspirationsStep = forwardRef<any, Props>(({ onSubmit, initialData, onValidityChange }, ref) => {
+  const [selected, setSelected] = useState<string[]>(initialData?.aspirations || [])
 
-  const toggleAspiration = (aspiration: string) => {
-    setSelectedAspirations(prev =>
-      prev.includes(aspiration)
-        ? prev.filter(item => item !== aspiration)
-        : [...prev, aspiration]
-    )
-  }
+  const isValid = selected.length >= 1
+
+  useEffect(() => {
+    onValidityChange?.(isValid)
+  }, [isValid, onValidityChange])
 
   useImperativeHandle(ref, () => ({
     submit: () => {
-      onSubmit({ aspirations: selectedAspirations })
-    }
+      if (!isValid) return
+      onSubmit({ aspirations: selected })
+    },
   }))
 
+  const toggle = (value: string) =>
+    setSelected((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-semibold text-foreground">What do you want to gain from UP?</h3>
-        <p className="mt-2 text-gray-600">Select all that apply. This helps us align with your goals.</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {aspirationsList.map(aspiration => (
-          <button
-            key={aspiration}
-            onClick={() => toggleAspiration(aspiration)}
-            className={cn(
-              "relative flex items-center justify-center p-4 h-24 text-center rounded-xl border-2 transition-all duration-200",
-              selectedAspirations.includes(aspiration)
-                ? "bg-orange-50 border-orange-500 text-orange-700 font-semibold"
-                : "bg-card hover:bg-gray-50 border-gray-200 text-gray-700"
-            )}
-          >
-            {selectedAspirations.includes(aspiration) && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-foreground rounded-full flex items-center justify-center">
-                <FlaticonIcon name="check" className="h-3 w-3" aria-hidden />
-              </div>
-            )}
-            {aspiration}
-          </button>
-        ))}
+    <div>
+      <StepHeader title={'What do you want out of this?'} description={'The last question. This shapes what we push to you, not just what we show.'} />
+
+      <div className="space-y-5">
+        <OptionGrid options={OPTIONS} selected={selected} onToggle={toggle} columns={1} />
+
+        <StepPayoff value={selected.length ? String(selected.length) : undefined}>
+          {selected.length ? 'goals set. You can change any of this later in Settings.' : 'Pick at least one to continue.'}
+        </StepPayoff>
       </div>
     </div>
   )
@@ -68,4 +54,4 @@ const AspirationsStep = forwardRef<any, AspirationsStepProps>(({ onSubmit, initi
 
 AspirationsStep.displayName = 'AspirationsStep'
 
-export default AspirationsStep 
+export default AspirationsStep

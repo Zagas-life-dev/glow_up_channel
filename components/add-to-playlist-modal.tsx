@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { usePlaylist, Playlist } from '@/contexts/playlist-context'
+import { usePlaylist, Playlist, type PlaylistContentType } from '@/contexts/playlist-context'
 import { cn } from '@/lib/utils'
 import { trackAddToPlaylist } from '@/lib/tracking'
 import {
@@ -20,7 +20,7 @@ import PlaylistModal from './playlist-modal'
 interface AddToPlaylistItem {
   _id: string
   title: string
-  type: 'opportunity' | 'job' | 'event' | 'resource'
+  type: PlaylistContentType
   company?: string
   organization?: string
   author?: string
@@ -60,8 +60,13 @@ export default function AddToPlaylistModal({ isOpen, onClose, item, onItemAddedT
       await addToPlaylist(playlist._id, item)
       setAddedTo([...addedTo, playlist._id])
       
-      // Track active user activity (fire-and-forget, won't throw errors)
-      trackAddToPlaylist(item.type, item._id)
+      // Track active user activity (fire-and-forget, won't throw errors).
+      // Gifts are excluded on purpose: this signal feeds the activity and
+      // recommendation pipeline, and a gift must never influence or appear in
+      // a feed. Adding one to a list is a private act, not a ranking signal.
+      if (item.type !== 'gift') {
+        trackAddToPlaylist(item.type, item._id)
+      }
       onItemAddedToPlaylist?.()
     } catch (err: any) {
       setError(err.message || 'Failed to add to playlist')

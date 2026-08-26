@@ -1,42 +1,104 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
-  RiArrowLeftLine,
   RiExternalLinkLine,
   RiMapPinLine,
   RiMoneyDollarCircleLine,
   RiTimeLine,
   RiBriefcaseLine,
-  RiCheckboxCircleLine,
-  RiFileLine,
+  RiAddLine,
 } from 'react-icons/ri'
+import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
 import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
-import AuthGuard from '@/components/auth-guard'
+import AddToPlaylistModal from '@/components/add-to-playlist-modal'
+import { DetailHero } from '@/components/content-detail/detail-hero'
+import { ContentDetailShell } from '@/components/content-detail/detail-shell'
+import {
+  BulletList,
+  DetailProse,
+  DetailSection,
+  Fact,
+  FactList,
+  SimilarList,
+  TagRow,
+  WhyCard,
+} from '@/components/content-detail/sections'
+import {
+  applyHost,
+  composeTiles,
+  deadlineTile,
+  formatDate,
+  formatShortDate,
+  locationLine,
+  type StatTile,
+} from '@/lib/content-detail/format'
+import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { toast } from 'sonner'
 import { trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
+import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type JobPageProps = { params: Promise<{ id: string }> }
 
+/** Pay as one line, e.g. "NGN 450,000/month". Null when the listing omits it. */
+function payLine(pay: any): string | null {
+  if (!pay?.amount) return null
+  const currency = pay.currency || 'NGN'
+  return `${currency} ${pay.amount}${pay.period ? `/${pay.period}` : ''}`
+}
+
+/**
+ * The three numbers worth reading before anything else.
+ *
+ * Built only from what the listing actually carries, so a sparse scraped record
+ * renders fewer tiles rather than confident-looking guesses.
+ */
+function buildStatTiles(job: any): StatTile[] {
+  const optional: StatTile[] = []
+
+  const pay = payLine(job.pay)
+  if (pay) optional.push({ label: 'Pay', value: pay })
+
+  if (job.jobType) optional.push({ label: 'Type', value: String(job.jobType) })
+
+  const place = locationLine(job.location)
+  if (place) optional.push({ label: 'Where', value: place })
+
+  if (job.experienceLevel) {
+    optional.push({ label: 'Level', value: String(job.experienceLevel) })
+  }
+
+  return composeTiles(optional, deadlineTile(job.dates?.applicationDeadline))
+}
+
 function JobPageContent({ params }: JobPageProps) {
-  const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [id, setId] = useState<string>('')
   const [showShareComposer, setShowShareComposer] = useState(false)
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
+  const tracker = useOptionalTracker()
+
+  /**
+   * The rail and phone-bar Apply buttons are the same exit through two entry
+   * points, so they share one handler — including arming the honesty tracker,
+   * which has to happen before the browser leaves for the listing.
+   */
+  const handleApplyClick = useCallback(() => {
+    ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})
+    ApiClient.recordApply('job', id).catch(() => {})
+    void tracker?.startTracking('job', id, 'apply_button')
+  }, [id, tracker])
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
@@ -65,6 +127,26 @@ function JobPageContent({ params }: JobPageProps) {
     ApiClient.recordPromotionClick(id, 'job', 'view').catch(() => {})
   }, [isAuthenticated, id, job])
 
+  const { reasons, glow, personalised } = useContentRanking(job)
+  const similar = useSimilarContent('jobs', job, {
+    getDeadline: (row) => row?.dates?.applicationDeadline,
+  })
+
+  const handleShare = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: job?.title ?? 'Job', url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied')
+      }
+    } catch {
+      // dismissed or clipboard denied — nothing to report
+    }
+  }, [job])
+
   if (loading) return <ContentDetailSkeleton />
   if (error || !job) {
     return (
@@ -74,168 +156,224 @@ function JobPageContent({ params }: JobPageProps) {
     )
   }
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const host = applyHost(job.url)
+  const place = locationLine(job.location)
+  const deadline = job.dates?.applicationDeadline
 
-  const getLocationString = () => {
-    if (!job.location) return 'Location TBD'
-    if (typeof job.location === 'string') return job.location
-    if (job.location.isRemote) return 'Remote'
-    const parts = [job.location.city, job.location.country].filter(Boolean)
-    return parts.join(', ') || 'Location TBD'
-  }
+  const eyebrow = [
+    String(job.jobType || 'Job'),
+    deadline ? `Apply by ${formatShortDate(deadline)}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
-  const metaParts = []
-  if (job.location) metaParts.push(getLocationString())
-  if (job.pay?.amount) metaParts.push(`${job.pay.amount} ${job.pay.currency}${job.pay.period ? `/${job.pay.period}` : ''}`)
-  if (job.dates?.applicationDeadline) metaParts.push(`Apply by ${formatDate(job.dates.applicationDeadline)}`)
-  const metaLine = metaParts.join(' · ')
+  const subtitle = [job.company, place].filter(Boolean).join(' · ')
+  const tiles = buildStatTiles(job)
+
+  const applyButton = !job.url ? (
+    <p className="py-4 text-center text-sm text-muted-foreground">
+      No application link on this listing yet.
+    </p>
+  ) : !isAuthenticated ? (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Link href={`/login?callbackUrl=${encodeURIComponent(`/jobs/${id}`)}`}>
+        Sign in to apply
+        <RiExternalLinkLine className="h-4 w-4" aria-hidden />
+      </Link>
+    </Button>
+  ) : (
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <a
+        href={cleanUrl(job.url)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleApplyClick}
+      >
+        <span className="truncate">{host ? `Apply on ${host}` : 'Apply now'}</span>
+        <RiExternalLinkLine className="h-4 w-4 flex-shrink-0" aria-hidden />
+      </a>
+    </Button>
+  )
+
+  const addToPlaylistButton = isAuthenticated ? (
+    <button
+      type="button"
+      onClick={() => setShowPlaylistModal(true)}
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      aria-label="Add to a playlist"
+    >
+      <RiAddLine className="h-5 w-5" aria-hidden />
+    </button>
+  ) : null
+
+  const similarRows = similar.map((row) => {
+    const rowAny = row as any
+    const closes = rowAny.dates?.applicationDeadline
+    const meta = [payLine(rowAny.pay), closes ? `closes ${formatShortDate(closes)}` : null]
+      .filter(Boolean)
+      .join(' · ')
+    return { _id: row._id, title: String(rowAny.title ?? 'Untitled'), meta: meta || null }
+  })
 
   return (
-    <div className="min-h-screen bg-page pb-28">
-      <header className="sticky top-0 z-30 bg-page/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <RiArrowLeftLine className="h-5 w-5" />
-          </button>
-          <span className="text-[15px] font-semibold text-foreground">Job</span>
-          <div className="w-9" />
-        </div>
-      </header>
-
-      <main className="max-w-[600px] lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 lg:px-6 xl:px-8 border-x border-border min-h-screen xl:grid xl:grid-cols-[1fr_320px] xl:gap-12 2xl:gap-16">
-        <div className="min-w-0">
-        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <RiBriefcaseLine className="w-6 h-6 text-primary-foreground" />
+    <ContentDetailShell
+      hero={
+        <DetailHero
+          eyebrow={eyebrow}
+          title={job.title}
+          subtitle={subtitle}
+          tiles={tiles}
+          accent="orange"
+          onShare={handleShare}
+        />
+      }
+      action={applyButton}
+      secondaryAction={addToPlaylistButton}
+      actionNote={deadline ? `Closes ${formatDate(deadline)}` : null}
+      rail={
+        similarRows.length > 0 ? (
+          <div className="rounded-[1.5rem] border border-border/70 bg-card/60 p-5">
+            <SimilarList items={similarRows} basePath="/jobs" label="Similar, also open" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-foreground truncate">{job.company || 'Company'}</span>
-              {job.jobType && <Badge className="bg-primary/20 text-primary border-0 text-[10px] px-1.5 py-0 capitalize">{job.jobType}</Badge>}
-            </div>
-            <p className="text-[13px] text-muted-foreground">Job opening</p>
-          </div>
-        </div>
+        ) : null
+      }
+      overlays={
+        <>
+          <AddToPlaylistModal
+            isOpen={showPlaylistModal}
+            onClose={() => setShowPlaylistModal(false)}
+            item={{
+              _id: job._id,
+              title: job.title,
+              type: 'job',
+              company: job.company,
+              description: job.description,
+            }}
+            onItemAddedToPlaylist={() => {
+              void ApiClient.recordFeedPlaylistAdd('job', job._id)
+            }}
+          />
 
-        <div className="px-4 pb-4">
-          <h1 className="text-xl font-bold text-foreground leading-snug break-words">{job.title}</h1>
-          <p className="text-[13px] text-muted-foreground mt-2">{metaLine}</p>
-          {job.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {job.tags.map((tag: string, i: number) => (
-                <span key={i} className="text-[12px] text-primary font-medium">#{tag}</span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="px-4 py-3 flex items-center gap-1 border-y border-border">
-          {id && (
-            <EngagementActions
-              type="jobs"
-              id={id}
-              className="flex-shrink-0"
-              likeCount={job.metrics?.likeCount ?? 0}
-              onPostClick={() => setShowShareComposer(true)}
+          {showShareComposer && job && (
+            <ContentShareComposer
+              content={{
+                _id: job._id,
+                title: job.title,
+                description: job.description,
+                type: 'job',
+                company: job.company,
+                location: job.location,
+                dates: job.dates,
+                pay: job.pay,
+              }}
+              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
+              onClose={() => setShowShareComposer(false)}
             />
           )}
-        </div>
-
-        <div className="px-4 py-5 space-y-6 text-[15px]">
-          {job.description && <p className="text-foreground leading-relaxed whitespace-pre-wrap">{job.description}</p>}
-
-          {job.requirements?.length > 0 && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requirements</p>
-              <ul className="text-muted-foreground text-sm pl-6 list-disc space-y-1">
-                {job.requirements.map((req: string, i: number) => <li key={i}>{req}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {job.benefits?.length > 0 && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Benefits</p>
-              <ul className="text-muted-foreground text-sm pl-6 list-disc space-y-1">
-                {job.benefits.map((b: string, i: number) => <li key={i}>{b}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {job.location && typeof job.location === 'object' && !job.location.isRemote && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Location</p>
-              <p className="text-muted-foreground text-sm">{job.location.city && `${job.location.city}, `}{job.location.country}{job.location.address && ` · ${job.location.address}`}</p>
-            </div>
-          )}
-
-          {job.dates?.applicationDeadline && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Deadline</p>
-              <p className="text-muted-foreground text-sm flex items-center gap-2"><RiTimeLine className="w-4 h-4 text-primary" /> {formatDate(job.dates.applicationDeadline)}</p>
-            </div>
-          )}
-
-          {job.pay?.amount && (
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Compensation</p>
-              <p className="text-muted-foreground text-sm flex items-center gap-2"><RiMoneyDollarCircleLine className="w-4 h-4 text-primary" /> {job.pay.currency || 'NGN'} {job.pay.amount}{job.pay.period && <span> per {job.pay.period}</span>}</p>
-            </div>
-          )}
-        </div>
-        </div>
-
-        {job.url && (
-          <>
-            <div className="xl:hidden sticky bottom-0 left-0 right-0 p-4 bg-page/95 backdrop-blur-md border-t border-border">
-              {!isAuthenticated ? (
-                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]">
-                  <Link href={`/login?callbackUrl=${encodeURIComponent(`/jobs/${id}`)}`} className="flex items-center justify-center gap-2">
-                    Sign in to apply
-                    <RiExternalLinkLine className="w-4 h-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 font-semibold text-[15px]">
-                  <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => { ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {}); ApiClient.recordApply('job', id).catch(() => {}); }}>
-                    Apply
-                    <RiExternalLinkLine className="w-4 h-4" />
-                  </a>
-                </Button>
-              )}
-            </div>
-            <aside className="hidden xl:block pt-4">
-              <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
-                {!isAuthenticated ? (
-                  <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold">
-                    <Link href={`/login?callbackUrl=${encodeURIComponent(`/jobs/${id}`)}`} className="flex items-center justify-center gap-2">
-                      Sign in to apply
-                      <RiExternalLinkLine className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-semibold">
-                    <a href={cleanUrl(job.url)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2" onClick={() => { ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {}); ApiClient.recordApply('job', id).catch(() => {}); }}>
-                      Apply
-                      <RiExternalLinkLine className="w-4 h-4" />
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </aside>
-          </>
-        )}
-      </main>
-
-      {showShareComposer && job && (
-        <ContentShareComposer
-          content={{ _id: job._id, title: job.title, description: job.description, type: 'job', company: job.company, location: job.location, dates: job.dates, pay: job.pay }}
-          onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-          onClose={() => setShowShareComposer(false)}
+        </>
+      }
+    >
+      {personalised && (
+        <WhyCard
+          reasons={reasons}
+          glow={glow}
+          caveat={
+            !deadline
+              ? 'No closing date published — check the source before you plan around it.'
+              : null
+          }
         />
       )}
-    </div>
+
+      {job.tags?.length > 0 && <TagRow tags={job.tags} />}
+
+      {job.description && (
+        <DetailSection label="About the role">
+          <DetailProse>{job.description}</DetailProse>
+        </DetailSection>
+      )}
+
+      {job.requirements?.length > 0 && (
+        <DetailSection label="Requirements">
+          <BulletList items={job.requirements} />
+        </DetailSection>
+      )}
+
+      {job.benefits?.length > 0 && (
+        <DetailSection label="What you get">
+          <BulletList items={job.benefits} />
+        </DetailSection>
+      )}
+
+      {(job.pay?.amount || job.jobType || job.experienceLevel) && (
+        <DetailSection label="The offer">
+          <FactList>
+            {job.pay?.amount && (
+              <Fact icon={RiMoneyDollarCircleLine} label="Pay">
+                {payLine(job.pay)}
+              </Fact>
+            )}
+            {job.jobType && (
+              <Fact icon={RiBriefcaseLine} label="Type">
+                <span className="capitalize">{job.jobType}</span>
+              </Fact>
+            )}
+            {job.experienceLevel && (
+              <Fact icon={RiBriefcaseLine} label="Level">
+                <span className="capitalize">{job.experienceLevel}</span>
+              </Fact>
+            )}
+          </FactList>
+        </DetailSection>
+      )}
+
+      {deadline && (
+        <DetailSection label="Important dates">
+          <FactList>
+            <Fact icon={RiTimeLine} label="Deadline">{formatDate(deadline)}</Fact>
+            {job.dates?.startDate && (
+              <Fact icon={RiTimeLine} label="Start">{formatDate(job.dates.startDate)}</Fact>
+            )}
+          </FactList>
+        </DetailSection>
+      )}
+
+      {job.location && typeof job.location === 'object' && !job.location.isRemote && (
+        <DetailSection label="Location">
+          <p className="text-[15px] text-muted-foreground">
+            {place || '—'}
+            {job.location.address && <span className="mt-1 block">{job.location.address}</span>}
+          </p>
+        </DetailSection>
+      )}
+
+      {job.location?.isRemote && (
+        <DetailSection label="Location">
+          <FactList>
+            <Fact icon={RiMapPinLine} label="Remote">Open to anyone</Fact>
+          </FactList>
+        </DetailSection>
+      )}
+
+      {/* Phones read the related list inline; desktop gets it in the rail. */}
+      <SimilarList
+        items={similarRows}
+        basePath="/jobs"
+        label="Similar, also open"
+        className="lg:hidden"
+      />
+
+      {id && (
+        <div className="border-t border-border/60 pt-4">
+          <EngagementActions
+            type="jobs"
+            id={id}
+            likeCount={job.metrics?.likeCount ?? 0}
+            onPostClick={() => setShowShareComposer(true)}
+          />
+        </div>
+      )}
+    </ContentDetailShell>
   )
 }
 
