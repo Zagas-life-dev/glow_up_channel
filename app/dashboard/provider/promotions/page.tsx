@@ -1,32 +1,40 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import { AuthRequiredCard } from '@/components/auth-required-card'
 import ApiClient from "@/lib/api-client"
+import { getPostingLimit } from "@/lib/posting-limits"
+import { cn } from "@/lib/utils"
 import {
-  ArrowLeft,
   Target,
   Calendar,
   Briefcase,
   BookOpen,
   TrendingUp,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   BarChart3,
+  Sparkles,
+  Layers,
+  Wallet,
 } from 'lucide-react'
 import { toast } from "sonner"
 import { WalletTopUpModal } from "@/components/wallet/WalletTopUpModal"
 import { PromoteContentModal } from "@/components/promote-content-modal"
-import ProviderDashboardSidebar from '@/components/provider/provider-dashboard-sidebar'
-import ProviderDashboardBottomNav from '@/components/provider/provider-dashboard-bottom-nav'
+import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
+import {
+  Panel,
+  EmptyState,
+  StatTile,
+  SegmentedTabs,
+  ProviderLoading,
+  statusToneClass,
+} from '@/components/provider/provider-ui'
 
 // Types matching backend exactly
 interface Promotion {
@@ -67,18 +75,167 @@ interface UserContent {
   createdAt: string
 }
 
+type PromoTab = 'active' | 'pending' | 'past' | 'recommended' | 'all-content'
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
+
+/** Static map, not a factory — the icon is looked up, never constructed. */
+const CONTENT_ICONS: Record<string, any> = {
+  event: Calendar,
+  job: Briefcase,
+  resource: BookOpen,
+  opportunity: Target,
+}
+
+/** Display name for a promotion: wallet-based promotions show "Wallet". */
+const getPackageDisplayName = (p: Promotion) =>
+  p.packageType === 'wallet_daily' || !p.packageName ? 'Wallet' : p.packageName || '—'
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * One promotion, showing every field the old table *and* card views showed
+ * between them: package, type, investment, duration, budget, spend, payment
+ * status, remaining days, end date and creation date.
+ */
+function PromotionRow({ promotion }: { promotion: Promotion }) {
+  const Icon = CONTENT_ICONS[promotion.contentType] ?? Target
+  const budget = promotion.spendLimitNg ?? null
+  const spent = promotion.spentNg ?? null
+
+  const facts: { label: string; value: string }[] = [
+    { label: 'Investment', value: formatCurrency(promotion.investment || 0) },
+    { label: 'Duration', value: `${promotion.duration ?? 0} days` },
+    { label: 'Budget', value: budget != null && budget > 0 ? formatCurrency(budget) : 'No limit' },
+    {
+      label: 'Ends',
+      value: promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—',
+    },
+  ]
+
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/40 p-3 transition-colors hover:border-primary/20 hover:bg-card/80">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
+          <Icon className="h-4 w-4 text-primary" />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-foreground">
+              {promotion.content?.title || getPackageDisplayName(promotion)}
+            </h3>
+            <Badge className={cn("shrink-0 rounded-md px-1.5 py-0 text-[10px] font-semibold capitalize", statusToneClass(promotion.status))}>
+              {promotion.status}
+            </Badge>
+          </div>
+
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+            <span className="font-medium text-foreground/70">{getPackageDisplayName(promotion)}</span>
+            <span className="opacity-40">·</span>
+            <span className="capitalize">{promotion.contentType || '—'}</span>
+            <span className="opacity-40">·</span>
+            <span>Started {new Date(promotion.createdAt).toLocaleDateString()}</span>
+          </div>
+
+          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/50 pt-2.5 sm:grid-cols-4">
+            {facts.map((fact) => (
+              <div key={fact.label} className="min-w-0">
+                <dt className="truncate text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{fact.label}</dt>
+                <dd className="truncate text-body-sm font-semibold tabular-nums text-foreground">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              Payment
+              <Badge className={cn("rounded-md px-1.5 py-0 text-[10px] font-semibold capitalize", statusToneClass(promotion.paymentStatus))}>
+                {promotion.paymentStatus}
+              </Badge>
+            </span>
+            {typeof promotion.remainingDays === 'number' && promotion.remainingDays > 0 ? (
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                <Clock className="h-3 w-3" />
+                {promotion.remainingDays} days remaining
+              </span>
+            ) : null}
+            {spent != null && spent > 0 ? (
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                <Wallet className="h-3 w-3" />
+                {formatCurrency(spent)} spent
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** A piece of content the provider can put budget behind. */
+function PromotableContentRow({
+  content,
+  showMetrics = false,
+  onPromote,
+}: {
+  content: UserContent
+  showMetrics?: boolean
+  onPromote: (content: UserContent) => void
+}) {
+  const Icon = CONTENT_ICONS[content.contentType] ?? Target
+  const metrics: any = (content as any).metrics || {}
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/40 p-3 transition-colors hover:border-primary/20 hover:bg-card/80">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
+        <Icon className="h-4 w-4 text-primary" />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-body-sm font-semibold text-foreground">{content.title}</p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
+          <span className="capitalize">{content.contentType}</span>
+          {showMetrics ? (
+            <>
+              <span className="opacity-40">·</span>
+              <span className="tabular-nums">{metrics.viewCount || 0} views</span>
+              <span className="opacity-40">·</span>
+              <span className="tabular-nums">{metrics.likeCount || 0} likes</span>
+              <span className="opacity-40">·</span>
+              <span className="tabular-nums">{metrics.saveCount || 0} saves</span>
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      <Button
+        size="sm"
+        onClick={() => onPromote(content)}
+        className="h-9 shrink-0 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90"
+      >
+        <TrendingUp className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">Promote</span>
+      </Button>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
 export default function PromotionsPage() {
   const { setHideNavbar, setHideFooter } = usePage()
-  const { user, isAuthenticated } = useAuth()
+  const { user, profile, isAuthenticated } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-  
-  // State
+
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [userContent, setUserContent] = useState<UserContent[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeSection, setActiveSection] = useState<PromoTab>('active')
 
-  // Promote modal: content selected for promotion (opens PromoteContentModal)
+  // Promote modal: content selected for promotion
   const [showPromoteModal, setShowPromoteModal] = useState(false)
   const [selectedContent, setSelectedContent] = useState<UserContent | null>(null)
 
@@ -92,6 +249,69 @@ export default function PromotionsPage() {
     }
   }, [setHideNavbar, setHideFooter])
 
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const authHeaders = {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Content-Type': 'application/json',
+      }
+
+      // Fetch user promotions (authenticated)
+      const promotionsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promotions/my-promotions`, {
+        headers: authHeaders,
+      })
+      const promotionsData = await promotionsResponse.json()
+
+      if (promotionsData.success) {
+        setPromotions(promotionsData.data.promotions || [])
+      } else {
+        if (promotionsResponse.status === 401) {
+          toast.error('Please log in again to continue')
+        } else if (promotionsResponse.status === 403) {
+          toast.error('You do not have permission to access promotions')
+        } else {
+          toast.error('Failed to load promotions')
+        }
+        setPromotions([])
+      }
+
+      // Fetch user content (authenticated)
+      const [opportunitiesRes, eventsRes, jobsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/my/opportunities`, { headers: authHeaders })
+          .then(res => res.json())
+          .catch(() => ({ success: false, data: { opportunities: [] } })),
+
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events/my/events`, { headers: authHeaders })
+          .then(res => res.json())
+          .catch(() => ({ success: false, data: { events: [] } })),
+
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/my/jobs`, { headers: authHeaders })
+          .then(res => res.json())
+          .catch(() => ({ success: false, data: { jobs: [] } })),
+      ])
+
+      const allContent: UserContent[] = []
+
+      if (opportunitiesRes.success) {
+        allContent.push(...(opportunitiesRes.data.opportunities || []).map((item: any) => ({ ...item, contentType: 'opportunity' })))
+      }
+      if (eventsRes.success) {
+        allContent.push(...(eventsRes.data.events || []).map((item: any) => ({ ...item, contentType: 'event' })))
+      }
+      if (jobsRes.success) {
+        allContent.push(...(jobsRes.data.jobs || []).map((item: any) => ({ ...item, contentType: 'job' })))
+      }
+
+      setUserContent(allContent)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      toast.error('Failed to load promotions data')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Fetch data when authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -99,7 +319,7 @@ export default function PromotionsPage() {
     } else {
       setLoading(false)
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, user, fetchData])
 
   // Handle redirect back from Paystack after promotion payment
   useEffect(() => {
@@ -119,148 +339,34 @@ export default function PromotionsPage() {
           window.history.replaceState({}, '', window.location.pathname)
         })
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, fetchData])
 
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-
-      // Fetch user promotions (authenticated)
-      const promotionsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promotions/my-promotions`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      const promotionsData = await promotionsResponse.json()
-      console.log('Promotions response:', promotionsData)
-      
-      if (promotionsData.success) {
-        setPromotions(promotionsData.data.promotions || [])
-        console.log('Promotions loaded:', promotionsData.data.promotions)
-      } else {
-        console.error('Failed to fetch promotions:', promotionsData)
-        
-        if (promotionsResponse.status === 401) {
-          toast.error('Please log in again to continue')
-        } else if (promotionsResponse.status === 403) {
-          toast.error('You do not have permission to access promotions')
-        } else {
-          toast.error('Failed to load promotions')
-        }
-        setPromotions([])
-      }
-
-      // Fetch user content (authenticated)
-      const [opportunitiesRes, eventsRes, jobsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/my/opportunities`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }).then(res => res.json()).catch(() => ({ success: false, data: { opportunities: [] } })),
-        
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/events/my/events`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }).then(res => res.json()).catch(() => ({ success: false, data: { events: [] } })),
-        
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/my/jobs`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }).then(res => res.json()).catch(() => ({ success: false, data: { jobs: [] } }))
-      ])
-
-      console.log('Content responses:', { opportunitiesRes, eventsRes, jobsRes })
-
-      // Combine all content
-      const allContent: UserContent[] = []
-      
-      if (opportunitiesRes.success) {
-        const opportunities = opportunitiesRes.data.opportunities || []
-        allContent.push(...opportunities.map((item: any) => ({ ...item, contentType: 'opportunity' })))
-      }
-      
-      if (eventsRes.success) {
-        const events = eventsRes.data.events || []
-        allContent.push(...events.map((item: any) => ({ ...item, contentType: 'event' })))
-      }
-      
-      if (jobsRes.success) {
-        const jobs = jobsRes.data.jobs || []
-        allContent.push(...jobs.map((item: any) => ({ ...item, contentType: 'job' })))
-      }
-      
-      setUserContent(allContent)
-      console.log('Total user content loaded:', allContent.length)
-
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      toast.error('Failed to load promotions data')
-    } finally {
-      setLoading(false)
-    }
+  const handlePromote = (content: UserContent) => {
+    setSelectedContent(content)
+    setShowPromoteModal(true)
   }
 
-  // Helper functions
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'completed': return 'bg-primary/10 text-foreground'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+  if (loading) {
+    return <ProviderLoading label="Loading promotions..." />
   }
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'failed': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+  if (!isAuthenticated) {
+    return (
+      <AuthRequiredCard
+        title="Authentication required"
+        description="Please sign in to access your promotions."
+        icon={Target}
+        signInLabel="Sign in"
+      />
+    )
   }
 
-  const getContentIcon = (contentType: string) => {
-    switch (contentType) {
-      case 'event': return Calendar
-      case 'job': return Briefcase
-      case 'resource': return BookOpen
-      default: return Target
-    }
-  }
+  /* -------- derived data (unchanged rules, one bucket per tab) -------- */
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  // Display name for package column: wallet-based promotions show "Wallet", else package name or "—"
-  const getPackageDisplayName = (p: Promotion) =>
-    p.packageType === 'wallet_daily' || !p.packageName ? 'Wallet' : p.packageName || '—'
-
-  // Filter promotions
-  const activePromotions = promotions.filter(p => p.status === 'active' && p.paymentStatus === 'paid')
-  const pendingPromotions = promotions.filter(p => p.status === 'pending')
-  const completedPromotions = promotions.filter(p => p.status === 'completed' || p.status === 'expired')
-
-  // Promotion Manager derived data
   const now = new Date()
-  const currentManagerPromotions = promotions.filter(p =>
-    p.status === 'active' ||
-    p.status === 'pending' ||
-    p.status === 'paused'
-  )
 
-  const pastManagerPromotions = promotions.filter(p => {
+  // Finished: explicitly closed, or the end date has already passed.
+  const isPast = (p: Promotion) => {
     if (p.status === 'completed' || p.status === 'expired' || p.status === 'cancelled') return true
     if (p.endDate) {
       try {
@@ -271,14 +377,15 @@ export default function PromotionsPage() {
       }
     }
     return false
-  })
+  }
 
-  const totalUpfrontSpentNg = promotions.reduce((sum, p) => {
-    if (p.packageType === 'wallet_daily') {
-      return sum + p.duration * 100
-    }
-    return sum
-  }, 0)
+  // Three mutually exclusive, exhaustive buckets — every promotion lands in
+  // exactly one, so nothing can hide the way it did across the old tab groups.
+  const pastPromotions = promotions.filter(isPast)
+  const livePromotions = promotions.filter(p => !isPast(p))
+  const isRunning = (p: Promotion) => p.status === 'active' && p.paymentStatus === 'paid'
+  const activePromotions = livePromotions.filter(isRunning)
+  const pendingPromotions = livePromotions.filter(p => !isRunning(p))
 
   // Total budget: upfront (₦100/day) + per-click budget limit for each promotion
   const totalBudgetNg = promotions.reduce((sum, p) => {
@@ -287,27 +394,12 @@ export default function PromotionsPage() {
     return sum + upfront + budget
   }, 0)
 
-  const totalRemainingBudgetNg = promotions.reduce((sum, p) => {
-    const limit = p.spendLimitNg ?? null
-    if (limit != null && limit > 0) {
-      const spent = p.spentNg ?? 0
-      const remaining = Math.max(0, limit - spent)
-      return sum + remaining
-    }
-    return sum
-  }, 0)
-
-  // Recommended content: no active promotion + good engagement / recency
-  const activeContentIds = new Set(
-    promotions
-      .filter(p => p.status === 'active' && p.paymentStatus === 'paid')
-      .map(p => p.contentId)
-  )
-
+  // Content with no live promotion behind it
+  const activeContentIds = new Set(activePromotions.map(p => p.contentId))
   const unpromotedContent: UserContent[] = userContent.filter((c: any) => !activeContentIds.has(c._id))
 
-  const recommendedContent: UserContent[] = userContent
-    .filter((c: any) => !activeContentIds.has(c._id))
+  // Recommended: unpromoted content ranked by engagement + recency
+  const recommendedContent: UserContent[] = unpromotedContent
     .map((c: any) => {
       const metrics = c.metrics || {}
       const views = metrics.viewCount || 0
@@ -323,570 +415,145 @@ export default function PromotionsPage() {
     .slice(0, 10)
     .map(r => r.content)
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading promotions...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <AuthRequiredCard
-        title="Authentication required"
-        description="Please sign in to access your promotions."
-        icon={Target}
-        signInLabel="Sign in"
-      />
-    )
-  }
-
-  const providerNavItems = [
-    { id: 'overview' as const, label: 'Overview', icon: BarChart3 },
-    { id: 'content' as const, label: 'Content', icon: Target },
-    { id: 'promotions' as const, label: 'Promotions', icon: TrendingUp },
-    { id: 'analytics' as const, label: 'Analytics', icon: Clock },
+  const sections: { id: PromoTab; label: string; icon: any; count: number }[] = [
+    { id: 'active', label: 'Active', icon: CheckCircle2, count: activePromotions.length },
+    { id: 'pending', label: 'Pending', icon: Clock, count: pendingPromotions.length },
+    { id: 'past', label: 'Past', icon: BarChart3, count: pastPromotions.length },
+    { id: 'recommended', label: 'Recommended', icon: Sparkles, count: recommendedContent.length },
+    { id: 'all-content', label: 'All content', icon: Layers, count: unpromotedContent.length },
   ]
-  const providerNavRouteMap = {
-    overview: '/dashboard/provider',
-    content: '/dashboard/provider/posting',
-    promotions: '/dashboard/provider/promotions',
-    analytics: '/dashboard/provider/settings',
-  }
-  const activeProviderTab: 'overview' | 'content' | 'promotions' | 'analytics' =
-    pathname?.startsWith('/dashboard/provider/promotions') ? 'promotions' : 'overview'
-  const quickLinks = [
-    { label: 'Post Content', icon: Target, href: '/dashboard/provider/posting', variant: 'default' as const },
-    { label: 'Settings', icon: Clock, href: '/dashboard/provider/settings', variant: 'outline' as const },
-    { label: 'Home', icon: Calendar, href: '/', variant: 'outline' as const },
-  ]
+
+  const postingLimit = getPostingLimit(user?.role)
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)] font-sans flex">
-      <ProviderDashboardSidebar
-        user={user as any}
-        profile={null}
-        navItems={providerNavItems}
-        quickLinks={quickLinks}
-        activeTab={activeProviderTab}
-        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
-        totalPostings={userContent.length}
-        postingLimit={20}
-      />
-
-      <div className="flex-1 flex min-w-0 flex-col lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border/70 bg-page/80 backdrop-blur-xl">
-          <div className="flex h-14 items-center justify-between px-4 pt-[max(0rem,env(safe-area-inset-top))]">
-            <div>
-              <p className="text-overline uppercase tracking-[0.14em] text-muted-foreground">Provider workspace</p>
-              <h1 className="text-body font-semibold text-foreground">Promotion Manager</h1>
-            </div>
-            <Button variant="outline" size="sm" asChild className="rounded-xl border-border/70">
-              <Link href="/dashboard/provider/posting">Post content</Link>
-            </Button>
-          </div>
-        </header>
-
-        <div className="flex-1 mx-auto max-w-7xl w-full px-4 lg:px-6 py-6 pb-24 lg:pb-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="border border-border bg-card rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Totals spent</p>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(totalBudgetNg)}</p>
-                </div>
-                <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center border border-border">
-                  <TrendingUp className="w-6 h-6 text-muted-foreground" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Total spent across all promotions</p>
-            </CardContent>
-          </Card>
-          <Card className="border border-border bg-card rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Promotions</p>
-                  <p className="text-2xl font-bold text-emerald-400">{activePromotions.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-border">
-                  <CheckCircle className="w-6 h-6 text-emerald-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upfront Spend card hidden
-          <Card className="border border-border bg-card rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Upfront Spend (₦100/day)</p>
-                  <p className="text-2xl font-bold text-yellow-400">{formatCurrency(totalUpfrontSpentNg)}</p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center border border-border">
-                  <Clock className="w-6 h-6 text-yellow-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          */}
-
-          {/* Remaining Budget card hidden
-          <Card className="border border-border bg-card rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Remaining Budget</p>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(totalRemainingBudgetNg)}</p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-border">
-                  <BarChart3 className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          */}
-
-          <Card className="border border-border bg-card rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Past Promotions</p>
-                  <p className="text-2xl font-bold text-violet-400">{pastManagerPromotions.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center border border-border">
-                  <Target className="w-6 h-6 text-violet-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Promotion Manager Tabs */}
-        <Tabs defaultValue="current" className="space-y-6 mb-10">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="current">Current ({currentManagerPromotions.length})</TabsTrigger>
-            <TabsTrigger value="past">Past ({pastManagerPromotions.length})</TabsTrigger>
-            <TabsTrigger value="all-content">All content ({unpromotedContent.length})</TabsTrigger>
-            <TabsTrigger value="recommendations">Recommendations ({recommendedContent.length})</TabsTrigger>
-          </TabsList>
-
-          {/* Current promotions: active + pending + paused */}
-          <TabsContent value="current" className="space-y-4">
-            {currentManagerPromotions.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Current Promotions</h3>
-                  <p className="text-muted-foreground">Pick content from the Recommendations or content list below and click Promote to start.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-0 overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-muted/60">
-                      <tr className="text-left">
-                        <th className="px-4 py-3 font-semibold text-foreground">Title</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Type</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Duration</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Status</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Budget (₦)</th>
-                        {/* <th className="px-4 py-3 font-semibold text-foreground">Spent (₦)</th> */}
-                        {/* <th className="px-4 py-3 font-semibold text-foreground">Remaining (₦)</th> */}
-                        <th className="px-4 py-3 font-semibold text-foreground">End date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentManagerPromotions.map((promotion) => {
-                        const budget = promotion.spendLimitNg ?? null
-                        // const spent = promotion.spentNg ?? 0
-                        // const remaining = budget != null && budget > 0 ? Math.max(0, budget - spent) : null
-                        return (
-                          <tr key={promotion._id} className="border-b border-border last:border-0">
-                            <td className="px-4 py-3">
-                              <div className="flex flex-col">
-                                <span className="font-medium text-foreground line-clamp-1">
-                                  {promotion.content?.title || getPackageDisplayName(promotion)}
-                                </span>
-                                <span className="text-xs text-muted-foreground line-clamp-1">
-                                  {getPackageDisplayName(promotion)}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 capitalize text-foreground">
-                              {promotion.contentType || '—'}
-                            </td>
-                            <td className="px-4 py-3 text-foreground">
-                              {promotion.duration} days
-                            </td>
-                            <td className="px-4 py-3">
-                              <Badge className={getStatusColor(promotion.status)}>
-                                {promotion.status}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3">
-                              {budget != null && budget > 0 ? formatCurrency(budget) : 'No limit'}
-                            </td>
-                            {/* <td className="px-4 py-3">
-                              {spent > 0 ? formatCurrency(spent) : '—'}
-                            </td>
-                            <td className="px-4 py-3">
-                              {remaining != null ? formatCurrency(remaining) : '—'}
-                            </td> */}
-                            <td className="px-4 py-3 text-foreground">
-                              {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—'}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Past promotions: completed / expired / cancelled / ended */}
-          <TabsContent value="past" className="space-y-4">
-            {pastManagerPromotions.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Past Promotions</h3>
-                  <p className="text-muted-foreground">Completed or expired promotions will appear here for your records.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-0 overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-muted/60">
-                      <tr className="text-left">
-                        <th className="px-4 py-3 font-semibold text-foreground">Title</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Type</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Duration</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Status</th>
-                        <th className="px-4 py-3 font-semibold text-foreground">Budget (₦)</th>
-                        {/* <th className="px-4 py-3 font-semibold text-foreground">Spent (₦)</th> */}
-                        <th className="px-4 py-3 font-semibold text-foreground">End date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pastManagerPromotions.map((promotion) => {
-                        const budget = promotion.spendLimitNg ?? null
-                        // const spent = promotion.spentNg ?? 0
-                        return (
-                          <tr key={promotion._id} className="border-b border-border last:border-0">
-                            <td className="px-4 py-3">
-                              <div className="flex flex-col">
-                                <span className="font-medium text-foreground line-clamp-1">
-                                  {promotion.content?.title || getPackageDisplayName(promotion)}
-                                </span>
-                                <span className="text-xs text-muted-foreground line-clamp-1">
-                                  {getPackageDisplayName(promotion)}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 capitalize text-foreground">
-                              {promotion.contentType || '—'}
-                            </td>
-                            <td className="px-4 py-3 text-foreground">
-                              {promotion.duration} days
-                            </td>
-                            <td className="px-4 py-3">
-                              <Badge className={getStatusColor(promotion.status)}>
-                                {promotion.status}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3">
-                              {budget != null && budget > 0 ? formatCurrency(budget) : 'No limit'}
-                            </td>
-                            {/* <td className="px-4 py-3">
-                              {spent > 0 ? formatCurrency(spent) : '—'}
-                            </td> */}
-                            <td className="px-4 py-3 text-foreground">
-                              {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—'}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* All content (unpromoted) */}
-          <TabsContent value="all-content" className="space-y-4">
-            {unpromotedContent.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No content to promote</h3>
-                  <p className="text-muted-foreground">
-                    All your content is already being promoted, or you have no content yet. Create content from your dashboard first.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {unpromotedContent.map((content) => {
-                  const ContentIcon = getContentIcon(content.contentType || 'opportunity')
-                  return (
-                    <Card key={content._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-                      <CardContent className="p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                              <ContentIcon className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-foreground line-clamp-2">{content.title}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{content.contentType}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="w-full mt-2 bg-primary hover:bg-primary/90"
-                          onClick={() => {
-                            setSelectedContent(content)
-                            setShowPromoteModal(true)
-                          }}
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Promote
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Recommendations tab */}
-          <TabsContent value="recommendations" className="space-y-4">
-            {recommendedContent.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Recommendations Yet</h3>
-                  <p className="text-muted-foreground">
-                    Once you post more content and start getting engagement, we’ll recommend what to promote here.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recommendedContent.map((content) => {
-                  const metrics: any = (content as any).metrics || {}
-                  const views = metrics.viewCount || 0
-                  const likes = metrics.likeCount || 0
-                  const saves = metrics.saveCount || 0
-                  const ContentIcon = getContentIcon(content.contentType || 'opportunity')
-                  return (
-                    <Card key={content._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-                      <CardContent className="p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                              <ContentIcon className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-foreground line-clamp-2">{content.title}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{content.contentType}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                          <div className="flex items-center gap-2">
-                            <span>{views} views</span>
-                            <span>•</span>
-                            <span>{likes} likes</span>
-                            <span>•</span>
-                            <span>{saves} saves</span>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="w-full mt-2 bg-primary hover:bg-primary/90"
-                          onClick={() => {
-                            setSelectedContent(content)
-                            setShowPromoteModal(true)
-                          }}
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Promote this content
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Promotions Tabs */}
-        <Tabs defaultValue="active" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active ({activePromotions.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({pendingPromotions.length})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({completedPromotions.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="active" className="space-y-4">
-            {activePromotions.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Active Promotions</h3>
-                  <p className="text-muted-foreground">Pick content from Recommendations or the content list above and click Promote to start.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activePromotions.map((promotion) => (
-                  <Card key={promotion._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-                    <CardHeader className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-primary flex items-center justify-center">
-                          <Target className="w-5 h-5 text-foreground" />
-                        </div>
-                        <Badge className={getStatusColor(promotion.status)}>
-                          {promotion.status}
-                        </Badge>
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.content?.title || getPackageDisplayName(promotion)}</h3>
-                      <p className="text-xs text-muted-foreground mb-4">{getPackageDisplayName(promotion)} • {promotion.contentType}</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Investment:</span>
-                          <span className="font-semibold">{formatCurrency(promotion.investment)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Duration:</span>
-                          <span className="font-semibold">{promotion.duration} days</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Remaining:</span>
-                          <span className="font-semibold text-green-600">{promotion.remainingDays} days</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="pending" className="space-y-4">
-            {pendingPromotions.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Pending Promotions</h3>
-                  <p className="text-muted-foreground">All your promotions are either active or completed</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pendingPromotions.map((promotion) => (
-                  <Card key={promotion._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-                    <CardHeader className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-primary flex items-center justify-center">
-                          <Target className="w-5 h-5 text-foreground" />
-                        </div>
-                        <Badge className={getStatusColor(promotion.status)}>
-                          {promotion.status}
-                        </Badge>
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.content?.title || getPackageDisplayName(promotion)}</h3>
-                      <p className="text-xs text-muted-foreground mb-4">{getPackageDisplayName(promotion)} • {promotion.contentType}</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Investment:</span>
-                          <span className="font-semibold">{formatCurrency(promotion.investment)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Duration:</span>
-                          <span className="font-semibold">{promotion.duration} days</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Payment:</span>
-                          <Badge className={getPaymentStatusColor(promotion.paymentStatus)}>
-                            {promotion.paymentStatus}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="completed" className="space-y-4">
-            {completedPromotions.length === 0 ? (
-              <Card className="border border-border bg-card rounded-xl">
-                <CardContent className="p-8 text-center">
-                  <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Completed Promotions</h3>
-                  <p className="text-muted-foreground">Your completed promotions will appear here</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {completedPromotions.map((promotion) => (
-                  <Card key={promotion._id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-                    <CardHeader className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-primary flex items-center justify-center">
-                          <Target className="w-5 h-5 text-foreground" />
-                        </div>
-                        <Badge className={getStatusColor(promotion.status)}>
-                          {promotion.status}
-                        </Badge>
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{promotion.content?.title || getPackageDisplayName(promotion)}</h3>
-                      <p className="text-xs text-muted-foreground mb-4">{getPackageDisplayName(promotion)} • {promotion.contentType}</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Investment:</span>
-                          <span className="font-semibold">{formatCurrency(promotion.investment)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Duration:</span>
-                          <span className="font-semibold">{promotion.duration} days</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Completed:</span>
-                          <span className="font-semibold text-primary">
-                            {new Date(promotion.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+    <ProviderShell
+      user={user}
+      profile={profile}
+      activeTab={providerTabForPath(pathname)}
+      onTabChange={(tab) => router.push(PROVIDER_NAV_ROUTES[tab])}
+      title="Promotions"
+      totalPostings={userContent.length}
+      postingLimit={postingLimit}
+      onRefresh={() => fetchData()}
+      refreshing={loading}
+    >
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-2.5 md:gap-3 lg:grid-cols-4">
+        <StatTile
+          label="Total spent"
+          value={formatCurrency(totalBudgetNg)}
+          hint="Upfront + budget across all promotions"
+          icon={TrendingUp}
+          tone="primary"
+        />
+        <StatTile label="Active" value={activePromotions.length} icon={CheckCircle2} tone="emerald" />
+        <StatTile label="Pending" value={pendingPromotions.length} icon={Clock} tone="amber" />
+        <StatTile label="Past" value={pastPromotions.length} icon={BarChart3} tone="violet" />
       </div>
 
-      {/* Wallet top-up modal kept for compatibility; not shown on this page (promotions use Paystack one-time payment) */}
+      <SegmentedTabs items={sections} value={activeSection} onChange={setActiveSection} />
+
+      {activeSection === 'active' && (
+        <Panel icon={CheckCircle2} title="Active promotions" subtitle="Running and paid for" bodyClassName={activePromotions.length ? undefined : "p-0"}>
+          {activePromotions.length > 0 ? (
+            <div className="space-y-2">
+              {activePromotions.map((promotion) => <PromotionRow key={promotion._id} promotion={promotion} />)}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Target}
+              title="No active promotions"
+              description="Pick something from Recommended or All content and put budget behind it to get started."
+              ctaLabel="See recommendations"
+              onCta={() => setActiveSection('recommended')}
+            />
+          )}
+        </Panel>
+      )}
+
+      {activeSection === 'pending' && (
+        <Panel icon={Clock} title="Pending promotions" subtitle="Awaiting payment or paused" bodyClassName={pendingPromotions.length ? undefined : "p-0"}>
+          {pendingPromotions.length > 0 ? (
+            <div className="space-y-2">
+              {pendingPromotions.map((promotion) => <PromotionRow key={promotion._id} promotion={promotion} />)}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Clock}
+              title="Nothing pending"
+              description="All of your promotions are either running or finished."
+            />
+          )}
+        </Panel>
+      )}
+
+      {activeSection === 'past' && (
+        <Panel icon={BarChart3} title="Past promotions" subtitle="Completed, expired or cancelled" bodyClassName={pastPromotions.length ? undefined : "p-0"}>
+          {pastPromotions.length > 0 ? (
+            <div className="space-y-2">
+              {pastPromotions.map((promotion) => <PromotionRow key={promotion._id} promotion={promotion} />)}
+            </div>
+          ) : (
+            <EmptyState
+              icon={BarChart3}
+              title="No past promotions"
+              description="Finished promotions will stay here for your records."
+            />
+          )}
+        </Panel>
+      )}
+
+      {activeSection === 'recommended' && (
+        <Panel
+          icon={Sparkles}
+          title="Recommended to promote"
+          subtitle="Ranked by engagement and how recently you posted"
+          bodyClassName={recommendedContent.length ? undefined : "p-0"}
+        >
+          {recommendedContent.length > 0 ? (
+            <div className="space-y-2">
+              {recommendedContent.map((content) => (
+                <PromotableContentRow key={content._id} content={content} showMetrics onPromote={handlePromote} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Sparkles}
+              title="No recommendations yet"
+              description="Once you post more content and it starts getting engagement, the best candidates show up here."
+              ctaHref="/dashboard/provider/posting"
+              ctaLabel="Post content"
+            />
+          )}
+        </Panel>
+      )}
+
+      {activeSection === 'all-content' && (
+        <Panel
+          icon={Layers}
+          title="All content"
+          subtitle="Everything without a live promotion"
+          bodyClassName={unpromotedContent.length ? undefined : "p-0"}
+        >
+          {unpromotedContent.length > 0 ? (
+            <div className="space-y-2">
+              {unpromotedContent.map((content) => (
+                <PromotableContentRow key={content._id} content={content} onPromote={handlePromote} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Target}
+              title="No content to promote"
+              description="Everything you have is already being promoted, or you have not posted anything yet."
+              ctaHref="/dashboard/provider/posting"
+              ctaLabel="Post content"
+            />
+          )}
+        </Panel>
+      )}
+
+      {/* Wallet top-up kept for compatibility; promotions use Paystack one-time payment */}
       <WalletTopUpModal open={false} onOpenChange={() => {}} onCompleted={fetchData} />
 
       <PromoteContentModal
@@ -901,12 +568,6 @@ export default function PromotionsPage() {
         } : null}
         onSuccess={fetchData}
       />
-      <ProviderDashboardBottomNav
-        navItems={providerNavItems}
-        activeTab={activeProviderTab}
-        onTabChange={(tab) => router.push(providerNavRouteMap[tab])}
-      />
-      </div>
-    </div>
+    </ProviderShell>
   )
 }
