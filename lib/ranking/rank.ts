@@ -201,6 +201,17 @@ export type RankOptions = {
   /** Discard anything scoring below this, 0–100. */
   minScore?: number
   limit?: number
+  /**
+   * Score without reordering.
+   *
+   * The For You feed's order is decided server-side, where it can draw on the
+   * whole candidate pool instead of the fifteen rows that landed on this page,
+   * and `feedSeed` keeps that order stable across the session's paginated
+   * requests. Re-sorting here would jumble it. The page still needs the score
+   * — it is what the card shows, and what the detail page has to agree with —
+   * so this scores in place and leaves the sequence alone.
+   */
+  preserveOrder?: boolean
 }
 
 /**
@@ -215,7 +226,7 @@ export function rankItems<T extends Record<string, unknown>>(
   context: RankingContext,
   options: RankOptions = {},
 ): RankedItem<T>[] {
-  const { dropExpired = true, minScore = 0, limit } = options
+  const { dropExpired = true, minScore = 0, limit, preserveOrder = false } = options
 
   const ranked: (RankedItem<T> & { order: number })[] = []
   items.forEach((item, order) => {
@@ -229,12 +240,14 @@ export function rankItems<T extends Record<string, unknown>>(
   // to whole points makes ties common enough for this to matter: without it a
   // promotion could be beaten by an unpromoted item it had genuinely outscored
   // before the round.
-  ranked.sort(
-    (a, b) =>
-      b.score - a.score ||
-      Number(isPromoted(b.item)) - Number(isPromoted(a.item)) ||
-      a.order - b.order,
-  )
+  if (!preserveOrder) {
+    ranked.sort(
+      (a, b) =>
+        b.score - a.score ||
+        Number(isPromoted(b.item)) - Number(isPromoted(a.item)) ||
+        a.order - b.order,
+    )
+  }
 
   const trimmed = limit ? ranked.slice(0, limit) : ranked
   return trimmed.map(({ order: _order, ...rest }) => rest)

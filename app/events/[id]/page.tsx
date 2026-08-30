@@ -134,7 +134,7 @@ function EventPageContent({ params }: EventPageProps) {
     ApiClient.recordPromotionClick(id, 'event', 'view').catch(() => {})
   }, [isAuthenticated, id, event])
 
-  const { reasons, glow, personalised } = useContentRanking(event)
+  const { reasons, match, personalised } = useContentRanking(event)
   const similar = useSimilarContent('events', event, { getDeadline: (row) => closingDate(row) })
 
   const handleShare = useCallback(async () => {
@@ -299,7 +299,7 @@ function EventPageContent({ params }: EventPageProps) {
       {personalised && (
         <WhyCard
           reasons={reasons}
-          glow={glow}
+          match={match}
           caveat={
             !event.dates?.startDate
               ? 'No start date published — check the source before you plan around it.'

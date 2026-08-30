@@ -15,6 +15,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+import type { NormalizedUser } from "@/lib/user"
+
 import { useViewingCountry } from "@/lib/geo/viewing-country"
 import { applyViewingSelection } from "@/lib/geo/viewing-location"
 import { useLocale } from "@/lib/i18n/context"
@@ -46,6 +48,32 @@ export type RankingUserProfile = {
   careerStage?: unknown
   updatedAt?: string
 } | null
+
+/**
+ * The ranking profile for the signed-in reader.
+ *
+ * Shared rather than written out at each call site on purpose. The feed and the
+ * detail page have to rank against the *same* reader or they answer with
+ * different numbers for the same listing, and two hand-copied object literals
+ * drift the moment one of them gains a field — which is exactly what happened
+ * to `fieldOfStudy`, read by `profileUser` but passed only by the feed.
+ */
+export function rankingProfileFrom(
+  user: NormalizedUser | null | undefined,
+): RankingUserProfile {
+  if (!user) return null
+  return {
+    country: user.country ?? undefined,
+    province: user.province ?? undefined,
+    city: user.city ?? undefined,
+    interests: user.interests,
+    skills: user.skills,
+    industrySectors: user.industrySectors,
+    aspirations: user.aspirations,
+    fieldOfStudy: user.fieldOfStudy ?? undefined,
+    careerStage: user.careerStage ?? undefined,
+  }
+}
 
 export type UsePersonalizedRanking = {
   /** Score and reorder a page of items. */

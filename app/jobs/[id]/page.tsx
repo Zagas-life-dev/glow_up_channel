@@ -127,7 +127,7 @@ function JobPageContent({ params }: JobPageProps) {
     ApiClient.recordPromotionClick(id, 'job', 'view').catch(() => {})
   }, [isAuthenticated, id, job])
 
-  const { reasons, glow, personalised } = useContentRanking(job)
+  const { reasons, match, personalised } = useContentRanking(job)
   const similar = useSimilarContent('jobs', job, {
     getDeadline: (row) => row?.dates?.applicationDeadline,
   })
@@ -276,7 +276,7 @@ function JobPageContent({ params }: JobPageProps) {
       {personalised && (
         <WhyCard
           reasons={reasons}
-          glow={glow}
+          match={match}
           caveat={
             !deadline
               ? 'No closing date published — check the source before you plan around it.'

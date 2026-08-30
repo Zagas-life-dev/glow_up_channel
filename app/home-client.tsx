@@ -35,6 +35,10 @@ import { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
 import { cn } from "@/lib/utils"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
+import {
+  rankingProfileFrom,
+  usePersonalizedRanking,
+} from "@/hooks/use-personalized-ranking"
 import { PageShell } from "@/components/layout/page-shell"
 import { TabStrip } from "@/components/layout/tab-strip"
 import CountrySelector from "@/components/country-selector"
@@ -428,6 +432,46 @@ export default function Home() {
     return () => clearTimeout(id)
   }, [backendUrl])
 
+  /**
+   * Score the For You rows with the shared ranker.
+   *
+   * The unified endpoint sends its own score, and this used to be rendered
+   * straight onto the card as "N% match". The detail page never saw that number
+   * — it scores the listing with `lib/ranking`, which weighs the server score
+   * as one signal among location, language, deadline, freshness, engagement and
+   * the reader's own tracker history. So one listing could sit in the feed at
+   * "100% match" and open at 61, two systems disagreeing about the same thing.
+   *
+   * Running the same scorer here makes the card and the "Why you're seeing
+   * this" panel one number with one explanation behind it. The server's score
+   * is not discarded: it arrives on the row and is read as the `baseScore`
+   * signal, so this refines the backend rather than overriding it.
+   *
+   * `preserveOrder` because the sequence is decided server-side over the whole
+   * candidate pool and held stable by `feedSeed`; only the score is added here.
+   * `dropExpired` stays off so the feed keeps showing closed listings with
+   * their "Application Closed" state instead of silently shedding rows.
+   *
+   * Scoped to the For You tab: the per-type tabs are a browse of everything of
+   * one kind, not a recommendation, and their rows carry no score today.
+   */
+  const rankingProfile = useMemo(
+    () => rankingProfileFrom(normalizedUser),
+    [normalizedUser],
+  )
+  const { rankForFeed } = usePersonalizedRanking(rankingProfile)
+
+  const rankedContent = useMemo(
+    () =>
+      activeTab === 'all'
+        ? rankForFeed(allContent as Record<string, unknown>[], {
+            preserveOrder: true,
+            dropExpired: false,
+          })
+        : allContent,
+    [activeTab, rankForFeed, allContent],
+  )
+
   const getCurrentItems = () => {
     return allContent
   }
@@ -535,7 +579,7 @@ export default function Home() {
 
         {activeTab === "all" && allContent.length > 0 ? (
           <div className="w-full max-w-full space-y-3">
-            {buildFeedWithSponsored(allContent, promotedFeed, { postsBetween: 4 }).map((item) =>
+            {buildFeedWithSponsored(rankedContent, promotedFeed, { postsBetween: 4 }).map((item) =>
               item.type === "post" ? (
                 <FeedCard key={item.post._id} item={item.post} />
               ) : (

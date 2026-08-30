@@ -137,7 +137,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
     ApiClient.recordPromotionClick(id, 'resource', 'view').catch(() => {})
   }, [isAuthenticated, id, resource])
 
-  const { reasons, glow, personalised } = useContentRanking(resource)
+  const { reasons, match, personalised } = useContentRanking(resource)
   const similar = useSimilarContent('resources', resource)
 
   const handleShare = useCallback(async () => {
@@ -340,7 +340,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
         )
       )}
 
-      {personalised && <WhyCard reasons={reasons} glow={glow} />}
+      {personalised && <WhyCard reasons={reasons} match={match} />}
 
       {resource.tags?.length > 0 && <TagRow tags={resource.tags} />}
 

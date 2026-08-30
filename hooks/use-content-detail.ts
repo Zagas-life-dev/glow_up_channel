@@ -11,38 +11,41 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { usePersonalizedRanking } from "@/hooks/use-personalized-ranking"
+import {
+  rankingProfileFrom,
+  usePersonalizedRanking,
+} from "@/hooks/use-personalized-ranking"
+import { withFeedBaseScore } from "@/lib/ranking/feed-base-score"
 import { fetchHomeListPage, type HomeListItem, type HomeListType } from "@/lib/fetch-home-list-page"
 
 /**
- * Score a single listing with the same ranker the feed uses.
+ * Score a single listing with the same ranker the feed uses — and, crucially,
+ * against the same inputs, so it answers with the same number.
  *
  * These endpoints return content on its own, with no notion of who is reading
- * it, so the match has to be computed here. `dropExpired` is off: the page
- * still has to explain itself after a deadline passes.
+ * it, so the match has to be computed here. Two things make that computation
+ * agree with the card the reader tapped rather than contradict it:
+ *
+ *   - `rankingProfileFrom` builds the reader the feed ranked against, instead
+ *     of a second literal that can drift from it.
+ *   - `withFeedBaseScore` puts the server's own score back on the listing. The
+ *     detail endpoints do not send one, and without it the `baseScore` signal
+ *     went missing here and nowhere else.
+ *
+ * `dropExpired` is off: the page still has to explain itself after a deadline
+ * passes.
  */
 export function useContentRanking(item: any | null): {
   reasons: string[]
-  glow: number | null
+  /** 0–100, the same match the feed card shows for this listing. */
+  match: number | null
   /** True once there is enough about the reader to say anything meaningful. */
   personalised: boolean
 } {
   const { normalizedUser } = useAuth()
 
   const rankingProfile = useMemo(
-    () =>
-      normalizedUser
-        ? {
-            country: normalizedUser.country ?? undefined,
-            province: normalizedUser.province ?? undefined,
-            city: normalizedUser.city ?? undefined,
-            interests: normalizedUser.interests,
-            skills: normalizedUser.skills,
-            industrySectors: normalizedUser.industrySectors,
-            aspirations: normalizedUser.aspirations,
-            careerStage: normalizedUser.careerStage ?? undefined,
-          }
-        : null,
+    () => rankingProfileFrom(normalizedUser),
     [normalizedUser],
   )
 
@@ -50,15 +53,16 @@ export function useContentRanking(item: any | null): {
 
   const ranked = useMemo(() => {
     if (!item) return null
-    return rankForFeed([item as Record<string, unknown>], { dropExpired: false })[0] ?? null
+    const scored = withFeedBaseScore(item as Record<string, unknown>)
+    return rankForFeed([scored], { dropExpired: false })[0] ?? null
   }, [rankForFeed, item])
 
   const reasons: string[] = Array.isArray(ranked?.reasons) ? ranked.reasons : []
-  const glow = typeof ranked?.score === "number" ? Math.round(ranked.score) : null
+  const match = typeof ranked?.score === "number" ? Math.round(ranked.score) : null
 
   return {
     reasons: personalised ? reasons : [],
-    glow,
+    match,
     personalised: personalised && reasons.length > 0,
   }
 }

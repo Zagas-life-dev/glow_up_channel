@@ -111,16 +111,23 @@ export function TrustBar({ parts }: { parts: string[] }) {
  *
  * The score and reasons are recomputed on the page rather than read off the
  * listing, because these endpoints return content with no notion of who is
- * reading it. `lib/ranking` is the same scorer the feed uses, so the number
- * here is the number that put the card in their feed.
+ * reading it. `lib/ranking` is the same scorer the feed runs over its rows, and
+ * `useContentRanking` feeds it the same reader and the same server base score,
+ * so the number here is the number on the card that was tapped — and the
+ * reasons below it are that number, itemised.
+ *
+ * It is labelled the way the card labels it, for the same reason: one listing
+ * showing "61 glow" here and "100% match" there reads as two systems
+ * disagreeing, which is precisely what it used to be.
  */
 export function WhyCard({
   reasons,
-  glow,
+  match,
   caveat,
 }: {
   reasons: string[]
-  glow: number | null
+  /** 0–100, the same match the feed card shows. */
+  match: number | null
   /** Shown as an amber row under the reasons, e.g. a missing closing date. */
   caveat?: string | null
 }) {
@@ -130,9 +137,9 @@ export function WhyCard({
     <section className="rounded-[1.25rem] border border-border/70 bg-card/80 p-4 lg:p-5">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[17px] font-semibold text-foreground">Why you&apos;re seeing this</h2>
-        {glow !== null && (
+        {match !== null && (
           <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
-            {glow} glow
+            {match}% match
           </span>
         )}
       </div>

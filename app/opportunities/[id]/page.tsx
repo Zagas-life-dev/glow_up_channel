@@ -119,7 +119,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
     ApiClient.recordPromotionClick(id, 'opportunity', 'view').catch(() => {})
   }, [isAuthenticated, id, opportunity])
 
-  const { reasons, glow, personalised } = useContentRanking(opportunity)
+  const { reasons, match, personalised } = useContentRanking(opportunity)
   const similar = useSimilarContent('opportunities', opportunity, {
     getDeadline: (row) => row?.dates?.applicationDeadline,
   })
@@ -297,7 +297,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
       {personalised && (
         <WhyCard
           reasons={reasons}
-          glow={glow}
+          match={match}
           caveat={
             !deadline
               ? 'No closing date published — check the source before you plan around it.'
