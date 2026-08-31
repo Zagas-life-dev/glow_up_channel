@@ -39,7 +39,7 @@ export const PROVIDER_NAV_ROUTES: Record<ProviderTab, string> = {
   overview: "/dashboard/provider",
   content: "/dashboard/provider/posting",
   promotions: "/dashboard/provider/promotions",
-  analytics: "/dashboard/provider/settings",
+  analytics: "/dashboard/provider/analytics",
 }
 
 export const PROVIDER_QUICK_LINKS = [
@@ -53,6 +53,9 @@ export function providerTabForPath(pathname?: string | null): ProviderTab {
   if (!pathname) return "overview"
   if (pathname.startsWith("/dashboard/provider/posting")) return "content"
   if (pathname.startsWith("/dashboard/provider/promotions")) return "promotions"
+  if (pathname.startsWith("/dashboard/provider/analytics")) return "analytics"
+  // Settings has no tab of its own; it reads as Analytics so the nav still
+  // highlights something while a provider is on it.
   if (pathname.startsWith("/dashboard/provider/settings")) return "analytics"
   return "overview"
 }

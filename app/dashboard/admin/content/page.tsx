@@ -48,8 +48,10 @@ import {
   RiEditLine,
   RiExternalLinkLine,
   RiDeleteBinLine,
+  RiUserSharedLine,
 } from "react-icons/ri"
 import { AdminShell } from "@/components/admin/admin-shell"
+import { AttachProviderDialog, type AttachTargetListing } from "@/components/admin/attach-provider-dialog"
 import {
   AdminStat,
   AdminStatGrid,
@@ -225,6 +227,25 @@ function jobTypeToDisplayFormat(apiValue: string | undefined): string {
   return match ?? apiValue.trim().replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+/**
+ * The organisation name a listing shows, which is a different field per type.
+ * Opportunities call it `provider`, jobs `company`, events `organizer`.
+ */
+function providerNameFor(item: ContentItem): string | null {
+  return item.provider || item.company || item.organizer || null
+}
+
+/** A content row, reduced to what the attach dialog needs. */
+function toAttachTarget(item: ContentItem): AttachTargetListing {
+  return {
+    _id: item._id,
+    title: item.title,
+    type: item.type,
+    providerId: item.providerId || item.organizerId || null,
+    providerName: providerNameFor(item),
+  }
+}
+
 function AdminContentCardSkeleton() {
   return (
     <article className="rounded-2xl border border-border/80 bg-card dark:bg-card overflow-hidden shadow-sm flex min-h-[140px] animate-pulse">
@@ -273,6 +294,7 @@ export default function AdminContent() {
   const [showReviewDialog, setShowReviewDialog] = useState(false)
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+  const [attachTarget, setAttachTarget] = useState<AttachTargetListing | null>(null)
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
   const [rejectionReason, setRejectionReason] = useState("")
@@ -1170,6 +1192,17 @@ export default function AdminContent() {
                                 {item.poster.name || "Unknown"}
                               </span>
                             )}
+                            {/* Whether a provider dashboard can see this listing at all. */}
+                            <span className="flex items-center gap-1.5">
+                              <RiUserSharedLine className="w-3.5 h-3.5" />
+                              {item.providerId || item.organizerId ? (
+                                <span className="text-emerald-600 dark:text-emerald-400">
+                                  {providerNameFor(item) || "Attached"}
+                                </span>
+                              ) : (
+                                "Not attached"
+                              )}
+                            </span>
                             {item.location?.city && (
                               <span className="flex items-center gap-1.5">
                                 <RiMapPinLine className="w-3.5 h-3.5" />
@@ -1191,6 +1224,22 @@ export default function AdminContent() {
                           >
                             <RiEyeLine className="w-4 h-4 sm:mr-2" />
                             <span className="hidden sm:inline">View</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setAttachTarget(toAttachTarget(item))}
+                            className="rounded-xl border-border h-9"
+                            title={
+                              item.providerId || item.organizerId
+                                ? "Change or remove the provider this listing belongs to"
+                                : "Put this listing in a provider's dashboard"
+                            }
+                          >
+                            <RiUserSharedLine className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">
+                              {item.providerId || item.organizerId ? "Reassign" : "Attach"}
+                            </span>
                           </Button>
                           {!item.isApproved && (
                             <>
@@ -2090,6 +2139,14 @@ export default function AdminContent() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Attach a listing to a provider, so it reaches their dashboard. */}
+      <AttachProviderDialog
+        open={attachTarget !== null}
+        onOpenChange={(open) => { if (!open) setAttachTarget(null) }}
+        listing={attachTarget}
+        onAttached={fetchFirstPage}
+      />
     </>
   )
 }

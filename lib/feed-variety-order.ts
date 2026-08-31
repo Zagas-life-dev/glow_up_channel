@@ -36,6 +36,14 @@
  * skipped. That puts a floor under how often promotions are seen without
  * letting them displace the organic mix above that floor.
  *
+ * **And promotions are pulled toward the top.** A reserved share says how
+ * *often* a promotion appears, not *where*: renormalised against four stocked
+ * categories it wins the opening slot around one time in six, so most readers
+ * saw nothing paid until several items in. `promotedLeadBias` adds a
+ * position-dependent preference on top — near-certain at slot 0, gone by
+ * `PROMOTED_LEAD_SLOTS` — so the feed leads with paid placement and hands the
+ * body of the list back to the organic mix.
+ *
  * Synchronous and fast enough for a feed page: category choice is O(1), the
  * weighted pluck is O(pool) with an incrementally maintained total.
  */
@@ -85,6 +93,49 @@ const PROMOTED_SHARE = 0.2
  * changing how many there are.
  */
 const PROMOTED_MIN_GAP = 3
+
+/**
+ * Odds that the very first slot in the feed goes to a promotion.
+ *
+ * `PROMOTED_SHARE` alone cannot put paid placement at the top. It is a share of
+ * a renormalised draw, so with all four categories in stock the promoted pool
+ * wins the opening slot about one time in six — meaning most readers open the
+ * feed and see no promotion until they have scrolled past several items.
+ *
+ * A direct probability rather than another share, because "lead with a
+ * promotion" is a statement about position and reads far better as one number
+ * than as a weight renormalised against whatever happens to be in stock.
+ *
+ * Deliberately short of 1: when the only live campaign is a poor match for this
+ * reader, the feed should still be allowed to open on something relevant.
+ *
+ * Kept in step with `PROMOTED_LEAD_BIAS` in the backend's scatterRankingService.
+ */
+const PROMOTED_LEAD_BIAS = 0.9
+
+/**
+ * How many slots the lead preference decays across.
+ *
+ * Falls linearly from `PROMOTED_LEAD_BIAS` at slot 0 to nothing here, after
+ * which `PROMOTED_SHARE` governs alone and the feed is exactly as it was. With
+ * `PROMOTED_MIN_GAP` holding promotions three apart, the practical effect is
+ * roughly slot 0 at 0.9, slot 4 at 0.6, slot 8 at 0.3, then the steady state —
+ * so promotions cluster near the top and thin out as the reader scrolls.
+ *
+ * Kept in step with `PROMOTED_LEAD_SLOTS` in the backend service.
+ */
+const PROMOTED_LEAD_SLOTS = 12
+
+/**
+ * The lead preference at a given position in the finished order, 0-1.
+ *
+ * Zero past the lead window, which hands the rest of the feed back to the
+ * ordinary category draw untouched.
+ */
+export function promotedLeadBias(position: number): number {
+  if (!(position >= 0) || position >= PROMOTED_LEAD_SLOTS) return 0
+  return PROMOTED_LEAD_BIAS * (1 - position / PROMOTED_LEAD_SLOTS)
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -308,6 +359,30 @@ export function applyVarietyOrder<T extends VarietyFeedItem>(items: T[], now: nu
       promotedPool !== null &&
       promotedPool.items.length > 0 &&
       sinceLastPromoted >= PROMOTED_MIN_GAP
+
+    // Lead preference: near the top of the feed, go to the promoted pool
+    // directly instead of letting it take its chances in the renormalised
+    // category draw. This is the only thing that actually puts paid placement
+    // first — the pool's share is renormalised against every stocked category,
+    // so on its own it wins the opening slot roughly one time in six.
+    //
+    // Sits behind `promotedInPlay`, so it can never stack promotions closer
+    // than PROMOTED_MIN_GAP, and decays to nothing by PROMOTED_LEAD_SLOTS, so
+    // the body of the feed keeps the organic mix.
+    if (promotedInPlay && promotedPool) {
+      const leadBias = promotedLeadBias(finalOrder.length)
+      if (leadBias > 0 && Math.random() < leadBias) {
+        const lead = pluckWeighted(promotedPool)
+        // Already placed via its own score category: drop it and draw again.
+        // Both pools shrank, so this still terminates.
+        if (lead && !emitted.has(lead)) {
+          emitted.add(lead)
+          finalOrder.push(lead)
+          sinceLastPromoted = 0
+        }
+        continue
+      }
+    }
 
     let available = promotedInPlay ? PROMOTED_SHARE : 0
     for (const name of CATEGORY_ORDER) {

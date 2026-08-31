@@ -36,6 +36,20 @@
     --chart-3: 222 47% 25%;
     --chart-4: 222 30% 45%;
     --chart-5: 222 20% 65%;
+
+    /*
+     * Apply-funnel categories, used by the listing analytics in both the admin
+     * and provider portals. Validated against a white chart surface for the
+     * OKLCH lightness band, chroma floor, adjacent-pair CVD separation and 3:1
+     * contrast — do not substitute these by eye. The dark steps below are
+     * separately chosen and separately validated, not a lightness flip.
+     * "No answer yet" is the absence of an answer rather than a category, so it
+     * stays neutral and always carries its own label.
+     */
+    --funnel-started: #b45309;
+    --funnel-applied: #059669;
+    --funnel-not-for-me: #9f1239;
+    --funnel-pending: 222 20% 72%;
   }
 
   .dark {
@@ -65,6 +79,12 @@
     --chart-3: 222 25% 70%;
     --chart-4: 222 25% 80%;
     --chart-5: 222 25% 90%;
+
+    /* Dark funnel steps, validated against the dark card surface (#121a2b). */
+    --funnel-started: #c2740a;
+    --funnel-applied: #059669;
+    --funnel-not-for-me: #f43f5e;
+    --funnel-pending: 222 20% 42%;
   }
 }
 

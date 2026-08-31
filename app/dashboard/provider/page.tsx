@@ -17,7 +17,6 @@ import ApiClient from "@/lib/api-client"
 import { getPostingLimit } from "@/lib/posting-limits"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import PaymentDetails from '@/components/payment-details'
 import { EditContentModal } from '@/components/edit-content-modal'
 import { PromoteContentModal } from '@/components/promote-content-modal'
 import { AuthRequiredCard } from '@/components/auth-required-card'
@@ -62,6 +61,14 @@ import {
   Users,
 } from 'lucide-react'
 import { canPublishContent } from '@/lib/roles'
+import { ListingAnalyticsCard, ListingAnalyticsSummary } from '@/components/analytics/listing-analytics'
+import {
+  EMPTY_TOTALS,
+  fetchListingAnalytics,
+  formatRate,
+  type ListingAnalyticsRow,
+  type ListingAnalyticsTotals,
+} from '@/lib/analytics/listing-analytics'
 
 interface ProviderStats {
   totalOpportunities: number
@@ -69,7 +76,6 @@ interface ProviderStats {
   totalJobs: number
   totalResources: number
   totalViews: number
-  totalApplications: number
   totalRegistrations: number
   totalLikes: number
   totalSaves: number
@@ -91,7 +97,6 @@ interface PostedItem {
     viewCount?: number
     likeCount?: number
     saveCount?: number
-    applicationCount?: number
     registrationCount?: number
     downloadCount?: number
   }
@@ -101,11 +106,6 @@ interface PostedItem {
     city?: string
   }
   tags?: string[]
-  paymentStatus?: string
-  paymentAmount?: number
-  paymentReference?: string
-  paymentReceipt?: string
-  paymentNotes?: string
 }
 
 /* ------------------------------------------------------------------ */
@@ -123,7 +123,6 @@ function ContentRow({
   onEdit,
   onView,
   onDelete,
-  onStatusUpdate,
 }: {
   item: PostedItem
   config: { icon: any; bg: string; border: string; text: string; label: string }
@@ -137,10 +136,8 @@ function ContentRow({
   onEdit?: (item: PostedItem) => void
   onView?: (item: PostedItem) => void
   onDelete?: (item: PostedItem) => void
-  onStatusUpdate: () => void
 }) {
   const Icon = config.icon
-  const showPayment = Boolean(item.paymentStatus && item.paymentStatus !== "not_required")
 
   return (
     <div className="rounded-xl border border-border/50 bg-card/40 p-3 transition-colors hover:border-primary/20 hover:bg-card/80">
@@ -233,21 +230,6 @@ function ContentRow({
               ) : null}
             </div>
           ) : null}
-
-          {showPayment ? (
-            <div className="mt-2.5 border-t border-border/50 pt-2.5">
-              <PaymentDetails
-                contentId={item._id}
-                contentType={item.type}
-                paymentStatus={item.paymentStatus as string}
-                paymentAmount={item.paymentAmount}
-                paymentReference={item.paymentReference}
-                paymentReceipt={item.paymentReceipt}
-                paymentNotes={item.paymentNotes}
-                onStatusUpdate={onStatusUpdate}
-              />
-            </div>
-          ) : null}
         </div>
       </div>
     </div>
@@ -269,7 +251,6 @@ export default function ProviderDashboard() {
     totalJobs: 0,
     totalResources: 0,
     totalViews: 0,
-    totalApplications: 0,
     totalRegistrations: 0,
     totalLikes: 0,
     totalSaves: 0,
@@ -277,6 +258,17 @@ export default function ProviderDashboard() {
     activePostings: 0,
   })
   const [postedItems, setPostedItems] = useState<PostedItem[]>([])
+  /**
+   * Real per-listing analytics, including the apply funnel from the tracker.
+   *
+   * The four /my/* endpoints above only return each listing's stored metrics —
+   * they have never carried an application count, which is why "Applications"
+   * read zero for everyone. This is where that number actually comes from.
+   */
+  const [analytics, setAnalytics] = useState<{
+    listings: ListingAnalyticsRow[]
+    totals: ListingAnalyticsTotals
+  }>({ listings: [], totals: EMPTY_TOTALS })
   const [onboardingStatus, setOnboardingStatus] = useState<{
     isCompleted: boolean
     completionPercentage: number
@@ -368,12 +360,7 @@ export default function ProviderDashboard() {
             updatedAt: item.updatedAt,
             metrics: item.metrics,
             location: item.location,
-            tags: item.tags,
-            paymentStatus: item.paymentStatus,
-            paymentAmount: item.paymentAmount,
-            paymentReference: item.paymentReference,
-            paymentReceipt: item.paymentReceipt,
-            paymentNotes: item.paymentNotes
+            tags: item.tags
           })
         })
       }
@@ -438,7 +425,6 @@ export default function ProviderDashboard() {
         totalJobs: jobsData.success ? jobsData.data.jobs.length : 0,
         totalResources: resourcesData.success ? resourcesData.data.resources.length : 0,
         totalViews: allPostedItems.reduce((sum, item) => sum + (item.metrics?.viewCount || 0), 0),
-        totalApplications: allPostedItems.reduce((sum, item) => sum + (item.metrics?.applicationCount || 0), 0),
         totalRegistrations: allPostedItems.reduce((sum, item) => sum + (item.metrics?.registrationCount || 0), 0),
         totalLikes: allPostedItems.reduce((sum, item) => sum + (item.metrics?.likeCount || 0), 0),
         totalSaves: allPostedItems.reduce((sum, item) => sum + (item.metrics?.saveCount || 0), 0),
@@ -448,6 +434,15 @@ export default function ProviderDashboard() {
 
       setStats(stats)
       setPostedItems(allPostedItems.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()))
+
+      // Analytics are a bonus on this screen, not a prerequisite — a failure
+      // here must not blank out a dashboard that already has its content.
+      try {
+        const result = await fetchListingAnalytics()
+        setAnalytics({ listings: result.listings, totals: result.totals })
+      } catch (analyticsError) {
+        console.error('Error loading listing analytics:', analyticsError)
+      }
 
     } catch (err: any) {
       console.error('Error loading provider dashboard data:', err)
@@ -612,6 +607,8 @@ export default function ProviderDashboard() {
     { label: 'Registrations', value: stats.totalRegistrations, icon: Users, tone: 'emerald' as Tone },
   ]
 
+  const funnel = analytics.totals.funnel
+
   return (
     <ProviderShell
       user={user}
@@ -638,7 +635,13 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-2 gap-2.5 md:gap-3 lg:grid-cols-4">
             <StatTile label="Live" value={stats.activePostings} icon={CheckCircle2} tone="emerald" />
             <StatTile label="Views" value={stats.totalViews} icon={Eye} tone="primary" />
-            <StatTile label="Applications" value={stats.totalApplications} icon={Send} tone="violet" />
+            <StatTile
+              label="Applied"
+              value={funnel.applied}
+              icon={Send}
+              tone="violet"
+              hint={funnel.started > 0 ? `${funnel.started} still applying` : undefined}
+            />
             <StatTile label="Pending" value={stats.pendingApprovals} icon={Clock} tone="amber" />
           </div>
 
@@ -691,7 +694,6 @@ export default function ProviderDashboard() {
                     getStatusColor={getStatusColor}
                     getStatusText={getStatusText}
                     getLocationString={getLocationString}
-                    onStatusUpdate={loadProviderData}
                   />
                 ))}
               </div>
@@ -745,7 +747,6 @@ export default function ProviderDashboard() {
                   onEdit={handleEditContent}
                   onView={handleViewContent}
                   onDelete={handleDeleteContent}
-                  onStatusUpdate={loadProviderData}
                 />
               ))}
             </div>
@@ -793,12 +794,50 @@ export default function ProviderDashboard() {
             </div>
           </Panel>
 
-          <Panel icon={TrendingUp} title="Deeper insights">
-            <div className="px-1 py-4 text-center">
-              <p className="text-body-sm text-muted-foreground">
-                Per-listing trends, traffic sources, and conversion reporting are on the way.
-              </p>
-            </div>
+          {/*
+            The apply funnel. Views and saves say a listing was noticed; this
+            says whether anyone actually went after it — which is the question
+            a provider is really asking.
+          */}
+          <Panel
+            icon={Send}
+            title="Applications"
+            subtitle={
+              funnel.tracked > 0
+                ? `${formatRate(analytics.totals.rates.submitRate)} of people who clicked through said they applied`
+                : 'Nobody has clicked through to apply yet'
+            }
+          >
+            <ListingAnalyticsSummary totals={analytics.totals} />
+          </Panel>
+
+          <Panel
+            icon={TrendingUp}
+            title="Per listing"
+            subtitle="Open a listing for its full breakdown"
+            action={
+              <Button asChild variant="outline" size="sm" className="rounded-xl">
+                <Link href="/dashboard/provider/analytics">
+                  Full analytics
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            }
+            bodyClassName="space-y-3"
+          >
+            {analytics.listings.length === 0 ? (
+              <EmptyState
+                icon={BarChart3}
+                title="Nothing to measure yet"
+                description="Once a listing is live and people start opening it, its numbers appear here."
+                ctaHref="/dashboard/provider/posting"
+                ctaLabel="Post content"
+              />
+            ) : (
+              analytics.listings
+                .slice(0, 5)
+                .map((row) => <ListingAnalyticsCard key={`${row.contentType}-${row._id}`} row={row} />)
+            )}
           </Panel>
         </div>
       )}

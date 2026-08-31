@@ -2007,6 +2007,29 @@ export class ApiClient {
     return json?.data ?? { counted: false };
   }
 
+  /**
+   * Start a promotion at no cost. Providers are never billed for promotion, so
+   * there is no payment step, no redirect and no budget — just a duration.
+   */
+  static async startFreePromotion(params: {
+    contentId: string;
+    contentType: 'opportunity' | 'event' | 'job' | 'resource';
+    durationDays: number;
+  }): Promise<{ promotion: any; duration: number }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/start-free`, {
+      method: 'POST',
+      body: JSON.stringify({
+        contentId: params.contentId,
+        contentType: params.contentType,
+        durationDays: params.durationDays,
+      }),
+    });
+    const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; duration?: number }>;
+    const data = (json as any)?.data ?? json;
+    if (!data?.promotion) throw new Error((json as any)?.message || 'Failed to start promotion');
+    return { promotion: data.promotion, duration: data.duration ?? params.durationDays };
+  }
+
   /** Initialize Paystack one-time payment for a promotion. Returns authorizationUrl to redirect user. spendLimitNg is required. */
   static async initializePromotionPayment(params: {
     contentId: string;

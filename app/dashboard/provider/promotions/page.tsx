@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { usePage } from "@/contexts/page-context"
 import { useAuth } from "@/lib/auth-context"
 import { AuthRequiredCard } from '@/components/auth-required-card'
-import ApiClient from "@/lib/api-client"
 import { getPostingLimit } from "@/lib/posting-limits"
 import { cn } from "@/lib/utils"
 import {
@@ -21,10 +20,8 @@ import {
   BarChart3,
   Sparkles,
   Layers,
-  Wallet,
 } from 'lucide-react'
 import { toast } from "sonner"
-import { WalletTopUpModal } from "@/components/wallet/WalletTopUpModal"
 import { PromoteContentModal } from "@/components/promote-content-modal"
 import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
 import {
@@ -43,25 +40,19 @@ interface Promotion {
   contentType: string
   packageType: string
   packageName: string
-  investment: number
   duration: number
   status: string
-  paymentStatus: string
   createdAt: string
   startDate?: string
   endDate?: string
   isActive?: boolean
   isExpired?: boolean
   remainingDays?: number
-  // Wallet-budget specific fields (optional, only for wallet-based promotions)
-  spendLimitNg?: number | null
-  spentNg?: number | null
   content?: {
     _id: string
     title: string
     description: string
     image?: string
-    isPaid?: boolean
   }
 }
 
@@ -77,9 +68,6 @@ interface UserContent {
 
 type PromoTab = 'active' | 'pending' | 'past' | 'recommended' | 'all-content'
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
-
 /** Static map, not a factory — the icon is looked up, never constructed. */
 const CONTENT_ICONS: Record<string, any> = {
   event: Calendar,
@@ -88,26 +76,25 @@ const CONTENT_ICONS: Record<string, any> = {
   opportunity: Target,
 }
 
-/** Display name for a promotion: wallet-based promotions show "Wallet". */
+/** Display name for a promotion. Every promotion is free, so there is no tier to name. */
 const getPackageDisplayName = (p: Promotion) =>
-  p.packageType === 'wallet_daily' || !p.packageName ? 'Wallet' : p.packageName || '—'
+  p.packageType === 'wallet_daily' || !p.packageName ? 'Promotion' : p.packageName || '—'
 
 /* ------------------------------------------------------------------ */
 
 /**
- * One promotion, showing every field the old table *and* card views showed
- * between them: package, type, investment, duration, budget, spend, payment
- * status, remaining days, end date and creation date.
+ * One promotion: package, type, duration, start and end dates, remaining days.
+ * Nothing here is priced — promotion is free for providers.
  */
 function PromotionRow({ promotion }: { promotion: Promotion }) {
   const Icon = CONTENT_ICONS[promotion.contentType] ?? Target
-  const budget = promotion.spendLimitNg ?? null
-  const spent = promotion.spentNg ?? null
 
   const facts: { label: string; value: string }[] = [
-    { label: 'Investment', value: formatCurrency(promotion.investment || 0) },
     { label: 'Duration', value: `${promotion.duration ?? 0} days` },
-    { label: 'Budget', value: budget != null && budget > 0 ? formatCurrency(budget) : 'No limit' },
+    {
+      label: 'Started',
+      value: promotion.startDate ? new Date(promotion.startDate).toLocaleDateString() : '—',
+    },
     {
       label: 'Ends',
       value: promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : '—',
@@ -136,10 +123,10 @@ function PromotionRow({ promotion }: { promotion: Promotion }) {
             <span className="opacity-40">·</span>
             <span className="capitalize">{promotion.contentType || '—'}</span>
             <span className="opacity-40">·</span>
-            <span>Started {new Date(promotion.createdAt).toLocaleDateString()}</span>
+            <span>Created {new Date(promotion.createdAt).toLocaleDateString()}</span>
           </div>
 
-          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/50 pt-2.5 sm:grid-cols-4">
+          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/50 pt-2.5 sm:grid-cols-3">
             {facts.map((fact) => (
               <div key={fact.label} className="min-w-0">
                 <dt className="truncate text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{fact.label}</dt>
@@ -148,26 +135,14 @@ function PromotionRow({ promotion }: { promotion: Promotion }) {
             ))}
           </dl>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              Payment
-              <Badge className={cn("rounded-md px-1.5 py-0 text-[10px] font-semibold capitalize", statusToneClass(promotion.paymentStatus))}>
-                {promotion.paymentStatus}
-              </Badge>
-            </span>
-            {typeof promotion.remainingDays === 'number' && promotion.remainingDays > 0 ? (
+          {typeof promotion.remainingDays === 'number' && promotion.remainingDays > 0 ? (
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1 tabular-nums">
                 <Clock className="h-3 w-3" />
                 {promotion.remainingDays} days remaining
               </span>
-            ) : null}
-            {spent != null && spent > 0 ? (
-              <span className="inline-flex items-center gap-1 tabular-nums">
-                <Wallet className="h-3 w-3" />
-                {formatCurrency(spent)} spent
-              </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
@@ -321,26 +296,6 @@ export default function PromotionsPage() {
     }
   }, [isAuthenticated, user, fetchData])
 
-  // Handle redirect back from Paystack after promotion payment
-  useEffect(() => {
-    if (typeof window === 'undefined' || !isAuthenticated) return
-    const params = new URLSearchParams(window.location.search)
-    const ref = params.get('reference')
-    if (params.get('promotion') === 'success' && ref) {
-      ApiClient.verifyPromotionPayment(ref)
-        .then(() => {
-          fetchData()
-          toast.success('Promotion started successfully')
-        })
-        .catch(() => {
-          toast.error('Failed to verify payment. Please try again or contact support.')
-        })
-        .finally(() => {
-          window.history.replaceState({}, '', window.location.pathname)
-        })
-    }
-  }, [isAuthenticated, fetchData])
-
   const handlePromote = (content: UserContent) => {
     setSelectedContent(content)
     setShowPromoteModal(true)
@@ -383,16 +338,9 @@ export default function PromotionsPage() {
   // exactly one, so nothing can hide the way it did across the old tab groups.
   const pastPromotions = promotions.filter(isPast)
   const livePromotions = promotions.filter(p => !isPast(p))
-  const isRunning = (p: Promotion) => p.status === 'active' && p.paymentStatus === 'paid'
+  const isRunning = (p: Promotion) => p.status === 'active'
   const activePromotions = livePromotions.filter(isRunning)
   const pendingPromotions = livePromotions.filter(p => !isRunning(p))
-
-  // Total budget: upfront (₦100/day) + per-click budget limit for each promotion
-  const totalBudgetNg = promotions.reduce((sum, p) => {
-    const upfront = (p.duration ?? 0) * 100
-    const budget = p.spendLimitNg ?? 0
-    return sum + upfront + budget
-  }, 0)
 
   // Content with no live promotion behind it
   const activeContentIds = new Set(activePromotions.map(p => p.contentId))
@@ -440,9 +388,9 @@ export default function PromotionsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2.5 md:gap-3 lg:grid-cols-4">
         <StatTile
-          label="Total spent"
-          value={formatCurrency(totalBudgetNg)}
-          hint="Upfront + budget across all promotions"
+          label="Total promotions"
+          value={promotions.length}
+          hint="Promotion is free — no fees, no budget"
           icon={TrendingUp}
           tone="primary"
         />
@@ -454,7 +402,7 @@ export default function PromotionsPage() {
       <SegmentedTabs items={sections} value={activeSection} onChange={setActiveSection} />
 
       {activeSection === 'active' && (
-        <Panel icon={CheckCircle2} title="Active promotions" subtitle="Running and paid for" bodyClassName={activePromotions.length ? undefined : "p-0"}>
+        <Panel icon={CheckCircle2} title="Active promotions" subtitle="Currently boosted" bodyClassName={activePromotions.length ? undefined : "p-0"}>
           {activePromotions.length > 0 ? (
             <div className="space-y-2">
               {activePromotions.map((promotion) => <PromotionRow key={promotion._id} promotion={promotion} />)}
@@ -463,7 +411,7 @@ export default function PromotionsPage() {
             <EmptyState
               icon={Target}
               title="No active promotions"
-              description="Pick something from Recommended or All content and put budget behind it to get started."
+              description="Pick something from Recommended or All content and promote it — it is free."
               ctaLabel="See recommendations"
               onCta={() => setActiveSection('recommended')}
             />
@@ -472,7 +420,7 @@ export default function PromotionsPage() {
       )}
 
       {activeSection === 'pending' && (
-        <Panel icon={Clock} title="Pending promotions" subtitle="Awaiting payment or paused" bodyClassName={pendingPromotions.length ? undefined : "p-0"}>
+        <Panel icon={Clock} title="Pending promotions" subtitle="Paused or not yet running" bodyClassName={pendingPromotions.length ? undefined : "p-0"}>
           {pendingPromotions.length > 0 ? (
             <div className="space-y-2">
               {pendingPromotions.map((promotion) => <PromotionRow key={promotion._id} promotion={promotion} />)}
@@ -552,9 +500,6 @@ export default function PromotionsPage() {
           )}
         </Panel>
       )}
-
-      {/* Wallet top-up kept for compatibility; promotions use Paystack one-time payment */}
-      <WalletTopUpModal open={false} onOpenChange={() => {}} onCompleted={fetchData} />
 
       <PromoteContentModal
         open={showPromoteModal}

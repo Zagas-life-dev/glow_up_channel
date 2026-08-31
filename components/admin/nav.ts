@@ -11,6 +11,7 @@ import {
   RiMegaphoneLine,
   RiBillLine,
   RiBarChartBoxLine,
+  RiLineChartLine,
   RiMailSendLine,
   RiSettings3Line,
   RiGiftLine,
@@ -70,6 +71,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Insights",
     items: [
       { label: "Analytics", href: "/dashboard/admin/analytics", icon: RiBarChartBoxLine },
+      { label: "Listing analytics", href: "/dashboard/admin/analytics/listings", icon: RiLineChartLine },
       { label: "Marketing email", href: "/dashboard/admin/marketing/email", icon: RiMailSendLine, superAdminOnly: true },
     ],
   },
