@@ -24,6 +24,13 @@ interface FeedSponsoredSlotProps {
  * card inside a second bordered card with its own "Open" button — that nested the same border
  * twice and duplicated a link the card's own title already provides. Promoted items should
  * read as the same kind of thing as everything around them, just labelled.
+ *
+ * The label itself now belongs to `FeedCard`, keyed on `isPromoted`. It moved there because
+ * promoted listings stopped being exclusive to this slot: they also sit inline in the hub
+ * lists and the feeds, pulled toward the top by the orderers, and those needed the same
+ * disclosure. One owner means the two can never disagree — and means this slot must pass
+ * `isPromoted` down rather than drawing its own label, or the card would say "Sponsored"
+ * twice.
  */
 export default function FeedSponsoredSlot({
   kind,
@@ -38,12 +45,15 @@ export default function FeedSponsoredSlot({
 
   return (
     <div className={cn("w-full", className)}>
-      <p className="mb-1.5 pl-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
-        Sponsored
-      </p>
       <FeedCard
         item={{
           ...content,
+          // Everything reaching this slot is a paid placement by definition —
+          // the per-type promoted endpoints answer with nothing else — but the
+          // rows they return project `isPromoted` off the *content* document,
+          // where it is usually absent. Setting it here is what guarantees the
+          // card discloses.
+          isPromoted: true,
           type: content.type as "opportunity" | "job" | "event" | "resource",
         }}
       />

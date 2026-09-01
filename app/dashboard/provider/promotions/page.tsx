@@ -251,8 +251,16 @@ export default function PromotionsPage() {
         setPromotions([])
       }
 
-      // Fetch user content (authenticated)
-      const [opportunitiesRes, eventsRes, jobsRes] = await Promise.all([
+      // Fetch user content (authenticated).
+      //
+      // All four promotable types. Resources were missing here while the rest
+      // of the pipeline supported them end to end — the Promotion model lists
+      // `resource` in its content types, the backend validates it, there is a
+      // `/api/promoted/resources` rail and the promote modal already renders a
+      // "Resource" label. The only thing absent was the fetch, so a provider
+      // with a resource simply never saw it in the list and could not promote
+      // it from anywhere in the product.
+      const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/my/opportunities`, { headers: authHeaders })
           .then(res => res.json())
           .catch(() => ({ success: false, data: { opportunities: [] } })),
@@ -264,6 +272,10 @@ export default function PromotionsPage() {
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/jobs/my/jobs`, { headers: authHeaders })
           .then(res => res.json())
           .catch(() => ({ success: false, data: { jobs: [] } })),
+
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources/my/resources`, { headers: authHeaders })
+          .then(res => res.json())
+          .catch(() => ({ success: false, data: { resources: [] } })),
       ])
 
       const allContent: UserContent[] = []
@@ -276,6 +288,9 @@ export default function PromotionsPage() {
       }
       if (jobsRes.success) {
         allContent.push(...(jobsRes.data.jobs || []).map((item: any) => ({ ...item, contentType: 'job' })))
+      }
+      if (resourcesRes.success) {
+        allContent.push(...(resourcesRes.data.resources || []).map((item: any) => ({ ...item, contentType: 'resource' })))
       }
 
       setUserContent(allContent)

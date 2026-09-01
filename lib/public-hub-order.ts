@@ -34,7 +34,37 @@
  * genuinely is the soonest twenty. The lottery redraws within the page it was
  * handed, which is why the global "soonest first" progression survives while
  * the page still looks different on every visit.
+ *
+ * **Paid placement.** The lottery above is the whole algorithm for organic
+ * listings; promoted ones get a second pool on top of it, the same shape the
+ * other two orderers use (`feed-variety-order` here, `scatterRankingService` on
+ * the server). Until that existed these four pages were the one browsing
+ * surface where buying a promotion changed nothing about the list: the hub
+ * showed promoted cards only in the separate sponsored rail, and inside the
+ * listing itself a promoted item was drawn on deadline alone like everything
+ * else. Since `/resources` is mostly undated, and undated items all share one
+ * weight, a promoted resource was in practice indistinguishable from a plain
+ * shuffle.
+ *
+ * The pool does two things a plain weight bump could not:
+ *
+ *   - **A floor on frequency.** `PROMOTED_SHARE` of slots go to the promoted
+ *     pool when it has stock, so paid listings appear at a predictable rate
+ *     rather than at whatever rate their deadlines happen to earn.
+ *   - **A pull toward the top.** A share says how *often* a promotion appears,
+ *     not *where*. `promotedLeadBias` adds a decaying preference over the first
+ *     `PROMOTED_LEAD_SLOTS`, so the page leads with paid placement and settles
+ *     into the organic mix as the reader scrolls.
+ *
+ * All of it runs off the seeded PRNG, which is what makes the bias survive
+ * caching: `fetch-public-hub-page` stores the *ordered* page in sessionStorage
+ * and rebuilds it on back-navigation, and React re-runs effects in development.
+ * Same seed in, same biased order out, every time — so a promoted listing that
+ * won a top slot keeps it for the session instead of being reshuffled down by
+ * the next rebuild.
  */
+
+import { isPromoted, promotionWeight } from "@/lib/promotion-boost"
 
 export type HubOrderItem = { _id: string; [key: string]: unknown }
 
@@ -160,6 +190,73 @@ export function deadlineWeight(item: HubOrderItem, now: number): number {
 }
 
 /**
+ * Share of slots reserved for the promoted pool while it has stock.
+ *
+ * Kept in step with `PROMOTED_SHARE` in `feed-variety-order` and the backend's
+ * `scatterRankingService`, so a promoted listing is delivered at roughly one
+ * slot in five wherever the reader meets it. Consistency across the three
+ * surfaces is the point: a promoter buys a rate, not a page.
+ */
+const PROMOTED_SHARE = 0.2
+
+/**
+ * Minimum organic listings between two promoted ones.
+ *
+ * The share is an average, and averages clump — three promoted rows together
+ * read as an ad break even when the overall rate is modest. Matches
+ * `PROMOTED_MIN_GAP` in the other two orderers.
+ */
+const PROMOTED_MIN_GAP = 3
+
+/**
+ * Odds that the very first row of the page goes to a promotion.
+ *
+ * `PROMOTED_SHARE` alone cannot put paid placement at the top: it governs how
+ * often, not how early, so with a 0.2 share the first promoted row lands around
+ * slot five on average and plenty of readers would scroll past the fold without
+ * seeing one. "Nine times in ten the page opens with a promotion" is a
+ * statement about position, and it needs its own number.
+ *
+ * Kept in step with `PROMOTED_LEAD_BIAS` in the other two orderers.
+ */
+const PROMOTED_LEAD_BIAS = 0.9
+
+/**
+ * Where the lead preference has fully decayed.
+ *
+ * Falls linearly from `PROMOTED_LEAD_BIAS` at slot 0 to nothing here, after
+ * which `PROMOTED_SHARE` governs alone. With `PROMOTED_MIN_GAP` holding
+ * promotions three apart, the practical ceiling over the first twelve slots is
+ * three or four promoted rows — clustered near the top, thinning out as the
+ * reader scrolls.
+ *
+ * Kept in step with `PROMOTED_LEAD_SLOTS` in the other two orderers.
+ */
+const PROMOTED_LEAD_SLOTS = 12
+
+/**
+ * How much a promoted listing's own deadline is allowed to move it within the
+ * promoted pool.
+ *
+ * `deadlineWeight` spans four orders of magnitude, which is right for organic
+ * content and far too harsh for a slot someone paid for: an undated promoted
+ * resource would sit 1500x below a listing closing tonight and never be drawn.
+ * Compressed into [0.4, 1] the ordering still favours urgency without burying
+ * anything. Matches `PROMOTED_DEADLINE_FLOOR` in `feed-variety-order` and
+ * `DEADLINE_FLOOR` in the backend's promotionRankingService.
+ */
+const PROMOTED_DEADLINE_FLOOR = 0.4
+
+/**
+ * The lead preference at a given slot: `PROMOTED_LEAD_BIAS` at the top of the
+ * page, decaying linearly to nothing at `PROMOTED_LEAD_SLOTS`.
+ */
+export function promotedLeadBias(position: number): number {
+  if (!(position >= 0) || position >= PROMOTED_LEAD_SLOTS) return 0
+  return PROMOTED_LEAD_BIAS * (1 - position / PROMOTED_LEAD_SLOTS)
+}
+
+/**
  * Mulberry32 — small, fast, and more than good enough for shuffling twenty
  * rows.
  *
@@ -246,10 +343,25 @@ export interface HubOrderOptions {
   now?: number
 }
 
+/** Build a pool from items and a weight function. */
+function buildPool<T>(items: T[], weightOf: (item: T) => number): Pool<T> {
+  const weights = items.map(weightOf)
+  return {
+    items: items.slice(),
+    weights,
+    total: weights.reduce((sum, weight) => sum + weight, 0),
+  }
+}
+
 /**
  * Draw an order for one page of a public hub list.
  *
  * Every item comes out exactly once; only the order changes.
+ *
+ * Promoted listings are drawn from their own pool, so they get a floor on how
+ * often they appear and a pull toward the top of the page. The two pools are
+ * disjoint — a promoted item is only ever in the promoted pool — which is what
+ * guarantees the "exactly once" property without a seen-set.
  */
 export function orderByDeadlineLottery<T extends HubOrderItem>(
   items: T[],
@@ -257,19 +369,54 @@ export function orderByDeadlineLottery<T extends HubOrderItem>(
 ): T[] {
   if (items.length <= 1) return items
 
-  const weights = items.map((item) => deadlineWeight(item, now))
-  const pool: Pool<T> = {
-    items: items.slice(),
-    weights,
-    total: weights.reduce((sum, weight) => sum + weight, 0),
-  }
-
   const random = mulberry32(seed)
+
+  const organicPool = buildPool(
+    items.filter((item) => !isPromoted(item)),
+    (item) => deadlineWeight(item, now),
+  )
+
+  // Within the promoted pool, what the promoter bought (campaign tier, opening
+  // burst, closing ramp, delivery pacing — all folded into `promotionWeight` by
+  // the server) times a compressed version of the listing's own urgency.
+  const promotedPool = buildPool(
+    items.filter(isPromoted),
+    (item) =>
+      promotionWeight(item) *
+      (PROMOTED_DEADLINE_FLOOR +
+        (1 - PROMOTED_DEADLINE_FLOOR) * Math.sqrt(deadlineWeight(item, now))),
+  )
+
   const ordered: T[] = []
-  while (pool.items.length > 0) {
-    const next = pluck(pool, random)
+  // Starts satisfied so the very first row may be promoted.
+  let sinceLastPromoted = PROMOTED_MIN_GAP
+
+  while (organicPool.items.length > 0 || promotedPool.items.length > 0) {
+    const organicLeft = organicPool.items.length > 0
+    const promotedLeft = promotedPool.items.length > 0
+
+    // Once one side is empty the other simply drains. Draining the promoted
+    // remainder ignores the spacing gap on purpose: the alternative is dropping
+    // paid listings off the page entirely, and the gap is a presentation
+    // preference, not a promise.
+    let takePromoted: boolean
+    if (!organicLeft) takePromoted = true
+    else if (!promotedLeft) takePromoted = false
+    else if (sinceLastPromoted < PROMOTED_MIN_GAP) takePromoted = false
+    else {
+      // Near the top of the page the lead bias governs; below
+      // PROMOTED_LEAD_SLOTS it has decayed to zero and the reserved share
+      // governs alone. Taking the max rather than adding them keeps the floor
+      // at exactly PROMOTED_SHARE once the lead-in is over.
+      const odds = Math.max(promotedLeadBias(ordered.length), PROMOTED_SHARE)
+      takePromoted = random() < odds
+    }
+
+    const next = takePromoted ? pluck(promotedPool, random) : pluck(organicPool, random)
     if (!next) break
+
     ordered.push(next)
+    sinceLastPromoted = takePromoted ? 0 : sinceLastPromoted + 1
   }
 
   return ordered

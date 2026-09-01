@@ -472,6 +472,43 @@ export default function Home() {
     [activeTab, rankForFeed, allContent],
   )
 
+  /**
+   * The promoted rail: deduped against the feed, then scored like every other
+   * card.
+   *
+   * Deduped because the recommendation feed flags and boosts promoted items
+   * itself and the orderer pulls them toward the top — so a promotion could be
+   * drawn once as a ranked card near the top and again as a sponsored slot a
+   * few rows below. The same listing twice, both labelled "Sponsored", is worse
+   * for the reader than either alone and wastes an impression.
+   *
+   * Scored because a sponsored card used to be the one card in the feed that
+   * showed no "% match" at all. The rail comes from `/api/promoted/feed`, which
+   * bypasses the client re-rank the rest of the feed goes through, so
+   * `item.score` was undefined and the card simply omitted the match line.
+   * Running it through the same `rankForFeed` gives these cards the reader's
+   * genuine glow score on identical terms to their organic neighbours — and
+   * because the rows now carry `promotion.liftFraction`, `applyPromotionLift`
+   * inside the ranker raises that score by exactly what the promotion bought.
+   * Gap-closing, so it can only ever move the score up.
+   *
+   * `preserveOrder` keeps the server's weighted draw — that order is the
+   * promotion pacing and rotation, and re-sorting by score here would throw it
+   * away.
+   */
+  const promotedRail = useMemo(() => {
+    const onScreen = new Set(
+      (rankedContent as { _id?: string }[]).map((item) => item?._id).filter(Boolean),
+    )
+    const unseen = promotedFeed.filter((item) => !onScreen.has(item._id))
+    if (unseen.length === 0) return unseen
+
+    return rankForFeed(unseen as unknown as Record<string, unknown>[], {
+      preserveOrder: true,
+      dropExpired: false,
+    }) as unknown as typeof promotedFeed
+  }, [promotedFeed, rankedContent, rankForFeed])
+
   const getCurrentItems = () => {
     return allContent
   }
@@ -579,7 +616,7 @@ export default function Home() {
 
         {activeTab === "all" && allContent.length > 0 ? (
           <div className="w-full max-w-full space-y-3">
-            {buildFeedWithSponsored(rankedContent, promotedFeed, { postsBetween: 4 }).map((item) =>
+            {buildFeedWithSponsored(rankedContent, promotedRail, { postsBetween: 4 }).map((item) =>
               item.type === "post" ? (
                 <FeedCard key={item.post._id} item={item.post} />
               ) : (

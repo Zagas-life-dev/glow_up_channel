@@ -80,6 +80,13 @@ interface FeedCardProps {
       playlistCount?: number
     }
     score?: number
+    /**
+     * Live paid placement. Set by the backend on every surface that can carry
+     * one — the list endpoints, the anonymous feed cache, the recommendation
+     * feed and the promoted rails — and it is what puts the disclosure above
+     * the card.
+     */
+    isPromoted?: boolean
     url?: string
     applicationLink?: string
     externalUrl?: string
@@ -637,6 +644,20 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
   return (
     <>
+      {/* Paid-placement disclosure.
+
+          It lives on the card rather than on the sponsored slot that used to
+          own it, because promoted listings no longer appear only in that slot:
+          they sit inline in the hub lists and in the For You and anonymous
+          feeds, where the ordering deliberately pulls them toward the top. A
+          placement biased upward has to say that it was paid for, and putting
+          the label here means every surface discloses it the same way without
+          each one having to remember to. */}
+      {item.isPromoted ? (
+        <p className="mb-1.5 pl-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
+          Sponsored
+        </p>
+      ) : null}
       <article
         className={cn(
           'group relative w-full overflow-hidden rounded-2xl border bg-card transition-colors duration-200',

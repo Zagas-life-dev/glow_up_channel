@@ -184,10 +184,19 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   // which is what the sponsored slot routes its detail link on. Stamping it
   // through the same normalizer the listings use also gives these cards the
   // card fields the rest of the feed has.
-  const promotedCards = useMemo(
-    () => promoted.map((row) => normalizeFeedListItem(type, row)),
-    [promoted, type],
-  )
+  //
+  // Anything already in the listing is dropped. The list endpoints now flag
+  // promoted rows themselves, and the hub orderer pulls them toward the top, so
+  // a promotion that is on this page inline would otherwise be drawn a second
+  // time in a sponsored slot a few rows below — the same listing twice, both
+  // labelled "Sponsored". The rail's job is what the listing did *not* surface,
+  // which is exactly the set left after this filter.
+  const promotedCards = useMemo(() => {
+    const onPage = new Set(items.map((item) => item._id))
+    return promoted
+      .map((row) => normalizeFeedListItem(type, row))
+      .filter((card) => !onPage.has(card._id))
+  }, [promoted, type, items])
 
   // Hand the feed back to the next visit in this session, so returning from a
   // detail page lands on the same list at the same scroll position rather than

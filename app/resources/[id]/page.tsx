@@ -108,7 +108,16 @@ function ResourcePageContent({ params }: ResourcePageProps) {
    */
   const handleResourceOpen = useCallback(() => {
     void tracker?.startTracking('resource', id, 'resource_link')
-  }, [id, tracker])
+    // The conversion event for a resource, and the counterpart of the `apply`
+    // the other three detail pages record on their CTA. Opening the resource is
+    // what a promoter is buying here, and without this a promoted resource
+    // reported views and nothing else — so its campaign looked like it was
+    // converting at zero however well it was actually doing. The backend
+    // no-ops when the content is not promoted.
+    if (isAuthenticated && id) {
+      ApiClient.recordPromotionClick(id, 'resource', 'apply').catch(() => {})
+    }
+  }, [id, tracker, isAuthenticated])
 
   useEffect(() => {
     const loadParams = async () => { const r = await params; setId(r.id) }
