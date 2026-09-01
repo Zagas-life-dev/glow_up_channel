@@ -228,18 +228,24 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     setPlaylistAddCount(item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0)
   }, [item._id, item.metrics?.viewCount, item.metrics?.shareCount, item.metrics?.saveCount, item.metrics?.playlistAddCount, item.metrics?.playlistCount])
 
-  const feedViewSessionKey = () => `glow_feed_view_expand_${contentKind}_${item._id}`
-
-  const recordAuthenticatedFeedView = async (source: 'feed_show_more' | 'feed_like') => {
-    if (!isAuthenticated || !item._id) return
-    try {
-      await ApiClient.recordFeedContentView(contentKind, item._id, source)
-      if (source === 'feed_show_more') {
-        trackContentView(contentKind, item._id)
-      }
-    } catch {
-      // Optimistic count already applied; backend may be unavailable
-    }
+  /**
+   * Report a view.
+   *
+   * A view means the reader opened this item — expanded it here, or landed on its
+   * detail page. Scrolling a card past on the feed is an impression, not a view, and
+   * counting those would both inflate the number and cost a request per card on every
+   * feed load.
+   *
+   * Signed-out visitors count too — they are most of the traffic on a public listing,
+   * and excluding them made the number read far below real reach. The server keys them
+   * by an HttpOnly cookie and deduplicates to one view per viewer per day, so the count
+   * only moves when the server says it did rather than on every optimistic guess.
+   */
+  const recordFeedView = async (source: string) => {
+    if (!item._id) return
+    const counted = await ApiClient.recordFeedContentView(contentKind, item._id, source)
+    if (counted) setViewCount((v) => v + 1)
+    if (isAuthenticated) trackContentView(contentKind, item._id)
   }
 
   const loadEngagementStatus = async () => {
@@ -306,9 +312,8 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
         await ApiClient.likeItem(engagementApiType, item._id)
 
-        // Like also counts as a view for feed metrics
-        setViewCount((v) => v + 1)
-        void recordAuthenticatedFeedView('feed_like')
+        // A like is not a view. It used to increment viewCount too, which
+        // double-counted every liked item on top of the impression beacon above.
 
         // Track active user activity (fire-and-forget, won't throw errors)
         trackLike(contentKind, item._id)
@@ -415,11 +420,11 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
     const url = `${window.location.origin}/${engagementApiType}/${item._id}`
 
-    const onShareCompleted = () => {
-      setShareCount((c) => c + 1)
-      if (isAuthenticated) {
-        void ApiClient.recordFeedShare(contentKind, item._id)
-      }
+    // Shares count for signed-out visitors too, and only once per viewer per day —
+    // so the displayed number follows what the server actually recorded.
+    const onShareCompleted = async () => {
+      const counted = await ApiClient.recordFeedShare(contentKind, item._id, 'feed')
+      if (counted) setShareCount((c) => c + 1)
     }
 
     if (navigator.share) {
@@ -456,7 +461,12 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isAuthenticated) return
+    // The button is visible to guests so its public count reads like the others;
+    // pressing it asks them to sign up rather than doing nothing.
+    if (!isAuthenticated) {
+      dispatchGuestEngaged()
+      return
+    }
     setShowPlaylistModal(true)
   }
 
@@ -471,15 +481,10 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
   const handleReadMore = () => {
     onPromotionReadMore?.()
     ApiClient.recordPromotionClick(item._id, contentKind, 'show_more').catch(() => {})
-    // Valid view: first open per item per browser session (authenticated)
-    if (isAuthenticated && typeof sessionStorage !== 'undefined') {
-      const key = feedViewSessionKey()
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1')
-        setViewCount((v) => v + 1)
-        void recordAuthenticatedFeedView('feed_show_more')
-      }
-    }
+    // The view was already reported when this card rendered, and the server
+    // deduplicates per viewer per day, so opening the detail page is not a second view.
+    // Reporting it again only makes the request; it cannot double the count.
+    void recordFeedView('feed_show_more')
   }
 
   const getLocationString = () => {
@@ -727,15 +732,15 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
               count={saveCount}
               label="Save"
             />
-            {isAuthenticated ? (
-              <FeedAction
-                onClick={handleAddToPlaylist}
-                hoverClass="hover:text-violet-500"
-                icon={RiListOrdered}
-                count={playlistAddCount}
-                label="Add to playlist"
-              />
-            ) : null}
+            {/* Shown to guests too: the count is public like every other one here, and
+                pressing it prompts sign-up rather than silently doing nothing. */}
+            <FeedAction
+              onClick={handleAddToPlaylist}
+              hoverClass="hover:text-violet-500"
+              icon={RiListOrdered}
+              count={playlistAddCount}
+              label="Add to playlist"
+            />
             <FeedAction
               onClick={handleShare}
               active={justShared}

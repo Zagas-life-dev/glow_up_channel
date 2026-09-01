@@ -9,6 +9,16 @@
  *
  * Short words are left alone. Over-stemming "arts" to "art" is fine;
  * over-stemming "les" to "le" would collide with real vocabulary.
+ *
+ * Two properties the rules must hold, because keyword overlap depends on them:
+ *
+ *   1. **Singular and plural must converge.** If "course" and "courses" stem
+ *      apart, a listing about courses shares no keyword with a reader who wrote
+ *      "course", and the cosine term silently loses the match.
+ *   2. **Stemming is idempotent.** `stem(stem(x))` must equal `stem(x)`, or the
+ *      indexed form of an alias can differ from the form a query stems to.
+ *
+ * Both used to fail on the same family of words — anything ending in "ss".
  */
 
 import type { SupportedLanguage } from "@/lib/nlp/detect-language"
@@ -16,20 +26,30 @@ import type { SupportedLanguage } from "@/lib/nlp/detect-language"
 /** Never strip below this many characters — the stem stops being a word. */
 const MIN_STEM = 4
 
+/** Safety bound on the fixpoint loop below; two passes settle every rule here. */
+const MAX_PASSES = 3
+
 type Rule = { suffix: string; replacement: string; minLength?: number }
 
 /** Applied in order, first match wins. Longest suffixes must come first. */
 const RULES: Record<SupportedLanguage, Rule[]> = {
   en: [
     { suffix: "ies", replacement: "y", minLength: 5 },
-    { suffix: "sses", replacement: "ss" },
+    // These four shorten by two, so six characters is enough to leave a stem of
+    // MIN_STEM. The inherited default of `suffix.length + MIN_STEM` was too
+    // strict and let the plain "s" rule take the word instead: "classes" became
+    // "classe" and "coaches" became "coache", neither of which their own
+    // singular stems to.
+    { suffix: "sses", replacement: "ss", minLength: 6 },
+    { suffix: "ches", replacement: "ch", minLength: 6 },
+    { suffix: "shes", replacement: "sh", minLength: 6 },
+    { suffix: "xes", replacement: "x", minLength: 6 },
     { suffix: "ships", replacement: "ship" },
     { suffix: "ments", replacement: "ment" },
     { suffix: "ings", replacement: "ing" },
-    { suffix: "ches", replacement: "ch" },
-    { suffix: "shes", replacement: "sh" },
-    { suffix: "xes", replacement: "x" },
-    { suffix: "ses", replacement: "s" },
+    // No "ses" -> "s" rule. It was meant for "gases" -> "gas" but caught every
+    // "-se" noun on the way: "courses" -> "cours", "cases" -> "cas". The plain
+    // "s" rule below handles all of them correctly.
     { suffix: "s", replacement: "", minLength: 4 },
   ],
   fr: [
@@ -83,16 +103,34 @@ export function stem(token: string, language?: SupportedLanguage): string {
   if (!language) {
     let shortest = token
     for (const key of Object.keys(RULES) as SupportedLanguage[]) {
-      const candidate = applyRules(token, RULES[key])
+      const candidate = stemWith(token, RULES[key])
       if (candidate.length < shortest.length) shortest = candidate
     }
     return shortest
   }
 
-  return applyRules(token, RULES[language])
+  return stemWith(token, RULES[language])
+}
+
+/** Apply the ruleset until the token stops changing, so stemming is idempotent. */
+function stemWith(token: string, rules: Rule[]): string {
+  let current = token
+  for (let pass = 0; pass < MAX_PASSES; pass += 1) {
+    const next = applyRules(current, rules)
+    if (next === current) return current
+    current = next
+  }
+  return current
 }
 
 function applyRules(token: string, rules: Rule[]): string {
+  // A word ending in "ss" is already singular — "business", "class", "process".
+  // Without this the plain "s" rule shortens them to "busines"/"clas"/"proces",
+  // which their own plurals ("businesses" -> "business") never stem to. Checked
+  // for every language so the no-language path cannot strip it via another
+  // ruleset's "s" rule either.
+  if (token.endsWith("ss")) return token
+
   for (const rule of rules) {
     if (!token.endsWith(rule.suffix)) continue
     if (token.length < (rule.minLength ?? rule.suffix.length + MIN_STEM)) continue

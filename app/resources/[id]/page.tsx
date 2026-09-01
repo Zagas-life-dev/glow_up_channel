@@ -125,6 +125,11 @@ function ResourcePageContent({ params }: ResourcePageProps) {
       const result = await response.json()
       if (!result.success) { setError(true); return }
       setResource(result.data.resource)
+      // Report the view. The GET above no longer increments anything — it fires for
+      // server renders, prefetches and crawlers alike — so this beacon is what counts,
+      // deduplicated server-side to one view per viewer per day. Signed-out visitors
+      // count too; only the recommender needs an account.
+      void ApiClient.recordFeedContentView('resource', id, 'detail_page')
       if (isAuthenticated) trackContentView('resource', id)
     } catch { setError(true) } finally { setLoading(false) }
   }, [id, isAuthenticated])

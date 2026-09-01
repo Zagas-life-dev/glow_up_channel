@@ -232,6 +232,13 @@ export function freshnessSignal(
  *
  * Weighted by intent: saving something means far more than loading the page it
  * is on. Log scaling stops one viral listing from flattening everything else.
+ *
+ * The conversion event differs by content type, and every type's has to be
+ * counted or that type is scored on its weakest evidence. Downloading a
+ * resource is what applying is to a job — it was read as zero, so a workbook
+ * with five thousand downloads and one nobody had ever opened scored
+ * identically. Resources also carry `playlistAddCount`, `shareCount` and
+ * `clickCount`, all of which were invisible.
  */
 export function engagementSignal(item: Record<string, unknown>): SignalValue {
   const metrics =
@@ -249,15 +256,38 @@ export function engagementSignal(item: Record<string, unknown>): SignalValue {
   }
 
   const views = count("views", "viewCount", "impressions")
+  const clicks = count("clicks", "clickCount")
   const likes = count("likes", "likeCount")
+  const shares = count("shares", "shareCount")
   const saves = count("saves", "saveCount", "bookmarks")
-  const applications = count("applications", "applicationCount", "registrations")
+  const playlistAdds = count("playlistAdds", "playlistAddCount")
+  const downloads = count("downloads", "downloadCount")
+  // `registrationCount` is the events model's spelling. The list here read
+  // "registrations", which nothing writes — so registering for an event, the
+  // one thing an event asks of a reader, counted for exactly nothing.
+  const applications = count(
+    "applications",
+    "applicationCount",
+    "registrations",
+    "registrationCount",
+  )
 
-  const weighted = views * 0.1 + likes * 1 + saves * 2.5 + applications * 4
+  const weighted =
+    views * 0.1 +
+    clicks * 0.15 +
+    likes * 1 +
+    shares * 1.5 +
+    saves * 2.5 +
+    playlistAdds * 2.5 +
+    downloads * 4 +
+    applications * 4
   if (weighted <= 0) return null
 
-  // Saturates around a few hundred weighted points.
-  return Math.min(1, Math.log10(1 + weighted) / 2.7)
+  // Saturates around three thousand weighted points. The old divisor of 2.7
+  // saturated at ~500, which every popular listing of every type already
+  // cleared — so the whole top of the catalogue tied at 1.0 and the signal
+  // stopped separating anything.
+  return Math.min(1, Math.log10(1 + weighted) / 3.5)
 }
 
 /**

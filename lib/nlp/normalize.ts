@@ -50,6 +50,21 @@ export function tokenize(text: string): string[] {
   return normalized.split(" ").filter((token) => token.length > 1 && !/^\d+$/.test(token))
 }
 
+/**
+ * Words for *language detection*, keeping the one-letter ones.
+ *
+ * `tokenize` drops single characters as elision debris, which is right for tag
+ * and keyword matching. It is wrong here: "o", "a", "e" are the three most
+ * frequent words in Portuguese and "y" is the Spanish "and", so dropping them
+ * deletes the strongest stopword evidence those two languages have — and they
+ * are precisely the pair the detector struggles to tell apart.
+ */
+export function tokenizeForDetection(text: string): string[] {
+  const normalized = normalizeText(text)
+  if (!normalized) return []
+  return normalized.split(" ").filter((token) => token && !/^\d+$/.test(token))
+}
+
 /** Contiguous word runs of length 1..maxLength, for phrase lookup. */
 export function ngrams(tokens: string[], maxLength: number): string[] {
   const out: string[] = []

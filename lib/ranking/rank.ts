@@ -183,7 +183,9 @@ export function scoreItem<T extends Record<string, unknown>>(
     score: Math.round(promoted),
     reasons: buildReasons(
       breakdown,
-      context.interests.tags,
+      // `coreTags`, not `tags`: a reason may only name an interest the reader
+      // actually chose, never one `expandRelated` inferred for them.
+      context.interests.coreTags,
       content.tags,
       location.proximity.tier,
       place,

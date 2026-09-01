@@ -2,6 +2,20 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 import { getOrCreateAnonId, clearAnonId } from '@/lib/anon-id';
 
+/** Listing kinds that carry public engagement metrics. */
+export type FeedMetricItemType = 'opportunity' | 'job' | 'event' | 'resource';
+
+/** The public engagement counts shown on a card or detail page. */
+export interface ContentMetrics {
+  viewCount: number;
+  likeCount: number;
+  saveCount: number;
+  playlistAddCount: number;
+  shareCount: number;
+  clickCount: number;
+}
+
+
 if (!API_BASE_URL && typeof window !== 'undefined') {
   console.error('NEXT_PUBLIC_BACKEND_URL environment variable is required');
   throw new Error('Backend URL not configured. Please set NEXT_PUBLIC_BACKEND_URL environment variable.');
@@ -1186,94 +1200,124 @@ export class ApiClient {
   }
 
   /**
-   * Record a feed view for home feed items (increments metrics used for recommendations / analytics).
-   * Call when the user expands "Show more" or when they like (like also counts as a view).
-   * Requires authentication; no-ops if the request fails (caller can still bump UI optimistically).
+   * Report an engagement to the public metrics endpoints.
+   *
+   * These are beacons: they never throw, never block a UI action, and are safe to call
+   * signed out — the server identifies the viewer by an HttpOnly cookie it sets itself,
+   * which is why `credentials: 'include'` is required here.
+   *
+   * `X-View-Source: client` marks this as a real browser event. The server drops
+   * anything without it so server renders, prefetches and crawlers cannot inflate counts.
+   *
+   * Returns whether the event was newly counted, so callers can bump their optimistic
+   * number only when the server actually accepted it. A repeat within the same day
+   * returns false, which is a normal outcome and not an error.
    */
-  static async recordFeedContentView(
-    itemType: 'opportunity' | 'job' | 'event' | 'resource',
+  private static async _sendMetricBeacon(
+    itemType: FeedMetricItemType,
     contentId: string,
-    _source: 'feed_show_more' | 'feed_like'
-  ): Promise<void> {
-    const contentType =
-      itemType === 'opportunity'
-        ? 'opportunity'
-        : itemType === 'job'
-          ? 'job'
-          : itemType === 'event'
-            ? 'event'
-            : 'resource';
+    action: 'view' | 'share',
+    source?: string
+  ): Promise<boolean> {
+    if (!contentId) return false;
     try {
-      await this.trackEngagement(contentType, contentId, 'view');
-    } catch {
-      try {
-        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/view`, {
+      const token = this.getAccessToken();
+      const response = await fetch(
+        `${API_BASE_URL}/api/metrics/${itemType}/${contentId}/${action}`,
+        {
           method: 'POST',
-          body: JSON.stringify({
-            contentType: itemType,
-            contentId,
-            source: _source,
-          }),
-        });
-        await this.handleResponse(response);
-      } catch {
-        // Backend may only implement recommended/engagement; ignore
-      }
-    }
-  }
-
-  private static _feedMetricContentType(itemType: 'opportunity' | 'job' | 'event' | 'resource'): string {
-    return itemType === 'opportunity'
-      ? 'opportunity'
-      : itemType === 'job'
-        ? 'job'
-        : itemType === 'event'
-          ? 'event'
-          : 'resource';
-  }
-
-  /** Record a share from the feed (share button completed). Best-effort backend increment for metrics.shareCount. */
-  static async recordFeedShare(
-    itemType: 'opportunity' | 'job' | 'event' | 'resource',
-    contentId: string
-  ): Promise<void> {
-    const contentType = this._feedMetricContentType(itemType);
-    try {
-      await this.trackEngagement(contentType, contentId, 'share');
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-View-Source': 'client',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(getOrCreateAnonId() ? { 'X-Anon-Id': getOrCreateAnonId() } : {}),
+          },
+          body: JSON.stringify({ source: source ?? null }),
+        }
+      );
+      if (!response.ok) return false;
+      const result = await response.json();
+      return Boolean(result?.data?.counted);
     } catch {
-      try {
-        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/share`, {
-          method: 'POST',
-          body: JSON.stringify({ contentType: itemType, contentId, source: 'feed' }),
-        });
-        await this.handleResponse(response);
-      } catch {
-        // ignore
-      }
+      // A metric is never worth surfacing an error for.
+      return false;
     }
   }
 
   /**
-   * Record add-to-playlist from the feed (distinct from bookmark/save).
-   * Best-effort backend increment for metrics.playlistAddCount.
+   * Record that a human viewed this listing.
+   *
+   * Deduplicated server-side to one view per viewer per day, so this is safe to call on
+   * every open — including from signed-out visitors, who used to be invisible to the
+   * view count entirely.
+   *
+   * Resolves to true only when the view was newly counted.
+   */
+  static async recordFeedContentView(
+    itemType: FeedMetricItemType,
+    contentId: string,
+    source: string = 'feed'
+  ): Promise<boolean> {
+    const counted = await this._sendMetricBeacon(itemType, contentId, 'view', source);
+    // Feed the recommender separately. Signed-out users have nothing to learn against,
+    // and a failure here must not affect the public count.
+    if (this.isAuthenticated()) {
+      this.trackEngagement(itemType, contentId, 'view').catch(() => {});
+    }
+    return counted;
+  }
+
+  /**
+   * Record a completed share — native share sheet, copy link, or the in-app composer.
+   * Deduplicated per viewer per day. Resolves to true when newly counted.
+   */
+  static async recordFeedShare(
+    itemType: FeedMetricItemType,
+    contentId: string,
+    source: string = 'feed'
+  ): Promise<boolean> {
+    const counted = await this._sendMetricBeacon(itemType, contentId, 'share', source);
+    if (this.isAuthenticated()) {
+      this.trackEngagement(itemType, contentId, 'share').catch(() => {});
+    }
+    return counted;
+  }
+
+  /**
+   * Record add-to-playlist.
+   *
+   * Unlike views and shares there is no beacon for this: `metrics.playlistAddCount` is
+   * derived from playlist membership by the backend when the item is actually added or
+   * removed, so it is already correct by the time the playlist call returns. This only
+   * feeds the recommender.
    */
   static async recordFeedPlaylistAdd(
-    itemType: 'opportunity' | 'job' | 'event' | 'resource',
+    itemType: FeedMetricItemType,
     contentId: string
   ): Promise<void> {
-    const contentType = this._feedMetricContentType(itemType);
+    if (!this.isAuthenticated()) return;
     try {
-      await this.trackEngagement(contentType, contentId, 'playlist_add');
+      await this.trackEngagement(itemType, contentId, 'playlist_add');
     } catch {
-      try {
-        const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/playlist-add`, {
-          method: 'POST',
-          body: JSON.stringify({ contentType: itemType, contentId, source: 'feed' }),
-        });
-        await this.handleResponse(response);
-      } catch {
-        // ignore
-      }
+      // Recommendation learning is best-effort.
+    }
+  }
+
+  /** Read the current public counts for one listing. */
+  static async getContentMetrics(
+    itemType: FeedMetricItemType,
+    contentId: string
+  ): Promise<ContentMetrics | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/metrics/${itemType}/${contentId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return null;
+      const result = await response.json();
+      return result?.data?.metrics ?? null;
+    } catch {
+      return null;
     }
   }
 

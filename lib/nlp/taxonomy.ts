@@ -26,6 +26,18 @@ export type TagDefinition = {
   label: string
   category: TagCategory
   aliases: Record<SupportedLanguage, string[]>
+  /**
+   * Words that hint at this tag without settling it, matched at a fraction of
+   * the strength of a real alias.
+   *
+   * "Funding" was a full alias of `scholarships-grants`, so a startup funding
+   * toolkit profiled as being exactly as much about scholarships as about
+   * entrepreneurship — and `expandRelated` then pushed that phantom into
+   * `research-academic` and `international-programs`. The word is still
+   * evidence; it is just not proof, and the same is true of "online",
+   * "international", "investment" and "challenge".
+   */
+  weakAliases?: Partial<Record<SupportedLanguage, string[]>>
   /** Tags that partially satisfy this one, scored at `RELATED_WEIGHT`. */
   related?: string[]
 }
@@ -49,10 +61,17 @@ export const TAXONOMY: TagDefinition[] = [
     category: "interest",
     related: ["research-academic", "international-programs"],
     aliases: {
-      en: ["scholarship", "scholarships", "grant", "grants", "bursary", "bursaries", "funding", "financial aid", "tuition", "stipend", "fully funded"],
-      fr: ["bourse", "bourses", "bourse d'etudes", "subvention", "subventions", "financement", "aide financiere", "frais de scolarite", "entierement financee"],
-      es: ["beca", "becas", "subvencion", "subvenciones", "financiacion", "ayuda financiera", "matricula", "totalmente financiada"],
-      pt: ["bolsa", "bolsas", "bolsa de estudos", "subvencao", "financiamento", "auxilio financeiro", "mensalidade", "totalmente financiada"],
+      en: ["scholarship", "scholarships", "grant", "grants", "bursary", "bursaries", "financial aid", "tuition", "stipend", "fully funded"],
+      fr: ["bourse", "bourses", "bourse d'etudes", "subvention", "subventions", "aide financiere", "frais de scolarite", "entierement financee"],
+      es: ["beca", "becas", "subvencion", "subvenciones", "ayuda financiera", "matricula", "totalmente financiada"],
+      pt: ["bolsa", "bolsas", "bolsa de estudos", "subvencao", "auxilio financeiro", "mensalidade", "totalmente financiada"],
+    },
+    // Every startup raises "funding" too — see `weakAliases` above.
+    weakAliases: {
+      en: ["funding", "funded"],
+      fr: ["financement"],
+      es: ["financiacion"],
+      pt: ["financiamento"],
     },
   },
   {
@@ -97,10 +116,19 @@ export const TAXONOMY: TagDefinition[] = [
     category: "interest",
     related: ["business-finance", "competition"],
     aliases: {
-      en: ["entrepreneurship", "entrepreneur", "startup", "startups", "founder", "incubator", "accelerator", "venture capital", "seed funding", "pitch", "investment", "small business"],
-      fr: ["entrepreneuriat", "entrepreneur", "startup", "fondateur", "incubateur", "accelerateur", "capital risque", "amorcage", "levee de fonds", "investissement", "petite entreprise"],
-      es: ["emprendimiento", "emprendedor", "startup", "fundador", "incubadora", "aceleradora", "capital riesgo", "capital semilla", "inversion", "pequena empresa"],
-      pt: ["empreendedorismo", "empreendedor", "startup", "fundador", "incubadora", "aceleradora", "capital de risco", "capital semente", "investimento", "pequena empresa"],
+      en: ["entrepreneurship", "entrepreneur", "startup", "startups", "founder", "incubator", "accelerator", "venture capital", "seed funding", "pitch deck", "pitch competition", "small business"],
+      fr: ["entrepreneuriat", "entrepreneur", "startup", "fondateur", "incubateur", "accelerateur", "capital risque", "amorcage", "levee de fonds", "petite entreprise"],
+      es: ["emprendimiento", "emprendedor", "startup", "fundador", "incubadora", "aceleradora", "capital riesgo", "capital semilla", "pequena empresa"],
+      pt: ["empreendedorismo", "empreendedor", "startup", "fundador", "incubadora", "aceleradora", "capital de risco", "capital semente", "pequena empresa"],
+    },
+    // "Pitch" is a sports field and a sales call; "investment" belongs as much
+    // to `business-finance`. Both stay as hints, with the specific phrases
+    // ("pitch deck", "capital semente") carrying the real weight above.
+    weakAliases: {
+      en: ["pitch", "investment", "investor", "investors"],
+      fr: ["investissement", "investisseur"],
+      es: ["inversion", "inversionista"],
+      pt: ["investimento", "investidor"],
     },
   },
   {
@@ -109,10 +137,18 @@ export const TAXONOMY: TagDefinition[] = [
     category: "interest",
     related: ["technology", "jobs-careers"],
     aliases: {
-      en: ["remote", "remote work", "work from home", "digital skills", "freelance", "telecommute", "online", "virtual", "hybrid", "distributed team"],
-      fr: ["teletravail", "a distance", "travail a distance", "competences numeriques", "freelance", "en ligne", "virtuel", "hybride"],
-      es: ["remoto", "teletrabajo", "trabajo remoto", "habilidades digitales", "freelance", "en linea", "virtual", "hibrido"],
-      pt: ["remoto", "teletrabalho", "trabalho remoto", "habilidades digitais", "freelancer", "online", "virtual", "hibrido"],
+      en: ["remote", "remote work", "work from home", "digital skills", "freelance", "telecommute", "distributed team"],
+      fr: ["teletravail", "a distance", "travail a distance", "competences numeriques", "freelance"],
+      es: ["remoto", "teletrabajo", "trabajo remoto", "habilidades digitales", "freelance"],
+      pt: ["remoto", "teletrabalho", "trabalho remoto", "habilidades digitais", "freelancer"],
+    },
+    // Almost every resource on the platform is "online". Left as a hint so an
+    // online course stops reading as a remote-work listing.
+    weakAliases: {
+      en: ["online", "virtual", "hybrid"],
+      fr: ["en ligne", "virtuel", "hybride"],
+      es: ["en linea", "virtual", "hibrido"],
+      pt: ["online", "virtual", "hibrido"],
     },
   },
   {
@@ -133,10 +169,17 @@ export const TAXONOMY: TagDefinition[] = [
     category: "interest",
     related: ["scholarships-grants"],
     aliases: {
-      en: ["exchange", "international", "abroad", "study abroad", "mobility", "visa", "erasmus", "global program", "overseas"],
-      fr: ["echange", "international", "a l'etranger", "etudes a l'etranger", "mobilite", "visa", "erasmus", "programme mondial"],
-      es: ["intercambio", "internacional", "en el extranjero", "estudiar en el extranjero", "movilidad", "visa", "erasmus", "programa global"],
-      pt: ["intercambio", "internacional", "no exterior", "estudar no exterior", "mobilidade", "visto", "erasmus", "programa global"],
+      en: ["exchange", "abroad", "study abroad", "mobility", "visa", "erasmus", "global program", "overseas"],
+      fr: ["echange", "a l'etranger", "etudes a l'etranger", "mobilite", "visa", "erasmus", "programme mondial"],
+      es: ["intercambio", "en el extranjero", "estudiar en el extranjero", "movilidad", "visa", "erasmus", "programa global"],
+      pt: ["intercambio", "no exterior", "estudar no exterior", "mobilidade", "visto", "erasmus", "programa global"],
+    },
+    // Half the listings on the platform describe themselves as international.
+    weakAliases: {
+      en: ["international", "global"],
+      fr: ["international", "mondial"],
+      es: ["internacional", "mundial"],
+      pt: ["internacional", "mundial"],
     },
   },
 
@@ -204,10 +247,18 @@ export const TAXONOMY: TagDefinition[] = [
     category: "industry",
     related: ["volunteering"],
     aliases: {
-      en: ["government", "public service", "public policy", "civic", "governance", "diplomacy", "public sector", "administration", "united nations"],
-      fr: ["gouvernement", "service public", "politique publique", "civique", "gouvernance", "diplomatie", "secteur public", "administration", "nations unies"],
-      es: ["gobierno", "servicio publico", "politica publica", "civico", "gobernanza", "diplomacia", "sector publico", "administracion", "naciones unidas"],
-      pt: ["governo", "servico publico", "politica publica", "civico", "governanca", "diplomacia", "setor publico", "administracao", "nacoes unidas"],
+      en: ["government", "public service", "public policy", "civic", "governance", "diplomacy", "public sector", "united nations"],
+      fr: ["gouvernement", "service public", "politique publique", "civique", "gouvernance", "diplomatie", "secteur public", "nations unies"],
+      es: ["gobierno", "servicio publico", "politica publica", "civico", "gobernanza", "diplomacia", "sector publico", "naciones unidas"],
+      pt: ["governo", "servico publico", "politica publica", "civico", "governanca", "diplomacia", "setor publico", "nacoes unidas"],
+    },
+    // "Administration" was a full alias, so a reader who studied Business
+    // Administration was scored as interested in the public sector.
+    weakAliases: {
+      en: ["administration", "administrative"],
+      fr: ["administration", "administratif"],
+      es: ["administracion", "administrativo"],
+      pt: ["administracao", "administrativo"],
     },
   },
   {
@@ -252,10 +303,17 @@ export const TAXONOMY: TagDefinition[] = [
     category: "format",
     related: ["entrepreneurship-funding"],
     aliases: {
-      en: ["competition", "contest", "challenge", "hackathon", "award", "prize", "pitch competition", "call for applications"],
-      fr: ["concours", "competition", "defi", "hackathon", "prix", "appel a candidatures"],
-      es: ["competencia", "concurso", "desafio", "hackathon", "premio", "convocatoria"],
-      pt: ["competicao", "concurso", "desafio", "hackathon", "premio", "chamada de inscricoes"],
+      en: ["competition", "contest", "hackathon", "award", "prize", "pitch competition", "call for applications"],
+      fr: ["concours", "competition", "hackathon", "prix", "appel a candidatures"],
+      es: ["competencia", "concurso", "hackathon", "premio", "convocatoria"],
+      pt: ["competicao", "concurso", "hackathon", "premio", "chamada de inscricoes"],
+    },
+    // "Challenge" is as often a hardship as a contest.
+    weakAliases: {
+      en: ["challenge"],
+      fr: ["defi"],
+      es: ["desafio", "reto"],
+      pt: ["desafio"],
     },
   },
 
@@ -306,9 +364,12 @@ export const MAX_PHRASE_WORDS = (() => {
   let max = 1
   for (const tag of TAXONOMY) {
     for (const language of SUPPORTED_LANGUAGES) {
-      for (const alias of tag.aliases[language]) {
-        const words = normalizeText(alias).split(" ").filter(Boolean).length
-        if (words > max) max = words
+      const lists = [tag.aliases[language], tag.weakAliases?.[language] ?? []]
+      for (const list of lists) {
+        for (const alias of list) {
+          const words = normalizeText(alias).split(" ").filter(Boolean).length
+          if (words > max) max = words
+        }
       }
     }
   }
@@ -324,6 +385,10 @@ export const PHRASE_INDEX = new Map<string, string[]>()
 /** Stemmed single word → tag ids. */
 export const TOKEN_INDEX = new Map<string, string[]>()
 
+/** The same two indexes for `weakAliases`, matched at a fraction of the strength. */
+export const WEAK_PHRASE_INDEX = new Map<string, string[]>()
+export const WEAK_TOKEN_INDEX = new Map<string, string[]>()
+
 function addTo(index: Map<string, string[]>, key: string, tagId: string): void {
   if (!key) return
   const existing = index.get(key)
@@ -334,47 +399,106 @@ function addTo(index: Map<string, string[]>, key: string, tagId: string): void {
   }
 }
 
+function indexAliases(
+  aliases: string[] | undefined,
+  language: SupportedLanguage,
+  tagId: string,
+  phrases: Map<string, string[]>,
+  tokens: Map<string, string[]>,
+): void {
+  if (!aliases) return
+  for (const alias of aliases) {
+    const normalized = normalizeText(alias)
+    if (!normalized) continue
+    const words = normalized.split(" ")
+    if (words.length > 1) {
+      addTo(phrases, normalized, tagId)
+    } else {
+      addTo(tokens, stem(words[0], language), tagId)
+      // Also index the unstemmed form — cheap, and covers stems that the
+      // light ruleset leaves alone in one language but strips in another.
+      addTo(tokens, words[0], tagId)
+    }
+  }
+}
+
 for (const tag of TAXONOMY) {
   // The canonical id and label are themselves matchable.
   addTo(TOKEN_INDEX, stem(tag.id.replace(/-/g, " ").split(" ")[0]), tag.id)
 
   for (const language of SUPPORTED_LANGUAGES) {
-    for (const alias of tag.aliases[language]) {
-      const normalized = normalizeText(alias)
-      if (!normalized) continue
-      const words = normalized.split(" ")
-      if (words.length > 1) {
-        addTo(PHRASE_INDEX, normalized, tag.id)
-      } else {
-        addTo(TOKEN_INDEX, stem(words[0], language), tag.id)
-        // Also index the unstemmed form — cheap, and covers stems that the
-        // light ruleset leaves alone in one language but strips in another.
-        addTo(TOKEN_INDEX, words[0], tag.id)
-      }
-    }
+    indexAliases(tag.aliases[language], language, tag.id, PHRASE_INDEX, TOKEN_INDEX)
+    indexAliases(
+      tag.weakAliases?.[language],
+      language,
+      tag.id,
+      WEAK_PHRASE_INDEX,
+      WEAK_TOKEN_INDEX,
+    )
   }
 }
 
 /**
- * Tag ids present in `text`, each with a 0..1 strength.
+ * Evidence contributed by one match, before saturation.
  *
  * Phrases score higher than single words because "capital semente" is far more
- * specific than "capital". Repeat mentions add sub-linearly — a listing that
- * says "scholarship" nine times is not nine times more about scholarships.
+ * specific than "capital", and a stemmed match scores below an exact one
+ * because stemming can over-collapse.
  */
-export function matchTags(
+const PHRASE_HIT = 1.5
+const TOKEN_HIT = 1
+const STEMMED_HIT = 0.8
+const WEAK_PHRASE_HIT = 0.5
+const WEAK_TOKEN_HIT = 0.35
+
+/**
+ * How fast evidence saturates. Tuned so one exact single-word hit lands near
+ * 0.75 and a matched phrase near 0.88.
+ *
+ * The old curve — `1 - 1/(1 + count)` over a 0.6 hit — put a single exact match
+ * at 0.375, which is why `semanticSimilarity` could not clear 0.46 even for an
+ * ideal match, and why the 0.55 reason threshold never fired. A listing whose
+ * title says "Scholarships" *is* about scholarships; the score should say so.
+ */
+const SATURATION_TAU = 0.72
+
+/** One tag's evidence in a piece of text. */
+export type TagMatch = {
+  /** 0..1 strength for this text alone, before any field weighting. */
+  strength: number
+  /**
+   * True when nothing but `weakAliases` supported this tag.
+   *
+   * Callers must not let field weighting lift such a tag to full strength.
+   * "Startup Funding Toolkit: Seed Funding …" says "funding" twice in a title
+   * weighted 3, which was enough to push `scholarships-grants` past the clamp
+   * and out the far side as a certainty.
+   */
+  weakOnly: boolean
+}
+
+/**
+ * Tag ids present in `text` with their evidence.
+ *
+ * Repeat mentions add sub-linearly — a listing that says "scholarship" nine
+ * times is not nine times more about scholarships.
+ */
+export function matchTagsDetailed(
   text: string,
   language?: SupportedLanguage,
-): Map<string, number> {
-  const hits = new Map<string, number>()
+): Map<string, TagMatch> {
+  const strong = new Map<string, number>()
+  const weak = new Map<string, number>()
+  const scored = new Map<string, TagMatch>()
+
   const normalized = normalizeText(text)
-  if (!normalized) return hits
+  if (!normalized) return scored
 
   const words = normalized.split(" ").filter(Boolean)
-  if (words.length === 0) return hits
+  if (words.length === 0) return scored
 
-  const bump = (tagId: string, amount: number) => {
-    hits.set(tagId, (hits.get(tagId) ?? 0) + amount)
+  const bump = (into: Map<string, number>, tagId: string, amount: number) => {
+    into.set(tagId, (into.get(tagId) ?? 0) + amount)
   }
 
   // Phrases first — a matched phrase is strong evidence.
@@ -382,29 +506,57 @@ export function matchTags(
     for (const gram of ngrams(words, MAX_PHRASE_WORDS)) {
       const tagIds = PHRASE_INDEX.get(gram)
       if (tagIds) {
-        for (const tagId of tagIds) bump(tagId, 1)
+        for (const tagId of tagIds) bump(strong, tagId, PHRASE_HIT)
+      }
+      const weakIds = WEAK_PHRASE_INDEX.get(gram)
+      if (weakIds) {
+        for (const tagId of weakIds) bump(weak, tagId, WEAK_PHRASE_HIT)
       }
     }
   }
 
   for (const word of words) {
+    const stemmedWord = stem(word, language)
+
     const direct = TOKEN_INDEX.get(word)
     if (direct) {
-      for (const tagId of direct) bump(tagId, 0.6)
-      continue
+      for (const tagId of direct) bump(strong, tagId, TOKEN_HIT)
+    } else {
+      const stemmed = TOKEN_INDEX.get(stemmedWord)
+      if (stemmed) {
+        for (const tagId of stemmed) bump(strong, tagId, STEMMED_HIT)
+      }
     }
-    const stemmed = TOKEN_INDEX.get(stem(word, language))
-    if (stemmed) {
-      for (const tagId of stemmed) bump(tagId, 0.5)
+
+    // Weak aliases are scored independently of the strong ones: a word can be
+    // a firm alias of one tag and a hint at another.
+    const hinted = WEAK_TOKEN_INDEX.get(word) ?? WEAK_TOKEN_INDEX.get(stemmedWord)
+    if (hinted) {
+      for (const tagId of hinted) bump(weak, tagId, WEAK_TOKEN_HIT)
     }
   }
 
   // Squash counts into 0..1 so a long description cannot outscore a precise one.
-  const scored = new Map<string, number>()
-  for (const [tagId, count] of hits) {
-    scored.set(tagId, 1 - 1 / (1 + count))
+  for (const tagId of new Set([...strong.keys(), ...weak.keys()])) {
+    const count = (strong.get(tagId) ?? 0) + (weak.get(tagId) ?? 0)
+    scored.set(tagId, {
+      strength: 1 - Math.exp(-count / SATURATION_TAU),
+      weakOnly: !strong.has(tagId),
+    })
   }
   return scored
+}
+
+/** Tag ids present in `text`, each with a 0..1 strength. */
+export function matchTags(
+  text: string,
+  language?: SupportedLanguage,
+): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const [tagId, match] of matchTagsDetailed(text, language)) {
+    out.set(tagId, match.strength)
+  }
+  return out
 }
 
 /**

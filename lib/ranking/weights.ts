@@ -59,5 +59,17 @@ export function weightsFor(contentType: string | undefined): Weights {
 /**
  * How strong a signal has to be before it is worth telling the user about.
  * Keeps "reasons" honest — a 0.3 tag match is not "matches your interests".
+ *
+ * 0.55 is a measured boundary, not a guess. Against a reader with five stated
+ * interests, `semanticSimilarity` scores an ideal resource 0.70, a strong one
+ * 0.74, one matching a single interest 0.62, a tangential one 0.27 and an
+ * unrelated one 0.00 — so this sits in the gap and the reason fires for exactly
+ * the items a person would call relevant.
+ *
+ * It used to be unreachable. The old scoring capped an ideal match at 0.46, so
+ * the `matchesTag` and `matchesInterests` branches in `buildReasons` could never
+ * run and the feed explained every recommendation by freshness or popularity —
+ * never by the interests it had actually matched on. Re-measure this if the
+ * weights in `semanticSimilarity` move again.
  */
 export const REASON_THRESHOLD = 0.55

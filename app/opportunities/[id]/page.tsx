@@ -106,6 +106,11 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
       const result = await response.json()
       if (!result.success) { setError(true); return }
       setOpportunity(result.data.opportunity)
+      // Report the view. The GET above no longer increments anything — it fires for
+      // server renders, prefetches and crawlers alike — so this beacon is what counts,
+      // deduplicated server-side to one view per viewer per day. Signed-out visitors
+      // count too; only the recommender needs an account.
+      void ApiClient.recordFeedContentView('opportunity', id, 'detail_page')
       if (isAuthenticated) trackContentView('opportunity', id)
     } catch { setError(true) } finally { setLoading(false) }
   }, [id, isAuthenticated])

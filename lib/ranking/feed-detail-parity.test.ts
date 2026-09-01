@@ -43,7 +43,14 @@ const context: RankingContext = {
   now: NOW,
 }
 
-/** How the recommendation endpoint sends a row: with its own `score`. */
+/**
+ * How the recommendation endpoint sends a row: with its own `score`.
+ *
+ * Country but no city, deliberately. `baseScore` carries 0.06 of the weight, so
+ * on a listing that already scores near 100 its whole contribution rounds away
+ * and "recovering the server score changes the number" stops being observable.
+ * The fixture has to leave headroom for the signal under test to show up in.
+ */
 const feedRow = {
   _id: "opp-1",
   contentType: "opportunity",
@@ -51,7 +58,6 @@ const feedRow = {
   description: "A funded programme for entrepreneurship and product design.",
   tags: ["design", "entrepreneurship"],
   country: "Nigeria",
-  city: "Lagos",
   createdAt: new Date(NOW - 3 * 86_400_000).toISOString(),
   dates: { applicationDeadline: new Date(NOW + 14 * 86_400_000).toISOString() },
   score: 100,
