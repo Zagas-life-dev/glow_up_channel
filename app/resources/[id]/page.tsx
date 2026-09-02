@@ -49,7 +49,7 @@ import {
 import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { trackContentView } from '@/lib/tracking'
+import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
@@ -116,6 +116,8 @@ function ResourcePageContent({ params }: ResourcePageProps) {
     // no-ops when the content is not promoted.
     if (isAuthenticated && id) {
       ApiClient.recordPromotionClick(id, 'resource', 'apply').catch(() => {})
+      // Opening the resource is this page's apply.
+      trackApply('resource', id)
     }
   }, [id, tracker, isAuthenticated])
 

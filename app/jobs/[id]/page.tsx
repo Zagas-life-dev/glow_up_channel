@@ -41,7 +41,7 @@ import {
 import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { trackContentView } from '@/lib/tracking'
+import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
@@ -97,6 +97,7 @@ function JobPageContent({ params }: JobPageProps) {
   const handleApplyClick = useCallback(() => {
     ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})
     ApiClient.recordApply('job', id).catch(() => {})
+    trackApply('job', id)
     void tracker?.startTracking('job', id, 'apply_button')
   }, [id, tracker])
 

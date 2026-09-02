@@ -45,7 +45,7 @@ import {
 import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { trackContentView } from '@/lib/tracking'
+import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
@@ -205,6 +205,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
           onClick={() => {
             ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})
             ApiClient.recordApply('opportunity', id).catch(() => {})
+            trackApply('opportunity', id)
             // Arms the honesty tracker: this is the last moment the platform can
             // see anything, so the exit is recorded before the browser leaves.
             void tracker?.startTracking('opportunity', id, 'apply_button')

@@ -1,12 +1,43 @@
 /**
  * User Activity Tracking Utility
- * 
+ *
  * Tracks:
- * - Visits: When users just open the website
- * - Active Daily Users: When users engage with content (like, share, repost, save, post, view content)
+ * - Visits: when someone opens the site at all, signed in or not.
+ * - Active Daily Users: signed-in people who did something that counts as using the
+ *   product that day.
+ *
+ * What counts is decided by the SERVER, in services/userActivityService.js
+ * (ACTIVE_USER_ACTIONS). This file can only report what happened; it cannot promote an
+ * action into the active-user definition. That split is deliberate — this bundle is
+ * served from a CDN and a visitor may be running a days-old copy of it, so a definition
+ * that lived here could not be changed without waiting out every cache.
+ *
+ * Qualifying today: content_view, like, save, share, playlist_add, search, apply.
+ *
+ * `repost`, `post_created` and `community_engagement` are still reported and still
+ * stored — they feed recommendations and moderation — but the server files them under
+ * `engagement` rather than `active`, so they no longer make someone an active user.
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+/**
+ * Actions that make a signed-in user active for the day. Mirrors ACTIVE_USER_ACTIONS on
+ * the server; the server is authoritative if the two ever drift.
+ */
+export type ActiveUserAction =
+  | 'content_view'
+  | 'like'
+  | 'save'
+  | 'share'
+  | 'playlist_add'
+  | 'search'
+  | 'apply';
+
+/** Actions reported but NOT counted toward active users. Recorded for other analytics. */
+export type NonQualifyingAction = 'repost' | 'post_created' | 'community_engagement';
+
+export type TrackedAction = ActiveUserAction | NonQualifyingAction;
 
 /**
  * Get or create a session ID
@@ -83,17 +114,15 @@ export function trackVisit(): void {
 }
 
 /**
- * Track active user activity (engagement)
- * This should be called when users:
- * - Open any event/opportunity/jobs/resources
- * - Engage with content (like, share, repost, save)
- * - Post anything to the community
- * - Open the community and engage with any post
- * 
- * This function is fire-and-forget and will never throw errors or log anything
+ * Report one action to the activity log.
+ *
+ * Whether it counts toward active users is the server's call — see ACTIVE_USER_ACTIONS
+ * in services/userActivityService.js. Everything sent here is stored either way.
+ *
+ * Fire-and-forget: never throws, never logs, never blocks the UI.
  */
 export function trackActiveActivity(
-  action: 'content_view' | 'like' | 'share' | 'repost' | 'save' | 'post_created' | 'community_engagement',
+  action: TrackedAction,
   details: {
     contentType?: 'opportunity' | 'event' | 'job' | 'resource' | 'post' | 'community';
     contentId?: string;
@@ -289,7 +318,11 @@ export function trackCommunityEngagement(action: 'view' | 'like' | 'reply' | 're
 }
 
 /**
- * Track add to playlist action
+ * Track add to playlist.
+ *
+ * Reported as `playlist_add`, not as `save`. They were the same action here, which meant
+ * the log could not tell curating from bookmarking and the two could never be counted or
+ * weighted separately.
  */
 export function trackAddToPlaylist(
   contentType: 'opportunity' | 'event' | 'job' | 'resource' | 'opportunities' | 'events' | 'jobs' | 'resources',
@@ -302,10 +335,50 @@ export function trackAddToPlaylist(
     : contentType === 'resources' ? 'resource'
     : contentType;
   
-  trackActiveActivity('save', { // Adding to playlist is similar to saving
+  trackActiveActivity('playlist_add', {
     contentType: normalizedType as 'opportunity' | 'event' | 'job' | 'resource' | 'post' | 'community',
     contentId
   });
+}
+
+/**
+ * Track that the reader ran a search.
+ *
+ * Deduplicated to one event per tab session per UTC day. The search box refetches on a
+ * 400ms debounce and on every tab switch, so reporting each one would write hundreds of
+ * rows per session into `user_activities` to answer a question — "did this person search
+ * today?" — that a single row already answers. The search term itself is not sent.
+ */
+export function trackSearch(): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // UTC to match how the server buckets its `date` field, so the dedup window and the
+    // day being counted are the same window.
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `searchTracked:${today}`;
+    if (sessionStorage.getItem(key) === 'true') return;
+    sessionStorage.setItem(key, 'true');
+  } catch {
+    // Storage unavailable (private mode, storage disabled). Report the search rather
+    // than dropping it — an extra row is a much smaller problem than an active user who
+    // never registers as one.
+  }
+
+  trackActiveActivity('search', { page: '/search' });
+}
+
+/**
+ * Track a click on an apply / register / open CTA.
+ *
+ * This is the strongest intent signal the platform can observe: the last thing it sees
+ * before the browser leaves for someone else's site.
+ */
+export function trackApply(
+  contentType: 'opportunity' | 'event' | 'job' | 'resource',
+  contentId: string
+): void {
+  trackActiveActivity('apply', { contentType, contentId });
 }
 
 /**

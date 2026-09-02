@@ -12,6 +12,7 @@ import {
   type SearchTab,
 } from "@/lib/search-list-fetch"
 import type { HomeListItem, HomeListType } from "@/lib/fetch-home-list-page"
+import { trackSearch } from "@/lib/tracking"
 
 type SearchFeedItem = HomeListItem & { _id: string }
 
@@ -134,6 +135,10 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Reported from inside the debounce, so a settled query counts and the keystrokes
+      // on the way to it do not. An empty box is a cleared search, not a search.
+      // trackSearch itself dedupes to one event per session per day.
+      if (searchQuery.trim()) trackSearch()
       void runFetch("reset")
     }, 400)
     return () => clearTimeout(timer)

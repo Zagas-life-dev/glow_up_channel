@@ -41,7 +41,7 @@ import {
 import { useContentRanking, useSimilarContent } from '@/hooks/use-content-detail'
 import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
-import { trackContentView } from '@/lib/tracking'
+import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
@@ -104,6 +104,8 @@ function EventPageContent({ params }: EventPageProps) {
    */
   const handleRegisterClick = useCallback(() => {
     ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})
+    // Registering for an event is this page's apply.
+    trackApply('event', id)
     void tracker?.startTracking('event', id, 'register_button')
   }, [id, tracker])
 
