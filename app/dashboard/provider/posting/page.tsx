@@ -133,6 +133,7 @@ function PostingContent() {
   const [errorMessage, setErrorMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const tagInputContainerRef = useRef<HTMLDivElement | null>(null)
+  const errorRef = useRef<HTMLDivElement | null>(null)
 
   // Permission state
   const [canPost, setCanPost] = useState(false)
@@ -217,6 +218,20 @@ function PostingContent() {
   useEffect(() => {
     checkPermission()
   }, [checkPermission])
+
+  /**
+   * Bring the error into view when a submit fails.
+   *
+   * The banner renders at the top of the scrolling column while the submit
+   * button is pinned to the footer, so submitting from the bottom of a long
+   * form showed the spinner stop and nothing else. That reads as a silent
+   * failure — and the form does keep every value, so the fix is to show the
+   * reason rather than to preserve anything.
+   */
+  useEffect(() => {
+    if (submitStatus !== 'error') return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [submitStatus, errorMessage])
 
   const handleSelectType = (type: PostType) => {
     const limit = getPostingLimit(user?.role)
@@ -514,7 +529,7 @@ function PostingContent() {
                   <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
                     <div className="mx-auto max-w-2xl space-y-4">
                       {submitStatus === 'error' && (
-                        <div className="flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-3">
+                        <div ref={errorRef} className="flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-3">
                           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
                           <div className="min-w-0 flex-1">
                             <p className="break-words text-body-sm text-red-500 dark:text-red-400">{errorMessage}</p>
