@@ -1,5 +1,19 @@
 "use client"
 
+/**
+ * @deprecated The notification system is being replaced.
+ *
+ * Its types are all post-shaped (like / reply / repost / mention) and the
+ * community surface they describe is itself deprecated, so the model cannot
+ * express a notification about a listing without being bent out of shape. It is
+ * left running for existing rows; nothing new should be built on it.
+ *
+ * Concretely: do not add notification types, and do not reach for this when a
+ * new feature wants to tell someone something. Monitor assignment was the first
+ * feature to want that and deliberately ships without a notification rather than
+ * adding a type here that the replacement would have to carry forward.
+ */
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Bell, Loader2 } from "lucide-react"

@@ -17,6 +17,7 @@ import {
   RiUserLine,
   
   RiVipCrownLine,
+  RiEyeLine,
   RiLogoutBoxRLine,
   RiArrowLeftLine,
   RiArrowRightLine,
@@ -24,7 +25,7 @@ import {
   RiDownloadLine,
   RiCheckboxCircleLine,
 } from "react-icons/ri"
-import { canPublishContent } from '@/lib/roles'
+import { canAccessMonitorPortal, canPublishContent } from '@/lib/roles'
 import { useGoBack } from "@/hooks/use-go-back"
 import { useNavAudience } from "@/hooks/use-nav-audience"
 
@@ -238,6 +239,16 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                   >
                     <RiVipCrownLine className="h-5 w-5 shrink-0" aria-hidden />
                     {!isCollapsed && <span className="truncate">Provider hub</span>}
+                  </Link>
+                )}
+                {canAccessMonitorPortal(user.role) && (
+                  <Link
+                    href="/dashboard/monitor"
+                    title={isCollapsed ? "Monitor" : undefined}
+                    className={navLinkClass({ isCollapsed, active: isActive("/dashboard/monitor") })}
+                  >
+                    <RiEyeLine className="h-5 w-5 shrink-0" aria-hidden />
+                    {!isCollapsed && <span className="truncate">Monitor</span>}
                   </Link>
                 )}
               </div>

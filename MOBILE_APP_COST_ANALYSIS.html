@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP / Glowup — Mobile App Cost Analysis</title>
+<style>
+  :root{
+    --bg:#faf9f7; --panel:#ffffff; --ink:#16150f; --muted:#5c5a51; --faint:#8a8779;
+    --line:#e4e1d8; --accent:#a8880a; --accent-soft:#fdf6d9;
+    --good:#1d7a4d; --good-soft:#e6f4ec;
+    --warn:#a8630a; --warn-soft:#fdf0dc;
+    --bad:#a8352a; --bad-soft:#fbe9e7;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+      --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+      --good:#5ec98d; --good-soft:#132c1f;
+      --warn:#e0a24a; --warn-soft:#2e2211;
+      --bad:#f08a7d; --bad-soft:#2e1714;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+    --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+    --good:#5ec98d; --good-soft:#132c1f;
+    --warn:#e0a24a; --warn-soft:#2e2211;
+    --bad:#f08a7d; --bad-soft:#2e1714;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.62 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px}
+  header.top{border-bottom:3px solid var(--ink);padding-bottom:26px;margin-bottom:44px}
+  .kicker{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 12px;letter-spacing:-.022em;font-weight:680}
+  .sub{color:var(--muted);font-size:17px;max-width:66ch;margin:0}
+  .meta{margin-top:20px;font:12px/1.6 var(--mono);color:var(--faint)}
+
+  h2{font-size:24px;margin:60px 0 6px;letter-spacing:-.015em;font-weight:660}
+  h2 .n{font:600 12px/1 var(--mono);color:var(--accent);display:block;margin-bottom:9px;letter-spacing:.1em}
+  h3{font-size:17px;margin:32px 0 10px;font-weight:640;letter-spacing:-.01em}
+  p{margin:12px 0;color:var(--muted)}
+  p strong,li strong,td strong{color:var(--ink);font-weight:620}
+  .lede{font-size:17px;color:var(--ink);max-width:70ch}
+
+  .verdict{
+    background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:4px;padding:26px 28px;margin:30px 0;
+  }
+  .verdict h3{margin:0 0 10px;font-size:19px}
+  .verdict p{margin:8px 0}
+  .verdict p:last-child{margin-bottom:0}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0}
+  .scroll table{min-width:660px}
+  th{
+    text-align:left;font:600 10.5px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);padding:0 12px 9px;border-bottom:1.5px solid var(--line);vertical-align:bottom;
+  }
+  td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+  td:first-child,th:first-child{padding-left:0}
+  td:last-child,th:last-child{padding-right:0}
+  td.k{color:var(--ink);font-weight:600}
+  td.num{font:500 14px/1.5 var(--mono);white-space:nowrap;color:var(--ink)}
+  tr.total td{border-top:2px solid var(--ink);border-bottom:none;padding-top:15px;color:var(--ink);font-weight:660}
+
+  .pill{display:inline-block;font:600 10.5px/1 var(--mono);padding:5px 9px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-good{background:var(--good-soft);color:var(--good)}
+  .p-warn{background:var(--warn-soft);color:var(--warn)}
+  .p-bad{background:var(--bad-soft);color:var(--bad)}
+  .p-acc{background:var(--accent-soft);color:var(--accent)}
+
+  .grid{display:grid;gap:14px;margin:24px 0}
+  @media(min-width:720px){.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  .card.hot{border-color:var(--bad);border-width:1.5px}
+  .card .lbl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .card .big{font-size:27px;font-weight:680;letter-spacing:-.02em;color:var(--ink);line-height:1.12}
+  .card .cap{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  ul,ol{color:var(--muted);padding-left:22px;margin:12px 0}
+  li{margin:7px 0}
+  code{font:0.88em var(--mono);background:var(--accent-soft);color:var(--ink);padding:2px 6px;border-radius:3px}
+
+  .flag{border-left:4px solid;padding:15px 18px;border-radius:0 4px 4px 0;margin:18px 0;background:var(--panel)}
+  .flag .t{font-weight:660;color:var(--ink);margin-bottom:5px;font-size:15px}
+  .flag p{margin:5px 0;font-size:14.5px}
+  .f-bad{border-color:var(--bad)} .f-warn{border-color:var(--warn)} .f-good{border-color:var(--good)}
+
+  .lev{display:flex;align-items:center;gap:8px}
+  .lev i{display:block;height:7px;border-radius:4px;background:var(--line);flex:1;max-width:64px;overflow:hidden;position:relative}
+  .lev i::after{content:"";position:absolute;inset:0 auto 0 0;background:currentColor;border-radius:4px}
+  .lev.l3{color:var(--good)} .lev.l3 i::after{width:92%}
+  .lev.l2{color:var(--warn)} .lev.l2 i::after{width:52%}
+  .lev.l1{color:var(--bad)}  .lev.l1 i::after{width:18%}
+  .lev span{font:600 10.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase}
+
+  .tl{margin:24px 0;border-left:2px solid var(--line);padding-left:0}
+  .tl .wk{position:relative;padding:0 0 22px 26px}
+  .tl .wk::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
+  .tl .wk.blocked::before{background:var(--bad)}
+  .tl .wk .wl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+  .tl .wk .wt{font-weight:640;color:var(--ink);font-size:15.5px;margin-bottom:3px}
+  .tl .wk p{margin:3px 0;font-size:14px}
+
+  footer{margin-top:72px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Build vs. Wrap — In-House + AI</div>
+  <h1>Turning UP into a mobile app</h1>
+  <p class="sub">What it costs to put Glowup/UP on iOS and Android with your own team and AI assistance. Grounded in a read of the real codebase, not a generic estimate.</p>
+  <div class="meta">Revised 3 September 2026 · Next.js 16 + React 19 (88,291 LOC) · Express/Mongo API (71,299 LOC) · <code>main</code> @ a39d1c7 · 3 contributors · <strong>decision: zero payment in-app, web only</strong></div>
+</header>
+
+<div class="verdict">
+  <h3>Verdict — Capacitor. Cash cost ~$124–$1,100. Payments decision just removed your biggest risk.</h3>
+  <p><strong>Taking payment out of the app is the right call</strong> and it is worth more than it sounds. Apple Guideline 3.1.1 — the In-App Purchase rule and its 15–30% cut — was the one item that could have sunk a submission outright. A free app with no purchase mechanism is the simplest thing either store reviews. It also simplifies your privacy labels and kills the IAP question permanently. Effort drops to <strong>~20–33 days</strong>.</p>
+  <p><strong>Two things worth checking before anyone deletes.</strong> Deprecating <code>resource.paymentLink</code> from the website as well as the app ends premium-resource sales outright — the only item on the list that removes revenue rather than dead code. And your keep-list names <code>subscriptions/initialize</code> but not <code>verify</code>, which the Paystack flow needs to complete a transaction; deleting it would break the flow you are keeping. Both in §07.</p>
+  <p><strong>You are right about the code, wrong about the calendar.</strong> The chain <em>static export → native shell → device QA → store review</em> cannot be parallelised away: <strong>~5 weeks of critical path</strong> before a reviewer opens your build. One month gets you <strong>into TestFlight / Play internal testing</strong>; public availability is <strong>5–7 weeks</strong>, gated by paperwork rather than code. <strong>Start Apple and Google enrollment today</strong> — before any code.</p>
+</div>
+
+<h2><span class="n">01</span>What AI actually accelerates here</h2>
+<p class="lede">AI leverage on this project is real but very unevenly distributed. Averaging it into one multiplier is how a month-long plan turns into a three-month one.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:24%">Phase</th><th style="width:9%">Baseline</th><th style="width:14%">AI leverage</th><th style="width:9%">With AI</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="k">0 · Feed round-trip fix</td>
+      <td class="num">5–8d</td>
+      <td><span class="lev l3"><i></i><span>High</span></span></td>
+      <td class="num">2–4d</td>
+      <td>Mechanical refactor with a clear spec and testable output. AI's strongest ground.</td>
+    </tr>
+    <tr>
+      <td class="k">1 · PWA completion</td>
+      <td class="num">3–5d</td>
+      <td><span class="lev l3"><i></i><span>Very high</span></span></td>
+      <td class="num">1–2d</td>
+      <td>Manifest plus a full icon set generated from the <code>logo-icon-transparent.svg</code> you already have. Hours, not days.</td>
+    </tr>
+    <tr>
+      <td class="k">2 · Static export migration</td>
+      <td class="num">10–15d</td>
+      <td><span class="lev l3"><i></i><span>Very high</span></span></td>
+      <td class="num">4–6d</td>
+      <td>14 near-identical dynamic-route transforms plus 6 API-route ports. Repetitive, well-specified, verifiable — exactly what AI collapses.</td>
+    </tr>
+    <tr>
+      <td class="k">3 · Capacitor shell + native</td>
+      <td class="num">8–12d</td>
+      <td><span class="lev l2"><i></i><span>Medium</span></span></td>
+      <td class="num">5–7d</td>
+      <td><strong>Scaffolding is instant; the rest is not.</strong> APNs certificates, Xcode signing, provisioning profiles and FCM console setup are manual clicking in someone else's web UI. Native build failures are slow to diagnose and poorly represented in training data. <em>Slightly cheaper now — no in-app browser flow needed for Paystack checkout.</em></td>
+    </tr>
+    <tr>
+      <td class="k">4 · Strip payment surface</td>
+      <td class="num">5–10d</td>
+      <td><span class="lev l3"><i></i><span>High</span></span></td>
+      <td class="num">1–2d</td>
+      <td><span class="pill p-good">Collapsed</span> Was "build IAP or gate dual rails". Now it is <strong>deletion plus one judgement call</strong>: strip the paid routes from the mobile build and decide what a premium resource looks like without its purchase CTA (§07).</td>
+    </tr>
+    <tr>
+      <td class="k">5 · Device QA</td>
+      <td class="num">8–10d</td>
+      <td><span class="lev l1"><i></i><span>Low</span></span></td>
+      <td class="num">5–8d</td>
+      <td><strong>Someone has to hold the phones.</strong> Real hardware, real Nigerian networks, real thumbs. AI fixes the bugs you find; it does not find them for you.</td>
+    </tr>
+    <tr>
+      <td class="k">6 · Store submission</td>
+      <td class="num">5–8d</td>
+      <td><span class="lev l1"><i></i><span>~None</span></span></td>
+      <td class="num">2–3d</td>
+      <td>Forms, screenshots, privacy labels, and <strong>waiting</strong>. Effort shrinks; wall-clock does not move at all. See §03.</td>
+    </tr>
+    <tr>
+      <td class="k">7 · CI/CD pipeline</td>
+      <td class="num">4–5d</td>
+      <td><span class="lev l3"><i></i><span>High</span></span></td>
+      <td class="num">1–2d</td>
+      <td>You have <strong>no CI today</strong> — <code>.github/workflows</code> does not exist. Greenfield config generation is fast.</td>
+    </tr>
+    <tr class="total">
+      <td>Total effort</td>
+      <td class="num">48–73d</td>
+      <td><span class="lev l2"><i></i><span>≈ 2× overall</span></span></td>
+      <td class="num">20–33d</td>
+      <td>A defensible ~55% cut — concentrated in phases 0, 1, 2, 4 and 7</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">Effort is no longer your constraint — sequence is</div>
+  <p>20–33 days of effort across 2–3 people looks like three weeks. It is not, because the work does not parallelise: <strong>phase 2 must finish before 3, 3 before 5, and 5 before 6.</strong> Adding a third developer to that chain does not shorten it. Even with unlimited people, the critical path is <strong>~5 weeks</strong> — and that is before a single store reviewer opens your build.</p>
+  <p>Dropping payments took ~3 days off the effort but <strong>almost nothing off the critical path</strong>, because phase 4 was already running in parallel with phase 3. What it genuinely bought you is <em>risk</em>: fewer review cycles at the far end, which is where weeks actually disappear.</p>
+</div>
+
+<h2><span class="n">02</span>The actual cash cost</h2>
+<p class="lede">With no contractor invoices, the money question collapses to hardware, two developer accounts, and AI seats you are likely already paying for.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:30%">Item</th><th style="width:17%">Cost</th><th style="width:12%">Type</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Apple Developer Program</td><td class="num">$99/yr</td><td>recurring</td><td>Mandatory. Organisation enrollment needs a D-U-N-S number — see §03.</td></tr>
+    <tr><td class="k">Google Play Console</td><td class="num">$25</td><td>one-time</td><td>Lifetime. Register as an <strong>organisation</strong>, not personal — §03 explains why this choice costs you two weeks if you get it wrong.</td></tr>
+    <tr><td class="k">A Mac (for iOS builds)</td><td class="num">$0 – $599</td><td>one-time</td><td><strong>Hard requirement.</strong> Xcode does not run on Windows and you are a Windows shop. $0 if a team member already owns one; ~$599 for a Mac Mini M4; ~$100/mo for a cloud Mac.</td></tr>
+    <tr><td class="k">Test devices</td><td class="num">$0 – $300</td><td>one-time</td><td>You need at least one low-end Android — that is your actual user. Team phones usually cover the rest.</td></tr>
+    <tr><td class="k">AI seats (3 devs)</td><td class="num">$300–600/mo</td><td>recurring</td><td>Almost certainly already in your budget. Counted here only for honesty.</td></tr>
+    <tr><td class="k">FCM + APNs push</td><td class="num">$0</td><td>—</td><td>Free at your volume.</td></tr>
+    <tr><td class="k">D-U-N-S number</td><td class="num">$0</td><td>—</td><td>Free from Dun &amp; Bradstreet — but <em>slow</em>. That is the real cost.</td></tr>
+    <tr class="total"><td>First-month cash</td><td class="num">$124 – $1,124</td><td></td><td>Floor assumes you already own a Mac and a test Android. AI seats excluded as pre-existing.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="grid c3">
+  <div class="card">
+    <div class="lbl">Absolute floor</div>
+    <div class="big">$124</div>
+    <div class="cap">Apple $99 + Play $25. Only if someone on the team already has a Mac and a spare Android.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Realistic</div>
+    <div class="big">~$750</div>
+    <div class="cap">Accounts + a Mac Mini M4. The Mac is the line item most teams forget until week three.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Ongoing after year 1</div>
+    <div class="big">$99/yr</div>
+    <div class="cap">Plus 10–15 days a year of OS-update maintenance — both stores enforce new SDK targets on a deadline.</div>
+  </div>
+</div>
+
+<h2><span class="n">03</span>The three gates AI cannot move</h2>
+<p class="lede">These are why one month becomes five to seven weeks. None of them are engineering problems, and all three are cheaper to start today than to discover in week three.</p>
+
+<div class="grid c3">
+  <div class="card hot">
+    <div class="lbl">Gate 1 · Paperwork</div>
+    <div class="big">5–14 days</div>
+    <div class="cap"><strong>Apple org enrollment needs a D-U-N-S number.</strong> Free, but Dun &amp; Bradstreet take business days to issue it and Apple then verify. Start this <em>before</em> writing code or it becomes your critical path.</div>
+  </div>
+  <div class="card hot">
+    <div class="lbl">Gate 2 · Play testing</div>
+    <div class="big">0 or 14 days</div>
+    <div class="cap">Personal Play accounts must run a closed test with a minimum tester count for <strong>14 consecutive days</strong> before production. <strong>Organisation accounts are exempt.</strong> Register correctly the first time — you cannot convert later without pain.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Gate 3 · Review cycles</div>
+    <div class="big">2–6 days</div>
+    <div class="cap"><span class="pill p-good">Improved</span> Was 3–10. A free app with <strong>no purchase mechanism at all</strong> is the simplest case either store reviews — no IAP questions, no financial-data privacy labels. Guideline 4.2 is now your only serious rejection risk.</div>
+  </div>
+</div>
+
+<div class="flag f-bad">
+  <div class="t">Do this today, before any code</div>
+  <p>Start Apple Developer organisation enrollment (get the D-U-N-S moving) and register the Google Play <strong>organisation</strong> account. Both are forms someone non-technical can fill in this afternoon. They run entirely in parallel with development — but only if they are started first. <strong>This single action is worth more to your one-month goal than any engineering decision in this document.</strong></p>
+</div>
+
+<h2><span class="n">04</span>A realistic one-month plan</h2>
+<p class="lede">This is what a genuine month buys, assuming two developers focused and the accounts started on day one. It ends at TestFlight, not at a public listing — and that is the correct place for a month to end.</p>
+
+<div class="tl">
+  <div class="wk blocked">
+    <div class="wl">Day 0 — before code</div>
+    <div class="wt">Start the paperwork</div>
+    <p>Apple org enrollment + D-U-N-S. Google Play <strong>organisation</strong> account. Confirm who owns a Mac, or order one. Non-technical work, runs in the background for the whole month.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Week 1</div>
+    <div class="wt">PWA ships + feed fix</div>
+    <p>Phases 1 and 0 in parallel — different people, no dependency. <strong>Real value in production by Friday</strong>, independent of whether the app ever ships. Icons generated here are reused in week 3.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Week 2</div>
+    <div class="wt">Static export migration</div>
+    <p>Phase 2 — the heaviest AI-leveraged block. 14 dynamic routes, middleware locale moved client-side, 6 API routes ported into Express, proxies deleted. Highest-risk week for surprises.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Week 3</div>
+    <div class="wt">Capacitor shell + payment strip</div>
+    <p>Phase 3 and 4 in parallel. Native projects, FCM/APNs, deep links. <strong>The Mac becomes non-optional here.</strong> Certificates and provisioning will eat more of this week than you expect. Phase 4 is now a day of deletion plus the premium-resource decision from §07.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Week 4</div>
+    <div class="wt">Device QA + internal builds</div>
+    <p>Phase 5 plus CI. Real devices on real networks. Ends with <strong>working builds in TestFlight and Play internal testing</strong> — a genuinely shippable milestone your team can hold in their hands.</p>
+  </div>
+  <div class="wk blocked">
+    <div class="wl">Weeks 5–7</div>
+    <div class="wt">Store submission and review</div>
+    <p>Screenshots, privacy labels, Data Safety form, submission, review. <strong>Mostly waiting, not working</strong> — and shorter than it would have been, because a no-payment app draws far fewer reviewer questions. Your team is largely free here, which is the argument for treating it as a separate phase rather than pretending it fits in the month.</p>
+  </div>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">One honest caveat about capacity</div>
+  <p>Your recent commit velocity is <strong>~5–6 commits per week across all three contributors</strong>. That reads as part-time attention on this repo, not a team hammering full-time. The month above needs <strong>two people genuinely focused</strong> for four weeks. If the real allocation is evenings and weekends, 20–33 days of effort spreads across two to three months regardless of how good the AI assistance is — the estimate is in <em>developer-days</em>, and those still have to come from somewhere.</p>
+</div>
+
+<h2><span class="n">05</span>Why Capacitor, not React Native or Flutter</h2>
+<p class="lede">The recommendation does not change under an in-house AI-accelerated model — it gets stronger, because AI leverage is highest precisely where Capacitor does its work and lowest where a rewrite does.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:20%">Option</th><th style="width:10%">Reuse</th><th style="width:14%">Effort with AI</th><th>Assessment</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="k">Finish the PWA</td>
+      <td class="num">100%</td>
+      <td class="num">1–2 days</td>
+      <td><span class="pill p-good">Week 1</span> Installable, offline shell, push on Android and iOS 16.4+ once installed. No stores, so no discovery and no store cut — but it is two days from shipping and it de-risks everything after it.</td>
+    </tr>
+    <tr>
+      <td class="k">Capacitor</td>
+      <td class="num">~95%</td>
+      <td class="num">20–33 days</td>
+      <td><span class="pill p-acc">Recommended</span> Your web build inside a native shell with real plugins for push, deep links and browser. One codebase, both stores, desktop later via Electron if wanted.</td>
+    </tr>
+    <tr>
+      <td class="k">React Native / Expo</td>
+      <td class="num">~25%</td>
+      <td class="num">110–170 days</td>
+      <td><span class="pill p-bad">No</span> Only <code>lib/</code> and <code>api-client.ts</code> survive; all 220 components get rebuilt. AI helps less here than you would hope — <strong>rewriting 220 components is 220 design decisions</strong>, each needing review, not one repeated transform.</td>
+    </tr>
+    <tr>
+      <td class="k">Flutter</td>
+      <td class="num">~0%</td>
+      <td class="num">150–230 days</td>
+      <td><span class="pill p-bad">No</span> Dart. Even <code>api-client.ts</code> is rewritten, and you would maintain two languages and two copies of business logic that must stay in agreement forever.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p>Note the asymmetry: AI cuts Capacitor's timeline by ~50% but a rewrite's by only ~35%. Repetitive, well-specified transforms compress hard. Novel design decisions do not — and a rewrite is 220 of those.</p>
+
+<h2><span class="n">06</span>Why the codebase makes this cheap</h2>
+<p class="lede">These facts, all verified in your repo, are what put the engineering inside a month at all.</p>
+
+<div class="grid c3">
+  <div class="card">
+    <div class="lbl">Client-side already</div>
+    <div class="big">220 / 288</div>
+    <div class="cap"><code>.tsx</code> files marked <code>use client</code>. The app is an SPA wearing a Next.js coat.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Server actions</div>
+    <div class="big">0</div>
+    <div class="cap">Nothing to untangle. One file touches <code>next/headers</code>; middleware only picks a locale.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Network entry points</div>
+    <div class="big">1</div>
+    <div class="cap"><code>lib/api-client.ts</code> — 2,573 lines, one <code>API_BASE_URL</code>. Retargeting the app is an env var.</div>
+  </div>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:32%">Finding</th><th style="width:13%">Impact</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Backend is already a separate stateless REST API</td><td><span class="pill p-good">Saves weeks</span></td><td>Express + Mongo at <code>latest-glowup-channel/</code>, JWT Bearer auth, Dockerised, on Cloud Run. A native client is just one more consumer.</td></tr>
+    <tr><td class="k"><code>images: { unoptimized: true }</code> already set</td><td><span class="pill p-good">Saves ~1 wk</span></td><td>The biggest blocker to a Next.js static export is <code>next/image</code>'s server requirement. You already turned it off.</td></tr>
+    <tr><td class="k">PWA groundwork ~80% built</td><td><span class="pill p-good">Saves ~1 wk</span></td><td><code>public/sw.js</code> with a live push handler, <code>web-push</code> both tiers, <code>hooks/use-push-notifications.ts</code>, VAPID endpoint. <strong>Missing only <code>manifest.json</code> and icons</strong> — and <code>logo-icon-transparent.svg</code> gives you clean vector source for those.</td></tr>
+    <tr><td class="k">No native device APIs anywhere</td><td><span class="pill p-good">Saves weeks</span></td><td>Zero hits for camera, <code>getUserMedia</code>, <code>FileReader</code> or file inputs. Uploads go server-side via Cloudinary. No custom native bridge needed.</td></tr>
+    <tr><td class="k">18 API routes, mostly thin proxies</td><td><span class="pill p-warn">Part of wk 2</span></td><td>Most exist only to dodge dev CORS and can be deleted. ~6 hold real secrets (Resend/SES, Google GenAI, Paystack verify/webhook, FX, geo) and move into Express.</td></tr>
+    <tr><td class="k">No CI exists yet</td><td><span class="pill p-warn">1–2 days</span></td><td><code>.github/workflows</code> is absent. Greenfield, so fast to generate — but without it every future release costs a manual day forever.</td></tr>
+    <tr><td class="k">Paystack (NGN) wallet + subscriptions in-app</td><td><span class="pill p-bad">Policy risk</span></td><td>Apple Guideline 3.1.1 wants IAP for digital services. See §07.</td></tr>
+    <tr><td class="k">Feed fans out to 4 endpoints, ranks on device</td><td><span class="pill p-bad">Do in wk 1</span></td><td><code>lib/ranking/</code> re-ranks client-side over a 4-way parallel fetch. Fine on broadband; punishing on Nigerian mobile data. See §08.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="n">07</span>Payments: full deprecation, plus a web-only remainder</h2>
+<p class="lede">Two different operations, and the distinction matters for how the work is done. <strong>Deprecated</strong> means deleted from the product — website and app both, no flags, no conditional builds. <strong>Web-only</strong> means the code stays and keeps working on the website, but is excluded from the mobile build.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:22%">Operation</th><th style="width:26%">Applies to</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="k"><span class="pill p-bad">Deprecate</span></td>
+      <td>Wallet subsystem · paid promotions · premium-resource <code>paymentLink</code></td>
+      <td><strong>Deleted from website and app.</strong> Straight removal — ~865 LOC across 10 files. No per-platform logic, because the feature ceases to exist anywhere.</td>
+    </tr>
+    <tr>
+      <td class="k"><span class="pill p-acc">Web-only</span></td>
+      <td><code>work-with-us</code> (8 files) · <code>founder-batch</code> (2) · <code>subscriptions</code> proxies · <code>components/payment-details.tsx</code></td>
+      <td><strong>Unchanged on the website; excluded from the mobile build.</strong> Costs nothing extra — these routes were already being cut from app scope in §09, so exclusion is the same route list you were writing anyway.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-good">
+  <div class="t">Resolved — Guideline 3.1.1 and the 15–30% cut</div>
+  <p>With no purchase mechanism in the app, the IAP rule stops applying. This kills the largest single risk in the original plan, permanently removes the 15–30% commission question, drops phase 4 from 5–10 days to 1–2, and simplifies your privacy nutrition labels and Data Safety form (no financial data collected in-app).</p>
+  <p><strong>The web-only surfaces cost you nothing on mobile</strong> — <code>work-with-us</code>, <code>founder-batch</code>, the <code>subscriptions</code> proxies and <code>payment-details.tsx</code> are B2B and marketing pages whose audience is already on a desktop. They were leaving app scope regardless, so "web-only" adds no work beyond the route exclusion list you were writing anyway.</p>
+</div>
+
+<div class="flag f-bad">
+  <div class="t">Confirm before deleting — premium resources lose their purchase path entirely</div>
+  <p>Deprecating <code>resource.paymentLink</code> from <em>both</em> surfaces means premium resources stop being purchasable <strong>on the website too</strong>, not just on mobile. That is a revenue decision, not a mobile one, and it is the only item on the deprecation list that removes an income stream rather than dead code.</p>
+  <p>Two ways to land it, and they are materially different: <strong>make those resources free</strong> (keep the catalogue, drop the gate), or <strong>unpublish them</strong> (remove the listings). If premium resources earn meaningful money, say so and this one should come back off the list — the mobile requirement is satisfied by excluding the CTA from the app build alone, which needs no change to the website at all.</p>
+</div>
+
+<div class="flag f-good">
+  <div class="t">Resolved by the deprecation — the premium resource link</div>
+  <p><code>app/resources/[id]/page.tsx:194</code> resolves its "Access resource" button as <code>resource.paymentLink || fileUrl</code>. On a premium resource that was <strong>an outbound purchase CTA for digital content on a consumer route you are keeping</strong> — precisely the shape Apple's anti-steering rules target, with no physical-goods exemption to hide behind. <code>paymentLink</code> is not in your keep-list, so deprecating it removes the last purchase pathway from app scope. Drop the <code>paymentLink</code> branch and let the button resolve to <code>fileUrl</code> only.</p>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">One correction — three subscription routes are load-bearing</div>
+  <p>Your keep-list names <code>app/api/subscriptions/initialize/route.ts</code> but not its three siblings. <strong>Do not deprecate <code>verify</code></strong> — a Paystack transaction is not complete until it is verified, so deleting it breaks the <code>initialize</code> flow you are keeping. <code>status</code> and <code>cancel</code> manage the lifecycle of those same subscriptions. All four are thin proxies routed through <code>lib/api-client.ts:372</code>; they are one feature, not four. Keep the set.</p>
+</div>
+
+<h3>What full deprecation removes, website and app</h3>
+<p>Most of this is already done — you deprecated the wallet in the frontend some time ago and did not finish the trail. <code>app/dashboard/provider/wallet/page.tsx</code> is already a redirect stub whose comment reads <em>"The provider wallet is gone… promotion is now free."</em> And <code>lib/api-client.ts:2058</code> confirms it: <em>"Providers are never billed for promotion."</em> <strong>There is no live paid-promotion flow left to remove</strong> — this is finishing a teardown you started, not beginning one.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:34%">Target</th><th style="width:12%">Size</th><th style="width:14%">State</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td class="k"><code>components/wallet/</code></td><td class="num">216 LOC</td><td><span class="pill p-good">Orphaned</span></td><td><code>WalletTopUpModal</code> (152) + <code>WalletBalanceCard</code> (64). <strong>Zero importers</strong> — already dead, safe delete.</td></tr>
+    <tr><td class="k"><code>lib/api-client.ts</code> wallet methods</td><td class="num">~110 LOC</td><td><span class="pill p-good">Orphaned</span></td><td>Lines ~1927–2033: balance, <code>topUpWallet</code>, <code>verifyTopUp</code>, transactions. Nothing calls them.</td></tr>
+    <tr><td class="k"><code>resource.paymentLink</code> branch</td><td class="num">1 line</td><td><span class="pill p-bad">Live · revenue</span></td><td><code>app/resources/[id]/page.tsx:194</code>. Removing it on the website too ends premium-resource sales — confirm this is intended (see flag above).</td></tr>
+    <tr><td class="k">Backend wallet subsystem</td><td class="num">538 LOC</td><td><span class="pill p-bad">Still mounted</span></td><td><strong>The actual remaining work.</strong> 7 files: <code>walletController</code> (276), <code>walletService</code> (125), <code>WalletTransaction</code> (50), <code>walletWebhookController</code> (33), <code>ProviderWallet</code> (32), <code>routes/wallet</code> (15), <code>routes/walletPaystack</code> (7). Live on <code>server.js:177</code> and <code>:271</code>.</td></tr>
+    <tr class="total"><td>Total</td><td class="num">~865 LOC</td><td></td><td>10 files + 4 lines in <code>server.js</code> · ~1–2 days, high AI leverage · already inside phase 4's estimate</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">Sequence the backend teardown carefully</div>
+  <p><code>ProviderWallet</code> and <code>WalletTransaction</code> are Mongo collections holding real historical balances and transaction records. <strong>Unmount the routes first, export the collections, then drop the models</strong> — in that order, with the export archived. Providers who topped up in the past may have unspent balance, and "the wallet is gone" is a different statement from "the money never existed." Confirm that reconciliation is settled before the models go.</p>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">Now your top risk — Guideline 4.2, "Minimum Functionality"</div>
+  <p>With payments gone, this is the only serious rejection path left. Apple rejects apps that are a website in a shell. The tempting shortcut is Capacitor's <code>server.url</code> pointed at your live site — it ships in <em>days</em> and it is <strong>the most likely reason you now get rejected</strong>. If the one-month target tempts anyone toward it, that is the moment the month turns into three.</p>
+  <p>Week 2's real static export, bundled and working offline, plus native push and deep links, is what makes this defensibly an app. That is why week 2 is not skippable. <strong>A payment-free app is also a thinner-looking app to a reviewer</strong> — so native push and offline behaviour are now carrying more of the "this is a real app" argument than they were.</p>
+</div>
+
+<h2><span class="n">08</span>Do the feed fix in week one regardless</h2>
+<div class="flag f-warn">
+  <div class="t">The feed fans out client-side, then ranks on the device</div>
+  <p>The feed calls opportunities, events, jobs and resources as four parallel requests from <code>lib/api-client.ts</code>, then <code>lib/ranking/</code> re-ranks the merged result on the client. On desktop broadband that reads as fine. On Nigerian mobile data — high round-trip latency, packet loss, sleeping radios — per-request latency dominates, and a native app makes it <em>worse</em>: cold starts have no warm browser cache to hide behind.</p>
+  <p><strong>Ship on the current feed path and the app will feel slower than the website</strong>, and reviewers judge apps on first-launch feel. It is 2–4 days with AI, it makes the website faster the same day, and it removes your largest "why does the app feel bad" risk before you have built the app.</p>
+</div>
+
+<h2><span class="n">09</span>Scope: what does not go in the app</h2>
+<p class="lede">You have 71 routes; ~40 belong on a phone. These cuts are already assumed in every number above — without them, the month is not achievable.</p>
+
+<div class="grid c2">
+  <div class="card">
+    <div class="lbl">Cut — 16 routes</div>
+    <div class="big">Admin dashboard</div>
+    <div class="cap">Analytics, user management, moderation, email campaigns, receipts, promotions. Admins work at a desk. Rebuilding these for a 6-inch screen is cost with no user at the end.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Cut — 7 routes</div>
+    <div class="big">Channels &amp; community</div>
+    <div class="cap">Deprecated surface — the listings feed is the product. Never carry dead code across a platform port; a port is the ideal moment to drop it for good.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Cut — ~8 routes</div>
+    <div class="big">Legal &amp; static pages</div>
+    <div class="cap">Terms, privacy, cookies, about, contact. In-app browser links to the live site — the stores require the links to exist, not native screens.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Cut — 2 routes · web-only</div>
+    <div class="big">Kept payment surfaces</div>
+    <div class="cap"><code>work-with-us</code> and <code>founder-batch</code> keep Paystack, and stay on the web. B2B and marketing pages with a desktop audience — no mobile cost, and no IAP exposure.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Keep — ~36 routes</div>
+    <div class="big">The actual app</div>
+    <div class="cap">Feed, search, opportunities, jobs, events, resources (free only), playlists, profiles, saved items, notifications, onboarding, auth, tracker, locked-in. <strong>Zero purchase pathways.</strong></div>
+  </div>
+</div>
+
+<h2><span class="n">10</span>Bottom line</h2>
+<ul>
+  <li><strong>Cash: ~$124 to ~$1,100.</strong> Two developer accounts and, most likely, a Mac. That is the entire budget.</li>
+  <li><strong>Effort: 20–33 developer-days</strong>, roughly half the non-AI figure — the saving concentrated in the static export, the PWA, the feed fix and CI.</li>
+  <li><strong>Calendar: four weeks to TestFlight, five to seven to a public listing.</strong> The gap is D-U-N-S paperwork, store review and device QA — none of which respond to AI or to adding people.</li>
+  <li><strong>The payment decision was the single best move in this plan.</strong> It removed the 15–30% cut, the IAP build, the dual-rail gating and most of your rejection risk, and it turned phase 4 from ten days of engineering into two days of deletion.</li>
+  <li><strong>Today's action is administrative, not technical:</strong> start Apple organisation enrollment, register the Google Play <em>organisation</em> account, and confirm who owns a Mac. Those three gate the month more than any code you write this week.</li>
+</ul>
+<p>The thing worth internalising: <strong>AI moved your bottleneck.</strong> It used to be building 220 components. Now it is a Dun &amp; Bradstreet form and an App Store reviewer — and neither of those gets faster because your team got faster.</p>
+
+<footer>
+  Revised 3 September 2026 from a direct read of the repository at <code>main</code> (a39d1c7). Effort figures are developer-days for your team working with AI assistance on a codebase they already know. Store policy — Apple Guidelines 3.1.1 and 4.2, Apple enrollment requirements, Google Play Billing and closed-testing rules — changes regularly and varies by storefront; <strong>verify all three gates in §03 against current terms before committing to a date</strong>, since they drive the calendar more than the engineering does.
+</footer>
+
+</div>
+</body>
+</html>

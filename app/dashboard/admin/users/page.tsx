@@ -112,6 +112,7 @@ interface User {
 const ROLES = [
   { value: "user", label: "User" },
   { value: "opportunity_seeker", label: "Opportunity Seeker" },
+  { value: "monitor", label: "Monitor" },
   { value: "founder_batch", label: "Founder Batch" },
   { value: "admin", label: "Admin" },
   { value: "super_admin", label: "Super Admin" },
@@ -372,6 +373,7 @@ export default function UserManagement() {
   const getRoleBadge = (role: string) => {
     const roleColors: Record<string, string> = {
       'opportunity_seeker': 'bg-primary/20 text-primary border-primary/30',
+      'monitor': 'bg-violet-500/20 text-violet-700 dark:text-violet-400 border-violet-500/30',
       'founder_batch': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
       'opportunity_poster': 'bg-slate-500/20 text-muted-foreground border-slate-500/30',
       'admin': 'bg-primary/20 text-orange-400 border-orange-500/30',
@@ -479,6 +481,7 @@ export default function UserManagement() {
                 <SelectContent>
                   <SelectItem value="all">All roles</SelectItem>
                   <SelectItem value="opportunity_seeker">Opportunity seeker</SelectItem>
+                  <SelectItem value="monitor">Monitor</SelectItem>
                   <SelectItem value="founder_batch">Founder batch</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="super_admin">Super admin</SelectItem>

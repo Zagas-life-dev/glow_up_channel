@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { AdminShell } from "@/components/admin/admin-shell"
 import { AdminSection, AdminStat, AdminStatGrid, AdminEmpty, AdminSkeletonRows } from "@/components/admin/ui"
-import { AttachProviderDialog, type AttachTargetListing } from "@/components/admin/attach-provider-dialog"
+import { AttachListingDialog, type AttachTargetListing } from "@/components/admin/attach-listing-dialog"
 import { ListingAnalyticsCard, ListingAnalyticsSummary } from "@/components/analytics/listing-analytics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -267,7 +267,7 @@ export default function AdminListingAnalytics() {
         )}
       </div>
 
-      <AttachProviderDialog
+      <AttachListingDialog
         open={attachTarget !== null}
         onOpenChange={(open) => { if (!open) setAttachTarget(null) }}
         listing={attachTarget}

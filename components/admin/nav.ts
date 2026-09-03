@@ -7,6 +7,7 @@ import {
   RiInboxUnarchiveLine,
   RiGroupLine,
   RiUserFollowLine,
+  RiEyeLine,
   RiBuilding2Line,
   RiMegaphoneLine,
   RiBillLine,
@@ -58,6 +59,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Users", href: "/dashboard/admin/users", icon: RiGroupLine, superAdminOnly: true, matchNested: true },
       { label: "Pending approvals", href: "/dashboard/admin/users/pending", icon: RiUserFollowLine, superAdminOnly: true },
       { label: "Poster details", href: "/dashboard/admin/business-upload", icon: RiBuilding2Line, superAdminOnly: true },
+      // Not super-admin-only: the screen manages assignments itself, so a plain
+      // admin can do the whole job without the super-admin-gated user pages.
+      { label: "Monitors", href: "/dashboard/admin/monitors", icon: RiEyeLine },
     ],
   },
   {

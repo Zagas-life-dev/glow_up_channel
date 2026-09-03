@@ -141,6 +141,7 @@ export default function PendingUsers() {
   const getRoleBadge = (role: string) => {
     const roleColors = {
       'opportunity_seeker': 'bg-primary/10 text-foreground',
+      'monitor': 'bg-violet-500/10 text-violet-700 dark:text-violet-400',
       'founder_batch': 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/30',
       'opportunity_poster': 'bg-muted text-foreground',
       'admin': 'bg-primary/10 text-primary border border-primary/30',
@@ -212,6 +213,7 @@ export default function PendingUsers() {
                 <SelectContent>
                   <SelectItem value="all">All pending roles</SelectItem>
                   <SelectItem value="opportunity_seeker">Opportunity Seeker</SelectItem>
+                  <SelectItem value="monitor">Monitor</SelectItem>
                   <SelectItem value="founder_batch">Founder Batch</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="super_admin">Super Admin</SelectItem>

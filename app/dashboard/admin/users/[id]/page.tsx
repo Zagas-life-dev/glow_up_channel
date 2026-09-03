@@ -25,6 +25,8 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { useParams } from "next/navigation"
 import { AdminShell } from "@/components/admin/admin-shell"
+import { MonitorAssignmentsPanel } from "@/components/admin/monitor-assignments-panel"
+import { ROLES } from "@/lib/roles"
 
 interface UserDetails {
   user: {
@@ -155,6 +157,7 @@ export default function UserDetailsPage() {
       'opportunity_seeker': 'bg-primary/10 text-foreground',
       'founder_batch': 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/30',
       'opportunity_poster': 'bg-muted text-foreground',
+      'monitor': 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/30',
       'admin': 'bg-primary/10 text-primary border border-primary/30',
       'super_admin': 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30'
     }
@@ -304,6 +307,10 @@ export default function UserDetailsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Which listings this account watches. Monitors only — every other
+                role's visibility comes from ownership, not assignment. */}
+            {user.role === ROLES.MONITOR && <MonitorAssignmentsPanel monitorId={user._id} />}
 
             {/* Profile Information */}
             {profile && (

@@ -53,7 +53,7 @@ import {
   RiUserSharedLine,
 } from "react-icons/ri"
 import { AdminShell } from "@/components/admin/admin-shell"
-import { AttachProviderDialog, type AttachTargetListing } from "@/components/admin/attach-provider-dialog"
+import { AttachListingDialog, type AttachTargetListing } from "@/components/admin/attach-listing-dialog"
 import {
   AdminStat,
   AdminStatGrid,
@@ -2195,8 +2195,8 @@ export default function AdminContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Attach a listing to a provider, so it reaches their dashboard. */}
-      <AttachProviderDialog
+      {/* Point a listing at its provider (ownership) and at any monitors (oversight). */}
+      <AttachListingDialog
         open={attachTarget !== null}
         onOpenChange={(open) => { if (!open) setAttachTarget(null) }}
         listing={attachTarget}

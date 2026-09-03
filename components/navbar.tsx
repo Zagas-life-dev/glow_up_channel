@@ -12,6 +12,7 @@ import {
   RiSearchLine,
   RiUserLine,
   RiBriefcaseLine,
+  RiEyeLine,
   RiSettings3Line,
   RiLogoutBoxRLine,
   RiMenuLine,
@@ -20,7 +21,7 @@ import {
   RiBook2Line,
   RiGroupLine,
 } from "react-icons/ri"
-import { canPublishContent } from '@/lib/roles'
+import { canAccessMonitorPortal, canPublishContent } from '@/lib/roles'
 
 const routes = [
   { name: "Home", path: "/", description: "Welcome to UP" },
@@ -416,6 +417,14 @@ export default function Navbar() {
                         <Link href="/dashboard/provider" onClick={() => setIsMenuOpen(false)}>
                           <RiBriefcaseLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
                           Provider Dashboard
+                        </Link>
+                      </Button>
+                    )}
+                    {canAccessMonitorPortal(normalizedUser?.role) && (
+                      <Button asChild variant="ghost" className="w-full justify-start text-gray-700 hover:text-orange-600 hover:bg-orange-50 py-3 sm:py-4 text-base sm:text-lg touch-manipulation">
+                        <Link href="/dashboard/monitor" onClick={() => setIsMenuOpen(false)}>
+                          <RiEyeLine className="h-5 w-5 sm:h-6 sm:w-6 mr-3" aria-hidden />
+                          Monitor
                         </Link>
                       </Button>
                     )}

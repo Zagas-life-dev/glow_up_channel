@@ -65,7 +65,7 @@ import { cn } from '@/lib/utils'
 import PageSkeleton from '@/components/skeletons/page-skeleton'
 import { PageShell } from '@/components/layout/page-shell'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
-import { canPublishContent } from '@/lib/roles'
+import { canAccessMonitorPortal, canPublishContent, isMonitor } from '@/lib/roles'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -851,6 +851,7 @@ export default function SettingsPage() {
   const profileHref = user?._id ? `/profile/${user._id}` : '/'
   const canPublish = canPublishContent(user?.role)
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
+  const monitors = isMonitor(user?.role)
 
   const saveStatus = isSaving
     ? 'Saving…'
@@ -1330,7 +1331,7 @@ export default function SettingsPage() {
                   </div>
                 </SettingsSection>
 
-                {(isAdmin || canPublish || PARTNER_PROGRAMME_ENABLED) && (
+                {(isAdmin || canPublish || monitors || PARTNER_PROGRAMME_ENABLED) && (
                   <SettingsSection title="Your access" description="Where else this account can take you.">
                     <div className="space-y-2">
                       {isAdmin && (
@@ -1342,6 +1343,19 @@ export default function SettingsPage() {
                           cta="Open"
                         />
                       )}
+                      {canAccessMonitorPortal(user?.role) && (
+                        <AccessRow
+                          icon={Eye}
+                          title="Monitor"
+                          description={
+                            monitors
+                              ? "View the listings assigned to you and how they are performing."
+                              : "Read any monitor's view, or the listings assigned to you."
+                          }
+                          href="/dashboard/monitor"
+                          cta="Open"
+                        />
+                      )}
                       {canPublish ? (
                         <AccessRow
                           icon={Crown}
@@ -1350,7 +1364,10 @@ export default function SettingsPage() {
                           href="/dashboard/provider"
                           cta="Open"
                         />
-                      ) : PARTNER_PROGRAMME_ENABLED ? (
+                      ) : PARTNER_PROGRAMME_ENABLED && !monitors ? (
+                        /* Not offered to monitors: the roles are mutually
+                           exclusive, so taking this would cost them the
+                           assignments they are here for. */
                         <AccessRow
                           icon={Crown}
                           title="Founder Batch"
