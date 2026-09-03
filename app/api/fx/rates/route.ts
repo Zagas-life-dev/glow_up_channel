@@ -26,14 +26,21 @@ import type { RateTable } from "@/lib/currency/convert"
 
 const UPSTREAM = "https://open.er-api.com/v6/latest/USD"
 
-/** Rates move once a day upstream; anything shorter is wasted traffic. */
-const REVALIDATE_SECONDS = 60 * 60 * 24
+/**
+ * Rates move once a day upstream; anything shorter is wasted traffic.
+ *
+ * Duplicated as a literal in the `revalidate` export below rather than
+ * referenced: Next reads segment config statically at build time and rejects
+ * anything it cannot evaluate from the literal alone, including a reference to
+ * a const declared one line up.
+ */
+const REVALIDATE_SECONDS = 86400
 
 /** Give up early — a slow rate lookup must not hold up the posting form. */
 const UPSTREAM_TIMEOUT_MS = 5_000
 
 export const runtime = "edge"
-export const revalidate = REVALIDATE_SECONDS
+export const revalidate = 86400
 
 const WANTED = CURRENCIES.map((c) => c.code)
 

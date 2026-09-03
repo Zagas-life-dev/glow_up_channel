@@ -50,17 +50,29 @@ interface ContentItem {
     registrationDeadline?: string
     timezone?: string
   }
+  /** Canonical money object; the containers below are derived from it and kept
+   *  for documents written before it existed. */
+  pricing?: {
+    isPaid?: boolean
+    amount?: number | null
+    currency?: string | null
+    period?: string | null
+  }
   financial?: {
     isPaid?: boolean
-    amount?: string
+    // Numbers since amounts stopped being submitted as raw input strings;
+    // string stays accepted because unmigrated documents still hold them.
+    amount?: number | string
     currency?: string
     benefits?: string[]
   }
   isPaid?: boolean
-  price?: string
+  isPremium?: boolean
+  price?: number | string
   currency?: string
   pay?: {
-    amount?: string
+    isPaid?: boolean
+    amount?: number | string
     currency?: string
     period?: string
   }

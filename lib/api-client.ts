@@ -88,6 +88,9 @@ export interface UserProfile {
   showConnections?: boolean;
   onboarding?: {
     country?: string;
+    /** ISO code. The backend normalises free-text country input to this on save
+     *  (see transformOnboardingData); the type simply never declared it. */
+    countryCode?: string;
     province?: string;
     city?: string;
     careerStage?: string;

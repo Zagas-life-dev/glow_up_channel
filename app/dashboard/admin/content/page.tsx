@@ -139,10 +139,27 @@ interface ContentItem {
   category?: string
   jobType?: string
   tags?: string[]
+  /**
+   * Canonical money object, written on all four content types. The three
+   * containers below are derived from it and kept for documents written before
+   * it existed — a job's figure lives under `pay`, an opportunity's under
+   * `financial`, an event's and a resource's at the top level.
+   */
+  pricing?: {
+    isPaid?: boolean
+    amount?: number | null
+    currency?: string | null
+    amountUsd?: number | null
+    fxRate?: number | null
+    fxAsOf?: string | null
+    period?: string | null
+    benefits?: string[]
+  }
   pay?: { amount?: number; currency?: string; period?: string }
   financial?: { amount?: number; currency?: string; isPaid?: boolean; benefits?: string[]; period?: string }
   price?: number
   currency?: string
+  priceUsd?: number | null
   dates?: {
     applicationDeadline?: string
     startDate?: string
