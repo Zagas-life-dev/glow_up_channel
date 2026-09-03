@@ -12,7 +12,9 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -64,6 +66,8 @@ import { cn } from "@/lib/utils"
 import { formatDistanceToNow } from "date-fns"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { Skeleton } from "@/components/ui/skeleton"
+import { CURRENCY_GROUPS } from "@/lib/currency/catalog"
+import { PAY_PERIODS } from "@/components/posting/AmountCurrencyField"
 
 function safeFormatDistanceToNow(dateInput: string | Date | undefined | null): string {
   if (!dateInput) return "N/A"
@@ -511,9 +515,9 @@ export default function AdminContent() {
       setEditPayPeriod((selectedContent.pay as { period?: string })?.period ?? (selectedContent.financial as { period?: string })?.period ?? "")
       setEditPaymentAmount(selectedContent.paymentAmount ?? "")
       setEditPaymentNotes(selectedContent.paymentNotes ?? "")
-      const priceVal = selectedContent.price ?? selectedContent.financial?.amount ?? ""
+      const priceVal = selectedContent.pricing?.amount ?? (selectedContent.pay as { amount?: number })?.amount ?? selectedContent.financial?.amount ?? selectedContent.price ?? ""
       setEditPrice(priceVal === "" ? "" : Number(priceVal))
-      setEditCurrency(selectedContent.currency ?? selectedContent.financial?.currency ?? "")
+      setEditCurrency(selectedContent.pricing?.currency ?? (selectedContent.pay as { currency?: string })?.currency ?? selectedContent.financial?.currency ?? selectedContent.currency ?? "")
       const benefitsArr = selectedContent.benefits ?? selectedContent.financial?.benefits ?? []
       setEditBenefits(Array.isArray(benefitsArr) ? benefitsArr.join("\n") : "")
       setEditAppDeadline(selectedContent.dates?.applicationDeadline ? selectedContent.dates.applicationDeadline.slice(0, 16) : "")
@@ -934,9 +938,9 @@ export default function AdminContent() {
         setEditPayPeriod((previousItem.pay as { period?: string })?.period ?? (previousItem.financial as { period?: string })?.period ?? "")
         setEditPaymentAmount(previousItem.paymentAmount ?? "")
         setEditPaymentNotes(previousItem.paymentNotes ?? "")
-        const p = previousItem.price ?? previousItem.financial?.amount ?? ""
+        const p = previousItem.pricing?.amount ?? (previousItem.pay as { amount?: number })?.amount ?? previousItem.financial?.amount ?? previousItem.price ?? ""
         setEditPrice(p === "" ? "" : Number(p))
-        setEditCurrency(previousItem.currency ?? previousItem.financial?.currency ?? "")
+        setEditCurrency(previousItem.pricing?.currency ?? (previousItem.pay as { currency?: string })?.currency ?? previousItem.financial?.currency ?? previousItem.currency ?? "")
         const b = previousItem.benefits ?? previousItem.financial?.benefits ?? []
         setEditBenefits(Array.isArray(b) ? b.join("\n") : "")
         setEditAppDeadline(previousItem.dates?.applicationDeadline ? previousItem.dates.applicationDeadline.slice(0, 16) : "")
@@ -1572,12 +1576,46 @@ export default function AdminContent() {
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Currency</label>
-                        <Input value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)} className="rounded-xl border-border" placeholder="NGN / USD" />
+                        {/* Was a free-text box. It accepted anything, and a blank
+                            one wrote `currency: undefined` — which unset the
+                            currency on the listing while leaving the amount. */}
+                        <Select value={editCurrency || undefined} onValueChange={setEditCurrency}>
+                          <SelectTrigger className="rounded-xl border-border">
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            {CURRENCY_GROUPS.map((group) => (
+                              <SelectGroup key={group.label}>
+                                <SelectLabel className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+                                  {group.label}
+                                </SelectLabel>
+                                {group.currencies.map((currency) => (
+                                  <SelectItem key={currency.code} value={currency.code}>
+                                    <span className="font-medium">{currency.code}</span>
+                                    <span className="ml-2 text-muted-foreground">{currency.name}</span>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       {(selectedContent.type === "job" || selectedContent.type === "opportunity") && (
                         <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Pay period (e.g. month, year)</label>
-                          <Input value={editPayPeriod} onChange={(e) => setEditPayPeriod(e.target.value)} className="rounded-xl border-border" placeholder="month" />
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Pay period</label>
+                          {/* The three forms offered "month", "monthly" and "/ month"
+                              for the same fact. One vocabulary, and the backend maps
+                              the legacy spellings onto it. */}
+                          <Select value={editPayPeriod || undefined} onValueChange={setEditPayPeriod}>
+                            <SelectTrigger className="rounded-xl border-border">
+                              <SelectValue placeholder="Select period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PAY_PERIODS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                       <div className="sm:col-span-2">
@@ -2108,9 +2146,9 @@ export default function AdminContent() {
                       setEditPayPeriod((selectedContent.pay as { period?: string })?.period ?? (selectedContent.financial as { period?: string })?.period ?? "")
                       setEditPaymentAmount(selectedContent.paymentAmount ?? "")
                       setEditPaymentNotes(selectedContent.paymentNotes ?? "")
-                      const p = selectedContent.price ?? selectedContent.financial?.amount ?? ""
+                      const p = selectedContent.pricing?.amount ?? (selectedContent.pay as { amount?: number })?.amount ?? selectedContent.financial?.amount ?? selectedContent.price ?? ""
                       setEditPrice(p === "" ? "" : Number(p))
-                      setEditCurrency(selectedContent.currency ?? selectedContent.financial?.currency ?? "")
+                      setEditCurrency(selectedContent.pricing?.currency ?? (selectedContent.pay as { currency?: string })?.currency ?? selectedContent.financial?.currency ?? selectedContent.currency ?? "")
                       const b = selectedContent.benefits ?? selectedContent.financial?.benefits ?? []
                       setEditBenefits(Array.isArray(b) ? b.join("\n") : "")
                       setEditAppDeadline(selectedContent.dates?.applicationDeadline ? selectedContent.dates.applicationDeadline.slice(0, 16) : "")

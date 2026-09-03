@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -14,11 +14,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
-import { Loader2, TrendingUp } from 'lucide-react'
+import { ImagePlus, Loader2, TrendingUp, X } from 'lucide-react'
 
 const MIN_DURATION = 7
 const MAX_DURATION = 365
 const QUICK_DURATIONS = [7, 14, 30, 60, 90]
+
+/** Matches the backend's own limit for hero uploads. */
+const MAX_HERO_BYTES = 10 * 1024 * 1024
 
 export interface PostedItemForPromote {
   _id: string
@@ -51,6 +54,20 @@ export function PromoteContentModal({
 }: PromoteContentModalProps) {
   const [durationDays, setDurationDays] = useState(7)
   const [submitting, setSubmitting] = useState(false)
+  const [heroFile, setHeroFile] = useState<File | null>(null)
+
+  // Derived rather than held in state, so picking a file does not cost an extra
+  // render pass. The effect below exists only to revoke the URL — without it
+  // every re-pick leaks a blob for the life of the tab.
+  const heroPreview = useMemo(
+    () => (heroFile ? URL.createObjectURL(heroFile) : null),
+    [heroFile],
+  )
+
+  useEffect(() => {
+    if (!heroPreview) return
+    return () => URL.revokeObjectURL(heroPreview)
+  }, [heroPreview])
 
   const safeDuration = Math.min(Math.max(MIN_DURATION, durationDays), MAX_DURATION)
 
@@ -62,12 +79,28 @@ export function PromoteContentModal({
     }
     setSubmitting(true)
     try {
+      // Uploaded first: a failed image must not leave a started campaign with a
+      // half-applied hero, and the start call needs the hosted URL.
+      let heroImageUrl: string | null = null
+      if (heroFile) {
+        try {
+          heroImageUrl = await ApiClient.uploadPromotionHeroImage(heroFile)
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Image upload failed'
+          toast.error(`${message}. Start the promotion without an image, or try again.`)
+          setSubmitting(false)
+          return
+        }
+      }
+
       await ApiClient.startFreePromotion({
         contentId: item._id,
         contentType: item.type,
         durationDays: safeDuration,
+        heroImageUrl,
       })
       toast.success(`Promotion started for ${safeDuration} days`)
+      setHeroFile(null)
       onOpenChange(false)
       onSuccess()
     } catch (e: unknown) {
@@ -124,6 +157,56 @@ export function PromoteContentModal({
             />
             <p className="text-xs text-muted-foreground">
               Min {MIN_DURATION}, max {MAX_DURATION} days.
+            </p>
+          </div>
+
+          {/* Hero image — only available while promoting.
+
+              A listing carries an `image` field that every promoted surface
+              reads, but no posting form ever set it, so promoted listings
+              rendered without one. It is offered here rather than on the
+              posting forms because it is part of what the promotion buys: it
+              goes on when the campaign starts and comes off when it ends. */}
+          <div className="space-y-2">
+            <Label>Hero image <span className="font-normal text-muted-foreground">(optional)</span></Label>
+            {heroPreview ? (
+              <div className="relative overflow-hidden rounded-lg border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={heroPreview} alt="Hero preview" className="h-32 w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setHeroFile(null)}
+                  disabled={submitting}
+                  aria-label="Remove image"
+                  className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 text-foreground shadow-sm hover:bg-background"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border bg-muted/30 p-5 text-center transition-colors hover:border-primary/50">
+                <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Add a hero image</span>
+                <span className="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF · max 10MB</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  disabled={submitting}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null
+                    if (file && file.size > MAX_HERO_BYTES) {
+                      toast.error('Image is too large. Maximum size is 10MB.')
+                      return
+                    }
+                    setHeroFile(file)
+                  }}
+                />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Shown on your listing while the promotion runs. It is removed when
+              the promotion ends.
             </p>
           </div>
 

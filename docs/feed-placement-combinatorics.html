@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feed Inventory &amp; Placement Combinatorics</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#1b1a18; --muted:#6b6862; --line:#e6e2db;
+    --accent:#8a5a2b; --accent-soft:#f3ece3; --warn:#a8442a; --warn-soft:#faeee9;
+    --ok:#3d6b4a; --ok-soft:#eaf2ec; --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#161512; --panel:#1e1d1a; --ink:#eeebe5; --muted:#9d9890; --line:#312f2b;
+      --accent:#d8a05e; --accent-soft:#2a231a; --warn:#e08a6c; --warn-soft:#2e201b;
+      --ok:#7fb894; --ok-soft:#1c261f;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:48px 24px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:40px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 8px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  h2{font-size:20px;margin:44px 0 6px;letter-spacing:-.01em}
+  h2 .n{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:10px;font-weight:600}
+  h3{font-size:15px;margin:28px 0 8px;color:var(--ink)}
+  p{margin:10px 0}
+  .lede{color:var(--muted);margin:0 0 18px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;background:var(--panel);
+    border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:var(--accent-soft);font-weight:600;font-size:12px;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  tfoot td{font-weight:600;background:var(--accent-soft)}
+  code{font-family:var(--mono);font-size:.9em;background:var(--accent-soft);
+    padding:1px 5px;border-radius:4px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .card .k{font-family:var(--mono);font-size:24px;font-weight:600;letter-spacing:-.02em;display:block}
+  .card .l{color:var(--muted);font-size:12px;margin-top:2px;display:block;line-height:1.4}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft);
+    padding:12px 16px;border-radius:0 6px 6px 0;margin:16px 0;font-size:14px}
+  .finding{border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--panel);
+    border-radius:0 8px 8px 0;padding:16px 18px;margin:16px 0}
+  .finding h3{margin:0 0 6px;font-size:15px}
+  .finding .tag{display:inline-block;background:var(--warn-soft);color:var(--warn);font-size:11px;
+    font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;
+    margin-bottom:8px}
+  .finding p{margin:6px 0;font-size:14px}
+  .good{border-left-color:var(--ok)}
+  .good .tag{background:var(--ok-soft);color:var(--ok)}
+  .src{color:var(--muted);font-size:12.5px;font-family:var(--mono);margin-top:4px}
+  .bar{display:inline-block;height:9px;background:var(--accent);border-radius:2px;vertical-align:middle;
+    min-width:2px;margin-right:7px}
+  .bar.w{background:var(--warn)}
+  hr{border:none;border-top:1px solid var(--line);margin:48px 0 0}
+  footer{color:var(--muted);font-size:12.5px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Feed inventory &amp; placement combinatorics</h1>
+  <p class="sub">Live counts from <code>glowup_channel</code> + constants read from the ranking code &middot; 3&nbsp;September&nbsp;2026</p>
+</header>
+
+<p class="lede">Two questions: how many listings are actually in the feed today, and how many distinct feeds can the placement machinery build out of them &mdash; now and as inventory grows. Every number below is measured, not estimated: DB counts are live <code>countDocuments</code> against the real filters, placement figures come from Monte-Carlo runs of the shipped <code>applyVarietyOrder</code> and <code>buildFeedWithSponsored</code>.</p>
+
+<h2><span class="n">1</span>What is in the feed</h2>
+
+<div class="cards">
+  <div class="card"><span class="k">214</span><span class="l">listings eligible for the feed</span></div>
+  <div class="card"><span class="k">172</span><span class="l">reachable in one session (80.4%)</span></div>
+  <div class="card"><span class="k">14</span><span class="l">promotions live in-window</span></div>
+  <div class="card"><span class="k">285</span><span class="l">archived / inactive</span></div>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr>
+    <th>Type</th><th class="num">Live</th><th class="num">Feed-eligible</th>
+    <th class="num">Pool cap</th><th class="num">In pool</th><th class="num">Archived</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Events</td><td class="num">105</td><td class="num">102</td><td class="num">60</td><td class="num">60</td><td class="num">117</td></tr>
+    <tr><td>Opportunities</td><td class="num">57</td><td class="num">57</td><td class="num">60</td><td class="num">57</td><td class="num">86</td></tr>
+    <tr><td>Resources</td><td class="num">41</td><td class="num">41</td><td class="num">60</td><td class="num">41</td><td class="num">0</td></tr>
+    <tr><td>Jobs</td><td class="num">14</td><td class="num">14</td><td class="num">60</td><td class="num">14</td><td class="num">82</td></tr>
+  </tbody>
+  <tfoot><tr><td>Total</td><td class="num">217</td><td class="num">214</td><td class="num">240</td><td class="num">172</td><td class="num">285</td></tr></tfoot>
+</table>
+</div>
+
+<p class="src">Eligibility mirrors <code>recommendationService.js</code> exactly: opportunities <code>{status:'active', isValid:true}</code>, events add <code>isApproved</code>, jobs add a live-deadline <code>$or</code>, resources <code>{isActive, isApproved}</code>.</p>
+
+<div class="note">
+  <strong>Events is the only type where selection actually happens.</strong> Everything else is under the 60-per-type cap, so every opportunity, every resource and all 14 jobs sit in every single reader's candidate pool. Today the "algorithm" chooses which listings to consider only for events &mdash; 60 of 102.
+</div>
+
+<h3>The anonymous feed is a different, smaller object</h3>
+<p><code>publicFeedService</code> builds one shared list interleaved R&ndash;J&ndash;E&ndash;O with per-type caps of 15/27/28/30 and a 100-slot loop. Jobs can only supply 14, so the cache actually holds <strong>87 items</strong>, not 100 &mdash; identical for every signed-out visitor for 10 minutes, then shuffled client-side by deadline (no scores, so the band weighting is a no-op).</p>
+
+<h2><span class="n">2</span>The three placement layers</h2>
+<p class="lede">Placement is not one algorithm. Three independent mechanisms compose, and only one of them knows the others exist.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Layer</th><th>Where</th><th>Knob</th><th class="num">Value</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="6"><strong>A.</strong> Scatter order</td><td rowspan="6"><code>scatterRankingService.js</code><br>mirrored in <code>lib/feed-variety-order.ts</code></td>
+        <td>Category odds</td><td class="num">.75/.20/.04/.01</td><td>Band share, renormalised over stocked bands</td></tr>
+    <tr><td>Half-life / bias</td><td class="num">7d / 1.6</td><td>Deadline pull inside a band</td></tr>
+    <tr><td><code>PROMOTED_SHARE</code></td><td class="num">0.20</td><td>Reserved draw share for paid items</td></tr>
+    <tr><td><code>PROMOTED_MIN_GAP</code></td><td class="num">3</td><td>Organic items between two promotions</td></tr>
+    <tr><td><code>PROMOTED_LEAD_BIAS</code></td><td class="num">0.90</td><td>Odds slot 0 goes to a promotion</td></tr>
+    <tr><td><code>PROMOTED_LEAD_SLOTS</code></td><td class="num">12</td><td>Lead bias decays linearly to 0 here</td></tr>
+    <tr><td><strong>B.</strong> Client re-rank</td><td><code>lib/ranking</code> via <code>rankForFeed</code></td>
+        <td><code>preserveOrder</code></td><td class="num">true</td><td>Rescores for the badge; order untouched</td></tr>
+    <tr><td rowspan="2"><strong>C.</strong> Sponsored slots</td><td rowspan="2"><code>lib/feed-ads.ts</code></td>
+        <td><code>postsBetween</code></td><td class="num">4</td><td>A slot after every 4th rendered card</td></tr>
+    <tr><td><code>spread</code></td><td class="num">max(4, ⌊n/(p+1)⌋)</td><td>Which slots draw real promoted content</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="n">3</span>How many feeds can we build</h2>
+<p class="lede">The raw combinatorics are astronomically large and almost meaningless. The <em>effective</em> counts &mdash; what a reader can actually land on &mdash; are three hundred orders of magnitude smaller, and those are the ones worth managing.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Quantity</th><th class="num">Count today (pool = 172)</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Orderings of the whole pool</td><td class="num">2.13 × 10<sup>311</sup></td><td>172! &mdash; unconstrained</td></tr>
+    <tr><td>&hellip; reachable under min-gap 4</td><td class="num">1.08 × 10<sup>309</sup></td><td>158!·14!·C(120,14) &mdash; 0.5% of all orders</td></tr>
+    <tr><td>Distinct page-1 sequences</td><td class="num">1.82 × 10<sup>33</sup></td><td>P(172, 15)</td></tr>
+    <tr><td>Distinct page-2 sequences</td><td class="num">2.34 × 10<sup>43</sup></td><td>P(157, 20)</td></tr>
+    <tr><td>Sponsored rail triples, page 1</td><td class="num">720</td><td>P(10, 3) after dedup (2,184 without)</td></tr>
+    <tr><td><strong>Distinct page-1 renders</strong></td><td class="num">1.31 × 10<sup>36</sup></td><td>15 cards + 3 slots, both layers</td></tr>
+    <tr><td>(item, position) pairs, page 1</td><td class="num">2,580</td><td>172 × 15</td></tr>
+    <tr><td>(item, position) pairs, session</td><td class="num">29,584</td><td>172 × 172</td></tr>
+    <tr><td>Candidate pools, theoretical</td><td class="num">8.22 × 10<sup>28</sup></td><td>C(102, 60) &mdash; but score-determined, so 1 per profile</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Effective variety, measured over 20,000 draws</h3>
+<div class="cards">
+  <div class="card"><span class="k">18.0</span><span class="l">effective distinct first cards (4.17 bits of entropy)</span></div>
+  <div class="card"><span class="k">99</span><span class="l">items that ever took slot 0, of 172</span></div>
+  <div class="card"><span class="k">45.3%</span><span class="l">of all first slots taken by just 5 listings</span></div>
+  <div class="card"><span class="k">1.65%</span><span class="l">median listing's chance of reaching page 1</span></div>
+</div>
+
+<div class="note">
+  10<sup>36</sup> page-1 renders exist on paper. In practice the opening card is drawn from an effective <strong>18</strong> listings, five of which own nearly half of all impressions, and the median listing surfaces on page 1 roughly <strong>once in 60 sessions</strong>. The combinatorial space is enormous; the probability mass is not.
+</div>
+
+<h2><span class="n">4</span>Measured placement as the reader scrolls</h2>
+<p class="lede">Monte-Carlo over the shipped orderer (2,000 runs), with the sponsored rail shrinking as dedup removes promotions that have already appeared organically. Page 1 is 15 items; every page after is 20.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr>
+    <th class="num">Depth</th><th class="num">Organic promoted</th><th class="num">Rail stock</th>
+    <th class="num">spread</th><th class="num">Slots</th><th class="num">Filled</th><th class="num">Empty</th>
+    <th class="num">Paid cards</th><th>Paid share of render</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="num">15</td><td class="num">3.82</td><td class="num">10</td><td class="num">4</td><td class="num">3</td><td class="num">3</td><td class="num">0</td><td class="num">6.82</td><td><span class="bar w" style="width:76px"></span>37.9%</td></tr>
+    <tr><td class="num">35</td><td class="num">8.05</td><td class="num">6</td><td class="num">5</td><td class="num">8</td><td class="num">6</td><td class="num">2</td><td class="num">14.05</td><td><span class="bar w" style="width:65px"></span>32.7%</td></tr>
+    <tr><td class="num">55</td><td class="num">10.51</td><td class="num">3</td><td class="num">13</td><td class="num">13</td><td class="num">3</td><td class="num">10</td><td class="num">13.51</td><td><span class="bar" style="width:40px"></span>19.9%</td></tr>
+    <tr><td class="num">75</td><td class="num">12.30</td><td class="num">2</td><td class="num">25</td><td class="num">18</td><td class="num">2</td><td class="num">16</td><td class="num">14.30</td><td><span class="bar" style="width:31px"></span>15.4%</td></tr>
+    <tr><td class="num">95</td><td class="num">13.57</td><td class="num">0</td><td class="num">4</td><td class="num">23</td><td class="num">0</td><td class="num">23</td><td class="num">13.57</td><td><span class="bar" style="width:23px"></span>11.5%</td></tr>
+    <tr><td class="num">115</td><td class="num">13.97</td><td class="num">0</td><td class="num">4</td><td class="num">28</td><td class="num">0</td><td class="num">28</td><td class="num">13.97</td><td><span class="bar" style="width:20px"></span>9.8%</td></tr>
+    <tr><td class="num">135</td><td class="num">14.00</td><td class="num">0</td><td class="num">4</td><td class="num">33</td><td class="num">0</td><td class="num">33</td><td class="num">14.00</td><td><span class="bar" style="width:17px"></span>8.3%</td></tr>
+    <tr><td class="num">155</td><td class="num">14.00</td><td class="num">0</td><td class="num">4</td><td class="num">38</td><td class="num">0</td><td class="num">38</td><td class="num">14.00</td><td><span class="bar" style="width:15px"></span>7.3%</td></tr>
+    <tr><td class="num">172</td><td class="num">14.00</td><td class="num">0</td><td class="num">4</td><td class="num">42</td><td class="num">0</td><td class="num">42</td><td class="num">14.00</td><td><span class="bar" style="width:13px"></span>6.5%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Promotion probability by position, measured: slot 0 <strong>0.94</strong>, then 0.84 at 4, 0.72 at 8, 0.61 at 12, 0.55 at 16, 0.51 at 20 &mdash; the lead bias decaying into the flat 20% share, with the min-gap-4 spacing visible as the sawtooth. Minimum observed gap was 4, so spacing holds.</p>
+
+<h2><span class="n">5</span>How this scales with inventory</h2>
+
+<div class="scroll">
+<table>
+  <thead><tr>
+    <th class="num">Inventory</th><th class="num">Candidate pool</th><th>Reachable</th>
+    <th class="num">Page-1 sequences</th><th class="num">Sponsored slots / session</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="num">214 <em>(today)</em></td><td class="num">172</td><td><span class="bar" style="width:161px"></span>80.4%</td><td class="num">1.8 × 10<sup>33</sup></td><td class="num">42</td></tr>
+    <tr><td class="num">400</td><td class="num">206</td><td><span class="bar" style="width:103px"></span>51.5%</td><td class="num">1.0 × 10<sup>34</sup></td><td class="num">51</td></tr>
+    <tr><td class="num">800</td><td class="num">232</td><td><span class="bar w" style="width:58px"></span>29.0%</td><td class="num">2.4 × 10<sup>34</sup></td><td class="num">57</td></tr>
+    <tr><td class="num">1,600</td><td class="num">240</td><td><span class="bar w" style="width:30px"></span>15.0%</td><td class="num">3.2 × 10<sup>35</sup></td><td class="num">59</td></tr>
+    <tr><td class="num">5,000</td><td class="num">240</td><td><span class="bar w" style="width:10px"></span>4.8%</td><td class="num">3.2 × 10<sup>35</sup></td><td class="num">59</td></tr>
+    <tr><td class="num">20,000</td><td class="num">240</td><td><span class="bar w" style="width:3px"></span>1.2%</td><td class="num">3.2 × 10<sup>35</sup></td><td class="num">59</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Pool size is <code>Σ min(60, eligible_of_type)</code>, so it saturates at <strong>240</strong>. Past roughly 1,600 listings the feed stops changing in any way: the same 240-item ceiling, the same 3.2 × 10<sup>35</sup> page-1 space, the same ~59 slots. Additional inventory buys zero variety &mdash; it only lowers the odds that any given listing is ever seen.</p>
+
+<h3>Shelf life rewrites the scaling story</h3>
+<p>The table above assumes inventory is a number you grow. It is not &mdash; it is a flow. Listings expire, so live inventory settles at <em>ingest rate × shelf life</em>, and the measured shelf life is short.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Type</th><th class="num">Median days to deadline</th><th class="num">Closing &le;14d</th><th class="num">Undated</th><th>Age of live stock</th></tr></thead>
+  <tbody>
+    <tr><td>Opportunities</td><td class="num">19</td><td class="num">6</td><td class="num">0</td><td>all 57 created within 15 days</td></tr>
+    <tr><td>Events</td><td class="num">21</td><td class="num">23</td><td class="num">15</td><td>p50 3d, tail to 207d</td></tr>
+    <tr><td>Jobs</td><td class="num">26</td><td class="num">1</td><td class="num">0</td><td>all 14 created within 10 days</td></tr>
+    <tr><td>Resources</td><td class="num">&mdash;</td><td class="num">0</td><td class="num">41</td><td>median 185 days &mdash; evergreen</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <strong>The catalogue replaces itself roughly monthly.</strong> That bounds the growth curve: reaching 5,000 live listings needs about 10× today's ingest, not merely time. It also means the governing number is <strong>~10 new listings per day</strong> &mdash; what it takes to hold 214 steady at a three-week life. If ingest stalls, the feed empties within a month. Ingest rate, not the pool cap, is the first-order control on feed size.
+</div>
+
+<p>It cuts the other way too. With a three-week life a listing gets <em>one</em> chance: missing the pool is not "buried, will resurface" &mdash; it is dead. And <strong>resources are the exception that breaks the pattern</strong>: undated, never expiring, median age 185 days. They are the only type whose inventory grows monotonically, and therefore the only type where the coverage collapse in the table above is genuinely inevitable.</p>
+
+<h2><span class="n">6</span>What breaks first</h2>
+
+<div class="finding">
+  <span class="tag">Correction</span>
+  <h3>The cap excludes by score today, not by recency</h3>
+  <p>An earlier draft of this report said exclusion was by recency. That is wrong at current scale. <code>.sort({createdAt:-1}).limit(400)</code> only binds once a type passes 400 live listings, and the largest type has 102. Today's 102 &rarr; 60 cut for events is made <em>after</em> scoring, by <code>sort((a,b) =&gt; b.score - a.score).slice(0, 60)</code>.</p>
+  <p>The recency cliff is real, but it sits at 400 per type rather than here. What bites today is the composition of the score itself.</p>
+  <p class="src">recommendationService.js:231, :23, :574</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Highest impact</span>
+  <h3>Urgency is 10% of the score that decides who makes the pool</h3>
+  <p>Median shelf life is 19&ndash;26 days, so exclusion from the pool is terminal rather than deferred. Yet the cut is made on a score where timing carries <strong>10 of ~100 points</strong> &mdash; interest 30, location 20, career stage 20, skill 15, timing 10, engagement 5. An event closing in two days competes on interest-match against one closing in three months, and can lose.</p>
+  <p><strong>Fix:</strong> replace the flat <code>slice(0, 60)</code> with a deadline-banded quota &mdash; N from closing &le;7d, N from 8&ndash;30d, N from later or undated &mdash; so time-critical content reaches the pool regardless of match score. The bands also scale on their own as volume grows.</p>
+  <p class="src">recommendationService.js:880-919, :574</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Correctness</span>
+  <h3>Expired listings still pass the eligibility filter</h3>
+  <p>Six events with past dates are in the eligible set right now. <code>isValid</code> is written <code>true</code> at creation and nothing flips it back, and neither the opportunity nor the event query carries a date guard &mdash; only jobs do. Expired items therefore consume pool slots and reach the orderer, where they land on <code>EXPIRED_WEIGHT</code> instead of being absent.</p>
+  <p><strong>Fix:</strong> give opportunities and events the same <code>$or</code> deadline guard the job query already uses.</p>
+  <p class="src">recommendationService.js:570, :626 &middot; eventController.js:214</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Scaling &mdash; deferred</span>
+  <h3>The recency cliff at 400 per type, and the evergreen types that hit it</h3>
+  <p>Past 400 live listings in a type, <code>SCORING_CANDIDATE_CAP</code> starts cutting by <code>createdAt</code> before anything is scored, and exclusion becomes permanent and relevance-blind. For time-bound types this is survivable &mdash; newest broadly means live. For <strong>resources it is fatal</strong>: they never expire, so the collection only grows, and a two-year-old guide is still perfectly good.</p>
+  <p><strong>Fix:</strong> sort the candidate window by actionable date rather than <code>createdAt</code> (index <code>dates.applicationDeadline</code>), and give resources seeded rotation. <code>rotationService.js</code> exists but serves promotions only.</p>
+  <p class="src">recommendationService.js:23, :574 &middot; rotationService.js:24</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Placement bug</span>
+  <h3>Sponsored slots reflow under the reader as pages load</h3>
+  <p><code>spread = max(4, ⌊n/(p+1)⌋)</code> is recomputed over the <em>entire</em> list on every render, and both <code>n</code> and <code>p</code> move with infinite scroll. The slot at position 4 carries promotion&nbsp;0 at depth&nbsp;15, is empty at depth&nbsp;75, and by depth&nbsp;95 every one of the 23 slots is empty. Keys shift with the assignment (<code>sponsored-promoted-0</code> → <code>ad-0</code>), so the cards remount.</p>
+  <p>A reader who scrolls back up sees different sponsored content than they scrolled past, and the promoter's impression at that position evaporates.</p>
+  <p class="src">lib/feed-ads.ts:47 &middot; app/home-client.tsx:619</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Design vs. behaviour</span>
+  <h3>The rail delivers the burst it was rewritten to prevent</h3>
+  <p><code>feed-ads.ts</code> documents its spread as giving promoters "presence for the length of the session rather than a burst at the top". The dedup added later in <code>promotedRail</code> removes any promotion already on screen &mdash; and the scatter's 0.9 lead bias puts promotions on screen early by design. The two cancel: rail stock falls 10 → 6 → 3 → 0 by depth 95, so <strong>all</strong> paid rail placement lands in the first two pages.</p>
+  <p class="src">app/home-client.tsx:499 &middot; lib/feed-ads.ts:12-30</p>
+</div>
+
+<div class="finding">
+  <span class="tag">Density</span>
+  <h3>Two promotion systems stack, and page 1 lands at 38% paid</h3>
+  <p>Page 1 renders 18 cards: ~3.8 organic promoted (lead bias + 20% share) plus 3 filled rail slots = <strong>6.8 paid cards, 37.9%</strong>. Neither layer is misbehaving on its own &mdash; <code>PROMOTED_SHARE</code> is 0.20 and the rail cadence is 1-in-4 &mdash; but nothing caps their sum, so the stated 20% intent nearly doubles exactly where it is most visible.</p>
+  <p>This gets worse as promotions sell: at 40 active promotions the rail stays stocked far deeper, and the top-of-feed share climbs with it.</p>
+</div>
+
+<div class="finding good">
+  <span class="tag">Holding up</span>
+  <h3>Spacing, completeness and front/back parity are sound</h3>
+  <p>Minimum observed promotion gap was 4 across every run, matching <code>PROMOTED_MIN_GAP</code>; 171 of 172 pool items reached page 1 at least once in 20,000 draws, so nothing is structurally unreachable within a pool; and the frontend constants track <code>scatterRankingService.js</code> exactly, so a server-ordered feed and a client-ordered one behave identically.</p>
+</div>
+
+<hr>
+<footer>
+  Sources: live <code>countDocuments</code> against <code>glowup_channel</code>; Monte-Carlo over the shipped
+  <code>lib/feed-variety-order.ts</code> and <code>lib/feed-ads.ts</code> (2,000&ndash;20,000 runs);
+  constants read from <code>recommendationService.js</code>, <code>scatterRankingService.js</code>,
+  <code>publicFeedService.js</code>, <code>lib/fetch-home-list-page.ts</code>.
+  Counts are a snapshot of 3&nbsp;September&nbsp;2026.
+</footer>
+
+</div>
+</body>
+</html>

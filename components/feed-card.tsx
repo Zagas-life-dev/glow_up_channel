@@ -37,6 +37,7 @@ import {
   type FeedContentKind,
 } from '@/lib/feed-content-type'
 import { toast } from 'sonner'
+import { useListingPrice } from '@/lib/currency/use-listing-price'
 
 interface FeedCardProps {
   item: {
@@ -55,14 +56,30 @@ interface FeedCardProps {
       address?: string
     }
     tags?: string[]
+    /** Canonical money object. Legacy containers below are still read for
+        documents written before it existed. */
+    pricing?: {
+      isPaid?: boolean
+      amount?: number | null
+      currency?: string | null
+      period?: string | null
+    }
     financial?: {
       isPaid?: boolean
-      amount?: string
+      amount?: number | string
       currency?: string
       benefits?: string[]
     }
+    pay?: {
+      isPaid?: boolean
+      amount?: number | string
+      currency?: string
+      period?: string
+    }
     isPaid?: boolean
-    price?: string
+    isPremium?: boolean
+    price?: number | string
+    currency?: string
     dates?: {
       applicationDeadline?: string
       startDate?: string
@@ -617,6 +634,9 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
           ? 'upcoming'
           : null
 
+  // As posted, with an approximate local equivalent beside it.
+  const price = useListingPrice(item)
+
   const deadlineLabel =
     urgency === 'urgent' && timeRemaining !== null
       ? `${formatCountdown(timeRemaining, contentKind)} left`
@@ -628,10 +648,16 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
   const metaParts: React.ReactNode[] = []
   if (getLocationString()) metaParts.push(<span key="loc">{getLocationString()}</span>)
   if (!urgency && getDateString()) metaParts.push(<span key="date">{getDateString()}</span>)
-  if (item.financial?.isPaid || item.isPaid) {
+  // Reads all four money shapes, so a job's salary finally reaches the card —
+  // it was previously looked up only under `financial` and `price`, neither of
+  // which a job has, and printed with no currency beside it.
+  if (price.primary) {
     metaParts.push(
       <span key="paid" className="font-medium text-emerald-600 dark:text-emerald-400">
-        {item.financial?.amount || item.price || 'Paid'}
+        {price.primary}
+        {price.approx ? (
+          <span className="ml-1 font-normal text-muted-foreground">{price.approx}</span>
+        ) : null}
       </span>
     )
   }

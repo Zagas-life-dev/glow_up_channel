@@ -43,6 +43,7 @@ import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
 import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
+import { formatListingPrice } from '@/lib/currency/listing-price'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type EventPageProps = { params: Promise<{ id: string }> }
@@ -71,7 +72,9 @@ function buildStatTiles(event: any): StatTile[] {
   if (place) optional.push({ label: 'Where', value: place })
 
   if (event.isPaid && event.price) {
-    optional.push({ label: 'Price', value: `${event.currency || 'NGN'} ${event.price}` })
+    // Formatted through the shared reader: a missing currency used to default to
+    // NGN, which relabelled every event priced in cedi or shillings as naira.
+    optional.push({ label: 'Price', value: formatListingPrice(event, null, null).primary ?? 'Paid' })
   } else if (event.isPaid === false || (!event.isPaid && !event.price)) {
     optional.push({ label: 'Price', value: 'Free' })
   }
@@ -421,7 +424,7 @@ function EventPageContent({ params }: EventPageProps) {
         <DetailSection label="Pricing">
           <p className="text-[15px] text-muted-foreground">
             {event.isPaid ? 'Paid' : 'Free'}
-            {event.price && ` · ${event.currency || 'NGN'} ${event.price}`}
+            {event.price && ` · ${formatListingPrice(event, null, null).primary ?? ''}`}
           </p>
         </DetailSection>
       )}

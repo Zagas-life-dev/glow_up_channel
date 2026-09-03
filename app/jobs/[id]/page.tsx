@@ -43,15 +43,21 @@ import { cleanUrl } from '@/lib/url-utils'
 import { useAuth } from '@/lib/auth-context'
 import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
+import { formatListingPrice } from '@/lib/currency/listing-price'
 import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type JobPageProps = { params: Promise<{ id: string }> }
 
-/** Pay as one line, e.g. "NGN 450,000/month". Null when the listing omits it. */
-function payLine(pay: any): string | null {
-  if (!pay?.amount) return null
-  const currency = pay.currency || 'NGN'
-  return `${currency} ${pay.amount}${pay.period ? `/${pay.period}` : ''}`
+/**
+ * Pay as one line, e.g. "₦450,000 / mo". Null when the listing omits it.
+ *
+ * Takes the whole job rather than `job.pay`: legacy documents keep the figure
+ * under `pay`, newer ones under `pricing`, and the shared reader knows both.
+ * The old version also defaulted a missing currency to NGN, which quietly
+ * relabelled every scraped USD salary as naira.
+ */
+function payLine(job: any): string | null {
+  return formatListingPrice(job ?? {}, null, null).primary
 }
 
 /**
@@ -63,7 +69,7 @@ function payLine(pay: any): string | null {
 function buildStatTiles(job: any): StatTile[] {
   const optional: StatTile[] = []
 
-  const pay = payLine(job.pay)
+  const pay = payLine(job)
   if (pay) optional.push({ label: 'Pay', value: pay })
 
   if (job.jobType) optional.push({ label: 'Type', value: String(job.jobType) })
@@ -215,7 +221,7 @@ function JobPageContent({ params }: JobPageProps) {
   const similarRows = similar.map((row) => {
     const rowAny = row as any
     const closes = rowAny.dates?.applicationDeadline
-    const meta = [payLine(rowAny.pay), closes ? `closes ${formatShortDate(closes)}` : null]
+    const meta = [payLine(rowAny), closes ? `closes ${formatShortDate(closes)}` : null]
       .filter(Boolean)
       .join(' · ')
     return { _id: row._id, title: String(rowAny.title ?? 'Untitled'), meta: meta || null }
@@ -316,7 +322,7 @@ function JobPageContent({ params }: JobPageProps) {
           <FactList>
             {job.pay?.amount && (
               <Fact icon={RiMoneyDollarCircleLine} label="Pay">
-                {payLine(job.pay)}
+                {payLine(job)}
               </Fact>
             )}
             {job.jobType && (

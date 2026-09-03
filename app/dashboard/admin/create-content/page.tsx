@@ -34,6 +34,14 @@ import { cn } from "@/lib/utils"
 import PageSkeleton from "@/components/skeletons/page-skeleton"
 import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
 import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
+import { AmountCurrencyField, type PayPeriod } from "@/components/posting/AmountCurrencyField"
+import { ChipMultiSelect } from "@/components/posting/ChipMultiSelect"
+import { CountryField, type CountryValue } from "@/components/posting/CountryField"
+import { useRates } from "@/lib/currency/use-rates"
+import { useAmountEntry } from "@/lib/currency/use-amount-entry"
+import { currencyForCountry } from "@/lib/currency/catalog"
+import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
+import { INDUSTRY_SECTORS, TARGET_AUDIENCE_GROUPS } from "@/lib/listings/taxonomy"
 
 type ContentType = "event" | "job" | "opportunity" | "resource"
 
@@ -80,6 +88,16 @@ export default function AdminCreateContentPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [tags, setTags] = useState<string[]>([])
+  const [industrySectors, setIndustrySectors] = useState<string[]>([])
+  const [targetAudience, setTargetAudience] = useState<string[]>([])
+  const [country, setCountry] = useState<CountryValue>(null)
+  const [period, setPeriod] = useState<PayPeriod>('monthly')
+
+  const { rates, stale: ratesStale } = useRates()
+  // Admin listings are posted on behalf of organisations all over the coverage
+  // map, so there is no sensible local default — USD is the neutral one, and
+  // the picker is one click away.
+  const amount = useAmountEntry(rates, { currency: currencyForCountry(country?.code) })
 
   // Common
   const [title, setTitle] = useState("")
@@ -150,6 +168,11 @@ export default function AdminCreateContentPage() {
     setPrice("")
     setBenefitsText("")
     setTags([])
+    setIndustrySectors([])
+    setTargetAudience([])
+    setCountry(null)
+    setPeriod('monthly')
+    amount.reset(null, currencyForCountry(null))
     setSuccess(false)
   }
 
@@ -176,76 +199,77 @@ export default function AdminCreateContentPage() {
     setSubmitting(true)
     setSuccess(false)
     try {
-      const basePayload = {
+      const benefitsList = parseBenefits()
+
+      /**
+       * One draft for all four types, shaped by `buildListingPayload`.
+       *
+       * The four hand-written payloads this replaces dropped, between them:
+       * every job's type (`type` where the model reads `jobType`), every
+       * resource's link and author (`url` and `author`, neither of which the
+       * model has), and — because the tag input was rendered only in the
+       * resource branch — the tags on every event, job and opportunity this
+       * form has ever created.
+       */
+      const draft: ListingDraft = {
+        kind: contentType,
         title: title.trim(),
         description: description.trim(),
         url: resourceLink.trim(),
-        status: "active" as const,
+        organizationName:
+          contentType === "event" ? (organizer.trim() || "UP")
+            : contentType === "job" ? (company.trim() || "Company")
+              : contentType === "opportunity" ? (provider.trim() || "UP")
+                : (author.trim() || "UP"),
+        type:
+          contentType === "event" ? eventType
+            : contentType === "job" ? jobType
+              : contentType === "opportunity" ? opportunityCategory
+                : resourceCategory,
+        tags,
+        industrySectors,
+        targetAudience,
+        location: contentType === "resource" ? undefined : {
+          country: country?.name,
+          countryCode: country?.code,
+          city:
+            contentType === "event" ? (eventCity.trim() || undefined)
+              : contentType === "job" ? (jobCity.trim() || undefined)
+                : (oppCity.trim() || undefined),
+          isRemote:
+            contentType === "event" ? eventRemote
+              : contentType === "job" ? jobRemote
+                : oppRemote,
+        },
+        money: isPaid ? amount.payload : null,
+        isPaid,
+        period: contentType === "job" ? period : undefined,
+        dates: {
+          startDate: contentType === "event" ? (startDate || undefined) : undefined,
+          endDate: contentType === "event" ? (endDate || undefined) : undefined,
+          applicationDeadline:
+            contentType === "job" ? (appDeadline || undefined)
+              : contentType === "opportunity" ? (oppDeadline || undefined)
+                : undefined,
+        },
+        requirements: contentType === "opportunity" ? eligibility.trim() : undefined,
+        benefits: benefitsList,
+        isPremium: contentType === "resource" && isPaid,
+        // Admin posts publish directly rather than queueing for review.
+        status: "active",
+        isApproved: true,
       }
 
-      const benefitsList = parseBenefits()
+      const payload = buildListingPayload(draft)
 
       if (contentType === "event") {
-        const start = startDate ? new Date(startDate).toISOString() : new Date().toISOString()
-        await ApiClient.createEvent({
-          ...basePayload,
-          organizer: organizer.trim() || "UP",
-          type: eventType,
-          eventType,
-          isPaid,
-          price: isPaid && price ? parseFloat(price) : undefined,
-          currency: "NGN",
-          location: {
-            city: eventCity.trim() || undefined,
-            isRemote: eventRemote,
-          },
-          dates: {
-            startDate: start,
-            endDate: endDate ? new Date(endDate).toISOString() : null,
-          },
-          ...(benefitsList.length > 0 && { financial: { benefits: benefitsList } }),
-        })
+        await ApiClient.createEvent(payload)
       } else if (contentType === "job") {
-        await ApiClient.createJob({
-          ...basePayload,
-          company: company.trim() || "Company",
-          type: jobType,
-          location: {
-            city: jobCity.trim() || undefined,
-            country: jobCountry.trim() || undefined,
-            isRemote: jobRemote,
-          },
-          pay: salary ? { isPaid: true, amount: parseFloat(salary), period: salaryPeriod, currency: "NGN" } : { isPaid: false },
-          dates: appDeadline ? { applicationDeadline: new Date(appDeadline).toISOString() } : undefined,
-          ...(benefitsList.length > 0 && { benefits: benefitsList }),
-        })
+        await ApiClient.createJob(payload)
       } else if (contentType === "opportunity") {
-        const hasAmount = oppAmount.trim() !== ""
-        await ApiClient.createOpportunity({
-          ...basePayload,
-          provider: provider.trim() || "UP",
-          category: opportunityCategory,
-          type: opportunityCategory,
-          location: { isRemote: oppRemote, city: oppCity.trim() || undefined },
-          requirements: eligibility.trim() ? { other: eligibility.trim() } : undefined,
-          dates: oppDeadline ? { applicationDeadline: new Date(oppDeadline).toISOString() } : undefined,
-          ...((hasAmount || benefitsList.length > 0) && {
-            financial: {
-              ...(hasAmount && { isPaid: true, amount: parseFloat(oppAmount), currency: "NGN" }),
-              ...(benefitsList.length > 0 && { benefits: benefitsList }),
-            },
-          }),
-        })
+        await ApiClient.createOpportunity(payload)
       } else {
-        await ApiClient.createResource({
-          title: basePayload.title,
-          description: basePayload.description,
-          author: author.trim() || "UP",
-          category: resourceCategory,
-          url: basePayload.url,
-          paymentLink: basePayload.url,
-          tags,
-        })
+        await ApiClient.createResource(payload)
       }
 
       setSuccess(true)
@@ -387,6 +411,10 @@ export default function AdminCreateContentPage() {
                       <Label>City</Label>
                       <Input value={eventCity} onChange={(e) => setEventCity(e.target.value)} placeholder="City" className="rounded-xl" />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Country</Label>
+                      <CountryField value={country} onChange={setCountry} className="rounded-xl" />
+                    </div>
                     <div className="flex items-center gap-2 pt-8">
                       <input type="checkbox" id="eventRemote" checked={eventRemote} onChange={(e) => setEventRemote(e.target.checked)} className="rounded" />
                       <Label htmlFor="eventRemote">Remote / online</Label>
@@ -396,9 +424,13 @@ export default function AdminCreateContentPage() {
                       <Label htmlFor="isPaid">Paid event</Label>
                     </div>
                     {isPaid && (
-                      <div className="space-y-2">
-                        <Label>Price (NGN)</Label>
-                        <Input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="rounded-xl" />
+                      <div className="sm:col-span-2">
+                        <AmountCurrencyField
+                          entry={amount}
+                          label="Ticket price"
+                          ratesStale={ratesStale}
+                          inputClassName="rounded-xl"
+                        />
                       </div>
                     )}
                     <div className="sm:col-span-2 space-y-2">
@@ -445,24 +477,27 @@ export default function AdminCreateContentPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Country</Label>
-                      <Input value={jobCountry} onChange={(e) => setJobCountry(e.target.value)} placeholder="Country" className="rounded-xl" />
+                      <CountryField value={country} onChange={setCountry} className="rounded-xl" />
                     </div>
                     <div className="flex items-center gap-2 pt-8">
                       <input type="checkbox" id="jobRemote" checked={jobRemote} onChange={(e) => setJobRemote(e.target.checked)} className="rounded" />
                       <Label htmlFor="jobRemote">Remote</Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Salary (optional)</Label>
-                      <div className="flex gap-2">
-                        <Input type="number" min={0} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="Amount" className="rounded-xl" />
-                        <Select value={salaryPeriod} onValueChange={setSalaryPeriod}>
-                          <SelectTrigger className="w-28 rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="month">/ month</SelectItem>
-                            <SelectItem value="year">/ year</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    <div className="sm:col-span-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="jobIsPaid" checked={isPaid} onChange={(e) => setIsPaid(e.target.checked)} className="rounded" />
+                        <Label htmlFor="jobIsPaid">States a salary</Label>
                       </div>
+                      {isPaid && (
+                        <AmountCurrencyField
+                          entry={amount}
+                          label="Salary"
+                          period={period}
+                          onPeriodChange={setPeriod}
+                          ratesStale={ratesStale}
+                          inputClassName="rounded-xl"
+                        />
+                      )}
                     </div>
                     <div className="sm:col-span-2 space-y-2">
                       <Label>Benefits (optional)</Label>
@@ -525,19 +560,23 @@ export default function AdminCreateContentPage() {
                       />
                       <p className="text-xs text-muted-foreground">Shown in the feed only when added.</p>
                     </div>
+                    <div className="space-y-2">
+                      <Label>Country</Label>
+                      <CountryField value={country} onChange={setCountry} className="rounded-xl" />
+                    </div>
                     <div className="sm:col-span-2 space-y-2">
-                      <Label>Stipend / amount (NGN, optional)</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={oppAmount}
-                        onChange={(e) => setOppAmount(e.target.value)}
-                        placeholder="Leave empty if this opportunity is free"
-                        className="rounded-xl"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        If you enter an amount, it will be treated as a paid opportunity; leave blank for free.
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="oppIsPaid" checked={isPaid} onChange={(e) => setIsPaid(e.target.checked)} className="rounded" />
+                        <Label htmlFor="oppIsPaid">Carries a stipend or award</Label>
+                      </div>
+                      {isPaid && (
+                        <AmountCurrencyField
+                          entry={amount}
+                          label="Stipend / award"
+                          ratesStale={ratesStale}
+                          inputClassName="rounded-xl"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -562,17 +601,53 @@ export default function AdminCreateContentPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="sm:col-span-2">
-                      <TagInputWithSuggestions
-                        tags={tags}
-                        onTagsChange={setTags}
-                        label="Tags"
-                        helperText="Add up to 10 tags to help users discover this resource."
-                      />
+                    <div className="sm:col-span-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="resourceIsPaid" checked={isPaid} onChange={(e) => setIsPaid(e.target.checked)} className="rounded" />
+                        <Label htmlFor="resourceIsPaid">Premium (paid) resource</Label>
+                      </div>
+                      {isPaid && (
+                        <AmountCurrencyField
+                          entry={amount}
+                          label="Price"
+                          ratesStale={ratesStale}
+                          inputClassName="rounded-xl"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Discovery fields, for all four types.
+
+                  The tag input used to live inside the resource block above and
+                  the payload passed `tags` only for resources, so every event,
+                  job and opportunity this form created shipped with none — which
+                  is most of what tag ranking had to work with. */}
+              <div className="space-y-4 rounded-xl border border-border p-4">
+                <h4 className="text-sm font-semibold text-foreground">Discovery</h4>
+                <TagInputWithSuggestions
+                  tags={tags}
+                  onTagsChange={setTags}
+                  label="Tags"
+                  helperText="Add up to 10 tags to help users discover this listing."
+                />
+                <ChipMultiSelect
+                  label="Industries"
+                  options={INDUSTRY_SECTORS}
+                  selected={industrySectors}
+                  onChange={setIndustrySectors}
+                  max={3}
+                />
+                <ChipMultiSelect
+                  label="Who is this for?"
+                  groups={TARGET_AUDIENCE_GROUPS}
+                  selected={targetAudience}
+                  onChange={setTargetAudience}
+                  max={4}
+                />
+              </div>
 
                </div>
               </AdminSection>

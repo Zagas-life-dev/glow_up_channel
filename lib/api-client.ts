@@ -2055,10 +2055,46 @@ export class ApiClient {
    * Start a promotion at no cost. Providers are never billed for promotion, so
    * there is no payment step, no redirect and no budget — just a duration.
    */
+  /**
+   * Upload a hero image for a promotion.
+   *
+   * Returns the hosted URL to pass as `heroImageUrl` when starting the
+   * promotion. Separate from the start call because the upload is multipart and
+   * the start is JSON, and because an image chosen but never confirmed should
+   * not start a campaign.
+   */
+  static async uploadPromotionHeroImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('heroImage', file);
+
+    const url = `${API_BASE_URL}/api/promotions/upload-hero-image`;
+    const doFetch = () => {
+      const headers: Record<string, string> = {};
+      const t = this.getAccessToken();
+      if (t) headers.Authorization = `Bearer ${t}`;
+      // No Content-Type: the browser sets the multipart boundary itself.
+      return fetch(url, { method: 'POST', headers, body: formData });
+    };
+
+    let response = await doFetch();
+    if (response.status === 401) {
+      const refreshed = await this.refreshTokenIfNeeded();
+      if (refreshed) response = await doFetch();
+    }
+
+    const json = await this.handleResponse(response) as any;
+    const heroImageUrl = json?.data?.heroImageUrl ?? json?.heroImageUrl;
+    if (!heroImageUrl) throw new Error(json?.message || 'Failed to upload image');
+    return heroImageUrl as string;
+  }
+
   static async startFreePromotion(params: {
     contentId: string;
     contentType: 'opportunity' | 'event' | 'job' | 'resource';
     durationDays: number;
+    /** Hosted URL from uploadPromotionHeroImage. Applied to the listing for the
+     *  run of the promotion and cleared again when it expires. */
+    heroImageUrl?: string | null;
   }): Promise<{ promotion: any; duration: number }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/start-free`, {
       method: 'POST',
@@ -2066,6 +2102,7 @@ export class ApiClient {
         contentId: params.contentId,
         contentType: params.contentType,
         durationDays: params.durationDays,
+        ...(params.heroImageUrl && { heroImageUrl: params.heroImageUrl }),
       }),
     });
     const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; duration?: number }>;

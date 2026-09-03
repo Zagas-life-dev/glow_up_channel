@@ -1,6 +1,7 @@
 import { LIST_PATH, promotionRunDays } from "../config"
 import { backendPost, type AdminCaller } from "./admin-auth"
 import type { ItemDoc } from "./db"
+import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 
 /** Where an admin-granted promotion is started. Add this route to the backend. */
 export const GRANT_PROMOTION_PATH = "/api/promotions/admin-grant"
@@ -26,74 +27,47 @@ function isoDate(value?: string): string | undefined {
 
 /**
  * Maps a submitted listing onto what the backend's create endpoints expect.
- * Mirrors the payloads the provider posting page sends.
+ *
+ * Delegates to `buildListingPayload`, the same builder the provider sheet and
+ * the admin form use. It previously mirrored those payloads by hand, and
+ * inherited their bugs along with their shape: jobs were sent with `type` where
+ * the model reads `jobType`, and every listing was stamped `currency: "NGN"`
+ * with no amount beside it.
+ *
+ * The importer states no figures — the intake form does not collect them — so
+ * `money` is null and `isPaid` reflects only the paid-event flag. That is
+ * deliberate: a currency with no amount is noise, and stamping NGN on a
+ * Ghanaian submission was worse than saying nothing.
  */
 export function buildContentPayload(item: ItemDoc): Record<string, unknown> {
   const f = item.fields
   const tags = tagList(f.tags)
-  const company = item.contact.organisation || item.contact.name
+  const organizationName = item.contact.organisation || item.contact.name
+  const location = place(f.location)
 
-  switch (item.contentType) {
-    case "opportunity":
-      return {
-        title: f.title,
-        company,
-        type: f.type,
-        description: f.description,
-        url: f.link,
-        tags,
-        location: place(f.location),
-        dates: { ...(f.deadline && { applicationDeadline: f.deadline }) },
-        status: "active",
-        isApproved: true,
-      }
-
-    case "job":
-      return {
-        title: f.title,
-        company,
-        type: f.type,
-        description: f.description,
-        url: f.link,
-        tags,
-        location: place(f.location),
-        pay: { isPaid: true, currency: "NGN" },
-        dates: { ...(f.deadline && { applicationDeadline: f.deadline }) },
-        status: "active",
-        isApproved: true,
-      }
-
-    case "event":
-      return {
-        title: f.title,
-        organizer: company,
-        eventType: f.type,
-        description: f.description,
-        url: f.link,
-        tags,
-        isPaid: item.kind === "paid-event",
-        currency: "NGN",
-        location: place(f.location),
-        dates: { ...(isoDate(f.date) && { startDate: isoDate(f.date) }) },
-        status: "active",
-        isApproved: true,
-      }
-
-    case "resource":
-      return {
-        title: f.title,
-        description: f.description,
-        category: f.type,
-        tags,
-        paymentLink: f.link,
-        status: "active",
-        isApproved: true,
-      }
-
-    default:
-      return {}
+  const draft: ListingDraft = {
+    kind: item.contentType as ListingDraft["kind"],
+    title: f.title,
+    description: f.description,
+    url: f.link,
+    organizationName,
+    type: f.type,
+    tags,
+    location: item.contentType === "resource" ? undefined : location,
+    money: null,
+    isPaid: item.contentType === "event" && item.kind === "paid-event",
+    dates:
+      item.contentType === "event"
+        ? { startDate: isoDate(f.date) }
+        : { applicationDeadline: f.deadline },
+    // Vetted by an admin before it reaches here, so it publishes directly.
+    status: "active",
+    isApproved: true,
   }
+
+  return buildListingPayload(draft)
 }
+
 
 /** Digs the new record's id out of whatever shape the backend returned. */
 function findId(data: unknown): string | null {

@@ -17,6 +17,15 @@ import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
 import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
 import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
+import { AmountCurrencyField, type PayPeriod } from "@/components/posting/AmountCurrencyField"
+import { ChipMultiSelect } from "@/components/posting/ChipMultiSelect"
+import { CountryField, type CountryValue } from "@/components/posting/CountryField"
+import { useRates } from "@/lib/currency/use-rates"
+import { useAmountEntry } from "@/lib/currency/use-amount-entry"
+import { currencyForCountry } from "@/lib/currency/catalog"
+import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
+import { INDUSTRY_SECTORS, TARGET_AUDIENCE_GROUPS } from "@/lib/listings/taxonomy"
+import { useUserLocation } from "@/hooks/use-user-location"
 import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
 import { Panel, QuotaMeter, OnboardingBanner } from '@/components/provider/provider-ui'
 import {
@@ -138,6 +147,25 @@ function PostingContent() {
   const [isPaid, setIsPaid] = useState(false)
   const [isRemote, setIsRemote] = useState(false)
   const [tags, setTags] = useState<string[]>([])
+  const [country, setCountry] = useState<CountryValue>(null)
+  const [industrySectors, setIndustrySectors] = useState<string[]>([])
+  const [targetAudience, setTargetAudience] = useState<string[]>([])
+  const [period, setPeriod] = useState<PayPeriod>('monthly')
+
+  // Rates load once per page and are shared with every other money field.
+  const { rates, stale: ratesStale } = useRates()
+  const { location } = useUserLocation()
+
+  /**
+   * The currency to open the form with: the poster's own, from the country they
+   * are in or the one on their profile. Someone in Accra posting a Ghanaian
+   * salary should not have to change a dropdown that says USD — and before
+   * this, all three forms hardcoded NGN regardless of who was posting.
+   */
+  const defaultCurrency = currencyForCountry(
+    country?.code || location.countryCode || profile?.onboarding?.countryCode,
+  )
+  const amount = useAmountEntry(rates, { currency: defaultCurrency })
   // Resource source: external link vs uploaded file (only one allowed per resource)
   const [resourceSource, setResourceSource] = useState<'link' | 'file'>('link')
   const [resourceFile, setResourceFile] = useState<File | null>(null)
@@ -207,6 +235,11 @@ function PostingContent() {
     setTags([])
     setIsPaid(false)
     setIsRemote(false)
+    setCountry(null)
+    setIndustrySectors([])
+    setTargetAudience([])
+    setPeriod('monthly')
+    amount.reset(null, defaultCurrency)
     setResourceSource('link')
     setResourceFile(null)
   }
@@ -239,85 +272,65 @@ function PostingContent() {
       const formData = new FormData(e.currentTarget as HTMLFormElement)
       const data = Object.fromEntries(formData.entries())
 
+      const str = (value: FormDataEntryValue | undefined) =>
+        typeof value === 'string' && value.trim() ? value.trim() : undefined
+
+      /**
+       * One draft, shaped by `buildListingPayload` into whatever the model for
+       * this type actually reads.
+       *
+       * The four hand-rolled payloads this replaces each had at least one key
+       * the model ignored — jobs sent `type` where the model reads `jobType`,
+       * opportunities sent `company` where it reads `provider` — and because the
+       * controllers accept unknown keys silently, all of it returned 201 and
+       * published with the field empty.
+       */
+      const draft: ListingDraft = {
+        kind: selectedType,
+        title: String(data.title ?? ''),
+        description: String(data.description ?? ''),
+        url: str(data.url),
+        organizationName: str(data.organizer) ?? str(data.company) ?? str(data.author),
+        type: str(data.type),
+        tags,
+        industrySectors,
+        targetAudience,
+        location: selectedType === 'resource'
+          ? undefined
+          : {
+              country: country?.name,
+              countryCode: country?.code,
+              province: str(data.province),
+              city: str(data.city),
+              isRemote,
+            },
+        money: isPaid ? amount.payload : null,
+        isPaid,
+        period: selectedType === 'job' ? period : undefined,
+        dates: {
+          applicationDeadline: str(data.deadline),
+          startDate: str(data.startDate),
+          endDate: str(data.endDate),
+          registrationDeadline: str(data.registrationDeadline),
+        },
+        requirements: str(data.requirements),
+        capacity: data.capacity ? parseInt(String(data.capacity), 10) : null,
+        // A resource with a price is a premium one; the flag and the figure were
+        // previously unrelated, so a paid resource could publish with no price.
+        isPremium: selectedType === 'resource' && isPaid,
+      }
+
       let submissionData: any = {}
 
-      if (selectedType === 'opportunity') {
-        submissionData = {
-          title: data.title,
-          company: data.company,
-          type: data.type,
-          description: data.description,
-          url: data.url,
-          requirements: data.requirements,
-          tags: tags,
-          location: {
-            country: data.country,
-            province: data.province,
-            city: data.city,
-            isRemote: isRemote
-          },
-          financial: { isPaid: isPaid, amount: data.amount, currency: 'NGN' },
-          dates: { applicationDeadline: data.deadline }
-        }
-      } else if (selectedType === 'job') {
-        submissionData = {
-          title: data.title,
-          company: data.company,
-          type: data.type,
-          description: data.description,
-          url: data.url,
-          tags: tags,
-          location: {
-            country: data.country,
-            province: data.province,
-            city: data.city,
-            isRemote: isRemote
-          },
-          pay: { isPaid: isPaid, amount: data.salary, period: data.period, currency: 'NGN' },
-          dates: { applicationDeadline: data.deadline }
-        }
-      } else if (selectedType === 'event') {
-        const eventPrice = data.price ? Number(data.price) : undefined
-        const capacityNum = data.capacity ? parseInt(String(data.capacity), 10) : undefined
-        const startDate = data.startDate ? (data.startDate as string) : undefined
-        const endDate = data.endDate ? (data.endDate as string) : undefined
-        const regDeadline = data.deadline ? (data.deadline as string) : undefined
+      if (selectedType !== 'resource') {
+        submissionData = buildListingPayload(draft)
+      } else {
 
-        submissionData = {
-          title: data.title,
-          organizer: data.organizer || undefined,
-          eventType: data.type,
-          description: data.description,
-          url: data.url || undefined,
-          tags: tags,
-          isPaid: isPaid,
-          ...(isPaid && eventPrice != null && !Number.isNaN(eventPrice) && { price: eventPrice }),
-          currency: 'NGN',
-          location: {
-            ...(data.country && { country: data.country }),
-            ...(data.province && { province: data.province }),
-            ...(data.city && { city: data.city }),
-            isRemote: isRemote
-          },
-          dates: {
-            ...(startDate && { startDate }),
-            ...(endDate && { endDate }),
-            ...(regDeadline && { registrationDeadline: regDeadline })
-          },
-          ...(capacityNum != null && !Number.isNaN(capacityNum) && capacityNum >= 1 && { capacity: { maxAttendees: capacityNum } })
-        }
-      } else if (selectedType === 'resource') {
-        const rawType = data.type ?? data.category ?? ''
-        const rawUrl = data.url ?? ''
-        const resourceCategory = typeof rawType === 'string' ? rawType.trim() : ''
-        const resourceUrl = typeof rawUrl === 'string' ? rawUrl.trim() : ''
-        const baseResource = {
-          title: typeof data.title === 'string' ? data.title : '',
-          description: typeof data.description === 'string' ? data.description : '',
-          // Reuse the same tag/hashtag selection so resources can be ranked by tags too
-          tags,
-          category: resourceCategory,
-        }
+        const resourceUrl = str(data.url) ?? ''
+        // The uploaded-file path posts multipart, so it takes the payload minus
+        // the link — a resource is a file or a link, never both, and the
+        // controller rejects one carrying each.
+        const { paymentLink: _link, ...baseResource } = buildListingPayload(draft) as Record<string, unknown>
 
         // A resource is either an uploaded file OR an external link — never both.
         if (resourceSource === 'file') {
@@ -342,10 +355,7 @@ function PostingContent() {
           setErrorMessage('Please provide an external link.')
           return
         }
-        submissionData = {
-          ...baseResource,
-          paymentLink: resourceUrl,
-        }
+        submissionData = { ...baseResource, paymentLink: resourceUrl }
       }
 
       switch (selectedType) {
@@ -659,7 +669,10 @@ function PostingContent() {
                         >
                           {!isRemote && (
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                              <Input name="country" placeholder="Country" className={FIELD_SM_CLASS} />
+                              {/* Picked, not typed: the ranker matches ISO codes, and
+                                  "nigeria" / "Nigeria " / "NGA" were three different
+                                  places to it. Choosing here also sets the currency. */}
+                              <CountryField value={country} onChange={setCountry} />
                               <Input name="province" placeholder="State/Province" className={FIELD_SM_CLASS} />
                               <Input name="city" placeholder="City" className={FIELD_SM_CLASS} />
                             </div>
@@ -668,40 +681,36 @@ function PostingContent() {
                       )}
 
                       {/* Financial (opportunity, job) or ticket price (event) */}
-                      {(selectedType === 'opportunity' || selectedType === 'job' || selectedType === 'event') && (
-                        <FormSection
+                      {/* Resources are included now: a premium resource used to be a
+                          bare flag plus an off-platform link, so its price was the one
+                          figure on the platform nothing could state. */}
+                      <FormSection
                           icon={DollarSign}
-                          title={selectedType === 'event' ? 'Ticket price' : 'Compensation'}
+                          title={
+                            selectedType === 'event' ? 'Ticket price'
+                              : selectedType === 'resource' ? 'Price'
+                                : 'Compensation'
+                          }
                           toggle={
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">{selectedType === 'event' ? 'Paid event' : 'Paid'}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {selectedType === 'event' ? 'Paid event' : selectedType === 'resource' ? 'Premium' : 'Paid'}
+                              </span>
                               <Switch checked={isPaid} onCheckedChange={setIsPaid} />
                             </div>
                           }
                         >
                           {isPaid && (
-                            <div className="flex gap-2">
-                              <Input
-                                name={selectedType === 'event' ? 'price' : selectedType === 'job' ? 'salary' : 'amount'}
-                                placeholder="Amount (NGN)"
-                                className={cn(FIELD_SM_CLASS, "flex-1")}
-                              />
-                              {selectedType === 'job' && (
-                                <Select name="period">
-                                  <SelectTrigger className={cn(FIELD_SM_CLASS, "w-32 shrink-0")}>
-                                    <SelectValue placeholder="Period" />
-                                  </SelectTrigger>
-                                  <SelectContent className="border-border bg-surface">
-                                    <SelectItem value="hourly" className="text-foreground">Hourly</SelectItem>
-                                    <SelectItem value="monthly" className="text-foreground">Monthly</SelectItem>
-                                    <SelectItem value="yearly" className="text-foreground">Yearly</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            </div>
+                            <AmountCurrencyField
+                              entry={amount}
+                              placeholder="Amount"
+                              period={selectedType === 'job' ? period : undefined}
+                              onPeriodChange={selectedType === 'job' ? setPeriod : undefined}
+                              ratesStale={ratesStale}
+                              inputClassName={FIELD_SM_CLASS}
+                            />
                           )}
-                        </FormSection>
-                      )}
+                      </FormSection>
 
                       {/* Dates */}
                       {selectedType !== 'resource' && (
@@ -716,6 +725,14 @@ function PostingContent() {
                                 <div className="space-y-1.5">
                                   <FieldLabel>End date</FieldLabel>
                                   <Input name="endDate" type="date" className={FIELD_SM_CLASS} />
+                                </div>
+                                {/* The submit handler has always read this field; the
+                                    input was simply never rendered, so every event
+                                    published with no registration deadline — and
+                                    Event.isValid is computed from exactly that. */}
+                                <div className="space-y-1.5">
+                                  <FieldLabel>Registration deadline</FieldLabel>
+                                  <Input name="registrationDeadline" type="date" className={FIELD_SM_CLASS} />
                                 </div>
                               </>
                             ) : (
@@ -737,6 +754,26 @@ function PostingContent() {
                           helperText="Add up to 10 tags for better discovery"
                         />
                       </div>
+
+                      {/* Both vocabularies are the ones users answer at onboarding,
+                          so a listing tagged "Technology, Student" matches a profile
+                          holding those exact values instead of being fuzzy-matched. */}
+                      <ChipMultiSelect
+                        label="Industries"
+                        options={INDUSTRY_SECTORS}
+                        selected={industrySectors}
+                        onChange={setIndustrySectors}
+                        max={3}
+                        helperText="Who this is relevant to. Shown to people who picked these at signup."
+                      />
+
+                      <ChipMultiSelect
+                        label="Who is this for?"
+                        groups={TARGET_AUDIENCE_GROUPS}
+                        selected={targetAudience}
+                        onChange={setTargetAudience}
+                        max={4}
+                      />
 
                       {/* Requirements (opportunity only) */}
                       {selectedType === 'opportunity' && (
