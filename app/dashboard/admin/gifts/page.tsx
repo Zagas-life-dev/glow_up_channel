@@ -54,6 +54,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { createGift, deleteGift, fetchGiftsAdmin, updateGift } from "@/lib/gifts/api"
+import { compressImage, formatBytes, MAX_COVER_BYTES } from "@/lib/images/compress-image"
 import { formatGiftSize, GIFT_CATEGORIES, type Gift } from "@/lib/gifts/types"
 
 type DeliveryMode = "file" | "link"
@@ -92,6 +93,8 @@ export default function AdminGiftsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [removeCover, setRemoveCover] = useState(false)
+  /** An oversized cover is re-encoded before it becomes the selection. */
+  const [compressingCover, setCompressingCover] = useState(false)
   /** Off by default: a gift reads in the app unless someone opts it out. */
   const [allowDownload, setAllowDownload] = useState(false)
 
@@ -466,20 +469,59 @@ export default function AdminGiftsPage() {
                 id="gift-cover"
                 type="file"
                 accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
-                disabled={removeCover}
-                onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
+                disabled={removeCover || compressingCover}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0] ?? null
+                  // Let the same file be re-picked after a failure.
+                  e.target.value = ""
+                  if (!file) {
+                    setCoverImage(null)
+                    return
+                  }
+                  if (file.size <= MAX_COVER_BYTES) {
+                    setCoverImage(file)
+                    return
+                  }
+
+                  setCompressingCover(true)
+                  const result = await compressImage(file)
+                  setCompressingCover(false)
+
+                  if (!result.ok) {
+                    toast.error(
+                      result.animated
+                        ? `That GIF is ${formatBytes(file.size)}. Animated GIFs can't be compressed without losing the animation — please use one under 10MB.`
+                        : `Image too large. This one is ${formatBytes(file.size)} and can't be compressed below 10MB without ruining it — please use one under 10MB.`,
+                    )
+                    return
+                  }
+
+                  setCoverImage(result.file)
+                  if (result.compressedFrom) {
+                    toast.success(
+                      `Cover compressed from ${formatBytes(result.compressedFrom)} to ${formatBytes(result.file.size)}.`,
+                    )
+                  }
+                }}
                 className="mt-1.5"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {isEdit
-                  ? "Optional. Leave blank to keep the current one."
-                  : "Optional. Shown in the popup and on the gift card; a gift mark is used without one."}
+                {compressingCover
+                  ? "Compressing image…"
+                  : isEdit
+                    ? "Optional. Leave blank to keep the current one. Over 10MB is compressed for you."
+                    : "Optional. Shown in the popup and on the gift card; a gift mark is used without one. Over 10MB is compressed for you."}
               </p>
             </div>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button type="button" onClick={handleSubmit} disabled={submitting} className="rounded-xl">
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting || compressingCover}
+              className="rounded-xl"
+            >
               {submitting ? (
                 <RiLoader4Line className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />
               ) : isEdit ? (

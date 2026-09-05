@@ -15,13 +15,14 @@ import { Label } from '@/components/ui/label'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { ImagePlus, Loader2, TrendingUp, X } from 'lucide-react'
+import { compressImage, formatBytes, MAX_COVER_BYTES } from '@/lib/images/compress-image'
 
 const MIN_DURATION = 7
 const MAX_DURATION = 365
 const QUICK_DURATIONS = [7, 14, 30, 60, 90]
 
 /** Matches the backend's own limit for hero uploads. */
-const MAX_HERO_BYTES = 10 * 1024 * 1024
+const MAX_HERO_BYTES = MAX_COVER_BYTES
 
 export interface PostedItemForPromote {
   _id: string
@@ -55,6 +56,8 @@ export function PromoteContentModal({
   const [durationDays, setDurationDays] = useState(7)
   const [submitting, setSubmitting] = useState(false)
   const [heroFile, setHeroFile] = useState<File | null>(null)
+  /** An oversized pick is re-encoded before it becomes the selection. */
+  const [compressing, setCompressing] = useState(false)
 
   // Derived rather than held in state, so picking a file does not cost an extra
   // render pass. The effect below exists only to revoke the URL — without it
@@ -176,7 +179,7 @@ export function PromoteContentModal({
                 <button
                   type="button"
                   onClick={() => setHeroFile(null)}
-                  disabled={submitting}
+                  disabled={submitting || compressing}
                   aria-label="Remove image"
                   className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 text-foreground shadow-sm hover:bg-background"
                 >
@@ -185,21 +188,51 @@ export function PromoteContentModal({
               </div>
             ) : (
               <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border bg-muted/30 p-5 text-center transition-colors hover:border-primary/50">
-                <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Add a hero image</span>
-                <span className="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF · max 10MB</span>
+                {compressing ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                ) : (
+                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {compressing ? 'Compressing image…' : 'Add a hero image'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  JPEG, PNG, WebP or GIF · larger than 10MB is compressed for you
+                </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   className="hidden"
-                  disabled={submitting}
-                  onChange={(e) => {
+                  disabled={submitting || compressing}
+                  onChange={async (e) => {
                     const file = e.target.files?.[0] ?? null
-                    if (file && file.size > MAX_HERO_BYTES) {
-                      toast.error('Image is too large. Maximum size is 10MB.')
+                    // Let the same file be re-picked after a failure.
+                    e.target.value = ''
+                    if (!file) return
+                    if (file.size <= MAX_HERO_BYTES) {
+                      setHeroFile(file)
                       return
                     }
-                    setHeroFile(file)
+
+                    setCompressing(true)
+                    const result = await compressImage(file, MAX_HERO_BYTES)
+                    setCompressing(false)
+
+                    if (!result.ok) {
+                      toast.error(
+                        result.animated
+                          ? `That GIF is ${formatBytes(file.size)}. Animated GIFs can't be compressed without losing the animation — please use one under 10MB.`
+                          : `Image too large. This one is ${formatBytes(file.size)} and can't be compressed below 10MB without ruining it — please use one under 10MB.`,
+                      )
+                      return
+                    }
+
+                    setHeroFile(result.file)
+                    if (result.compressedFrom) {
+                      toast.success(
+                        `Compressed from ${formatBytes(result.compressedFrom)} to ${formatBytes(result.file.size)}.`,
+                      )
+                    }
                   }}
                 />
               </label>
