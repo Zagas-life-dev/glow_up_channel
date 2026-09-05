@@ -18,8 +18,10 @@ import {
   RiAddLine,
   RiCloseLine,
   RiDeleteBinLine,
+  RiDownload2Line,
   RiEditLine,
   RiEyeLine,
+  RiEyeOffLine,
   RiGiftLine,
   RiHeartLine,
   RiLoader4Line,
@@ -90,6 +92,8 @@ export default function AdminGiftsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [removeCover, setRemoveCover] = useState(false)
+  /** Off by default: a gift reads in the app unless someone opts it out. */
+  const [allowDownload, setAllowDownload] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -111,6 +115,7 @@ export default function AdminGiftsPage() {
     setFile(null)
     setCoverImage(null)
     setRemoveCover(false)
+    setAllowDownload(false)
     setMode("file")
     setEditing(null)
     setShowForm(false)
@@ -130,6 +135,7 @@ export default function AdminGiftsPage() {
     setFile(null)
     setCoverImage(null)
     setRemoveCover(false)
+    setAllowDownload(gift.allowDownload)
     setShowForm(true)
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
@@ -140,6 +146,7 @@ export default function AdminGiftsPage() {
     setFile(null)
     setCoverImage(null)
     setRemoveCover(false)
+    setAllowDownload(false)
     setMode("file")
     setShowForm(true)
   }, [])
@@ -196,6 +203,10 @@ export default function AdminGiftsPage() {
         .map((tag) => tag.trim())
         .filter(Boolean),
       ...(mode === "link" ? { linkUrl: form.linkUrl.trim() } : { file }),
+      // A link gift has no file of ours to give away, so the flag is always
+      // sent as false there rather than left at whatever the switch happened to
+      // be showing before the mode changed.
+      allowDownload: mode === "file" && allowDownload,
       coverImage,
     }
 
@@ -388,9 +399,32 @@ export default function AdminGiftsPage() {
                   className="mt-1.5"
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  PDF, Word, PowerPoint, or an image. Up to 25MB. Office files are converted for
-                  the in-app reader — members view gifts in the app and cannot download them.
+                  PDF, Word (.doc/.docx), PowerPoint, or an image. Up to 25MB. PDFs, images and
+                  .docx render in the app as-is; .doc, .ppt and .pptx are converted to a PDF
+                  first, which needs LibreOffice on the server.
                 </p>
+
+                {/* Reading happens in the app either way; this only decides
+                    whether members can also keep the file. */}
+                <label className="mt-3 flex items-start gap-3 rounded-xl border border-border/70 bg-muted/30 p-3">
+                  <Switch
+                    checked={allowDownload}
+                    onCheckedChange={(checked) => setAllowDownload(checked === true)}
+                    aria-label="Allow members to download this gift"
+                    className="mt-0.5"
+                  />
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                      <RiDownload2Line className="h-3.5 w-3.5" aria-hidden />
+                      Let members download it
+                    </span>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {allowDownload
+                        ? "Members get a Download button and keep the original file — the Word document as you uploaded it, not the converted PDF."
+                        : "Off: members read this gift in the app only. There is no download button and no file URL to pass around."}
+                    </span>
+                  </span>
+                </label>
               </div>
             ) : (
               <div className="sm:col-span-2">
@@ -508,6 +542,33 @@ export default function AdminGiftsPage() {
                   <span className="capitalize">{gift.category}</span>
                   <span>{gift.giftType === "link" ? "Link" : (gift.fileType ?? "file").toUpperCase()}</span>
                   {formatGiftSize(gift.fileSize) && <span>{formatGiftSize(gift.fileSize)}</span>}
+                  {gift.giftType === "file" && (
+                    <span
+                      className={`inline-flex items-center gap-1 ${
+                        gift.allowDownload ? "text-primary" : ""
+                      }`}
+                      title={
+                        gift.allowDownload
+                          ? "Members can download this gift"
+                          : "Members can only read this gift in the app"
+                      }
+                    >
+                      {gift.allowDownload ? (
+                        <>
+                          <RiDownload2Line className="h-3.5 w-3.5" aria-hidden />
+                          Downloadable
+                          {gift.metrics.downloadCount > 0 && (
+                            <span className="tabular-nums opacity-70">{gift.metrics.downloadCount}</span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <RiEyeOffLine className="h-3.5 w-3.5" aria-hidden />
+                          Read-only
+                        </>
+                      )}
+                    </span>
+                  )}
                   <span>{new Date(gift.createdAt).toLocaleDateString()}</span>
                   {gift.updatedAt !== gift.createdAt && (
                     <span>edited {new Date(gift.updatedAt).toLocaleDateString()}</span>

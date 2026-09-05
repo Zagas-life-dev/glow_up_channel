@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matching Model Hosting Costs — Glowup Diaries</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --surface:#fff; --ink:#16151a; --muted:#605c6b; --faint:#8b8796;
+    --line:#e6e2dc; --line-soft:#f0ede8;
+    --accent:#6d4aff; --accent-soft:#f1edff;
+    --good:#0f7a56; --good-soft:#e6f4ee;
+    --warn:#a15c00; --warn-soft:#fdf1de;
+    --bad:#b3261e; --bad-soft:#fdeceb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#131217; --surface:#1c1b22; --ink:#f2f0f5; --muted:#a9a4b5; --faint:#7d788b;
+      --line:#2e2c37; --line-soft:#26242e;
+      --accent:#a894ff; --accent-soft:#251f3d;
+      --good:#5fd3a6; --good-soft:#123027;
+      --warn:#e5aa54; --warn-soft:#33260f;
+      --bad:#f08b84; --bad-soft:#35191a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:56px 24px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+  .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-.02em;margin:0 0 12px;font-weight:680}
+  .sub{color:var(--muted);max-width:64ch;margin:0;font-size:17px}
+  h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;font-weight:660}
+  .h2note{color:var(--faint);font-size:14px;margin:0 0 20px;max-width:74ch}
+  p{max-width:74ch}
+  code{font-family:var(--mono);font-size:.88em;background:var(--line-soft);
+    padding:.14em .4em;border-radius:4px;border:1px solid var(--line)}
+  a{color:var(--accent)}
+
+  .hero{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:28px 30px;margin:0 0 8px}
+  .hero .big{font:700 clamp(30px,5vw,44px)/1.05 var(--mono);letter-spacing:-.03em;color:var(--good);margin:0 0 10px}
+  .hero p{margin:0 0 10px}
+  .hero p:last-child{margin:0}
+
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:20px 24px;margin:28px 0}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0 0 10px}
+  .callout p:last-child{margin:0}
+  .callout strong{font-weight:640}
+
+  .tablewrap{overflow-x:auto;margin:16px 0 8px;border:1px solid var(--line);
+    border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:14.5px}
+  th{text-align:left;font:600 11.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:var(--line-soft)}
+  th.r,td.r{text-align:right}
+  td{padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .name{font-weight:620}
+  .num{font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .free{color:var(--good);font-weight:700}
+  .paid{color:var(--warn);font-weight:700}
+  .big-paid{color:var(--bad);font-weight:700}
+  .sect td{background:var(--line-soft);font:600 11px/1 var(--mono);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--faint);padding:10px 16px}
+  .pick td{background:var(--accent-soft)}
+
+  .tag{display:inline-block;font:600 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+    padding:4px 7px;border-radius:5px;white-space:nowrap}
+  .t-emb{background:var(--good-soft);color:var(--good)}
+  .t-rer{background:var(--warn-soft);color:var(--warn)}
+  .t-sta{background:var(--accent-soft);color:var(--accent)}
+
+  ul{max-width:74ch;padding-left:20px}
+  li{margin:7px 0}
+  dl{max-width:74ch;margin:16px 0}
+  dt{font:600 13px/1.4 var(--mono);color:var(--accent);margin-top:14px}
+  dd{margin:4px 0 0;color:var(--muted);font-size:14.5px}
+
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+  pre code{background:none;border:none;padding:0}
+
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:13.5px}
+  footer a{color:var(--faint)}
+  footer li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Cost model &middot; 5 Sept 2026</p>
+  <h1>What each model costs on GCP</h1>
+  <p class="sub">Every model from the <a href="matching-model-shortlist.html">shortlist</a>, priced for
+  <strong>10,000 calls/day</strong> &mdash; 304,200 calls/month &mdash; in us-central1.</p>
+</header>
+
+<div class="hero">
+  <p class="big">$0.00 / month</p>
+  <p>That is the honest compute cost of <em>every embedding model on the list</em> at this volume.
+  10K calls/day is small enough that all of them &mdash; from 8M parameters to 595M &mdash; fit
+  entirely inside the Cloud&nbsp;Run free tier, on requests, on vCPU-seconds and on GiB-seconds
+  simultaneously.</p>
+  <p>The model you pick is not the cost driver. <strong>How you keep it warm is.</strong> The same
+  workload ranges from $0 to $147/month depending only on deployment shape, and the spread between the
+  cheapest and most expensive <em>model</em> is smaller than the spread between two ways of hosting the
+  <em>same</em> model.</p>
+</div>
+
+<h2>Assumptions</h2>
+<p class="h2note">Everything below falls out of these. Change one and the numbers move.</p>
+<dl>
+  <dt>1 call = 1 short embedding</dt>
+  <dd>A user's profile/query text (~64 tokens) becomes one vector; cosine against pre-embedded
+  listings happens in-process. Listings are embedded once at ingest, not per request.</dd>
+  <dt>304,200 calls/month</dt>
+  <dd>10,000/day &times; 30.42. Average arrival rate 0.116 req/s.</dd>
+  <dt>2 vCPU, ONNX Runtime, int8</dt>
+  <dd>Memory sized per model. 1 vCPU roughly halves idle cost and roughly doubles latency.</dd>
+  <dt>us-central1, Tier 1, list price</dt>
+  <dd>Request-based Cloud Run: $0.00003360/vCPU-s, $0.00000350/GiB-s, $0.40/M requests.
+  Instance-based: $0.00002400/vCPU-s, $0.00000250/GiB-s. Free tier: 180,000 vCPU-s,
+  360,000 GiB-s, 2M requests per month.</dd>
+  <dt>Latency figures are estimates</dt>
+  <dd><strong>Not measured.</strong> Scaled from parameter count and architecture. They are the
+  largest source of error here &mdash; see the caveat at the end.</dd>
+</dl>
+
+<h2>Per-model cost, Cloud Run scale-to-zero</h2>
+<p class="h2note">The literal answer to the question. <span class="num">$/1M calls</span> is the
+marginal compute cost ignoring free tier &mdash; useful for projecting growth.
+<span class="num">$/month</span> is what you would actually be billed at 10K/day.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Model</th><th class="r">Est. ms</th><th class="r">GiB</th>
+<th class="r">$/1M calls</th><th class="r">vCPU-s/mo</th><th class="r">GiB-s/mo</th><th class="r">$/month</th></tr></thead>
+<tbody>
+<tr class="sect"><td colspan="7">Embedding &mdash; the matching path</td></tr>
+<tr><td><span class="name">Qwen3-Embedding-0.6B</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">85</td><td class="r num">4</td><td class="r num">$6.90</td>
+  <td class="r num">51,714</td><td class="r num">103,428</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">BGE-M3</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">70</td><td class="r num">4</td><td class="r num">$5.68</td>
+  <td class="r num">42,588</td><td class="r num">85,176</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">jina-embeddings-v3</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">70</td><td class="r num">4</td><td class="r num">$5.68</td>
+  <td class="r num">42,588</td><td class="r num">85,176</td><td class="r num free">$0.00</td></tr>
+<tr class="pick"><td><span class="name">EmbeddingGemma-300M</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">38</td><td class="r num">2</td><td class="r num">$2.82</td>
+  <td class="r num">23,119</td><td class="r num">23,119</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">granite-311m-r2</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">38</td><td class="r num">2</td><td class="r num">$2.82</td>
+  <td class="r num">23,119</td><td class="r num">23,119</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">gte-multilingual-base</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">38</td><td class="r num">2</td><td class="r num">$2.82</td>
+  <td class="r num">23,119</td><td class="r num">23,119</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">multilingual-e5-base</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">35</td><td class="r num">2</td><td class="r num">$2.60</td>
+  <td class="r num">21,294</td><td class="r num">21,294</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">multilingual-e5-small</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">15</td><td class="r num">1</td><td class="r num">$1.06</td>
+  <td class="r num">9,126</td><td class="r num">4,563</td><td class="r num free">$0.00</td></tr>
+<tr class="pick"><td><span class="name">granite-97m-r2</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">12</td><td class="r num">1</td><td class="r num">$0.85</td>
+  <td class="r num">7,301</td><td class="r num">3,650</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">all-MiniLM-L6-v2</span> <span class="tag t-emb">Embed</span></td>
+  <td class="r num">4</td><td class="r num">0.5</td><td class="r num">$0.28</td>
+  <td class="r num">2,434</td><td class="r num">608</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">potion-base-32M</span> <span class="tag t-sta">Static</span></td>
+  <td class="r num">0.3</td><td class="r num">0.5</td><td class="r num">$0.02</td>
+  <td class="r num">183</td><td class="r num">46</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">static-retrieval-mrl-en-v1</span> <span class="tag t-sta">Static</span></td>
+  <td class="r num">0.3</td><td class="r num">0.5</td><td class="r num">$0.02</td>
+  <td class="r num">183</td><td class="r num">46</td><td class="r num free">$0.00</td></tr>
+<tr><td><span class="name">potion-base-8M</span> <span class="tag t-sta">Static</span></td>
+  <td class="r num">0.2</td><td class="r num">0.5</td><td class="r num">$0.01</td>
+  <td class="r num">122</td><td class="r num">30</td><td class="r num free">$0.00</td></tr>
+<tr class="sect"><td colspan="7">Reranking &mdash; optional second stage, 30 candidates per call</td></tr>
+<tr><td><span class="name">gte-reranker-modernbert</span> <span class="tag t-rer">Rerank</span></td>
+  <td class="r num">400</td><td class="r num">1</td><td class="r num">$28.28</td>
+  <td class="r num">243,360</td><td class="r num">121,680</td><td class="r num paid">$2.13</td></tr>
+<tr><td><span class="name">ettin-reranker-150m</span> <span class="tag t-rer">Rerank</span></td>
+  <td class="r num">500</td><td class="r num">1</td><td class="r num">$35.35</td>
+  <td class="r num">304,200</td><td class="r num">152,100</td><td class="r num paid">$4.17</td></tr>
+<tr><td><span class="name">ettin-reranker-400m</span> <span class="tag t-rer">Rerank</span></td>
+  <td class="r num">1,200</td><td class="r num">2</td><td class="r num">$89.04</td>
+  <td class="r num">730,080</td><td class="r num">730,080</td><td class="r num big-paid">$19.78</td></tr>
+<tr><td><span class="name">Qwen3-Reranker-0.6B</span> <span class="tag t-rer">Rerank</span></td>
+  <td class="r num">2,000</td><td class="r num">4</td><td class="r num">$162.40</td>
+  <td class="r num">1,216,800</td><td class="r num">2,433,600</td><td class="r num big-paid">$42.09</td></tr>
+</tbody></table></div>
+
+<p>Two things fall out of this table:</p>
+<ul>
+  <li><strong>Reranking costs 10&ndash;200&times; more than embedding</strong>, because it runs
+  <em>N</em> forward passes over long query&ndash;document pairs instead of one over a short query.
+  It is the only line item on this page where the model choice materially changes the bill. If you
+  add a reranker, <code>gte-reranker-modernbert</code> at $2.13/month is the one that stays cheap.</li>
+  <li><strong>Even the most expensive embedding model is free here</strong>, and at
+  $6.90/1M calls Qwen3-Embedding-0.6B would still only cost about $70/month if you grew
+  <em>thirty-fold</em> to 10M calls/day.</li>
+</ul>
+
+<h2>The number that actually matters</h2>
+<p class="h2note">$0.00 assumes scale-to-zero. At 0.116 req/s your service will idle out overnight
+and cold-start &mdash; loading a 300&nbsp;MB model takes seconds. Avoiding that is where the money goes.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Deployment shape</th><th class="r">$/month</th><th>Cold starts</th><th>What you are paying for</th></tr></thead>
+<tbody>
+<tr><td class="name">Cloud Run, scale-to-zero</td><td class="r num free">$0.00</td>
+  <td>Yes &mdash; multi-second P99 after idle</td>
+  <td>Nothing. Entirely within free tier. Fine for a pilot, rough for a user-facing feed.</td></tr>
+<tr class="pick"><td class="name">Vertex AI <code>gemini-embedding-001</code></td><td class="r num free">$2.92</td>
+  <td>None &mdash; managed endpoint</td>
+  <td>$0.15/M input tokens &times; 19.5M tokens. No container, no model file, no ops.
+      $1.46 on batch pricing. Range is $1.46&ndash;$9.13 depending on text length.</td></tr>
+<tr><td class="name">e2-micro VM, always on</td><td class="r num free">$6.11</td>
+  <td>None</td><td>1&nbsp;GB RAM. Fits the static models and granite-97m int8. Nothing larger.</td></tr>
+<tr><td class="name">e2-small VM, always on</td><td class="r num paid">$12.23</td>
+  <td>None</td><td>2&nbsp;GB. Fits everything up to ~300M int8, EmbeddingGemma included.</td></tr>
+<tr><td class="name">e2-standard-2 VM, always on</td><td class="r num paid">$48.92</td>
+  <td>None</td><td>8&nbsp;GB, fits every model on the list including BGE-M3.
+      <strong>$30.82</strong> with a 1-year commitment, $22.01 at 3 years.</td></tr>
+<tr><td class="name">Cloud Run, min-instances=1, 1 vCPU / 2 GiB</td><td class="r num big-paid">$70.99</td>
+  <td>None</td><td>2,628,000 idle vCPU-seconds. You are renting a warm container around the clock
+      and using 0.9% of it.</td></tr>
+<tr><td class="name">Cloud Run, min-instances=1, 2 vCPU / 4 GiB</td><td class="r num big-paid">$147.20</td>
+  <td>None</td><td>The same thing, twice the size. <strong>The trap</strong> &mdash; the intuitive
+      "just keep it warm" setting, and 3&times; the price of a VM that does more.</td></tr>
+</tbody></table></div>
+
+<div class="callout warn">
+  <p><strong>The counterintuitive result:</strong> the managed Vertex AI embedding API is cheaper than
+  self-hosting <em>any</em> of these models on always-warm infrastructure &mdash; $2.92/month against
+  $12&ndash;147. Serverless per-token pricing wins decisively at low volume because you are not paying
+  for idle.</p>
+  <p>That flips as you scale. Vertex is linear in calls; a VM is flat. Break-even against a
+  $12.23 e2-small is roughly <strong>42,000 calls/day</strong>; against a $48.92 e2-standard-2,
+  roughly <strong>167,000/day</strong>. Below those lines, managed is cheaper <em>and</em> less work.</p>
+</div>
+
+<h2>The cheapest call is the one you don't make</h2>
+<p>Worth stating plainly, because it changes the premise: at 10K feed requests/day you probably do not
+need 10K <em>embedding</em> calls.</p>
+<p>Listings are embedded once at ingest. A user's profile vector only changes when they edit their
+profile &mdash; which is rare. Cache it on the profile document and the per-request embedding count
+drops to roughly zero; every feed render becomes pure cosine arithmetic, which is what
+<code>lib/nlp/similarity.ts</code> already does for free.</p>
+<pre><code>naive     10,000 feed requests/day  -&gt;  10,000 embeddings/day
+cached    10,000 feed requests/day  -&gt;  ~50 embeddings/day   (profile edits only)</code></pre>
+<p>This also matters for a reason that is not cost. The known latency problem on this feed is round
+trips &mdash; ~240 per request at 296&nbsp;ms RTT. Adding a network hop to an embedding service on
+every render would make the actual bottleneck worse while saving nothing. Precompute; do not call.</p>
+
+<div class="callout">
+  <p><strong>What I would do:</strong> run <code>EmbeddingGemma-300M</code> as a batch job at ingest to
+  vectorise listings, cache profile vectors on write, and skip the online embedding service entirely.
+  Budget is then effectively <strong>$0</strong> &mdash; batch ingest fits in the Cloud Run free tier
+  or costs a few cents on Vertex batch.</p>
+  <p>If you do want a live endpoint, start with <strong>Vertex AI at $2.92/month</strong> rather than
+  standing up a container. Move to an <strong>e2-small at $12.23</strong> if you cross ~40K calls/day
+  or need a model Vertex does not host. Do not reach for Cloud Run <code>min-instances=1</code> &mdash;
+  it is the most expensive option here and buys nothing a $12 VM does not.</p>
+</div>
+
+<h2>Line items I have left out</h2>
+<ul>
+  <li><strong>Egress</strong> &mdash; ~$0.12/GB. 304K responses of a 256-d float32 vector (1&nbsp;KB)
+  is ~0.3&nbsp;GB, about $0.04/month. Negligible, and zero if ranking stays in-process.</li>
+  <li><strong>Artifact Registry</strong> &mdash; ~$0.10/GB/month for container images. A 2&nbsp;GB
+  image is $0.20/month.</li>
+  <li><strong>Ingest embedding</strong> &mdash; one-off. 50,000 listings &times; 500 tokens = 25M
+  tokens = $3.75 on Vertex, or $1.88 batch. Free on Cloud Run.</li>
+  <li><strong>Vector storage</strong> &mdash; 50,000 &times; 256 dims &times; 4 bytes = 51&nbsp;MB.
+  Stored on the existing Mongo documents, so no new line item. Managed vector databases would be a
+  new one, and are not needed at this corpus size.</li>
+  <li><strong>GPU</strong> &mdash; deliberately omitted. Nothing on this list needs one, and the
+  cheapest Cloud Run GPU would exceed every figure on this page combined.</li>
+</ul>
+
+<footer>
+  <p><strong>Caveats.</strong> The per-call latency estimates are the weak link: they are scaled from
+  parameter counts and architecture, not measured on GCP hardware, and could be off by 2&ndash;3&times;
+  in either direction. That barely matters for the conclusion &mdash; the embedding models have
+  roughly 7&times; headroom before any of them leaves the free tier, so even a 3&times; miss keeps every
+  one at $0.00. It matters much more for the reranker rows, where the figures are already non-zero and
+  scale directly with candidate count. Prices are us-central1 list, Tier 1, September 2026, before any
+  committed-use or sustained-use discount, and cloud pricing changes without much notice; re-check
+  before committing spend. Free-tier allowances are per billing account, not per service, so a busy
+  project elsewhere would eat into the headroom that makes these numbers zero.</p>
+  <p><strong>Sources.</strong></p>
+  <ul>
+    <li><a href="https://cloud.google.com/run/pricing">Cloud Run pricing &mdash; Google Cloud</a></li>
+    <li><a href="https://cloudcostkit.com/guides/gcp-cloud-run-pricing/">GCP Cloud Run Pricing: Request-Based vs Instance-Based Billing</a></li>
+    <li><a href="https://docs.cloud.google.com/run/docs/configuring/min-instances">Set minimum instances for services &mdash; Cloud Run docs</a></li>
+    <li><a href="https://developers.googleblog.com/gemini-embedding-available-gemini-api/">Gemini Embedding generally available &mdash; Google Developers Blog</a></li>
+    <li><a href="https://embeddingcost.com/google">Google Gemini Embedding pricing</a></li>
+    <li><a href="https://www.economize.cloud/resources/gcp/pricing/compute-engine/e2-standard-2/">e2-standard-2 pricing</a></li>
+    <li><a href="https://www.economize.cloud/resources/gcp/pricing/compute-engine/e2-small/">e2-small pricing</a></li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>

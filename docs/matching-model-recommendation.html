@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Self-Hosted Matching Plan — Glowup Diaries</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --surface:#fff; --ink:#16151a; --muted:#605c6b; --faint:#8b8796;
+    --line:#e6e2dc; --line-soft:#f0ede8;
+    --accent:#6d4aff; --accent-soft:#f1edff;
+    --good:#0f7a56; --good-soft:#e6f4ee;
+    --warn:#a15c00; --warn-soft:#fdf1de;
+    --bad:#b3261e; --bad-soft:#fdeceb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#131217; --surface:#1c1b22; --ink:#f2f0f5; --muted:#a9a4b5; --faint:#7d788b;
+      --line:#2e2c37; --line-soft:#26242e;
+      --accent:#a894ff; --accent-soft:#251f3d;
+      --good:#5fd3a6; --good-soft:#123027;
+      --warn:#e5aa54; --warn-soft:#33260f;
+      --bad:#f08b84; --bad-soft:#35191a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:56px 24px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+  .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-.02em;margin:0 0 12px;font-weight:680}
+  .sub{color:var(--muted);max-width:64ch;margin:0;font-size:17px}
+  h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;font-weight:660}
+  h3{font-size:16.5px;margin:34px 0 10px;font-weight:640}
+  .h2note{color:var(--faint);font-size:14px;margin:0 0 20px;max-width:74ch}
+  p{max-width:74ch}
+  code{font-family:var(--mono);font-size:.88em;background:var(--line-soft);
+    padding:.14em .4em;border-radius:4px;border:1px solid var(--line)}
+  a{color:var(--accent)}
+
+  .verdict{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:30px 32px;margin:0 0 8px;border-top:3px solid var(--accent)}
+  .verdict .label{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 12px}
+  .verdict .model{font:700 clamp(21px,3.4vw,30px)/1.2 var(--mono);letter-spacing:-.02em;
+    color:var(--accent);margin:0 0 8px;word-break:break-word}
+  .verdict .price{font:600 15px/1.4 var(--mono);color:var(--good);margin:0 0 18px}
+  .verdict p{margin:0 0 10px}
+  .verdict p:last-child{margin:0}
+
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:20px 24px;margin:28px 0}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout.bad{border-left-color:var(--bad)}
+  .callout.good{border-left-color:var(--good)}
+  .callout p{margin:0 0 10px}
+  .callout p:last-child{margin:0}
+  .callout strong{font-weight:640}
+
+  .tablewrap{overflow-x:auto;margin:16px 0 8px;border:1px solid var(--line);
+    border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:700px;font-size:14.5px}
+  th{text-align:left;font:600 11.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:var(--line-soft)}
+  th.r,td.r{text-align:right}
+  td{padding:13px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .name{font-weight:620;display:block}
+  .num{font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .free{color:var(--good);font-weight:700}
+  .paid{color:var(--warn);font-weight:700}
+  .big-paid{color:var(--bad);font-weight:700}
+  .pick td{background:var(--accent-soft)}
+
+  ul{max-width:74ch;padding-left:20px}
+  li{margin:8px 0}
+  ol{max-width:74ch;padding-left:22px}
+  ol li{margin:14px 0}
+
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.7}
+  pre code{background:none;border:none;padding:0}
+  .filename{font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);margin:24px 0 -6px;display:block}
+
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:13.5px}
+  footer a{color:var(--faint)}
+  footer li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Implementation plan &middot; 5 Sept 2026</p>
+  <h1>Self-hosted matching, built to scale</h1>
+  <p class="sub">10,000 users and growing. No per-call metering. The model runs on your own
+  infrastructure, and the bill stops tracking your user count.</p>
+</header>
+
+<div class="verdict">
+  <p class="label">The stack</p>
+  <p class="model">granite-embedding-311m-multilingual-r2 on TEI, Cloud Run</p>
+  <p class="price">$0/month today &middot; ~$18/month at 100K users &middot; flat, not per-call</p>
+  <p>Hugging Face's <strong>Text Embeddings Inference</strong> is the server &mdash; a Rust binary
+  purpose-built for this, with batching, ONNX on CPU, Prometheus metrics and OpenTelemetry already in
+  it. You do not write an inference server; you run their image with a <code>--model-id</code> flag.</p>
+  <p>That removes the main argument against self-hosting. The work is a Dockerfile of about five lines
+  and one more Cloud Build step.</p>
+</div>
+
+<h2>You are right about the trajectory</h2>
+<p class="h2note">Metered APIs price per call, so the bill grows exactly as fast as you do. Self-hosted
+compute prices per container, and one container absorbs an enormous amount of growth.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Scale</th><th class="r">Feed renders/day</th><th class="r">Self-hosted, cached</th>
+<th class="r">Self-hosted, uncached</th><th class="r">Metered API, uncached</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="name">10K users (today)</td><td class="r num">~30,000</td>
+  <td class="r num free">$0.00</td><td class="r num free">$0.00</td><td class="r num paid">$8.76</td></tr>
+<tr><td class="name">100K users</td><td class="r num">~300,000</td>
+  <td class="r num free">$0.00</td><td class="r num paid">$18.43</td><td class="r num big-paid">$87.62</td></tr>
+<tr><td class="name">1M users</td><td class="r num">~3,000,000</td>
+  <td class="r num free">~$2</td><td class="r num paid">~$250 <span style="font-weight:400">(~$100 on VMs)</span></td>
+  <td class="r num big-paid">~$876</td></tr>
+</tbody></table></div>
+<p>The gap widens the whole way, and the cached column barely moves at all. That column is the real
+prize, and it is an architecture decision rather than a vendor one &mdash; see step 4.</p>
+
+<h2>Why TEI rather than rolling your own</h2>
+<ul>
+  <li><strong>It is the server.</strong> HTTP <code>/embed</code> endpoint, dynamic batching, health
+  and metrics endpoints, graceful shutdown. Writing this yourself in Node means
+  <code>onnxruntime-node</code>, your own batching, and your own concurrency control.</li>
+  <li><strong>Its CPU path is ONNX Runtime with Intel MKL</strong>, which is materially faster than
+  naive per-request inference. HuggingFace document 10&times;+ throughput over naive Python serving.</li>
+  <li><strong>Granite R2 is ModernBERT under the hood</strong>, which TEI supports natively, and IBM
+  ship pre-converted ONNX <em>and OpenVINO INT8</em> weights alongside the PyTorch ones &mdash; the
+  INT8 CPU path is exactly what you want here, and you convert nothing yourself.</li>
+  <li><strong>It is language-agnostic to your stack.</strong> Your backend stays pure Node and talks
+  to it over HTTP. No Python in your deploy, no native bindings in your Express image.</li>
+</ul>
+
+<h2>Which model to point TEI at</h2>
+<p class="h2note">TEI only serves architectures it knows: BERT, CamemBERT, XLM-RoBERTa, NomicBERT,
+JinaBERT, MPNet, ModernBERT, Mistral, Qwen2/Qwen3 and Gemma3. That rules out a few shortlist entries
+outright, so compatibility comes before benchmarks.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Hugging Face repo</th><th class="r">Params</th><th class="r">Dims</th><th class="r">Ctx</th>
+<th class="r">MTEB ret.</th><th>Arch / TEI</th><th>Licence</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="name">ibm-granite/granite-embedding-311m-multilingual-r2</td>
+  <td class="r num">311M</td><td class="r num">768&rarr;128</td><td class="r num">32K</td>
+  <td class="r num">65.2</td><td class="free">ModernBERT &check;</td><td class="num">Apache 2.0</td></tr>
+<tr class="pick"><td class="name">ibm-granite/granite-embedding-97m-multilingual-r2</td>
+  <td class="r num">97M</td><td class="r num">384</td><td class="r num">32K</td>
+  <td class="r num">60.3</td><td class="free">ModernBERT &check;</td><td class="num">Apache 2.0</td></tr>
+<tr><td class="name">google/embeddinggemma-300m</td>
+  <td class="r num">308M</td><td class="r num">768&rarr;128</td><td class="r num">2K</td>
+  <td class="r num">#1 &lt;500M</td><td class="free">Gemma3 &check; (TEI 1.8.1+)</td><td class="num">Gemma terms</td></tr>
+<tr><td class="name">BAAI/bge-m3</td>
+  <td class="r num">568M</td><td class="r num">1024</td><td class="r num">8K</td>
+  <td class="r num">strong</td><td class="free">XLM-RoBERTa &check;</td><td class="num">MIT</td></tr>
+<tr><td class="name">Qwen/Qwen3-Embedding-0.6B</td>
+  <td class="r num">595M</td><td class="r num">1024</td><td class="r num">32K</td>
+  <td class="r num">strong</td><td class="free">Qwen3 &check;</td><td class="num">Apache 2.0</td></tr>
+<tr><td class="name">Alibaba-NLP/gte-multilingual-reranker-base</td>
+  <td class="r num">306M</td><td class="r num">&mdash;</td><td class="r num">8K</td>
+  <td class="r num">rerank</td><td class="free">Encoder &check;</td><td class="num">Apache 2.0</td></tr>
+</tbody></table></div>
+
+<p><strong>Granite 311m R2 is the pick</strong>, and it displaces EmbeddingGemma from the earlier
+draft on four specific grounds that only became clear once TEI and CPU serving were the constraints:</p>
+<ul>
+  <li><strong>32K context against EmbeddingGemma's 2K.</strong> Your listing bodies are the bulk of each
+  document &mdash; <code>recommendationService.js</code> notes description is 60&ndash;70% of a resource.
+  2K tokens means chunking or truncating them; 32K means you do not think about it.</li>
+  <li><strong>Pre-built OpenVINO INT8 weights.</strong> IBM ship an INT8 CPU build alongside the
+  PyTorch and ONNX ones. That is the deployment path you are actually on, already quantized, with no
+  conversion step to own.</li>
+  <li><strong>Apache 2.0</strong> rather than the Gemma licence terms, which carry a field-of-use
+  rider you would have to read properly before shipping commercially.</li>
+  <li><strong>65.2 MTEB retrieval, #2 among open models under 500M.</strong> EmbeddingGemma still ranks
+  #1 in that class, so this is a real if modest quality concession &mdash; traded for context length,
+  licence and a ready INT8 path.</li>
+</ul>
+<p>All four of your languages &mdash; English, French, Spanish and Portuguese &mdash; are in Granite's
+52-language enhanced-support set, not just its long tail of 200+.</p>
+
+<h3>The throughput alternative</h3>
+<p><code>granite-embedding-97m-multilingual-r2</code> is the same family, roughly 3&times; faster, and
+scores 60.3 against the 311m's 65.2. It also emits <strong>384 dimensions natively</strong>, which
+halves your Mongo storage and wire cost with no truncation step at all. If you would rather have
+3&times; the per-container headroom than the last 5 MTEB points, take this one &mdash; it is a
+defensible pick, not a downgrade.</p>
+
+<div class="callout good">
+  <p><strong>Correction to something I said earlier:</strong> I described the strong small rerankers as
+  English-only. That is wrong &mdash;
+  <code>Alibaba-NLP/gte-multilingual-reranker-base</code> covers 70+ languages including all four of
+  yours, runs on TEI, takes 8K context, and is encoder-only, which its authors put at ~10&times; the
+  inference speed of decoder-based rerankers of similar quality. If you add a reranking stage later,
+  that is the one to use, not the English-only Ettin or ModernBERT variants.</p>
+</div>
+
+<h2>What to deploy</h2>
+
+<span class="filename">embeddings/Dockerfile</span>
+<pre><code>FROM ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.1
+
+# Bake the weights into the image so cold start does not wait on a download.
+ENV MODEL_ID=ibm-granite/granite-embedding-311m-multilingual-r2
+RUN text-embeddings-router --model-id $MODEL_ID --dtype float32 --pooling mean --download-only
+
+ENV PORT=8080
+ENTRYPOINT ["text-embeddings-router"]
+CMD ["--model-id", "ibm-granite/granite-embedding-311m-multilingual-r2", \
+     "--dtype", "float32", "--pooling", "cls", \
+     "--port", "8080", "--max-batch-tokens", "16384"]</code></pre>
+
+<span class="filename">deploy</span>
+<pre><code>gcloud run deploy glowup-embeddings \
+  --image gcr.io/$PROJECT_ID/glowup-embeddings:$COMMIT_SHA \
+  --region us-central1 \
+  --cpu 2 --memory 2Gi \
+  --min-instances 0 --max-instances 10 \
+  --concurrency 32 \
+  --no-allow-unauthenticated
+
+# Only the backend may call it.
+gcloud run services add-iam-policy-binding glowup-embeddings \
+  --member serviceAccount:$BACKEND_SA --role roles/run.invoker</code></pre>
+
+<p><code>--concurrency 32</code> rather than the 4 you would use for naive inference: TEI batches
+internally, so letting requests queue into a batch is how you get its throughput.
+<code>--no-allow-unauthenticated</code> matters &mdash; unlike your public API, nothing outside the
+project should reach this.</p>
+
+<div class="callout good">
+  <p><strong>Capacity, for context:</strong> one 2-vCPU TEI container running Granite 311m should
+  sustain low tens of embeddings per second with batching &mdash; call it 1&ndash;4M/day. That covers
+  your <em>uncached</em> traffic well past 100K users on a single instance, and
+  <code>--max-instances 10</code> handles bursts above it. This is an estimate from model size, not a
+  measurement; TEI exposes Prometheus metrics, so you will know the real number the day you deploy.</p>
+</div>
+
+<h2>The backend changes</h2>
+<ol>
+  <li><strong>Fill in <code>src/services/embeddingService.js</code>.</strong> The stub at line 34 already
+  throws <em>"not implemented, please configure an embedding provider"</em>. It becomes a
+  <code>fetch</code> to the Cloud Run URL with an ID token. It currently references
+  <code>post.embedding</code> and suggests OpenAI defaults &mdash; posts are the deprecated surface, so
+  retarget it at <code>resources</code>.</li>
+
+  <li><strong>Backfill the corpus once.</strong> A Cloud Run Job on the same image, or a one-off script
+  next to your existing <code>scripts/</code>. TEI takes batched input, so send listings in chunks of
+  32 rather than one at a time.</li>
+
+  <li><strong>Embed new listings on a cron.</strong> You already run five <code>node-cron</code> jobs
+  in-process; add one that picks up any resource missing a vector.</li>
+
+  <li><strong>Cache the user vector on the profile.</strong> Recompute in the
+  <code>routes/profile.js</code> write path when interests change &mdash; never on read.
+  <strong>This is the single highest-leverage line in the plan.</strong> It decouples embedding volume
+  from user count: 10K users generate roughly 100&ndash;200 profile edits/day, not 30,000 renders.
+  It is why the "cached" column above stays flat while everything else grows.</li>
+
+  <li><strong>Cosine in JS, in the loop you already have.</strong> Add it beside
+  <code>calculateInterestMatch</code> at <code>recommendationService.js:848</code> as one more weighted
+  term. <code>SCORING_CANDIDATE_CAP</code> is 400 and your own comment puts real volume near 100 per
+  type, so a dot product over 400 &times; 256 floats is sub-millisecond and needs no index.</li>
+
+  <li><strong>Store 256-dim Float32 as BSON Binary.</strong> Mongo stores a JS number array as 8-byte
+  doubles, so 768 dims costs ~6&nbsp;KB per doc &mdash; 2.4&nbsp;MB extra on the wire per 400-doc pull.
+  Binary at 256 dims is ~1&nbsp;KB. Granite 311m is Matryoshka-trained (512/384/256/128), so truncating 768&rarr;256
+  costs 1&ndash;3% recall and can be undone later without re-embedding.</li>
+</ol>
+
+<div class="callout bad">
+  <p><strong>Two hard rules.</strong> This must be a <em>separate</em> Cloud Run service, never added
+  to the Express container &mdash; that runs <code>--concurrency 100 --cpu 1</code>, and synchronous
+  inference on Node's event loop would stall every request on the instance. And nothing on the feed
+  read path may call it: the known bottleneck is ~240 round trips per request at 296&nbsp;ms RTT, so
+  an embedding hop during a render would worsen the real problem to fix a smaller one. Both vectors are
+  in Mongo before scoring starts.</p>
+</div>
+
+<div class="callout warn">
+  <p><strong>Skip Atlas Vector Search for now.</strong> <code>src/config/database.js:425&ndash;446</code>
+  carries commented setup for a <code>$vectorSearch</code> index on <code>posts.embedding</code> at 1536
+  dimensions. Posts are deprecated, 1536 is an OpenAI <code>ada-002</code> shape matching nothing here,
+  and brute force beats an index hop at 400 candidates. It also needs an M10 tier, roughly $57/month.
+  Revisit past ~50,000 listings &mdash; which, at your growth rate, is a real date rather than a
+  hypothetical.</p>
+</div>
+
+<h2>The scaling path, in order</h2>
+<ol>
+  <li><strong>Now &rarr; 100K users:</strong> exactly as above. <code>min-instances 0</code>, free tier,
+  cold starts land on cron jobs where nobody notices.</li>
+  <li><strong>When you add live query embedding</strong> (search-as-you-type, say), cold start starts
+  mattering. Move to <code>min-instances 1</code> ($71/mo) or, cheaper, a
+  <code>e2-small</code> VM at $12.23 running the same image.</li>
+  <li><strong>Past ~50K listings:</strong> add the Atlas vector index, or swap the JS cosine for a
+  pre-filtered candidate set. Not before.</li>
+  <li><strong>Past ~1M users:</strong> the flat-rate VM path (a couple of <code>e2-standard-2</code> at
+  $30.82 each on committed use) undercuts Cloud Run's per-second premium. Same container, different
+  substrate.</li>
+</ol>
+
+<footer>
+  <p><strong>Caveats.</strong> Throughput and latency figures are estimates scaled from model size, not
+  measured on GCP hardware &mdash; they drive the capacity headroom claim, so treat that claim as
+  directional until TEI's own metrics confirm it. The user-scale projections assume ~3 feed renders per
+  user per day and ~1&ndash;2% of users editing their profile daily; both are assumptions about your
+  product, not measurements from it, and the cost table moves proportionally if they are wrong. The
+  metered-API column uses $0.15/1M tokens at 64 tokens per call for comparison only. Cloud Run free-tier
+  allowances are per billing account and your Express backend already draws on them, so verify the
+  headroom in Cloud Run metrics before relying on the zeros.</p>
+  <p><strong>Sources.</strong></p>
+  <ul>
+    <li><a href="https://github.com/huggingface/text-embeddings-inference">huggingface/text-embeddings-inference</a></li>
+    <li><a href="https://huggingface.co/blog/embeddinggemma">Welcome EmbeddingGemma &mdash; Hugging Face</a></li>
+    <li><a href="https://huggingface.co/onnx-community/embeddinggemma-300m-ONNX">onnx-community/embeddinggemma-300m-ONNX</a></li>
+    <li><a href="https://huggingface.co/docs/text-embeddings-inference/index">TEI documentation</a></li>
+    <li><a href="https://cloud.google.com/run/pricing">Cloud Run pricing</a></li>
+    <li><a href="https://www.economize.cloud/resources/gcp/pricing/compute-engine/e2-small/">e2-small pricing</a></li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>

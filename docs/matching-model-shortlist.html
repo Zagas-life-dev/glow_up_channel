@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matching Model Shortlist — Glowup Diaries</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --surface:#fff; --ink:#16151a; --muted:#605c6b; --faint:#8b8796;
+    --line:#e6e2dc; --line-soft:#f0ede8;
+    --accent:#6d4aff; --accent-soft:#f1edff;
+    --good:#0f7a56; --good-soft:#e6f4ee;
+    --warn:#a15c00; --warn-soft:#fdf1de;
+    --bad:#b3261e; --bad-soft:#fdeceb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#131217; --surface:#1c1b22; --ink:#f2f0f5; --muted:#a9a4b5; --faint:#7d788b;
+      --line:#2e2c37; --line-soft:#26242e;
+      --accent:#a894ff; --accent-soft:#251f3d;
+      --good:#5fd3a6; --good-soft:#123027;
+      --warn:#e5aa54; --warn-soft:#33260f;
+      --bad:#f08b84; --bad-soft:#35191a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:56px 24px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:40px}
+  .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-.02em;margin:0 0 12px;font-weight:680}
+  .sub{color:var(--muted);max-width:64ch;margin:0;font-size:17px}
+  h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;font-weight:660}
+  h3{font-size:16px;margin:32px 0 10px;font-weight:640}
+  .h2note{color:var(--faint);font-size:14px;margin:0 0 20px;max-width:72ch}
+  p{max-width:72ch}
+  code{font-family:var(--mono);font-size:.88em;background:var(--line-soft);
+    padding:.14em .4em;border-radius:4px;border:1px solid var(--line)}
+  a{color:var(--accent)}
+
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:20px 24px;margin:28px 0}
+  .callout p{margin:0 0 10px}
+  .callout p:last-child{margin:0}
+  .callout strong{font-weight:640}
+
+  .tablewrap{overflow-x:auto;margin:16px 0 8px;border:1px solid var(--line);
+    border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:780px;font-size:14.5px}
+  th{text-align:left;font:600 11.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:var(--line-soft)}
+  td{padding:14px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.rank{font:700 13px/1.5 var(--mono);color:var(--faint);width:34px;padding-right:0}
+  .name{font-weight:640;display:block;line-height:1.35}
+  .org{color:var(--faint);font-size:12.5px}
+  .num{font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .pick td{background:var(--accent-soft)}
+  .pick .name::after{content:"\25C2 pick";font:700 10px/1 var(--mono);letter-spacing:.1em;
+    color:var(--accent);margin-left:8px;vertical-align:middle}
+
+  .tag{display:inline-block;font:600 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+    padding:4px 7px;border-radius:5px;white-space:nowrap}
+  .t-emb{background:var(--good-soft);color:var(--good)}
+  .t-rer{background:var(--warn-soft);color:var(--warn)}
+  .t-sta{background:var(--accent-soft);color:var(--accent)}
+
+  .langs{font:600 11px/1 var(--mono);color:var(--faint)}
+
+  ul{max-width:72ch;padding-left:20px}
+  li{margin:7px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card h4{margin:0 0 8px;font-size:15px;font-weight:640}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .verdict{font:700 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    display:inline-block;padding:4px 8px;border-radius:5px;margin-bottom:12px}
+  .v-no{background:var(--bad-soft);color:var(--bad)}
+  .v-maybe{background:var(--warn-soft);color:var(--warn)}
+
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+  pre code{background:none;border:none;padding:0}
+
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:13.5px}
+  footer a{color:var(--faint)}
+  footer li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Research &middot; 5 Sept 2026</p>
+  <h1>Small models for AI matching</h1>
+  <p class="sub">Ranked shortlists by parameter budget, scoped to models that work out of the box with
+  zero training, and to the four languages <code>lib/nlp/detect-language.ts</code> supports &mdash;
+  <strong>en &middot; fr &middot; es &middot; pt</strong>.</p>
+</header>
+
+<div class="callout">
+  <p><strong>The load-bearing correction:</strong> all three models currently in
+  <code>C:\llama.cpp\models</code> are <em>generative</em> decoder LLMs. Matching is a
+  retrieval problem, not a generation problem.</p>
+  <p>An embedding model turns each listing into one vector <em>once</em> at ingest, and matching
+  becomes a cosine &mdash; the exact operation <code>lib/nlp/similarity.ts</code> already performs over
+  tag maps. A generative model has to run a full forward pass <em>per user&ndash;item pair</em>, which at
+  a few hundred items per feed render is not a latency budget that exists. It is also the family that
+  actually delivers on &ldquo;zero training&rdquo;: embedding models are contrastively trained for
+  similarity, whereas a 270M generative model is sold as a <em>fine-tuning base</em>.</p>
+  <p><strong>So: embed for matching. Rerank the top ~30 if you want more. Keep the generative
+  models for a different job entirely</strong> &mdash; see the last section.</p>
+</div>
+
+<h2>1 &nbsp;Under 1B</h2>
+<p class="h2note">The ceiling. Best quality that still runs on CPU at acceptable latency.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Model</th><th>Params</th><th>Type</th><th>Ctx</th><th>Langs</th><th>Why it ranks here</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="rank">1</td>
+  <td><span class="name">Qwen3-Embedding-0.6B</span><span class="org">Alibaba &middot; Apache 2.0</span></td>
+  <td class="num">595M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">100+</td>
+  <td>Highest-scoring model that still fits under 1&nbsp;GB quantized. 32K context means a whole
+      listing body embeds in one shot with no chunking. MRL-trained, so you can truncate dimensions
+      later without re-embedding the corpus.</td></tr>
+<tr><td class="rank">2</td>
+  <td><span class="name">EmbeddingGemma-300M</span><span class="org">Google &middot; Gemma terms</span></td>
+  <td class="num">308M</td><td><span class="tag t-emb">Embed</span></td><td class="num">2K</td>
+  <td class="langs">100+</td>
+  <td>Wins on quality-per-MB by a wide margin and beats Qwen3-0.6B specifically on
+      <em>instruction retrieval and reranking</em>. Half the size for a small accuracy give-up.
+      Full write-up in tier 3 &mdash; that is where it belongs.</td></tr>
+<tr><td class="rank">3</td>
+  <td><span class="name">BGE-M3</span><span class="org">BAAI &middot; MIT</span></td>
+  <td class="num">568M</td><td><span class="tag t-emb">Embed</span></td><td class="num">8K</td>
+  <td class="langs">100+</td>
+  <td>The one model that emits dense <em>and</em> sparse vectors in a single pass. Sparse output is a
+      near-free upgrade for your keyword tiebreaker, and it handles the es/pt confusion better than
+      dense-only models because exact lexical hits survive.</td></tr>
+<tr><td class="rank">4</td>
+  <td><span class="name">jina-embeddings-v3</span><span class="org">Jina AI &middot; CC-BY-NC 4.0</span></td>
+  <td class="num">570M</td><td><span class="tag t-emb">Embed</span></td><td class="num">8K</td>
+  <td class="langs">89</td>
+  <td>Task-specific LoRA adapters (retrieval / classification / clustering) off one backbone, so
+      matching and tagging share weights. <strong>Non-commercial licence</strong> &mdash; the blocker.
+      jina-embeddings-v5-text-small supersedes it in 2026 if licensing clears.</td></tr>
+<tr><td class="rank">5</td>
+  <td><span class="name">Qwen3-Reranker-0.6B</span><span class="org">Alibaba &middot; Apache 2.0</span></td>
+  <td class="num">596M</td><td><span class="tag t-rer">Rerank</span></td><td class="num">32K</td>
+  <td class="langs">100+</td>
+  <td>Not an embedder &mdash; a cross-encoder that rescores an already-retrieved shortlist. Pairs with
+      #1 as a second stage. Beaten on MTEB by a 150M model (tier 4), so it is mainly here for the
+      shared Qwen tokenizer.</td></tr>
+</tbody></table></div>
+
+<h2>2 &nbsp;Under 750M</h2>
+<p class="h2note">Honestly: the same band. Nothing notable ships between 600M and 1B &mdash; the size
+distribution is bimodal, clustering at ~0.6B and ~2B+. The ordering shifts on licence and deployment
+shape rather than on new entrants.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Model</th><th>Params</th><th>Type</th><th>Ctx</th><th>Langs</th><th>Why it ranks here</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="rank">1</td>
+  <td><span class="name">Qwen3-Embedding-0.6B</span><span class="org">Alibaba &middot; Apache 2.0</span></td>
+  <td class="num">595M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">100+</td>
+  <td>Unchanged. Permissive licence, longest context, best sub-1GB score. If you only try one
+      model from this document, try this one.</td></tr>
+<tr><td class="rank">2</td>
+  <td><span class="name">BGE-M3</span><span class="org">BAAI &middot; MIT</span></td>
+  <td class="num">568M</td><td><span class="tag t-emb">Embed</span></td><td class="num">8K</td>
+  <td class="langs">100+</td>
+  <td>Pick this over #1 if you want to retire hand-maintained keyword matching too &mdash; hybrid
+      dense+sparse from one model is less machinery to run than two separate systems.</td></tr>
+<tr><td class="rank">3</td>
+  <td><span class="name">granite-embedding-311m-multilingual-r2</span><span class="org">IBM &middot; Apache 2.0</span></td>
+  <td class="num">311M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">12+</td>
+  <td>Top-3 open multilingual under 500M, and its supported languages are a superset of your four.
+      Cleanest licence and training-provenance story of anything on this page.</td></tr>
+<tr><td class="rank">4</td>
+  <td><span class="name">EmbeddingGemma-300M</span><span class="org">Google &middot; Gemma terms</span></td>
+  <td class="num">308M</td><td><span class="tag t-emb">Embed</span></td><td class="num">2K</td>
+  <td class="langs">100+</td>
+  <td>Only slips here because 2K context truncates long listing bodies. If you embed
+      title + tags + first paragraph rather than full text, this moves back to #1.</td></tr>
+<tr><td class="rank">5</td>
+  <td><span class="name">ettin-reranker-400m-v1</span><span class="org">cross-encoder &middot; MIT</span></td>
+  <td class="num">400M</td><td><span class="tag t-rer">Rerank</span></td><td class="num">8K</td>
+  <td class="langs">EN</td>
+  <td>Lands within 0.0024 MTEB of its own 1.54B teacher &mdash; remarkable distillation. English-only,
+      so it can only rescore your <code>en</code> slice.</td></tr>
+</tbody></table></div>
+
+<h2>3 &nbsp;Under 500M</h2>
+<p class="h2note">The sweet spot for this platform. Quantized, these are 200&ndash;350&nbsp;MB and embed a
+few hundred items in well under a second on CPU.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Model</th><th>Params</th><th>Type</th><th>Ctx</th><th>Langs</th><th>Why it ranks here</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="rank">1</td>
+  <td><span class="name">EmbeddingGemma-300M</span><span class="org">Google &middot; Gemma terms</span></td>
+  <td class="num">308M</td><td><span class="tag t-emb">Embed</span></td><td class="num">2K</td>
+  <td class="langs">100+</td>
+  <td><strong>Ranked #1 under 500M on MTEB multilingual, English and code simultaneously</strong>,
+      by a wide margin over the previous best. Matryoshka: 768 dims truncatable to 512/256/128, so
+      you can store 128-d vectors client-side and lose only 1&ndash;3% recall. Built explicitly for
+      on-device use. Sibling of the Gemma 3 already on your disk.</td></tr>
+<tr><td class="rank">2</td>
+  <td><span class="name">granite-embedding-311m-multilingual-r2</span><span class="org">IBM &middot; Apache 2.0</span></td>
+  <td class="num">311M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">12+</td>
+  <td>Top-3 open multilingual under 500M on MTEB-v2 retrieval, and 32K context against Gemma's 2K &mdash;
+      the trade to make if listings run long. Apache 2.0 with no field-of-use rider.</td></tr>
+<tr><td class="rank">3</td>
+  <td><span class="name">gte-multilingual-base</span><span class="org">Alibaba &middot; Apache 2.0</span></td>
+  <td class="num">305M</td><td><span class="tag t-emb">Embed</span></td><td class="num">8K</td>
+  <td class="langs">70+</td>
+  <td>The dependable middle. Consistently strong across all four of your languages with no weak one,
+      well-supported in every runtime, and 8K context splits the difference above.</td></tr>
+<tr><td class="rank">4</td>
+  <td><span class="name">multilingual-e5-base</span><span class="org">Microsoft &middot; MIT</span></td>
+  <td class="num">278M</td><td><span class="tag t-emb">Embed</span></td><td class="num">512</td>
+  <td class="langs">100</td>
+  <td>Older and beaten on every benchmark here, but the most-deployed multilingual embedder in
+      existence. Requires <code>query:</code> / <code>passage:</code> prefixes &mdash; omit them and
+      quality drops silently. The 512-token limit is tight.</td></tr>
+<tr><td class="rank">5</td>
+  <td><span class="name">ettin-reranker-400m-v1</span><span class="org">cross-encoder &middot; MIT</span></td>
+  <td class="num">400M</td><td><span class="tag t-rer">Rerank</span></td><td class="num">8K</td>
+  <td class="langs">EN</td>
+  <td>Second-stage only, English only. Worth adding if the <code>en</code> feed is your main volume.</td></tr>
+</tbody></table></div>
+
+<h2>4 &nbsp;Under 250M</h2>
+<p class="h2note">Where multilingual coverage starts to genuinely cost you. One model is far ahead
+of the field.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Model</th><th>Params</th><th>Type</th><th>Ctx</th><th>Langs</th><th>Why it ranks here</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="rank">1</td>
+  <td><span class="name">granite-embedding-97m-multilingual-r2</span><span class="org">IBM &middot; Apache 2.0</span></td>
+  <td class="num">97M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">12+</td>
+  <td><strong>60.3 on multilingual MTEB retrieval &mdash; a +9.4 point lead over the next-best open
+      model under 100M.</strong> It is not merely the best under 250M; it beats things three times its
+      size. 32K context at 97M parameters is close to absurd. Distilled from the 311M sibling.</td></tr>
+<tr><td class="rank">2</td>
+  <td><span class="name">multilingual-e5-small</span><span class="org">Microsoft &middot; MIT</span></td>
+  <td class="num">118M</td><td><span class="tag t-emb">Embed</span></td><td class="num">512</td>
+  <td class="langs">100</td>
+  <td>Scores 50.9 against granite-97m's 60.3 while being larger. Kept on the list only because its
+      ONNX / transformers.js support is the most battle-tested for in-browser use &mdash; which matters
+      given ranking runs on the frontend.</td></tr>
+<tr><td class="rank">3</td>
+  <td><span class="name">ettin-reranker-150m-v1</span><span class="org">cross-encoder &middot; MIT</span></td>
+  <td class="num">150M</td><td><span class="tag t-rer">Rerank</span></td><td class="num">8K</td>
+  <td class="langs">EN</td>
+  <td>The strongest reranker anywhere under 600M &mdash; edges out Qwen3-Reranker-0.6B
+      (0.5994 vs 0.5940) at a quarter the size, and beats every BGE reranker variant by
+      0.03&ndash;0.05. English only.</td></tr>
+<tr><td class="rank">4</td>
+  <td><span class="name">gte-reranker-modernbert-base</span><span class="org">Alibaba &middot; Apache 2.0</span></td>
+  <td class="num">149M</td><td><span class="tag t-rer">Rerank</span></td><td class="num">8K</td>
+  <td class="langs">EN</td>
+  <td>83.0% Hit@1 on English &mdash; matches 1.2B-class rerankers at 8&times; smaller. The ModernBERT
+      backbone is meaningfully faster on CPU than BERT-era equivalents.</td></tr>
+<tr><td class="rank">5</td>
+  <td><span class="name">paraphrase-multilingual-MiniLM-L12-v2</span><span class="org">SBERT &middot; Apache 2.0</span></td>
+  <td class="num">118M</td><td><span class="tag t-emb">Embed</span></td><td class="num">128</td>
+  <td class="langs">50+</td>
+  <td>Obsolete on quality, and the 128-token window is brutal. Listed as the known-quantity fallback:
+      if a newer model behaves strangely, this is the sanity check.</td></tr>
+</tbody></table></div>
+
+<h2>5 &nbsp;Sub-100M</h2>
+<p class="h2note">Browser-shippable territory. Below ~100M, multilingual all but disappears &mdash; with
+exactly one exception, which is why it tops two tiers.</p>
+<div class="tablewrap"><table>
+<thead><tr><th></th><th>Model</th><th>Params</th><th>Type</th><th>Ctx</th><th>Langs</th><th>Why it ranks here</th></tr></thead>
+<tbody>
+<tr class="pick"><td class="rank">1</td>
+  <td><span class="name">granite-embedding-97m-multilingual-r2</span><span class="org">IBM &middot; Apache 2.0</span></td>
+  <td class="num">97M</td><td><span class="tag t-emb">Embed</span></td><td class="num">32K</td>
+  <td class="langs">12+</td>
+  <td>The only sub-100M model that is multilingual <em>and</em> actually good. Everything else in this
+      tier is an English-only or quality-sacrificing trade. If you need one sub-100M model, this is
+      not a close call.</td></tr>
+<tr><td class="rank">2</td>
+  <td><span class="name">potion-base-32M</span><span class="org">MinishLab &middot; MIT</span></td>
+  <td class="num">32M</td><td><span class="tag t-sta">Static</span></td><td class="num">&infin;</td>
+  <td class="langs">EN</td>
+  <td>Distilled to a pure token-lookup table &mdash; no transformer at inference, just averaged
+      vectors. Reaches <strong>94.7% of all-MiniLM-L6-v2 quality at roughly 70&times; the CPU
+      speed</strong> (~25,000 sentences/sec). Unbounded context because there is no attention.</td></tr>
+<tr><td class="rank">3</td>
+  <td><span class="name">potion-base-8M</span><span class="org">MinishLab &middot; MIT</span></td>
+  <td class="num">8M</td><td><span class="tag t-sta">Static</span></td><td class="num">&infin;</td>
+  <td class="langs">EN</td>
+  <td>~8&ndash;10&nbsp;MB on disk at roughly 90% of MiniLM quality. Small enough to ship in a JS bundle
+      and run synchronously inside the existing <code>signals.ts</code> pure-function contract &mdash;
+      no async, no WASM warm-up, no worker.</td></tr>
+<tr><td class="rank">4</td>
+  <td><span class="name">static-retrieval-mrl-en-v1</span><span class="org">SBERT &middot; Apache 2.0</span></td>
+  <td class="num">~30M</td><td><span class="tag t-sta">Static</span></td><td class="num">&infin;</td>
+  <td class="langs">EN</td>
+  <td>Static embeddings tuned for retrieval specifically rather than general similarity, with MRL
+      truncation. Sensible alternative to potion if you want first-party SentenceTransformers
+      support.</td></tr>
+<tr><td class="rank">5</td>
+  <td><span class="name">all-MiniLM-L6-v2</span><span class="org">SBERT &middot; Apache 2.0</span></td>
+  <td class="num">22M</td><td><span class="tag t-emb">Embed</span></td><td class="num">256</td>
+  <td class="langs">EN</td>
+  <td>The default everyone reaches for, and by 2026 the consensus is <em>don't</em> for new datasets
+      &mdash; it is comprehensively beaten at its own size. Included because it is the reference point
+      every other number on this page is quoted against.</td></tr>
+</tbody></table></div>
+
+<h2>Your three local models</h2>
+<p class="h2note">Included as requested, judged against the actual job.</p>
+<div class="grid">
+  <div class="card">
+    <span class="verdict v-no">Not for matching</span>
+    <h4>gemma-3-270m-it &middot; Q4_K_M &middot; 253&nbsp;MB</h4>
+    <p>Google's own framing is that it is &ldquo;a high-quality foundation model&hellip; <em>once
+    specialized through fine-tuning</em>&rdquo; for classification and extraction &mdash; which is
+    precisely the zero-training constraint it fails. Best-in-class IFEval for its size, so it follows
+    instructions; it just does not know enough to judge relevance unaided. Its 262K-token vocabulary
+    is also why it is heavier on disk than the 350M model sitting beside it.</p>
+  </div>
+  <div class="card">
+    <span class="verdict v-maybe">Adjacent use</span>
+    <h4>LFM2-350M &middot; Q4_K_M &middot; 229&nbsp;MB</h4>
+    <p>Liquid's LFM2 line is built for fast CPU/edge decoding, and it is the quickest generator you
+    have. Wrong family for scoring pairs, but a fair fit for the one genuinely generative job in this
+    pipeline: turning a <code>SignalBreakdown</code> into a natural &ldquo;why you're seeing this&rdquo;
+    line in the user's language, replacing the templated strings in
+    <code>lib/ranking/reasons.ts</code>.</p>
+  </div>
+  <div class="card">
+    <span class="verdict v-maybe">Adjacent use</span>
+    <h4>Qwen3.5-0.8B &middot; Q4_K_M &middot; 532&nbsp;MB</h4>
+    <p>The most capable of the three and the only one with enough headroom for reliable zero-shot
+    structured output. Use it offline at ingest &mdash; read a listing, emit taxonomy tag ids as JSON
+    &mdash; to catch vocabulary <code>taxonomy.ts</code> has no alias for. That is a batch job, not a
+    per-render one. Note that its embedding sibling, Qwen3-Embedding-0.6B, tops two tiers above.</p>
+  </div>
+</div>
+
+<h2>Where this lands in the codebase</h2>
+<p>The pipeline is already shaped for this. <code>semanticSignal</code> in
+<code>lib/ranking/signals.ts</code> consumes a 0&ndash;1 similarity, and <code>cosineSimilarity</code>
+in <code>lib/nlp/similarity.ts</code> already computes cosine over sparse maps. Swapping in a dense
+vector is a substitution at one seam, not a rewrite.</p>
+<pre><code>ingest  --&gt;  embed(title + body)  --&gt;  store vector on the listing   (once, offline)
+profile --&gt;  embed(interests)     --&gt;  cache in localStorage        (once per profile edit)
+render  --&gt;  cosine(user, item)   --&gt;  semanticSignal               (pure, sync, microseconds)</code></pre>
+<p>Two constraints worth holding onto:</p>
+<ul>
+  <li><strong>Keep <code>signals.ts</code> pure and synchronous.</strong> Its header states the reason
+  outright. So embedding has to happen <em>outside</em> ranking &mdash; vectors arrive precomputed, and
+  the hot path only ever does arithmetic.</li>
+  <li><strong>Don't delete the taxonomy.</strong> It is what lets <code>reasons.ts</code> say
+  <em>which</em> interest matched; an embedding gives you a number with no explanation. Run the vector
+  score as an added signal in <code>weights.ts</code> and let the existing null-dropping
+  renormalization handle items that have no vector yet &mdash; that behaviour means you can roll this
+  out incrementally without a backfill gate.</li>
+</ul>
+
+<div class="callout">
+  <p><strong>If you want the shortest path:</strong> <code>EmbeddingGemma-300M</code> at 256 truncated
+  dimensions. It is #1 in its class, it is Matryoshka so the dimension choice stays reversible, its 2K
+  context comfortably covers title + tags + lede, and it is the same model family as the Gemma already
+  on your disk. Fall back to <code>granite-embedding-97m-multilingual-r2</code> if you decide to run
+  embeddings in the browser rather than at ingest.</p>
+</div>
+
+<footer>
+  <p><strong>Caveats.</strong> MTEB standings move month to month, and several figures here come from
+  vendor announcements and secondary benchmark write-ups rather than independent replication &mdash;
+  treat the tier orderings as sound and the individual decimals as indicative. Nothing here was
+  benchmarked on Glowup Diaries data; the only number that settles the pick is nDCG on your own
+  labelled pairs. Licences were read from model cards, not from counsel.</p>
+  <p><strong>Sources.</strong></p>
+  <ul>
+    <li><a href="https://arxiv.org/html/2509.20354v2">EmbeddingGemma: Powerful and Lightweight Text Representations</a></li>
+    <li><a href="https://huggingface.co/blog/ibm-granite/granite-embedding-multilingual-r2">Granite Embedding Multilingual R2 &mdash; Best Sub-100M Retrieval Quality</a></li>
+    <li><a href="https://huggingface.co/ibm-granite/granite-embedding-97m-multilingual-r2">ibm-granite/granite-embedding-97m-multilingual-r2</a></li>
+    <li><a href="https://arxiv.org/pdf/2506.05176">Qwen3 Embedding: Advancing Text Embedding and Reranking</a></li>
+    <li><a href="https://huggingface.co/blog/ettin-reranker">Introducing the Ettin Reranker Family</a></li>
+    <li><a href="https://mixpeek.com/curated-lists/best-rerankers">Best Rerankers for RAG in 2026</a></li>
+    <li><a href="https://github.com/MinishLab/model2vec/blob/main/results/README.md">Model2Vec benchmark results</a></li>
+    <li><a href="https://huggingface.co/minishlab/potion-base-32M">minishlab/potion-base-32M</a></li>
+    <li><a href="https://www.morphllm.com/ollama-embedding-models">Best Ollama Embedding Models 2026</a></li>
+    <li><a href="https://www.premai.io/blog/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/">Best Embedding Models for RAG (2026)</a></li>
+    <li><a href="https://simonwillison.net/2025/Aug/14/gemma-3-270m/">Gemma 3 270M: The compact model for hyper-efficient AI</a></li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>

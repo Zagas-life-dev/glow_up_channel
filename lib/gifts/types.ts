@@ -6,6 +6,9 @@
  * never appears in a feed, in search, in recommendations, or in rotation. The
  * only places a gift surfaces are the announcement popup and the shared gift
  * list on the profile page.
+ *
+ * Gifts read in the app by default. `allowDownload` is the per-gift opt-out of
+ * that: with it on, members can also keep the original file.
  */
 
 /** How a gift's content is delivered. */
@@ -22,6 +25,13 @@ export interface Gift {
   fileType: string | null
   fileSize: number | null
   pageCount: number | null
+  /** The original upload's filename, used as the download's name. */
+  fileName: string | null
+  /**
+   * The admin let members keep this file. A hint for the UI only — the backend
+   * re-checks it, so hiding or showing the button changes nothing on its own.
+   */
+  allowDownload: boolean
   /** Cover art for the popup and the gift card. */
   image: string | null
   tags: string[]
@@ -44,6 +54,7 @@ export interface GiftMetrics {
   likeCount: number
   saveCount: number
   playlistAddCount: number
+  downloadCount: number
 }
 
 /**
@@ -86,6 +97,23 @@ export interface GiftDraft {
   /** Explicitly clear the existing cover image. */
   removeCoverImage?: boolean
   isActive?: boolean
+  /** Let members download the original file. Ignored on a link gift. */
+  allowDownload?: boolean
+}
+
+/**
+ * File types the browser renders from the original upload, with no server-side
+ * PDF conversion in between.
+ *
+ * Must stay in step with the backend's CLIENT_RENDERED_TYPES: the content proxy
+ * decides which asset to stream from the same list, so a mismatch would hand
+ * one viewer the bytes meant for the other.
+ */
+const CLIENT_RENDERED_FILE_TYPES = new Set(["docx"])
+
+/** True when this gift is painted by the client-side Word renderer. */
+export function isClientRenderedGift(fileType: string | null): boolean {
+  return fileType !== null && CLIENT_RENDERED_FILE_TYPES.has(fileType)
 }
 
 /** Human-readable file size for the gift card, e.g. "2.4 MB". */

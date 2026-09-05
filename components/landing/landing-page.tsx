@@ -14,7 +14,7 @@
  * change them there and every section inherits the new value.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   RiFocus3Line,
@@ -25,19 +25,56 @@ import {
   RiArrowRightLine,
 } from 'react-icons/ri'
 import { usePage } from '@/contexts/page-context'
+import { fetchPublicPlatformStats } from '@/lib/platform-stats'
 import { cn } from '@/lib/utils'
 // Shared with the server-rendered FAQPage JSON-LD in `app/page.tsx`.
 import { FAQS } from '@/lib/seo/faq'
 
 /* ─────────────────────────── §0 Brand foundation ─────────────────────────── */
 
-/** Verified stats. Update here first; every section reads from this block. */
+/**
+ * Verified stats. Update here first; every section reads from this block.
+ *
+ * The user figure is the exception: it is read live from the platform at render time
+ * (see `fetchPublicPlatformStats`), because it is the one number here that moves on its
+ * own. The value below is what a visitor sees while that request is in flight, and what
+ * they keep seeing if it fails, so it must stay a figure we are willing to publish.
+ */
 const STATS = [
-  { figure: '8,200+', label: 'Platform Users' },
-  { figure: '7,500+', label: 'Opportunities Shared' },
-  { figure: '700+', label: 'Young Africans Upskilled' },
-  { figure: '5,800+', label: 'Community Members' },
+  { id: 'activeUsers', figure: '8,200+', label: 'Platform Users' },
+  { id: 'opportunities', figure: '7,500+', label: 'Opportunities Shared' },
+  { id: 'upskilled', figure: '700+', label: 'Young Africans Upskilled' },
+  { id: 'community', figure: '5,800+', label: 'Community Members' },
 ] as const
+
+/** 8247 -> "8,247". Grouped the way the static figures above already are. */
+const countFormatter = new Intl.NumberFormat('en-US')
+
+/**
+ * Live active-user count, or null until it arrives (and forever if it never does).
+ *
+ * Deliberately client-side and after paint: the landing page renders behind a
+ * client-side auth branch anyway, and a stat bar is not worth blocking first paint on.
+ */
+function useActiveUserCount(): number | null {
+  const [activeUsers, setActiveUsers] = useState<number | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let cancelled = false
+
+    fetchPublicPlatformStats(controller.signal).then((stats) => {
+      if (!cancelled && stats) setActiveUsers(stats.activeUsers)
+    })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [])
+
+  return activeUsers
+}
 
 /**
  * The organizations UP works with, in one place. Each logo was taken from the
@@ -218,6 +255,7 @@ function PrimaryCta({ href, children }: { href: string; children: React.ReactNod
 
 export default function LandingPage() {
   const { setHideNavbar, setHideFooter } = usePage()
+  const activeUsers = useActiveUserCount()
 
   // A front door carries its own header and footer. The in-app sidebar and
   // bottom tab bar are for people who are already inside.
@@ -288,7 +326,10 @@ export default function LandingPage() {
                 <dt className="sr-only">{stat.label}</dt>
                 <dd>
                   <span className="font-up-display block text-[30px] font-bold leading-none tracking-[-0.02em] text-[var(--orange)] lg:text-[36px]">
-                    {stat.figure}
+                    {/* The live count is exact, so it drops the "+" the rounded figures carry. */}
+                    {stat.id === 'activeUsers' && activeUsers !== null
+                      ? countFormatter.format(activeUsers)
+                      : stat.figure}
                   </span>
                   <span className="mt-2 block text-[14px] text-[var(--paper)]/60">
                     {stat.label}

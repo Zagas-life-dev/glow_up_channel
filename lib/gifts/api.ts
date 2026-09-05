@@ -64,13 +64,80 @@ export async function fetchGift(id: string): Promise<Gift | null> {
 /**
  * A file gift's bytes, for the in-app viewer.
  *
- * The response is `Content-Disposition: inline` and `no-store` — there is no
- * download URL to hand out, which is what keeps gifts render-only.
+ * Always the PDF derivative, served `Content-Disposition: inline` and
+ * `no-store`. Reading never depends on `allowDownload` — a view-only gift and a
+ * downloadable one render through exactly the same path.
  */
 export async function fetchGiftContentBlob(id: string): Promise<Blob> {
   const response = await ApiClient.makeAuthenticatedRequest(`${API_BASE_URL}/api/gifts/${id}/content`)
   if (!response.ok) throw new Error(`Failed to load gift content (HTTP ${response.status})`)
   return response.blob()
+}
+
+/** The filename the backend asked us to save under, if it named one. */
+function filenameFromDisposition(header: string | null): string | null {
+  if (!header) return null
+  // filename*=UTF-8''… wins over the plain form: it is the one that survives
+  // non-ASCII titles.
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1])
+    } catch {
+      // Fall through to the plain filename.
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header)
+  return plain ? plain[1] : null
+}
+
+/**
+ * Download a gift's original file — the .docx as uploaded, not the PDF the
+ * reader shows.
+ *
+ * The backend answers 403 when the gift is view-only, so this throws with that
+ * message rather than saving an error page. Returns the blob plus the name the
+ * server chose; the caller owns the save.
+ */
+export async function fetchGiftDownload(id: string): Promise<{ blob: Blob; filename: string | null }> {
+  const response = await ApiClient.makeAuthenticatedRequest(`${API_BASE_URL}/api/gifts/${id}/download`)
+  if (!response.ok) {
+    let message = `Failed to download gift (HTTP ${response.status})`
+    try {
+      const json = (await response.json()) as Envelope<never>
+      if (json?.message) message = json.message
+    } catch {
+      // Non-JSON error body — keep the status-based message.
+    }
+    throw new Error(message)
+  }
+  return {
+    blob: await response.blob(),
+    filename: filenameFromDisposition(response.headers.get("Content-Disposition")),
+  }
+}
+
+/**
+ * Fetch a downloadable gift and hand it to the browser's save dialog.
+ *
+ * Goes through the authenticated proxy and an object URL rather than pointing
+ * an anchor at the API: the endpoint needs a bearer token, and the Cloudinary
+ * URL behind it is never exposed to the page.
+ */
+export async function downloadGift(id: string, fallbackName: string): Promise<void> {
+  const { blob, filename } = await fetchGiftDownload(id)
+  const url = URL.createObjectURL(blob)
+  try {
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = filename || fallbackName
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  } finally {
+    // Revoking immediately can race the download in Safari; one tick is enough.
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 }
 
 // ------------------------------------------------------------- announcement
@@ -142,6 +209,7 @@ function draftToFormData(draft: Partial<GiftDraft>): FormData {
   if (draft.category !== undefined) form.append("category", draft.category)
   if (draft.tags !== undefined) form.append("tags", JSON.stringify(draft.tags))
   if (draft.isActive !== undefined) form.append("isActive", String(draft.isActive))
+  if (draft.allowDownload !== undefined) form.append("allowDownload", String(draft.allowDownload))
   if (draft.linkUrl) form.append("linkUrl", draft.linkUrl)
   if (draft.file) form.append("file", draft.file)
   if (draft.coverImage) form.append("coverImage", draft.coverImage)

@@ -11,11 +11,14 @@
  * What it deliberately does not borrow from those pages: ranking explanations,
  * "similar items", and the share composer. All three assume public feed content,
  * and a gift is members-only and unranked. The action slot carries a reader or a
- * link instead of an Apply button, and there is no download anywhere — file
- * gifts stream through the content proxy and render in place.
+ * link instead of an Apply button.
+ *
+ * File gifts always stream through the content proxy and render in place. A
+ * download button appears on top of that only when the admin turned
+ * `allowDownload` on for this particular gift.
  */
 
-import { use, useCallback, useEffect, useRef, useState } from "react"
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import {
@@ -23,6 +26,7 @@ import {
   RiBookmarkFill,
   RiBookmarkLine,
   RiCalendarLine,
+  RiDownload2Line,
   RiExternalLinkLine,
   RiEyeOffLine,
   RiFileTextLine,
@@ -30,6 +34,7 @@ import {
   RiGiftLine,
   RiHeartFill,
   RiHeartLine,
+  RiLoader4Line,
   RiPlayListAddLine,
   RiPriceTag3Line,
 } from "react-icons/ri"
@@ -51,22 +56,33 @@ import { useAuth } from "@/lib/auth-context"
 import { useLocale } from "@/lib/i18n/context"
 import { giftsHref } from "@/lib/gifts/routes"
 import {
+  downloadGift,
   fetchGift,
   fetchGiftContentBlob,
   markGiftOpened,
   setGiftLiked,
   setGiftSaved,
 } from "@/lib/gifts/api"
-import { formatGiftSize, type Gift } from "@/lib/gifts/types"
+import { formatGiftSize, isClientRenderedGift, type Gift } from "@/lib/gifts/types"
+
+const viewerLoading = () => (
+  <div className="rounded-2xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
+    Loading viewer…
+  </div>
+)
 
 // The viewer depends on browser-only pdf.js APIs; load it client-side only.
 const ResourceViewer = dynamic(() => import("@/components/resource/ResourceViewer"), {
   ssr: false,
-  loading: () => (
-    <div className="rounded-2xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
-      Loading viewer…
-    </div>
-  ),
+  loading: viewerLoading,
+})
+
+// Word gifts are rendered from the original .docx in the browser, so they use a
+// different viewer — and a much heavier one to load, which is why it is only
+// pulled in for the gifts that actually need it.
+const DocxViewer = dynamic(() => import("@/components/resource/DocxViewer"), {
+  ssr: false,
+  loading: viewerLoading,
 })
 
 type GiftPageProps = { params: Promise<{ id: string }> }
@@ -105,6 +121,18 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [busy, setBusy] = useState<"like" | "save" | null>(null)
+  const [downloading, setDownloading] = useState(false)
+
+  /**
+   * Memoised because both viewers key their fetch effect on this object. An
+   * inline literal would be a new object on every render, so liking or saving
+   * the gift would re-download the whole document.
+   */
+  const giftId = gift?._id ?? null
+  const viewerSource = useMemo(
+    () => (giftId ? { id: giftId, loadContent: () => fetchGiftContentBlob(giftId) } : null),
+    [giftId],
+  )
   const [playlistOpen, setPlaylistOpen] = useState(false)
   const readerRef = useRef<HTMLDivElement | null>(null)
 
@@ -170,6 +198,23 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
       setBusy(null)
     }
   }, [gift, busy])
+
+  /**
+   * Save the original file. Guarded on `allowDownload` here purely so the UI
+   * stays honest — the endpoint refuses view-only gifts regardless, and its
+   * message is what surfaces if the two ever disagree.
+   */
+  const handleDownload = useCallback(async () => {
+    if (!gift || downloading || !gift.allowDownload) return
+    setDownloading(true)
+    try {
+      await downloadGift(gift._id, gift.fileName ?? `${gift.title}.${gift.fileType ?? "file"}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("gifts.downloadFailed"))
+    } finally {
+      setDownloading(false)
+    }
+  }, [gift, downloading, t])
 
   const scrollToReader = useCallback(() => {
     readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -328,7 +373,11 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
             <span className="capitalize">{gift.category}</span>
           </Fact>
           <Fact icon={RiFileTextLine} label="Format">
-            {isFile ? `${(gift.fileType ?? "file").toUpperCase()} — read in the app` : "External link"}
+            {isFile
+              ? `${(gift.fileType ?? "file").toUpperCase()} — ${
+                  gift.allowDownload ? t("gifts.readOrDownload") : t("gifts.readInApp")
+                }`
+              : "External link"}
           </Fact>
           {gift.pageCount ? (
             <Fact icon={RiBookOpenLine} label="Length">
@@ -351,18 +400,42 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
       {isFile && (
         <DetailSection label="Read it here">
           <div ref={readerRef} className="scroll-mt-20">
-            <p className="mb-2 flex items-center gap-1.5 text-[13px] text-muted-foreground">
-              <RiEyeOffLine className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
-              {t("gifts.viewOnly")}
-            </p>
-            <ResourceViewer
-              source={{
-                id: gift._id,
-                loadContent: () => fetchGiftContentBlob(gift._id),
-              }}
-              fileType={gift.fileType}
-              initialPageCount={gift.pageCount}
-            />
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                {gift.allowDownload ? (
+                  <RiDownload2Line className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+                ) : (
+                  <RiEyeOffLine className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+                )}
+                {gift.allowDownload ? t("gifts.downloadable") : t("gifts.viewOnly")}
+              </p>
+              {gift.allowDownload && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="h-9 rounded-xl text-sm"
+                >
+                  {downloading ? (
+                    <RiLoader4Line className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />
+                  ) : (
+                    <RiDownload2Line className="mr-1.5 h-4 w-4" aria-hidden />
+                  )}
+                  {downloading ? t("gifts.downloading") : t("gifts.download")}
+                </Button>
+              )}
+            </div>
+            {viewerSource &&
+              (isClientRenderedGift(gift.fileType) ? (
+                <DocxViewer source={viewerSource} label={gift.title} />
+              ) : (
+                <ResourceViewer
+                  source={viewerSource}
+                  fileType={gift.fileType}
+                  initialPageCount={gift.pageCount}
+                />
+              ))}
           </div>
         </DetailSection>
       )}
@@ -403,6 +476,23 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
           )}
           {gift.saved ? t("gifts.saved") : t("gifts.save")}
         </Button>
+
+        {isFile && gift.allowDownload && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="h-10 rounded-xl text-sm"
+          >
+            {downloading ? (
+              <RiLoader4Line className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <RiDownload2Line className="mr-1.5 h-4 w-4" aria-hidden />
+            )}
+            {downloading ? t("gifts.downloading") : t("gifts.download")}
+          </Button>
+        )}
       </div>
     </ContentDetailShell>
   )

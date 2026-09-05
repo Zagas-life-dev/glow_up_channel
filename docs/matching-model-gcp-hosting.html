@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GCP Hosting for the Matching Model — Glowup Diaries</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --surface:#fff; --ink:#16151a; --muted:#605c6b; --faint:#8b8796;
+    --line:#e6e2dc; --line-soft:#f0ede8;
+    --accent:#6d4aff; --accent-soft:#f1edff;
+    --good:#0f7a56; --good-soft:#e6f4ee;
+    --warn:#a15c00; --warn-soft:#fdf1de;
+    --bad:#b3261e; --bad-soft:#fdeceb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#131217; --surface:#1c1b22; --ink:#f2f0f5; --muted:#a9a4b5; --faint:#7d788b;
+      --line:#2e2c37; --line-soft:#26242e;
+      --accent:#a894ff; --accent-soft:#251f3d;
+      --good:#5fd3a6; --good-soft:#123027;
+      --warn:#e5aa54; --warn-soft:#33260f;
+      --bad:#f08b84; --bad-soft:#35191a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:56px 24px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+  .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-.02em;margin:0 0 12px;font-weight:680}
+  .sub{color:var(--muted);max-width:64ch;margin:0;font-size:17px}
+  h2{font-size:24px;letter-spacing:-.01em;margin:56px 0 6px;font-weight:660}
+  .h2note{color:var(--faint);font-size:14px;margin:0 0 20px;max-width:74ch}
+  p{max-width:74ch}
+  code{font-family:var(--mono);font-size:.88em;background:var(--line-soft);
+    padding:.14em .4em;border-radius:4px;border:1px solid var(--line)}
+  a{color:var(--accent)}
+
+  .verdict{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:30px 32px;margin:0 0 8px;border-top:3px solid var(--accent)}
+  .verdict .label{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 12px}
+  .verdict .model{font:700 clamp(21px,3.4vw,30px)/1.2 var(--mono);letter-spacing:-.02em;
+    color:var(--accent);margin:0 0 8px;word-break:break-word}
+  .verdict .price{font:600 15px/1.4 var(--mono);color:var(--good);margin:0 0 18px}
+  .verdict p{margin:0 0 10px}
+  .verdict p:last-child{margin:0}
+
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:20px 24px;margin:28px 0}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout.bad{border-left-color:var(--bad)}
+  .callout p{margin:0 0 10px}
+  .callout p:last-child{margin:0}
+  .callout strong{font-weight:640}
+
+  .tablewrap{overflow-x:auto;margin:16px 0 8px;border:1px solid var(--line);
+    border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:14.5px}
+  th{text-align:left;font:600 11.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:var(--line-soft)}
+  th.r,td.r{text-align:right}
+  td{padding:13px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .name{font-weight:620;display:block}
+  .org{color:var(--faint);font-size:12.5px}
+  .num{font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .free{color:var(--good);font-weight:700}
+  .paid{color:var(--warn);font-weight:700}
+  .big-paid{color:var(--bad);font-weight:700}
+  .pick td{background:var(--accent-soft)}
+  .sect td{background:var(--line-soft);font:600 11px/1 var(--mono);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--faint);padding:10px 16px}
+
+  ul{max-width:74ch;padding-left:20px}
+  li{margin:8px 0}
+  ol{max-width:74ch;padding-left:22px}
+  ol li{margin:12px 0}
+
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+  pre code{background:none;border:none;padding:0}
+
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:13.5px}
+  footer a{color:var(--faint)}
+  footer li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">GCP hosting &middot; 5 Sept 2026</p>
+  <h1>Where on Google Cloud to run it</h1>
+  <p class="sub">Every GCP surface that can host a model, priced for these models at
+  10,000 calls/day. Not APIs &mdash; places you deploy weights.</p>
+</header>
+
+<div class="verdict">
+  <p class="label">Answer</p>
+  <p class="model">Cloud Run &mdash; a second service, CPU only, scale-to-zero</p>
+  <p class="price">$0.00/month &middot; inside the free tier at your volume</p>
+  <p>You already have the pipeline: <code>cloudbuild.yaml</code>, a Dockerfile, and
+  <code>gcloud run deploy</code> in your npm scripts. A second service is the same deploy you already
+  run, pointed at a different image. Same project, same region, same IAM, one more entry in Cloud Build.</p>
+  <p>Everything else on Google Cloud that can host a model either bills you for idle hours
+  (Vertex Endpoints, GKE) or hands you a GPU you have no use for (Cloud Run GPU). None of these models
+  needs a GPU &mdash; the largest is 595M parameters and runs in under 100&nbsp;ms on a CPU core.</p>
+</div>
+
+<h2>The GCP surfaces, compared</h2>
+<p class="h2note">Everything Google Cloud offers that can hold model weights. Costs are monthly,
+us-central1, for a single small CPU model serving 10K calls/day.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Surface</th><th class="r">$/month</th><th>Scales to zero?</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr class="pick"><td><span class="name">Cloud Run service</span><span class="org">CPU, 2 vCPU / 2 GiB, min-instances 0</span></td>
+  <td class="r num free">$0.00</td><td class="free">Yes</td>
+  <td>Free tier covers it entirely (180K vCPU-s, 360K GiB-s, 2M requests). Cold start on the first
+      call after idle. <strong>The pick.</strong></td></tr>
+<tr class="pick"><td><span class="name">Cloud Run Job</span><span class="org">batch, triggered by Cloud Scheduler</span></td>
+  <td class="r num free">$0.00</td><td class="free">Yes</td>
+  <td>Same billing, but for the ingest backfill. Cold start lands on a cron job instead of a user,
+      which makes it a non-issue. <strong>Use alongside the service.</strong></td></tr>
+<tr><td><span class="name">Compute Engine e2-micro</span><span class="org">2 vCPU burst / 1 GB</span></td>
+  <td class="r num free">$6.11</td><td class="paid">No</td>
+  <td>Always warm, no cold start. Fits static models and granite-97m int8 only. You manage patching,
+      restarts and the health check yourself.</td></tr>
+<tr><td><span class="name">Compute Engine e2-small</span><span class="org">2 vCPU burst / 2 GB</span></td>
+  <td class="r num paid">$12.23</td><td class="paid">No</td>
+  <td>Fits everything up to ~300M int8, EmbeddingGemma included. The cheapest way to have zero
+      cold starts.</td></tr>
+<tr><td><span class="name">Compute Engine e2-standard-2</span><span class="org">2 vCPU / 8 GB</span></td>
+  <td class="r num paid">$48.92</td><td class="paid">No</td>
+  <td>Fits every model on the shortlist including BGE-M3 at fp32. <strong>$30.82</strong> on a 1-year
+      commitment, $22.01 at 3 years.</td></tr>
+<tr><td><span class="name">Cloud Run, min-instances=1</span><span class="org">2 vCPU / 4 GiB, always warm</span></td>
+  <td class="r num big-paid">$147.20</td><td class="paid">No</td>
+  <td>Buys exactly what a $12 e2-small buys, for 12&times; the money. The intuitive setting and the
+      wrong one.</td></tr>
+<tr class="sect"><td colspan="4">Managed ML serving</td></tr>
+<tr><td><span class="name">Vertex AI Endpoint</span><span class="org">dedicated node, n1-standard-2</span></td>
+  <td class="r num big-paid">~$45&ndash;89</td><td class="paid">No</td>
+  <td>Billed by the node-hour <em>even when idle</em>. Buys autoscaling, versioning and monitoring you
+      do not need at 0.116 req/s. Model Garden's one-click deploy lands here &mdash; that is the trap
+      in the button.</td></tr>
+<tr><td><span class="name">Vertex AI Batch Prediction</span><span class="org">job-scoped nodes</span></td>
+  <td class="r num paid">pennies</td><td class="free">Yes</td>
+  <td>Genuinely good for the one-time corpus backfill if you would rather not write a Cloud Run Job.
+      Nodes exist only for the job's duration.</td></tr>
+<tr class="sect"><td colspan="4">Overkill</td></tr>
+<tr><td><span class="name">GKE Autopilot</span><span class="org">1 vCPU / 2 GiB pod</span></td>
+  <td class="r num big-paid">~$113</td><td class="paid">No</td>
+  <td>~$73/month cluster management fee before a single pod runs. Kubernetes for one stateless
+      container that does one thing.</td></tr>
+<tr><td><span class="name">Cloud Run + NVIDIA L4 GPU</span><span class="org">$0.67/hour</span></td>
+  <td class="r num big-paid">$0&ndash;489</td><td class="free">Yes</td>
+  <td>Scales to zero, so light use is cheap &mdash; but these models do not need a GPU. A 300M encoder
+      on an L4 is a rounding error of the card. Revisit only if you move to a multi-billion-param
+      reranker.</td></tr>
+</tbody></table></div>
+
+<h2>Per-model Cloud Run config</h2>
+<p class="h2note">What to actually put in the deploy flags, and what cold start to expect from loading
+weights out of the container image.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Model</th><th class="r">Params</th><th>Cloud Run flags</th><th class="r">Cold start</th><th class="r">$/month</th></tr></thead>
+<tbody>
+<tr><td class="name">potion-base-8M / 32M</td><td class="r num">8&ndash;32M</td>
+  <td class="num">--cpu 1 --memory 512Mi</td><td class="r num">&lt;1 s</td><td class="r num free">$0.00</td></tr>
+<tr class="pick"><td class="name">granite-embedding-97m-r2</td><td class="r num">97M</td>
+  <td class="num">--cpu 1 --memory 1Gi</td><td class="r num">~2 s</td><td class="r num free">$0.00</td></tr>
+<tr><td class="name">multilingual-e5-small</td><td class="r num">118M</td>
+  <td class="num">--cpu 1 --memory 1Gi</td><td class="r num">~2 s</td><td class="r num free">$0.00</td></tr>
+<tr class="pick"><td class="name">EmbeddingGemma-300M</td><td class="r num">308M</td>
+  <td class="num">--cpu 2 --memory 2Gi</td><td class="r num">~5 s</td><td class="r num free">$0.00</td></tr>
+<tr><td class="name">granite-311m-r2 / gte-multilingual-base</td><td class="r num">~310M</td>
+  <td class="num">--cpu 2 --memory 2Gi</td><td class="r num">~5 s</td><td class="r num free">$0.00</td></tr>
+<tr><td class="name">BGE-M3 / jina-v3</td><td class="r num">~570M</td>
+  <td class="num">--cpu 2 --memory 4Gi</td><td class="r num">~9 s</td><td class="r num free">$0.00</td></tr>
+<tr><td class="name">Qwen3-Embedding-0.6B</td><td class="r num">595M</td>
+  <td class="num">--cpu 2 --memory 4Gi</td><td class="r num">~10 s</td><td class="r num free">$0.00</td></tr>
+<tr><td class="name">gte-reranker-modernbert</td><td class="r num">149M</td>
+  <td class="num">--cpu 2 --memory 1Gi</td><td class="r num">~2 s</td><td class="r num paid">$2.13</td></tr>
+<tr><td class="name">Qwen3-Reranker-0.6B</td><td class="r num">596M</td>
+  <td class="num">--cpu 2 --memory 4Gi</td><td class="r num">~10 s</td><td class="r num big-paid">$42.09</td></tr>
+</tbody></table></div>
+
+<div class="callout">
+  <p><strong>Cold start is the only real trade-off</strong>, and your architecture makes it disappear.
+  Both embedding events &mdash; a listing being ingested, a profile being edited &mdash; are background
+  writes, not feed renders. A 5-second cold start on a cron job costs nobody anything. Nothing on the
+  read path ever waits for this service.</p>
+  <p>Bake the weights into the container image rather than fetching from GCS at boot. It makes the
+  image bigger and the cold start much shorter, and image storage is ~$0.10/GB/month.</p>
+</div>
+
+<div class="callout warn">
+  <p><strong>Do not deploy from Vertex AI Model Garden's one-click button.</strong> EmbeddingGemma,
+  BGE-M3 and the Qwen embedding models are all in Model Garden, and the deploy button provisions a
+  dedicated Vertex Endpoint &mdash; a node billed by the hour whether or not anything calls it.
+  That is $45&ndash;89/month for a workload the free tier would carry. Pull the weights from Model
+  Garden or Hugging Face, put them in your own image, deploy to Cloud Run.</p>
+</div>
+
+<div class="callout bad">
+  <p><strong>Still true regardless of platform:</strong> this has to be a <em>separate</em> Cloud Run
+  service, not added to the Express backend. That service runs <code>--concurrency 100 --cpu 1</code>,
+  and synchronous ONNX inference on Node's event loop would stall every other request on the instance.
+  Separate service, separate scaling, separate failure domain.</p>
+</div>
+
+<h2>What to deploy</h2>
+<ol>
+  <li><strong>New service: <code>glowup-embeddings</code>.</strong> Its own Dockerfile with the ONNX
+  weights baked in, its own <code>cloudbuild.yaml</code> step, deployed with
+  <code>--cpu 2 --memory 2Gi --min-instances 0 --concurrency 4</code>. Low concurrency on purpose:
+  inference is CPU-bound, so queueing beats thrashing.</li>
+  <li><strong>Make it internal-only.</strong> <code>--no-allow-unauthenticated</code> and grant the
+  backend's service account <code>roles/run.invoker</code>. Unlike your public API, nothing outside
+  the project should reach it.</li>
+  <li><strong>Cloud Run Job for the backfill.</strong> One pass over existing resources to populate
+  vectors, triggered manually or by Cloud Scheduler. Same image, different entrypoint.</li>
+  <li><strong>Call it only from writes.</strong> The ingest cron in
+  <code>src/services/</code> and the profile-update handler. Never from a feed render.</li>
+</ol>
+
+<footer>
+  <p><strong>Caveats.</strong> The Vertex AI Endpoint figure is the shakiest number here &mdash;
+  published sources quoted node-hour rates that imply anywhere from $45 to $89/month for a comparable
+  machine, and I could not reconcile them; the conclusion (billed hourly while idle, so wrong for this
+  workload) holds across the whole range, but check the calculator before budgeting. GKE Autopilot's
+  ~$113 assumes the cluster management fee applies, which free-tier credits may offset for a first
+  cluster. Cold-start figures are estimates from model size, not measured. Cloud Run free-tier
+  allowances are per billing account, not per service, so another busy service in the same account
+  eats the headroom that makes these zeros.</p>
+  <p><strong>Sources.</strong></p>
+  <ul>
+    <li><a href="https://cloud.google.com/run/pricing">Cloud Run pricing</a></li>
+    <li><a href="https://docs.cloud.google.com/run/docs/configuring/services/gpu">GPU support for Cloud Run services</a></li>
+    <li><a href="https://cloud.google.com/vertex-ai/pricing">Vertex AI pricing</a></li>
+    <li><a href="https://www.cloudzero.com/blog/google-vertex-ai-pricing/">Google Vertex AI pricing in 2026</a></li>
+    <li><a href="https://www.economize.cloud/resources/gcp/pricing/compute-engine/e2-small/">e2-small pricing</a></li>
+    <li><a href="https://www.economize.cloud/resources/gcp/pricing/compute-engine/e2-standard-2/">e2-standard-2 pricing</a></li>
+    <li><a href="https://www.thundercompute.com/blog/google-cloud-gpu-instances">Google Cloud GPU instances, specs and price (2026)</a></li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>

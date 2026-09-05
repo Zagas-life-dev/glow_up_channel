@@ -9,7 +9,13 @@
  */
 
 import Link from "next/link"
-import { RiGiftFill, RiExternalLinkLine, RiFileTextLine, RiImageLine } from "react-icons/ri"
+import {
+  RiGiftFill,
+  RiDownload2Line,
+  RiExternalLinkLine,
+  RiFileTextLine,
+  RiImageLine,
+} from "react-icons/ri"
 import { useLocale } from "@/lib/i18n/context"
 import { giftHref } from "@/lib/gifts/routes"
 import { formatGiftSize, type Gift } from "@/lib/gifts/types"
@@ -77,6 +83,15 @@ export default function GiftCard({ gift }: { gift: Gift }) {
                 {entry}
               </span>
             ))}
+            {/* Only worth a marker when it's true — every other gift is
+                read-in-the-app, so saying so on each card is noise. */}
+            {gift.allowDownload && (
+              <span className="inline-flex items-center gap-1 text-primary">
+                <span className="mr-1 text-border">·</span>
+                <RiDownload2Line className="h-3 w-3" aria-hidden />
+                {t("gifts.download")}
+              </span>
+            )}
           </div>
         )}
       </div>
