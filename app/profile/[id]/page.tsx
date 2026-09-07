@@ -63,6 +63,7 @@ import {
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
 import { isFounderBatch } from '@/lib/roles'
+import { trackConnectionRequest } from '@/lib/tracking'
 
 interface OnboardingData {
   country: string
@@ -544,6 +545,10 @@ export default function ProfilePage() {
         })
         const data = await response.json()
         if (data.success) {
+          // Only the connect direction reports. Disconnecting is a real action
+          // too, but counting it would make a user churning a connection on and
+          // off look like a busy day.
+          trackConnectionRequest(userId)
           if (profile?.isPrivate) {
             setConnectionStatus({ ...connectionStatus!, isFollowing: false, isPending: true })
           } else {

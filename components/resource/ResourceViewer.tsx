@@ -16,6 +16,7 @@ import {
   RiAspectRatioLine,
   RiClockwise2Line,
 } from 'react-icons/ri'
+import { trackResourceProgress } from '@/lib/tracking'
 
 // Configure the pdf.js worker. The `new URL(..., import.meta.url)` form lets the
 // bundler (Turbopack/webpack) emit the worker as a local asset — no external CDN.
@@ -97,6 +98,10 @@ function resourceSource(resourceId: string): ViewerSource {
     },
     saveProgress: (page, pageCount) => {
       ApiClient.saveResourceProgress(resourceId, page, pageCount ?? undefined).catch(() => {})
+      // Secondary tier, throttled to once a minute inside trackResourceProgress:
+      // page turns fire far too often to report raw, and a minute of sustained
+      // reading is the unit that actually means someone sat down with the thing.
+      trackResourceProgress(resourceId)
     },
   }
 }

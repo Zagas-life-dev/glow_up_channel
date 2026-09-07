@@ -14,6 +14,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { ApiClient } from "@/lib/api-client"
 import { RiCalendarLine } from "react-icons/ri"
+import { trackContentSubmit } from '@/lib/tracking'
 
 interface OpportunityFormData {
   submitter_name: string
@@ -107,6 +108,7 @@ export default function OpportunitySubmissionForm() {
       }
 
       await ApiClient.createOpportunity(opportunityData)
+      trackContentSubmit('opportunity')
       
       toast.success("Opportunity Submitted", {
         description: "Your opportunity has been submitted successfully and is pending approval."

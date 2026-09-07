@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageShell } from "@/components/layout/page-shell"
+import { trackPlaylistDiscover } from '@/lib/tracking'
 
 type TabType = "my" | "shared" | "saved" | "public"
 
@@ -111,6 +112,17 @@ function PlaylistsPageInner() {
       fetchSavedPlaylists()
     }
   }, [fetchPublicPlaylists, fetchPlaylists, fetchSavedPlaylists, isAuthenticated])
+
+  /**
+   * Browsing Discover — the explore-and-find-more surface for playlists.
+   *
+   * Only the public tab reports. Landing on "Mine" is looking at your own shelf,
+   * which the playlist_open on the detail page already covers. trackPlaylistDiscover
+   * throttles itself, because this effect re-runs whenever the tab regains focus.
+   */
+  useEffect(() => {
+    if (activeTab === "public") trackPlaylistDiscover()
+  }, [activeTab])
 
   const handleDelete = async (playlist: Playlist) => {
     if (!confirm(`Delete "${playlist.name}"? This action cannot be undone.`)) return

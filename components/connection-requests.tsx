@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { trackConnectionRespond } from '@/lib/tracking'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -68,6 +69,7 @@ export default function ConnectionRequests({ isOpen, onClose, requests, onUpdate
       const data = await response.json()
       
       if (data.success) {
+        trackConnectionRespond(request.requestId)
         onUpdate() // Refresh the requests list
       }
     } catch (err) {

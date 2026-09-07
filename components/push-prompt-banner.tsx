@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context"
 import { usePushNotifications } from "@/hooks/use-push-notifications"
 import { Button } from "@/components/ui/button"
 import { PWA_DISMISSED_EVENT } from "@/components/pwa-install-banner"
+import { trackPushEnable } from '@/lib/tracking'
 
 const STORAGE_KEY = "glowup-push-prompt-dismissed"
 const AUTH_DELAY_MS = 5 * 60 * 1000 // 5 minutes
@@ -75,7 +76,10 @@ export default function PushPromptBanner() {
 
   const handleAllow = async () => {
     const ok = await push.subscribe()
-    if (ok) handleDismiss()
+    if (ok) {
+      trackPushEnable()
+      handleDismiss()
+    }
   }
 
   if (!shouldShow) return null

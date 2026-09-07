@@ -32,6 +32,7 @@ import {
 } from "react"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
+import { trackTrackerAnswer } from "@/lib/tracking"
 import {
   getPending,
   recordOutcome,
@@ -55,13 +56,21 @@ const ARMED_KEY = "glowup.tracker.armed"
  * Checked on the client too so a misclick never even costs a round trip — the
  * server still enforces it, this is purely to stay quiet.
  */
-const MIN_AWAY_MS = 25 * 1000
+const MIN_AWAY_MS = 20 * 1000
 
 interface ArmedExit {
-  entryId: string
+  /**
+   * Null until the enrol request comes back.
+   *
+   * The record is parked BEFORE that request is awaited, because on mobile the
+   * await may not resolve until after the user has already returned — see
+   * `startTracking`. A null here is recoverable; a missing record is not.
+   */
+  entryId: string | null
   leftAt: number
   contentType: TrackerContentType
   contentId: string
+  source?: string
 }
 
 interface TrackerContextValue {
@@ -93,7 +102,9 @@ function readArmed(): ArmedExit | null {
     const raw = window.localStorage.getItem(ARMED_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as ArmedExit
-    if (!parsed?.entryId || typeof parsed.leftAt !== "number") return null
+    // entryId is allowed to be null — that is the un-reconciled case, not a
+    // corrupt one. Only a missing contentId or leftAt makes the record useless.
+    if (!parsed?.contentId || typeof parsed.leftAt !== "number") return null
     return parsed
   } catch {
     // A private window, cleared storage, or a half-written value. The server
@@ -174,7 +185,25 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
     writeArmed(null)
 
     try {
-      const { shouldPrompt, entry } = await recordReturn(armed.entryId, awayMs)
+      let entryId = armed.entryId
+
+      if (!entryId) {
+        // The enrol request never made it back before the document froze. Enrol
+        // now instead: recordClick upserts on (user, content), so this resolves
+        // to the same entry the lost request created — or creates it, if that
+        // request died before ever reaching the server. `replay` stops it being
+        // counted as a second click on the way through.
+        const replayed = await startTrackingRequest(
+          armed.contentType,
+          armed.contentId,
+          armed.source,
+          { replay: true },
+        )
+        if (!replayed.tracked || !replayed.entryId) return
+        entryId = replayed.entryId
+      }
+
+      const { shouldPrompt, entry } = await recordReturn(entryId, awayMs)
       if (shouldPrompt && entry) showEntry(entry)
     } finally {
       claiming.current = false
@@ -248,13 +277,40 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
       if (!isAuthenticated) return
 
       const leftAt = Date.now()
+
+      /**
+       * Park the exit BEFORE the enrol request, never after it.
+       *
+       * This runs in the same tick as the navigation. On desktop the origin tab
+       * survives a target=_blank, so awaiting first happened to work. On a phone
+       * the in-app browser opens over the document and FREEZES it: the fetch's
+       * promise cannot resolve until the user comes back, by which point the
+       * return listeners have already run and found nothing armed. `keepalive`
+       * keeps the request in flight, but does nothing for the response handler
+       * that was supposed to write this record.
+       *
+       * That is why the sheet almost never appeared on mobile. The record now
+       * goes down synchronously with no entryId, and the return path knows how
+       * to recover one.
+       */
+      writeArmed({ entryId: null, leftAt, contentType, contentId, source })
+
       const { tracked, entryId } = await startTrackingRequest(contentType, contentId, source)
+
+      // Reconcile only if this exit is still the armed one. If the user has
+      // already come back, claimArmedReturn cleared the record and is mid-flight;
+      // re-arming here would ask the same question twice.
+      const current = readArmed()
+      if (!current || current.leftAt !== leftAt) return
 
       // In-app resources come back tracked:false — nothing left the site, so
       // there is nothing to ask about on the way back.
-      if (!tracked || !entryId) return
+      if (!tracked || !entryId) {
+        writeArmed(null)
+        return
+      }
 
-      writeArmed({ entryId, leftAt, contentType, contentId })
+      writeArmed({ entryId, leftAt, contentType, contentId, source })
     },
     [isAuthenticated],
   )
@@ -278,6 +334,7 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      trackTrackerAnswer()
       setAnsweredAt(Date.now())
     },
     [showEntry],

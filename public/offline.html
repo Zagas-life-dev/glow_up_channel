@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Offline · UP</title>
+<meta name="theme-color" content="#ff6700">
+<!--
+  Deliberately a plain file in public/ rather than an app/ route.
+
+  This is what renders when the network is gone, so it cannot depend on the thing
+  that is unavailable: no Next.js runtime, no bundle, no webfont, no external
+  request of any kind. Its styles are inline and its only asset is the app icon,
+  which the service worker precaches alongside this file for exactly that reason.
+
+  It is not only a notice. It reads the worker's document cache and offers the
+  pages that will actually open, so being offline is a detour rather than a wall.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px calc(24px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+    background: #0B1222; color: #f4f5f7;
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased; text-align: center;
+  }
+  .card { width: 100%; max-width: 30rem; }
+  img.mark { width: 72px; height: 72px; margin-bottom: 22px; border-radius: 16px; }
+  h1 { font-size: 22px; line-height: 1.25; margin: 0 0 10px; font-weight: 640; letter-spacing: -0.01em; }
+  p.lede { margin: 0; color: #98a1b0; font-size: 15px; }
+  button {
+    margin-top: 24px; width: 100%;
+    font: 600 15px/1 inherit; color: #fff; background: #ff6700;
+    border: 0; border-radius: 10px; padding: 14px 26px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { background: #e65c00; }
+  .status { margin-top: 14px; font-size: 13px; color: #6b7688; min-height: 1.5em; }
+
+  /* Available-offline list. Hidden until we know there is something in it, so
+     an empty cache never shows an empty heading. */
+  .available { margin-top: 34px; text-align: left; }
+  .available h2 {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #6b7688; margin: 0 0 10px; text-align: center;
+  }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  a {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 16px; border-radius: 10px;
+    background: #18202f; border: 1px solid #232c3f;
+    color: #f4f5f7; text-decoration: none; font-size: 15px; font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a:active { background: #1f2838; }
+  a .chev { color: #6b7688; flex-shrink: 0; }
+  a .sub { color: #6b7688; font-size: 13px; font-weight: 400; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <!-- The precached app icon: no network needed, and the same mark the home
+         screen shows, so this page reads as the app rather than a browser error. -->
+    <img class="mark" src="/icons/icon-192.png" alt="" width="72" height="72">
+    <h1>You're offline</h1>
+    <p class="lede">UP can't reach the network right now.</p>
+    <button type="button" id="retry">Try again</button>
+    <p class="status" id="status" role="status"></p>
+
+    <nav class="available" id="available" hidden aria-labelledby="available-heading">
+      <h2 id="available-heading">Available offline</h2>
+      <ul id="available-list"></ul>
+    </nav>
+  </div>
+
+<script>
+(function () {
+  var btn = document.getElementById("retry")
+  var status = document.getElementById("status")
+
+  function retry() {
+    if (!navigator.onLine) {
+      status.textContent = "Still no connection."
+      return
+    }
+    status.textContent = "Reconnecting…"
+    location.reload()
+  }
+
+  btn.addEventListener("click", retry)
+  // Reload on our own once the device says it is back, so a user who set the
+  // phone down does not have to notice and tap.
+  window.addEventListener("online", retry)
+
+  /* --- what can still be opened ------------------------------------------ */
+
+  var SECTIONS = {
+    "": "Home",
+    opportunities: "Opportunities",
+    events: "Events",
+    jobs: "Jobs",
+    resources: "Resources",
+    search: "Search",
+    playlists: "Playlists",
+    tracker: "Tracker",
+    profile: "Profile",
+    notifications: "Notifications",
+    saved: "Saved",
+  }
+
+  /** A cached path becomes a label plus, for a detail page, the section it is in. */
+  function describe(pathname) {
+    var parts = pathname.split("/").filter(Boolean)
+    var head = parts[0] || ""
+    var name = SECTIONS[head]
+    if (!name) {
+      if (!head) return null
+      name = head.charAt(0).toUpperCase() + head.slice(1).replace(/-/g, " ")
+    }
+    // A second segment means a specific item rather than the section index.
+    return parts.length > 1 ? { label: name, sub: "Saved page" } : { label: name, sub: "" }
+  }
+
+  function render(entries) {
+    if (!entries.length) return
+    var list = document.getElementById("available-list")
+    entries.forEach(function (entry) {
+      var li = document.createElement("li")
+      var a = document.createElement("a")
+      a.href = entry.href
+
+      var left = document.createElement("span")
+      left.textContent = entry.label
+      a.appendChild(left)
+
+      var right = document.createElement("span")
+      right.className = entry.sub ? "sub" : "chev"
+      right.textContent = entry.sub || "›"
+      a.appendChild(right)
+
+      li.appendChild(a)
+      list.appendChild(li)
+    })
+    document.getElementById("available").hidden = false
+  }
+
+  if (!("caches" in window)) return
+
+  caches
+    .keys()
+    .then(function (names) {
+      var docs = names.filter(function (n) { return n.indexOf("up-documents-") === 0 })
+      if (!docs.length) return []
+      return caches.open(docs[0]).then(function (cache) { return cache.keys() })
+    })
+    .then(function (requests) {
+      var seen = Object.create(null)
+      var entries = []
+      ;(requests || []).forEach(function (request) {
+        var url
+        try { url = new URL(request.url) } catch (e) { return }
+        if (url.origin !== location.origin) return
+        if (url.pathname === "/offline.html") return
+        if (seen[url.pathname]) return
+        var described = describe(url.pathname)
+        if (!described) return
+        seen[url.pathname] = true
+        entries.push({ href: url.pathname, label: described.label, sub: described.sub })
+      })
+      // Section indexes first, then saved detail pages; capped so the list stays
+      // scannable on a phone rather than becoming a history dump.
+      entries.sort(function (a, b) {
+        if (!a.sub !== !b.sub) return a.sub ? 1 : -1
+        return a.label.localeCompare(b.label)
+      })
+      render(entries.slice(0, 10))
+    })
+    .catch(function () { /* no cache to offer; the notice above still stands */ })
+})()
+</script>
+</body>
+</html>

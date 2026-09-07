@@ -6,38 +6,73 @@
  * - Active Daily Users: signed-in people who did something that counts as using the
  *   product that day.
  *
- * What counts is decided by the SERVER, in services/userActivityService.js
- * (ACTIVE_USER_ACTIONS). This file can only report what happened; it cannot promote an
- * action into the active-user definition. That split is deliberate — this bundle is
- * served from a CDN and a visitor may be running a days-old copy of it, so a definition
- * that lived here could not be changed without waiting out every cache.
+ * What counts is decided by the SERVER, in services/userActivityService.js. This file
+ * can only report what happened; it cannot promote an action into the active-user
+ * definition. That split is deliberate — this bundle is served from a CDN and a visitor
+ * may be running a days-old copy of it, so a definition that lived here could not be
+ * changed without waiting out every cache.
  *
- * Qualifying today: content_view, like, save, share, playlist_add, search, apply.
+ * The server sorts what it receives into three tiers:
  *
- * `repost`, `post_created` and `community_engagement` are still reported and still
- * stored — they feed recommendations and moderation — but the server files them under
- * `engagement` rather than `active`, so they no longer make someone an active user.
+ *   PRIMARY   — one occurrence makes the user active for that day. These are the acts
+ *               that only happen on purpose.
+ *   SECONDARY — real interactions, individually too weak to mean much. Three of them
+ *               in a UTC day (repeats included) makes the user active.
+ *   NAVIGATION — never counted, and never even sent. Route changes, tab switches,
+ *               infinite-scroll paging, back/forward/refresh. Movement is not usage,
+ *               and paging alone would qualify every idle session.
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 /**
- * Actions that make a signed-in user active for the day. Mirrors ACTIVE_USER_ACTIONS on
- * the server; the server is authoritative if the two ever drift.
+ * Actions that make a signed-in user active on a single occurrence.
+ * Mirrors ACTIVE_USER_ACTIONS on the server; the server is authoritative if the two
+ * ever drift.
  */
-export type ActiveUserAction =
+export type PrimaryAction =
   | 'content_view'
   | 'like'
   | 'save'
   | 'share'
   | 'playlist_add'
+  | 'playlist_open'
+  | 'playlist_create'
   | 'search'
   | 'apply';
+
+/**
+ * Actions that count only in aggregate — three or more in a day.
+ * Mirrors SECONDARY_USER_ACTIONS on the server.
+ */
+export type SecondaryAction =
+  | 'playlist_discover'
+  | 'playlist_edit'
+  | 'playlist_delete'
+  | 'playlist_item_remove'
+  | 'playlist_save'
+  | 'playlist_share'
+  | 'collaborator_invite'
+  | 'invitation_respond'
+  | 'tracker_open'
+  | 'tracker_answer'
+  | 'tracker_status_update'
+  | 'resource_progress'
+  | 'filter_apply'
+  | 'profile_edit'
+  | 'connection_request'
+  | 'connection_respond'
+  | 'content_submit'
+  | 'locked_in_session'
+  | 'push_enable';
+
+/** Kept for the older call sites. `content_view` and friends are the primary tier. */
+export type ActiveUserAction = PrimaryAction;
 
 /** Actions reported but NOT counted toward active users. Recorded for other analytics. */
 export type NonQualifyingAction = 'repost' | 'post_created' | 'community_engagement';
 
-export type TrackedAction = ActiveUserAction | NonQualifyingAction;
+export type TrackedAction = PrimaryAction | SecondaryAction | NonQualifyingAction;
 
 /**
  * Get or create a session ID
@@ -399,4 +434,149 @@ export function trackVote(postId: string): void {
     contentType: 'community',
     contentId: postId
   });
+}
+
+/* ------------------------------------------------------------------------- *
+ * Secondary-tier reporting.
+ *
+ * Everything below reports an action the server files under SECONDARY_USER_ACTIONS:
+ * individually too weak to make someone an active user, but three or more of them in a
+ * day is a real session. Repeats count toward that total, which is why the two noisy
+ * ones here are throttled rather than sent raw — a PDF page-turn listener firing sixty
+ * times is one person reading, not sixty acts of engagement, and writing sixty rows to
+ * answer a question that three can answer is just cost.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Allow an action through at most once per `windowMs` for a given key.
+ *
+ * Returns true when the caller should report. Storage failures return true: an extra
+ * row is a far smaller problem than an active user who never registers as one.
+ */
+function throttle(key: string, windowMs: number): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const storageKey = `track:${key}`;
+    const last = Number(sessionStorage.getItem(storageKey) || 0);
+    const now = Date.now();
+    if (last && now - last < windowMs) return false;
+    sessionStorage.setItem(storageKey, String(now));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+/** Opened a playlist and looked at what is in it. Primary tier — counts on its own. */
+export function trackPlaylistOpen(playlistId: string): void {
+  trackActiveActivity('playlist_open', { contentId: playlistId });
+}
+
+/** Made a new playlist. Primary tier — counts on its own. */
+export function trackPlaylistCreate(playlistId: string): void {
+  trackActiveActivity('playlist_create', { contentId: playlistId });
+}
+
+/** Opened Discover to browse public playlists — the explore-and-find-more surface. */
+export function trackPlaylistDiscover(): void {
+  // Once a minute: the tab refetches on focus and on every tab switch back.
+  if (!throttle('playlist_discover', 60 * 1000)) return;
+  trackActiveActivity('playlist_discover', { page: '/playlists' });
+}
+
+export function trackPlaylistEdit(playlistId: string): void {
+  trackActiveActivity('playlist_edit', { contentId: playlistId });
+}
+
+export function trackPlaylistDelete(playlistId: string): void {
+  trackActiveActivity('playlist_delete', { contentId: playlistId });
+}
+
+export function trackPlaylistItemRemove(playlistId: string): void {
+  trackActiveActivity('playlist_item_remove', { contentId: playlistId });
+}
+
+/** Saved someone else's public playlist. */
+export function trackPlaylistSave(playlistId: string): void {
+  trackActiveActivity('playlist_save', { contentId: playlistId });
+}
+
+export function trackPlaylistShare(playlistId: string): void {
+  trackActiveActivity('playlist_share', { contentId: playlistId });
+}
+
+export function trackCollaboratorInvite(playlistId: string): void {
+  trackActiveActivity('collaborator_invite', { contentId: playlistId });
+}
+
+/** Accepted or declined a playlist invitation. */
+export function trackInvitationRespond(playlistId: string): void {
+  trackActiveActivity('invitation_respond', { contentId: playlistId });
+}
+
+/** Opened the tracker page to look at their own applications. */
+export function trackTrackerOpen(): void {
+  if (!throttle('tracker_open', 60 * 1000)) return;
+  trackActiveActivity('tracker_open', { page: '/tracker' });
+}
+
+/** Answered the return sheet. The honesty tracker's whole point. */
+export function trackTrackerAnswer(): void {
+  trackActiveActivity('tracker_answer', { page: '/tracker' });
+}
+
+/** Moved an entry along its lifecycle from the tracker page. */
+export function trackTrackerStatusUpdate(): void {
+  trackActiveActivity('tracker_status_update', { page: '/tracker' });
+}
+
+/**
+ * Read further into an in-app resource.
+ *
+ * Throttled to one report a minute per resource. Page-turn events fire far too often
+ * to send raw, and a minute of sustained reading is the unit that actually means
+ * something: three of them is someone who sat down with the thing.
+ */
+export function trackResourceProgress(resourceId: string): void {
+  if (!throttle(`resource_progress:${resourceId}`, 60 * 1000)) return;
+  trackActiveActivity('resource_progress', { contentType: 'resource', contentId: resourceId });
+}
+
+/**
+ * Narrowed the feed or search by a real filter.
+ *
+ * Explicitly NOT a tab switch — switching between All / Jobs / Events is navigation and
+ * is never reported. This is a category, location or type filter being applied.
+ */
+export function trackFilterApply(): void {
+  if (!throttle('filter_apply', 10 * 1000)) return;
+  trackActiveActivity('filter_apply');
+}
+
+export function trackProfileEdit(): void {
+  trackActiveActivity('profile_edit');
+}
+
+export function trackConnectionRequest(userId: string): void {
+  trackActiveActivity('connection_request', { contentId: userId });
+}
+
+/** Accepted or declined a connection request. */
+export function trackConnectionRespond(userId: string): void {
+  trackActiveActivity('connection_respond', { contentId: userId });
+}
+
+/** Submitted a listing for review. */
+export function trackContentSubmit(contentType: 'opportunity' | 'event' | 'job' | 'resource'): void {
+  trackActiveActivity('content_submit', { contentType });
+}
+
+/** Finished a Locked In focus session. */
+export function trackLockedInSession(): void {
+  trackActiveActivity('locked_in_session');
+}
+
+/** Turned push notifications on. */
+export function trackPushEnable(): void {
+  trackActiveActivity('push_enable');
 }

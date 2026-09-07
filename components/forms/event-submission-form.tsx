@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
 import { toast } from "sonner"
 import { ApiClient } from "@/lib/api-client"
+import { trackContentSubmit } from '@/lib/tracking'
 
 interface EventFormData {
   name: string
@@ -124,6 +125,7 @@ export default function EventSubmissionForm() {
       }
 
       await ApiClient.createEvent(eventData)
+      trackContentSubmit('event')
       
       toast.success("Event Submitted", {
         description: "Your event has been submitted successfully and is pending approval."

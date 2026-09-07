@@ -66,6 +66,7 @@ import PageSkeleton from '@/components/skeletons/page-skeleton'
 import { PageShell } from '@/components/layout/page-shell'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { canAccessMonitorPortal, canPublishContent, isMonitor } from '@/lib/roles'
+import { trackProfileEdit } from '@/lib/tracking'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -768,6 +769,9 @@ export default function SettingsPage() {
       setLastSavedAt(new Date())
 
       if (!silent) {
+        // Only a deliberate save reports. The silent autosave fires on a timer
+        // and would otherwise let a form left open qualify a user on its own.
+        trackProfileEdit()
         toast.success('Profile updated successfully!')
       }
     } catch (err) {

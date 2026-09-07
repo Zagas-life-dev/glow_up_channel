@@ -15,6 +15,7 @@ import {
 } from "react"
 import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
+import { trackLockedInSession } from '@/lib/tracking'
 
 export interface LockedInTodoItem {
   id: string
@@ -197,6 +198,7 @@ export function LockedInProvider({ children }: { children: ReactNode }) {
         durationSeconds,
         endReason: "user_ended",
       })
+      trackLockedInSession()
     } finally {
       lastStatsMarkRef.current = 0
       setState({ ...defaultState })

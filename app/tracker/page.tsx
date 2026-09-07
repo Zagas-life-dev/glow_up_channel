@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useTracker } from "@/contexts/tracker-context"
 import { getTracker, updateStatus } from "@/lib/tracker/api"
+import { trackTrackerOpen, trackTrackerStatusUpdate } from "@/lib/tracking"
 import {
   BUCKET_LABELS,
   BUCKET_ORDER,
@@ -180,6 +181,9 @@ function TrackerContent() {
 
   useEffect(() => {
     void load()
+    // Checking your own applications is using the product, so it reports. It is
+    // secondary tier: opening the page once is not a session on its own.
+    trackTrackerOpen()
   }, [load])
 
   // Answering the sheet elsewhere in the app moves an entry between buckets,
@@ -195,6 +199,7 @@ function TrackerContent() {
       // client would only be undone a moment later by the refetch.
       try {
         await updateStatus(entryId, status)
+        trackTrackerStatusUpdate()
       } finally {
         await load()
       }

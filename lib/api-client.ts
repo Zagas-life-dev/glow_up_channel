@@ -292,7 +292,36 @@ export class ApiClient {
     return false;
   }
 
+  /**
+   * Message shown when a write is attempted with no connection. Exported shape
+   * is a plain Error, so every existing `catch` that surfaces `error.message`
+   * displays it without changes.
+   */
+  static readonly OFFLINE_WRITE_MESSAGE =
+    "You're offline. You can keep reading saved listings, but changes can't be saved until you reconnect.";
+
+  /**
+   * Offline is read-only, and this is where that is enforced.
+   *
+   * The UI hides write controls when the connection drops (see
+   * hooks/use-online-status.ts), but that is presentation and it only covers the
+   * surfaces someone remembered to gate. This covers all of them: nothing is
+   * queued for replay, so a write with no connection can only fail, and failing
+   * here produces a sentence a user can act on instead of "Failed to fetch"
+   * from somewhere deep in a form handler.
+   *
+   * Reads are deliberately left alone — the service worker answers those from
+   * cache, which is the entire point of the offline mode.
+   */
+  private static assertWritableOffline(method?: string): void {
+    const verb = (method || 'GET').toUpperCase();
+    if (verb === 'GET' || verb === 'HEAD' || verb === 'OPTIONS') return;
+    if (typeof navigator === 'undefined' || navigator.onLine) return;
+    throw new Error(ApiClient.OFFLINE_WRITE_MESSAGE);
+  }
+
   public static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+    this.assertWritableOffline(options.method);
     try {
       let response = await fetch(url, {
         ...options,
@@ -347,6 +376,7 @@ export class ApiClient {
     method: 'POST' | 'PUT' | 'PATCH',
     formData: FormData,
   ): Promise<Response> {
+    this.assertWritableOffline(method);
     const doFetch = () => {
       const headers: Record<string, string> = {};
       const token = this.getAccessToken();
@@ -376,6 +406,8 @@ export class ApiClient {
 
   // Authentication Methods
   static async login(email: string, password: string): Promise<LoginResponse> {
+    // Raw fetch, so the read-only rule is restated rather than inherited.
+    this.assertWritableOffline('POST');
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -388,6 +420,8 @@ export class ApiClient {
   }
 
   static async registerOpportunitySeeker(email: string, password: string, firstName?: string, lastName?: string, dateOfBirth?: string): Promise<RegisterResponse> {
+    // Raw fetch, so the read-only rule is restated rather than inherited.
+    this.assertWritableOffline('POST');
     const body: Record<string, unknown> = { email, password, firstName, lastName, dateOfBirth };
     if (typeof window !== 'undefined') {
       body.anonId = getOrCreateAnonId();
@@ -427,7 +461,21 @@ export class ApiClient {
       // Backend might be down, but we still want to logout locally
     } finally {
       this.clearTokens();
+      this.clearOfflineCaches();
     }
+  }
+
+  /**
+   * Drop the service worker's cached pages and listing data on sign-out.
+   *
+   * Only endpoints that return identical bytes to every caller are ever cached
+   * (see PUBLIC_API in public/sw.js), so nothing user-specific is sitting there
+   * to leak. This is here so that stays true by construction on a shared device
+   * rather than by anyone remembering to re-check that list.
+   */
+  private static clearOfflineCaches(): void {
+    if (typeof navigator === 'undefined') return;
+    navigator.serviceWorker?.controller?.postMessage('up-clear-caches');
   }
 
   // User Profile Methods
@@ -552,6 +600,9 @@ export class ApiClient {
    * `fields` contains the text metadata (title, description, category, tags, etc.).
    */
   static async createResourceWithFile(file: File, fields: Record<string, any>): Promise<any> {
+    // Multipart uploads bypass makeAuthenticatedRequest, so the read-only rule
+    // has to be restated here rather than inherited.
+    this.assertWritableOffline('POST');
     const formData = new FormData();
     Object.entries(fields).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
@@ -586,6 +637,9 @@ export class ApiClient {
    * Sends multipart/form-data; the file field must be named "file".
    */
   static async updateResourceWithFile(id: string, file: File, fields: Record<string, any>): Promise<any> {
+    // Multipart uploads bypass makeAuthenticatedRequest, so the read-only rule
+    // has to be restated here rather than inherited.
+    this.assertWritableOffline('POST');
     const formData = new FormData();
     Object.entries(fields).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
@@ -2067,6 +2121,9 @@ export class ApiClient {
    * not start a campaign.
    */
   static async uploadPromotionHeroImage(file: File): Promise<string> {
+    // Multipart uploads bypass makeAuthenticatedRequest, so the read-only rule
+    // has to be restated here rather than inherited.
+    this.assertWritableOffline('POST');
     const formData = new FormData();
     formData.append('heroImage', file);
 
@@ -2381,6 +2438,8 @@ export class ApiClient {
   }
 
   static async verifyResetCode(email: string, code: string): Promise<void> {
+    // Raw fetch, so the read-only rule is restated rather than inherited.
+    this.assertWritableOffline('POST');
     const response = await fetch(`${API_BASE_URL}/api/auth/verify-reset-code`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2390,6 +2449,8 @@ export class ApiClient {
   }
 
   static async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    // Raw fetch, so the read-only rule is restated rather than inherited.
+    this.assertWritableOffline('POST');
     const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

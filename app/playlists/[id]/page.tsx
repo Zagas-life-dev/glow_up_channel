@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/sheet"
 import { toast } from "sonner"
 import { typeConfigFor, typeIconClass, playlistItemHref } from "@/lib/playlist-item-display"
+import { trackPlaylistOpen } from '@/lib/tracking'
 
 /** Type filter chips only earn their space on a playlist long and mixed enough to need them. */
 const FILTER_MIN_ITEMS = 8
@@ -95,6 +96,10 @@ export default function PlaylistDetailPage() {
         const found = await getPlaylistById(playlistId)
         if (isMounted) {
           setPlaylist(found)
+          // Primary tier: opening a playlist and looking at what is in it counts
+          // on its own. Reported only on a playlist that actually resolved — a
+          // 403 or a dead id is not someone using their library.
+          if (found) trackPlaylistOpen(playlistId)
         }
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status

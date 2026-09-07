@@ -6,6 +6,7 @@ import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { trackLike, trackSave, trackShare } from '@/lib/tracking'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/hooks/use-online-status'
 import {
   RiHeartLine,
   RiHeartFill,
@@ -40,6 +41,11 @@ export default function EngagementActions({
   onPostClick,
 }: EngagementActionsProps) {
   const { isAuthenticated } = useAuth()
+  // Offline is read-only. Like, save and post all write to the API and nothing
+  // is queued for replay, so they are removed rather than left to fail — Share
+  // stays because it is the OS share sheet or the clipboard, neither of which
+  // needs the network.
+  const readOnly = useReadOnly()
   const [engagementStatus, setEngagementStatus] = useState<EngagementStatus>({
     isSaved: false,
     isLiked: false,
@@ -216,6 +222,7 @@ export default function EngagementActions({
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {/* Like – same as feed card */}
+      {!readOnly && (
       <button
         type="button"
         onClick={handleLike}
@@ -234,8 +241,10 @@ export default function EngagementActions({
         )}
         {likeCount > 0 && <span className="text-xs">{likeCount}</span>}
       </button>
+      )}
 
       {/* Save – same as feed card */}
+      {!readOnly && (
       <button
         type="button"
         onClick={handleSave}
@@ -253,6 +262,7 @@ export default function EngagementActions({
           <RiBookmarkLine className="w-4 h-4" aria-hidden />
         )}
       </button>
+      )}
 
       {/* Share – same as feed card */}
       <button
@@ -271,7 +281,7 @@ export default function EngagementActions({
       </button>
 
       {/* Post – same as feed card, only when onPostClick provided */}
-      {onPostClick && isAuthenticated && (
+      {onPostClick && isAuthenticated && !readOnly && (
         <button
           type="button"
           onClick={(e) => {

@@ -44,19 +44,24 @@ async function unwrap<T>(response: Response): Promise<T | null> {
  * a normal fetch is cancelled once the document begins unloading — which on a
  * mobile in-app browser is exactly when this runs.
  *
- * Returns the entry id so the caller can arm the return watcher. A null means
- * the request lost the race with the unload, which is survivable: the pending
- * queue is refetched on the next app open regardless.
+ * Returns the entry id so the caller can reconcile the armed record. A null is
+ * survivable: the caller parks the exit before this is awaited, and the return
+ * path re-enrols with `replay` if the id never arrived.
+ *
+ * `replay` marks exactly that second attempt. It tells the server this is the
+ * same pursuit being recovered, not a fresh click, so the click count stays
+ * honest.
  */
 export async function startTracking(
   contentType: TrackerContentType,
   contentId: string,
   source?: string,
+  options?: { replay?: boolean },
 ): Promise<{ tracked: boolean; entryId: string | null }> {
   try {
     const response = await ApiClient.makeAuthenticatedRequest(`${API_BASE_URL}/api/tracker/start`, {
       method: "POST",
-      body: JSON.stringify({ contentType, contentId, source }),
+      body: JSON.stringify({ contentType, contentId, source, replay: !!options?.replay }),
       keepalive: true,
     })
     const data = await unwrap<{ tracked: boolean; entry?: TrackerEntry }>(response)

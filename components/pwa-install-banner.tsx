@@ -361,10 +361,12 @@ export default function PwaInstallBanner() {
 
         <div className="flex flex-col items-center text-center">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
+            {/* The manifest icon rather than the in-app logo, so the preview here
+                is literally what lands on the home screen. */}
             <img
-              src="/images/Yellow and Black Modern Media Company Logo (14).png"
+              src="/icons/icon-192.png"
               alt=""
-              className="h-10 w-10"
+              className="h-10 w-10 rounded-xl"
             />
           </div>
           <h2 id="pwa-install-title" className="mt-4 text-xl font-bold text-foreground">

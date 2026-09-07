@@ -26,6 +26,7 @@ import GiftPopup from "@/components/gifts/gift-popup"
 import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
+import OfflineBanner from "@/components/offline-banner"
 import { getMetadataBase } from "@/lib/site-url"
 import { JsonLd } from "@/components/seo/json-ld"
 import { buildSiteJsonLd } from "@/lib/seo/structured-data"
@@ -85,10 +86,16 @@ export const metadata: Metadata = {
     },
   },
   alternates: { canonical: "/" },
+  // Generated set from scripts/generate-pwa-icons.mjs. The Apple entry is opaque
+  // and 180x180 on purpose: iOS masks the corners itself and renders a
+  // transparent touch icon against black.
   icons: {
-    icon: "/images/Yellow and Black Modern Media Company Logo (14).png",
-    shortcut: "/images/Yellow and Black Modern Media Company Logo (14).png",
-    apple: "/images/Yellow and Black Modern Media Company Logo (14).png",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192.png",
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     type: "website",
@@ -150,8 +157,6 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="UP" />
-        <link rel="apple-touch-icon" href="/images/Yellow and Black Modern Media Company Logo (14).png" />
-        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="google" content="notranslate" />
         {/* Publisher identity every listing's JSON-LD points back to. */}
         <JsonLd data={buildSiteJsonLd()} />
@@ -177,6 +182,7 @@ export default async function RootLayout({
                           <AppLayout>
                             <VisitTracker />
                             <RegisterSw />
+                            <OfflineBanner />
                             <PwaInstallBanner />
                             {children}
                             <TrackerReturnSheet />

@@ -2,6 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import {
+  trackPlaylistCreate,
+  trackPlaylistDelete,
+  trackPlaylistEdit,
+  trackPlaylistItemRemove,
+  trackPlaylistSave,
+  trackCollaboratorInvite,
+  trackInvitationRespond,
+} from '@/lib/tracking'
 
 /**
  * What a playlist may hold. Mirrors PLAYLIST_ITEM_TYPES on the backend.
@@ -351,6 +360,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || 'Failed to save playlist')
     }
 
+    trackPlaylistSave(playlistId)
+
     // Refresh saved playlists
     await fetchSavedPlaylists()
   }, [isAuthenticated, getAuthHeaders, fetchSavedPlaylists])
@@ -407,6 +418,9 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       throw err
     }
 
+    // Primary tier: making a playlist is a deliberate act and counts on its own.
+    trackPlaylistCreate(result.data.playlist._id)
+
     // Refresh playlists
     await fetchPlaylists()
     
@@ -438,6 +452,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       throw err
     }
 
+    trackPlaylistEdit(id)
+
     // Refresh playlists
     await fetchPlaylists()
     
@@ -456,6 +472,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     if (!result.success) {
       throw new Error(result.message || 'Failed to delete playlist')
     }
+
+    trackPlaylistDelete(id)
 
     // Refresh playlists
     await fetchPlaylists()
@@ -517,6 +535,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || 'Failed to remove item from playlist')
     }
 
+    trackPlaylistItemRemove(playlistId)
+
     // Refresh playlists
     await fetchPlaylists()
   }, [getAuthHeaders, fetchPlaylists])
@@ -534,6 +554,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     if (!result.success) {
       throw new Error(result.message || 'Failed to send invitation')
     }
+
+    trackCollaboratorInvite(playlistId)
 
     // Refresh playlists
     await fetchPlaylists()
@@ -569,6 +591,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || 'Failed to accept invitation')
     }
 
+    trackInvitationRespond(playlistId)
+
     // Refresh data
     await fetchPlaylists()
     await fetchInvitations()
@@ -586,6 +610,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     if (!result.success) {
       throw new Error(result.message || 'Failed to decline invitation')
     }
+
+    trackInvitationRespond(playlistId)
 
     // Refresh invitations
     await fetchInvitations()

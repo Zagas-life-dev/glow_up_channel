@@ -31,6 +31,7 @@ import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
 import { trackLike, trackSave, trackShare, trackContentView } from '@/lib/tracking'
+import { useReadOnly } from '@/hooks/use-online-status'
 import {
   resolveFeedContentKind,
   toEngagementApiPlural,
@@ -210,6 +211,10 @@ function FeedAction({
 export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCardProps) {
   const { isAuthenticated } = useAuth()
   const [isLiked, setIsLiked] = useState(false)
+  // Offline is read-only: like, save and add-to-playlist all write to the API
+  // with nothing queued for replay. Share survives because it is the OS share
+  // sheet or the clipboard.
+  const readOnly = useReadOnly()
   const [isSaved, setIsSaved] = useState(false)
   const [likeCount, setLikeCount] = useState(item.metrics?.likeCount || 0)
   const [viewCount, setViewCount] = useState(item.metrics?.viewCount ?? 0)
@@ -761,33 +766,37 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
           {/* Actions sit above the title's stretched link */}
           <div className="relative z-10 mt-3 flex items-center gap-0.5 border-t border-border/60 pt-2.5">
-            <FeedAction
-              onClick={handleLike}
-              active={isLiked}
-              activeClass="text-red-500"
-              hoverClass="hover:text-red-500"
-              icon={isLiked ? RiHeartFill : RiHeartLine}
-              count={likeCount}
-              label="Like"
-            />
-            <FeedAction
-              onClick={handleSave}
-              active={isSaved}
-              activeClass="text-primary"
-              hoverClass="hover:text-primary"
-              icon={isSaved ? RiBookmarkFill : RiBookmarkLine}
-              count={saveCount}
-              label="Save"
-            />
-            {/* Shown to guests too: the count is public like every other one here, and
-                pressing it prompts sign-up rather than silently doing nothing. */}
-            <FeedAction
-              onClick={handleAddToPlaylist}
-              hoverClass="hover:text-violet-500"
-              icon={RiListOrdered}
-              count={playlistAddCount}
-              label="Add to playlist"
-            />
+            {!readOnly && (
+              <>
+                <FeedAction
+                  onClick={handleLike}
+                  active={isLiked}
+                  activeClass="text-red-500"
+                  hoverClass="hover:text-red-500"
+                  icon={isLiked ? RiHeartFill : RiHeartLine}
+                  count={likeCount}
+                  label="Like"
+                />
+                <FeedAction
+                  onClick={handleSave}
+                  active={isSaved}
+                  activeClass="text-primary"
+                  hoverClass="hover:text-primary"
+                  icon={isSaved ? RiBookmarkFill : RiBookmarkLine}
+                  count={saveCount}
+                  label="Save"
+                />
+                {/* Shown to guests too: the count is public like every other one here, and
+                    pressing it prompts sign-up rather than silently doing nothing. */}
+                <FeedAction
+                  onClick={handleAddToPlaylist}
+                  hoverClass="hover:text-violet-500"
+                  icon={RiListOrdered}
+                  count={playlistAddCount}
+                  label="Add to playlist"
+                />
+              </>
+            )}
             <FeedAction
               onClick={handleShare}
               active={justShared}
