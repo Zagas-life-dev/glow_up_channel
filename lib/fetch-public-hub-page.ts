@@ -36,6 +36,7 @@ import {
   MAX_EXTREME_IN_FEED_TOP,
   MAX_PROMOTED_IN_FEED_TOP,
   enforcePromotedCaps,
+  leadWithExtreme,
 } from "@/lib/promotion-placement"
 
 export { HOME_LIST_PAGE_SIZE as HUB_PAGE_SIZE }
@@ -111,14 +112,26 @@ export async function fetchPublicHubPage({
   // nowhere else. Applying them per page would also throttle paid placement at
   // the head of page four, which is not what they are for — and the ordinary
   // promoted share already keeps density modest down there.
+  //
+  // The extreme lead belongs to the first page for the same reason, and has to
+  // be stated here rather than left to `orderByDeadlineLottery`: that draws the
+  // promoted pool at `promotedLeadBias` odds and then picks *which* promoted
+  // listing by weight, so an extreme campaign sharing the page with ordinary
+  // promotions had no better than a good chance at the top row. A search is
+  // left alone — someone who typed a query is looking for something specific,
+  // and leading with an advert instead is the one place this would read as
+  // broken rather than paid.
   const items =
     isFirstPage && !isSearching
-      ? enforcePromotedCaps(ordered, {
-          isPromoted,
-          isExtreme: isExtremePromotion,
-          maxExtreme: MAX_EXTREME_IN_FEED_TOP,
-          maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
-        })
+      ? enforcePromotedCaps(
+          leadWithExtreme(ordered, { isExtreme: isExtremePromotion, sessionSeed }),
+          {
+            isPromoted,
+            isExtreme: isExtremePromotion,
+            maxExtreme: MAX_EXTREME_IN_FEED_TOP,
+            maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
+          },
+        )
       : ordered
 
   const result: HomeListPageResult = { ...page, items }

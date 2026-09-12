@@ -9,12 +9,14 @@
  *
  *   - **Standard** boosts placement in the feed and the hub pages. The provider
  *     picks how long it runs.
- *   - **Extreme** additionally announces the listing to readers directly — a
- *     popup, a push and an email slot — and its length is fixed at 21 days.
- *     Fixed because the announcement schedule is expressed as offsets into that
- *     window; a chosen length would desynchronise the three channels from each
- *     other. So the duration control is not disabled for extreme, it is
- *     replaced, which is the honest way to show a control that does not apply.
+ *   - **Extreme** additionally takes the first card of every feed and announces
+ *     the listing to readers directly — a popup, a push and an email slot. Its
+ *     length used to be fixed at 21 days, because the announcement schedule was
+ *     a set of offsets into that window and any other length would have pulled
+ *     the three channels apart. The schedule is now drawn from whatever span the
+ *     campaign is created with and the number of announcements scales with it,
+ *     so the provider picks the length here too — and the line under the control
+ *     tells them what a longer run buys.
  *
  * Both are free. Neither has a budget, a bid or a per-click charge.
  */
@@ -32,6 +34,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ApiClient from '@/lib/api-client'
+import { announcementCount } from '@/lib/promotions/announcement'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
@@ -52,8 +55,17 @@ const MIN_DURATION = 7
 const MAX_DURATION = 365
 const QUICK_DURATIONS = [7, 14, 30, 60, 90]
 
-/** Fixed server-side. Shown here so the choice is not a surprise on submit. */
-const EXTREME_DURATION = 21
+/**
+ * Extreme runs may be shorter than a standard one, because the shortest band
+ * on the announcement ladder is a week and a run has to be able to sit inside
+ * it. Mirrors `MIN_EXTREME_DAYS` in `promotionController.startFree`.
+ */
+const EXTREME_MIN_DURATION = 3
+
+/** What the tier has always run for, and still does unless asked otherwise. */
+const EXTREME_DEFAULT_DURATION = 21
+
+const EXTREME_QUICK_DURATIONS = [7, 21, 45, 90, 180, 365]
 
 /** Matches the backend's own limit for hero uploads. */
 const MAX_HERO_BYTES = MAX_COVER_BYTES
@@ -85,10 +97,10 @@ function getTypeLabel(type: string): string {
 
 /** What the extreme tier adds, in the order a provider cares about it. */
 const EXTREME_PERKS: { icon: typeof Zap; text: string }[] = [
+  { icon: Sparkles, text: 'The first card of the feed and of every hub page, every load' },
   { icon: Zap, text: 'Shown in the main feed and the sponsored feed, not just one' },
-  { icon: Sparkles, text: 'Priority in the top 10, and a stronger match score to every reader' },
-  { icon: Megaphone, text: 'A full-screen announcement on two days, picked per reader' },
-  { icon: Bell, text: 'A push notification on each of those two days' },
+  { icon: Megaphone, text: 'Full-screen announcements through the run, on days picked per reader' },
+  { icon: Bell, text: 'A push notification on each of those days' },
   { icon: Mail, text: 'A featured slot in our welcome and verification emails' },
 ]
 
@@ -189,8 +201,18 @@ export function PromoteContentModal({
   // reset effect here: there is nothing to reset.
 
   const isExtreme = tier === 'extreme'
-  const safeDuration = Math.min(Math.max(MIN_DURATION, durationDays), MAX_DURATION)
-  const effectiveDuration = isExtreme ? EXTREME_DURATION : safeDuration
+  const minDuration = isExtreme ? EXTREME_MIN_DURATION : MIN_DURATION
+  const effectiveDuration = Math.min(Math.max(minDuration, durationDays), MAX_DURATION)
+
+  /**
+   * How many times this run will announce itself to a given reader.
+   *
+   * Computed from the same ladder the server draws the days from, so the
+   * number shown here is the number delivered rather than a marketing round
+   * figure. It is the one part of the tier that visibly rewards a longer run,
+   * which is exactly why it belongs next to the control that sets it.
+   */
+  const popups = announcementCount(effectiveDuration)
 
   const handleSubmit = async () => {
     if (!item) return
@@ -220,7 +242,7 @@ export function PromoteContentModal({
 
       toast.success(
         isExtreme
-          ? `Extreme promotion started — ${EXTREME_DURATION} days, announcements included`
+          ? `Extreme promotion started — ${effectiveDuration} days, ${popups} announcement${popups === 1 ? '' : 's'}`
           : `Promotion started for ${effectiveDuration} days`,
       )
       setHeroFile(null)
@@ -275,11 +297,17 @@ export function PromoteContentModal({
 
             <TierCard
               selected={isExtreme}
-              onSelect={() => setTier('extreme')}
+              onSelect={() => {
+                setTier('extreme')
+                // Standard opens on a week, which would quietly halve what the
+                // tier has always run for. Anything the provider has already
+                // set is theirs and is left alone.
+                if (durationDays === MIN_DURATION) setDurationDays(EXTREME_DEFAULT_DURATION)
+              }}
               disabled={busy}
               title="Extreme"
               tagline="Everything in Standard, plus we announce it to readers directly."
-              meta={`${EXTREME_DURATION} days`}
+              meta="You choose the length"
               badge="Most reach"
             >
               {isExtreme && (
@@ -297,50 +325,57 @@ export function PromoteContentModal({
             </TierCard>
           </div>
 
-          {/* Duration — replaced rather than disabled when it does not apply. */}
-          {isExtreme ? (
-            <div className="rounded-lg border border-border bg-muted/30 p-3">
-              <p className="text-sm font-medium text-foreground">
-                Runs for {EXTREME_DURATION} days
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Fixed, because the two announcement days are drawn from inside this
-                window — a different length would pull the popup, the push and the
-                email apart. It replaces any promotion currently running on this
-                listing.
-              </p>
+          {/*
+            Duration — one control for both tiers now.
+
+            It used to be replaced for extreme by a "fixed at 21 days" notice,
+            because the announcement schedule was a fixed set of offsets into a
+            21-day window. It is now drawn from whatever span the campaign is
+            created with, and the number of announcements scales with it, so
+            the length is a real choice on both tiers. What extreme adds here
+            is the line below the control saying what that choice buys.
+          */}
+          <div className="space-y-2">
+            <Label htmlFor="duration">Duration</Label>
+            <div className="flex flex-wrap gap-2">
+              {(isExtreme ? EXTREME_QUICK_DURATIONS : QUICK_DURATIONS).map((n) => (
+                <Button
+                  key={n}
+                  type="button"
+                  variant={effectiveDuration === n ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => setDurationDays(n)}
+                >
+                  {n} days
+                </Button>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_DURATIONS.map((n) => (
-                  <Button
-                    key={n}
-                    type="button"
-                    variant={safeDuration === n ? 'default' : 'outline'}
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => setDurationDays(n)}
-                  >
-                    {n} days
-                  </Button>
-                ))}
-              </div>
-              <Input
-                id="duration"
-                type="number"
-                min={MIN_DURATION}
-                max={MAX_DURATION}
-                value={durationDays}
-                disabled={busy}
-                onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || MIN_DURATION)}
-              />
+            <Input
+              id="duration"
+              type="number"
+              min={minDuration}
+              max={MAX_DURATION}
+              value={durationDays}
+              disabled={busy}
+              onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || minDuration)}
+            />
+            {isExtreme ? (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Between {minDuration} and {MAX_DURATION} days. A {effectiveDuration}-day
+                run announces itself to each reader on{' '}
+                <span className="font-medium text-foreground">
+                  {popups} {popups === 1 ? 'day' : 'separate days'}
+                </span>{' '}
+                — longer runs earn more. It replaces any promotion currently running
+                on this listing.
+              </p>
+            ) : (
               <p className="text-xs text-muted-foreground">
-                Between {MIN_DURATION} and {MAX_DURATION} days.
+                Between {minDuration} and {MAX_DURATION} days.
               </p>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Hero image — only available while promoting.
 
@@ -436,7 +471,7 @@ export function PromoteContentModal({
                 Starting…
               </>
             ) : isExtreme ? (
-              `Start extreme · ${EXTREME_DURATION} days`
+              `Start extreme · ${effectiveDuration} days`
             ) : (
               `Start promotion · ${effectiveDuration} days`
             )}

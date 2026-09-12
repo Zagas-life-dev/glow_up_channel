@@ -4,31 +4,37 @@
  * Where an extreme promotion appears, and how much of the top of a list paid
  * placement is allowed to hold.
  *
- * **The two-sided boost.**
+ * **The feed slot is unconditional.**
  *
- * An ordinary promotion lives on one surface. It is boosted inside the
- * recommendation feed by the orderers' promoted pool, *or* it is shown in the
- * sponsored rail — never both, because both feeds dedupe against each other.
- * That dedupe exists for a good reason: the same listing drawn twice in one
- * scroll, labelled "Sponsored" both times, is worse for the reader than either
- * placement alone and wastes an impression.
+ * A live extreme campaign takes the first card of every feed and every hub
+ * page, every load. Not "is likelier to", not "wins the opening draw" — it is
+ * hoisted there by `leadWithExtreme` after whichever orderer ran, so the
+ * guarantee does not depend on a pool, a weight or a coin coming up right.
  *
- * The extreme tier is sold on reaching the reader through both. Rather than
- * removing the dedupe — which would put the listing on screen twice — the
- * surface is drawn per load: heads it competes in the algorithmic feed, tails
- * it takes a sponsored slot. Still exactly once per load, but a reader who
- * refreshes meets it in the feed one time and in the rail the next, and over a
- * 21-day campaign the listing is present on both surfaces.
+ * That is a change from what this file used to do, and the reason is worth
+ * recording. The surface used to be *drawn*: heads it competed in the
+ * algorithmic feed, tails it took a sponsored slot and was withheld from the
+ * feed entirely. Exactly once per load, both surfaces over a campaign — tidy,
+ * and wrong for what the tier is sold as. Half of all loads showed the feed
+ * with no extreme placement in it at all, which is indistinguishable, from the
+ * outside, from the tier being broken.
  *
- * The draw is seeded on `(feed session, listing)` rather than random, and that
- * is load-bearing rather than tidy. The two consumers of this decision are
- * different components — the feed and the rail — and they run it
- * independently. If they disagreed, a listing would either be dropped from both
- * (invisible, though paid for) or kept by both (the duplicate the dedupe
- * exists to prevent). Deriving the answer from inputs both of them already
- * hold is what makes them agree without having to talk to each other. It also
- * survives re-renders and back-navigation, so the listing does not hop between
- * surfaces while the reader is looking at it.
+ * **The rail is now additive rather than alternative.**
+ *
+ * The coin survives, with one side of its job removed: it no longer decides
+ * whether the feed keeps the listing (the feed always does), only whether the
+ * sponsored rail *also* carries it this load. So a reader meets the listing at
+ * the top of the feed every time and a second time in the rail on about half
+ * of loads, which is what "dual-surface placement" says on the package.
+ *
+ * Showing one listing twice in a scroll is a real cost and the dedupe between
+ * the two surfaces still exists for every other tier. This tier is the
+ * deliberate exception; `railCarries` is the only hole in it.
+ *
+ * The draw stays seeded on `(feed session, listing)` rather than random
+ * because the rail and the feed are different components that never talk. It
+ * also survives re-renders and back-navigation, so the rail does not gain and
+ * lose the listing while the reader is looking at it.
  *
  * **The caps.**
  *
@@ -102,7 +108,8 @@ function firstDraw(seed: number): number {
 }
 
 /**
- * Which surface this extreme promotion takes for this feed session.
+ * The extra surface this extreme promotion takes for this feed session, on top
+ * of the feed slot it always holds.
  *
  * `sessionSeed` is `getFeedSessionSeed()` — new on refresh, constant while
  * scrolling. Null during SSR, where it folds to a fixed seed so the server and
@@ -114,22 +121,87 @@ export function extremeRoute(contentId: string, sessionSeed: number | null): Pro
 }
 
 /**
- * True when an extreme promotion should be withheld from the surface asking.
+ * True when the sponsored rail should carry this listing *as well as* the feed.
  *
- * The two call sites are mirror images, which is the whole point: the feed asks
- * about "feed" and the rail asks about "sponsored", both get their answer from
- * the same draw, and exactly one of them keeps the listing.
+ * The rail's ordinary dedupe drops anything already on screen. For an extreme
+ * campaign whose coin came up "sponsored" this session, this is the exemption
+ * from that rule: the listing leads the feed and takes a rail slot too. Every
+ * other tier, and an extreme campaign on a "feed" session, is deduped as
+ * before.
+ *
+ * Returns false for anything that is not extreme, and for an item with no
+ * usable id — there is nothing to seed the draw with, and silently duplicating
+ * on a missing field is the wrong way to fail.
  */
-export function withheldFrom(
+export function railCarries(
   item: unknown,
-  surface: PromotionRoute,
   sessionSeed: number | null,
   isExtreme: (item: unknown) => boolean,
 ): boolean {
   if (!isExtreme(item)) return false
   const id = (item as { _id?: unknown })?._id
   if (typeof id !== "string" || id.length === 0) return false
-  return extremeRoute(id, sessionSeed) !== surface
+  return extremeRoute(id, sessionSeed) === "sponsored"
+}
+
+/**
+ * Put a live extreme promotion at the very front of an ordered list.
+ *
+ * This is the whole of the "extreme is always first" guarantee, and it is one
+ * function applied at the end of every surface rather than a rule inside each
+ * orderer, for a reason the feed learned the hard way. The orderers *did* each
+ * carry their own version of it — `applyVarietyOrder` and `scatterRank` both
+ * hand slot 0 to an extreme item when one is in the promoted pool. But three
+ * of the four surfaces never reach that code: the signed-in feed re-ranks with
+ * `preserveOrder` and keeps the server's sequence, the hub pages order by
+ * deadline lottery, and the per-type tabs do not order at all. A guarantee
+ * that holds in one orderer out of three is not a guarantee.
+ *
+ * So it is stated once, last, over whatever order came out. Idempotent, so
+ * applying it after an orderer that already led with the same item changes
+ * nothing.
+ *
+ * **Only one item moves.** Hoisting every extreme campaign would fill the
+ * opening screen with paid cards the moment two ran at once; the promise is
+ * about the first card, and the rest keep the placement their score and the
+ * promoted pool already earned them.
+ *
+ * **Which one leads rotates with the session.** With several campaigns live,
+ * picking the first in array order would hand one of them every opening slot
+ * for the length of its run and leave the others with none. The seed is the
+ * feed session's, so the lead is stable while the reader scrolls and different
+ * on the next load.
+ *
+ * Everything else keeps its relative order, and nothing is dropped or
+ * duplicated — this is a rotation of one element to the front.
+ */
+export function leadWithExtreme<T>(
+  ordered: T[],
+  options: {
+    isExtreme: (item: NoInfer<T>) => boolean
+    /** `getFeedSessionSeed()`, or null during SSR. */
+    sessionSeed: number | null
+  },
+): T[] {
+  const { isExtreme, sessionSeed } = options
+  if (ordered.length <= 1) return ordered
+
+  const extremeIndices: number[] = []
+  for (let i = 0; i < ordered.length; i += 1) {
+    if (isExtreme(ordered[i])) extremeIndices.push(i)
+  }
+
+  if (extremeIndices.length === 0) return ordered
+  // Already leading, whether by one campaign or by the orderer having done it.
+  if (extremeIndices[0] === 0) return ordered
+
+  // Rotate on the session seed rather than on anything about the listings, so
+  // the choice does not follow whichever campaign happens to sort first.
+  // `min` guards the draw returning exactly 1, which would index past the end.
+  const draw = Math.floor(firstDraw(sessionSeed ?? 0) * extremeIndices.length)
+  const pick = extremeIndices[Math.min(draw, extremeIndices.length - 1)]
+
+  return [ordered[pick], ...ordered.slice(0, pick), ...ordered.slice(pick + 1)]
 }
 
 export interface PromotedCapOptions<T> {

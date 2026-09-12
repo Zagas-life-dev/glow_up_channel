@@ -18,7 +18,8 @@ import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
 import {
   MAX_EXTREME_IN_SPONSORED_TOP,
   enforcePromotedCaps,
-  withheldFrom,
+  leadWithExtreme,
+  railCarries,
 } from "@/lib/promotion-placement"
 import { fetchPublicHubPage, type HomeListType } from "@/lib/fetch-public-hub-page"
 import { getPageState, savePageState } from "@/lib/page-state-session"
@@ -200,38 +201,35 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   /** This session's draw, read once. See the twin in `home-client`. */
   const sessionSeed = useMemo(() => getFeedSessionSeed(), [])
 
-  /** Listings the sponsored rail is holding for this type, by id. */
-  const railIds = useMemo(
-    () => new Set(promoted.map((row) => String((row as { _id?: unknown })._id ?? ""))),
-    [promoted],
-  )
-
   /**
-   * The listing half of the extreme tier's two-sided boost.
+   * The inline list, with a live extreme campaign pulled to the top row.
    *
-   * An extreme campaign whose coin came up "sponsored" this session steps out
-   * of the inline list so the rail below carries it instead. Conditioned on the
-   * rail actually holding it, so a failed or empty promoted response cannot
-   * take a paid placement off both surfaces at once.
+   * `fetchPublicHubPage` already leads with it on the first page, so on that
+   * page this is a no-op. It is restated here because this component also
+   * renders lists it did not fetch — a session restore, and the pages appended
+   * by infinite scroll, both of which arrive as one array through `items`.
+   *
+   * Nothing steps out of the list any more. This used to withhold an extreme
+   * campaign whose coin came up "sponsored", handing the listing to the rail
+   * instead; the coin now only decides whether the rail carries it *as well*.
    */
   const routedItems = useMemo(
-    () =>
-      items.filter(
-        (item) =>
-          !railIds.has(item._id) ||
-          !withheldFrom(item, "feed", sessionSeed, isExtremePromotion),
-      ),
-    [items, railIds, sessionSeed],
+    () => leadWithExtreme(items, { isExtreme: isExtremePromotion, sessionSeed }),
+    [items, sessionSeed],
   )
 
   const promotedCards = useMemo(() => {
-    // Deduped against what the list actually renders, not against everything it
-    // fetched — an item withheld above has to stay eligible here, or the
-    // routing would drop it rather than move it.
+    // Deduped against what the list actually renders — except for an extreme
+    // campaign whose coin picked the rail this session, which is carried in
+    // both places on purpose. See `railCarries`.
     const onPage = new Set(routedItems.map((item) => item._id))
     const cards = promoted
       .map((row) => normalizeFeedListItem(type, row))
-      .filter((card) => !onPage.has(card._id))
+      .filter(
+        (card) =>
+          !onPage.has(card._id) ||
+          railCarries(card, sessionSeed, isExtremePromotion),
+      )
 
     // No combined cap: the rail is paid placement by definition, so the only
     // question is how much of it one tier may hold.
@@ -240,7 +238,7 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
       isExtreme: isExtremePromotion,
       maxExtreme: MAX_EXTREME_IN_SPONSORED_TOP,
     })
-  }, [promoted, type, routedItems])
+  }, [promoted, type, routedItems, sessionSeed])
 
   // Hand the feed back to the next visit in this session, so returning from a
   // detail page lands on the same list at the same scroll position rather than

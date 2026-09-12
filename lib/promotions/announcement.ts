@@ -3,18 +3,23 @@
 /**
  * When an extreme promotion announces itself, and to whom.
  *
- * The tier buys two announcement days inside its 21-day run: on each, the
+ * The tier buys a handful of announcement days inside its run: on each, the
  * listing takes over the screen once, the way a gift does. The interesting
- * question is which two days, and the answer is per reader rather than per
+ * question is which days, and the answer is per reader rather than per
  * campaign.
  *
- * **Why per reader.** Two fixed dates would make the announcement a broadcast:
- * every signed-in user meets the same popup within the same few hours, twice a
- * campaign. That concentrates the whole delivery into two spikes, makes the
- * product feel like an ad break rather than a discovery, and wastes the reach
- * the tier is sold on — a reader who happens not to open the app on those two
- * days never sees it at all. Drawing per reader spreads the same two
- * impressions across the full 21 days and gives each person their own two.
+ * **How many.** Scaled to the length of the run by `ANNOUNCEMENT_BANDS`, not
+ * fixed. A run is sold on how long it is, so the announcements have to keep
+ * pace with it: two interruptions is right for three weeks and insulting for a
+ * year. See the ladder below for the bands.
+ *
+ * **Why per reader.** Fixed dates would make the announcement a broadcast:
+ * every signed-in user meets the same popup within the same few hours. That
+ * concentrates the whole delivery into a few spikes, makes the product feel
+ * like an ad break rather than a discovery, and wastes the reach the tier is
+ * sold on — a reader who happens not to open the app on those days never sees
+ * it at all. Drawing per reader spreads the same impressions across the full
+ * run and gives each person their own days.
  *
  * **Why derived rather than stored.** The obvious implementation is a row per
  * (reader, campaign, day), written when the campaign starts. That is a table
@@ -29,8 +34,42 @@
  * shown, and that is per-device by nature — it lives in `localStorage`, below.
  */
 
-/** Announcement days each extreme campaign buys. */
-export const ANNOUNCEMENTS_PER_CAMPAIGN = 2
+/**
+ * Upper bounds, in days, of the bands an extreme run's announcement count is
+ * read off. A run of `span` days buys `i + 1` announcements, where `i` is the
+ * first band it fits inside; anything past the last band buys the last count.
+ *
+ * The first four bands are the product's, given as ranges: up to a week buys
+ * one, up to three weeks two, up to six weeks three, up to two months four.
+ * From there it is one more per further thirty days, so a long campaign
+ * announces itself roughly monthly and a full year buys fourteen.
+ *
+ * **The 21 is load bearing and must stay the second band.** Every extreme
+ * campaign issued before this ladder existed ran for exactly 21 days and drew
+ * two days; `announcementCount(21)` has to keep returning 2 or every live
+ * campaign re-draws mid-run, and the ledger cannot catch the repeat because
+ * its key is the day index. Same reason `pickDays` has to reduce to the old
+ * two-day draw at `count === 2`, which the tests pin.
+ *
+ * Mirrored by `ANNOUNCEMENT_BANDS` in `promotionAnnouncementService.js`.
+ */
+export const ANNOUNCEMENT_BANDS = [
+  7, 21, 45, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 365,
+]
+
+/**
+ * How many announcement days a run of `spanDays` buys.
+ *
+ * Never more than the run has days to put them on — a three-day run cannot
+ * hold four distinct announcements — and never fewer than one, so even a
+ * one-day run announces itself once.
+ */
+export function announcementCount(spanDays: number): number {
+  const span = Math.max(1, Math.round(spanDays))
+  const band = ANNOUNCEMENT_BANDS.findIndex((upper) => span <= upper)
+  const wanted = band === -1 ? ANNOUNCEMENT_BANDS.length : band + 1
+  return Math.max(1, Math.min(wanted, span))
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -38,11 +77,15 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const LEDGER_PREFIX = "glowup_promo_popup_v1_"
 
 /**
- * How many "already shown" marks to keep. A reader meets at most two per
- * campaign, so this holds roughly a month of history even with several running
- * at once, and stops the entry growing without bound on a long-lived device.
+ * How many "already shown" marks to keep.
+ *
+ * Sized off the worst case now that the count scales: a year-long run buys
+ * fourteen, so this holds a dozen such campaigns at once and still stops the
+ * entry growing without bound on a long-lived device. It was 60, which was
+ * generous against two per campaign and would have started dropping marks —
+ * and so repeating popups — against fourteen.
  */
-const MAX_SEEN_ENTRIES = 60
+const MAX_SEEN_ENTRIES = 200
 
 export type ExtremeCampaign = {
   /** The promotion's id — what the draw is keyed on, not the listing's. */
@@ -55,8 +98,9 @@ export type ExtremeCampaign = {
   startDate: string
   endDate: string
   /**
-   * The window the two announcement days are drawn from, pinned at creation.
-   * Absent on campaigns created before the field existed.
+   * The window the announcement days are drawn from, pinned at creation. It
+   * also decides how many there are, via `announcementCount`. Absent on
+   * campaigns created before the field existed.
    */
   announcementSpanDays?: number | null
 }
@@ -104,22 +148,41 @@ function mulberry32(seed: number): () => number {
 }
 
 /**
- * Two distinct days in `[0, span)`, drawn uniformly.
+ * `count` distinct days in `[0, span)`, drawn uniformly.
  *
- * The second is drawn from a span one shorter and then shifted past the first,
- * which yields a uniform distinct pair in constant time. Rejection sampling
- * would be the obvious alternative and can loop, which is not something worth
- * doing on a render path.
+ * Each draw comes from a range one shorter than the last and is then shifted
+ * past every day already taken, ascending — the standard bijection between
+ * `[0, span - i)` and the gaps left in `[0, span)`. That yields a uniform
+ * distinct set without rejection sampling, which is the obvious alternative
+ * and can loop; looping is not something worth doing on a render path.
+ *
+ * **At `count === 2` this is exactly the two-day draw it replaces**, down to
+ * the order the two randoms are consumed in. That is not a coincidence to be
+ * grateful for, it is the requirement: every campaign issued before the ladder
+ * existed is mid-run with two days already derived for every reader, and a
+ * different answer would re-announce to people the ledger thinks are done.
  */
-export function pickTwoDays(seed: number, span: number): number[] {
-  if (span <= 1) return [0]
+export function pickDays(seed: number, span: number, count: number): number[] {
+  const width = Math.max(1, Math.floor(span))
+  if (width <= 1) return [0]
 
+  const wanted = Math.max(1, Math.min(Math.floor(count), width))
   const rand = mulberry32(seed)
-  const first = Math.floor(rand() * span)
-  const offset = Math.floor(rand() * (span - 1))
-  const second = offset >= first ? offset + 1 : offset
 
-  return [first, second].sort((a, b) => a - b)
+  // Kept sorted as it fills, so the shift below can walk it ascending.
+  const picked: number[] = []
+
+  for (let i = 0; i < wanted; i += 1) {
+    let day = Math.floor(rand() * (width - i))
+    let at = 0
+    while (at < picked.length && day >= picked[at]) {
+      day += 1
+      at += 1
+    }
+    picked.splice(at, 0, day)
+  }
+
+  return picked
 }
 
 /**
@@ -128,9 +191,10 @@ export function pickTwoDays(seed: number, span: number): number[] {
  * `announcementSpanDays` takes precedence over the start/end distance, and that
  * precedence is the whole point: a campaign's duration is editable, so if the
  * span followed it, extending a run from 21 days to 30 would re-draw every
- * reader's two days. Someone already announced to on day 5 could be announced
+ * reader's days. Someone already announced to on day 5 could be announced
  * again on the new day 5 — and the ledger would not catch it, because its key
- * is the day index, which just moved underneath it.
+ * is the day index, which just moved underneath it. Now that the span also
+ * sets the *count*, an edit would change how many they get as well.
  *
  * Falls back to the start/end distance for campaigns created before the field
  * existed, which is exactly what those were already using.
@@ -162,12 +226,13 @@ export function runDayIndex(campaign: ExtremeCampaign, now: number): number | nu
   return Math.floor((now - start) / DAY_MS)
 }
 
-/** The two days this reader gets for this campaign. */
+/** The days this reader gets for this campaign. */
 export function announcementDays(userId: string, campaign: ExtremeCampaign): number[] {
-  return pickTwoDays(deriveSeed(userId, campaign._id), runLengthDays(campaign))
+  const span = runLengthDays(campaign)
+  return pickDays(deriveSeed(userId, campaign._id), span, announcementCount(span))
 }
 
-/** True when today is one of this reader's two days for this campaign. */
+/** True when today is one of this reader's days for this campaign. */
 export function isAnnouncementDay(
   userId: string,
   campaign: ExtremeCampaign,

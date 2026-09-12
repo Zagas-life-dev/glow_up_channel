@@ -1,16 +1,20 @@
 /**
- * The two-sided boost and the caps that keep it from eating the feed.
+ * The extreme lead, the rail exemption, and the caps that keep paid placement
+ * from eating the feed.
  *
- * Two properties carry the whole design, and both are the kind that fail
+ * Three properties carry the design, and all three are the kind that fail
  * silently in production rather than loudly in review:
  *
- *   1. **Exactly one surface keeps each extreme listing.** The feed and the
- *      sponsored rail decide independently, in different components, with no
- *      shared state — they only agree because both derive the answer from
- *      `(session seed, listing id)`. If that derivation ever stopped being a
- *      clean split, a paid listing would either be shown twice in one scroll or
- *      vanish from both surfaces while still being billed as delivered.
- *   2. **The caps reorder, never drop.** They run last, on the finished order,
+ *   1. **A live extreme campaign is always the first card.** This is the whole
+ *      promise of the tier, and the version that shipped before was a pile of
+ *      probabilities — a reserved share, a lead bias, a weighted pluck — that
+ *      came out first *often*. Often is indistinguishable from broken when the
+ *      provider refreshes twice and sees organic both times.
+ *   2. **The rail may double the lead, and only the lead.** The dedupe between
+ *      the two surfaces still holds for every other tier; `railCarries` is the
+ *      one exemption, and if it widened, ordinary promotions would start
+ *      appearing twice in a single scroll.
+ *   3. **The caps reorder, never drop.** They run last, on the finished order,
  *      so a bug here silently removes listings from the feed — the failure mode
  *      nobody notices until a provider asks why their campaign served nothing.
  */
@@ -23,7 +27,8 @@ import {
   TOP_SLOTS,
   enforcePromotedCaps,
   extremeRoute,
-  withheldFrom,
+  leadWithExtreme,
+  railCarries,
 } from "@/lib/promotion-placement"
 
 const SEED = 0x5eed1234
@@ -38,7 +43,7 @@ function extremeItem(id: string) {
 const isExtreme = (item: unknown): boolean =>
   (item as { promotion?: { packageType?: string } })?.promotion?.packageType === "extreme"
 
-describe("extremeRoute — which surface takes the listing", () => {
+describe("extremeRoute — whether the rail doubles the listing", () => {
   it("is stable for the same listing and session", () => {
     for (const id of ids.slice(0, 20)) {
       expect(extremeRoute(id, SEED)).toBe(extremeRoute(id, SEED))
@@ -55,10 +60,10 @@ describe("extremeRoute — which surface takes the listing", () => {
   })
 
   it("redraws when the session does", () => {
-    // A refresh mints a new seed, which is what makes the listing meet the
-    // reader on the other surface next time. If the seed did not reach the
-    // draw, every session would route identically and the tier would be
-    // one-sided.
+    // A refresh mints a new seed, which is what moves the listing on and off
+    // the rail between loads. If the seed did not reach the draw, every session
+    // would decide identically and the rail half of the tier would be
+    // permanently on or permanently off.
     const moved = ids.filter((id) => extremeRoute(id, SEED) !== extremeRoute(id, SEED + 1))
     expect(moved.length).toBeGreaterThan(ids.length * 0.3)
   })
@@ -69,33 +74,145 @@ describe("extremeRoute — which surface takes the listing", () => {
   })
 })
 
-describe("withheldFrom — the two surfaces must not disagree", () => {
-  it("keeps each extreme listing on exactly one surface", () => {
+describe("railCarries — the one hole in the dedupe", () => {
+  it("doubles an extreme listing on exactly the sessions its coin picks the rail", () => {
     for (const id of ids) {
-      const item = extremeItem(id)
-      const outOfFeed = withheldFrom(item, "feed", SEED, isExtreme)
-      const outOfRail = withheldFrom(item, "sponsored", SEED, isExtreme)
-      // Never both (invisible despite being paid for) and never neither (the
-      // same card twice in one scroll).
-      expect(outOfFeed).not.toBe(outOfRail)
+      expect(railCarries(extremeItem(id), SEED, isExtreme)).toBe(
+        extremeRoute(id, SEED) === "sponsored",
+      )
     }
   })
 
-  it("never withholds anything that is not an extreme promotion", () => {
+  it("leaves roughly half the loads showing it once", () => {
+    // The duplicate is deliberate, but it is still a cost to the reader, so it
+    // has to stay a coin flip rather than creeping toward always.
+    const doubled = ids.filter((id) => railCarries(extremeItem(id), SEED, isExtreme)).length
+    const share = doubled / ids.length
+    expect(share).toBeGreaterThan(0.4)
+    expect(share).toBeLessThan(0.6)
+  })
+
+  it("never exempts anything that is not an extreme promotion", () => {
+    // The whole point of the dedupe is that ordinary promotions are not shown
+    // twice. If this widened, every wallet promotion would start doubling.
     const ordinary = { _id: "x1", isPromoted: true, promotion: { packageType: "wallet_daily" } }
     const organic = { _id: "x2" }
-    for (const surface of ["feed", "sponsored"] as const) {
-      expect(withheldFrom(ordinary, surface, SEED, isExtreme)).toBe(false)
-      expect(withheldFrom(organic, surface, SEED, isExtreme)).toBe(false)
+    expect(railCarries(ordinary, SEED, isExtreme)).toBe(false)
+    expect(railCarries(organic, SEED, isExtreme)).toBe(false)
+  })
+
+  it("dedupes a listing with no usable id rather than doubling it", () => {
+    // No id means no stable draw. Falling back to "carry it" would show the
+    // card twice on every load, which is the worse of the two failures.
+    const noId = { isPromoted: true, promotion: { packageType: "extreme" } }
+    expect(railCarries(noId, SEED, isExtreme)).toBe(false)
+    expect(railCarries({ ...noId, _id: "" }, SEED, isExtreme)).toBe(false)
+  })
+})
+
+describe("leadWithExtreme — the first card", () => {
+  const organicRow = (n: number) => ({ _id: `o${n}` })
+  const paidRow = (n: number) => ({
+    _id: `p${n}`,
+    isPromoted: true,
+    promotion: { packageType: "wallet_daily" },
+  })
+
+  it("puts the extreme listing first from anywhere in the list", () => {
+    // Where it starts is whatever the orderer left it at, which on the
+    // `preserveOrder` feed is wherever the server happened to put it. Every
+    // one of these has to end up at slot 0.
+    for (const at of [1, 2, 5, 9, 19, 40]) {
+      const rows: Array<{ _id: string }> = Array.from({ length: 50 }, (_, i) => organicRow(i))
+      rows[at] = extremeItem("the-campaign")
+      expect(leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })[0]._id).toBe("the-campaign")
     }
   })
 
-  it("keeps a listing with no usable id rather than routing it nowhere", () => {
-    // No id means no stable draw, so the two surfaces could not agree. Showing
-    // it is the safe failure: the dedupe downstream still prevents a double.
-    const noId = { isPromoted: true, promotion: { packageType: "extreme" } }
-    expect(withheldFrom(noId, "feed", SEED, isExtreme)).toBe(false)
-    expect(withheldFrom({ ...noId, _id: "" }, "feed", SEED, isExtreme)).toBe(false)
+  it("keeps every other item, exactly once, in its original order", () => {
+    // It reorders; it must never drop or duplicate. A feed quietly shedding
+    // rows is the failure nobody reports.
+    const rows = Array.from({ length: 12 }, (_, i) => organicRow(i))
+    rows.splice(7, 0, extremeItem("e1"))
+    const out = leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })
+
+    expect(out).toHaveLength(rows.length)
+    expect(new Set(out.map((r) => r._id)).size).toBe(rows.length)
+    expect(out.slice(1).map((r) => r._id)).toEqual(
+      rows.filter((r) => r._id !== "e1").map((r) => r._id),
+    )
+  })
+
+  it("is a no-op when nothing extreme is live", () => {
+    // The ordinary feed has to be untouched by this. Leading with a paid card
+    // that did not buy the tier would be the obvious way to get it wrong.
+    const rows = [...Array.from({ length: 8 }, (_, i) => organicRow(i)), paidRow(1)]
+    expect(leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })).toBe(rows)
+  })
+
+  it("is idempotent, so stacking it on an orderer that already led changes nothing", () => {
+    // Both `applyVarietyOrder` and the backend's `scatterRank` hand slot 0 to
+    // an extreme item themselves. This runs after them.
+    const rows = [extremeItem("e1"), ...Array.from({ length: 9 }, (_, i) => organicRow(i))]
+    const once = leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })
+    expect(leadWithExtreme(once, { isExtreme, sessionSeed: SEED })).toEqual(once)
+    expect(once[0]._id).toBe("e1")
+  })
+
+  it("rotates which campaign leads as sessions turn over", () => {
+    // With several live, taking the first in array order would hand one of them
+    // every opening slot for its whole run and the others none.
+    const rows = [
+      ...Array.from({ length: 5 }, (_, i) => organicRow(i)),
+      extremeItem("e1"),
+      extremeItem("e2"),
+      extremeItem("e3"),
+    ]
+    const leaders = new Set<string>()
+    for (let seed = 0; seed < 200; seed += 1) {
+      leaders.add(leadWithExtreme(rows, { isExtreme, sessionSeed: seed })[0]._id)
+    }
+    expect(leaders).toEqual(new Set(["e1", "e2", "e3"]))
+  })
+
+  it("holds the lead steady while the reader scrolls", () => {
+    // Same session seed, same answer — otherwise the top card would change
+    // under a re-render or a back-navigation.
+    const rows = [
+      ...Array.from({ length: 4 }, (_, i) => organicRow(i)),
+      extremeItem("e1"),
+      extremeItem("e2"),
+    ]
+    const first = leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })[0]._id
+    for (let i = 0; i < 20; i += 1) {
+      expect(leadWithExtreme(rows, { isExtreme, sessionSeed: SEED })[0]._id).toBe(first)
+    }
+  })
+
+  it("still leads during SSR, when there is no seed yet", () => {
+    const rows = [organicRow(0), extremeItem("e1"), organicRow(1)]
+    expect(leadWithExtreme(rows, { isExtreme, sessionSeed: null })[0]._id).toBe("e1")
+  })
+
+  it("survives the caps that run after it", () => {
+    // The lead is applied before `enforcePromotedCaps`, and what makes that
+    // safe is that at slot 0 no cap has been met yet. If the order ever
+    // flipped, the caps could defer the very card this exists to place.
+    const rows = [
+      ...Array.from({ length: 8 }, (_, i) => paidRow(i)),
+      extremeItem("e1"),
+      ...Array.from({ length: 20 }, (_, i) => organicRow(i)),
+    ]
+    const capped = enforcePromotedCaps(
+      leadWithExtreme(rows, { isExtreme, sessionSeed: SEED }),
+      {
+        isPromoted: (r) => Boolean((r as { isPromoted?: boolean }).isPromoted),
+        isExtreme,
+        maxExtreme: MAX_EXTREME_IN_FEED_TOP,
+        maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
+      },
+    )
+    expect(capped[0]._id).toBe("e1")
   })
 })
 

@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { normalizeUnifiedFeedItem } from "@/lib/feed-content-type"
+import { getFeedSessionSeed } from "@/lib/feed-session-seed"
 import { applyVarietyOrder } from "@/lib/feed-variety-order"
 import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
 import {
@@ -52,6 +53,7 @@ import {
   MAX_PROMOTED_IN_FEED_TOP,
   TOP_SLOTS,
   enforcePromotedCaps,
+  leadWithExtreme,
 } from "@/lib/promotion-placement"
 import { cn } from "@/lib/utils"
 
@@ -155,8 +157,15 @@ export default function ExtremePromotionsPage() {
       const normalized = feed.map((row: Record<string, unknown>) =>
         normalizeUnifiedFeedItem(row),
       )
+      // The same three steps, in the same order, the real feed runs — this
+      // page is only worth having if it is not a separate implementation of
+      // the arrangement it claims to be previewing. `leadWithExtreme` included,
+      // or the preview would show slot 0 going organic while the feed does not.
       const ordered = enforcePromotedCaps(
-        applyVarietyOrder(normalized as Parameters<typeof applyVarietyOrder>[0]),
+        leadWithExtreme(
+          applyVarietyOrder(normalized as Parameters<typeof applyVarietyOrder>[0]),
+          { isExtreme: isExtremePromotion, sessionSeed: getFeedSessionSeed() },
+        ),
         {
           isPromoted,
           isExtreme: isExtremePromotion,

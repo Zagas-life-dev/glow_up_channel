@@ -16,7 +16,8 @@ import {
   MAX_EXTREME_IN_SPONSORED_TOP,
   MAX_PROMOTED_IN_FEED_TOP,
   enforcePromotedCaps,
-  withheldFrom,
+  leadWithExtreme,
+  railCarries,
 } from "@/lib/promotion-placement"
 import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
@@ -168,8 +169,17 @@ export default function Home() {
         // These items carry no score, so they all land in one band and the band
         // weighting is a no-op — the deadline weighting inside the band is the
         // part that does the work, which is exactly what is wanted here.
+        //
+        // `leadWithExtreme` before the caps, not after: at slot 0 no cap has
+        // been met yet, so the lead always survives them, and the caps still
+        // govern every paid card behind it. `applyVarietyOrder` usually leads
+        // with the extreme item on its own, which makes this a no-op — usually
+        // is not the guarantee the tier is sold on.
         const ordered = enforcePromotedCaps(
-          applyVarietyOrder(normalizedFeed as Parameters<typeof applyVarietyOrder>[0]),
+          leadWithExtreme(
+            applyVarietyOrder(normalizedFeed as Parameters<typeof applyVarietyOrder>[0]),
+            { isExtreme: isExtremePromotion, sessionSeed: getFeedSessionSeed() },
+          ),
           {
             isPromoted,
             isExtreme: isExtremePromotion,
@@ -485,44 +495,45 @@ export default function Home() {
    */
   const feedSessionSeed = useMemo(() => getFeedSessionSeed(), [])
 
-  /** Listings the sponsored rail is holding this session, by id. */
-  const railIds = useMemo(
-    () => new Set(promotedFeed.map((item) => item._id)),
-    [promotedFeed],
-  )
-
   const rankedContent = useMemo(() => {
-    if (activeTab !== 'all') return allContent
+    // The per-type tabs are a browse rather than a recommendation and are not
+    // scored, but a live extreme campaign still leads them — the promise is
+    // about every feed the reader can open, not only For You.
+    if (activeTab !== 'all') {
+      return leadWithExtreme(allContent, {
+        isExtreme: isExtremePromotion,
+        sessionSeed: feedSessionSeed,
+      })
+    }
 
     const scored = rankForFeed(allContent as Record<string, unknown>[], {
       preserveOrder: true,
       dropExpired: false,
     })
 
-    // The feed half of the extreme tier's two-sided boost. A campaign whose
-    // coin came up "sponsored" for this session steps out of the feed so the
-    // rail can carry it instead; the rail's own dedupe then keeps it, because
-    // anything withheld here is no longer on screen. The two halves never have
-    // to agree explicitly — they read the same draw.
+    // Nothing is withheld from the feed any more. This used to filter out an
+    // extreme campaign whose session coin came up "sponsored", handing it to
+    // the rail instead — which meant half of all loads opened with no extreme
+    // placement at all. The coin now only decides whether the rail carries the
+    // listing *as well*; see `railCarries` in `lib/promotion-placement`.
     //
-    // Conditioned on the rail actually holding the listing. The promoted fetch
-    // is deferred a tick and can fail outright, and withholding unconditionally
-    // would drop a paid placement off both surfaces at once. The cost is that a
-    // listing can move from feed to rail when the promoted response lands,
-    // which is much the cheaper of the two.
-    const routed = scored.filter(
-      (item) =>
-        !railIds.has(String((item as { _id?: unknown })._id ?? '')) ||
-        !withheldFrom(item, 'feed', feedSessionSeed, isExtremePromotion),
-    )
+    // `preserveOrder` above keeps the server's sequence, and the server does
+    // lead with the extreme item — but only inside `scatterRank`, and only
+    // when the campaign made it into that page's promoted pool. Stating it
+    // here instead of trusting that is what makes "always first" true rather
+    // than probable.
+    const led = leadWithExtreme(scored, {
+      isExtreme: isExtremePromotion,
+      sessionSeed: feedSessionSeed,
+    })
 
-    return enforcePromotedCaps(routed, {
+    return enforcePromotedCaps(led, {
       isPromoted,
       isExtreme: isExtremePromotion,
       maxExtreme: MAX_EXTREME_IN_FEED_TOP,
       maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
     })
-  }, [activeTab, rankForFeed, allContent, railIds, feedSessionSeed])
+  }, [activeTab, rankForFeed, allContent, feedSessionSeed])
 
   /**
    * The promoted rail: deduped against the feed, then scored like every other
@@ -552,7 +563,16 @@ export default function Home() {
     const onScreen = new Set(
       (rankedContent as { _id?: string }[]).map((item) => item?._id).filter(Boolean),
     )
-    const unseen = promotedFeed.filter((item) => !onScreen.has(item._id))
+    // The dedupe holds for every tier but one. An extreme campaign leads the
+    // feed on every load, so deduping against the feed would take it off the
+    // rail permanently and the tier would be single-surface in practice. On
+    // the sessions its coin picks the rail, it is carried here too — the one
+    // deliberate duplicate on screen, and what "dual-surface" is sold as.
+    const unseen = promotedFeed.filter(
+      (item) =>
+        !onScreen.has(item._id) ||
+        railCarries(item, feedSessionSeed, isExtremePromotion),
+    )
     if (unseen.length === 0) return unseen
 
     const scored = rankForFeed(unseen as unknown as Record<string, unknown>[], {
@@ -567,7 +587,7 @@ export default function Home() {
       isExtreme: isExtremePromotion,
       maxExtreme: MAX_EXTREME_IN_SPONSORED_TOP,
     })
-  }, [promotedFeed, rankedContent, rankForFeed])
+  }, [promotedFeed, rankedContent, rankForFeed, feedSessionSeed])
 
   const getCurrentItems = () => {
     return allContent

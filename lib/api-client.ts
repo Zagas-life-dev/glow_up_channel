@@ -2184,10 +2184,11 @@ export class ApiClient {
     /**
      * Tier. Omitted for an ordinary promotion.
      *
-     * 'extreme' ignores `durationDays` — the server fixes that run at 21 days,
-     * because the announcement schedule is expressed as offsets into it and a
-     * caller-chosen length would desynchronise the popup, the push and the
-     * email from one another.
+     * 'extreme' honours `durationDays` like any other run, with a floor of 3
+     * rather than 7. It used to ignore it and fix the run at 21 days, because
+     * the announcement schedule was a set of offsets into that window; the
+     * schedule is now drawn from the campaign's own span, and the number of
+     * announcements scales with it, so the length is the caller's to choose.
      */
     packageType?: 'extreme';
   }): Promise<{ promotion: any; duration: number }> {

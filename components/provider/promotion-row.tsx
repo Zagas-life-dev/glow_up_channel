@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ApiClient from "@/lib/api-client"
+import { announcementCount } from "@/lib/promotions/announcement"
 import { cn } from "@/lib/utils"
 import { statusToneClass } from "@/components/provider/provider-ui"
 
@@ -60,6 +61,13 @@ export interface PromotionRowData {
   startDate?: string
   endDate?: string
   remainingDays?: number
+  /**
+   * The span the extreme tier's announcement days are drawn from, pinned at
+   * creation. Null on every other package, and absent on extreme campaigns
+   * created before the field existed — `announcementCount` falls back to
+   * `duration` for those, which is what they were already using.
+   */
+  announcementSpanDays?: number | null
   content?: { title?: string } | null
 }
 
@@ -104,6 +112,17 @@ export function PromotionRow({
   const Icon = CONTENT_ICONS[promotion.contentType] ?? Target
   const extreme = isExtreme(promotion)
   const finished = isFinished(promotion)
+
+  /**
+   * Read off the pinned span rather than the current duration, and that is the
+   * point of the fallback order: extending a run below does not buy more
+   * announcements, because the days — and now the count — are drawn from the
+   * span frozen at creation. Showing the number the duration implies would
+   * promise a provider something the schedule will not deliver.
+   */
+  const announcementDayCount = announcementCount(
+    promotion.announcementSpanDays ?? promotion.duration,
+  )
 
   const [managing, setManaging] = useState(false)
   const [days, setDays] = useState(promotion.duration || 7)
@@ -231,8 +250,9 @@ export function PromotionRow({
           {extreme && !finished && (
             <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
               <Megaphone className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden />
-              Announced to each reader on two days of this campaign, with a push
-              notification and an email slot.
+              Announced to each reader on {announcementDayCount}{" "}
+              {announcementDayCount === 1 ? "day" : "separate days"} of this campaign,
+              with a push notification and an email slot.
             </p>
           )}
 

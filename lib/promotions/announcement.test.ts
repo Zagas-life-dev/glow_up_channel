@@ -1,18 +1,25 @@
 /**
  * The announcement calendar.
  *
- * Two days per campaign, drawn per reader, derived rather than stored. The
- * properties worth pinning are the ones that would make the tier quietly fail
- * to deliver what it sold:
+ * A count scaled to the length of the run, drawn per reader, derived rather
+ * than stored. The properties worth pinning are the ones that would make the
+ * tier quietly fail to deliver what it sold:
  *
- *   - **Exactly two, always distinct.** A draw that can return the same day
- *     twice halves the campaign's announcements without anything erroring.
- *   - **Spread across the whole run.** If the draw clustered, the "two days
- *     somewhere in 21" promise would collapse back into the broadcast the
- *     per-reader design exists to avoid.
+ *   - **The count follows the run.** A year-long campaign announcing itself
+ *     twice, like a three-week one, is the failure the ladder exists to stop.
+ *   - **Always distinct, never more than the run has days.** A draw that can
+ *     return the same day twice silently loses announcements, and one that can
+ *     ask for four days out of a three-day run cannot terminate.
+ *   - **Spread across the whole run.** If the draw clustered, the promise of
+ *     days scattered through the run would collapse back into the broadcast
+ *     the per-reader design exists to avoid.
+ *   - **Unchanged for campaigns already running.** Every extreme campaign
+ *     issued before the ladder ran 21 days and drew two; if `announcementCount`
+ *     or `pickDays` answered differently at 21, every live campaign would
+ *     re-announce to readers the ledger thinks are finished.
  *   - **Stable per reader.** The days are recomputed on every evaluation, on
  *     every device. If they moved, a reader could be shown the same campaign
- *     far more than twice, or never.
+ *     far more often than it bought, or never.
  *   - **One interruption a day, whatever is running.** The cap is checked
  *     against the ledger before any campaign is considered, so three campaigns
  *     landing on one reader's day still produce one popup.
@@ -21,11 +28,13 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
 import {
+  ANNOUNCEMENT_BANDS,
+  announcementCount,
   announcementDays,
   isAnnouncementDay,
   localDateKey,
   markAnnounced,
-  pickTwoDays,
+  pickDays,
   runDayIndex,
   runLengthDays,
   selectAnnouncement,
@@ -56,29 +65,93 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe("pickTwoDays", () => {
-  it("always returns two distinct days inside the span", () => {
-    for (let seed = 0; seed < 500; seed += 1) {
-      const days = pickTwoDays(seed, 21)
-      expect(days).toHaveLength(2)
-      expect(days[0]).not.toBe(days[1])
-      for (const day of days) {
-        expect(day).toBeGreaterThanOrEqual(0)
-        expect(day).toBeLessThan(21)
+describe("announcementCount — the ladder", () => {
+  it("matches the bands the product asked for", () => {
+    // Stated as ranges rather than a formula on purpose: these four are the
+    // product decision, and everything past them is the continuation of it.
+    for (const span of [1, 3, 4, 7]) expect(announcementCount(span)).toBeLessThanOrEqual(1)
+    for (const span of [8, 14, 21]) expect(announcementCount(span)).toBe(2)
+    for (const span of [22, 30, 45]) expect(announcementCount(span)).toBe(3)
+    for (const span of [46, 52, 60]) expect(announcementCount(span)).toBe(4)
+  })
+
+  it("adds one per further thirty days, up to fourteen at a year", () => {
+    expect(announcementCount(90)).toBe(5)
+    expect(announcementCount(120)).toBe(6)
+    expect(announcementCount(180)).toBe(8)
+    expect(announcementCount(365)).toBe(14)
+  })
+
+  it("never buys more announcements than the run has days for", () => {
+    // Otherwise `pickDays` would be asked for four distinct days out of three.
+    for (let span = 1; span <= 10; span += 1) {
+      expect(announcementCount(span)).toBeLessThanOrEqual(span)
+      expect(announcementCount(span)).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it("holds the last band rather than growing without bound", () => {
+    expect(announcementCount(400)).toBe(ANNOUNCEMENT_BANDS.length)
+    expect(announcementCount(10_000)).toBe(ANNOUNCEMENT_BANDS.length)
+  })
+
+  it("rises with the run and never falls", () => {
+    let previous = 0
+    for (let span = 1; span <= 400; span += 1) {
+      const count = announcementCount(span)
+      expect(count).toBeGreaterThanOrEqual(previous)
+      previous = count
+    }
+  })
+})
+
+describe("pickDays", () => {
+  it("returns the asked-for number of distinct days, in order, inside the span", () => {
+    for (const [span, count] of [
+      [21, 2],
+      [45, 3],
+      [60, 4],
+      [365, 14],
+    ] as const) {
+      for (let seed = 0; seed < 200; seed += 1) {
+        const days = pickDays(seed, span, count)
+        expect(days).toHaveLength(count)
+        expect(new Set(days).size).toBe(count)
+        expect([...days].sort((a, b) => a - b)).toEqual(days)
+        for (const day of days) {
+          expect(day).toBeGreaterThanOrEqual(0)
+          expect(day).toBeLessThan(span)
+        }
       }
     }
   })
 
-  it("returns them in order", () => {
-    for (let seed = 0; seed < 100; seed += 1) {
-      const [a, b] = pickTwoDays(seed, 21)
-      expect(a).toBeLessThan(b)
+  it("reproduces the old two-day draw exactly", () => {
+    // The guard on every campaign already mid-run. This is the algorithm the
+    // replaced `pickTwoDays` ran, restated so a rewrite of `pickDays` that
+    // consumed its randoms in a different order cannot pass.
+    for (let seed = 0; seed < 500; seed += 1) {
+      let a = seed >>> 0
+      const rand = () => {
+        a = (a + 0x6d2b79f5) >>> 0
+        let t = a
+        t = Math.imul(t ^ (t >>> 15), t | 1)
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+      const first = Math.floor(rand() * 21)
+      const offset = Math.floor(rand() * 20)
+      const second = offset >= first ? offset + 1 : offset
+
+      expect(pickDays(seed, 21, 2)).toEqual([first, second].sort((x, y) => x - y))
     }
   })
 
-  it("degrades rather than looping on a one-day span", () => {
-    expect(pickTwoDays(1, 1)).toEqual([0])
-    expect(pickTwoDays(1, 0)).toEqual([0])
+  it("degrades rather than looping on a span it cannot fill", () => {
+    expect(pickDays(1, 1, 2)).toEqual([0])
+    expect(pickDays(1, 0, 4)).toEqual([0])
+    expect(pickDays(1, 3, 9)).toHaveLength(3)
+    expect(pickDays(1, 5, 0)).toHaveLength(1)
   })
 
   it("reaches every day of the run across readers", () => {
@@ -86,9 +159,25 @@ describe("pickTwoDays", () => {
     // and undo the reason the draw is per reader at all.
     const hit = new Set<number>()
     for (let seed = 0; seed < 2000; seed += 1) {
-      for (const day of pickTwoDays(seed, 21)) hit.add(day)
+      for (const day of pickDays(seed, 21, 2)) hit.add(day)
     }
     expect(hit.size).toBe(21)
+  })
+
+  it("spreads a long run's days rather than bunching them at one end", () => {
+    // A year's fourteen announcements landing in January would deliver the
+    // same campaign as a broadcast and leave eleven months silent.
+    const perMonth = new Array(12).fill(0)
+    for (let seed = 0; seed < 1000; seed += 1) {
+      for (const day of pickDays(seed, 365, 14)) {
+        perMonth[Math.min(11, Math.floor(day / 30.5))] += 1
+      }
+    }
+    const total = perMonth.reduce((sum, n) => sum + n, 0)
+    for (const month of perMonth) {
+      expect(month / total).toBeGreaterThan(0.04)
+      expect(month / total).toBeLessThan(0.13)
+    }
   })
 })
 
@@ -386,9 +475,39 @@ describe("server parity — the push must land on the popup's days", () => {
     }
   })
 
-  it("agrees on the raw draw, seed for seed", () => {
-    for (let seed = 0; seed < 500; seed += 1) {
-      expect(pickTwoDays(seed, 21)).toEqual(PromotionAnnouncementService.pickTwoDays(seed, 21))
+  it("agrees on the raw draw, seed for seed, at every count on the ladder", () => {
+    for (const span of ANNOUNCEMENT_BANDS) {
+      const count = announcementCount(span)
+      for (let seed = 0; seed < 120; seed += 1) {
+        expect(pickDays(seed, span, count)).toEqual(
+          PromotionAnnouncementService.pickDays(seed, span, count),
+        )
+      }
+    }
+  })
+
+  it("agrees on how many announcements a run buys", () => {
+    // The ladder is duplicated by hand across the boundary, so a band edge
+    // moved on one side only is exactly the drift this catches: the popup and
+    // the push would then disagree about how many days there even are.
+    for (let span = 1; span <= 400; span += 1) {
+      expect(announcementCount(span)).toBe(PromotionAnnouncementService.announcementCount(span))
+    }
+    expect(ANNOUNCEMENT_BANDS).toEqual(PromotionAnnouncementService.ANNOUNCEMENT_BANDS)
+  })
+
+  it("agrees on the days of a long run, where the counts differ most", () => {
+    // The 21-day campaign above exercises two days on both sides. A year-long
+    // one exercises fourteen, which is where a mismatched loop shows up.
+    const yearLong = campaign({
+      endDate: new Date(START + 365 * DAY).toISOString(),
+      announcementSpanDays: 365,
+    })
+    for (let i = 0; i < 100; i += 1) {
+      const user = `reader-${i}`
+      const days = announcementDays(user, yearLong)
+      expect(days).toHaveLength(14)
+      expect(days).toEqual(PromotionAnnouncementService.announcementDays(user, yearLong))
     }
   })
 
