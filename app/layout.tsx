@@ -21,8 +21,11 @@ import { PlaylistProvider } from "@/contexts/playlist-context"
 import { LockedInProvider } from "@/contexts/locked-in-context"
 import { TrackerProvider } from "@/contexts/tracker-context"
 import { GiftProvider } from "@/contexts/gift-context"
+import { PromotionAnnouncementProvider } from "@/contexts/promotion-announcement-context"
 import TrackerReturnSheet from "@/components/tracker/return-sheet"
 import GiftPopup from "@/components/gifts/gift-popup"
+import PromotionAnnouncementPopup from "@/components/promotion/promotion-announcement-popup"
+import AnnouncementAttribution from "@/components/promotion/announcement-attribution"
 import VisitTracker from "@/components/visit-tracker"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
@@ -178,6 +181,11 @@ export default async function RootLayout({
                           member-only, and the poll must not run for a
                           signed-out visitor. */}
                       <GiftProvider>
+                        {/* Inside GiftProvider, because the announcement popup
+                            reads it: when both are due at once the gift wins
+                            and the announcement waits for the reader's next
+                            eligible day. */}
+                        <PromotionAnnouncementProvider>
                         <PageProvider>
                           <AppLayout>
                             <VisitTracker />
@@ -191,9 +199,20 @@ export default async function RootLayout({
                                 fixed-position so it overlays whichever layout
                                 branch AppLayout took. */}
                             <GiftPopup />
+                            {/* Ordered after GiftPopup so that when both would
+                                render, the gift paints on top; the announcement
+                                also returns null of its own accord while a gift
+                                is waiting, so this is belt and braces. */}
+                            <PromotionAnnouncementPopup />
+                            {/* Renders nothing. Reads the ?promo=&src= markers
+                                that announcement pushes and emails put on their
+                                links, so a visit arriving from one is credited
+                                to it instead of looking like any other click. */}
+                            <AnnouncementAttribution />
                             <Toaster position="bottom-center" />
                           </AppLayout>
                         </PageProvider>
+                        </PromotionAnnouncementProvider>
                       </GiftProvider>
                     </TrackerProvider>
                   </LockedInProvider>

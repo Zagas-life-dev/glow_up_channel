@@ -31,6 +31,12 @@ import {
   type HomeListType,
 } from "@/lib/fetch-home-list-page"
 import { deriveSeed, orderByDeadlineLottery } from "@/lib/public-hub-order"
+import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
+import {
+  MAX_EXTREME_IN_FEED_TOP,
+  MAX_PROMOTED_IN_FEED_TOP,
+  enforcePromotedCaps,
+} from "@/lib/promotion-placement"
 
 export { HOME_LIST_PAGE_SIZE as HUB_PAGE_SIZE }
 export type { HomeListItem, HomeListPageResult, HomeListType }
@@ -95,11 +101,25 @@ export async function fetchPublicHubPage({
   // Search results keep the API's ordering. Someone who typed a query is
   // looking for specific listings, and reshuffling matches under them would
   // make the same search look broken twice in a row.
-  const items = isSearching
+  const ordered = isSearching
     ? page.items
     : orderByDeadlineLottery(page.items, {
         seed: deriveSeed(sessionSeed ?? 0, type, cursorLastId ?? "first"),
       })
+
+  // The caps govern the top of the list, so they belong to the first page and
+  // nowhere else. Applying them per page would also throttle paid placement at
+  // the head of page four, which is not what they are for — and the ordinary
+  // promoted share already keeps density modest down there.
+  const items =
+    isFirstPage && !isSearching
+      ? enforcePromotedCaps(ordered, {
+          isPromoted,
+          isExtreme: isExtremePromotion,
+          maxExtreme: MAX_EXTREME_IN_FEED_TOP,
+          maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
+        })
+      : ordered
 
   const result: HomeListPageResult = { ...page, items }
 

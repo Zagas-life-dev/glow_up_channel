@@ -15,7 +15,13 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { applyVarietyOrder, promotedLeadBias, type VarietyFeedItem } from "@/lib/feed-variety-order"
+import {
+  applyVarietyOrder,
+  promotedLeadBias,
+  TOP_PROMOTED_SLOTS,
+  TOP_SLOTS,
+  type VarietyFeedItem,
+} from "@/lib/feed-variety-order"
 
 const NOW = Date.UTC(2026, 7, 31)
 const DAY = 24 * 60 * 60 * 1000
@@ -128,19 +134,41 @@ describe("applyVarietyOrder — invariants the lead bias must not break", () => 
     }
   })
 
-  it("keeps promotions at least PROMOTED_MIN_GAP apart while organic stock lasts", () => {
+  it("keeps promotions at least PROMOTED_MIN_GAP apart past the opening block", () => {
+    // The opening block is exempt by design: TOP_SLOTS holds a fixed
+    // four-paid-of-ten, whose minimum gap is one rather than three. The ordinary
+    // spacing resumes the moment that block ends — see TOP_PROMOTED_MIN_GAP.
     for (const order of run(feed(60, 8), 300)) {
       let previous = -Infinity
       order.forEach((item, index) => {
         if (!item.isPromoted) return
         const organicLeft = order.slice(index).some((i) => !i.isPromoted)
-        // The tail drain is exempt: once nothing organic remains there is
+        // The tail drain is exempt too: once nothing organic remains there is
         // nothing left to space against.
-        if (organicLeft && previous >= 0) {
+        if (index > TOP_SLOTS && organicLeft && previous >= TOP_SLOTS) {
           expect(index - previous).toBeGreaterThan(MIN_GAP)
         }
         previous = index
       })
+    }
+  })
+
+  it("holds the fixed paid/organic split across the opening block, paid first", () => {
+    // The product rule: of the first TOP_SLOTS cards, exactly TOP_PROMOTED_SLOTS
+    // are paid and the very first one is. Below that only if the pool has fewer.
+    for (const order of run(feed(60, 8), 200)) {
+      expect(order[0]?.isPromoted).toBe(true)
+      expect(order.slice(0, TOP_SLOTS).filter((i) => i.isPromoted)).toHaveLength(
+        TOP_PROMOTED_SLOTS,
+      )
+    }
+  })
+
+  it("never puts two promotions side by side in the opening block", () => {
+    for (const order of run(feed(60, 8), 200)) {
+      for (let i = 1; i < TOP_SLOTS; i += 1) {
+        expect(Boolean(order[i].isPromoted && order[i - 1].isPromoted)).toBe(false)
+      }
     }
   })
 

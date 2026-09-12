@@ -174,12 +174,27 @@ export function deadlineOf(item: Record<string, unknown>): number | null {
  * For most content that is the deadline; for events there is no deadline and
  * the start date is what runs out. Callers that care about time pressure want
  * this, not `deadlineOf`.
+ *
+ * Note this reads the deadline fields directly rather than delegating to
+ * `deadlineOf`, because the two want `endDate` in different places. For expiry,
+ * an event is over when it ends. For *acting*, what runs out is the start — the
+ * morning you had to be there — so `endDate` is only the last resort here, for
+ * something that carries no start date at all. Delegating measured urgency to
+ * the end of a three-day conference instead of to its first morning.
  */
 export function actionableDateOf(item: Record<string, unknown>): number | null {
-  const deadline = deadlineOf(item)
-  if (deadline !== null) return deadline
   const dates = datesOf(item)
-  return toTime(dates.startDate ?? dates.start) ?? toTime(item.startDate ?? item.date)
+
+  const deadline =
+    toTime(dates.deadline ?? dates.applicationDeadline ?? dates.registrationDeadline) ??
+    toTime(item.deadline ?? item.applicationDeadline ?? item.registrationDeadline)
+  if (deadline !== null) return deadline
+
+  const start =
+    toTime(dates.startDate ?? dates.start) ?? toTime(item.startDate ?? item.date)
+  if (start !== null) return start
+
+  return toTime(dates.endDate) ?? toTime(item.endDate)
 }
 
 /**

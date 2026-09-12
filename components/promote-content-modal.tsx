@@ -1,5 +1,24 @@
 "use client"
 
+/**
+ * Starting a promotion.
+ *
+ * Two tiers reach this modal, and they are genuinely different products rather
+ * than a small and a large of the same thing, so the choice is the first thing
+ * asked and everything below it reacts:
+ *
+ *   - **Standard** boosts placement in the feed and the hub pages. The provider
+ *     picks how long it runs.
+ *   - **Extreme** additionally announces the listing to readers directly — a
+ *     popup, a push and an email slot — and its length is fixed at 21 days.
+ *     Fixed because the announcement schedule is expressed as offsets into that
+ *     window; a chosen length would desynchronise the three channels from each
+ *     other. So the duration control is not disabled for extreme, it is
+ *     replaced, which is the honest way to show a control that does not apply.
+ *
+ * Both are free. Neither has a budget, a bid or a per-click charge.
+ */
+
 import { useEffect, useMemo, useState } from 'react'
 import {
   Dialog,
@@ -13,16 +32,33 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ApiClient from '@/lib/api-client'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { ImagePlus, Loader2, TrendingUp, X } from 'lucide-react'
+import {
+  Bell,
+  Check,
+  ImagePlus,
+  Loader2,
+  Mail,
+  Megaphone,
+  Sparkles,
+  TrendingUp,
+  X,
+  Zap,
+} from 'lucide-react'
 import { compressImage, formatBytes, MAX_COVER_BYTES } from '@/lib/images/compress-image'
 
 const MIN_DURATION = 7
 const MAX_DURATION = 365
 const QUICK_DURATIONS = [7, 14, 30, 60, 90]
 
+/** Fixed server-side. Shown here so the choice is not a surprise on submit. */
+const EXTREME_DURATION = 21
+
 /** Matches the backend's own limit for hero uploads. */
 const MAX_HERO_BYTES = MAX_COVER_BYTES
+
+type Tier = 'standard' | 'extreme'
 
 export interface PostedItemForPromote {
   _id: string
@@ -47,12 +83,85 @@ function getTypeLabel(type: string): string {
   return map[type] || type
 }
 
+/** What the extreme tier adds, in the order a provider cares about it. */
+const EXTREME_PERKS: { icon: typeof Zap; text: string }[] = [
+  { icon: Zap, text: 'Shown in the main feed and the sponsored feed, not just one' },
+  { icon: Sparkles, text: 'Priority in the top 10, and a stronger match score to every reader' },
+  { icon: Megaphone, text: 'A full-screen announcement on two days, picked per reader' },
+  { icon: Bell, text: 'A push notification on each of those two days' },
+  { icon: Mail, text: 'A featured slot in our welcome and verification emails' },
+]
+
+function TierCard({
+  selected,
+  onSelect,
+  disabled,
+  title,
+  tagline,
+  meta,
+  badge,
+  children,
+}: {
+  selected: boolean
+  onSelect: () => void
+  disabled?: boolean
+  title: string
+  tagline: string
+  meta: string
+  badge?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={disabled}
+      aria-pressed={selected}
+      className={cn(
+        'w-full rounded-xl border p-3 text-left transition-colors',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        selected
+          ? 'border-primary bg-primary/5'
+          : 'border-border bg-card hover:border-primary/40',
+        disabled && 'cursor-not-allowed opacity-60',
+      )}
+    >
+      <div className="flex items-start gap-2.5">
+        <span
+          className={cn(
+            'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+            selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/40',
+          )}
+          aria-hidden
+        >
+          {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-sm font-semibold text-foreground">{title}</span>
+            {badge && (
+              <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                {badge}
+              </span>
+            )}
+            <span className="ml-auto text-[11px] font-medium text-muted-foreground">{meta}</span>
+          </div>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{tagline}</p>
+          {children}
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export function PromoteContentModal({
   open,
   onOpenChange,
   item,
   onSuccess,
 }: PromoteContentModalProps) {
+  const [tier, setTier] = useState<Tier>('standard')
   const [durationDays, setDurationDays] = useState(7)
   const [submitting, setSubmitting] = useState(false)
   const [heroFile, setHeroFile] = useState<File | null>(null)
@@ -72,14 +181,19 @@ export function PromoteContentModal({
     return () => URL.revokeObjectURL(heroPreview)
   }, [heroPreview])
 
+  // Note: callers key this component on the listing id, so opening it for a
+  // different listing remounts it and every field above starts fresh. That
+  // matters more than it looks — without it the modal remembers the last tier
+  // and image, and a provider who chose Extreme once would silently get it
+  // again on the next listing they promoted. Remounting is also why there is no
+  // reset effect here: there is nothing to reset.
+
+  const isExtreme = tier === 'extreme'
   const safeDuration = Math.min(Math.max(MIN_DURATION, durationDays), MAX_DURATION)
+  const effectiveDuration = isExtreme ? EXTREME_DURATION : safeDuration
 
   const handleSubmit = async () => {
     if (!item) return
-    if (safeDuration < MIN_DURATION) {
-      toast.error(`Duration must be at least ${MIN_DURATION} days`)
-      return
-    }
     setSubmitting(true)
     try {
       // Uploaded first: a failed image must not leave a started campaign with a
@@ -99,10 +213,16 @@ export function PromoteContentModal({
       await ApiClient.startFreePromotion({
         contentId: item._id,
         contentType: item.type,
-        durationDays: safeDuration,
+        durationDays: effectiveDuration,
         heroImageUrl,
+        ...(isExtreme && { packageType: 'extreme' as const }),
       })
-      toast.success(`Promotion started for ${safeDuration} days`)
+
+      toast.success(
+        isExtreme
+          ? `Extreme promotion started — ${EXTREME_DURATION} days, announcements included`
+          : `Promotion started for ${effectiveDuration} days`,
+      )
       setHeroFile(null)
       onOpenChange(false)
       onSuccess()
@@ -116,52 +236,111 @@ export function PromoteContentModal({
 
   if (!item) return null
 
+  const busy = submitting || compressing
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
             Promote this content
           </DialogTitle>
           <DialogDescription>
-            Promotion is free. Pick how long you want the boost to run and it starts right away.
+            Promotion is free — no fees, no budget, no per-click charge. Pick how
+            far you want it to reach.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-5 py-1">
           <div className="rounded-lg border border-border bg-muted/50 p-3">
-            <p className="text-sm font-medium text-foreground line-clamp-2">{item.title}</p>
-            <p className="text-xs text-muted-foreground mt-1">{getTypeLabel(item.type)}</p>
+            <p className="line-clamp-2 text-sm font-medium text-foreground">{item.title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{getTypeLabel(item.type)}</p>
           </div>
 
+          {/* Tier. First, because everything below depends on it. */}
           <div className="space-y-2">
-            <Label htmlFor="duration">Duration (days)</Label>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_DURATIONS.map((n) => (
-                <Button
-                  key={n}
-                  type="button"
-                  variant={safeDuration === n ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDurationDays(n)}
-                >
-                  {n} days
-                </Button>
-              ))}
-            </div>
-            <Input
-              id="duration"
-              type="number"
-              min={MIN_DURATION}
-              max={MAX_DURATION}
-              value={durationDays}
-              onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || MIN_DURATION)}
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+              Reach
+            </Label>
+
+            <TierCard
+              selected={!isExtreme}
+              onSelect={() => setTier('standard')}
+              disabled={busy}
+              title="Standard"
+              tagline="Boosted placement in the feed and on the hub pages."
+              meta="You choose the length"
             />
-            <p className="text-xs text-muted-foreground">
-              Min {MIN_DURATION}, max {MAX_DURATION} days.
-            </p>
+
+            <TierCard
+              selected={isExtreme}
+              onSelect={() => setTier('extreme')}
+              disabled={busy}
+              title="Extreme"
+              tagline="Everything in Standard, plus we announce it to readers directly."
+              meta={`${EXTREME_DURATION} days`}
+              badge="Most reach"
+            >
+              {isExtreme && (
+                <ul className="mt-2.5 space-y-1.5 border-t border-primary/15 pt-2.5">
+                  {EXTREME_PERKS.map((perk) => (
+                    <li key={perk.text} className="flex items-start gap-2">
+                      <perk.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                      <span className="text-xs leading-relaxed text-muted-foreground">
+                        {perk.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </TierCard>
           </div>
+
+          {/* Duration — replaced rather than disabled when it does not apply. */}
+          {isExtreme ? (
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <p className="text-sm font-medium text-foreground">
+                Runs for {EXTREME_DURATION} days
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Fixed, because the two announcement days are drawn from inside this
+                window — a different length would pull the popup, the push and the
+                email apart. It replaces any promotion currently running on this
+                listing.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration</Label>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_DURATIONS.map((n) => (
+                  <Button
+                    key={n}
+                    type="button"
+                    variant={safeDuration === n ? 'default' : 'outline'}
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => setDurationDays(n)}
+                  >
+                    {n} days
+                  </Button>
+                ))}
+              </div>
+              <Input
+                id="duration"
+                type="number"
+                min={MIN_DURATION}
+                max={MAX_DURATION}
+                value={durationDays}
+                disabled={busy}
+                onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || MIN_DURATION)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Between {MIN_DURATION} and {MAX_DURATION} days.
+              </p>
+            </div>
+          )}
 
           {/* Hero image — only available while promoting.
 
@@ -171,7 +350,9 @@ export function PromoteContentModal({
               posting forms because it is part of what the promotion buys: it
               goes on when the campaign starts and comes off when it ends. */}
           <div className="space-y-2">
-            <Label>Hero image <span className="font-normal text-muted-foreground">(optional)</span></Label>
+            <Label>
+              Hero image <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
             {heroPreview ? (
               <div className="relative overflow-hidden rounded-lg border border-border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -179,7 +360,7 @@ export function PromoteContentModal({
                 <button
                   type="button"
                   onClick={() => setHeroFile(null)}
-                  disabled={submitting || compressing}
+                  disabled={busy}
                   aria-label="Remove image"
                   className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 text-foreground shadow-sm hover:bg-background"
                 >
@@ -203,7 +384,7 @@ export function PromoteContentModal({
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   className="hidden"
-                  disabled={submitting || compressing}
+                  disabled={busy}
                   onChange={async (e) => {
                     const file = e.target.files?.[0] ?? null
                     // Let the same file be re-picked after a failure.
@@ -242,29 +423,22 @@ export function PromoteContentModal({
               the promotion ends.
             </p>
           </div>
-
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              Your content gets boosted placement for {safeDuration} days.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              No fee, no budget and no per-click charge — promotion costs you nothing.
-            </p>
-          </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button onClick={handleSubmit} disabled={busy}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Starting…
               </>
+            ) : isExtreme ? (
+              `Start extreme · ${EXTREME_DURATION} days`
             ) : (
-              'Start promotion'
+              `Start promotion · ${effectiveDuration} days`
             )}
           </Button>
         </DialogFooter>

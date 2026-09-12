@@ -10,6 +10,14 @@ import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page
 import { normalizeUnifiedFeedItem } from "@/lib/feed-content-type"
 import { getFeedSessionSeed } from "@/lib/feed-session-seed"
 import { applyVarietyOrder } from "@/lib/feed-variety-order"
+import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
+import {
+  MAX_EXTREME_IN_FEED_TOP,
+  MAX_EXTREME_IN_SPONSORED_TOP,
+  MAX_PROMOTED_IN_FEED_TOP,
+  enforcePromotedCaps,
+  withheldFrom,
+} from "@/lib/promotion-placement"
 import FeedContainer from "@/components/feed-container"
 import FeedCard from "@/components/feed-card"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
@@ -160,8 +168,14 @@ export default function Home() {
         // These items carry no score, so they all land in one band and the band
         // weighting is a no-op — the deadline weighting inside the band is the
         // part that does the work, which is exactly what is wanted here.
-        const ordered = applyVarietyOrder(
-          normalizedFeed as Parameters<typeof applyVarietyOrder>[0],
+        const ordered = enforcePromotedCaps(
+          applyVarietyOrder(normalizedFeed as Parameters<typeof applyVarietyOrder>[0]),
+          {
+            isPromoted,
+            isExtreme: isExtremePromotion,
+            maxExtreme: MAX_EXTREME_IN_FEED_TOP,
+            maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
+          },
         ) as typeof normalizedFeed
 
         if (ordered.length) {
@@ -461,16 +475,54 @@ export default function Home() {
   )
   const { rankForFeed } = usePersonalizedRanking(rankingProfile)
 
-  const rankedContent = useMemo(
-    () =>
-      activeTab === 'all'
-        ? rankForFeed(allContent as Record<string, unknown>[], {
-            preserveOrder: true,
-            dropExpired: false,
-          })
-        : allContent,
-    [activeTab, rankForFeed, allContent],
+  /**
+   * The seed this browsing session draws with, read once.
+   *
+   * Held in a memo rather than called inline so every consumer below sees the
+   * same number for the life of the page: `getFeedSessionSeed` mints on first
+   * call, and a re-render that re-read it after a sessionStorage failure would
+   * otherwise re-route listings mid-scroll.
+   */
+  const feedSessionSeed = useMemo(() => getFeedSessionSeed(), [])
+
+  /** Listings the sponsored rail is holding this session, by id. */
+  const railIds = useMemo(
+    () => new Set(promotedFeed.map((item) => item._id)),
+    [promotedFeed],
   )
+
+  const rankedContent = useMemo(() => {
+    if (activeTab !== 'all') return allContent
+
+    const scored = rankForFeed(allContent as Record<string, unknown>[], {
+      preserveOrder: true,
+      dropExpired: false,
+    })
+
+    // The feed half of the extreme tier's two-sided boost. A campaign whose
+    // coin came up "sponsored" for this session steps out of the feed so the
+    // rail can carry it instead; the rail's own dedupe then keeps it, because
+    // anything withheld here is no longer on screen. The two halves never have
+    // to agree explicitly — they read the same draw.
+    //
+    // Conditioned on the rail actually holding the listing. The promoted fetch
+    // is deferred a tick and can fail outright, and withholding unconditionally
+    // would drop a paid placement off both surfaces at once. The cost is that a
+    // listing can move from feed to rail when the promoted response lands,
+    // which is much the cheaper of the two.
+    const routed = scored.filter(
+      (item) =>
+        !railIds.has(String((item as { _id?: unknown })._id ?? '')) ||
+        !withheldFrom(item, 'feed', feedSessionSeed, isExtremePromotion),
+    )
+
+    return enforcePromotedCaps(routed, {
+      isPromoted,
+      isExtreme: isExtremePromotion,
+      maxExtreme: MAX_EXTREME_IN_FEED_TOP,
+      maxPromoted: MAX_PROMOTED_IN_FEED_TOP,
+    })
+  }, [activeTab, rankForFeed, allContent, railIds, feedSessionSeed])
 
   /**
    * The promoted rail: deduped against the feed, then scored like every other
@@ -503,10 +555,18 @@ export default function Home() {
     const unseen = promotedFeed.filter((item) => !onScreen.has(item._id))
     if (unseen.length === 0) return unseen
 
-    return rankForFeed(unseen as unknown as Record<string, unknown>[], {
+    const scored = rankForFeed(unseen as unknown as Record<string, unknown>[], {
       preserveOrder: true,
       dropExpired: false,
     }) as unknown as typeof promotedFeed
+
+    // No combined cap here: everything in the rail is paid by definition, so
+    // the only question is how much of it one tier may hold.
+    return enforcePromotedCaps(scored, {
+      isPromoted,
+      isExtreme: isExtremePromotion,
+      maxExtreme: MAX_EXTREME_IN_SPONSORED_TOP,
+    })
   }, [promotedFeed, rankedContent, rankForFeed])
 
   const getCurrentItems = () => {

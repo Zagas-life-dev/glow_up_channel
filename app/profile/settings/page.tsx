@@ -148,6 +148,7 @@ const PUSH_TOPICS = [
   { key: 'pushConnectionPosts', label: 'When connections post', desc: 'When someone you follow posts in Community' },
   { key: 'pushChannelPosts', label: 'Channel posts', desc: 'New posts in channels you are in' },
   { key: 'pushFunReminders', label: 'Fun and motivational', desc: 'Occasional goals and motivation, about once a day' },
+  { key: 'pushPromotions', label: 'Featured listings', desc: 'Occasional sponsored listings, at most twice per campaign' },
 ]
 
 /**
@@ -364,7 +365,9 @@ export default function SettingsPage() {
     pushLockedInReminders: true,
     pushChannelPosts: true,
     pushConnectionPosts: true,
-    pushFunReminders: true
+    pushFunReminders: true,
+    pushPromotions: true,
+    promotionPopups: true
   })
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   const [savingPushPref, setSavingPushPref] = useState(false)
@@ -415,7 +418,9 @@ export default function SettingsPage() {
           pushLockedInReminders: ns.pushLockedInReminders !== false,
           pushChannelPosts: ns.pushChannelPosts !== false,
           pushConnectionPosts: ns.pushConnectionPosts !== false,
-          pushFunReminders: ns.pushFunReminders !== false
+          pushFunReminders: ns.pushFunReminders !== false,
+          pushPromotions: ns.pushPromotions !== false,
+          promotionPopups: ns.promotionPopups !== false
         }))
         setPreferencesLoaded(true)
       })
@@ -1281,6 +1286,22 @@ export default function SettingsPage() {
                           />
                         ))
                       : null}
+                  </div>
+                </SettingsSection>
+
+                <SettingsSection
+                  title="In-app"
+                  description="What can interrupt you while you are using the app."
+                >
+                  <div className="divide-y divide-border">
+                    <ToggleRow
+                      id="promotionPopups"
+                      label="Featured listing announcements"
+                      description="A full-screen card for a sponsored listing, at most once a day. Gift announcements are unaffected."
+                      checked={preferences.promotionPopups}
+                      disabled={savingPushPref}
+                      onChange={(checked) => saveNotificationPreference('promotionPopups', checked)}
+                    />
                   </div>
                 </SettingsSection>
               </>

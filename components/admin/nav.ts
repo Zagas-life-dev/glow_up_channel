@@ -16,6 +16,7 @@ import {
   RiMailSendLine,
   RiSettings3Line,
   RiGiftLine,
+  RiFlashlightLine,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -68,6 +69,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Revenue",
     items: [
       { label: "Promotions", href: "/dashboard/admin/promotions", icon: RiMegaphoneLine, superAdminOnly: true },
+      { label: "Extreme", href: "/dashboard/admin/promotions/extreme", icon: RiFlashlightLine, superAdminOnly: true },
       { label: "Receipts", href: "/dashboard/admin/receipts", icon: RiBillLine, superAdminOnly: true },
     ],
   },

@@ -65,10 +65,9 @@
  */
 
 import { isPromoted, promotionWeight } from "@/lib/promotion-boost"
+import { HUB_TIME_PRESSURE, timePressureFrom } from "@/lib/feed-time-pressure"
 
 export type HubOrderItem = { _id: string; [key: string]: unknown }
-
-const DAY_MS = 24 * 60 * 60 * 1000
 
 function toTime(value: unknown): number | null {
   if (!value) return null
@@ -118,75 +117,23 @@ export function actingDateOf(item: HubOrderItem): number | null {
 }
 
 /**
- * How fast the pull toward "now" decays. At one half-life out, a listing is
- * half as likely to be plucked as one closing today, before the bias exponent
- * below sharpens it.
- *
- * Shorter than the For You feed's seven days: a hub page is where someone goes
- * specifically to find what is closing, so it should lean harder on the next
- * fortnight.
- */
-const HALF_LIFE_DAYS = 5
-
-/**
- * Sharpens the curve. 1 would be a plain half-life decay; above that makes the
- * page markedly more deadline-driven. At 1.5, something closing today is ~8x
- * likelier to lead than something due in two weeks.
- *
- * This is the knob to turn if the page feels too panicky or too flat.
- */
-const TIME_BIAS = 1.5
-
-/**
- * Weight for a listing with no date at all — most resources, evergreen guides.
- *
- * Roughly what something ten days out scores, so undated content neither owns
- * the page nor gets buried under anything that merely happens to carry a date.
- * On /resources, where nearly everything is undated, this puts every item on
- * the same weight and the lottery degrades to a plain shuffle, which is the
- * right behaviour there.
- */
-const UNDATED_WEIGHT = 0.15
-
-/**
- * Floor for a live listing, whatever its deadline. Reached at ~33 days out, so
- * the curve still discriminates across the window someone could plausibly act
- * in and flattens only past it. Everything beyond a month is therefore drawn
- * with equal likelihood, which is the intent — at that range the exact date is
- * not what should decide who gets seen.
- */
-const MIN_WEIGHT = 0.001
-
-/**
- * Weight for something already closed. An order of magnitude under the live
- * floor: still reachable rather than unpickable, but never ahead of something
- * that can still be acted on.
- *
- * Most of these never reach the page — the list APIs filter past deadlines out
- * — but search deliberately includes them, and a session-cached page can carry
- * one across midnight.
- */
-const EXPIRED_WEIGHT = 0.0001
-
-/**
  * Pluck likelihood from time remaining. Monotonic: sooner is always better.
  *
- * Deliberately unlike `urgencySignal` in `lib/ranking/signals`, which dips
- * under three days out on the grounds that there may not be time left to apply.
- * That caution belongs in personalized scoring, where a bad recommendation
- * wastes a slot someone was owed. Here the instruction is simply "closer means
- * higher" — a visitor browsing a public list is the one deciding whether they
- * can still make it.
+ * The curve, its constants and the reasoning behind them live in
+ * `lib/feed-time-pressure`, shared with the For You feed so the surfaces cannot
+ * drift apart again — they had, into three different curves, which is how the
+ * same defect survived in all of them: a dated listing could be floored *below*
+ * an undated one, so anything scheduled more than a month out was effectively
+ * unreachable. The shared module pins that floor to the undated weight.
+ *
+ * Deliberately unlike `urgencySignal` in `lib/ranking/signals`, which dips under
+ * three days out on the grounds that there may not be time left to apply. That
+ * caution belongs in personalized scoring, where a bad recommendation wastes a
+ * slot someone was owed. Here the instruction is simply "closer means higher" —
+ * a visitor browsing a public list is the one deciding whether they can make it.
  */
 export function deadlineWeight(item: HubOrderItem, now: number): number {
-  const target = actingDateOf(item)
-  if (target === null) return UNDATED_WEIGHT
-
-  const days = (target - now) / DAY_MS
-  if (days <= 0) return EXPIRED_WEIGHT
-
-  const decay = 2 ** (-days / HALF_LIFE_DAYS)
-  return Math.max(MIN_WEIGHT, decay ** TIME_BIAS)
+  return timePressureFrom(actingDateOf(item), now, HUB_TIME_PRESSURE)
 }
 
 /**

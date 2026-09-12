@@ -2109,6 +2109,32 @@ export class ApiClient {
   }
 
   /**
+   * Record an extreme announcement delivery event.
+   *
+   * Separate from `recordPromotionClick` on purpose. That endpoint answers
+   * "was this a billable interaction with promoted content?" and carries the
+   * per-click accounting with it; this one only counts what the extreme tier's
+   * announcement channels delivered. Sharing a counter would file popup
+   * dismissals alongside feed clicks and make both numbers useless.
+   *
+   * Returns quietly on any failure — every caller is a fire-and-forget side
+   * effect next to something the reader actually asked for.
+   */
+  static async recordAnnouncementEvent(
+    promotionId: string,
+    event: 'popup_impression' | 'popup_dismiss' | 'popup_click' | 'announcement_click',
+  ): Promise<void> {
+    try {
+      await this.makeAuthenticatedRequest(
+        `${API_BASE_URL}/api/promoted/announcements/${promotionId}/event`,
+        { method: 'POST', body: JSON.stringify({ event }) },
+      );
+    } catch {
+      // Analytics must never surface to the reader.
+    }
+  }
+
+  /**
    * Start a promotion at no cost. Providers are never billed for promotion, so
    * there is no payment step, no redirect and no budget — just a duration.
    */
@@ -2155,6 +2181,15 @@ export class ApiClient {
     /** Hosted URL from uploadPromotionHeroImage. Applied to the listing for the
      *  run of the promotion and cleared again when it expires. */
     heroImageUrl?: string | null;
+    /**
+     * Tier. Omitted for an ordinary promotion.
+     *
+     * 'extreme' ignores `durationDays` — the server fixes that run at 21 days,
+     * because the announcement schedule is expressed as offsets into it and a
+     * caller-chosen length would desynchronise the popup, the push and the
+     * email from one another.
+     */
+    packageType?: 'extreme';
   }): Promise<{ promotion: any; duration: number }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/start-free`, {
       method: 'POST',
@@ -2163,12 +2198,45 @@ export class ApiClient {
         contentType: params.contentType,
         durationDays: params.durationDays,
         ...(params.heroImageUrl && { heroImageUrl: params.heroImageUrl }),
+        ...(params.packageType && { packageType: params.packageType }),
       }),
     });
     const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; duration?: number }>;
     const data = (json as any)?.data ?? json;
     if (!data?.promotion) throw new Error((json as any)?.message || 'Failed to start promotion');
     return { promotion: data.promotion, duration: data.duration ?? params.durationDays };
+  }
+
+  /**
+   * Change how long a running promotion lasts.
+   *
+   * `durationDays` is measured from the campaign's original start, so 30 means
+   * thirty days of campaign rather than thirty more from today. Trimming below
+   * what has already elapsed ends it — the response says so with `ended`.
+   */
+  static async updatePromotionDuration(
+    promotionId: string,
+    durationDays: number,
+  ): Promise<{ duration: number; endDate: string; ended: boolean; remainingDays: number }> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/promotions/${promotionId}/duration`,
+      { method: 'PATCH', body: JSON.stringify({ durationDays }) },
+    );
+    const json = await this.handleResponse(response) as ApiResponse<{
+      duration: number; endDate: string; ended: boolean; remainingDays: number;
+    }>;
+    const data = (json as any)?.data;
+    if (!data) throw new Error((json as any)?.message || 'Failed to update the promotion');
+    return data;
+  }
+
+  /** Stop a running promotion. The record is kept; only delivery stops. */
+  static async cancelPromotion(promotionId: string): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/promotions/${promotionId}`,
+      { method: 'DELETE' },
+    );
+    await this.handleResponse(response);
   }
 
   /** Initialize Paystack one-time payment for a promotion. Returns authorizationUrl to redirect user. spendLimitNg is required. */

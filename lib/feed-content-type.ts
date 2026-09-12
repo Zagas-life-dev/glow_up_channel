@@ -57,6 +57,19 @@ function coalesceUrl(item: Record<string, unknown>): string | undefined {
   return undefined
 }
 
+/**
+ * Map a raw `contentType`/`type` field to the kind the feed ranks and renders.
+ *
+ * The fallback is `opportunity` because opportunity subtypes are the only kind
+ * that legitimately arrive under a name of their own (internship, scholarship,
+ * fellowship …) — but only a *recognised* subtype earns it now. Anything truly
+ * unrecognised is a bug upstream, and silently calling it an opportunity hid
+ * that: a row that reached `scoreItem` without a resolvable type was scored with
+ * opportunity weights (location 0.22 rather than an event's 0.32, urgency 0.12
+ * rather than 0.16) and counted as an opportunity by everything downstream that
+ * balances the feed by type. It still resolves — the feed must render the row —
+ * but it says so in development rather than doing it quietly.
+ */
 export function resolveFeedContentKind(
   typeField: string | undefined,
 ): FeedContentKind {
@@ -65,6 +78,13 @@ export function resolveFeedContentKind(
   }
   if (typeField && OPPORTUNITY_SUBTYPES.has(typeField.toLowerCase())) {
     return "opportunity"
+  }
+  if (typeField && process.env.NODE_ENV === "development") {
+    console.warn(
+      `[feed] unrecognised content type ${JSON.stringify(typeField)}; ` +
+        "ranking it as an opportunity. Add it to FEED_CONTENT_KINDS or " +
+        "OPPORTUNITY_SUBTYPES.",
+    )
   }
   return "opportunity"
 }

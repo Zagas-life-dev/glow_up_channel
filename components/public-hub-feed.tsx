@@ -14,6 +14,12 @@ import { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
 import { normalizeFeedListItem } from "@/lib/feed-content-type"
 import { getFeedSessionSeed } from "@/lib/feed-session-seed"
+import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
+import {
+  MAX_EXTREME_IN_SPONSORED_TOP,
+  enforcePromotedCaps,
+  withheldFrom,
+} from "@/lib/promotion-placement"
 import { fetchPublicHubPage, type HomeListType } from "@/lib/fetch-public-hub-page"
 import { getPageState, savePageState } from "@/lib/page-state-session"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
@@ -191,12 +197,50 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   // time in a sponsored slot a few rows below — the same listing twice, both
   // labelled "Sponsored". The rail's job is what the listing did *not* surface,
   // which is exactly the set left after this filter.
+  /** This session's draw, read once. See the twin in `home-client`. */
+  const sessionSeed = useMemo(() => getFeedSessionSeed(), [])
+
+  /** Listings the sponsored rail is holding for this type, by id. */
+  const railIds = useMemo(
+    () => new Set(promoted.map((row) => String((row as { _id?: unknown })._id ?? ""))),
+    [promoted],
+  )
+
+  /**
+   * The listing half of the extreme tier's two-sided boost.
+   *
+   * An extreme campaign whose coin came up "sponsored" this session steps out
+   * of the inline list so the rail below carries it instead. Conditioned on the
+   * rail actually holding it, so a failed or empty promoted response cannot
+   * take a paid placement off both surfaces at once.
+   */
+  const routedItems = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          !railIds.has(item._id) ||
+          !withheldFrom(item, "feed", sessionSeed, isExtremePromotion),
+      ),
+    [items, railIds, sessionSeed],
+  )
+
   const promotedCards = useMemo(() => {
-    const onPage = new Set(items.map((item) => item._id))
-    return promoted
+    // Deduped against what the list actually renders, not against everything it
+    // fetched — an item withheld above has to stay eligible here, or the
+    // routing would drop it rather than move it.
+    const onPage = new Set(routedItems.map((item) => item._id))
+    const cards = promoted
       .map((row) => normalizeFeedListItem(type, row))
       .filter((card) => !onPage.has(card._id))
-  }, [promoted, type, items])
+
+    // No combined cap: the rail is paid placement by definition, so the only
+    // question is how much of it one tier may hold.
+    return enforcePromotedCaps(cards, {
+      isPromoted,
+      isExtreme: isExtremePromotion,
+      maxExtreme: MAX_EXTREME_IN_SPONSORED_TOP,
+    })
+  }, [promoted, type, routedItems])
 
   // Hand the feed back to the next visit in this session, so returning from a
   // detail page lands on the same list at the same scroll position rather than
@@ -305,7 +349,7 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
                 placements that do not match it is noise. */}
             {!activeSearch && items.length > 0 ? (
               <div className="w-full max-w-full space-y-5">
-                {buildFeedWithSponsored(items, promotedCards, { postsBetween: 4 }).map(
+                {buildFeedWithSponsored(routedItems, promotedCards, { postsBetween: 4 }).map(
                   (entry) =>
                     entry.type === "post" ? (
                       <FeedCard key={entry.post._id} item={entry.post} />

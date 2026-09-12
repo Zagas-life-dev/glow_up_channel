@@ -849,6 +849,7 @@ export default function ProviderDashboard() {
         onSaved={loadProviderData}
       />
       <PromoteContentModal
+        key={promotingItem?._id ?? 'none'}
         open={promoteModalOpen}
         onOpenChange={setPromoteModalOpen}
         item={promotingItem}
