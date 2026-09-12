@@ -139,5 +139,10 @@ export const pt: Dictionary = {
     railNote: "Todos os membros recebem os mesmos presentes. Nunca aparecem no seu feed.",
     added: "Adicionado",
     backToGifts: "Voltar aos presentes",
+    listingClosed: "Encerrado",
+    openListing: "Ver {type}",
+    listingGone: "Esta publicação já está encerrada",
+    listingPaid: "Este é pago. O presente leva você até ele — não cobre o preço.",
+    railNoteListing: "Todos os membros recebem os mesmos presentes. Este entrega algo que você também encontra no feed.",
   },
 }

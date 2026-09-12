@@ -140,5 +140,10 @@ export const fr: Dictionary = {
     railNote: "Tous les membres reçoivent les mêmes cadeaux. Ils n'apparaissent jamais dans votre fil.",
     added: "Ajouté le",
     backToGifts: "Retour aux cadeaux",
+    listingClosed: "Clôturé",
+    openListing: "Voir {type}",
+    listingGone: "Cette annonce est clôturée",
+    listingPaid: "Celui-ci est payant. Le cadeau vous y mène — il ne couvre pas le prix.",
+    railNoteListing: "Tous les membres reçoivent les mêmes cadeaux. Celui-ci vous offre quelque chose que vous pouvez aussi trouver dans le fil.",
   },
 }

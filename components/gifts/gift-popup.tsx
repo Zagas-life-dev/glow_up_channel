@@ -22,6 +22,8 @@ import { useAuth } from "@/lib/auth-context"
 import { useOptionalGifts } from "@/contexts/gift-context"
 import { useLocale } from "@/lib/i18n/context"
 import { giftsHref } from "@/lib/gifts/routes"
+import { GIFT_LISTING_LABELS } from "@/lib/gifts/types"
+import { GIFT_LISTING_ICONS } from "@/components/gifts/listing-icons"
 
 /** Brand-ish confetti; falls back silently if the canvas is unavailable. */
 function celebrate() {
@@ -99,6 +101,10 @@ export default function GiftPopup() {
   if (!announced || !dismiss) return null
 
   const extraCount = Math.max(0, newCount - 1)
+  const listing = announced.listing
+  // A listing gift says what kind of thing it is rather than a gift category it
+  // never had — "Opportunity" tells a member more than "guide" would.
+  const ListingIcon = listing ? GIFT_LISTING_ICONS[listing.type] : null
 
   return (
     <div
@@ -145,11 +151,16 @@ export default function GiftPopup() {
               <RiGiftFill className="h-3.5 w-3.5" aria-hidden />
               {t("gifts.badge")}
             </span>
-            {announced.category && (
+            {listing && ListingIcon ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                <ListingIcon className="h-3.5 w-3.5" aria-hidden />
+                {GIFT_LISTING_LABELS[listing.type]}
+              </span>
+            ) : announced.category ? (
               <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground">
                 {announced.category}
               </span>
-            )}
+            ) : null}
           </div>
 
           <h2 id="gift-popup-title" className="text-xl font-bold leading-tight text-foreground sm:text-2xl">
@@ -159,6 +170,10 @@ export default function GiftPopup() {
           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
             {announced.description}
           </p>
+
+          {listing?.provider && (
+            <p className="mt-2 text-xs font-medium text-muted-foreground">{listing.provider}</p>
+          )}
 
           {extraCount > 0 && (
             <p className="mt-3 text-xs font-medium text-primary">

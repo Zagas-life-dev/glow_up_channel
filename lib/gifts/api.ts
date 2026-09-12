@@ -9,7 +9,14 @@
  */
 
 import ApiClient from "@/lib/api-client"
-import type { Gift, GiftAnnouncement, GiftDraft, GiftListPage } from "@/lib/gifts/types"
+import type {
+  Gift,
+  GiftAnnouncement,
+  GiftDraft,
+  GiftListingRef,
+  GiftListingType,
+  GiftListPage,
+} from "@/lib/gifts/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -202,6 +209,30 @@ export async function fetchGiftsAdmin(): Promise<Gift[]> {
   return data?.gifts ?? []
 }
 
+/**
+ * Live listings an admin can give away, for the picker.
+ *
+ * Empty on any failure rather than throwing: the picker degrades to "no
+ * matches", which is what an admin can act on, and never takes the form down
+ * with it.
+ */
+export async function searchGiftListings(
+  query: string,
+  type?: GiftListingType | "all",
+): Promise<GiftListingRef[]> {
+  const params = new URLSearchParams({ q: query })
+  if (type && type !== "all") params.set("type", type)
+  try {
+    const response = await ApiClient.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/gifts/admin/listings?${params}`,
+    )
+    const data = await unwrap<{ listings: GiftListingRef[] }>(response)
+    return data?.listings ?? []
+  } catch {
+    return []
+  }
+}
+
 function draftToFormData(draft: Partial<GiftDraft>): FormData {
   const form = new FormData()
   if (draft.title !== undefined) form.append("title", draft.title)
@@ -211,6 +242,12 @@ function draftToFormData(draft: Partial<GiftDraft>): FormData {
   if (draft.isActive !== undefined) form.append("isActive", String(draft.isActive))
   if (draft.allowDownload !== undefined) form.append("allowDownload", String(draft.allowDownload))
   if (draft.linkUrl) form.append("linkUrl", draft.linkUrl)
+  // Sent as a pair — the backend reads a gift as a listing gift only when both
+  // arrive, so a half-filled picker can never overwrite the current delivery.
+  if (draft.listingType && draft.listingId) {
+    form.append("listingType", draft.listingType)
+    form.append("listingId", draft.listingId)
+  }
   if (draft.file) form.append("file", draft.file)
   if (draft.coverImage) form.append("coverImage", draft.coverImage)
   // Only sent when true: the backend treats an absent flag as "keep the cover".

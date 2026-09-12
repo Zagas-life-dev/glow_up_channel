@@ -7,6 +7,8 @@
  * hand-built `/profile/${id}?tab=gifts` in three places drifts.
  */
 
+import type { GiftListingRef, GiftListingType } from "@/lib/gifts/types"
+
 /** The tab query value the profile page matches on. */
 export const GIFTS_TAB = "gifts"
 
@@ -24,4 +26,24 @@ export function giftsHref(userId?: string | null): string | null {
 /** One gift's detail page. */
 export function giftHref(giftId: string): string {
   return `/gifts/${giftId}`
+}
+
+/** Where each kind of listing gift points, once followed. */
+const LISTING_SEGMENTS: Record<GiftListingType, string> = {
+  opportunity: "opportunities",
+  event: "events",
+  job: "jobs",
+  resource: "resources",
+}
+
+/**
+ * The listing a gift hands over.
+ *
+ * Null once the listing has left its live collection: those detail routes 404,
+ * so the gift shows the snapshot it kept instead of offering a link that goes
+ * nowhere.
+ */
+export function giftListingHref(listing: GiftListingRef | null): string | null {
+  if (!listing?.isLive) return null
+  return `/${LISTING_SEGMENTS[listing.type]}/${listing.id}`
 }

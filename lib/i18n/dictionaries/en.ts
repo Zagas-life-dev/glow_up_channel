@@ -157,6 +157,11 @@ export const en = {
     railNote: "Every member gets the same gifts. They never show up in your feed.",
     added: "Added",
     backToGifts: "Back to gifts",
+    listingClosed: "Closed",
+    openListing: "View the {type}",
+    listingGone: "This {type} has closed",
+    listingPaid: "This one is paid. The gift points you to it — it doesn't cover the price.",
+    railNoteListing: "Every member gets the same gifts. This one hands you something you can also find in the feed.",
   },
 }
 

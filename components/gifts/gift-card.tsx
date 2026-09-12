@@ -18,11 +18,28 @@ import {
 } from "react-icons/ri"
 import { useLocale } from "@/lib/i18n/context"
 import { giftHref } from "@/lib/gifts/routes"
-import { formatGiftSize, type Gift } from "@/lib/gifts/types"
+import {
+  formatGiftSize,
+  giftListingDate,
+  GIFT_LISTING_LABELS,
+  type Gift,
+} from "@/lib/gifts/types"
+import { GIFT_LISTING_ICONS } from "@/components/gifts/listing-icons"
 
 const DOC_FILE_TYPES = new Set(["pdf", "doc", "docx", "ppt", "pptx"])
 
+/** Short, locale-independent date for the meta row: "12 Mar". */
+function shortDate(value: string): string | null {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString(undefined, { day: "numeric", month: "short" })
+}
+
 function GiftTypeIcon({ gift }: { gift: Gift }) {
+  if (gift.listing) {
+    const Icon = GIFT_LISTING_ICONS[gift.listing.type]
+    return <Icon className="h-4 w-4" aria-hidden />
+  }
   if (gift.giftType === "link") return <RiExternalLinkLine className="h-4 w-4" aria-hidden />
   if (gift.fileType && DOC_FILE_TYPES.has(gift.fileType)) {
     return <RiFileTextLine className="h-4 w-4" aria-hidden />
@@ -33,12 +50,24 @@ function GiftTypeIcon({ gift }: { gift: Gift }) {
 export default function GiftCard({ gift }: { gift: Gift }) {
   const { t } = useLocale()
   const size = formatGiftSize(gift.fileSize)
+  const listing = gift.listing
+  const listingDate = listing ? giftListingDate(listing) : null
 
-  const meta = [
-    gift.category,
-    gift.pageCount ? `${gift.pageCount} ${gift.pageCount === 1 ? "page" : "pages"}` : null,
-    size,
-  ].filter(Boolean)
+  /**
+   * A listing gift is described by the listing, not by file facts it has none
+   * of — what it is, who it is from, and when it closes.
+   */
+  const meta = listing
+    ? [
+        GIFT_LISTING_LABELS[listing.type],
+        listing.provider,
+        listingDate ? `${listingDate.label} ${shortDate(listingDate.value) ?? ""}`.trim() : null,
+      ].filter(Boolean)
+    : [
+        gift.category,
+        gift.pageCount ? `${gift.pageCount} ${gift.pageCount === 1 ? "page" : "pages"}` : null,
+        size,
+      ].filter(Boolean)
 
   return (
     <Link
@@ -83,6 +112,14 @@ export default function GiftCard({ gift }: { gift: Gift }) {
                 {entry}
               </span>
             ))}
+            {/* The listing has closed since this gift went out. Worth saying on
+                the card: the gift still opens, but there is nothing to apply to. */}
+            {listing && !listing.isLive && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <span className="mr-1 text-border">·</span>
+                {t("gifts.listingClosed")}
+              </span>
+            )}
             {/* Only worth a marker when it's true — every other gift is
                 read-in-the-app, so saying so on each card is noise. */}
             {gift.allowDownload && (

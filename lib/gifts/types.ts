@@ -12,7 +12,44 @@
  */
 
 /** How a gift's content is delivered. */
-export type GiftType = "file" | "link"
+export type GiftType = "file" | "link" | "listing"
+
+/** The kinds of listing a gift can hand over. */
+export type GiftListingType = "opportunity" | "event" | "job" | "resource"
+
+/**
+ * The listing behind a `listing` gift.
+ *
+ * Flattened by the backend from four differently-shaped collections — an
+ * opportunity's `provider`, an event's `organizer` and a job's `company` all
+ * arrive here as `provider` — so the card, the popup and the detail page read
+ * one shape rather than branching per listing type.
+ */
+export interface GiftListingRef {
+  type: GiftListingType
+  id: string
+  /**
+   * The listing is still live. When false the gift is showing the snapshot
+   * taken when it was published: the listing has since closed, so its detail
+   * page is gone and the UI says so instead of linking to a dead route.
+   */
+  isLive: boolean
+  title: string | null
+  description: string | null
+  image: string | null
+  /** One line, e.g. "Remote, Lagos, Nigeria". */
+  location: string | null
+  /** Provider, organizer or company, whichever the listing type carries. */
+  provider: string | null
+  /** The listing's own sub-kind: "internship", "full-time", a resource category. */
+  subtype: string | null
+  /** Application or registration deadline. */
+  deadline: string | null
+  /** Events only. */
+  startDate: string | null
+  /** The listing still costs money — gifting it does not make it free. */
+  isPremium: boolean
+}
 
 export interface Gift {
   _id: string
@@ -22,6 +59,8 @@ export interface Gift {
   giftType: GiftType
   /** Present only on link gifts; file gifts stream through the content proxy. */
   linkUrl: string | null
+  /** Present only on listing gifts. */
+  listing: GiftListingRef | null
   fileType: string | null
   fileSize: number | null
   pageCount: number | null
@@ -92,6 +131,9 @@ export interface GiftDraft {
   category: string
   tags: string[]
   linkUrl?: string
+  /** Listing gifts: which collection, and which document in it. */
+  listingType?: GiftListingType
+  listingId?: string
   file?: File | null
   coverImage?: File | null
   /** Explicitly clear the existing cover image. */
@@ -127,6 +169,32 @@ export function formatGiftSize(bytes: number | null): string | null {
     unit += 1
   }
   return `${value >= 10 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`
+}
+
+/** What to call each listing type in the UI, singular. */
+export const GIFT_LISTING_LABELS: Record<GiftListingType, string> = {
+  opportunity: "Opportunity",
+  event: "Event",
+  job: "Job",
+  resource: "Resource",
+}
+
+/**
+ * The date a listing gift leads with, and what to call it.
+ *
+ * An event is defined by when it starts; everything else by when it closes. A
+ * listing carrying neither returns null and the UI simply shows one fact fewer.
+ */
+export function giftListingDate(
+  listing: GiftListingRef,
+): { label: string; value: string } | null {
+  if (listing.type === "event" && listing.startDate) {
+    return { label: "Starts", value: listing.startDate }
+  }
+  if (listing.deadline) {
+    return { label: listing.type === "event" ? "Register by" : "Deadline", value: listing.deadline }
+  }
+  return null
 }
 
 /** Categories offered in the admin form. Free text is still accepted by the API. */

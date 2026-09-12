@@ -22,9 +22,11 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import {
+  RiArrowRightUpLine,
   RiBookOpenLine,
   RiBookmarkFill,
   RiBookmarkLine,
+  RiBuilding2Line,
   RiCalendarLine,
   RiDownload2Line,
   RiExternalLinkLine,
@@ -35,8 +37,11 @@ import {
   RiHeartFill,
   RiHeartLine,
   RiLoader4Line,
+  RiLockLine,
+  RiMapPinLine,
   RiPlayListAddLine,
   RiPriceTag3Line,
+  RiTimeLine,
 } from "react-icons/ri"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -51,10 +56,17 @@ import {
   FactList,
   TagRow,
 } from "@/components/content-detail/sections"
-import { composeTiles, formatDate, type StatTile } from "@/lib/content-detail/format"
+import {
+  composeTiles,
+  deadlineTile,
+  formatDate,
+  formatShortDate,
+  type StatTile,
+} from "@/lib/content-detail/format"
 import { useAuth } from "@/lib/auth-context"
 import { useLocale } from "@/lib/i18n/context"
-import { giftsHref } from "@/lib/gifts/routes"
+import { giftListingHref, giftsHref } from "@/lib/gifts/routes"
+import { GIFT_LISTING_ICONS } from "@/components/gifts/listing-icons"
 import {
   downloadGift,
   fetchGift,
@@ -63,7 +75,13 @@ import {
   setGiftLiked,
   setGiftSaved,
 } from "@/lib/gifts/api"
-import { formatGiftSize, isClientRenderedGift, type Gift } from "@/lib/gifts/types"
+import {
+  formatGiftSize,
+  giftListingDate,
+  GIFT_LISTING_LABELS,
+  isClientRenderedGift,
+  type Gift,
+} from "@/lib/gifts/types"
 
 const viewerLoading = () => (
   <div className="rounded-2xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
@@ -90,12 +108,24 @@ type GiftPageProps = { params: Promise<{ id: string }> }
 /**
  * The few numbers worth reading before anything else.
  *
- * A gift has no deadline — nothing to count down to — so unlike the other detail
- * pages this one never passes an urgent tile. Tiles are only built from what the
- * gift actually carries, so a link gift simply renders fewer of them.
+ * A file or link gift has no deadline — nothing to count down to — so it never
+ * passes an urgent tile. A listing gift is the exception: a gifted opportunity
+ * closes on the same day whether a member found it in the feed or in the popup,
+ * so it counts down exactly like the listing's own page does. Tiles are only
+ * built from what the gift actually carries, so a sparse one renders fewer.
  */
 function buildStatTiles(gift: Gift): StatTile[] {
   const optional: StatTile[] = []
+
+  const { listing } = gift
+  if (listing) {
+    optional.push({ label: "Type", value: GIFT_LISTING_LABELS[listing.type] })
+    if (listing.startDate) optional.push({ label: "Starts", value: formatShortDate(listing.startDate) })
+    if (listing.location) optional.push({ label: "Where", value: listing.location })
+    // No countdown once the listing has closed — a "Left: 3d" tile there would
+    // read as still open.
+    return composeTiles(optional, listing.isLive ? deadlineTile(listing.deadline ?? undefined) : null)
+  }
 
   optional.push({
     label: "Format",
@@ -256,7 +286,16 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
   }
 
   const isFile = gift.giftType === "file"
-  const eyebrow = [t("gifts.badge"), gift.category].filter(Boolean).join(" · ")
+  const listing = gift.listing
+  // Null once the listing has left its live collection: its detail route 404s,
+  // so the page stops offering the trip rather than sending members to it.
+  const listingHref = giftListingHref(listing)
+  const listingDate = listing ? giftListingDate(listing) : null
+  const listingLabel = listing ? GIFT_LISTING_LABELS[listing.type] : null
+  /** "opportunity", "event" … for the sentences that name it mid-phrase. */
+  const listingNoun = listingLabel?.toLowerCase() ?? ""
+  const ListingIcon = listing ? GIFT_LISTING_ICONS[listing.type] : null
+  const eyebrow = [t("gifts.badge"), listingLabel ?? gift.category].filter(Boolean).join(" · ")
 
   /**
    * Cover art placement adapts to the gift.
@@ -269,7 +308,24 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
   const coverBanner = gift.image && !isFile
   const coverThumb = gift.image && isFile
 
-  const primaryAction = isFile ? (
+  const primaryAction = listing ? (
+    listingHref ? (
+      <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+        <Link href={listingHref}>
+          <span className="truncate">
+            {t("gifts.openListing", { type: listingNoun })}
+          </span>
+          <RiArrowRightUpLine className="h-4 w-4 flex-shrink-0" aria-hidden />
+        </Link>
+      </Button>
+    ) : (
+      <Button size="lg" disabled className="h-14 w-full rounded-full text-[15px] font-semibold">
+        <span className="truncate">
+          {t("gifts.listingGone", { type: listingNoun })}
+        </span>
+      </Button>
+    )
+  ) : isFile ? (
     <Button
       type="button"
       size="lg"
@@ -318,7 +374,9 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             {t("gifts.badge")}
           </p>
-          <p className="text-[13px] leading-snug text-muted-foreground">{t("gifts.railNote")}</p>
+          <p className="text-[13px] leading-snug text-muted-foreground">
+            {listing ? t("gifts.railNoteListing") : t("gifts.railNote")}
+          </p>
           {listHref && (
             <Link
               href={listHref}
@@ -367,23 +425,108 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
         </div>
       </DetailSection>
 
+      {/* What is actually being given. The gift's own title and description
+          default to the listing's, so each line here is skipped when it would
+          only repeat what the hero and the About section already said. */}
+      {listing && ListingIcon && (
+        <DetailSection label={`The ${listingNoun}`}>
+          <div className="rounded-[1.25rem] border border-border/70 bg-card/60 p-4">
+            <div className="flex gap-4">
+              {listing.image && listing.image !== gift.image && (
+                <img
+                  src={listing.image}
+                  alt=""
+                  className="h-20 w-20 flex-shrink-0 rounded-xl border border-border/60 object-cover"
+                  draggable={false}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                {listing.title && listing.title !== gift.title && (
+                  <p className="text-[15px] font-semibold leading-snug text-foreground">
+                    {listing.title}
+                  </p>
+                )}
+                {listing.provider && (
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">{listing.provider}</p>
+                )}
+                {listing.description && listing.description !== gift.description && (
+                  <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">
+                    {listing.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Gifting a listing hands over the pointer, not the payment. */}
+            {listing.isPremium && (
+              <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-muted/50 p-2.5 text-[13px] text-muted-foreground">
+                <RiLockLine className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+                {t("gifts.listingPaid")}
+              </p>
+            )}
+
+            {listingHref ? (
+              <Link
+                href={listingHref}
+                className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-primary hover:underline"
+              >
+                <ListingIcon className="h-3.5 w-3.5" aria-hidden />
+                {t("gifts.openListing", { type: listingNoun })}
+              </Link>
+            ) : (
+              <p className="mt-3 text-[13px] text-muted-foreground">
+                {t("gifts.listingGone", { type: listingNoun })}
+              </p>
+            )}
+          </div>
+        </DetailSection>
+      )}
+
       <DetailSection label="Details">
         <FactList>
-          <Fact icon={RiGiftLine} label="Type">
-            <span className="capitalize">{gift.category}</span>
-          </Fact>
-          <Fact icon={RiFileTextLine} label="Format">
-            {isFile
-              ? `${(gift.fileType ?? "file").toUpperCase()} — ${
-                  gift.allowDownload ? t("gifts.readOrDownload") : t("gifts.readInApp")
-                }`
-              : "External link"}
-          </Fact>
-          {gift.pageCount ? (
-            <Fact icon={RiBookOpenLine} label="Length">
-              {gift.pageCount} {gift.pageCount === 1 ? "page" : "pages"}
-            </Fact>
-          ) : null}
+          {listing && ListingIcon ? (
+            <>
+              <Fact icon={ListingIcon} label="Type">
+                <span className="capitalize">
+                  {listingLabel}
+                  {listing.subtype ? ` · ${listing.subtype.replace(/[-_]/g, " ")}` : ""}
+                </span>
+              </Fact>
+              {listing.provider && (
+                <Fact icon={RiBuilding2Line} label="From">
+                  {listing.provider}
+                </Fact>
+              )}
+              {listing.location && (
+                <Fact icon={RiMapPinLine} label="Where">
+                  {listing.location}
+                </Fact>
+              )}
+              {listingDate && (
+                <Fact icon={RiTimeLine} label={listingDate.label}>
+                  {formatDate(listingDate.value)}
+                </Fact>
+              )}
+            </>
+          ) : (
+            <>
+              <Fact icon={RiGiftLine} label="Type">
+                <span className="capitalize">{gift.category}</span>
+              </Fact>
+              <Fact icon={RiFileTextLine} label="Format">
+                {isFile
+                  ? `${(gift.fileType ?? "file").toUpperCase()} — ${
+                      gift.allowDownload ? t("gifts.readOrDownload") : t("gifts.readInApp")
+                    }`
+                  : "External link"}
+              </Fact>
+              {gift.pageCount ? (
+                <Fact icon={RiBookOpenLine} label="Length">
+                  {gift.pageCount} {gift.pageCount === 1 ? "page" : "pages"}
+                </Fact>
+              ) : null}
+            </>
+          )}
           <Fact icon={RiCalendarLine} label="Added">
             {formatDate(gift.createdAt)}
           </Fact>
