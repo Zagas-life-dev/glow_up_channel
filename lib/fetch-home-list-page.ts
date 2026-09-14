@@ -26,9 +26,15 @@ export type SearchFilters = {
   city?: string
   /** Opportunity/event/job category, whichever applies to the list being fetched. */
   type?: string
-  /** ISO dates, inclusive. */
+  /** Bare `YYYY-MM-DD` calendar dates, both ends inclusive. */
   dateFrom?: string
   dateTo?: string
+  /**
+   * What the date range is measured against: when a listing closes
+   * ("deadline", the default) or when it was posted. See
+   * `lib/search-date-filters` for what each means per content type.
+   */
+  dateField?: "deadline" | "posted"
   isRemote?: boolean
   isPaid?: boolean
 }

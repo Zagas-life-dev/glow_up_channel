@@ -1,13 +1,17 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   createInitialSearchCursors,
   createInitialSearchHasMore,
   fetchSearchAllCategoriesPage,
   fetchSearchCategoryPage,
+  hasActiveFilters,
+  parseSearchFilters,
+  searchFiltersKey,
   searchTabToListType,
   type SearchCursors,
+  type SearchFilters,
   type SearchHasMoreByType,
   type SearchTab,
 } from "@/lib/search-list-fetch"
@@ -16,7 +20,11 @@ import { trackSearch } from "@/lib/tracking"
 
 type SearchFeedItem = HomeListItem & { _id: string }
 
-export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
+export function useSearchFeed(
+  searchQuery: string,
+  activeTab: SearchTab,
+  filters?: SearchFilters,
+) {
   const [items, setItems] = useState<SearchFeedItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
@@ -29,12 +37,22 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
+  // Round-tripped through the query string so the value below changes when the
+  // filters change and not merely when the caller re-renders — the panel hands
+  // back a fresh object on every interaction, including ones that set nothing.
+  const filtersKey = searchFiltersKey(filters)
+  const activeFilters = useMemo(() => parseSearchFilters(filtersKey), [filtersKey])
+  const filtersNarrow = hasActiveFilters(activeFilters)
+
   const runFetch = useCallback(
     async (mode: "reset" | "more") => {
       const term = searchQuery.trim()
-      if (!term) {
+      // A filter on its own is a search: "everything closing this week" needs
+      // no keyword to be a sensible thing to ask for.
+      if (!term && !hasActiveFilters(activeFilters)) {
         setItems([])
         setHasMore(false)
+        setError(null)
         singleLastIdRef.current = null
         allCursorsRef.current = createInitialSearchCursors()
         allHasMoreRef.current = createInitialSearchHasMore()
@@ -68,6 +86,7 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
             cursorLastId: mode === "reset" ? null : singleLastIdRef.current,
             backendUrl,
             search: term,
+            filters: activeFilters,
           })
 
           if (requestId !== requestIdRef.current) return
@@ -91,6 +110,7 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
             cursors: allCursorsRef.current,
             hasMoreByType: allHasMoreRef.current,
             reset: mode === "reset",
+            filters: activeFilters,
           })
 
           if (requestId !== requestIdRef.current) return
@@ -121,7 +141,7 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
         }
       }
     },
-    [searchQuery, activeTab, backendUrl],
+    [searchQuery, activeTab, activeFilters, backendUrl],
   )
 
   const reset = useCallback(() => {
@@ -151,8 +171,11 @@ export function useSearchFeed(searchQuery: string, activeTab: SearchTab) {
     error,
     reset,
     loadMore,
-    hasQuery: Boolean(searchQuery.trim()),
+    /** Something to search on: a keyword, a filter, or both. */
+    hasQuery: Boolean(searchQuery.trim()) || filtersNarrow,
+    hasKeyword: Boolean(searchQuery.trim()),
+    hasFilters: filtersNarrow,
   }
 }
 
-export type { SearchTab, HomeListType }
+export type { SearchTab, HomeListType, SearchFilters }

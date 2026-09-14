@@ -4,8 +4,8 @@ import * as React from "react"
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DateRangeFields } from "@/components/search/date-filter"
 import { useSearchFacets } from "@/hooks/use-search-facets"
 import type { SearchFilters } from "@/lib/search-list-fetch"
 import type { SearchTab } from "@/lib/search-list-fetch"
@@ -17,15 +17,6 @@ const TYPE_FACET: Record<string, { key: string; label: string }> = {
   event: { key: "event", label: "Event type" },
   job: { key: "job", label: "Job type" },
   resource: { key: "resource", label: "Category" },
-}
-
-/** What the date range means, spelled out so nobody has to guess. */
-const DATE_HINT: Record<string, string> = {
-  all: "Events by when they start, opportunities and jobs by their deadline",
-  opportunity: "By application deadline",
-  event: "By when the event starts",
-  job: "By application deadline",
-  resource: "By when it was posted",
 }
 
 /** Tabs on the public search page are plural; content types are singular. */
@@ -41,10 +32,19 @@ export function contentTypeForTab(tab: SearchTab): string {
   return TAB_TO_CONTENT_TYPE[tab]
 }
 
+/**
+ * How many filters the badge should claim.
+ *
+ * The date range counts once however many of its three fields are set: a range
+ * with both ends is one decision, and `dateField` on its own narrows nothing at
+ * all — it only says what an existing range measures.
+ */
 export function countActiveFilters(filters: SearchFilters): number {
-  return Object.values(filters).filter((value) =>
+  const { dateFrom, dateTo, dateField: _basis, ...rest } = filters
+  const plain = Object.values(rest).filter((value) =>
     typeof value === "string" ? value.trim().length > 0 : value !== undefined,
   ).length
+  return plain + (dateFrom || dateTo ? 1 : 0)
 }
 
 function Select({
@@ -126,6 +126,8 @@ export default function SearchFiltersPanel({
   filters,
   onChange,
   scope = "public",
+  className,
+  trailingControls,
 }: {
   /** "all", or one of opportunity | event | job | resource. */
   contentType: string
@@ -133,6 +135,13 @@ export default function SearchFiltersPanel({
   onChange: (filters: SearchFilters) => void
   /** Admin scope also offers values found in unpublished content. */
   scope?: "public" | "admin"
+  className?: string
+  /**
+   * Controls that share the trigger's row rather than claiming one of their
+   * own — the closing-date chips, on a page whose header is already sticky and
+   * tall enough on a phone.
+   */
+  trailingControls?: React.ReactNode
 }) {
   const [open, setOpen] = React.useState(false)
   const { facets } = useSearchFacets(scope)
@@ -145,14 +154,15 @@ export default function SearchFiltersPanel({
   const hasLocation = contentType !== "resource"
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className={cn("space-y-3", className)}>
+      <div className="flex min-w-0 items-center gap-2">
         <Button
           type="button"
           variant={open ? "default" : "outline"}
           size="sm"
           onClick={() => setOpen((current) => !current)}
-          className="rounded-xl"
+          aria-expanded={open}
+          className="shrink-0 rounded-xl"
         >
           <SlidersHorizontal className="mr-2 h-4 w-4" aria-hidden />
           Filters
@@ -163,16 +173,20 @@ export default function SearchFiltersPanel({
           )}
         </Button>
 
+        {trailingControls}
+
         {active > 0 && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="rounded-xl text-muted-foreground"
+            className="shrink-0 rounded-xl px-2 text-muted-foreground sm:px-3"
             onClick={() => onChange({})}
+            aria-label="Clear all filters"
           >
-            <X className="mr-1.5 h-4 w-4" aria-hidden />
-            Clear all
+            <X className="h-4 w-4 sm:mr-1.5" aria-hidden />
+            {/* Label gives way to the chips first — the row does not wrap. */}
+            <span className="hidden sm:inline">Clear all</span>
           </Button>
         )}
       </div>
@@ -211,28 +225,11 @@ export default function SearchFiltersPanel({
             />
           )}
 
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Date range</Label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                type="date"
-                aria-label="From"
-                value={filters.dateFrom ?? ""}
-                onChange={(event) => set({ dateFrom: event.target.value || undefined })}
-                className="rounded-xl"
-              />
-              <Input
-                type="date"
-                aria-label="To"
-                value={filters.dateTo ?? ""}
-                onChange={(event) => set({ dateTo: event.target.value || undefined })}
-                className="rounded-xl"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {DATE_HINT[contentType] ?? DATE_HINT.all}
-            </p>
-          </div>
+          <DateRangeFields
+            contentType={contentType}
+            filters={filters}
+            onChange={onChange}
+          />
 
           {hasLocation && (
             <div className="flex flex-wrap gap-2">
