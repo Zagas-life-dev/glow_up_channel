@@ -223,7 +223,11 @@ export function PromoteContentModal({
       let heroImageUrl: string | null = null
       if (heroFile) {
         try {
-          heroImageUrl = await ApiClient.uploadPromotionHeroImage(heroFile)
+          heroImageUrl = await ApiClient.uploadPromotionHeroImage({
+            file: heroFile,
+            contentId: item._id,
+            contentType: item.type,
+          })
         } catch (uploadError) {
           const message = uploadError instanceof Error ? uploadError.message : 'Image upload failed'
           toast.error(`${message}. Start the promotion without an image, or try again.`)

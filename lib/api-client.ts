@@ -2198,13 +2198,25 @@ export class ApiClient {
    * promotion. Separate from the start call because the upload is multipart and
    * the start is JSON, and because an image chosen but never confirmed should
    * not start a campaign.
+   *
+   * The listing has to be named here even though nothing is written to it yet:
+   * the endpoint checks the caller owns it before accepting the file, and
+   * rejects the upload outright without these two fields.
    */
-  static async uploadPromotionHeroImage(file: File): Promise<string> {
+  static async uploadPromotionHeroImage(params: {
+    file: File;
+    contentId: string;
+    contentType: 'opportunity' | 'event' | 'job' | 'resource';
+  }): Promise<string> {
     // Multipart uploads bypass makeAuthenticatedRequest, so the read-only rule
     // has to be restated here rather than inherited.
     this.assertWritableOffline('POST');
     const formData = new FormData();
-    formData.append('heroImage', file);
+    // Text parts go in ahead of the file so they are already parsed by the time
+    // multer hands the stream to storage, rather than arriving after it.
+    formData.append('contentId', params.contentId);
+    formData.append('contentType', params.contentType);
+    formData.append('heroImage', params.file);
 
     const url = `${API_BASE_URL}/api/promotions/upload-hero-image`;
     const doFetch = () => {
