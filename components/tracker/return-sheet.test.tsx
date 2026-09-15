@@ -16,7 +16,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { act } from "react"
 
 const entry = {
@@ -31,6 +31,8 @@ const entry = {
   awayMs: 14 * 60 * 1000,
   answeredAt: null,
   reason: null,
+  issue: null,
+  issueNote: null,
   reminderAt: null,
   clickCount: 1,
   contentTitle: "Vital Impacts Photography Grant",
@@ -177,6 +179,88 @@ describe("TrackerReturnSheet", () => {
     )
     await waitFor(() => expect(screen.queryByText(/What put you off/i)).toBeNull())
 
+    expect(bodyLockState()).toEqual(UNLOCKED)
+  })
+
+  it("reports a broken listing without filing it as a rejection", async () => {
+    await openSheet()
+
+    await act(async () => {
+      screen.getByText(/Couldn't apply/i).click()
+    })
+    await waitFor(() => expect(screen.getByText(/What happened/i)).toBeTruthy())
+
+    await act(async () => {
+      screen.getByText(/registration form was faulty/i).click()
+    })
+    await act(async () => {
+      screen.getByText(/^Send$/).click()
+    })
+
+    // `other`, never `not_for_me`. Filing this as a rejection is what would
+    // teach the feed to bury a whole category over somebody else's broken form.
+    await waitFor(() =>
+      expect(api.recordOutcome).toHaveBeenCalledWith("entry-1", "other", {
+        issue: "registration_faulty",
+        issueNote: undefined,
+      }),
+    )
+    await waitFor(() => expect(screen.queryByText(/What happened/i)).toBeNull())
+
+    expect(bodyLockState()).toEqual(UNLOCKED)
+  })
+
+  it("sends the typed note when the issue is 'something else'", async () => {
+    await openSheet()
+
+    await act(async () => {
+      screen.getByText(/Couldn't apply/i).click()
+    })
+    await waitFor(() => expect(screen.getByText(/What happened/i)).toBeTruthy())
+
+    await act(async () => {
+      screen.getByText(/^Something else$/).click()
+    })
+
+    const box = await screen.findByPlaceholderText(/What went wrong/i)
+    await act(async () => {
+      fireEvent.change(box, { target: { value: "  The apply button 500s.  " } })
+    })
+    await act(async () => {
+      screen.getByText(/^Send$/).click()
+    })
+
+    // Trimmed on the way out. The server re-clamps, but sending padding it will
+    // only strip again is how the two ends drift on what was actually said.
+    await waitFor(() =>
+      expect(api.recordOutcome).toHaveBeenCalledWith("entry-1", "other", {
+        issue: "something_else",
+        issueNote: "The apply button 500s.",
+      }),
+    )
+    expect(bodyLockState()).toEqual(UNLOCKED)
+  })
+
+  it("will not send an issue report with nothing chosen", async () => {
+    await openSheet()
+
+    await act(async () => {
+      screen.getByText(/Couldn't apply/i).click()
+    })
+    await waitFor(() => expect(screen.getByText(/What happened/i)).toBeTruthy())
+
+    await act(async () => {
+      screen.getByText(/^Send$/).click()
+    })
+    expect(api.recordOutcome).not.toHaveBeenCalled()
+
+    // "Rather not say" is still a real answer, exactly as it is for a rejection.
+    await act(async () => {
+      screen.getByText(/Rather not say/i).click()
+    })
+    await waitFor(() =>
+      expect(api.recordOutcome).toHaveBeenCalledWith("entry-1", "other", undefined),
+    )
     expect(bodyLockState()).toEqual(UNLOCKED)
   })
 

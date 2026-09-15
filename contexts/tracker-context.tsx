@@ -44,6 +44,7 @@ import type {
   TrackerAnswer,
   TrackerContentType,
   TrackerEntry,
+  TrackerIssue,
   TrackerReason,
 } from "@/lib/tracker/types"
 
@@ -73,6 +74,18 @@ interface ArmedExit {
   source?: string
 }
 
+/** Everything an answer can carry besides the answer itself. */
+export interface TrackerAnswerOptions {
+  /** Only with not_for_me. */
+  reason?: TrackerReason
+  /** Only with other. */
+  issue?: TrackerIssue
+  /** Only with issue === "something_else". */
+  issueNote?: string
+  /** Only with started. */
+  remindWeekday?: string
+}
+
 interface TrackerContextValue {
   /** The entry currently being asked about, if the sheet is up. */
   activeEntry: TrackerEntry | null
@@ -86,7 +99,7 @@ interface TrackerContextValue {
   answer: (
     entryId: string,
     status: TrackerAnswer,
-    options?: { reason?: TrackerReason; remindWeekday?: string },
+    options?: TrackerAnswerOptions,
   ) => Promise<void>
   /** Dismiss without answering. */
   dismiss: (entryId: string) => Promise<void>
@@ -316,11 +329,7 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
   )
 
   const answer = useCallback(
-    async (
-      entryId: string,
-      status: TrackerAnswer,
-      options?: { reason?: TrackerReason; remindWeekday?: string },
-    ) => {
+    async (entryId: string, status: TrackerAnswer, options?: TrackerAnswerOptions) => {
       // Closed first, deliberately: the user has answered, and holding the
       // sheet open behind a spinner would make an honest answer feel expensive.
       showEntry(null)

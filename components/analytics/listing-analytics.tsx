@@ -19,10 +19,12 @@ import {
   formatRate,
   listingStatusLabel,
   topRejectionReasons,
+  topReportedIssues,
   type ListingAnalyticsRow,
   type ListingAnalyticsTotals,
   type ListingEngagement,
   type ListingFunnel,
+  type ListingIssueNote,
 } from "@/lib/analytics/listing-analytics"
 import {
   Eye,
@@ -32,6 +34,7 @@ import {
   ExternalLink,
   ChevronDown,
   BarChart3,
+  AlertTriangle,
 } from "lucide-react"
 
 /** Fill for each funnel stage. Tokens are defined and validated in globals.css. */
@@ -39,6 +42,7 @@ const STAGE_FILL: Record<string, string> = {
   started: "var(--funnel-started)",
   applied: "var(--funnel-applied)",
   notForMe: "var(--funnel-not-for-me)",
+  other: "var(--funnel-other)",
   pending: "hsl(var(--funnel-pending))",
 }
 
@@ -265,6 +269,101 @@ export function RejectionReasonBars({
   )
 }
 
+/**
+ * What stopped people who did reach the listing.
+ *
+ * Kept visually apart from the rejection bars, and not merged into one "why
+ * they didn't apply" tally, because the two ask opposite things of whoever is
+ * reading. A rejection means the listing found the wrong person, and the fix is
+ * a better posting. An issue means it found the right one and then failed them,
+ * and the fix is usually to take it down.
+ */
+export function ReportedIssueBars({
+  issues,
+  className,
+}: {
+  issues: ListingAnalyticsRow["reportedIssues"]
+  className?: string
+}) {
+  const rows = topReportedIssues(issues)
+  if (rows.length === 0) return null
+
+  const max = Math.max(...rows.map((row) => row.count))
+
+  return (
+    <div className={className}>
+      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        <AlertTriangle className="h-3 w-3" aria-hidden />
+        What stopped them
+      </p>
+      <div className="space-y-2">
+        {rows.map((row) => (
+          <div key={row.issue}>
+            <div className="mb-1 flex items-baseline justify-between gap-3">
+              <span className="truncate text-xs text-foreground">{row.label}</span>
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{row.count}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-[4px]"
+                style={{ width: `${(row.count / max) * 100}%`, background: STAGE_FILL.other }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The free-text reports, verbatim.
+ *
+ * Rendered as plain text and never as markup: this is the one field on a
+ * listing's analytics that a stranger wrote. No name and no date beyond the
+ * day, because a provider reading "the form 500s on submit" needs the sentence,
+ * not the person — and the people who answer honestly do so on the strength of
+ * exactly that.
+ */
+export function IssueNoteList({
+  notes,
+  className,
+}: {
+  notes: ListingIssueNote[]
+  className?: string
+}) {
+  if (!notes || notes.length === 0) return null
+
+  return (
+    <div className={className}>
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        In their words
+      </p>
+      <ul className="space-y-2">
+        {notes.map((note, index) => (
+          <li
+            key={`${note.at ?? "undated"}-${index}`}
+            className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2"
+          >
+            <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground">
+              {note.note}
+            </p>
+            {note.at ? (
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {new Date(note.at).toLocaleDateString(undefined, {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ rows */
 
 /**
@@ -339,12 +438,15 @@ export function ListingAnalyticsCard({
           </div>
 
           <RejectionReasonBars reasons={row.rejectionReasons} />
+          <ReportedIssueBars issues={row.reportedIssues} />
+          <IssueNoteList notes={row.issueNotes} />
 
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 sm:grid-cols-3 lg:grid-cols-5">
             {[
               { label: "Click-through", value: formatRate(row.rates.clickThroughRate), hint: "Views that became apply clicks" },
               { label: "Submit rate", value: formatRate(row.rates.submitRate), hint: "Apply clicks that became submissions" },
               { label: "Save rate", value: formatRate(row.rates.saveRate), hint: "Views that saved the listing" },
+              { label: "Couldn't apply", value: formatRate(row.rates.issueRate), hint: "Apply clicks that hit a problem on the listing's own site" },
               { label: "Answered", value: formatRate(row.rates.answerRate), hint: "Apply clicks we got an answer for" },
             ].map((stat) => (
               <div key={stat.label} className="min-w-0">
@@ -387,7 +489,16 @@ export function ListingAnalyticsSummary({
         <OutcomeRow funnel={totals.funnel} className="mt-3 border-t border-border pt-3" />
       </div>
 
-      <RejectionReasonBars reasons={totals.rejectionReasons} className="rounded-xl border border-border bg-card p-4" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:[&>*]:flex-1">
+        <RejectionReasonBars
+          reasons={totals.rejectionReasons}
+          className="rounded-xl border border-border bg-card p-4"
+        />
+        <ReportedIssueBars
+          issues={totals.reportedIssues}
+          className="rounded-xl border border-border bg-card p-4"
+        />
+      </div>
     </div>
   )
 }

@@ -9,7 +9,14 @@
 export type TrackerContentType = "opportunity" | "job" | "event" | "resource"
 
 /** The answers the return sheet can produce. */
-export type TrackerAnswer = "submitted" | "started" | "not_for_me" | "used" | "not_useful"
+export type TrackerAnswer =
+  | "submitted"
+  | "started"
+  | "not_for_me"
+  | "used"
+  | "not_useful"
+  /** Got there, and neither applied nor ruled it out. Carries a TrackerIssue. */
+  | "other"
 
 /** Every state an entry can hold, including the ones only the tracker page sets. */
 export type TrackerStatus =
@@ -28,6 +35,27 @@ export type TrackerReason =
   | "deadline_too_tight"
   | "not_my_field"
   | "changed_my_mind"
+
+/**
+ * What stopped someone applying, behind the `other` answer.
+ *
+ * Separate from TrackerReason on purpose. A reason is a verdict on fit — "too
+ * senior", "not my field" — and it is a preference, so it feeds ranking. An
+ * issue is a report that the listing could not be acted on at all, which says
+ * nothing about whether the person wanted it and everything about whether the
+ * posting still works. Those go to whoever posted it, not into a taste profile.
+ *
+ * `just_looking` is the odd one out and deliberately so: it is not a fault
+ * report, it is the honest "I only wanted a look", and having it here is what
+ * stops that answer being smuggled in as a rejection it never was.
+ */
+export type TrackerIssue =
+  | "listing_closed"
+  | "registration_faulty"
+  | "could_not_register"
+  | "site_down"
+  | "just_looking"
+  | "something_else"
 
 /** Which section of the tracker page an entry renders in. */
 export type TrackerBucket =
@@ -49,6 +77,9 @@ export interface TrackerEntry {
   awayMs: number | null
   answeredAt: string | null
   reason: TrackerReason | null
+  issue: TrackerIssue | null
+  /** Their own words. Only ever set alongside issue === "something_else". */
+  issueNote: string | null
   reminderAt: string | null
   clickCount: number
   /**
@@ -70,6 +101,7 @@ export interface TrackerSignal {
   contentId: string
   status: TrackerStatus
   reason: TrackerReason | null
+  issue: TrackerIssue | null
   category: string | null
   provider: string | null
   answeredAt: string | null
@@ -107,6 +139,7 @@ export const STATUS_LABELS: Record<TrackerStatus, string> = {
   not_for_me: "Not for me",
   used: "Used it",
   not_useful: "Wasn't useful",
+  other: "Couldn't apply",
   accepted: "Accepted",
   declined: "Declined",
   no_response: "No response",
@@ -133,6 +166,52 @@ export const REASON_OPTIONS: TrackerReason[] = [
   "looks_like_a_scam",
   "changed_my_mind",
 ]
+
+export const ISSUE_LABELS: Record<TrackerIssue, string> = {
+  listing_closed: "The listing had already closed",
+  registration_faulty: "The registration form was faulty",
+  could_not_register: "I couldn't register at all",
+  site_down: "The site wouldn't load",
+  just_looking: "I was only checking the site out",
+  something_else: "Something else",
+}
+
+/**
+ * The issues offered on the sheet, in reading order.
+ *
+ * Ordered by how often they are the real answer, with the two that need no
+ * explanation last. ISSUE_FREE_TEXT must stay at the end — it is the only one
+ * that opens a text box, and an escape hatch in the middle of a list reads as
+ * just another option.
+ */
+export const ISSUE_OPTIONS: TrackerIssue[] = [
+  "listing_closed",
+  "registration_faulty",
+  "could_not_register",
+  "site_down",
+  "just_looking",
+  "something_else",
+]
+
+/** The one issue that asks for their own words. Mirrors the backend constant. */
+export const ISSUE_FREE_TEXT: TrackerIssue = "something_else"
+
+/** Mirrors ApplicationTracker.ISSUE_NOTE_MAX_LENGTH. The server re-clamps it. */
+export const ISSUE_NOTE_MAX_LENGTH = 300
+
+/**
+ * How an `other` answer reads on one line: the issue, or their own words.
+ *
+ * The note wins when there is one, because "the form threw a 500 on submit" is
+ * strictly more use to the person reading it than "Something else".
+ */
+export function issueSummary(
+  entry: Pick<TrackerEntry, "status" | "issue" | "issueNote">,
+): string | null {
+  if (entry.status !== "other") return null
+  if (entry.issueNote) return entry.issueNote
+  return entry.issue ? ISSUE_LABELS[entry.issue] : null
+}
 
 /**
  * Resources ask a different question, because they have no deadline and nothing

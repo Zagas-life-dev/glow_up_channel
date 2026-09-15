@@ -10,7 +10,12 @@
  */
 
 import ApiClient from "@/lib/api-client"
-import { REASON_LABELS, type TrackerReason } from "@/lib/tracker/types"
+import {
+  ISSUE_LABELS,
+  REASON_LABELS,
+  type TrackerIssue,
+  type TrackerReason,
+} from "@/lib/tracker/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -44,6 +49,8 @@ export interface ListingFunnel {
   started: number
   submitted: number
   notForMe: number
+  /** Got there and could not act on it. The defect count — see reportedIssues. */
+  other: number
   used: number
   notUseful: number
   accepted: number
@@ -63,7 +70,23 @@ export interface ListingRates {
   submitRate: number
   abandonRate: number
   notForMeRate: number
+  /** Share of click-throughs that came back reporting the listing did not work. */
+  issueRate: number
   answerRate: number
+}
+
+/**
+ * One person's own words about what went wrong, as a provider sees it.
+ *
+ * Nothing identifying travels with it — not a name, not a user id. The tracker
+ * is a private record someone keeps for themselves, and the only reason people
+ * answer it honestly is that it never becomes a lead list for whoever posted
+ * the listing. That goes double for a box they typed a complaint into.
+ */
+export interface ListingIssueNote {
+  note: string
+  issue: TrackerIssue | null
+  at: string | null
 }
 
 export interface ListingAnalyticsRow {
@@ -81,6 +104,9 @@ export interface ListingAnalyticsRow {
   engagement: ListingEngagement
   funnel: ListingFunnel
   rejectionReasons: Partial<Record<TrackerReason, number>>
+  reportedIssues: Partial<Record<TrackerIssue, number>>
+  /** The most recent free-text reports, newest first. Capped by the backend. */
+  issueNotes: ListingIssueNote[]
   rates: ListingRates
 }
 
@@ -90,6 +116,7 @@ export interface ListingAnalyticsTotals {
   engagement: ListingEngagement
   funnel: ListingFunnel
   rejectionReasons: Partial<Record<TrackerReason, number>>
+  reportedIssues: Partial<Record<TrackerIssue, number>>
   rates: ListingRates
 }
 
@@ -99,6 +126,7 @@ export interface ListingTimelinePoint {
   submitted: number
   started: number
   notForMe: number
+  other: number
 }
 
 export const EMPTY_FUNNEL: ListingFunnel = {
@@ -107,6 +135,7 @@ export const EMPTY_FUNNEL: ListingFunnel = {
   started: 0,
   submitted: 0,
   notForMe: 0,
+  other: 0,
   used: 0,
   notUseful: 0,
   accepted: 0,
@@ -134,6 +163,7 @@ export const EMPTY_TOTALS: ListingAnalyticsTotals = {
   engagement: EMPTY_ENGAGEMENT,
   funnel: EMPTY_FUNNEL,
   rejectionReasons: {},
+  reportedIssues: {},
   rates: {
     engagementRate: 0,
     saveRate: 0,
@@ -142,19 +172,26 @@ export const EMPTY_TOTALS: ListingAnalyticsTotals = {
     submitRate: 0,
     abandonRate: 0,
     notForMeRate: 0,
+    issueRate: 0,
     answerRate: 0,
   },
 }
 
 /**
- * The apply funnel as a dashboard shows it: three outcomes plus the people who
- * have not said yet. Order is the story — started, applied, ruled out, silent.
+ * The apply funnel as a dashboard shows it: four outcomes plus the people who
+ * have not said yet. Order is the story — started, applied, ruled out, blocked,
+ * silent.
+ *
+ * These stages have to partition `tracked` exactly. A status that is counted in
+ * `tracked` but named by no stage does not read as a gap in the bar, it reads as
+ * a bar that quietly no longer adds up, so anything added to STATUS_KEYS on the
+ * backend has to land in one of these.
  */
 export const FUNNEL_STAGES: {
   key: keyof ListingFunnel
   label: string
   hint: string
-  tone: "amber" | "emerald" | "rose" | "neutral"
+  tone: "amber" | "emerald" | "rose" | "violet" | "neutral"
 }[] = [
   {
     key: "started",
@@ -173,6 +210,12 @@ export const FUNNEL_STAGES: {
     label: "Not for me",
     hint: "Looked, then ruled it out — see the reasons below",
     tone: "rose",
+  },
+  {
+    key: "other",
+    label: "Couldn't apply",
+    hint: "Reached the listing and something stopped them — see the reports below",
+    tone: "violet",
   },
   {
     key: "pending",
@@ -197,7 +240,7 @@ export const CONTENT_TYPE_LABELS: Record<ListingContentType, string> = {
   resource: "Resource",
 }
 
-export { REASON_LABELS }
+export { ISSUE_LABELS, REASON_LABELS }
 
 /** Rejection reasons for one listing, biggest first. */
 export function topRejectionReasons(
@@ -208,6 +251,21 @@ export function topRejectionReasons(
     .map(([reason, count]) => ({
       reason: reason as TrackerReason,
       label: REASON_LABELS[reason as TrackerReason] ?? reason,
+      count: count as number,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+}
+
+/** Reported issues for one listing, biggest first. */
+export function topReportedIssues(
+  issues: Partial<Record<TrackerIssue, number>>,
+  limit = 6,
+): { issue: TrackerIssue; label: string; count: number }[] {
+  return Object.entries(issues || {})
+    .map(([issue, count]) => ({
+      issue: issue as TrackerIssue,
+      label: ISSUE_LABELS[issue as TrackerIssue] ?? issue,
       count: count as number,
     }))
     .sort((a, b) => b.count - a.count)

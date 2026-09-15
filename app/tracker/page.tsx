@@ -35,6 +35,7 @@ import {
   REASON_LABELS,
   STATUS_LABELS,
   hrefFor,
+  issueSummary,
   type TrackerBucket,
   type TrackerBuckets,
   type TrackerEntry,
@@ -100,6 +101,9 @@ function EntryRow({
     entry.contentProvider,
     entry.status === "not_for_me" && entry.reason ? REASON_LABELS[entry.reason] : null,
     entry.bucket === "closed" ? STATUS_LABELS[entry.status] : null,
+    // Their own account of what went wrong, shown back to them. A report filed
+    // into silence is one people stop bothering to file.
+    issueSummary(entry),
   ].filter(Boolean)
 
   return (

@@ -14,6 +14,7 @@ import {
   type TrackerBuckets,
   type TrackerContentType,
   type TrackerEntry,
+  type TrackerIssue,
   type TrackerReason,
   type TrackerSignal,
   type TrackerStatus,
@@ -98,7 +99,12 @@ export async function recordReturn(
 export async function recordOutcome(
   entryId: string,
   status: TrackerAnswer,
-  options?: { reason?: TrackerReason; remindWeekday?: string },
+  options?: {
+    reason?: TrackerReason
+    issue?: TrackerIssue
+    issueNote?: string
+    remindWeekday?: string
+  },
 ): Promise<TrackerEntry | null> {
   try {
     const response = await ApiClient.makeAuthenticatedRequest(
@@ -108,6 +114,8 @@ export async function recordOutcome(
         body: JSON.stringify({
           status,
           reason: options?.reason,
+          issue: options?.issue,
+          issueNote: options?.issueNote,
           remindWeekday: options?.remindWeekday,
         }),
       },

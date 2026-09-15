@@ -5,10 +5,19 @@
  *
  * Two things about this component are load-bearing rather than decorative:
  *
- * The three options are weighted equally in everything except visual emphasis.
+ * The options are weighted equally in everything except visual emphasis.
  * "Not for me" is not a hidden escape hatch — a rejection with a reason is worth
  * as much to ranking as a submission, and burying it would only teach people to
  * tap the top button to make the sheet go away.
+ *
+ * "Couldn't apply" exists because the sheet used to have no honest answer for
+ * the commonest outcome of all: they got to the site and the listing had closed,
+ * or the form was broken, or nothing loaded. Every one of those had to be filed
+ * as "not for me", which is a lie in the one direction that costs the most — it
+ * taught the feed to stop showing a whole category because somebody else's
+ * registration page was down, and it hid the broken listing from the only two
+ * people who could fix it. That answer goes to the provider and to admins
+ * instead of into ranking.
  *
  * Dismissing is always available. A modal you cannot close turns an honest
  * question into a toll, and the answer it extracts is worthless.
@@ -17,16 +26,22 @@
 import { useEffect, useState } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { RiArrowLeftLine, RiCloseLine } from "react-icons/ri"
-import { useTracker } from "@/contexts/tracker-context"
+import { useTracker, type TrackerAnswerOptions } from "@/contexts/tracker-context"
 import { cn } from "@/lib/utils"
 import { scheduleBodyLockRelease } from "@/lib/dom/body-lock-guard"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
 import {
+  ISSUE_FREE_TEXT,
+  ISSUE_LABELS,
+  ISSUE_NOTE_MAX_LENGTH,
+  ISSUE_OPTIONS,
   REASON_LABELS,
   REASON_OPTIONS,
   answersFor,
   type TrackerAnswer,
   type TrackerEntry,
-  type TrackerReason,
+  type TrackerIssue,
 } from "@/lib/tracker/types"
 
 /** The weekday choices offered with "started, not finished". */
@@ -66,17 +81,32 @@ function subtitleFor(entry: TrackerEntry): string {
   return [entry.contentProvider, away].filter(Boolean).join(" · ")
 }
 
+/**
+ * The verb for what they went there to do.
+ *
+ * Only ever used in the "couldn't do it" branch, where being vague is what makes
+ * the option easy to skip past: somebody who could not get onto an event's
+ * registration page is looking for the word "register", not for "apply".
+ */
+function attemptVerb(entry: TrackerEntry): string {
+  if (entry.contentType === "resource") return "open it"
+  if (entry.contentType === "event") return "register"
+  return "apply"
+}
+
 /** Which panel of the sheet is showing. */
-type Step = "answer" | "reason" | "remind"
+type Step = "answer" | "reason" | "issue" | "remind"
 
 interface SheetBodyProps {
   entry: TrackerEntry
-  onAnswer: (status: TrackerAnswer, options?: { reason?: TrackerReason; remindWeekday?: string }) => void
+  onAnswer: (status: TrackerAnswer, options?: TrackerAnswerOptions) => void
   onDismiss: () => void
 }
 
 function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
   const [step, setStep] = useState<Step>("answer")
+  const [issue, setIssue] = useState<TrackerIssue | null>(null)
+  const [issueNote, setIssueNote] = useState("")
   const isResource = entry.contentType === "resource"
   const { positive, middle, negative } = answersFor(entry.contentType)
 
@@ -123,6 +153,106 @@ function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
           type="button"
           onClick={() => onAnswer(negative)}
           className="mt-4 w-full rounded-full px-4 py-2.5 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Rather not say
+        </button>
+      </div>
+    )
+  }
+
+  if (step === "issue") {
+    const wantsNote = issue === ISSUE_FREE_TEXT
+    const note = issueNote.trim()
+
+    return (
+      <div className="px-5 pb-6 pt-2">
+        <button
+          type="button"
+          onClick={() => setStep("answer")}
+          className="-ml-2 mb-3 flex items-center gap-1.5 rounded-full px-2 py-1 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <RiArrowLeftLine className="h-4 w-4" aria-hidden />
+          Back
+        </button>
+
+        <h2 className="text-[22px] font-bold leading-tight tracking-[-0.01em]">
+          What happened?
+        </h2>
+        {/*
+          Says who reads it, because that is the whole reason to answer. This one
+          does not shape the feed — it goes to the people who can pull a dead
+          listing down, and saying so is what makes the question worth a tap.
+        */}
+        <p className="mt-2 text-body-sm text-muted-foreground">
+          This goes to whoever posted it, and to us. Listings that stop working
+          get taken down.
+        </p>
+
+        <fieldset className="mt-4">
+          <legend className="sr-only">What stopped you</legend>
+          <RadioGroup
+            value={issue ?? ""}
+            onValueChange={(value) => setIssue(value as TrackerIssue)}
+            className="gap-0"
+          >
+            {ISSUE_OPTIONS.map((option) => (
+              <label
+                key={option}
+                htmlFor={`issue-${option}`}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[15px] transition-colors",
+                  issue === option ? "bg-accent" : "hover:bg-accent/60",
+                )}
+              >
+                <RadioGroupItem value={option} id={`issue-${option}`} className="shrink-0" />
+                <span className="min-w-0">{ISSUE_LABELS[option]}</span>
+              </label>
+            ))}
+          </RadioGroup>
+        </fieldset>
+
+        {wantsNote && (
+          <div className="mt-2 px-3">
+            <label htmlFor="issue-note" className="sr-only">
+              Tell us what happened
+            </label>
+            <Textarea
+              id="issue-note"
+              autoFocus
+              rows={3}
+              maxLength={ISSUE_NOTE_MAX_LENGTH}
+              value={issueNote}
+              onChange={(event) => setIssueNote(event.target.value)}
+              placeholder="What went wrong?"
+              className="min-h-[76px] resize-none rounded-xl bg-card text-[15px]"
+            />
+            <p className="mt-1 text-right text-caption text-muted-foreground">
+              {issueNote.length}/{ISSUE_NOTE_MAX_LENGTH}
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          disabled={!issue}
+          onClick={() =>
+            onAnswer("other", {
+              issue: issue ?? undefined,
+              // Sent only for the one option that offered a box. The server
+              // drops it otherwise, and this keeps the two ends agreeing.
+              issueNote: wantsNote && note ? note : undefined,
+            })
+          }
+          className="mt-4 w-full rounded-full bg-primary px-5 py-3 text-[15px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+        >
+          Send
+        </button>
+
+        {/* Same escape as the reason panel: the answer still counts without a detail. */}
+        <button
+          type="button"
+          onClick={() => onAnswer("other")}
+          className="mt-2 w-full rounded-full px-4 py-2.5 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           Rather not say
         </button>
@@ -210,6 +340,20 @@ function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
         >
           {isResource ? "Wasn't useful — less like this" : "Not for me — stop suggesting these"}
         </button>
+
+        {/*
+          Last, but styled exactly like the two above it. Someone who could not
+          get the form to load is not going to hunt for this under a "more"
+          link, and the answer they would give instead — "not for me" — is the
+          single most damaging thing they could tell the feed.
+        */}
+        <button
+          type="button"
+          onClick={() => setStep("issue")}
+          className="w-full rounded-2xl border border-border bg-card px-5 py-4 text-left text-[15px] font-medium transition-colors hover:border-primary/40 hover:bg-accent"
+        >
+          Couldn&apos;t {attemptVerb(entry)} — something was wrong
+        </button>
       </div>
 
       <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
@@ -286,10 +430,7 @@ export function TrackerReturnSheet() {
 
   const entry = rendered
 
-  const handleAnswer = (
-    status: TrackerAnswer,
-    options?: { reason?: TrackerReason; remindWeekday?: string },
-  ) => {
+  const handleAnswer = (status: TrackerAnswer, options?: TrackerAnswerOptions) => {
     void answer(entry._id, status, options)
   }
 
@@ -319,6 +460,11 @@ export function TrackerReturnSheet() {
             "fixed z-50 border border-border bg-card text-card-foreground shadow-2xl focus:outline-none",
             // Phone: a bottom sheet, clear of the home indicator.
             "inset-x-0 bottom-0 rounded-t-3xl pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+            // Tall panels scroll inside the sheet rather than off the top of it.
+            // dvh over vh because mobile browser chrome is what makes the
+            // difference here, and overscroll-contain stops a flick at the end
+            // of the list scrolling the page behind the overlay.
+            "max-h-[85vh] overflow-y-auto overscroll-contain [@supports(height:100dvh)]:max-h-[85dvh]",
             // An exit animation is load-bearing, not decoration: Radix's Presence
             // keeps the content mounted until it finishes, and that is what runs
             // the effect cleanup restoring the body's pointer-events.

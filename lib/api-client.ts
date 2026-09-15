@@ -1745,6 +1745,59 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  /**
+   * Move a past post back into the collection it came from, with new dates.
+   *
+   * The dates are mandatory and the server enforces the rules in
+   * `lib/listings/restore-dates.ts`: it refuses a restore whose governing date is
+   * unchanged or already behind us, because the nightly cleanup sweep would archive the
+   * post again on its next run. A rejection arrives as a thrown Error carrying that
+   * message, so the dialog can show the admin exactly which date to fix.
+   *
+   * `dates` keys are per type — applicationDeadline/startDate/endDate for opportunities,
+   * startDate/endDate/registrationDeadline for events, applicationDeadline/startDate for
+   * jobs. Omit a key to keep the archived value; send null to clear it.
+   */
+  static async restorePastPost(
+    collection: 'opportunities' | 'events' | 'jobs',
+    postId: string,
+    input: {
+      dates: Record<string, string | null>;
+      /**
+       * Whitelisted edits. The link fields are the full set a listing detail page
+       * consults — `url` outranks the rest, and jobs read nothing else — so a restore can
+       * correct whichever one actually reaches readers. See lib/listings/listing-links.ts.
+       */
+      updates?: {
+        title?: string;
+        description?: string;
+        url?: string;
+        applicationLink?: string;
+        application_link?: string;
+        registrationLink?: string;
+        eventLink?: string;
+        externalUrl?: string;
+        externalLink?: string;
+      };
+      note?: string;
+    }
+  ): Promise<{
+    restoredId: string;
+    restoredTo: string;
+    isLive: boolean;
+    expiryDate: string;
+    expiryField: string;
+    previousExpiryDate: string | null;
+    changedDateFields: string[];
+    updatedFields: string[];
+  }> {
+    const response = await this.makeAuthenticatedRequest(
+      `${API_BASE_URL}/api/admin/past-posts/restore/${collection}/${postId}`,
+      { method: 'POST', body: JSON.stringify(input) }
+    );
+    return this.handleResponse(response);
+  }
+
   // Provider Onboarding Admin Methods
   static async getAllPostersDetails(): Promise<{
     success: boolean;

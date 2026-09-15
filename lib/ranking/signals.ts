@@ -354,11 +354,18 @@ export function historySignal(
 
       // Already dealt with. Not a rejection, but there is no value in pushing
       // it back up a feed they have already acted on.
+      //
+      // `other` sits here rather than at the floor with the rejections: they
+      // went, and something stopped them — a closed listing, a broken form.
+      // That is not a no, so it keeps a rejection's silence without inheriting
+      // its verdict. The one `other` that IS just a glance never reaches this
+      // map at all; buildTrackerHistory leaves it out.
       case "submitted":
       case "accepted":
       case "declined":
       case "no_response":
       case "used":
+      case "other":
         return 0.1
 
       // Asked and never answered. No verdict to apply, so fall through to the

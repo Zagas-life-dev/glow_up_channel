@@ -68,6 +68,12 @@ export type ItemDoc = {
   target?: {
     title: string
     contentId: string | null
+    /**
+     * Which collection `contentId` lives in. The backend's admin-grant route
+     * needs it to find the record and refuses the call without it, so a target
+     * carrying an id but no type is not a usable target.
+     */
+    contentType?: ContentType | null
     /** Set when the thing being promoted is a listing on this same order. */
     listingRef: string | null
   }

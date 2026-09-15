@@ -41,6 +41,10 @@ type Item = {
 }
 
 const TABS = [
+  // "All" comes first so the screen answers "has anyone used this?" before it
+  // answers "what do I have to do?". Without it, an inbox whose submissions
+  // were all abandoned at payment reads as though nothing was ever submitted.
+  { id: "all", label: "All" },
   { id: "pending_review", label: "To review" },
   { id: "needs_clarification", label: "Waiting on them" },
   { id: "published", label: "Published" },
@@ -49,6 +53,10 @@ const TABS = [
   { id: "rejected", label: "Rejected" },
   { id: "awaiting_payment", label: "Unpaid" },
 ] as const
+
+const TAB_LABEL: Record<string, string> = Object.fromEntries(
+  TABS.map((entry) => [entry.id, entry.label]),
+)
 
 const STATUS_TONE: Record<string, string> = {
   pending_review: "bg-amber-500/15 text-amber-600 border-amber-500/30",
@@ -125,24 +133,38 @@ export default function ReviewQueue() {
   const [tab, setTab] = useState<string>("pending_review")
   const [rows, setRows] = useState<Item[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
+  const [total, setTotal] = useState<number | null>(null)
+  const [truncated, setTruncated] = useState(false)
   const [loading, setLoading] = useState(true)
+  // A toast is gone in four seconds, which is how "it will not load" ended up
+  // with no reason attached. The reason stays on the screen until it is fixed.
+  const [error, setError] = useState<string | null>(null)
   const [busyRef, setBusyRef] = useState<string | null>(null)
 
   const allowed = isAdminOrSuperAdmin(user?.role)
 
   const load = useCallback(async () => {
-    if (!allowed) return
+    // Without clearing the flag here the skeleton rows stayed up for ever on
+    // any account the check said no to.
+    if (!allowed) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch(`/work-with-us/api/admin/items?status=${tab}`, {
         headers: { Authorization: `Bearer ${token()}` },
       })
-      const json = await response.json()
-      if (!response.ok) throw new Error(json?.error || "Could not load submissions")
+      const json = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(json?.error || `Could not load submissions (HTTP ${response.status})`)
       setRows(json.items ?? [])
       setCounts(json.counts ?? {})
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not load submissions")
+      setTotal(typeof json.total === "number" ? json.total : null)
+      setTruncated(Boolean(json.truncated))
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "Could not load submissions"
+      setError(message)
       setRows([])
     } finally {
       setLoading(false)
@@ -154,9 +176,26 @@ export default function ReviewQueue() {
   }, [authLoading, load])
 
   if (!authLoading && !allowed) {
+    // "Access denied" was shown for both of these, so an admin whose account
+    // simply had not loaded — the usual cause being the backend being down —
+    // was told they had no permission, and stopped looking.
     return (
       <AdminShell title="Work with us">
-        <p className="p-8 text-center text-sm text-muted-foreground">Access denied.</p>
+        <div className="p-8 text-center text-sm text-muted-foreground">
+          {user ? (
+            <p>
+              Access denied — {user.email || "this account"} is not an admin.
+            </p>
+          ) : (
+            <>
+              <p className="font-medium text-foreground">We could not confirm your account.</p>
+              <p className="mt-2">
+                Either your session has expired, or the backend is not reachable from here.
+                Sign in again, and check the backend is up if it keeps happening.
+              </p>
+            </>
+          )}
+        </div>
       </AdminShell>
     )
   }
@@ -230,12 +269,20 @@ export default function ReviewQueue() {
               }
             >
               {entry.label}
-              {counts[entry.id] ? (
-                <span className="ml-2 text-xs text-muted-foreground">{counts[entry.id]}</span>
+              {(entry.id === "all" ? total : counts[entry.id]) ? (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {entry.id === "all" ? total : counts[entry.id]}
+                </span>
               ) : null}
             </button>
           ))}
         </div>
+
+        {truncated && (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700">
+            Showing the 200 most recent. Narrow by status to see older ones.
+          </p>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -243,10 +290,40 @@ export default function ReviewQueue() {
               <Skeleton key={key} className="h-32 w-full rounded-2xl" />
             ))}
           </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-8 text-center">
+            <p className="text-sm font-medium">Could not load submissions</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{error}</p>
+            <Button size="sm" variant="outline" className="mt-4" onClick={load}>
+              <RiRefreshLine className="mr-2 h-4 w-4" aria-hidden />
+              Try again
+            </Button>
+          </div>
         ) : rows.length === 0 ? (
-          <p className="rounded-2xl border border-border/70 bg-card/60 p-8 text-center text-sm text-muted-foreground">
-            Nothing here.
-          </p>
+          <div className="rounded-2xl border border-border/70 bg-card/60 p-8 text-center text-sm text-muted-foreground">
+            {total === 0 ? (
+              <p>No one has submitted anything through the public flow yet.</p>
+            ) : (
+              <>
+                <p>
+                  Nothing in {tab === "all" ? "the queue" : `"${TAB_LABEL[tab] ?? tab}"`}.
+                </p>
+                {/* The count is the point: an empty work queue is good news, an
+                    empty account is not, and they must not look the same. */}
+                <p className="mt-2">
+                  {total} submission{total === 1 ? "" : "s"} in total —{" "}
+                  <button
+                    type="button"
+                    onClick={() => setTab("all")}
+                    className="font-medium text-foreground underline underline-offset-2"
+                  >
+                    see all of them
+                  </button>
+                  .
+                </p>
+              </>
+            )}
+          </div>
         ) : (
           <div className="space-y-3">
             {rows.map((item) => (

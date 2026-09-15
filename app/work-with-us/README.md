@@ -49,7 +49,7 @@ What are you trying to achieve?
 | `submit-track.tsx` / `promote-track.tsx` / `partner-track.tsx` | The three branches. |
 | `ui.tsx` | The shared bits — step wrapper, choice card, form fields. |
 | `admin/review-queue.tsx` | The review screen, mounted at `/dashboard/admin/work-with-us`. |
-| `lookup.ts` | Searches the four public list APIs, for pointing a promotion at something live. |
+| `lookup.ts` | Searches the four public list APIs, for pointing a promotion at something live. **Not wired up yet** — nothing imports it, so a promotion never records what it runs against. See "Promotion targets" below. |
 | `api/submissions` | Saves an order and its items, and starts the payment if there is one. |
 | `api/verify` | Confirms a payment when the person lands back on the site. |
 | `api/webhook` | Confirms a payment when they don't. Optional. |
@@ -185,3 +185,33 @@ Approving a promotion that includes platform placement calls
 `POST /api/promotions/admin-grant` on the backend — see `server/publish.ts`. That
 route does not exist yet; until it does, those promotions have to be started by
 hand. Promotions that are only community or social work do not need it.
+
+## Promotion targets — a known gap
+
+A promotion has to point at something before it can run: the backend's
+`/api/promotions/admin-grant` needs both a `contentId` and the `contentType`
+that says which collection to find it in.
+
+Right now **nothing ever records that target**. `buildItems` writes
+`target: { title, contentId: null, listingRef: null }` for every promotion, and
+`parsePayload` does not carry a target through from the browser, so both stay
+null. `lookup.ts` exists to let a customer pick something live, but nothing
+imports it.
+
+The effect: approving any promotion that bought platform placement — the
+`boost-7`, `boost-14` and `feature-30` items, and all three bundles, which is
+everything with `runDays` — fails, because there is nothing to run it against.
+The reviewer is told so and can start it by hand, but the queue cannot do it.
+
+Closing this needs a decision on where the target comes from:
+
+- **At purchase.** Wire `lookup.ts` into `promote-track.tsx`, carry the chosen
+  `contentId` and `contentType` through `parsePayload` into `buildItems`. The
+  customer says what they are promoting; matches how the flow reads today.
+- **At review.** Let the reviewer search and attach a target from the queue
+  before approving. Smaller change, no payment-path risk, and fits the fact
+  that the rest of this work is hand-delivered anyway.
+
+Everything downstream of the target is already correct — `resolveTarget` returns
+the id and type together, and `startPromotion` sends both — so either route is
+the only piece missing.

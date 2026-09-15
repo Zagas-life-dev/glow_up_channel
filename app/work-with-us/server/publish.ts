@@ -1,9 +1,9 @@
-import { LIST_PATH, promotionRunDays } from "../config"
+import { LIST_PATH, promotionRunDays, type ContentType } from "../config"
 import { backendPost, type AdminCaller } from "./admin-auth"
 import type { ItemDoc } from "./db"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 
-/** Where an admin-granted promotion is started. Add this route to the backend. */
+/** Where an admin-granted promotion is started. Lives in the backend at src/routes/promotions.js. */
 export const GRANT_PROMOTION_PATH = "/api/promotions/admin-grant"
 
 function tagList(value?: string): string[] {
@@ -108,15 +108,19 @@ export async function publishListing(
 export async function startPromotion(
   caller: AdminCaller,
   item: ItemDoc,
-  contentId: string,
+  target: { contentId: string; contentType: ContentType },
 ): Promise<{ ok: true; days: number | null } | { ok: false; error: string }> {
   const days = promotionRunDays(item.promotions ?? [])
   // Nothing on this order runs automatically — it is all hand-delivered work.
   if (!days) return { ok: true, days: null }
 
+  // The type has to come from whatever is being promoted, not from the
+  // promotion item: a promotion publishes nothing itself, so its own
+  // `contentType` is null, and sending that made the backend reject every
+  // grant with "contentId and contentType are required".
   const result = await backendPost(caller, GRANT_PROMOTION_PATH, {
-    contentId,
-    contentType: item.contentType,
+    contentId: target.contentId,
+    contentType: target.contentType,
     durationDays: days,
     reason: `work-with-us ${item.ref}`,
   })

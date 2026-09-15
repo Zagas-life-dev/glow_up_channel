@@ -50,6 +50,12 @@ const OUTCOME_AFFINITY: Partial<Record<TrackerStatus, number>> = {
   not_useful: -0.6,
   not_for_me: -1,
   // `pending` and `unknown` are the absence of an answer, not an answer.
+  //
+  // `other` is absent too, and for a stronger reason than either: it means the
+  // person got to the site and could not apply. A closed listing, a broken
+  // form or a dead link is a fact about the posting, not a preference — reading
+  // it as one would quietly teach the feed that someone dislikes every category
+  // whose providers keep stale listings up, which is nobody's taste.
 }
 
 function accumulate(target: Map<string, { sum: number; count: number }>, key: string | null, value: number) {
@@ -83,7 +89,16 @@ export function buildTrackerHistory(signals: TrackerSignal[]): TrackerHistory {
   for (const signal of signals) {
     if (!signal) continue
 
-    if (signal.contentId) byContentId.set(String(signal.contentId), signal.status)
+    /*
+     * "I was only checking the site out" is not a verdict on the listing.
+     *
+     * Every other answer leaves a mark on the listing it was about — see
+     * historySignal, which reads this map first and stops there. Letting this
+     * one in would score a listing down to "already dealt with" on the strength
+     * of someone having glanced at it, which is the opposite of what they said.
+     */
+    const isGlance = signal.status === "other" && signal.issue === "just_looking"
+    if (signal.contentId && !isGlance) byContentId.set(String(signal.contentId), signal.status)
 
     const affinity = OUTCOME_AFFINITY[signal.status]
     if (affinity === undefined) continue

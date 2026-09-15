@@ -45,10 +45,17 @@
      * separately chosen and separately validated, not a lightness flip.
      * "No answer yet" is the absence of an answer rather than a category, so it
      * stays neutral and always carries its own label.
+     *
+     * "Couldn't apply" is indigo rather than a second red, and that is a
+     * statement about the data: it is not a worse rejection, it is a different
+     * kind of fact — the listing failed, not the fit. Hue 277 sits far from the
+     * other three (58, 163, 12) so the four stay apart under protanopia and
+     * deuteranopia, which is where amber and emerald crowd each other most.
      */
     --funnel-started: #b45309;
     --funnel-applied: #059669;
     --funnel-not-for-me: #9f1239;
+    --funnel-other: #4338ca;
     --funnel-pending: 222 20% 72%;
   }
 
@@ -84,6 +91,7 @@
     --funnel-started: #c2740a;
     --funnel-applied: #059669;
     --funnel-not-for-me: #f43f5e;
+    --funnel-other: #818cf8;
     --funnel-pending: 222 20% 42%;
   }
 }

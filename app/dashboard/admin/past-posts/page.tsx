@@ -27,6 +27,7 @@ import {
   Shield,
   Clock,
   Filter,
+  RotateCcw,
   X
 } from "lucide-react"
 import Link from "next/link"
@@ -42,6 +43,7 @@ import {
   AdminSkeletonRows,
   StatusPill,
 } from "@/components/admin/ui"
+import { RestorePastPostDialog } from "@/components/admin/restore-past-post-dialog"
 
 type CollectionType = 'opportunities' | 'events' | 'jobs'
 
@@ -59,6 +61,8 @@ export default function PastPostsPage() {
   const [limit] = useState(20)
   const [searchQuery, setSearchQuery] = useState("")
   const [pastStatusFilter, setPastStatusFilter] = useState<string>("all")
+  /** The archived post open in the restore dialog, or null. */
+  const [restoreTarget, setRestoreTarget] = useState<any | null>(null)
 
   // Hide navbar and footer when this page is active
   useEffect(() => {
@@ -140,6 +144,19 @@ export default function PastPostsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  /**
+   * A restored post is no longer in `past_*`, so drop it locally before refetching:
+   * the counts and the page contents both shift, and waiting on two round trips leaves
+   * the row the admin just acted on sitting there looking untouched.
+   */
+  const handleRestored = ({ restoredId }: { restoredId: string }) => {
+    setPosts((prev) => prev.filter((post: any) => String(post._id) !== restoredId))
+    setTotal((prev) => Math.max(0, prev - 1))
+    setRestoreTarget(null)
+    fetchStats()
+    fetchPosts()
   }
 
   const totalPages = Math.ceil(total / limit)
@@ -330,6 +347,12 @@ export default function PastPostsPage() {
                         <Clock className="h-3.5 w-3.5" />
                         Moved {formatDate(post.movedToPastAt)}
                       </span>
+                      {post.restoreCount ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          Restored {post.restoreCount}× before
+                        </span>
+                      ) : null}
                       {post.reason ? (
                         <span className="inline-flex items-center gap-1.5">
                           <Archive className="h-3.5 w-3.5" />
@@ -348,6 +371,17 @@ export default function PastPostsPage() {
                           Deadline was {formatDate(post.dates.applicationDeadline)}
                         </span>
                       ) : null}
+                    </div>
+
+                    <div className="mt-3 flex justify-end border-t border-border pt-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setRestoreTarget(post)}
+                        className="h-9 rounded-lg"
+                      >
+                        <RotateCcw className="mr-1.5 h-4 w-4" />
+                        Restore &amp; edit
+                      </Button>
                     </div>
                   </AdminCard>
                 </li>
@@ -387,6 +421,14 @@ export default function PastPostsPage() {
           </>
         )}
       </div>
+
+      <RestorePastPostDialog
+        open={restoreTarget !== null}
+        onOpenChange={(open) => { if (!open) setRestoreTarget(null) }}
+        post={restoreTarget}
+        collection={activeTab}
+        onRestored={handleRestored}
+      />
     </AdminShell>
   )
 }
