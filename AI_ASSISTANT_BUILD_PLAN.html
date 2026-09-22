@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP / Glowup — Assistant Build Plan</title>
+<style>
+  :root{
+    --bg:#faf9f7; --panel:#ffffff; --ink:#16150f; --muted:#5c5a51; --faint:#8a8779;
+    --line:#e4e1d8; --accent:#a8880a; --accent-soft:#fdf6d9;
+    --good:#1d7a4d; --good-soft:#e6f4ec;
+    --warn:#a8630a; --warn-soft:#fdf0dc;
+    --bad:#a8352a; --bad-soft:#fbe9e7;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+      --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+      --good:#5ec98d; --good-soft:#132c1f;
+      --warn:#e0a24a; --warn-soft:#2e2211;
+      --bad:#f08a7d; --bad-soft:#2e1714;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+    --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+    --good:#5ec98d; --good-soft:#132c1f;
+    --warn:#e0a24a; --warn-soft:#2e2211;
+    --bad:#f08a7d; --bad-soft:#2e1714;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.62 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px}
+  header.top{border-bottom:3px solid var(--ink);padding-bottom:26px;margin-bottom:44px}
+  .kicker{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 12px;letter-spacing:-.022em;font-weight:680}
+  .sub{color:var(--muted);font-size:17px;max-width:66ch;margin:0}
+  .meta{margin-top:20px;font:12px/1.6 var(--mono);color:var(--faint)}
+
+  h2{font-size:24px;margin:60px 0 6px;letter-spacing:-.015em;font-weight:660}
+  h2 .n{font:600 12px/1 var(--mono);color:var(--accent);display:block;margin-bottom:9px;letter-spacing:.1em}
+  h3{font-size:17px;margin:32px 0 10px;font-weight:640;letter-spacing:-.01em}
+  h4{font-size:14.5px;margin:22px 0 6px;font-weight:640;color:var(--ink)}
+  p{margin:12px 0;color:var(--muted)}
+  p strong,li strong,td strong{color:var(--ink);font-weight:620}
+  .lede{font-size:17px;color:var(--ink);max-width:70ch}
+
+  .verdict{
+    background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:4px;padding:26px 28px;margin:30px 0;
+  }
+  .verdict h3{margin:0 0 10px;font-size:19px}
+  .verdict p{margin:8px 0}
+  .verdict p:last-child{margin-bottom:0}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0}
+  .scroll table{min-width:660px}
+  th{
+    text-align:left;font:600 10.5px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);padding:0 12px 9px;border-bottom:1.5px solid var(--line);vertical-align:bottom;
+  }
+  td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+  td:first-child,th:first-child{padding-left:0}
+  td:last-child,th:last-child{padding-right:0}
+  td.k{color:var(--ink);font-weight:600}
+  td.num{font:500 14px/1.5 var(--mono);white-space:nowrap;color:var(--ink)}
+  tr.total td{border-top:2px solid var(--ink);border-bottom:none;padding-top:15px;color:var(--ink);font-weight:660}
+
+  .pill{display:inline-block;font:600 10.5px/1 var(--mono);padding:5px 9px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-good{background:var(--good-soft);color:var(--good)}
+  .p-warn{background:var(--warn-soft);color:var(--warn)}
+  .p-bad{background:var(--bad-soft);color:var(--bad)}
+  .p-acc{background:var(--accent-soft);color:var(--accent)}
+
+  .grid{display:grid;gap:14px;margin:24px 0}
+  @media(min-width:720px){.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  .card.hot{border-color:var(--bad);border-width:1.5px}
+  .card.win{border-color:var(--good);border-width:1.5px}
+  .card .lbl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .card .big{font-size:27px;font-weight:680;letter-spacing:-.02em;color:var(--ink);line-height:1.12}
+  .card .cap{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  ul,ol{color:var(--muted);padding-left:22px;margin:12px 0}
+  li{margin:7px 0}
+  code{font:0.88em var(--mono);background:var(--accent-soft);color:var(--ink);padding:2px 6px;border-radius:3px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px 18px;overflow-x:auto;font:12.5px/1.65 var(--mono);color:var(--ink);margin:18px 0}
+  pre code{background:none;padding:0}
+  .cmt{color:var(--faint)}
+
+  .flag{border-left:4px solid;padding:15px 18px;border-radius:0 4px 4px 0;margin:18px 0;background:var(--panel)}
+  .flag .t{font-weight:660;color:var(--ink);margin-bottom:5px;font-size:15px}
+  .flag p{margin:5px 0;font-size:14.5px}
+  .f-bad{border-color:var(--bad)} .f-warn{border-color:var(--warn)} .f-good{border-color:var(--good)}
+
+  .phase{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:24px 26px;margin:22px 0}
+  .phase.gate{border-left:5px solid var(--bad)}
+  .phase .ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .phase .pn{font:660 11px/1 var(--mono);color:var(--accent);letter-spacing:.12em;text-transform:uppercase}
+  .phase h3{margin:0;font-size:19px}
+  .phase .est{font:600 11px/1 var(--mono);color:var(--faint);margin-left:auto}
+  .ships{background:var(--accent-soft);border-radius:3px;padding:10px 14px;margin:14px 0 4px;font-size:13.5px;color:var(--ink)}
+  .ships b{font-weight:660}
+
+  .files{list-style:none;padding:0;margin:14px 0;font-size:13.5px}
+  .files li{margin:5px 0;padding-left:20px;position:relative;color:var(--muted)}
+  .files li::before{content:"+";position:absolute;left:0;color:var(--good);font-weight:700;font-family:var(--mono)}
+  .files li.re::before{content:"~";color:var(--accent)}
+  .files li.no::before{content:"\2013";color:var(--faint)}
+
+  footer{margin-top:72px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Build plan — the UP assistant</div>
+  <h1>How we build it, in order</h1>
+  <p class="sub">Build on hosted Gemini. Swap in the self-hosted model as the last step before production. Seven phases, each one shippable on its own, sequenced so the risky work is de-risked by the cheap work that came before it.</p>
+  <div class="meta">Revised 19 September 2026 · companion to <strong>AI_ASSISTANT_MODEL_RESEARCH.html</strong> · Next.js 16 frontend + Express/Mongo API · target model at swap: <strong>Qwen3.5-4B</strong> or <strong>Gemma 4 E4B</strong> on Cloud Run L4 · <strong>embedding is a local offline job — production hosts no embedding model</strong></div>
+</header>
+
+<div class="verdict">
+  <h3>The finding that shapes this whole plan: the query language already exists.</h3>
+  <p><code>latest-glowup-channel/src/utils/listFilters.js</code> already defines one shared filter vocabulary across opportunities, events, jobs and resources — <code>country, city, isRemote, isPaid, type, dateFrom, dateTo, dateField</code> — and <code>applyCommonFilters()</code> already turns that object into a tested Mongo query.</p>
+  <p><strong>So the model's job is not "understand the user". It is "fill in this exact object."</strong> We are not inventing a schema for the AI; we are pointing it at a schema our platform has used in production for months. That means no translation layer, no new query code, and — when we move to the self-hosted model — a constrained-decoding grammar we can generate directly from a file that already exists.</p>
+  <p>Second finding, nearly as useful: <code>matchTags()</code> in <code>lib/nlp/taxonomy.ts</code> already maps free text onto our interest taxonomy, deterministically, with no model at all. <strong>Phase 1 therefore ships a working recommender with zero AI in it.</strong> The model is added in Phase 2 to make it conversational — not to make it work.</p>
+</div>
+
+<h2><span class="n">00</span>Three rules that hold for every phase</h2>
+
+<div class="grid c3">
+  <div class="card">
+    <div class="lbl">Rule 1</div>
+    <div class="big">One query</div>
+    <div class="cap">The feed already makes ~240 round trips per request. The assistant gets <strong>one aggregation per turn</strong>. If a code review sees a loop with an <code>await</code> inside it touching Mongo, that is a blocker, not a nit.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Rule 2</div>
+    <div class="big">Model behind a door</div>
+    <div class="cap">Every model call goes through <code>lib/assistant/provider.ts</code>. Nothing else in the codebase imports <code>@google/genai</code>. Phase 6 then changes one file instead of twenty.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Rule 3</div>
+    <div class="big">Log from day one</div>
+    <div class="cap">Every turn records: user text, extracted filter, results shown, action taken. Free to collect, and it is the entire training set if we ever fine-tune. Start in Phase 1, not Phase 6.</div>
+  </div>
+</div>
+
+<div class="flag f-bad">
+  <div class="t">Fix before we copy it: <code>app/api/marketing/ai-generate/route.ts</code> has no auth check</div>
+  <p><code>middleware.ts</code> deliberately excludes <code>/api</code> from its matcher, and that route never validates a session. <strong>Anyone who finds the URL can POST to it and spend our Gemini quota.</strong> It is also the file we are about to use as a template, so the pattern would propagate. Every assistant route validates the BetterAuth session as its first statement, and the marketing route should get the same treatment while we are in there.</p>
+</div>
+
+<h2><span class="n">01</span>Phase 0 — Resource text extraction</h2>
+<p class="lede">Start this first and run it alongside everything else. It is the longest lead-time item and nothing in Job C can begin without it.</p>
+
+<div class="phase gate">
+  <div class="ph"><span class="pn">Phase 0</span><h3>Make the Resource PDFs readable — on a laptop, not in production</h3><span class="est">~4–6 days · parallel track</span></div>
+  <p>Our <code>Resource</code> documents store <code>fileUrl</code>, <code>pdfUrl</code>, <code>pageCount</code> — files, not text. Nothing can be searched or summarised until the text is out of them and chunked.</p>
+
+  <div class="flag f-good">
+    <div class="t">The key decision: embedding is an offline job, not a service</div>
+    <p>The embedding model runs <strong>locally, on one developer machine, through our Vulkan pipeline</strong> (~1.5–1.7x faster than CPU on that box). It writes finished vectors into MongoDB and then it is done. <strong>Production never loads an embedding model, never hosts one, and never pays for one</strong> — it only ever reads numbers that are already sitting in the database.</p>
+    <p>This is exactly what <code>embeddingService.js</code> was designed for when it was written: precomputed vectors on both sides, cosine similarity between two stored arrays. The stub is currently called by nothing and no model has an <code>embedding</code> field yet, so we are filling in a blank, not changing existing behaviour.</p>
+  </div>
+
+  <h4>What runs locally, and never ships</h4>
+  <ul class="files">
+    <li class="no"><strong>EmbeddingGemma-300M GGUF weights</strong> — never committed. Git is bad at large binaries and prod has no use for them.</li>
+    <li class="no"><strong>Vulkan / llama.cpp binary paths and device selection</strong> — machine-specific, stays in <code>.env.local</code> (already gitignored in both repos)</li>
+    <li class="re"><code>node-llama-cpp</code> as a <strong>devDependency only</strong> — it must not enter the Cloud Run image or the Docker build gets heavier for nothing</li>
+  </ul>
+
+  <h4>What does get written</h4>
+  <ul class="files">
+    <li class="re"><code>src/services/embeddingService.js</code> — implement <code>generateEmbedding()</code> against the local Vulkan runner. Guard it: if the runner is absent (i.e. in prod), throw a clear error rather than falling back to something slow and silent.</li>
+    <li><code>scripts/backfill-embeddings.js</code> — follows the existing <code>backfill-*.js</code> convention exactly: <code>--dry-run</code>, <code>--type=</code>, dotenv, documented usage header</li>
+    <li>New collection <code>ResourceChunk</code> — <code>{resourceId, page, text, tags, embedding, embeddingModel, embeddingDims}</code></li>
+    <li><code>embedding</code> fields on <code>Resource</code> and <code>UserProfile</code></li>
+  </ul>
+
+  <div class="flag f-warn">
+    <div class="t">Two things to get right, or this bites us in six months</div>
+    <p><strong>Stamp every vector with the model that made it.</strong> Store <code>embeddingModel</code> and <code>embeddingDims</code> next to each vector. Vectors from different models are meaningless against each other, and if someone re-runs the job later with a different model or setting, the mismatch is completely silent — the maths still works, the results just quietly get worse. The stamp is how we detect that.</p>
+    <p><strong>Commit the script even though the weights stay out.</strong> Every other <code>backfill-*.js</code> in that folder is committed, and they are the record of how our data came to be the way it is. A script that exists only on one laptop means nobody else can re-embed, and when that laptop is unavailable the resource library silently stops being indexable. Keeping the script in git while gitignoring the weights and the local paths gets the full benefit of this design with none of that risk — nothing machine-specific enters the repo and the Docker image is unaffected either way.</p>
+  </div>
+
+  <div class="ships"><b>Ships:</b> semantic search across our own resource library, with zero production infrastructure. Feeds the main recommendation engine too — so this phase earns its keep even if the chat never launches.</div>
+</div>
+
+<h3>The one gap this design leaves, and how we close it</h3>
+<p>Precomputed vectors work perfectly when <em>both</em> sides are precomputed — profile against listing, profile against resource. That covers the feed completely.</p>
+<p>But in Phase 5 the user types a brand-new question. <strong>That question has no stored vector, and with no embedding model in production there is nothing to make one with.</strong> Worth naming now rather than discovering it in Phase 5.</p>
+<p>The fix costs nothing and uses what we already have:</p>
+<ul>
+  <li><strong>Tag the chunks during the same local batch job.</strong> Run <code>matchTags()</code> from <code>lib/nlp/taxonomy.ts</code> over each chunk and store the tag IDs alongside the text.</li>
+  <li><strong>At query time, run <code>matchTags()</code> on the question instead of embedding it.</strong> It is deterministic, instant, needs no model, and returns weighted tags — so it both routes <em>and</em> ranks. Combine with a Mongo text index on the chunk text for the keyword half.</li>
+  <li><strong>If we later want true semantic query matching</strong>, the chat GPU container is already running for Phase 6. EmbeddingGemma-300M is ~300MB and rides along in that same process for near-zero marginal cost. That is not another host — it is a rounding error inside a container that is already up.</li>
+</ul>
+
+<h2><span class="n">02</span>Phase 1 — The retrieval spine, with no AI in it</h2>
+<p class="lede">Prove the hard half works before adding the part everyone finds exciting. If this phase is not good, no model will save it.</p>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 1</span><h3>Filter object in, ranked cards out</h3><span class="est">~4–5 days</span></div>
+  <p>One new backend endpoint that accepts the filter vocabulary we already have and returns candidates in a single aggregation, plus the frontend glue that ranks them with the engine we already have.</p>
+  <h4>Backend</h4>
+  <ul class="files">
+    <li><code>src/routes/assistant.js</code> + <code>src/controllers/assistantController.js</code></li>
+    <li><code>POST /api/assistant/search</code> — body is the filter object; <strong>one aggregation</strong>, capped at ~60 candidates</li>
+    <li class="re">Reuses <code>applyCommonFilters()</code> from <code>utils/listFilters.js</code> unchanged — no new query logic</li>
+  </ul>
+  <h4>Frontend</h4>
+  <ul class="files">
+    <li><code>lib/assistant/extract-rules.ts</code> — deterministic first pass: <code>matchTags()</code> for interests, plus simple date and country parsing</li>
+    <li class="re"><code>lib/ranking/rank.ts</code> — call <code>rankAndAnnotate()</code> exactly as the feed does; the <code>reasons</code> it returns become the assistant's explanations for free</li>
+    <li class="re"><code>lib/i18n/translate.ts</code> + <code>lib/ranking/reasons.ts</code> — reasons come out translated already</li>
+    <li class="re"><code>lib/feature-flags.ts</code> — put the whole assistant behind a flag from the very first commit</li>
+  </ul>
+  <div class="ships"><b>Ships:</b> an internal test page where you paste <code>{"type":"scholarship","country":"NG"}</code> and get back correctly ranked cards with readable reasons. No model, no API key, no cost. <strong>If this is slow or the ranking is wrong, stop here and fix it</strong> — everything downstream inherits both.</div>
+</div>
+
+<h2><span class="n">03</span>Phase 2 — Gemini becomes the mouth</h2>
+<p class="lede">Now add the model, for the two jobs it is actually good at: filling the filter object, and writing the friendly text around results it was handed.</p>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 2</span><h3>The chat endpoint</h3><span class="est">~5–7 days</span></div>
+  <ul class="files">
+    <li><code>lib/assistant/provider.ts</code> — <strong>the swap point.</strong> Exposes <code>extractFilter(text, ctx)</code> and <code>composeReply(results, ctx)</code>. Gemini today, self-hosted later. Nothing else touches the SDK.</li>
+    <li><code>lib/assistant/schema.ts</code> — the filter JSON schema, written to mirror <code>listFilters.js</code> exactly</li>
+    <li><code>app/api/assistant/chat/route.ts</code> — <strong>session check first</strong>, then extract → search → rank → compose, streamed back</li>
+    <li><code>lib/assistant/validate.ts</code> — every extracted value checked against the real taxonomy and country list before it reaches Mongo</li>
+  </ul>
+  <div class="flag f-warn">
+    <div class="t">Do not copy the JSON handling from <code>ai-generate</code></div>
+    <p>That route asks for JSON in the prompt, then scrapes it back with <code>rawText.replace(/^[\s\S]*?\{/, "{")</code> and falls back to an empty object on failure. For a marketing draft, a silent failure is harmless. For an assistant that saves things to a user's account, it is not. <strong>Use Gemini's structured-output / <code>responseSchema</code> mode instead</strong> — it enforces the schema server-side, and it is the direct equivalent of the constrained decoding we switch to in Phase 6. Same guarantee, same shape, both ends.</p>
+  </div>
+  <div class="ships"><b>Ships:</b> a working conversation over the API. Type a sentence, get correct cards and a warm reply. Test with curl before any UI exists.</div>
+</div>
+
+<h2><span class="n">04</span>Phase 3 — The page</h2>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 3</span><h3>Chat UI and act-then-undo</h3><span class="est">~5–7 days</span></div>
+  <ul class="files">
+    <li><code>app/assistant/page.tsx</code> + <code>assistant-client.tsx</code> — follows the existing <code>home-client.tsx</code> split</li>
+    <li><code>components/assistant/</code> — message list, streaming bubble, inline result cards</li>
+    <li class="re">Result cards reuse the existing feed card components. The assistant should look like the platform, not like a bolted-on widget.</li>
+    <li><code>POST /api/assistant/act</code> — save / add-to-tracker / add-to-playlist, each returning an undo token</li>
+    <li class="re"><code>SavedItem.notes</code> already exists — write the reason into it, so a saved item remembers <em>why</em> it was saved</li>
+  </ul>
+  <div class="ships"><b>Ships:</b> the real feature, behind the flag, for the team to use daily. <strong>Dogfood for at least a week before anyone else sees it.</strong></div>
+</div>
+
+<h2><span class="n">05</span>Phase 4 — The memory bank</h2>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 4</span><h3>Remembering, safely</h3><span class="est">~5–6 days</span></div>
+  <ul class="files">
+    <li><code>src/models/AssistantMemory.js</code> — <code>{userId, kind, value, confidence, sourceMessageId, createdAt}</code></li>
+    <li>Write-back into <code>UserProfile</code> for high-confidence facts only</li>
+    <li class="re"><strong>Gate everything on <code>UserPreferences.enablePersonalization</code></strong> — that flag already exists and already means exactly this. If it is off, we store nothing.</li>
+    <li>Liked / skipped tracking, so it stops re-suggesting rejects</li>
+    <li><code>app/assistant/memory/page.tsx</code> — every fact listed, each one deletable</li>
+  </ul>
+  <div class="flag f-warn">
+    <div class="t">Write-back changes the feed, so it needs to be visible</div>
+    <p>A sentence typed in chat will alter what the user sees on the home feed for weeks. That is the point, and it is also the risk. Show a small <strong>"Noted: masters student · undo"</strong> chip the moment a fact is learned, and keep the memory page one tap away. Silent profile edits are the fastest way to lose someone's trust.</p>
+  </div>
+  <div class="ships"><b>Ships:</b> continuity. The assistant stops asking what it already knows.</div>
+</div>
+
+<h2><span class="n">06</span>Phase 5 — Advice from our own library</h2>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 5</span><h3>Job C, unblocked by Phase 0</h3><span class="est">~4–5 days · needs Phase 0</span></div>
+  <ul class="files">
+    <li><code>POST /api/assistant/advice</code> — <strong>no embedding call at runtime</strong>: <code>matchTags()</code> on the question plus a Mongo text index picks the chunks, and the model only writes prose over what came back</li>
+    <li>Router: is this a "find me something" turn or a "how do I" turn? Start with a keyword rule, not a model call.</li>
+    <li>Answers cite the resource and link to it — grounded, and it drives traffic into our own content</li>
+    <li>Explicit fallback: no good chunk found means <strong>"I do not have anything on that yet"</strong>, never an invented answer</li>
+  </ul>
+  <div class="ships"><b>Ships:</b> the assistant stops being only a search box.</div>
+</div>
+
+<h2><span class="n">07</span>Phase 6 — The swap</h2>
+<p class="lede">Everything above ran on hosted Gemini. Now, and only now, we spend money on GPUs — with a working product and real logs to test against.</p>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 6</span><h3>Self-host, test, then cut over</h3><span class="est">~6–8 days</span></div>
+  <ol>
+    <li><strong>Write the 50-question test set</strong> — real questions, multiple languages, from someone who talks to users. Run it against Gemini first to get the baseline we must match.</li>
+    <li><strong>Generate the grammar from <code>listFilters.js</code></strong> so the constrained decoder and the backend filter can never drift apart.</li>
+    <li><strong>Bake off Qwen3.5-4B vs Gemma 4 E4B</strong> on a rented hourly GPU — a few dollars, no commitment. Score both on the 50 questions with constrained decoding on.</li>
+    <li><strong>Build the vLLM container</strong>, weights baked into the image — this is what makes cold starts short enough for scale-to-zero to be affordable.</li>
+    <li><strong>Deploy two Cloud Run services:</strong> CPU always-warm (extract + query + rank), GPU scale-to-zero (compose + advice). <em>No embedding model in either — the vectors are already in Mongo from Phase 0.</em></li>
+    <li><strong>Swap <code>provider.ts</code></strong> — one file. Run the 50 questions again and compare against the Gemini baseline.</li>
+    <li><strong>Shadow-run for a week</strong>: self-hosted model answers alongside Gemini, nobody sees it, we diff the outputs. Cut over when it stops being worse.</li>
+  </ol>
+  <div class="ships"><b>Ships:</b> the production assistant, self-hosted, with a measured quality comparison rather than a hopeful one.</div>
+</div>
+
+<h2><span class="n">08</span>Phase 7 — Before it goes public</h2>
+
+<div class="phase">
+  <div class="ph"><span class="pn">Phase 7</span><h3>Hardening</h3><span class="est">~3–4 days</span></div>
+  <ul class="files">
+    <li>Per-user rate limits, and a hard monthly GPU spend cap with an alert well before it</li>
+    <li>Tune the Cloud Run idle timeout against two weeks of <strong>real</strong> instance-alive hours — not our estimate</li>
+    <li>Prompt-injection guard: listing text is user-submitted, so a provider could write "ignore your instructions" into a description. Treat all listing and resource text as data, never as instruction.</li>
+    <li>Abuse and off-topic handling, plus a visible "this is an assistant, check the official page" line</li>
+    <li class="re">Confirm the flag in <code>lib/feature-flags.ts</code> controls a clean, total rollback</li>
+  </ul>
+</div>
+
+<h2><span class="n">09</span>Sequence and rough calendar</h2>
+<p class="lede">Phase 0 runs in parallel with 1–3 because it blocks only Phase 5. The rest is a chain.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:8%">Phase</th><th style="width:30%">What</th><th style="width:12%">Estimate</th><th style="width:14%">Blocked by</th><th>Can we ship without it?</th></tr></thead>
+  <tbody>
+    <tr><td class="k">0</td><td>Resource text extraction + local embedding <span class="pill p-acc">offline</span></td><td class="num">4–6d</td><td>—</td><td>Yes — only Phase 5 needs it. Start it now anyway; it is the long pole, and it adds nothing to the production bill.</td></tr>
+    <tr><td class="k">1</td><td>Retrieval spine, no AI</td><td class="num">4–5d</td><td>—</td><td><strong>No.</strong> This is the product.</td></tr>
+    <tr><td class="k">2</td><td>Gemini extract + compose</td><td class="num">5–7d</td><td>1</td><td>No.</td></tr>
+    <tr><td class="k">3</td><td>Chat page + act-then-undo</td><td class="num">5–7d</td><td>2</td><td>No.</td></tr>
+    <tr><td class="k">4</td><td>Memory bank</td><td class="num">5–6d</td><td>3</td><td>Yes — v1 can launch without memory.</td></tr>
+    <tr><td class="k">5</td><td>Advice from resources</td><td class="num">4–5d</td><td>0, 3</td><td>Yes — can follow the first launch.</td></tr>
+    <tr><td class="k">6</td><td>Self-host and swap</td><td class="num">6–8d</td><td>3</td><td>Yes, in the sense that Gemini works. This is the cost decision, not the launch decision.</td></tr>
+    <tr><td class="k">7</td><td>Hardening</td><td class="num">3–4d</td><td>6</td><td><strong>No.</strong> Not for a public launch.</td></tr>
+    <tr class="total"><td></td><td>Critical path (1→2→3→6→7)</td><td class="num">23–31d</td><td></td><td>Roughly 5–6 working weeks with Phases 0, 4 and 5 folded into the gaps.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-good">
+  <div class="t">Two natural places to stop and ship</div>
+  <p><strong>After Phase 3</strong> — a complete, useful assistant running on Gemini, behind a flag, for a subset of users. Real feedback, near-zero infrastructure cost, nothing self-hosted yet.</p>
+  <p><strong>After Phase 6</strong> — the same product on our own model and our own bill. Note that the swap is <em>not</em> what makes it launchable. It is what makes it cheap at scale and tunable later. Do not let it block a launch that is otherwise ready.</p>
+</div>
+
+<h2><span class="n">10</span>What we are reusing, and what is genuinely new</h2>
+<p class="lede">The reason this is five weeks and not five months.</p>
+
+<div class="grid c2">
+  <div class="card win">
+    <div class="lbl">Already built — reuse as-is</div>
+    <div class="cap" style="margin-top:2px">
+      <ul style="margin:6px 0;padding-left:18px">
+        <li><code>listFilters.js</code> — the query vocabulary <em>and</em> the model's output schema</li>
+        <li><code>lib/ranking/</code> — scoring plus readable, translated reasons</li>
+        <li><code>lib/nlp/taxonomy.ts</code> — <code>matchTags()</code> does interest extraction with no model</li>
+        <li><code>@google/genai</code> — installed, keyed, working</li>
+        <li><code>SavedItem</code>, <code>ApplicationTracker</code>, <code>UserProfile</code>, <code>UserPreferences</code></li>
+        <li>Feed cards, i18n, feature flags, BetterAuth</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lbl">Actually new work</div>
+    <div class="cap" style="margin-top:2px">
+      <ul style="margin:6px 0;padding-left:18px">
+        <li>PDF extraction and chunking <span class="pill p-warn">long pole</span></li>
+        <li>The embedding implementation (stub exists, body does not) — <strong>local-only, never deployed</strong></li>
+        <li>One assistant endpoint and its single aggregation</li>
+        <li>The provider abstraction and filter schema</li>
+        <li>Chat UI and undo flow</li>
+        <li><code>AssistantMemory</code> and its review screen</li>
+        <li>vLLM container and Cloud Run GPU service</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><strong>UP / Glowup — assistant build plan.</strong> Drafted 16 September 2026, alongside <code>AI_ASSISTANT_MODEL_RESEARCH.html</code>. Estimates are working-day ranges for one experienced developer with AI assistance, and exclude review and QA cycles. The <code>ai-generate</code> auth gap noted in §00 is a live issue in <code>main</code> today, independent of this project.</p>
+</footer>
+
+</div>
+</body>
+</html>

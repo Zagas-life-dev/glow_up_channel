@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>UP — One motion, one color</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/audio-data.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Bricolage Grotesque";
+        src: url("assets/fonts/bricolage-grotesque-latin.woff2") format("woff2");
+        font-weight: 200 800;
+        font-style: normal;
+        font-display: block;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #0b1222;
+      }
+
+      /* The only three values in this film. Navy and orange are sampled from
+         the logo file; white is a contrast utility, never a shape. */
+      #root {
+        --navy: #0b1222;
+        --orange: #ff6700;
+        --card: #121a2b;
+        --hair: rgba(255, 255, 255, 0.09);
+        --mute: rgba(255, 255, 255, 0.55);
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        background: var(--navy);
+        font-family: "Inter", sans-serif;
+        color: #fff;
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ── the ink stage ─────────────────────────────────────────────────── */
+      #ink-stage {
+        display: block;
+      }
+
+      /* ── scene 4: the feed ─────────────────────────────────────────────── */
+      #s-feed {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 70px;
+        gap: 54px;
+      }
+      #tabstrip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+      }
+      .tab {
+        display: block;
+        padding: 15px 26px;
+        border-radius: 999px;
+        border: 1px solid var(--hair);
+        font-size: 27px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--mute);
+        white-space: nowrap;
+      }
+      .tab.is-active {
+        background: var(--orange);
+        border-color: var(--orange);
+        color: var(--navy);
+        font-weight: 700;
+      }
+      #feedcard {
+        width: 100%;
+        background: var(--card);
+        border: 1px solid var(--hair);
+        border-radius: 30px;
+        padding: 42px 44px 38px;
+        display: block;
+      }
+      #card-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--mute);
+        margin-bottom: 26px;
+      }
+      #card-urgent {
+        color: var(--orange);
+        letter-spacing: 0.02em;
+      }
+      #card-title {
+        font-size: 44px;
+        font-weight: 700;
+        line-height: 1.16;
+        letter-spacing: -0.025em;
+        margin-bottom: 22px;
+      }
+      #card-body {
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-size: 27px;
+        line-height: 1.5;
+        color: var(--mute);
+        margin-bottom: 34px;
+      }
+      #card-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 29px;
+        font-weight: 600;
+      }
+      #meta-match {
+        color: var(--orange);
+        font-weight: 700;
+      }
+      #meta-loc {
+        color: var(--mute);
+      }
+      #card-actions {
+        display: flex;
+        gap: 22px;
+        margin-top: 34px;
+      }
+      #card-actions svg {
+        display: block;
+        width: 34px;
+        height: 34px;
+        stroke: rgba(255, 255, 255, 0.34);
+        stroke-width: 1.9;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── scene 5: the number ───────────────────────────────────────────── */
+      #s-number {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+      }
+      #bignum {
+        display: block;
+        font-size: 176px;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        color: var(--orange);
+        line-height: 1;
+      }
+      #numsub {
+        display: block;
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-size: 36px;
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        color: var(--mute);
+      }
+
+      /* ── scene 6: the credit ───────────────────────────────────────────── */
+      #s-credit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: 430px;
+        gap: 0;
+      }
+      #ctaline {
+        display: block;
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #fff;
+      }
+      #urlline {
+        display: block;
+        margin-top: 92px;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--orange);
+      }
+      #creditline {
+        display: block;
+        margin-top: 18px;
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-size: 25px;
+        font-weight: 400;
+        letter-spacing: 0.005em;
+        color: var(--mute);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="18.02"
+      data-width="1080"
+      data-height="1920"
+      data-fps="30"
+    >
+      <!-- ═══ the ink: one continuous substance, 0 → 18.02 ═══════════════ -->
+      <svg
+        id="ink-stage"
+        class="clip"
+        data-start="0"
+        data-duration="18.02"
+        data-track-index="0"
+        viewBox="0 0 1080 1920"
+        width="1080"
+        height="1920"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <!-- metaball contrast-alpha filter: blurred shapes snap back to hard
+               edges, so separate masses merge with real surface tension -->
+          <filter id="goo" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="22" result="b" />
+            <feColorMatrix
+              in="b"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -13"
+            />
+          </filter>
+          <filter id="goo-soft" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b" />
+            <feColorMatrix
+              in="b"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -12"
+            />
+          </filter>
+
+          <!-- the lockup is revealed by liquid masses closing in from both
+               edges; when they meet over the centre the PNG's own navy arrow
+               paints over the standing orange one, and the mark inverts -->
+          <mask id="lockup-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920">
+            <g filter="url(#goo-soft)" fill="#fff">
+              <rect id="mask-l" x="-460" y="700" width="420" height="520" />
+              <rect id="mask-r" x="1120" y="700" width="420" height="520" />
+              <ellipse id="mask-le" cx="-40" cy="960" rx="86" ry="150" />
+              <ellipse id="mask-re" cx="1120" cy="960" rx="86" ry="150" />
+            </g>
+          </mask>
+        </defs>
+
+        <!-- the pool (scenes 1-2) -->
+        <g id="goo-layer" filter="url(#goo)" fill="#ff6700">
+          <ellipse id="drop" cx="540" cy="300" rx="26" ry="34" opacity="0" />
+          <ellipse id="sat1" cx="540" cy="960" rx="0" ry="0" />
+          <ellipse id="sat2" cx="540" cy="960" rx="0" ry="0" />
+          <ellipse id="sat3" cx="540" cy="960" rx="0" ry="0" />
+          <ellipse id="sat4" cx="540" cy="960" rx="0" ry="0" />
+          <ellipse id="head" cx="550" cy="960" rx="0" ry="0" />
+        </g>
+
+        <!-- the arrow, traced from the real logo: head 0.375 of mark height,
+             base half-width 0.2428, shaft half-width 0.0849 -->
+        <path
+          id="arrow"
+          d="M 550.2 756 L 649.3 909 L 584.8 909 L 584.8 1163.9 L 515.5 1163.9 L 515.5 909 L 451.1 909 Z"
+          fill="#ff6700"
+          opacity="0"
+        />
+
+        <!-- the real logo file; its field is already #0B1222 so it composites
+             onto this canvas with no matte -->
+        <image
+          id="lockup"
+          href="assets/brand/up-logo-dark.png"
+          x="-54.1"
+          y="354.2"
+          width="1174"
+          height="1174"
+          mask="url(#lockup-mask)"
+          data-layout-allow-overflow="true"
+        />
+
+        <!-- the number's drop (scene 5) -->
+        <g id="goo2" filter="url(#goo)" fill="#ff6700" opacity="0">
+          <ellipse id="drop2" cx="540" cy="700" rx="30" ry="40" />
+          <ellipse id="drop2b" cx="540" cy="960" rx="0" ry="0" />
+        </g>
+      </svg>
+
+      <!-- ═══ scene 4 — the feed ════════════════════════════════════════ -->
+      <section id="s-feed" class="clip" data-start="7.64" data-duration="3.82" data-track-index="1">
+        <div id="tabstrip">
+          <span class="tab is-active">For You</span>
+          <span class="tab">Opportunities</span>
+          <span class="tab">Jobs</span>
+          <span class="tab">Events</span>
+          <span class="tab">Resources</span>
+        </div>
+
+        <div id="feedcard">
+          <div id="card-eyebrow">
+            <span>OPPORTUNITY</span>
+            <span id="card-urgent">· 3 days left</span>
+          </div>
+          <div id="card-title">Fully Funded Scholarship — Tuition &amp; Stipend</div>
+          <div id="card-body">Tuition, housing and monthly stipend.</div>
+          <div id="card-meta">
+            <span id="meta-match">94% match</span>
+            <span id="meta-loc">· Lagos, Nigeria</span>
+          </div>
+          <div id="card-actions">
+            <!-- the card's real action row: save, bookmark, share — idle -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.8 8.6c0 4.9-8.8 9.7-8.8 9.7s-8.8-4.8-8.8-9.7a4.4 4.4 0 0 1 8.8-1.3 4.4 4.4 0 0 1 8.8 1.3Z" />
+            </svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 20.5 12 16.4 6 20.5V5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 18 5Z" />
+            </svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5.6" r="2.6" />
+              <circle cx="6" cy="12" r="2.6" />
+              <circle cx="18" cy="18.4" r="2.6" />
+              <path d="m8.3 10.7 7.4-3.9M8.3 13.3l7.4 3.9" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ scene 5 — the number ═════════════════════════════════════ -->
+      <section
+        id="s-number"
+        class="clip"
+        data-start="11.46"
+        data-duration="3.27"
+        data-track-index="2"
+      >
+        <span id="bignum">22,000+</span>
+        <span id="numsub">10k+ active · 22k+ community</span>
+      </section>
+
+      <!-- ═══ scene 6 — the credit ═════════════════════════════════════ -->
+      <section
+        id="s-credit"
+        class="clip"
+        data-start="14.73"
+        data-duration="3.29"
+        data-track-index="3"
+      >
+        <span id="ctaline">Get access. Get UP.</span>
+        <span id="urlline">glowupchannel.com</span>
+        <span id="creditline">UP is a product by Outside Solutions</span>
+      </section>
+
+      <!-- ═══ audio ════════════════════════════════════════════════════ -->
+      <audio
+        id="music"
+        src="assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3"
+        data-start="0"
+        data-duration="18.02"
+        data-track-index="10"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.6,"v":0.32},{"t":16.38,"v":0.32},{"t":17.1,"v":0.14},{"t":18.02,"v":0}]}]}'
+      ></audio>
+
+      <!-- the ink lands -->
+      <audio
+        id="sfx-drop"
+        src="assets/sfx/interface/drop_001.ogg"
+        data-start="0.56"
+        data-duration="0.11"
+        data-track-index="11"
+        data-volume="0.6"
+      ></audio>
+      <!-- the arrow locks -->
+      <audio
+        id="sfx-lock"
+        src="assets/sfx/impact/impactSoft_medium_001.ogg"
+        data-start="3.82"
+        data-duration="0.18"
+        data-track-index="12"
+        data-volume="0.55"
+      ></audio>
+      <!-- the wordmark locks and the arrow inverts -->
+      <audio
+        id="sfx-brand"
+        src="assets/sfx/impact/impactBell_heavy_000.ogg"
+        data-start="6.56"
+        data-duration="1.48"
+        data-track-index="13"
+        data-volume="0.7"
+      ></audio>
+      <!-- the ranked card arrives -->
+      <audio
+        id="sfx-card"
+        src="assets/sfx/casino/card-slide-1.ogg"
+        data-start="9.29"
+        data-duration="0.6"
+        data-track-index="14"
+        data-volume="0.6"
+      ></audio>
+      <!-- the number lands: the opening drop, heavier -->
+      <audio
+        id="sfx-num"
+        src="assets/sfx/interface/drop_002.ogg"
+        data-start="12.55"
+        data-duration="0.19"
+        data-track-index="15"
+        data-volume="0.5"
+      ></audio>
+      <!-- the condense; allowed to ring past the music fade -->
+      <audio
+        id="sfx-close"
+        src="assets/sfx/impact/impactBell_heavy_003.ogg"
+        data-start="14.73"
+        data-duration="0.65"
+        data-track-index="16"
+        data-volume="0.65"
+      ></audio>
+    </div>
+
+    <script>
+      (function () {
+        var ARROW_CX = 550.2;
+        var ARROW_CY = 960;
+        var ORIGIN = ARROW_CX + "px " + ARROW_CY + "px";
+        // GSAP measures transformOrigin on an SVG element from that element's own
+        // bounding box, so px values there are NOT user-space coordinates.
+        // svgOrigin is the user-space one: the arrow and the lockup have to
+        // scale about the frame point the ink pool climbs to, or they drift
+        // up-left of the liquid they are supposed to be a continuation of.
+        var SVG_ORIGIN = ARROW_CX + " " + ARROW_CY;
+
+        function build() {
+          var tl = gsap.timeline({ paused: true });
+
+          /* ── initial state (set here, never in CSS, so GSAP owns every
+                transform it later tweens) ───────────────────────────────── */
+          gsap.set(["#arrow", "#lockup", "#goo-layer"], { svgOrigin: SVG_ORIGIN });
+          gsap.set("#bignum", { transformOrigin: "50% 100%" });
+          gsap.set("#s-number", { transformOrigin: ORIGIN });
+          // immediate, outside the timeline: a zero-duration set at position 0
+          // does not render while the playhead sits exactly at 0
+          gsap.set("#arrow", { opacity: 0, scale: 1.42 });
+          gsap.set(["#s-feed", "#s-number", "#s-credit"], { opacity: 0 });
+          gsap.set(["#ctaline", "#urlline", "#creditline"], { opacity: 0 });
+
+          // Every deferred fromTo below carries immediateRender:false, so GSAP
+          // does NOT stamp its from-values at authoring time. Each of those
+          // elements therefore needs its resting state set here, or it sits
+          // fully visible until its own tween starts.
+          gsap.set("#tabstrip .tab", { opacity: 0, y: -46 });
+          gsap.set("#feedcard", { opacity: 0, y: 86 });
+          gsap.set(["#card-meta", "#card-actions"], { opacity: 0 });
+          gsap.set("#meta-match", { y: 14 });
+          gsap.set("#bignum", { opacity: 0, scaleY: 0.5, y: 36 });
+          gsap.set("#numsub", { opacity: 0, y: 22 });
+          gsap.set("#ctaline", { y: 20 });
+          gsap.set("#urlline", { y: 16 });
+          gsap.set("#creditline", { y: 14 });
+
+          /* ═══ SCENE 1 — the ink drop (0.00 → 2.19) ═══════════════════ */
+          // the drop falls and lands dead centre
+          tl.to("#drop", { attr: { cy: ARROW_CY }, duration: 0.3, ease: "power2.in" }, 0.26)
+            .to("#drop", { opacity: 1, duration: 0.08 }, 0.3)
+            // squash on contact, then settle — surface tension, not a scale
+            .to("#drop", { attr: { rx: 74, ry: 17 }, duration: 0.13, ease: "power3.out" }, 0.56)
+            .to("#drop", { attr: { rx: 52, ry: 46 }, duration: 0.22, ease: "power2.inOut" }, 0.7)
+            // the pool spreads, still widening at the cut
+            .to("#drop", { attr: { rx: 168, ry: 142 }, duration: 1.245, ease: "power1.out" }, 0.945);
+
+          // four satellites push out on their own timing, so the meniscus is
+          // uneven the way a real spread is
+          var sats = [
+            { el: "#sat1", cx: 382, cy: 886, rx: 74, ry: 64, at: 0.86 },
+            { el: "#sat2", cx: 700, cy: 900, rx: 82, ry: 70, at: 0.98 },
+            { el: "#sat3", cx: 448, cy: 1046, rx: 66, ry: 58, at: 1.12 },
+            { el: "#sat4", cx: 654, cy: 1042, rx: 70, ry: 60, at: 1.04 },
+          ];
+          sats.forEach(function (s) {
+            tl.to(
+              s.el,
+              {
+                attr: { cx: s.cx, cy: s.cy, rx: s.rx, ry: s.ry },
+                duration: 0.92,
+                ease: "power2.out",
+              },
+              s.at,
+            );
+          });
+
+          /* ═══ SCENE 2 — the arrow (2.19 → 4.39) ══════════════════════ */
+          // the spread arrests and the mass pulls upward against itself
+          tl.to(
+            "#drop",
+            { attr: { cy: 1000, rx: 104, ry: 176 }, duration: 0.72, ease: "power2.inOut" },
+            2.19,
+          )
+            .to(
+              "#drop",
+              { attr: { cy: 1020, rx: 44, ry: 158 }, duration: 0.52, ease: "power2.inOut" },
+              2.91,
+            )
+            // a head gathers above the column: the arrow declaring itself
+            .to(
+              "#head",
+              { attr: { cx: ARROW_CX, cy: 880, rx: 104, ry: 84 }, duration: 0.6, ease: "power2.out" },
+              2.62,
+            );
+
+          // the satellites are drawn back in and up as the mass climbs
+          sats.forEach(function (s, i) {
+            tl.to(
+              s.el,
+              {
+                attr: { cx: ARROW_CX, cy: 930 - i * 8, rx: 0, ry: 0 },
+                duration: 0.66,
+                ease: "power2.in",
+              },
+              2.19 + i * 0.04,
+            );
+          });
+
+          // edges harden: the liquid hands off to the real arrow geometry
+          tl.to("#goo-layer", { opacity: 0, duration: 0.28, ease: "power2.in" }, 3.49)
+            .fromTo(
+              "#arrow",
+              { opacity: 0, scale: 1.3 },
+              { opacity: 1, scale: 1.42, duration: 0.3, ease: "power3.out", immediateRender: false },
+              3.52, // beat-grid: 3.82 (lock)
+            );
+
+          /* ═══ SCENE 3 — the wordmark (4.39 → 7.64) ═══════════════════ */
+          // the arrow stands alone, then gives up scale to make room
+          tl.to("#arrow", { scale: 1, duration: 0.6, ease: "power2.inOut" }, 4.39);
+
+          // orange floods in from both edges as the U and the P
+          tl.to("#mask-l", { attr: { x: -60 }, duration: 1.16, ease: "power2.inOut" }, 5.34)
+            .to("#mask-r", { attr: { x: 720 }, duration: 1.16, ease: "power2.inOut" }, 5.34)
+            .to("#mask-le", { attr: { cx: 300 }, duration: 1.16, ease: "power2.inOut" }, 5.34)
+            .to("#mask-re", { attr: { cx: 780 }, duration: 1.16, ease: "power2.inOut" }, 5.34);
+
+          // 6.56 — beat-grid: the masses meet over the
+          // centre, the PNG's navy arrow paints over the orange one, and the
+          // mark inverts. The masks overshoot to full width so the lockup is
+          // whole.
+          tl.to("#mask-l", { attr: { x: -60, width: 1200 }, duration: 0.16, ease: "power3.out" }, 6.56) // beat-grid: 6.56
+            .to("#mask-r", { attr: { x: -60, width: 1200 }, duration: 0.16, ease: "power3.out" }, 6.56) // beat-grid: 6.56
+            .to("#mask-le", { attr: { rx: 0, ry: 0 }, duration: 0.16 }, 6.56)
+            .to("#mask-re", { attr: { rx: 0, ry: 0 }, duration: 0.16 }, 6.56)
+            // the orange arrow is now redundant — the logo carries its own
+            .set("#arrow", { opacity: 0 }, 6.7)
+            // the lockup settles
+            .fromTo(
+              "#lockup",
+              { scale: 1.035 },
+              { scale: 1, duration: 0.46, ease: "power3.out", immediateRender: false },
+              6.56,
+            );
+
+          /* ═══ SCENE 4 — the feed (7.64 → 11.46) ══════════════════════ */
+          // the lockup drains downward and what it pours into is the product
+          tl.to(
+            ["#mask-l", "#mask-r"],
+            { attr: { y: 1230, height: 0 }, duration: 0.55, ease: "power2.in" },
+            7.64,
+          );
+          // two masses ride the receding top edge so the lockup drains away as
+          // liquid rather than being sliced off by a straight wipe
+          tl.fromTo(
+            "#mask-le",
+            { attr: { cx: 392, cy: 706, rx: 138, ry: 62 } },
+            {
+              attr: { cy: 1236, rx: 96, ry: 40 },
+              duration: 0.55,
+              ease: "power2.in",
+              immediateRender: false,
+            },
+            7.64,
+          )
+            .fromTo(
+              "#mask-re",
+              { attr: { cx: 716, cy: 690, rx: 120, ry: 54 } },
+              {
+                attr: { cy: 1220, rx: 84, ry: 34 },
+                duration: 0.55,
+                ease: "power2.in",
+                immediateRender: false,
+              },
+              7.64,
+            )
+            // clear them so scene 6's re-reveal starts from the rects alone
+            .set(["#mask-le", "#mask-re"], { attr: { rx: 0, ry: 0 } }, 8.25);
+
+          tl.to("#s-feed", { opacity: 1, duration: 0.01 }, 7.64);
+
+          // the five real tabs pour in as one gesture, then hold as a set
+          tl.fromTo(
+            "#tabstrip .tab",
+            { opacity: 0, y: -46 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.42,
+              ease: "power3.out",
+              stagger: 0.12,
+              immediateRender: false,
+            },
+            8.19, // beat-grid: 8.19
+          );
+
+          // 9.29 — beat-locked (strongCue 0.971): the ranked card arrives
+          tl.fromTo(
+            "#feedcard",
+            { opacity: 0, y: 86 },
+            { opacity: 1, y: 0, duration: 0.54, ease: "power3.out", immediateRender: false },
+            9.29, // beat-locked: 9.29
+          );
+          tl.fromTo(
+            ["#card-meta", "#card-actions"],
+            { opacity: 0 },
+            { opacity: 1, duration: 0.34, ease: "power2.out", immediateRender: false },
+            10.37, // beat-grid: 10.37
+          );
+          tl.fromTo(
+            "#meta-match",
+            { y: 14 },
+            { y: 0, duration: 0.34, ease: "power3.out", immediateRender: false },
+            10.37, // beat-grid: 10.37
+          );
+
+          // the feed dissolves back into ink
+          tl.to("#s-feed", { opacity: 0, duration: 0.3, ease: "power2.in" }, 11.16);
+
+          /* ═══ SCENE 5 — the number (11.46 → 14.73) ═══════════════════ */
+          tl.set("#s-number", { opacity: 1 }, 11.46)
+            .set("#goo2", { opacity: 1 }, 12.14)
+            .fromTo(
+              "#drop2",
+              { attr: { cy: 640, rx: 30, ry: 40 } },
+              { attr: { cy: 900, rx: 34, ry: 36 }, duration: 0.38, ease: "power2.in", immediateRender: false },
+              12.17,
+            )
+            // it lands and flattens with the opening drop's exact gesture
+            .to("#drop2", { attr: { rx: 210, ry: 26 }, duration: 0.16, ease: "power3.out" }, 12.55) // beat-locked: 12.55
+            .to("#drop2", { attr: { rx: 250, ry: 8 }, duration: 0.34, ease: "power2.out" }, 12.71)
+            .to("#goo2", { opacity: 0, duration: 0.3, ease: "power2.in" }, 12.88);
+
+          // the figure resolves out of the settling liquid
+          tl.fromTo(
+            "#bignum",
+            { opacity: 0, scaleY: 0.5, y: 36 },
+            { opacity: 1, scaleY: 1, y: 0, duration: 0.42, ease: "power3.out", immediateRender: false },
+            12.55, // beat-locked: 12.55
+          );
+
+          tl.fromTo(
+            "#numsub",
+            { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", immediateRender: false },
+            13.11, // beat-grid: 13.11
+          );
+
+          /* ═══ SCENE 6 — the credit (14.73 → 18.02) ═══════════════════ */
+          // 14.73 — beat-grid: everything is drawn inward
+          // and condenses into the arrow it started as
+          tl.to(
+            "#s-number",
+            { opacity: 0, scale: 0.42, duration: 0.42, ease: "power3.in" },
+            14.73, // beat-grid: 14.73
+          );
+
+          tl.fromTo(
+            "#arrow",
+            { opacity: 0, scale: 0.3 },
+            { opacity: 1, scale: 1, duration: 0.46, ease: "power3.out", immediateRender: false },
+            14.73, // beat-grid: 14.73
+          );
+
+          // the mark resolves back into the full lockup
+          tl.set("#s-credit", { opacity: 1 }, 14.73)
+            .fromTo(
+              ["#mask-l", "#mask-r"],
+              { attr: { x: 460, y: 940, width: 160, height: 40 } },
+              {
+                attr: { x: -60, y: 700, width: 1200, height: 520 },
+                duration: 0.46,
+                ease: "power3.out",
+                immediateRender: false,
+              },
+              15.29, // beat-grid: 15.29
+            )
+            .set("#arrow", { opacity: 0 }, 15.57)
+            .fromTo("#ctaline", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.42, immediateRender: false }, 15.84) // beat-locked: 15.84
+            .fromTo("#urlline", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, immediateRender: false }, 16.38) // beat-grid: 16.38
+            .fromTo("#creditline", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, immediateRender: false }, 16.48);
+
+          /* ── audio-reactive: the ink breathes ───────────────────────────
+             Per-frame sampling of a deterministic envelope derived from the
+             track's own per-beat analysis. It touches only the orange mark's
+             glow and the pool's presence — never text, never scale on copy. */
+          var A = window.AUDIO_DATA;
+          if (A && A.frames) {
+            var arrowEl = document.getElementById("arrow");
+            var poolEl = document.getElementById("goo-layer");
+            var maxF = Math.min(A.totalFrames, Math.round(18.02 * A.fps));
+            for (var f = 0; f < maxF; f++) {
+              tl.call(
+                (function (fr) {
+                  return function () {
+                    var rms = fr[0];
+                    var bass = fr[1];
+                    arrowEl.style.filter =
+                      "drop-shadow(0 0 " +
+                      (16 + bass * 30).toFixed(1) +
+                      "px rgba(255,103,0," +
+                      (0.16 + bass * 0.26).toFixed(3) +
+                      "))";
+                    poolEl.style.filter =
+                      "url(#goo) drop-shadow(0 0 " +
+                      (10 + rms * 26).toFixed(1) +
+                      "px rgba(255,103,0," +
+                      (0.1 + rms * 0.2).toFixed(3) +
+                      "))";
+                  };
+                })(A.frames[f]),
+                [],
+                f / A.fps,
+              );
+            }
+          }
+
+          window.__timelines["main"] = tl;
+        }
+
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(build);
+        } else {
+          build();
+        }
+      })();
+    </script>
+  </body>
+</html>

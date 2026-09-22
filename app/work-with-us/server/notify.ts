@@ -1,7 +1,7 @@
 import { sendBasicEmail } from "@/lib/email/service"
 
 import { naira } from "../config"
-import type { ItemDoc, OrderDoc } from "./db"
+import type { ItemDoc, OrderDoc } from "./api"
 
 function escape(value: string): string {
   return value

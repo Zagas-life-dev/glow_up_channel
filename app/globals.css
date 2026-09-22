@@ -143,8 +143,9 @@
     padding-top: env(safe-area-inset-top, 0);
   }
 
-  /* Brand typography (Master Copy Library §1.2): Inter carries headlines and
-     CTAs, Bricolage Grotesque carries body copy. Opt-in per surface. */
+  /* Brand typography (landing redesign, docs/main-html): Unbounded carries
+     headings, figures and the wordmark, Plus Jakarta Sans carries everything
+     else. Opt-in per surface. */
   .font-up-display {
     font-family: var(--font-up-display), ui-sans-serif, system-ui, sans-serif;
   }

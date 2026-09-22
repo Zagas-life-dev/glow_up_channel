@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP / Glowup — Picking a Model for the Assistant</title>
+<style>
+  :root{
+    --bg:#faf9f7; --panel:#ffffff; --ink:#16150f; --muted:#5c5a51; --faint:#8a8779;
+    --line:#e4e1d8; --accent:#a8880a; --accent-soft:#fdf6d9;
+    --good:#1d7a4d; --good-soft:#e6f4ec;
+    --warn:#a8630a; --warn-soft:#fdf0dc;
+    --bad:#a8352a; --bad-soft:#fbe9e7;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+      --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+      --good:#5ec98d; --good-soft:#132c1f;
+      --warn:#e0a24a; --warn-soft:#2e2211;
+      --bad:#f08a7d; --bad-soft:#2e1714;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14140f; --panel:#1c1c16; --ink:#f0eee6; --muted:#a3a094; --faint:#7a776c;
+    --line:#2e2e25; --accent:#e6c53f; --accent-soft:#2c2711;
+    --good:#5ec98d; --good-soft:#132c1f;
+    --warn:#e0a24a; --warn-soft:#2e2211;
+    --bad:#f08a7d; --bad-soft:#2e1714;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.62 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px}
+  header.top{border-bottom:3px solid var(--ink);padding-bottom:26px;margin-bottom:44px}
+  .kicker{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 12px;letter-spacing:-.022em;font-weight:680}
+  .sub{color:var(--muted);font-size:17px;max-width:66ch;margin:0}
+  .meta{margin-top:20px;font:12px/1.6 var(--mono);color:var(--faint)}
+
+  h2{font-size:24px;margin:60px 0 6px;letter-spacing:-.015em;font-weight:660}
+  h2 .n{font:600 12px/1 var(--mono);color:var(--accent);display:block;margin-bottom:9px;letter-spacing:.1em}
+  h3{font-size:17px;margin:32px 0 10px;font-weight:640;letter-spacing:-.01em}
+  p{margin:12px 0;color:var(--muted)}
+  p strong,li strong,td strong{color:var(--ink);font-weight:620}
+  .lede{font-size:17px;color:var(--ink);max-width:70ch}
+
+  .verdict{
+    background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:4px;padding:26px 28px;margin:30px 0;
+  }
+  .verdict h3{margin:0 0 10px;font-size:19px}
+  .verdict p{margin:8px 0}
+  .verdict p:last-child{margin-bottom:0}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0}
+  .scroll table{min-width:660px}
+  th{
+    text-align:left;font:600 10.5px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);padding:0 12px 9px;border-bottom:1.5px solid var(--line);vertical-align:bottom;
+  }
+  td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+  td:first-child,th:first-child{padding-left:0}
+  td:last-child,th:last-child{padding-right:0}
+  td.k{color:var(--ink);font-weight:600}
+  td.num{font:500 14px/1.5 var(--mono);white-space:nowrap;color:var(--ink)}
+  tr.total td{border-top:2px solid var(--ink);border-bottom:none;padding-top:15px;color:var(--ink);font-weight:660}
+  .rank{font:660 13px/1 var(--mono);color:var(--accent)}
+
+  .pill{display:inline-block;font:600 10.5px/1 var(--mono);padding:5px 9px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-good{background:var(--good-soft);color:var(--good)}
+  .p-warn{background:var(--warn-soft);color:var(--warn)}
+  .p-bad{background:var(--bad-soft);color:var(--bad)}
+  .p-acc{background:var(--accent-soft);color:var(--accent)}
+
+  .grid{display:grid;gap:14px;margin:24px 0}
+  @media(min-width:720px){.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  .card.hot{border-color:var(--bad);border-width:1.5px}
+  .card.win{border-color:var(--good);border-width:1.5px}
+  .card .lbl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .card .big{font-size:27px;font-weight:680;letter-spacing:-.02em;color:var(--ink);line-height:1.12}
+  .card .cap{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  ul,ol{color:var(--muted);padding-left:22px;margin:12px 0}
+  li{margin:7px 0}
+  code{font:0.88em var(--mono);background:var(--accent-soft);color:var(--ink);padding:2px 6px;border-radius:3px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px 18px;overflow-x:auto;font:13px/1.6 var(--mono);color:var(--ink);margin:18px 0}
+  pre code{background:none;padding:0}
+
+  .flag{border-left:4px solid;padding:15px 18px;border-radius:0 4px 4px 0;margin:18px 0;background:var(--panel)}
+  .flag .t{font-weight:660;color:var(--ink);margin-bottom:5px;font-size:15px}
+  .flag p{margin:5px 0;font-size:14.5px}
+  .f-bad{border-color:var(--bad)} .f-warn{border-color:var(--warn)} .f-good{border-color:var(--good)}
+
+  .lev{display:flex;align-items:center;gap:8px}
+  .lev i{display:block;height:7px;border-radius:4px;background:var(--line);flex:1;max-width:64px;overflow:hidden;position:relative}
+  .lev i::after{content:"";position:absolute;inset:0 auto 0 0;background:currentColor;border-radius:4px}
+  .lev.l3{color:var(--good)} .lev.l3 i::after{width:92%}
+  .lev.l2{color:var(--warn)} .lev.l2 i::after{width:52%}
+  .lev.l1{color:var(--bad)}  .lev.l1 i::after{width:18%}
+  .lev span{font:600 10.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase}
+
+  .tl{margin:24px 0;border-left:2px solid var(--line);padding-left:0}
+  .tl .wk{position:relative;padding:0 0 22px 26px}
+  .tl .wk::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
+  .tl .wk.blocked::before{background:var(--bad)}
+  .tl .wk .wl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+  .tl .wk .wt{font-weight:640;color:var(--ink);font-size:15.5px;margin-bottom:3px}
+  .tl .wk p{margin:3px 0;font-size:14px}
+
+  footer{margin-top:72px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--faint)}
+  footer a{color:var(--muted)}
+  footer ul{font-size:12.5px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Model research — the UP assistant</div>
+  <h1>Which small model should run the chat?</h1>
+  <p class="sub">Ten models compared for one specific job: a friendly assistant that finds opportunities in our own database, explains why they fit, and saves them for the user. Self-hosted, on a startup budget.</p>
+  <div class="meta">16 September 2026 · for the Glowup/UP team · decisions already taken: <strong>self-host</strong> · <strong>Cloud Run + L4 GPU</strong> · <strong>act-then-undo</strong> · <strong>advice from our own Resource library</strong></div>
+</header>
+
+<div class="verdict">
+  <h3>Short version — Qwen3.5-4B. Budget about $80/month. And the model is not the risky part.</h3>
+  <p><strong>Pick Qwen3.5-4B.</strong> It is Apache 2.0, free to use commercially, and it wins on the one number that actually predicts success here: instruction-following. It scores <strong>89.8% on IFEval</strong> — higher than GPT-OSS-120B, a model thirty times its size. Our assistant mostly needs to follow format rules and stay inside the facts we hand it. That is an instruction-following job, not a genius job.</p>
+  <p><strong>Gemma 4 E4B is a very close second</strong> and nobody would be wrong to take it instead. It went Apache 2.0 in April, it is a Google model running on Google Cloud, and it has native tool-calling built in. If deployment friction turns out to be the real problem, switch. Keep the prompts model-agnostic so that stays a one-line change.</p>
+  <p><strong>The real risk is not model quality — it is small models producing broken JSON.</strong> Measured parse rates on comparable models range from <strong>26% to 96%</strong>. That is the difference between a product and a toy. The fix is free and takes an afternoon: constrained decoding (§05). Do not skip it.</p>
+  <p><strong>And the real cost driver is not tokens — it is how long the GPU stays awake.</strong> Cloud Run bills per second of instance life, not per word generated. Bursty evening traffic costs ~$80/month. The exact same number of chats spread thinly across the day costs <strong>~$320/month</strong>. Same users, four times the bill (§04).</p>
+</div>
+
+<h2><span class="n">01</span>What the model actually has to do</h2>
+<p class="lede">Before comparing models, be clear about the job. Most teams over-buy here because they imagine the model doing everything. Ours does three narrow things, and only one of them is hard.</p>
+
+<div class="grid c3">
+  <div class="card">
+    <div class="lbl">Job A · every turn</div>
+    <div class="big">Fill a form</div>
+    <div class="cap">"I need scholarships to apply for" becomes <code>{type:"scholarship", country:"NG", educationLevel:"masters"}</code>. Pure translation. A 2B model does this well. <strong>Easy.</strong></div>
+  </div>
+  <div class="card">
+    <div class="lbl">Job B · every turn</div>
+    <div class="big">Talk about results</div>
+    <div class="cap">Our existing ranker in <code>lib/ranking/</code> already picked the top five and already produced the reasons. The model just writes friendly sentences around facts it was handed. <strong>Medium.</strong></div>
+  </div>
+  <div class="card hot">
+    <div class="lbl">Job C · sometimes</div>
+    <div class="big">Give advice</div>
+    <div class="cap">"How do I approach this essay?" — answered from our own PDF resources, not from the model's memory. Needs real reading comprehension. <strong>This is the job that sets the size.</strong></div>
+  </div>
+</div>
+
+<p>Two things follow from this, and they save us a lot of money.</p>
+<ul>
+  <li><strong>The model never searches and never ranks.</strong> MongoDB searches. <code>lib/ranking/</code> ranks. The model only ever sees results that were already chosen. It physically cannot invent a scholarship, because it never sees anything except the handful of cards we pass it.</li>
+  <li><strong>The model never needs world knowledge.</strong> Everything factual comes from our database or our own resource PDFs. So all the benchmarks about trivia, history and general knowledge — the ones that make big models look necessary — simply do not apply to us.</li>
+</ul>
+
+<div class="flag f-good">
+  <div class="t">Why this means a 4B model is genuinely enough</div>
+  <p>A small model's main weaknesses are that it knows less about the world and reasons less deeply. We have designed both weaknesses out of the job. What is left — following a format, staying on topic, being warm, summarising a passage we handed it — is exactly what small models became good at this year.</p>
+</div>
+
+<h2><span class="n">02</span>The top ten, ranked for this job</h2>
+<p class="lede">Ranked for <em>our</em> use, not in general. A model that tops coding leaderboards is irrelevant here; a model that reliably emits clean JSON in Portuguese is gold. Everything listed fits on a single L4 (24GB) with room to spare.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:4%">#</th><th style="width:18%">Model</th><th style="width:12%">Size</th><th style="width:10%">Licence</th><th style="width:8%">Context</th><th style="width:12%">Fit for us</th><th>Why this position</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="rank">01</td>
+      <td class="k">Qwen3.5-4B <span class="pill p-good">Pick</span></td>
+      <td class="num">4B</td>
+      <td>Apache 2.0</td>
+      <td class="num">262K</td>
+      <td><span class="lev l3"><i></i><span>Excellent</span></span></td>
+      <td><strong>IFEval 89.8%</strong> — beats GPT-OSS-120B (88.9%), a model 30x bigger. Reported strong on tool-invocation benchmarks, and it matches a previous-generation 30B model on agent tasks. Its hybrid architecture gives higher throughput and lower latency, which on per-second billing is money straight off the bill. Huge context for stuffing resource chunks plus the memory bank. Multilingual, which our i18n setup needs.</td>
+    </tr>
+    <tr>
+      <td class="rank">02</td>
+      <td class="k">Gemma 4 E4B</td>
+      <td class="num">8B total<br>4.5B effective</td>
+      <td>Apache 2.0</td>
+      <td class="num">128K</td>
+      <td><span class="lev l3"><i></i><span>Excellent</span></span></td>
+      <td>Native structured tool use, built for agent workflows. Apache 2.0 since April 2026 — the old restrictive licence is gone, which matters if we ever commercialise. A Google model on Google Cloud is worth real deployment hours. Pretrained on 140+ languages, 35+ supported out of the box. Shorter context and no IFEval figure we could verify, so it sits second by a nose.</td>
+    </tr>
+    <tr>
+      <td class="rank">03</td>
+      <td class="k">Qwen3.5-9B</td>
+      <td class="num">9B</td>
+      <td>Apache 2.0</td>
+      <td class="num">262K</td>
+      <td><span class="lev l3"><i></i><span>Excellent</span></span></td>
+      <td>The upgrade path, not the starting point. Intelligence Index 32 against the 4B's 27, and reported to match models ten times its size while still fitting one consumer GPU. Take this only if Job C disappoints at 4B. It burns more GPU-seconds per reply, so switch deliberately rather than by default.</td>
+    </tr>
+    <tr>
+      <td class="rank">04</td>
+      <td class="k">Gemma 4 E2B</td>
+      <td class="num">5.1B total<br>2.3B effective</td>
+      <td>Apache 2.0</td>
+      <td class="num">128K</td>
+      <td><span class="lev l2"><i></i><span>Good</span></span></td>
+      <td>The cheapest credible option and the one originally proposed. MMLU Pro 60.0% is fine for Jobs A and B. But long-context comprehension is weak — <strong>MRCR v2 19.1%</strong> — and that is exactly the skill Job C needs when reading our resource PDFs. A good extractor and a poor adviser.</td>
+    </tr>
+    <tr>
+      <td class="rank">05</td>
+      <td class="k">Ministral-3-3B-Instruct</td>
+      <td class="num">3.8B</td>
+      <td><span class="pill p-warn">Verify</span></td>
+      <td class="num">256K</td>
+      <td><span class="lev l2"><i></i><span>Good</span></span></td>
+      <td>Mistral built this one specifically for function calling and JSON output on small hardware — precisely Job A. About 8GB in FP8. The honest reason it is not higher: we could not confirm its licence terms, and for a startup an unclear licence is a real cost. Check that before building anything on it.</td>
+    </tr>
+    <tr>
+      <td class="rank">06</td>
+      <td class="k">IBM Granite 4.0 Micro / Tiny</td>
+      <td class="num">7B total<br>1B active</td>
+      <td>Apache 2.0</td>
+      <td class="num">128K</td>
+      <td><span class="lev l2"><i></i><span>Good</span></span></td>
+      <td><strong>The dark horse for Job C.</strong> Granite 4.0 H-Small and Micro score 73 and 72 on RAG, beating Llama-3.3-70B (61) and Qwen3-8B (55). Our advice layer <em>is</em> RAG. Very memory-efficient hybrid Mamba-2 architecture, so several instances fit one modest GPU. Weaker as a conversationalist — consider it a specialist, not the main voice.</td>
+    </tr>
+    <tr>
+      <td class="rank">07</td>
+      <td class="k">Qwen3.5-2B</td>
+      <td class="num">2B</td>
+      <td>Apache 2.0</td>
+      <td class="num">262K</td>
+      <td><span class="lev l2"><i></i><span>Good</span></span></td>
+      <td>Intelligence Index 16 — clearly below the 4B's 27, but for Job A that gap barely shows. A sensible choice if we split jobs across two models. Same family as our main pick, so prompts, tokeniser and tooling carry over unchanged.</td>
+    </tr>
+    <tr>
+      <td class="rank">08</td>
+      <td class="k">Qwen3.5-0.8B</td>
+      <td class="num">0.8B</td>
+      <td>Apache 2.0</td>
+      <td class="num">262K</td>
+      <td><span class="lev l2"><i></i><span>Niche</span></span></td>
+      <td>Far too small to be the voice (Intelligence Index 9), but it is the piece that makes the always-warm CPU trick in §04 work — an instant first response while the GPU boots. 200+ languages. Note: its "thinking mode" is reported unstable in production, so keep that switched off.</td>
+    </tr>
+    <tr>
+      <td class="rank">09</td>
+      <td class="k">Phi-4-mini-instruct</td>
+      <td class="num">3.8B</td>
+      <td>MIT</td>
+      <td class="num">128K</td>
+      <td><span class="lev l2"><i></i><span>Fair</span></span></td>
+      <td>MIT is the most permissive licence here, and it runs on CPU with no GPU at all — a genuinely useful fallback. Strong reasoning for its size. But <strong>uneven non-English performance</strong> and limited factual knowledge. Our platform is multilingual, so that is a meaningful strike against it.</td>
+    </tr>
+    <tr>
+      <td class="rank">10</td>
+      <td class="k">SmolLM3-3B</td>
+      <td class="num">3B</td>
+      <td>Apache 2.0</td>
+      <td class="num">64K / 128K</td>
+      <td><span class="lev l1"><i></i><span>Poor fit</span></span></td>
+      <td>Best in class if we ever want to fine-tune deeply — the entire training recipe is public, which nobody else here offers. Supports function calling. But it covers only <strong>six main European languages</strong>. For a platform serving Africa and beyond, that rules it out as the main model whatever its other merits.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Also looked at, and why not</h3>
+<ul>
+  <li><strong>gpt-oss-20b</strong> (21B total, 3.6B active, runs in 16GB, roughly o3-mini quality) — genuinely the strongest thing on this list, and it does fit an L4. But it is five times the model for a job we deliberately made small, and every extra GPU-second is money. Revisit only if we later want one model handling everything including hard reasoning.</li>
+  <li><strong>Gemma 4 26B-A4B and 31B Dense</strong> — the 26B only activates 3.8B parameters per token, so it runs faster than its size suggests, but the full weights still have to sit in VRAM. Overkill, and it squeezes out KV-cache room we would rather spend on concurrent users.</li>
+  <li><strong>Llama 3.2 3B</strong> — measured at a <strong>47.8–56.5% JSON parse rate</strong>. See §05. Not viable for a tool-calling assistant without heavy scaffolding.</li>
+</ul>
+
+<div class="flag f-warn">
+  <div class="t">How to read every number in that table</div>
+  <p>Benchmarks are marketing as much as measurement, and each vendor publishes the ones it wins. Treat this as a shortlist, not a verdict. <strong>Budget two days to test the top three on fifty real user questions</strong> written by someone on the team who talks to users. That test will tell us more than every number above combined, and it costs almost nothing to run.</p>
+</div>
+
+<h2><span class="n">03</span>The two finalists, head to head</h2>
+<p class="lede">Realistically this is a choice between Qwen3.5-4B and Gemma 4 E4B. Both are Apache 2.0, both fit comfortably, both are current. Here is where they actually differ.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:26%">What we care about</th><th style="width:30%">Qwen3.5-4B</th><th style="width:30%">Gemma 4 E4B</th><th style="width:14%">Matters?</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="k">Following our format rules</td>
+      <td><strong>IFEval 89.8%</strong>, verified and published</td>
+      <td>Native structured tool use, no comparable public figure found</td>
+      <td><span class="pill p-bad">Critical</span></td>
+    </tr>
+    <tr>
+      <td class="k">Context window</td>
+      <td class="num">262K</td>
+      <td class="num">128K</td>
+      <td><span class="pill p-warn">Medium</span></td>
+    </tr>
+    <tr>
+      <td class="k">Speed per reply</td>
+      <td>Hybrid linear-attention + sparse MoE — built for throughput</td>
+      <td>Per-layer embeddings, designed for on-device efficiency</td>
+      <td><span class="pill p-bad">Critical</span> — speed <em>is</em> cost here</td>
+    </tr>
+    <tr>
+      <td class="k">Languages</td>
+      <td>Strong multilingual across the family (200+ at the small end)</td>
+      <td>140+ pretrained, 35+ supported out of the box</td>
+      <td><span class="pill p-warn">Medium</span></td>
+    </tr>
+    <tr>
+      <td class="k">Deploying on Google Cloud</td>
+      <td>Standard vLLM container, nothing special</td>
+      <td><strong>First-party</strong> — Google publishes Cloud Run and Vertex paths</td>
+      <td><span class="pill p-warn">Medium</span></td>
+    </tr>
+    <tr>
+      <td class="k">Licence</td>
+      <td>Apache 2.0</td>
+      <td>Apache 2.0</td>
+      <td><span class="pill p-good">Tie</span></td>
+    </tr>
+    <tr>
+      <td class="k">Prototyping before we self-host</td>
+      <td>Needs a GPU or a third-party host</td>
+      <td>We already have <code>@google/genai</code> wired up in <code>app/api/marketing/ai-generate/route.ts</code></td>
+      <td><span class="pill p-acc">Nice</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-good">
+  <div class="t">The pragmatic move: prototype on Gemma, decide later</div>
+  <p>We already have a working Google GenAI call path and an API key in this codebase. Build the whole assistant against hosted Gemma first — no GPU, no ops, no spend. Once the prompts and the tool schema are stable, benchmark Qwen3.5-4B and Gemma 4 E4B on our own fifty questions and self-host whichever wins. <strong>This defers the entire GPU bill until after we know the product works</strong>, which for a small startup is the whole game.</p>
+</div>
+
+<h2><span class="n">04</span>What it actually costs on Cloud Run</h2>
+<p class="lede">This is the section to read twice. Cloud Run GPU billing surprises people, and the surprise is expensive.</p>
+
+<p><strong>The rate.</strong> An NVIDIA L4 on Cloud Run in a Tier 1 region is about <strong>$0.0001867 per second</strong> without zonal redundancy — roughly <strong>$0.67 per hour</strong>. With zonal redundancy it rises to about $0.0002909 per second. For an assistant feature, skip zonal redundancy; if it is briefly down, the rest of the platform still works.</p>
+
+<div class="flag f-bad">
+  <div class="t">The trap: you are billed for instance lifetime, not for tokens</div>
+  <p>GPU-enabled Cloud Run keeps CPU allocated for the whole life of an instance, and you pay per second for every second it is alive — not just the seconds it is generating text. So <strong>the bill is driven by how long the GPU stays awake, not by how many people chat.</strong> Scale-to-zero only saves money when traffic arrives in clumps. Thinly spread traffic keeps the instance permanently warm and you pay nearly the always-on price for very few conversations.</p>
+</div>
+
+<div class="grid c3">
+  <div class="card win">
+    <div class="lbl">Bursty · realistic</div>
+    <div class="big">~$80<span style="font-size:15px;color:var(--faint)">/mo</span></div>
+    <div class="cap">Traffic clumps into evenings. Instance alive ~4 hrs/day. This is what we should be aiming for, and it is achievable with a short idle timeout.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Thinly spread · the trap</div>
+    <div class="big">~$320<span style="font-size:15px;color:var(--faint)">/mo</span></div>
+    <div class="cap">Same number of chats, arriving one at a time across 16 hours. Instance never gets to sleep. <strong>Four times the cost for identical usage.</strong></div>
+  </div>
+  <div class="card hot">
+    <div class="lbl">Always on · the ceiling</div>
+    <div class="big">~$480<span style="font-size:15px;color:var(--faint)">/mo</span></div>
+    <div class="cap">24/7, no scale-down. This is also roughly what a dedicated GPU VM costs — which is the point: past a certain traffic level, serverless stops being cheaper.</div>
+  </div>
+</div>
+
+<p style="font-size:13.5px;color:var(--faint)"><em>Estimates. The $0.67/hr rate is published; the monthly figures are our own arithmetic from assumed instance-alive hours and should be re-checked against real traffic after two weeks in production.</em></p>
+
+<h3>The three levers that control this bill</h3>
+<ol>
+  <li><strong>Idle timeout.</strong> The single biggest dial. Short timeout means the GPU sleeps sooner and we pay less, but more users hit a cold start. This is the tradeoff to tune, and it should be tuned with real numbers, not guesses.</li>
+  <li><strong>Bake the weights into the container image.</strong> If the model downloads at boot, cold starts run into tens of seconds and we will be tempted to keep the GPU warm — which is what costs money. Weights in the image make cold starts short enough that aggressive scale-down becomes affordable. <strong>Measure this on day one</strong>; the whole cost model depends on it.</li>
+  <li><strong>Split the jobs across two services.</strong> Explained below. This is the trick that makes cold starts nearly invisible.</li>
+</ol>
+
+<h3>The two-service trick</h3>
+<p>Run two Cloud Run services instead of one:</p>
+<ul>
+  <li><strong>A CPU-only service, always warm, costing cents.</strong> It hosts a 0.8B model doing Job A — turning the sentence into a filter — plus the database query and the existing ranker. No GPU involved.</li>
+  <li><strong>A GPU service that only wakes for Jobs B and C</strong> — the actual talking.</li>
+</ul>
+<p>The user sends "I need scholarships". Within a second the CPU service has parsed it, queried Mongo, ranked results, and streamed back <em>the cards themselves</em> plus a line like "Found 6 scholarships you can still apply for — let me look at these properly." The GPU boots in the background and the friendly commentary arrives a moment later. <strong>The cold start disappears behind content the user is already reading.</strong> And on the many turns that need no commentary at all, the GPU never wakes and costs nothing.</p>
+
+<h2><span class="n">05</span>The thing that will actually break: JSON</h2>
+<p class="lede">If one section of this document gets implemented, make it this one. Small models are not unreliable because they are stupid. They are unreliable because they drift out of format.</p>
+
+<p>Measured JSON parse rates on comparable small models:</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:30%">Model</th><th style="width:22%">Valid JSON produced</th><th>What that means in practice</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Qwen2.5 1.5B</td><td class="num">95.7%</td><td>Roughly 1 in 23 turns breaks. Noticeable but survivable with retries.</td></tr>
+    <tr><td class="k">Qwen2.5 0.5B</td><td class="num">82% <span class="pill p-warn">recoverable</span></td><td>And only 72% once the arguments are checked too. So more than a quarter of tool calls are wrong in some way.</td></tr>
+    <tr><td class="k">Llama 3.2 3B</td><td class="num">47.8–56.5%</td><td><strong>About half of all actions fail.</strong> Unusable for save-and-track.</td></tr>
+    <tr><td class="k">SmolLM2 1.7B</td><td class="num">26.1%</td><td>Three quarters of attempts are broken. Completely unusable.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-good">
+  <div class="t">The fix costs nothing and takes an afternoon</div>
+  <p><strong>Constrained decoding.</strong> Instead of asking the model nicely for JSON and hoping, we constrain what it is allowed to produce at each step so that only characters valid under our schema can come out. Invalid JSON becomes <em>impossible</em>, not unlikely. vLLM ships this as guided decoding; llama.cpp does it with GBNF grammars. Either way it is configuration, not a research project.</p>
+  <p>With it, parse rate is 100% by construction. Model quality then only affects whether the <em>values</em> are sensible — a much smaller and much more forgiving problem. <strong>This is what makes a 4B model production-viable and it is why we can ignore most of the scary numbers in the table above.</strong></p>
+</div>
+
+<h3>Belt and braces</h3>
+<ul>
+  <li><strong>Validate on our side anyway.</strong> The model may emit <code>{"country":"Wakanda"}</code> — perfectly valid JSON, meaningless value. Validate every extracted field against our real taxonomy in <code>lib/nlp/taxonomy.ts</code> before it reaches Mongo.</li>
+  <li><strong>Every action is reversible.</strong> We already chose act-then-undo. That choice is doing real work here: a wrong save costs the user one tap, not a support ticket.</li>
+  <li><strong>Log every extraction.</strong> Query in, JSON out, and whether the user seemed happy. This is the training data for §07, and it is free to collect from day one. Start collecting before we need it.</li>
+</ul>
+
+<h2><span class="n">06</span>The embedding model — and a stub we can finally fill</h2>
+<p class="lede">Job C needs semantic search over our Resource library. That needs an embedding model, which is a different and much smaller thing than the chat model.</p>
+
+<p><code>latest-glowup-channel/src/services/embeddingService.js</code> has been sitting there as an unimplemented stub, throwing on call, with a comment listing providers to choose from. This is the moment to finish it — and doing so improves the main feed too, not just the chat.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:22%">Model</th><th style="width:14%">Size</th><th style="width:14%">Dimensions</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="k">EmbeddingGemma-300M <span class="pill p-good">Pick</span></td>
+      <td class="num">300M</td>
+      <td class="num">768</td>
+      <td>Runs in <strong>under 200MB RAM</strong> quantized, embeds in ~22ms, trained on 100+ languages with real cross-lingual retrieval. Runs on the CPU service — no GPU, effectively free. Rivals much larger models on MTEB.</td>
+    </tr>
+    <tr>
+      <td class="k">BGE-M3</td>
+      <td class="num">~570M</td>
+      <td class="num">1024</td>
+      <td>Does dense, sparse <em>and</em> multi-vector retrieval from one model — hybrid search without running two systems. Bigger and slower, but if keyword-plus-semantic search matters (and for scholarship names, it does), this is the smarter pick.</td>
+    </tr>
+    <tr>
+      <td class="k">all-MiniLM-L6-v2</td>
+      <td class="num">22M</td>
+      <td class="num">384</td>
+      <td><span class="pill p-bad">Avoid</span> Still the default people reach for, but it is 2021-era and English-first. Fine for a prototype; leaving real retrieval quality on the table if it is still there in a year.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">One piece of work nobody has costed yet</div>
+  <p>Our <code>Resource</code> documents are <strong>PDFs</strong> — the model stores <code>fileUrl</code>, <code>pdfUrl</code>, <code>pageCount</code>, not text. Before anything can be embedded, the text has to be extracted and chunked. That is a real task: a batch job, a text store, a re-run whenever a resource is added. It is not hard, but it is <strong>the actual critical path for Job C</strong> and it should be scheduled explicitly rather than discovered late.</p>
+</div>
+
+<h2><span class="n">07</span>Fine-tuning: not yet, and cheaper than expected</h2>
+<p class="lede">Self-hosting was chosen partly to keep fine-tuning open. Good. But fine-tuning first is a common and expensive mistake.</p>
+
+<p><strong>Do not fine-tune at launch.</strong> On day one we have no data about how our users actually phrase things, and fine-tuning on guesses bakes in the guesses. Prompting plus constrained decoding will carry us a long way. Log everything, then train on reality.</p>
+
+<p><strong>When the time comes, it is cheap.</strong> A LoRA or QLoRA run on a 7–8B model costs <strong>$3–$10 in GPU time</strong> — two to four hours on a rented A100 at around $1.50–$2.00/hr. A 4B costs less. This is not a budget line item; it is a rounding error. The expensive part is assembling and cleaning the examples, which is human time.</p>
+
+<div class="grid c2">
+  <div class="card">
+    <div class="lbl">Teaching it our format &amp; tone</div>
+    <div class="big">~200 examples</div>
+    <div class="cap">Output formatting is the cheapest thing to teach. A couple of hundred good examples of "user said X, correct filter is Y" is enough to move the needle. Realistic within a month of logging.</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Teaching it our categories</div>
+    <div class="big">2,000+ examples</div>
+    <div class="cap">Classifying into ~20 domain categories needs an order of magnitude more. This is the harder ask, and a good reason to lean on our existing <code>lib/nlp/taxonomy.ts</code> rather than teaching the model to replace it.</div>
+  </div>
+</div>
+
+<p><strong>The sequence that works:</strong> ship with prompting → log query-and-outcome pairs for four to eight weeks → look at where it actually fails → LoRA on those specific failures for about $10 → measure against the same fifty test questions. Repeat only if the numbers justify it.</p>
+
+<h2><span class="n">08</span>Recommended order of work</h2>
+<p class="lede">Sequenced so that the expensive, irreversible decisions come last, after cheap experiments have answered them.</p>
+
+<div class="tl">
+  <div class="wk">
+    <div class="wl">Step 1 · costs nothing</div>
+    <div class="wt">Build the whole thing on hosted Gemma</div>
+    <p>Use the <code>@google/genai</code> path already in the repo. No GPU, no ops. Get the tool schema, the prompts, the memory bank and the act-then-undo flow working end to end. Everything learned here transfers to the self-hosted model unchanged.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Step 2 · one afternoon</div>
+    <div class="wt">Write the fifty-question test set</div>
+    <p>Real questions, from someone who talks to users, in more than one language. This becomes the thing every later decision is measured against. Without it, model comparison is vibes.</p>
+  </div>
+  <div class="wk blocked">
+    <div class="wl">Step 3 · the real critical path</div>
+    <div class="wt">Extract and chunk the Resource PDFs</div>
+    <p>Job C cannot start until this exists. Stand up EmbeddingGemma on CPU and finally implement <code>embeddingService.js</code>. This improves the main feed as a side effect, so it earns its keep even if the chat slips.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Step 4 · two days</div>
+    <div class="wt">Bake off Qwen3.5-4B vs Gemma 4 E4B</div>
+    <p>Rent a GPU by the hour — a few dollars, not a monthly commitment. Run both against the fifty questions with constrained decoding on. Pick the winner on results, not on this document.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Step 5 · the first real bill</div>
+    <div class="wt">Self-host on Cloud Run, two services</div>
+    <p>Weights baked into the image. CPU service always warm, GPU service scaling to zero. Then watch the actual instance-alive hours for two weeks and tune the idle timeout against the real number, not our estimate.</p>
+  </div>
+  <div class="wk">
+    <div class="wl">Step 6 · month two or later</div>
+    <div class="wt">Consider a LoRA, for about $10</div>
+    <p>Only after there is logged data showing where it actually fails. Not before.</p>
+  </div>
+</div>
+
+<div class="flag f-warn">
+  <div class="t">One carry-over risk from the existing platform</div>
+  <p>The feed already makes roughly 240 database round trips per request. If a chat turn fans out the same way, replies will take ten seconds and feel broken regardless of which model we pick. <strong>The assistant's database lookup has to be a single aggregation.</strong> No model choice can rescue a slow query, and this is the most likely cause of a disappointing first demo.</p>
+</div>
+
+<footer>
+  <p><strong>UP / Glowup — model research for the conversational assistant.</strong> Compiled 16 September 2026. Benchmark figures are as published by vendors and third-party evaluators and were not independently reproduced; Cloud Run monthly totals are our own arithmetic from the published hourly rate and assumed usage. Re-check both before committing budget.</p>
+  <p>Sources consulted:</p>
+  <ul>
+    <li><a href="https://ai.google.dev/gemma/docs/core/model_card_4">Gemma 4 model card — Google AI for Developers</a></li>
+    <li><a href="https://cloud.google.com/blog/products/ai-machine-learning/gemma-4-available-on-google-cloud">Gemma 4 available on Google Cloud</a></li>
+    <li><a href="https://artificialanalysis.ai/articles/qwen3-5-small-models">Qwen3.5 small models — Artificial Analysis</a></li>
+    <li><a href="https://venturebeat.com/technology/alibabas-small-open-source-qwen3-5-9b-beats-openais-gpt-oss-120b-and-can-run">Qwen3.5-9B coverage — VentureBeat</a></li>
+    <li><a href="https://www.bentoml.com/blog/the-best-open-source-small-language-models">The Best Open-Source Small Language Models in 2026 — BentoML</a></li>
+    <li><a href="https://www.bentoml.com/blog/a-guide-to-open-source-embedding-models">The Best Open-Source Embedding Models in 2026 — BentoML</a></li>
+    <li><a href="https://arxiv.org/html/2609.07370">A CPU Reliability Benchmark for MCP-Style Tool Calling in Sub-2B Small Language Models</a></li>
+    <li><a href="https://arxiv.org/pdf/2605.02363">When Correct Isn't Usable: Improving Structured Output Reliability in Small Language Models</a></li>
+    <li><a href="https://cloud.google.com/run/pricing">Cloud Run pricing — Google Cloud</a></li>
+    <li><a href="https://www.ibm.com/think/news/granite-4-bets-big-on-small-models">Granite 4.0 bets big on small models — IBM</a></li>
+    <li><a href="https://www.stratagem-systems.com/blog/lora-fine-tuning-cost-analysis-2026">LoRA Fine-Tuning Cost in 2026 — Stratagem Systems</a></li>
+    <li><a href="https://www.spheron.network/blog/best-open-source-llms-self-host-2026-vram-guide/">Best Open-Source LLMs to Self-Host in 2026: VRAM Tier Guide — Spheron</a></li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>

@@ -52,6 +52,29 @@ Make sure these are set in Vercel:
 - `NEXT_PUBLIC_BACKEND_URL` = `https://glow-up-channel-backend-761979347865.europe-west1.run.app`
 - `NEXT_PUBLIC_SUPABASE_URL` = `https://tvdqtadeojafitwhqyub.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `your-supabase-anon-key`
+- `WORK_WITH_US_SERVICE_KEY` = the same value as on the backend (see below)
+- `PAYSTACK_SECRET_KEY` = the Paystack secret key
+
+**The frontend does not use `MONGODB_URI` and must not be given one.** Everything
+the "Work with us" flow reads or writes goes through `/api/work-with-us` on the
+backend, which is the only service holding database credentials. If a page here
+ever needs data from Mongo, the fix is an endpoint on the backend, not a
+connection string on Vercel.
+
+A variable added in Vercel does not reach the deployments that already exist —
+redeploy after changing one, or the site keeps running with the old set.
+
+### Backend environment variables
+Alongside the existing `MONGODB_URI`, `DB_NAME` and `JWT_SECRET`, the backend
+needs:
+- `WORK_WITH_US_SERVICE_KEY` — the shared secret the storefront proves itself
+  with. It has to be byte-identical to the Vercel value. `/api/work-with-us`
+  fails closed: with the variable unset, every call to it is refused with a 503
+  saying so, rather than standing open.
+
+Generate one with
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and
+set the same string in both places.
 
 ## 🗄️ Database Setup
 

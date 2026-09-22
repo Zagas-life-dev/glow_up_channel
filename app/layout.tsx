@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next/types"
 import { cookies, headers } from "next/headers"
-import { Inter, Bricolage_Grotesque } from "next/font/google"
+import { Unbounded, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import AppLayout from "@/components/app-layout"
 import { LocaleProvider } from "@/lib/i18n/context"
@@ -35,19 +35,22 @@ import { JsonLd } from "@/components/seo/json-ld"
 import { buildSiteJsonLd } from "@/lib/seo/structured-data"
 
 /**
- * The two brand typefaces from the Master Copy Library §1.2 — Inter for headlines
- * and CTAs, Bricolage Grotesque for body copy. Exposed under their own variable
- * names so they sit alongside the app's existing `--font-inter` stack rather than
- * redefining it, and are opted into per surface (currently the landing page).
+ * The two brand typefaces of the landing redesign (docs/main-html) — Unbounded
+ * carries every heading, figure and the wordmark; Plus Jakarta Sans carries
+ * everything else. Exposed under their own variable names so they sit alongside
+ * the app's existing `--font-inter` stack rather than redefining it, and are
+ * opted into per surface (currently the landing page only).
  */
-const brandDisplay = Inter({
+const brandDisplay = Unbounded({
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
   variable: "--font-up-display",
   display: "swap",
 })
 
-const brandBody = Bricolage_Grotesque({
+const brandBody = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-up-body",
   display: "swap",
 })

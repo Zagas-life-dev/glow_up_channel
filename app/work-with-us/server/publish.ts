@@ -1,10 +1,51 @@
 import { LIST_PATH, promotionRunDays, type ContentType } from "../config"
-import { backendPost, type AdminCaller } from "./admin-auth"
-import type { ItemDoc } from "./db"
+import { backendUrl, type ItemDoc } from "./api"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 
 /** Where an admin-granted promotion is started. Lives in the backend at src/routes/promotions.js. */
 export const GRANT_PROMOTION_PATH = "/api/promotions/admin-grant"
+
+/**
+ * The reviewer, as far as publishing is concerned: their token and nothing
+ * else. Who they are is not checked here — the order book's own endpoints do
+ * that, on a token this server never validates, because the backend owns the
+ * JWT secret. So this can only ever be as trusting as the backend is, and a
+ * call made with a non-admin's token is refused there rather than here.
+ */
+export type AdminCaller = { token: string }
+
+/** Calls the platform API as the admin who is signed in. */
+export async function backendPost(
+  caller: AdminCaller,
+  path: string,
+  body: unknown,
+): Promise<{ ok: true; data: any } | { ok: false; error: string; status: number }> {
+  try {
+    const response = await fetch(`${backendUrl()}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${caller.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+    const json = await response.json().catch(() => null)
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: json?.message || `Backend refused (HTTP ${response.status})`,
+      }
+    }
+    return { ok: true, data: json?.data ?? json }
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      error: error instanceof Error ? error.message : "Could not reach the backend",
+    }
+  }
+}
 
 function tagList(value?: string): string[] {
   return (value ?? "")

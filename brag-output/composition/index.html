@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>UP — Series A (2016)</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/audio-data.js"></script>
+    <style>
+      /* Inter, subset out of the project's own next/font build so the film sets in the
+         product's real typeface rather than a lookalike. Latin + latin-ext cover the
+         em dashes and the "Africans" copy. */
+      @font-face {
+        font-family: "UP Inter";
+        src: url("assets/fonts/inter-latin.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+          U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "UP Inter";
+        src: url("assets/fonts/inter-latin-ext.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+          U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+          U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+
+      :root {
+        /* Straight out of components/landing/landing-page.tsx BRAND_VARS and app/globals.css. */
+        --ink: #0b1222;
+        --orange: #fe6700;
+        --paper: #fdf5ed;
+        --card: #121a2b;
+        --hairline: rgba(255, 255, 255, 0.1);
+        --on-ink: #f2f4f8;
+        --on-ink-muted: #8b93a7;
+        --on-ink-faint: #7b8498;
+        --on-paper-muted: #5a6275;
+        --urgent: #ef4444;
+
+        /* Driven per frame from the music bed; see the audio-reactive block at the
+           bottom. Base values are the resting state, so if the sampler never runs the
+           film still looks right — it just stops breathing. */
+        --bass: 0;
+        --rms: 0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ink);
+      }
+
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "UP Inter", ui-sans-serif, system-ui, sans-serif;
+        font-feature-settings: "rlig" 1, "calt" 1;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ── The announcement slides (1-3): paper, centered, nothing moving ───────── */
+
+      .slide {
+        background: var(--paper);
+        color: var(--ink);
+        padding: 0 140px;
+      }
+
+      .mono {
+        font-family: monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .eyebrow {
+        font-size: 24px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--on-paper-muted);
+      }
+
+      #s1-line {
+        max-width: 1500px;
+        text-align: center;
+        font-size: 84px;
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: -0.025em;
+      }
+
+      #s1-dateline {
+        margin-top: 44px;
+        font-size: 22px;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--on-paper-muted);
+      }
+
+      /* The amount and the bar that takes it away. The bar is a sized block child of a
+         relative box, so scaleX has something real to scale. */
+      #s2-amount-box {
+        position: relative;
+        display: inline-block;
+      }
+
+      #s2-amount {
+        font-size: 128px;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+
+      #s2-bar {
+        position: absolute;
+        left: -18px;
+        right: -18px;
+        top: 5%;
+        height: 90%;
+        width: auto;
+        display: block;
+        background: var(--ink);
+        transform-origin: left center;
+      }
+
+      #s2-caption {
+        margin-top: 52px;
+        font-size: 38px;
+        font-weight: 400;
+        color: var(--on-paper-muted);
+      }
+
+      /* Stat tiles */
+      #s3-eyebrow {
+        position: absolute;
+        top: 300px;
+      }
+
+      #s3-tiles {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 118px;
+      }
+
+      .tile {
+        width: 400px;
+        text-align: center;
+      }
+
+      .tile-figure {
+        font-size: 108px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        line-height: 1;
+      }
+
+      .tile-label {
+        margin-top: 22px;
+        font-size: 27px;
+        font-weight: 400;
+        color: var(--on-paper-muted);
+      }
+
+      /* ── The product scenes (4-6): the app's own ink surface ─────────────────── */
+
+      .app {
+        background: var(--ink);
+        color: var(--on-ink);
+      }
+
+      .feed {
+        width: 968px;
+      }
+
+      .feed-greeting {
+        font-size: 41px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .feed-sub {
+        margin-top: 9px;
+        font-size: 26px;
+        color: var(--on-ink-muted);
+      }
+
+      /* components/feed-card.tsx: rounded-2xl, hairline border, card surface, an
+         urgency rail down the left edge once a deadline is inside three days. */
+      .card-wrap {
+        margin-top: 34px;
+      }
+
+      .card {
+        position: relative;
+        border: 1px solid var(--hairline);
+        border-radius: 24px;
+        background: var(--card);
+        padding: 38px 42px 30px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, calc(0.28 + 0.1 * var(--bass)));
+      }
+
+      .card-rail {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--urgent);
+      }
+
+      .card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .card-kind {
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--on-ink-muted);
+      }
+
+      .card-deadline {
+        font-size: 17px;
+        font-weight: 500;
+        color: var(--urgent);
+      }
+
+      .card-title {
+        margin-top: 20px;
+        font-size: 34px;
+        font-weight: 600;
+        line-height: 1.24;
+        letter-spacing: -0.015em;
+      }
+
+      .card-desc {
+        margin-top: 16px;
+        font-size: 23px;
+        line-height: 1.5;
+        color: var(--on-ink-muted);
+      }
+
+      .card-meta {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 22px;
+        color: var(--on-ink-muted);
+      }
+
+      .card-match {
+        font-weight: 600;
+        color: var(--orange);
+      }
+
+      .card-actions {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+        gap: 34px;
+        color: var(--on-ink-muted);
+      }
+
+      .card-actions svg {
+        display: block;
+        width: 29px;
+        height: 29px;
+      }
+
+      /* ── The tracker return sheet ────────────────────────────────────────────── */
+
+      #s5-scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(3, 6, 15, 0.62);
+      }
+
+      #s5-sheet-wrap {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 960px;
+        margin-left: -480px;
+      }
+
+      #s5-sheet {
+        border: 1px solid var(--hairline);
+        border-bottom: none;
+        border-radius: 30px 30px 0 0;
+        background: var(--card);
+        padding: 44px 48px 58px;
+        box-shadow: 0 -30px 90px rgba(0, 0, 0, 0.45);
+      }
+
+      #s5-listing {
+        font-size: 18px;
+        color: var(--on-ink-muted);
+      }
+
+      #s5-question {
+        margin-top: 14px;
+        font-size: 40px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .sheet-btn {
+        margin-top: 22px;
+        width: 100%;
+        border-radius: 14px;
+        padding: 22px 26px;
+        font-size: 22px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      #s5-primary {
+        background: var(--orange);
+        color: #fff;
+      }
+
+      #s5-secondary {
+        border: 1px solid var(--hairline);
+        color: var(--on-ink-muted);
+        font-weight: 500;
+      }
+
+      #s5-cursor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 42px;
+        height: 42px;
+        display: block;
+      }
+
+      /* ── Outro ───────────────────────────────────────────────────────────────── */
+
+      #s6-mark {
+        display: block;
+        width: 228px;
+        height: 228px;
+        /* The mark is the only thing in the film allowed to react to the music. */
+        filter: drop-shadow(0 0 calc(18px + 34px * var(--bass)) rgba(254, 103, 0, calc(0.18 + 0.3 * var(--bass))));
+      }
+
+      #s6-wordmark {
+        margin-top: 46px;
+        font-size: 58px;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+
+      #s6-url {
+        margin-top: 22px;
+        font-size: 22px;
+        letter-spacing: 0.18em;
+        color: var(--on-ink-muted);
+      }
+
+      #s6-footnote {
+        position: absolute;
+        bottom: 86px;
+        font-size: 21px;
+        font-style: italic;
+        color: #7b8498;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="24.75"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- ── Scene 1 · 0.00–3.70 · The announcement ─────────────────────────── -->
+      <section id="s1" class="clip slide" data-start="0" data-duration="3.7" data-track-index="0">
+        <h1 id="s1-line">Today, we&rsquo;re announcing our Series A.</h1>
+        <p id="s1-dateline" class="mono">Lagos &middot; September 2016</p>
+      </section>
+
+      <!-- ── Scene 2 · 3.70–7.38 · The redaction ────────────────────────────── -->
+      <section id="s2" class="clip slide" data-start="3.7" data-duration="3.68" data-track-index="0">
+        <div id="s2-amount-box">
+          <div id="s2-amount" class="mono" data-layout-allow-occlusion="true">$ 12,000,000</div>
+          <div id="s2-bar"></div>
+        </div>
+        <p id="s2-caption">Amount undisclosed.</p>
+      </section>
+
+      <!-- ── Scene 3 · 7.38–11.60 · The numbers we can disclose ─────────────── -->
+      <section id="s3" class="clip slide" data-start="7.38" data-duration="4.22" data-track-index="0">
+        <p id="s3-eyebrow" class="eyebrow mono">The numbers we can disclose</p>
+        <div id="s3-tiles">
+          <div class="tile" id="s3-tile-1">
+            <div class="tile-figure mono" id="s3-fig-1">8,200+</div>
+            <div class="tile-label">Platform users</div>
+          </div>
+          <div class="tile" id="s3-tile-2">
+            <div class="tile-figure mono" id="s3-fig-2">7,500+</div>
+            <div class="tile-label">Opportunities shared</div>
+          </div>
+          <div class="tile" id="s3-tile-3">
+            <div class="tile-figure mono" id="s3-fig-3">700+</div>
+            <div class="tile-label">Young Africans upskilled</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Scene 4 · 11.60–16.34 · The feed, working ──────────────────────── -->
+      <section id="s4" class="clip app" data-start="11.6" data-duration="4.74" data-track-index="0">
+        <div class="feed">
+          <div id="s4-greeting" class="feed-greeting">Hey, Amara</div>
+          <div id="s4-sub" class="feed-sub">Picks to help you glow up.</div>
+
+          <div id="s4-card-wrap" class="card-wrap">
+            <div id="s4-card" class="card">
+              <div class="card-rail"></div>
+              <div class="card-top">
+                <span class="card-kind">Opportunity</span>
+                <span class="card-deadline">3 days left</span>
+              </div>
+              <h2 class="card-title">Undergraduate Scholarship &mdash; Full Tuition + Monthly Stipend</h2>
+              <p class="card-desc">
+                Covers tuition, accommodation and a monthly stipend for African students entering
+                undergraduate study.
+              </p>
+              <div class="card-meta">
+                <span class="card-match" id="s4-match">94% match</span>
+                <span id="s4-loc-dot">&middot;</span>
+                <span id="s4-loc">Lagos, Nigeria</span>
+              </div>
+              <div class="card-actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <path d="M20.8 8.6c0 4.4-8.8 9.4-8.8 9.4S3.2 13 3.2 8.6a4.4 4.4 0 0 1 8.8-1 4.4 4.4 0 0 1 8.8 1Z" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <path d="M6 3.8h12v16.4l-6-4.4-6 4.4V3.8Z" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <circle cx="18" cy="5.5" r="2.6" />
+                  <circle cx="6" cy="12" r="2.6" />
+                  <circle cx="18" cy="18.5" r="2.6" />
+                  <path d="M8.4 10.8 15.6 6.8M8.4 13.2l7.2 4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Scene 5 · 16.34–20.54 · Did you get it in? ─────────────────────── -->
+      <section id="s5" class="clip app" data-start="16.34" data-duration="4.2" data-track-index="0">
+        <div class="feed" id="s5-feed" data-layout-allow-occlusion="true">
+          <div class="feed-greeting">Hey, Amara</div>
+          <div class="feed-sub">Picks to help you glow up.</div>
+          <div class="card-wrap">
+            <div class="card">
+              <div class="card-rail"></div>
+              <div class="card-top">
+                <span class="card-kind">Opportunity</span>
+                <span class="card-deadline">3 days left</span>
+              </div>
+              <h2 class="card-title">Undergraduate Scholarship &mdash; Full Tuition + Monthly Stipend</h2>
+              <p class="card-desc">
+                Covers tuition, accommodation and a monthly stipend for African students entering
+                undergraduate study.
+              </p>
+              <div class="card-meta">
+                <span class="card-match">94% match</span>
+                <span>&middot;</span>
+                <span>Lagos, Nigeria</span>
+              </div>
+              <div class="card-actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <path d="M20.8 8.6c0 4.4-8.8 9.4-8.8 9.4S3.2 13 3.2 8.6a4.4 4.4 0 0 1 8.8-1 4.4 4.4 0 0 1 8.8 1Z" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <path d="M6 3.8h12v16.4l-6-4.4-6 4.4V3.8Z" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <circle cx="18" cy="5.5" r="2.6" />
+                  <circle cx="6" cy="12" r="2.6" />
+                  <circle cx="18" cy="18.5" r="2.6" />
+                  <path d="M8.4 10.8 15.6 6.8M8.4 13.2l7.2 4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="s5-scrim"></div>
+
+        <div id="s5-sheet-wrap">
+          <div id="s5-sheet">
+            <div id="s5-listing">Undergraduate Scholarship &mdash; Full Tuition + Monthly Stipend</div>
+            <div id="s5-question">Welcome back. Did you get it in?</div>
+            <div id="s5-primary" class="sheet-btn">Submitted it &mdash; track this one</div>
+            <div id="s5-secondary" class="sheet-btn">Not for me &mdash; stop suggesting these</div>
+          </div>
+        </div>
+
+        <svg id="s5-cursor" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M5 2.5 19.4 11.6l-6.2 1.1 3 6.1-2.7 1.3-3-6.1-4.5 4.4V2.5Z"
+            fill="#ffffff"
+            stroke="#0b1222"
+            stroke-width="1.1"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </section>
+
+      <!-- ── Scene 6 · 20.54–24.75 · Get access. Get UP. ────────────────────── -->
+      <section id="s6" class="clip app" data-start="20.54" data-duration="4.21" data-track-index="0">
+        <img id="s6-mark" src="assets/logo-icon-transparent.svg" width="228" height="228" alt="UP" />
+        <div id="s6-wordmark">Get access. Get UP.</div>
+        <div id="s6-url" class="mono">glowupchannel.com</div>
+        <div id="s6-footnote">No round was raised in the making of this video.</div>
+      </section>
+    </div>
+
+    <!-- ── Audio ─────────────────────────────────────────────────────────────────
+         Music bed on track 10, every SFX on its own ascending index above it. The
+         volume lane carries the whole envelope (fade up, hold, then down under the
+         closing footnote) — the level is authored here, not with data-volume. -->
+    <audio
+      id="music-bed"
+      src="assets/music/happy-beats-business-moves-vol-11-by-ende-dot-app.mp3"
+      data-start="0"
+      data-duration="24.75"
+      data-track-index="10"
+      data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.7,"v":0.3},{"t":21.6,"v":0.3},{"t":22.4,"v":0.13},{"t":24.3,"v":0.08},{"t":24.75,"v":0}]}]}'
+    ></audio>
+
+    <!-- The bar taking the number away: one flat, dry hit. -->
+    <audio
+      id="sfx-redaction"
+      src="assets/sfx/impact/impactSoft_medium_001.ogg"
+      data-start="5.8"
+      data-duration="0.19"
+      data-track-index="11"
+      data-volume="0.62"
+    ></audio>
+
+    <!-- Three stat tiles, each set down on the table. Same file all three times. -->
+    <audio
+      id="sfx-tile-1"
+      src="assets/sfx/impact/impactWood_medium_000.ogg"
+      data-start="7.91"
+      data-duration="0.34"
+      data-track-index="12"
+      data-volume="0.42"
+    ></audio>
+    <audio
+      id="sfx-tile-2"
+      src="assets/sfx/impact/impactWood_medium_000.ogg"
+      data-start="8.96"
+      data-duration="0.34"
+      data-track-index="13"
+      data-volume="0.42"
+    ></audio>
+    <audio
+      id="sfx-tile-3"
+      src="assets/sfx/impact/impactWood_medium_000.ogg"
+      data-start="10.01"
+      data-duration="0.34"
+      data-track-index="14"
+      data-volume="0.42"
+    ></audio>
+
+    <!-- The ranked listing arriving. -->
+    <audio
+      id="sfx-card"
+      src="assets/sfx/casino/card-slide-1.ogg"
+      data-start="12.62"
+      data-duration="0.6"
+      data-track-index="15"
+      data-volume="0.5"
+    ></audio>
+
+    <!-- The return sheet coming up. Quiet enough to almost miss. -->
+    <audio
+      id="sfx-sheet"
+      src="assets/sfx/impact/impactSoft_medium_003.ogg"
+      data-start="16.9"
+      data-duration="0.14"
+      data-track-index="16"
+      data-volume="0.3"
+    ></audio>
+
+    <!-- The tap. The most satisfying sound in the film, and the quietest thing in it. -->
+    <audio
+      id="sfx-tap"
+      src="assets/sfx/interface/click_003.ogg"
+      data-start="20.05"
+      data-duration="0.01"
+      data-track-index="17"
+      data-volume="0.6"
+    ></audio>
+
+    <!-- The mark landing, allowed to ring out past the music fade. -->
+    <audio
+      id="sfx-logo"
+      src="assets/sfx/impact/impactBell_heavy_000.ogg"
+      data-start="21.07"
+      data-duration="1.48"
+      data-track-index="18"
+      data-volume="0.55"
+    ></audio>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      /* ── Scene 1 · the announcement ────────────────────────────────────────────
+         Nothing moves but the type arriving. The straightness is the hook. */
+      tl.fromTo("#s1-line", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 0.15);
+      tl.fromTo("#s1-dateline", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" }, 0.75);
+
+      /* ── Scene 2 · the redaction ───────────────────────────────────────────────
+         The amount holds long enough to read, then // beat-locked: 5.80s strong cue. */
+      tl.fromTo("#s2-amount", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 3.78);
+      tl.fromTo("#s2-bar", { scaleX: 0 }, { scaleX: 1, duration: 0.24, ease: "power4.in" }, 5.8);
+      tl.fromTo("#s2-caption", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 6.15);
+
+      /* ── Scene 3 · the numbers we can disclose ─────────────────────────────────
+         // beat-grid: tile 1 at 7.91s, tile 2 at 8.96s, tile 3 at 10.01s — every
+         other beat of the 114.84 BPM grid. The raw 0.52s grid outruns reading. */
+      tl.fromTo("#s3-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 7.5);
+
+      const TILES = [
+        { el: "#s3-tile-1", figure: "#s3-fig-1", to: 8200, at: 7.91 },
+        { el: "#s3-tile-2", figure: "#s3-fig-2", to: 7500, at: 8.96 },
+        { el: "#s3-tile-3", figure: "#s3-fig-3", to: 700, at: 10.01 },
+      ];
+
+      TILES.forEach(function (tile) {
+        tl.fromTo(tile.el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, tile.at);
+
+        /* The proxy form rather than a raw innerText tween, so the figures keep the
+           grouping the landing page gives them ("8,200+", not "8200"). The static
+           HTML already holds the final value, so a run where these callbacks never
+           fire still shows the right number — it just doesn't count up to it. */
+        const counter = { v: 0 };
+        const node = document.querySelector(tile.figure);
+        tl.to(
+          counter,
+          {
+            v: tile.to,
+            duration: 0.55,
+            ease: "power1.out",
+            onUpdate: function () {
+              node.textContent = Math.round(counter.v).toLocaleString("en-US") + "+";
+            },
+          },
+          tile.at,
+        );
+      });
+
+      /* ── Scene 4 · the feed, working ───────────────────────────────────────────
+         // beat-locked: 12.65s strong cue — the ranked listing lands on it. */
+      tl.fromTo("#s4-greeting", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 11.75);
+      tl.fromTo("#s4-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 11.95);
+      tl.fromTo(
+        "#s4-card-wrap",
+        { opacity: 0, y: 44 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+        12.65,
+      );
+
+      /* // beat-grid: the ranker's answer resolves into the meta row at 13.70s and
+         14.76s — the score first, then where it is. */
+      tl.fromTo("#s4-match", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 13.7);
+      tl.fromTo("#s4-loc-dot", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 14.76);
+      tl.fromTo("#s4-loc", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 14.8);
+
+      /* ── Scene 5 · did you get it in? ──────────────────────────────────────────
+         The sheet rises on a beat (16.86s), the two answers arrive on the next two
+         even beats, and the cursor taps the one that feeds the ranking. */
+      tl.fromTo("#s5-scrim", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 16.7);
+      tl.fromTo(
+        "#s5-sheet-wrap",
+        { yPercent: 100 },
+        { yPercent: 0, duration: 0.5, ease: "power3.out" },
+        16.86,
+      );
+      /* // beat-grid: answers at 18.44s and 19.49s. */
+      tl.fromTo("#s5-primary", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 18.44);
+      tl.fromTo("#s5-secondary", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 19.49);
+
+      /* The cursor comes in from the lower right and lands on "Submitted it". */
+      tl.fromTo(
+        "#s5-cursor",
+        { opacity: 0, x: 1320, y: 1010 },
+        { opacity: 1, x: 1232, y: 878, duration: 0.75, ease: "power2.inOut" },
+        19.3,
+      );
+      tl.to("#s5-primary", { scale: 0.985, duration: 0.08, ease: "power2.in" }, 20.05);
+      tl.to("#s5-primary", { scale: 1, duration: 0.18, ease: "power2.out" }, 20.13);
+      tl.to("#s5-cursor", { scale: 0.9, duration: 0.08, ease: "power2.in" }, 20.05);
+      tl.to("#s5-cursor", { scale: 1, duration: 0.18, ease: "power2.out" }, 20.13);
+
+      /* ── Scene 6 · get access. get up. ─────────────────────────────────────────
+         The mark is an upward arrow, which is the whole brand argument, so it lands
+         first and everything else settles under it. */
+      tl.fromTo("#s6-mark", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, 21.07);
+      tl.fromTo("#s6-wordmark", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 21.55);
+      tl.fromTo("#s6-url", { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power1.out" }, 21.8);
+      tl.fromTo("#s6-footnote", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" }, 22.05);
+
+      /* ── Audio-reactive ────────────────────────────────────────────────────────
+         Two CSS custom properties sampled per frame off the pre-extracted bed. They
+         only modulate the card's shadow depth and the mark's glow — no waveform, no
+         bars, nothing that would let the film look excited about itself. Sampling
+         starts where the product does; the announcement slides stay dead still. */
+      (function wireAudioReactive() {
+        const data = window.HF_AUDIO;
+        if (!data || !data.bass) return;
+
+        const root = document.getElementById("root");
+        const fps = data.fps;
+        const first = Math.floor(11.6 * fps);
+        const last = Math.min(data.totalFrames - 1, Math.floor(24.75 * fps));
+
+        for (let f = first; f <= last; f++) {
+          tl.call(
+            (function (bass, rms) {
+              return function () {
+                root.style.setProperty("--bass", bass.toFixed(3));
+                root.style.setProperty("--rms", rms.toFixed(3));
+              };
+            })(data.bass[f], data.rms[f]),
+            [],
+            f / fps,
+          );
+        }
+      })();
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

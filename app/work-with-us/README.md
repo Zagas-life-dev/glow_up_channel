@@ -54,14 +54,49 @@ What are you trying to achieve?
 | `api/verify` | Confirms a payment when the person lands back on the site. |
 | `api/webhook` | Confirms a payment when they don't. Optional. |
 | `api/admin/items` | The review queue's list and its approve / clarify / reject / deliver action. |
-| `server/*` | Database, Paystack, emails, publishing, and the request validation. |
+| `server/api.ts` | The client for the order book. Every read and write of an order or an item goes through here. |
+| `server/*` | Paystack, emails, publishing, and the request validation. |
+
+## Where the data lives
+
+**Not here.** The two collections belong to the backend, at
+`latest-glowup-channel/src/routes/workWithUs.js` and the service under it. This
+app holds no database credentials and opens no database connection; it calls
+`/api/work-with-us` and proves it is us with `WORK_WITH_US_SERVICE_KEY`.
+
+It did not start that way. The sales page and the review queue used to open
+their own MongoDB client against the same cluster, which meant this host needed
+`MONGODB_URI` — and the day it did not have one, the queue answered every
+reviewer with "Could not read the submissions database" while the submissions
+themselves sat there, intact and unreadable. A second host with database
+credentials is a second host that can lose them.
+
+What stayed on this side is what the storefront owns: the price list, the form
+fields, the order maths, the Paystack conversation and the two automatic emails.
+What moved is the order book — what exists, what state it is in, which
+transitions are legal, and what a rejection does to the rest of the order.
+
+Approving still publishes through the platform's ordinary create endpoints
+(`/api/opportunities` and friends) with the reviewing admin's own token, so a
+listing published from the queue goes through exactly the same path as one
+posted by hand. The queue is told the outcome afterwards.
+
+| Call | What it does |
+| --- | --- |
+| `POST /api/work-with-us/orders` | Stores a submission. Mints the reference; derives the status from the amount. |
+| `GET /api/work-with-us/orders/:ref` | One order. |
+| `POST /api/work-with-us/orders/:ref/paid` | Records a payment Paystack has confirmed, and releases the items. Safe to call twice. |
+| `GET /api/work-with-us/audience` | The audience figure for the trust strip. |
+| `GET /api/work-with-us/items` | The review queue, with counts. Admin token required. |
+| `GET /api/work-with-us/items/:ref` | One item, plus whether it can be approved and what a promotion would run against. |
+| `POST /api/work-with-us/items/:ref/review` | Records a decision. Attributed to the admin whose token the call carries. |
 
 ## Orders and items
 
-Two MongoDB collections. An **order** is one payment; an **item** is one thing we
-owe the customer for it. They are split because their lifecycles differ — an order
-is paid once and never changes, while a five-listing batch is five separate review
-decisions.
+Two MongoDB collections, owned by the backend. An **order** is one payment; an
+**item** is one thing we owe the customer for it. They are split because their
+lifecycles differ — an order is paid once and never changes, while a
+five-listing batch is five separate review decisions.
 
 ```js
 // work_with_us_orders
@@ -170,12 +205,27 @@ be faked from the browser.
 Needs these in `.env`:
 
 ```
-MONGODB_URI=            # same one the backend uses
+NEXT_PUBLIC_BACKEND_URL=      # the order book, and where the queue publishes
+WORK_WITH_US_SERVICE_KEY=     # shared secret; must match the backend's exactly
 PAYSTACK_SECRET_KEY=
-NEXT_PUBLIC_BACKEND_URL=  # the review queue publishes through it
-SES_SENDER_EMAIL=       # already set — used for the notification emails
+SES_SENDER_EMAIL=             # already set — used for the notification emails
 SES_CONTACT_RECIPIENT_EMAIL=
 ```
+
+And in `latest-glowup-channel/.env`, the same secret:
+
+```
+WORK_WITH_US_SERVICE_KEY=     # byte-identical to the one above
+```
+
+Generate it once with
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and
+put the same string in both. `/api/work-with-us` fails closed — with the
+variable missing on the backend, every call to it is refused with a 503 that
+says which variable is missing, rather than the route standing open.
+
+No `MONGODB_URI`. If you find yourself wanting one, the thing you want is an
+endpoint on the backend.
 
 Optional: add `https://your-domain.com/work-with-us/api/webhook` as a webhook in the
 Paystack dashboard. Without it, an order only gets marked paid when the person makes it
@@ -215,3 +265,13 @@ Closing this needs a decision on where the target comes from:
 Everything downstream of the target is already correct — `resolveTarget` returns
 the id and type together, and `startPromotion` sends both — so either route is
 the only piece missing.
+
+There was a second bug underneath this one, now fixed. A bundle records a
+`listingRef`, so the bundle case should have resolved its target the moment its
+listing went live. It did not: publishing back-filled `target.contentId` and
+left `target.contentType` null, and `resolveTarget` treats a recorded id as the
+answer — so instead of falling through to the branch that reads both halves off
+the published listing, it returned null and the promotion was refused with "no
+target recorded", at exactly the point it should have started working. The
+back-fill now writes both halves (see `reviewItem` in the backend's
+`workWithUsService.js`), and `scripts/smoke-work-with-us.js` covers it.

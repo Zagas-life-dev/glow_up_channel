@@ -8,7 +8,7 @@ import {
   trackForKind,
   type SubmissionPayload,
 } from "../../config"
-import { itemRef, items, newRef, orders, type ItemDoc, type OrderDoc } from "../../server/db"
+import { createSubmission, type ItemDraft, type OrderDraft } from "../../server/api"
 import { notifySubmitter, notifyTeam } from "../../server/notify"
 import { parsePayload } from "../../server/payload"
 import { initializePayment } from "../../server/paystack"
@@ -17,22 +17,11 @@ import { initializePayment } from "../../server/paystack"
  * Splits one submission into the things we will have to act on: a listing
  * batch becomes one item per listing, a promotion becomes a single item
  * carrying what was bought.
+ *
+ * References are not assigned here. The order book mints them, because it owns
+ * the collection and can retry a collision instead of storing one.
  */
-function buildItems(
-  payload: SubmissionPayload,
-  orderRef: string,
-  status: ItemDoc["status"],
-  now: Date,
-): ItemDoc[] {
-  const base = {
-    orderRef,
-    kind: payload.kind,
-    contact: payload.contact,
-    status,
-    createdAt: now,
-    updatedAt: now,
-  }
-
+function buildItems(payload: SubmissionPayload): ItemDraft[] {
   if (payload.kind === "promotion") {
     const bundle = BUNDLES.find((entry) => entry.id === payload.bundleId)
     // A bundle is stored as the items it contains so the queue shows the work,
@@ -49,9 +38,8 @@ function buildItems(
 
     return [
       {
-        ...base,
-        ref: itemRef(orderRef, 1),
         itemType: "promotion",
+        kind: payload.kind,
         contentType: null,
         fields: payload.entries[0] ?? {},
         promotions: bought,
@@ -64,10 +52,9 @@ function buildItems(
     ]
   }
 
-  return payload.entries.map((fields, index) => ({
-    ...base,
-    ref: itemRef(orderRef, index + 1),
+  return payload.entries.map((fields) => ({
     itemType: "listing" as const,
+    kind: payload.kind,
     contentType: contentTypeForKind(payload.kind),
     fields,
   }))
@@ -92,12 +79,9 @@ export async function POST(request: Request) {
 
   const { payload } = parsed
   const order = buildOrder(payload)
-  const now = new Date()
-  const ref = newRef()
   const unpaid = order.total > 0
 
-  const orderDoc: OrderDoc = {
-    ref,
+  const draft: OrderDraft = {
     track: trackForKind(payload.kind),
     kind: payload.kind,
     quantity: payload.entries.length,
@@ -108,35 +92,46 @@ export async function POST(request: Request) {
     contact: payload.contact,
     order,
     amountNg: order.total,
-    status: unpaid ? "awaiting_payment" : "pending_review",
-    createdAt: now,
-    updatedAt: now,
   }
 
-  // Nothing can be reviewed before it is paid for, so unpaid items sit out of
-  // the queue until the payment confirms and moves them across.
-  const itemDocs = buildItems(payload, ref, unpaid ? "awaiting_payment" : "pending_review", now)
+  // Nothing can be reviewed before it is paid for. The order book parks an
+  // unpaid order's items out of the queue until the payment confirms.
+  const created = await createSubmission({ order: draft, items: buildItems(payload) })
+  if (!created.ok) {
+    console.error("work-with-us submission failed:", created.error)
+    return NextResponse.json(
+      { error: "We could not save that. Please try again." },
+      { status: 500 },
+    )
+  }
+
+  const { order: orderDoc, items: itemDocs } = created.data
 
   try {
-    await (await orders()).insertOne(orderDoc)
-    await (await items()).insertMany(itemDocs)
-
     if (unpaid) {
       const authorizationUrl = await initializePayment({
         email: orderDoc.contact.email,
         amountNg: orderDoc.amountNg,
-        reference: ref,
+        reference: orderDoc.ref,
         callbackUrl: `${new URL(request.url).origin}/work-with-us`,
-        metadata: { ref, kind: orderDoc.kind },
+        metadata: { ref: orderDoc.ref, kind: orderDoc.kind },
       })
       // Nothing is announced yet — the team hears about it once it is paid for.
-      return NextResponse.json({ ref, amountNg: orderDoc.amountNg, authorizationUrl })
+      return NextResponse.json({ ref: orderDoc.ref, amountNg: orderDoc.amountNg, authorizationUrl })
     }
 
     await Promise.all([notifyTeam(orderDoc, itemDocs), notifySubmitter(orderDoc, itemDocs)])
-    return NextResponse.json({ ref, amountNg: 0 })
+    return NextResponse.json({ ref: orderDoc.ref, amountNg: 0 })
   } catch (error) {
-    console.error("work-with-us submission failed:", error)
-    return NextResponse.json({ error: "We could not save that. Please try again." }, { status: 500 })
+    // The order is saved; only the payment page or the emails failed. Hand back
+    // the reference rather than a bare error, so the submission is not lost and
+    // can be picked up from the queue.
+    console.error(`work-with-us ${orderDoc.ref} saved but could not be started:`, error)
+    return NextResponse.json(
+      {
+        error: `We saved your submission as ${orderDoc.ref}, but could not open the payment page. Quote that reference and we will send you a link.`,
+      },
+      { status: 502 },
+    )
   }
 }
