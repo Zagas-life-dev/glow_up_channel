@@ -227,6 +227,30 @@ says which variable is missing, rather than the route standing open.
 No `MONGODB_URI`. If you find yourself wanting one, the thing you want is an
 endpoint on the backend.
 
+### What happens when one of them is missing
+
+None of them are needed to build or boot. Each switches on one part of the flow,
+and without it that part says so and the rest carries on — a half-configured
+deploy loses the feature, not the site.
+
+| Missing | What stops | What the reader is told |
+| --- | --- | --- |
+| `NEXT_PUBLIC_BACKEND_URL` or `WORK_WITH_US_SERVICE_KEY` | Every read and write of an order. | A 503 naming **both** variables if both are unset. The sales page still loads; its trust strip just shows no number. |
+| `PAYSTACK_SECRET_KEY` | Taking money, and confirming it. | Free submissions are unaffected. A paid one is **saved first**, then the customer gets its reference and a note that we will send a payment link. Coming back from Paystack holds the reference open rather than reporting a failed payment. |
+| `AWS_*` / `SES_SENDER_EMAIL` | Both automatic emails. | Nothing, to the customer — the order is saved, confirmed and queued either way. The miss is logged against the order's ref. |
+| `SES_CONTACT_RECIPIENT_EMAIL` | The team notification only. | Nothing. The customer's copy still sends. |
+
+The distinction the code keeps is between **a missing setting**, **something
+being down**, and **an answer**. They are one word apart and three different
+jobs: the first is ours and permanent, the second is ours and temporary, the
+third belongs to whoever we asked. `ApiResult` in `server/api.ts` and
+`PaystackResult` in `server/paystack.ts` are both shaped to keep them apart, and
+`server/fallbacks.test.ts` pins the behaviour down.
+
+Never report a payment we could not check as a payment that did not go through.
+Someone's card has already been charged by then, and "that payment did not go
+through" sends them to their bank instead of to us.
+
 Optional: add `https://your-domain.com/work-with-us/api/webhook` as a webhook in the
 Paystack dashboard. Without it, an order only gets marked paid when the person makes it
 back to the site after paying.

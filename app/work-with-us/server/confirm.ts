@@ -29,7 +29,22 @@ export async function confirmPayment(reference: string): Promise<ConfirmResult> 
     return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true, track: doc.track }
   }
 
-  const result = await verifyPayment(reference)
+  const checked = await verifyPayment(reference)
+  if (!checked.ok) {
+    // Paystack could not be asked, so we do not know. "That payment did not go
+    // through" would be a guess here, and the wrong one for someone whose card
+    // has already been charged — hold the reference open instead. A missing key
+    // is this host's configuration, not the customer's problem, and it reads
+    // the same to them either way: nothing is lost, quote the reference.
+    console.error(`work-with-us ${doc.ref}: could not verify (${checked.reason}) — ${checked.error}`)
+    return {
+      ok: false,
+      status: 503,
+      error: `We could not check that payment just now. Nothing is lost — quote ${doc.ref} and we will confirm it.`,
+    }
+  }
+
+  const result = checked.data
   if (!result.successful) {
     return { ok: false, status: 400, error: "That payment did not go through" }
   }
@@ -61,6 +76,9 @@ export async function confirmPayment(reference: string): Promise<ConfirmResult> 
     return { ok: true, ref: doc.ref, amountNg: doc.amountNg, alreadyPaid: true, track: doc.track }
   }
 
+  // Both report their own failures and neither rejects, so a mail outage or an
+  // unset SES variable cannot turn a confirmed payment back into an error the
+  // customer sees.
   const { order, items } = recorded.data
   await Promise.all([notifyTeam(order, items), notifySubmitter(order, items)])
 

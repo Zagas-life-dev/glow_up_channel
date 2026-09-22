@@ -1,7 +1,33 @@
-import { sendBasicEmail } from "@/lib/email/service"
+import { sendBasicEmail, type BasicEmailParams } from "@/lib/email/service"
 
 import { naira } from "../config"
 import type { ItemDoc, OrderDoc } from "./api"
+
+/**
+ * Sends one of the two, and says so when it does not go.
+ *
+ * `sendBasicEmail` reports a missing AWS_* or SES_SENDER_EMAIL the same way it
+ * reports a refused address — as a returned failure, not a thrown one — and the
+ * result used to be discarded here. Logged instead, because a deploy whose mail
+ * has quietly never worked looks exactly like one whose customers never write
+ * back, and the message names the variable.
+ */
+async function send(what: string, ref: string, params: BasicEmailParams): Promise<void> {
+  const result = await sendBasicEmail(params)
+  if (!result.success) console.error(`work-with-us ${ref}: ${what} email not sent — ${result.error}`)
+}
+
+/**
+ * Wraps one of the two so it can never reject, whatever goes wrong — including
+ * while the message is still being built. Both callers run them through
+ * `Promise.all`, where one rejection would take the other down with it and
+ * surface as a failed order.
+ */
+function quietly(what: string, ref: string, run: () => Promise<void>): Promise<void> {
+  return run().catch((error: unknown) => {
+    console.error(`work-with-us ${ref}: ${what} email failed:`, error)
+  })
+}
 
 function escape(value: string): string {
   return value
@@ -40,7 +66,11 @@ function signOff(body: string): string {
  * Tells the team an order came in. Best-effort: a failed email must never lose
  * an order that is already saved, so callers ignore the result.
  */
-export async function notifyTeam(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<void> {
+export function notifyTeam(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<void> {
+  return quietly("team", doc.ref, () => teamEmail(doc, itemDocs))
+}
+
+async function teamEmail(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<void> {
   const to = process.env.SES_CONTACT_RECIPIENT_EMAIL
   if (!to) return
 
@@ -81,12 +111,12 @@ export async function notifyTeam(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<vo
     ${itemBlocks}
   `
 
-  await sendBasicEmail({
+  await send("team", doc.ref, {
     to,
     subject: `${paid ? "Paid" : "New"} submission ${doc.ref} — ${doc.kind}`,
     htmlBody: html,
     replyTo: doc.contact.email,
-  }).catch(() => undefined)
+  })
 }
 
 /**
@@ -94,7 +124,11 @@ export async function notifyTeam(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<vo
  * they sent us plus the order ID, so neither side has to ask the other what was
  * in it. Also best-effort: a failed email must not lose a saved order.
  */
-export async function notifySubmitter(doc: OrderDoc, itemDocs: ItemDoc[] = []): Promise<void> {
+export function notifySubmitter(doc: OrderDoc, itemDocs: ItemDoc[] = []): Promise<void> {
+  return quietly("customer", doc.ref, () => submitterEmail(doc, itemDocs))
+}
+
+async function submitterEmail(doc: OrderDoc, itemDocs: ItemDoc[]): Promise<void> {
   const paid = doc.status === "paid"
 
   const lines = doc.order.lines
@@ -158,13 +192,13 @@ export async function notifySubmitter(doc: OrderDoc, itemDocs: ItemDoc[] = []): 
     <strong>${escape(doc.ref)}</strong> if you get in touch.</p>
   `)
 
-  await sendBasicEmail({
+  await send("customer", doc.ref, {
     to: doc.contact.email,
     subject: paid
       ? `Payment received — your order is with UP (${doc.ref})`
       : `We've got your submission (${doc.ref})`,
     htmlBody: html,
-  }).catch(() => undefined)
+  })
 }
 
 /*

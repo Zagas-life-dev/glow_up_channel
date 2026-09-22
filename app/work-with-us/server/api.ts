@@ -124,16 +124,27 @@ export type ItemDraft = Omit<
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string }
 
+/**
+ * The settings this storefront needs to reach the order book, by name, or an
+ * empty list when it has them all.
+ *
+ * Reported together rather than one at a time: a host that is missing both
+ * should be told both, or fixing the first only earns you the second. This is
+ * also the whole of what `/work-with-us` requires to read and write orders —
+ * there is no database URI in it, and there is not meant to be.
+ */
+export function missingSettings(): string[] {
+  const missing: string[] = []
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL
+  if (!url?.trim()) missing.push("NEXT_PUBLIC_BACKEND_URL")
+  if (!process.env.WORK_WITH_US_SERVICE_KEY?.trim()) missing.push("WORK_WITH_US_SERVICE_KEY")
+  return missing
+}
+
 export function backendUrl(): string {
   const url = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL
   if (!url) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set")
   return url.replace(/\/$/, "")
-}
-
-function serviceKey(): string {
-  const key = process.env.WORK_WITH_US_SERVICE_KEY
-  if (!key) throw new Error("WORK_WITH_US_SERVICE_KEY is not set")
-  return key
 }
 
 /**
@@ -151,20 +162,19 @@ async function call<T>(
 ): Promise<ApiResult<T>> {
   const { token, ...rest } = init
 
-  let base: string
-  let key: string
-  try {
-    base = backendUrl()
-    key = serviceKey()
-  } catch (error) {
+  const missing = missingSettings()
+  if (missing.length > 0) {
     return {
       ok: false,
       status: 503,
-      error: `This server is missing a setting it needs: ${
-        error instanceof Error ? error.message : "unknown"
-      }.`,
+      error: `This server is missing ${
+        missing.length === 1 ? "a setting" : "settings"
+      } it needs: ${missing.join(" and ")}.`,
     }
   }
+
+  const base = backendUrl()
+  const key = process.env.WORK_WITH_US_SERVICE_KEY as string
 
   let response: Response
   try {

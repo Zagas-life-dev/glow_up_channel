@@ -107,31 +107,45 @@ export async function POST(request: Request) {
 
   const { order: orderDoc, items: itemDocs } = created.data
 
-  try {
-    if (unpaid) {
-      const authorizationUrl = await initializePayment({
-        email: orderDoc.contact.email,
-        amountNg: orderDoc.amountNg,
-        reference: orderDoc.ref,
-        callbackUrl: `${new URL(request.url).origin}/work-with-us`,
-        metadata: { ref: orderDoc.ref, kind: orderDoc.kind },
-      })
-      // Nothing is announced yet — the team hears about it once it is paid for.
-      return NextResponse.json({ ref: orderDoc.ref, amountNg: orderDoc.amountNg, authorizationUrl })
+  if (unpaid) {
+    const started = await initializePayment({
+      email: orderDoc.contact.email,
+      amountNg: orderDoc.amountNg,
+      reference: orderDoc.ref,
+      callbackUrl: `${new URL(request.url).origin}/work-with-us`,
+      metadata: { ref: orderDoc.ref, kind: orderDoc.kind },
+    })
+
+    if (!started.ok) {
+      // The order is saved; only the payment page failed — an unset
+      // PAYSTACK_SECRET_KEY, Paystack down, or Paystack saying no. Hand back the
+      // reference rather than a bare error, so the submission is not lost and
+      // can be picked up from the queue.
+      console.error(
+        `work-with-us ${orderDoc.ref} saved but payment could not start (${started.reason}):`,
+        started.error,
+      )
+      return NextResponse.json(
+        {
+          ref: orderDoc.ref,
+          error: `We saved your submission as ${orderDoc.ref}, but could not open the payment page. Quote that reference and we will send you a link.`,
+        },
+        { status: 502 },
+      )
     }
 
-    await Promise.all([notifyTeam(orderDoc, itemDocs), notifySubmitter(orderDoc, itemDocs)])
-    return NextResponse.json({ ref: orderDoc.ref, amountNg: 0 })
-  } catch (error) {
-    // The order is saved; only the payment page or the emails failed. Hand back
-    // the reference rather than a bare error, so the submission is not lost and
-    // can be picked up from the queue.
-    console.error(`work-with-us ${orderDoc.ref} saved but could not be started:`, error)
-    return NextResponse.json(
-      {
-        error: `We saved your submission as ${orderDoc.ref}, but could not open the payment page. Quote that reference and we will send you a link.`,
-      },
-      { status: 502 },
-    )
+    // Nothing is announced yet — the team hears about it once it is paid for.
+    return NextResponse.json({
+      ref: orderDoc.ref,
+      amountNg: orderDoc.amountNg,
+      authorizationUrl: started.data,
+    })
   }
+
+  // A free submission is complete the moment it is saved. The two emails are a
+  // courtesy on top of that and neither rejects, so a mail outage cannot be the
+  // reason someone is told their submission did not arrive — which is what the
+  // shared catch here used to do, under the wrong message at that.
+  await Promise.all([notifyTeam(orderDoc, itemDocs), notifySubmitter(orderDoc, itemDocs)])
+  return NextResponse.json({ ref: orderDoc.ref, amountNg: 0 })
 }

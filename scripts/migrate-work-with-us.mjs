@@ -13,6 +13,12 @@
  *   node scripts/migrate-work-with-us.mjs --dry-run   # report, change nothing
  *   node scripts/migrate-work-with-us.mjs             # migrate
  *
+ * This is the only thing left in the app that talks to MongoDB, and `mongodb`
+ * is deliberately not a dependency of it any more — the web host holds no
+ * database credentials, and a package.json entry is how one creeps back in.
+ * Run it from the backend, which has both, or fetch the driver just for the
+ * run: `npx -y -p mongodb@6 node scripts/migrate-work-with-us.mjs --dry-run`.
+ *
  * Safe to run twice: an order whose ref already exists is skipped, so a partial
  * run can simply be re-run. Nothing is deleted — the old collection is left
  * exactly as it is, so this is reversible by dropping the two new collections.

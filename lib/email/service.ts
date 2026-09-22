@@ -100,8 +100,21 @@ export async function sendBasicEmail(params: BasicEmailParams): Promise<EmailRes
 export async function sendContactEmail(params: ContactEmailParams): Promise<EmailResult> {
   const { message, fromEmail, name } = params
 
-  const { config } = getSesClient()
-  const contactRecipient = process.env.SES_CONTACT_RECIPIENT_EMAIL || config.senderEmail
+  // Reading the sender out here used to throw when SES was unconfigured, and
+  // /api/contact answers a throw with "Failed to process request", losing the
+  // one useful detail — which variable is unset. Everything else in this file
+  // reports that as a returned failure, so this does too.
+  let contactRecipient = process.env.SES_CONTACT_RECIPIENT_EMAIL?.trim()
+  if (!contactRecipient) {
+    try {
+      contactRecipient = getSesClient().config.senderEmail
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Amazon SES is not configured",
+      }
+    }
+  }
 
   const subject = `New contact message from ${name || fromEmail}`
 
