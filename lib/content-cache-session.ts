@@ -27,6 +27,7 @@ export type ContentCacheType =
   | "hub_events"
   | "hub_jobs"
   | "hub_resources"
+  | "discover_playlists"
 
 /** Must match CONTENT_CACHE_PREFIX in page-state-session so clear on refresh removes these keys */
 const PREFIX = "glowup_content_"
@@ -43,6 +44,13 @@ interface StoredContentCache {
   items: unknown[]
   lastId: string | null
   hasMore?: boolean
+  /**
+   * Whose feed this is, for personalised entries. The background prefetcher
+   * writes these without anyone looking at them, so an entry has to say who it
+   * was built for — otherwise signing out and in as someone else within one tab
+   * would open on the previous person's For You.
+   */
+  owner?: string
 }
 
 function getStorage(): Storage | null {
@@ -63,7 +71,7 @@ function cacheKey(type: ContentCacheType): string {
  */
 export function setContentCache<T extends { _id: string }>(
   type: ContentCacheType,
-  data: { items: T[]; lastId: string | null; hasMore?: boolean },
+  data: { items: T[]; lastId: string | null; hasMore?: boolean; owner?: string },
 ): void {
   const storage = getStorage()
   if (!storage) return
@@ -73,6 +81,7 @@ export function setContentCache<T extends { _id: string }>(
       items: (data.items || []).slice(-MAX_ITEMS),
       lastId: data.lastId ?? null,
       hasMore: data.hasMore,
+      ...(data.owner ? { owner: data.owner } : {}),
     }
     storage.setItem(cacheKey(type), JSON.stringify(stored))
   } catch {
@@ -83,7 +92,10 @@ export function setContentCache<T extends { _id: string }>(
 /**
  * Read cached items + lastId for a content type. Returns null if missing or different session (e.g. after refresh).
  */
-export function getContentCache<T = unknown>(type: ContentCacheType): ContentCacheEntry<T> | null {
+export function getContentCache<T = unknown>(
+  type: ContentCacheType,
+  opts: { owner?: string } = {},
+): ContentCacheEntry<T> | null {
   const storage = getStorage()
   if (!storage) return null
   try {
@@ -91,6 +103,8 @@ export function getContentCache<T = unknown>(type: ContentCacheType): ContentCac
     if (!raw) return null
     const stored = JSON.parse(raw) as StoredContentCache
     if (stored.boot !== getBootId()) return null
+    // A caller that names an owner only accepts an entry built for that owner.
+    if (opts.owner !== undefined && stored.owner !== opts.owner) return null
     return {
       items: (stored.items || []) as T[],
       lastId: stored.lastId ?? null,

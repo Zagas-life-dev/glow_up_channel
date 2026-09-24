@@ -62,7 +62,7 @@ import {
   searchGiftListings,
   updateGift,
 } from "@/lib/gifts/api"
-import { compressImage, formatBytes, MAX_COVER_BYTES } from "@/lib/images/compress-image"
+import { IMAGE_TARGETS, formatBytes, prepareErrorMessage, prepareImageUpload } from "@/lib/images/compress-image"
 import {
   formatGiftSize,
   giftListingDate,
@@ -594,12 +594,27 @@ export default function AdminGiftsPage() {
                   id="gift-file"
                   type="file"
                   accept=".pdf,.doc,.docx,.ppt,.pptx,image/jpeg,image/png,image/gif,image/webp,image/avif"
-                  onChange={(e) => {
-                    const picked = e.target.files?.[0] ?? null
-                    setFile(picked)
-                    if (picked) {
-                      toast.success(`File ready — ${picked.name} (${formatBytes(picked.size)})`)
+                  onChange={async (e) => {
+                    const original = e.target.files?.[0] ?? null
+                    if (!original) {
+                      setFile(null)
+                      return
                     }
+                    // Documents pass straight through; an image gift is brought to a
+                    // readable 2560px rather than uploaded at camera size.
+                    const result = await prepareImageUpload(original, IMAGE_TARGETS.resourceImage)
+                    if (!result.ok) {
+                      e.target.value = ""
+                      setFile(null)
+                      toast.error(prepareErrorMessage(result, original, IMAGE_TARGETS.resourceImage))
+                      return
+                    }
+                    setFile(result.file)
+                    toast.success(
+                      result.compressedFrom
+                        ? `File ready — compressed from ${formatBytes(result.compressedFrom)} to ${formatBytes(result.file.size)}.`
+                        : `File ready — ${result.file.name} (${formatBytes(result.file.size)})`,
+                    )
                   }}
                   className="mt-1.5"
                 />
@@ -822,22 +837,12 @@ export default function AdminGiftsPage() {
                     return
                   }
 
-                  if (picked.size <= MAX_COVER_BYTES) {
-                    setCoverImage(picked)
-                    toast.success(`Cover image ready — ${picked.name} (${formatBytes(picked.size)})`)
-                    return
-                  }
-
                   setCompressingCover(true)
-                  const result = await compressImage(picked)
+                  const result = await prepareImageUpload(picked, IMAGE_TARGETS.giftCover)
                   setCompressingCover(false)
 
                   if (!result.ok) {
-                    toast.error(
-                      result.animated
-                        ? `That GIF is ${formatBytes(picked.size)}. Animated GIFs can't be compressed without losing the animation — please use one under 10MB.`
-                        : `Image too large. This one is ${formatBytes(picked.size)} and can't be compressed below 10MB without ruining it — please use one under 10MB.`,
-                    )
+                    toast.error(prepareErrorMessage(result, picked, IMAGE_TARGETS.giftCover))
                     return
                   }
 

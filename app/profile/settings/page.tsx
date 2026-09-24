@@ -67,6 +67,7 @@ import { PageShell } from '@/components/layout/page-shell'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { canAccessMonitorPortal, canPublishContent, isMonitor } from '@/lib/roles'
 import { trackProfileEdit } from '@/lib/tracking'
+import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -597,16 +598,19 @@ export default function SettingsPage() {
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB')
-      return
-    }
-
     setUploadingImage(true)
 
     try {
+      // Brought to the 400px square the server keeps. A phone photo used to be
+      // refused for being over 5MB; now it is shrunk to a few dozen KB instead.
+      const prepared = await prepareImageUpload(file, IMAGE_TARGETS.profilePicture)
+      if (!prepared.ok) {
+        toast.error(prepareErrorMessage(prepared, file, IMAGE_TARGETS.profilePicture))
+        return
+      }
+
       const formData = new FormData()
-      formData.append('image', file)
+      formData.append('image', prepared.file)
 
       const response = await fetch(`${API_BASE_URL}/api/profile/image`, {
         method: 'POST',

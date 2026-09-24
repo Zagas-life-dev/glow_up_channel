@@ -49,7 +49,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { compressImage, formatBytes, MAX_COVER_BYTES } from '@/lib/images/compress-image'
+import { IMAGE_TARGETS, formatBytes, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 
 const MIN_DURATION = 7
 const MAX_DURATION = 365
@@ -67,8 +67,6 @@ const EXTREME_DEFAULT_DURATION = 21
 
 const EXTREME_QUICK_DURATIONS = [7, 21, 45, 90, 180, 365]
 
-/** Matches the backend's own limit for hero uploads. */
-const MAX_HERO_BYTES = MAX_COVER_BYTES
 
 type Tier = 'standard' | 'extreme'
 
@@ -429,21 +427,14 @@ export function PromoteContentModal({
                     // Let the same file be re-picked after a failure.
                     e.target.value = ''
                     if (!file) return
-                    if (file.size <= MAX_HERO_BYTES) {
-                      setHeroFile(file)
-                      return
-                    }
-
+                    // Always prepared, not just when over the cap: the server
+                    // keeps 1920x1080, so a bigger photo is only upload time.
                     setCompressing(true)
-                    const result = await compressImage(file, MAX_HERO_BYTES)
+                    const result = await prepareImageUpload(file, IMAGE_TARGETS.promotionHero)
                     setCompressing(false)
 
                     if (!result.ok) {
-                      toast.error(
-                        result.animated
-                          ? `That GIF is ${formatBytes(file.size)}. Animated GIFs can't be compressed without losing the animation — please use one under 10MB.`
-                          : `Image too large. This one is ${formatBytes(file.size)} and can't be compressed below 10MB without ruining it — please use one under 10MB.`,
-                      )
+                      toast.error(prepareErrorMessage(result, file, IMAGE_TARGETS.promotionHero))
                       return
                     }
 

@@ -82,8 +82,27 @@ export interface Playlist {
   updatedAt: string
   itemCount: number
   saveCount?: number
-  coverImage?: string
+  /**
+   * Engagement counters. Everyone gets views and likes (saves are `saveCount`);
+   * owners and collaborators also get shares, impressions and click-throughs.
+   */
+  metrics?: PlaylistMetrics
+  coverImage?: string | null
   isSaved?: boolean
+  /** Whether the signed-in viewer has liked it. Absent when signed out. */
+  isLiked?: boolean
+  /** Discover only: the 0–100 rank score and the one-line reason it was shown. */
+  score?: number
+  reason?: "matchesInterests" | "popular" | "justPosted" | null
+}
+
+export interface PlaylistMetrics {
+  viewCount?: number
+  likeCount?: number
+  saveCount?: number
+  shareCount?: number
+  impressionCount?: number
+  clickCount?: number
 }
 
 /**
@@ -115,6 +134,10 @@ interface PlaylistContextType {
   createPlaylist: (data: CreatePlaylistData) => Promise<Playlist>
   updatePlaylist: (id: string, data: Partial<CreatePlaylistData>) => Promise<Playlist>
   deletePlaylist: (id: string) => Promise<void>
+  /** Upload (or replace) a playlist's cover image. Owner or editor only. Resolves to the hosted URL. */
+  uploadPlaylistCover: (id: string, file: File) => Promise<string>
+  /** Remove the cover image, falling back to the generated art. */
+  removePlaylistCover: (id: string) => Promise<void>
   addToPlaylist: (playlistId: string, item: AddToPlaylistItem) => Promise<void>
   removeFromPlaylist: (playlistId: string, itemId: string) => Promise<void>
   inviteCollaborator: (playlistId: string, email: string, role: 'editor' | 'viewer') => Promise<void>
@@ -479,6 +502,37 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     await fetchPlaylists()
   }, [getAuthHeaders, fetchPlaylists])
 
+  // Cover image. Multipart, so the JSON Content-Type from getAuthHeaders is left
+  // off and the browser sets the boundary itself.
+  const uploadPlaylistCover = useCallback(async (id: string, file: File): Promise<string> => {
+    const token = localStorage.getItem('accessToken')
+    const body = new FormData()
+    body.append('cover', file)
+    const response = await fetch(`${API_BASE_URL}/api/playlists/${encodeURIComponent(id)}/cover`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body,
+    })
+    const result = await response.json().catch(() => null)
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.message || 'Failed to upload cover')
+    }
+    await fetchPlaylists()
+    return result.data.coverImage as string
+  }, [fetchPlaylists])
+
+  const removePlaylistCover = useCallback(async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/playlists/${encodeURIComponent(id)}/cover`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    })
+    const result = await response.json().catch(() => null)
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.message || 'Failed to remove cover')
+    }
+    await fetchPlaylists()
+  }, [getAuthHeaders, fetchPlaylists])
+
   // Check if user can edit a playlist
   const canEditPlaylist = useCallback((playlist: Playlist): boolean => {
     if (!user) return false
@@ -670,6 +724,8 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       createPlaylist,
       updatePlaylist,
       deletePlaylist,
+      uploadPlaylistCover,
+      removePlaylistCover,
       addToPlaylist,
       removeFromPlaylist,
       inviteCollaborator,

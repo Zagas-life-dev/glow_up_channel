@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP Platform Design</title>
+<meta name="description" content="Every user-facing UP page redrawn in UP Design v1 — same flows, light and dark.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* ═══ UP Design v1 tokens + proposed feed neutrals ═══════════════════════ */
+:root{
+  --surface-page:#FBFAF7; --surface-card:#FFFFFF; --surface-navy:#0B1233;
+  --surface-navy-subtle:rgba(255,255,255,.06);
+  --border-default:#E7E4DC; --border-on-navy:rgba(255,255,255,.12);
+  --ink:#0B1233; --ink-muted:#5B5847;
+  --text-on-navy:#FBFAF7; --text-on-navy-muted:rgba(251,250,247,.65); --text-on-navy-faint:rgba(251,250,247,.4);
+  --accent-orange:#FF6A00; --accent-orange-ink:#B8551E; --accent-orange-tint:rgba(255,106,0,.12);
+  --accent-lime:#D6FF3F; --accent-lime-tint:rgba(214,255,63,.35);
+  --radius-sm:12px; --radius-md:14px; --radius-lg:18px; --radius-xl:20px; --radius-pill:999px;
+  --display:'Unbounded',sans-serif; --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --fill-subtle:#F2EFE8; --hairline:#F0EDE6; --sep:#C9C4B6; --border-hover:#D8D3C6; --bar-bg:rgba(251,250,247,.94);
+}
+/* Proposed dark theme — applied per artboard by the Light/Dark switch */
+.dark{
+  --surface-page:#070A1C; --surface-card:#10173A;
+  --border-default:rgba(255,255,255,.09); --border-hover:rgba(255,255,255,.18);
+  --ink:#FBFAF7; --ink-muted:rgba(251,250,247,.66);
+  --accent-orange-ink:#FF8A3D; --accent-orange-tint:rgba(255,106,0,.16);
+  --accent-lime-tint:rgba(214,255,63,.14);
+  --fill-subtle:rgba(255,255,255,.07); --hairline:rgba(255,255,255,.07); --sep:rgba(255,255,255,.25);
+  --bar-bg:rgba(7,10,28,.9);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F4F1EA;color:#0B1233;font-family:var(--body);-webkit-font-smoothing:antialiased}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+svg.i.sm{width:15px;height:15px} svg.i.lg{width:22px;height:22px} svg.i.xl{width:28px;height:28px}
+
+/* ═══ Document chrome ═══════════════════════════════════════════════════ */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(11,18,51,.96);backdrop-filter:blur(12px);color:#FBFAF7}
+.topbar .in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 24px}
+.topbar b{font-family:var(--display);font-size:15px}
+.topbar .grow{flex:1}
+.jump{position:relative}
+.jump summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font:600 13px var(--body);background:rgba(255,255,255,.08);color:#FBFAF7;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:8px 14px;user-select:none}
+.jump summary::-webkit-details-marker{display:none}
+.jump[open] summary{background:#FBFAF7;color:#0B1233}
+.jump-menu{position:absolute;right:0;top:calc(100% + 8px);width:340px;max-height:70vh;overflow:auto;background:#fff;color:#0B1233;border-radius:18px;box-shadow:0 20px 50px rgba(11,18,51,.3);padding:8px}
+.jump-menu h5{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5B5847;padding:10px 12px 4px}
+.jump-menu a{display:flex;gap:10px;padding:9px 12px;border-radius:12px;color:#0B1233;text-decoration:none;font-size:14px;font-weight:600}
+.jump-menu a span{font-family:var(--display);font-size:11px;color:#B8551E;min-width:22px;padding-top:2px}
+.jump-menu a:hover{background:#F2EFE8}
+@media (max-width:640px){.jump-menu{position:fixed;left:12px;right:12px;width:auto;top:56px}}
+.theme{display:flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px}
+.theme button{font:700 13px var(--body);border:0;background:transparent;color:rgba(251,250,247,.7);padding:7px 14px;border-radius:999px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.theme button.on{background:#FF6A00;color:#0B1233}
+.doc-hero{background:#0B1233;color:#FBFAF7;padding:72px 24px 64px}
+.wrap{max-width:1240px;margin:0 auto}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#B8551E}
+.doc-hero .eyebrow{color:#FF6A00}
+.doc-hero h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.4vw,54px);line-height:1.1;margin-top:16px;max-width:980px}
+.doc-hero p.lede{margin-top:20px;font-size:18px;line-height:1.6;color:#FF6A00;max-width:800px}
+.doc-meta{margin-top:32px;display:flex;flex-wrap:wrap;gap:8px}
+.doc-meta span{font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.12);color:rgba(251,250,247,.65);border-radius:999px;padding:6px 12px}
+.idx{padding:56px 24px 8px}
+.idx h2,.screen h2{font-family:var(--display);font-weight:700;font-size:clamp(22px,2.6vw,34px);line-height:1.2;margin-top:8px}
+.idx-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:28px}
+.idx-g{background:#fff;border:1px solid #E7E4DC;border-radius:20px;padding:20px}
+.idx-g h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#5B5847;margin-bottom:12px}
+.idx-g a{display:flex;gap:10px;align-items:baseline;padding:7px 0;color:#0B1233;text-decoration:none;font-size:15px;font-weight:600;border-top:1px solid #F0EDE6}
+.idx-g a:first-of-type{border-top:0}
+.idx-g a span{font-family:var(--display);font-size:11px;color:#B8551E;min-width:22px}
+.idx-g a:hover{color:#B8551E}
+@media (max-width:980px){.idx-groups{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.idx-groups{grid-template-columns:1fr}}
+.rules{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.rule{background:#0B1233;color:#FBFAF7;border-radius:18px;padding:16px 18px;font-size:14px;line-height:1.5}
+.rule b{display:block;font-family:var(--display);font-size:14px;margin-bottom:4px}
+.rule span{color:#FF6A00}
+@media (max-width:980px){.rules{grid-template-columns:1fr 1fr}}
+.screen{padding:72px 24px 0;scroll-margin-top:56px}
+.screen-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.route{font:600 12px ui-monospace,Consolas,monospace;background:#fff;border:1px solid #E7E4DC;border-radius:999px;padding:6px 12px;color:#5B5847}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.note{background:#fff;border:1px solid #E7E4DC;border-radius:18px;padding:18px 20px}
+.note h4{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#5B5847;margin-bottom:10px}
+.note ul{list-style:none;display:grid;gap:8px}
+.note li{font-size:14px;line-height:1.5;color:#3B3A33;padding-left:16px;position:relative}
+.note li::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:#0B1233}
+.note.chg li::before{background:#FF6A00}
+.note li b{color:#0B1233}
+@media (max-width:800px){.notes{grid-template-columns:1fr}}
+.stage{margin-top:20px;background:#E9E5DB;border-radius:22px;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:24px;align-items:start;transition:background .2s}
+body.is-dark .stage{background:#03050F}
+.stage .cap{font-size:12px;font-weight:700;color:#5B5847;margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase}
+body.is-dark .stage .cap{color:rgba(251,250,247,.55)}
+@media (max-width:1100px){.stage{grid-template-columns:1fr}.stage .mcol{justify-self:center}}
+.scaler{position:relative;width:100%}
+.scaler > .art{position:absolute;top:0;left:0;transform-origin:0 0}
+footer.doc{margin-top:96px;padding:32px 24px;background:#0B1233;color:#FF6A00;font-size:13px}
+footer.doc .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ═══ Artboards ═════════════════════════════════════════════════════════ */
+.art{background:var(--surface-page);color:var(--ink);font-family:var(--body)}
+.board{border-radius:14px;overflow:hidden;box-shadow:0 1px 0 rgba(11,18,51,.06),0 12px 40px rgba(11,18,51,.14);position:relative}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0B1233,0 30px 60px rgba(11,18,51,.25)}
+.phone.dark{box-shadow:0 0 0 10px #1B2352,0 30px 60px rgba(0,0,0,.5)}
+.app{display:flex;height:100%}
+
+/* Sidebar */
+.side{width:280px;flex-shrink:0;background:var(--surface-navy);color:var(--text-on-navy);display:flex;flex-direction:column;padding:24px 16px}
+.dark .side{box-shadow:inset -1px 0 0 rgba(255,255,255,.08)}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px 22px;border-bottom:1px solid var(--border-on-navy)}
+.mark{font-family:var(--display);font-weight:800;font-size:20px;background:var(--accent-orange);color:var(--surface-navy);width:44px;height:44px;border-radius:var(--radius-md);display:grid;place-items:center;flex-shrink:0}
+.brand b{font-family:var(--display);font-weight:700;font-size:18px;display:block}
+.brand small{font-size:13px;color:var(--accent-orange);opacity:.85}
+.brand .collapse{margin-left:auto;color:var(--text-on-navy-faint)}
+.nav{display:grid;gap:3px;padding-top:18px}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-pill);font-size:14px;font-weight:500;color:var(--text-on-navy)}
+.nav a svg{color:var(--text-on-navy-muted)}
+.nav a.on{background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);font-weight:700}
+.nav a.on svg{color:var(--accent-orange)}
+.nav a .cnt{margin-left:auto;font-size:12px;color:var(--text-on-navy-faint)}
+.nav-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-orange);opacity:.75;padding:18px 12px 6px}
+.side-foot{margin-top:auto;display:grid;gap:3px;border-top:1px solid var(--border-on-navy);padding-top:14px}
+.me{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border-radius:var(--radius-lg);background:var(--surface-navy-subtle)}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accent-lime);color:var(--surface-navy);font-family:var(--display);font-weight:700;font-size:12px;display:grid;place-items:center;flex-shrink:0}
+.av.o{background:var(--accent-orange)} .av.c{background:#FBFAF7} .av.n{background:var(--surface-navy);color:var(--accent-orange);box-shadow:0 0 0 2px var(--surface-card)}
+.me b{font-size:14px;display:block}
+.me small{font-size:12px;color:var(--accent-orange);opacity:.85}
+.org{display:flex;gap:12px;align-items:center;margin-top:18px;padding:12px;border-radius:var(--radius-lg);background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy)}
+.org .logo{width:40px;height:40px;border-radius:var(--radius-sm);background:#FBFAF7;color:var(--surface-navy);font-family:var(--display);font-weight:800;font-size:13px;display:grid;place-items:center}
+.org b{font-size:14px;display:block}
+.org small{font-size:12px;color:var(--accent-lime);display:flex;align-items:center;gap:4px}
+.quota{padding:12px;border-radius:var(--radius-lg);background:var(--surface-navy-subtle);margin-top:10px}
+.quota .top{display:flex;justify-content:space-between;font-size:12px;color:var(--text-on-navy-muted)}
+.quota .top b{color:var(--text-on-navy);font-family:var(--display);font-size:12px}
+.quota .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}
+.quota .bar i{display:block;height:100%;background:var(--accent-orange);border-radius:99px}
+.ro{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:4px 9px;background:var(--accent-lime);color:var(--surface-navy)}
+
+/* Main area */
+.main{flex:1;min-width:0;position:relative;overflow:hidden}
+.tbar{position:sticky;top:0;z-index:5;background:var(--bar-bg);backdrop-filter:blur(14px);border-bottom:1px solid var(--border-default)}
+.bar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:14px 0}
+.dash-head{display:flex;align-items:center;gap:12px;padding:16px 40px;border-bottom:1px solid var(--border-default);background:var(--bar-bg)}
+.dash-head .t small{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-orange-ink)}
+.dash-head .t b{font-family:var(--display);font-size:20px;font-weight:700}
+.dash-head .grow{flex:1}
+.pg{max-width:760px;margin:0 auto;padding:28px 0 40px}
+.pg.wide{max-width:none;padding:28px 40px 40px}
+.tabs{display:flex;gap:6px;overflow:hidden;flex:1;min-width:0}
+.tab{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:var(--radius-pill);font-size:14px;font-weight:600;color:var(--ink-muted);white-space:nowrap;flex-shrink:0}
+.tab .n{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+.tab.on{background:var(--surface-navy);color:var(--text-on-navy)}
+.tab.on svg{color:var(--accent-orange)}
+.dark .tab.on{background:var(--ink);color:var(--surface-navy)}
+.dark .tab.on svg{color:#B8551E}
+.seg{display:flex;gap:4px;padding:4px;border-radius:var(--radius-pill);background:var(--fill-subtle);width:max-content;max-width:100%}
+.seg .tab{height:34px;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border:1px solid var(--border-default);background:var(--surface-card);border-radius:var(--radius-pill);font-size:13px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radius-pill);border:1px solid var(--border-default);font-size:13px;font-weight:600;color:var(--ink-muted);background:var(--surface-card);white-space:nowrap}
+.chip.on{background:var(--surface-navy);border-color:var(--surface-navy);color:var(--text-on-navy)}
+.dark .chip.on{background:var(--ink);border-color:var(--ink);color:var(--surface-navy)}
+.chip.lime{background:var(--accent-lime-tint);border-color:transparent;color:var(--ink)}
+.chip.or{background:var(--accent-orange-tint);border-color:transparent;color:var(--accent-orange-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lbl-s{font-size:12px;font-weight:700;color:var(--ink-muted)}
+
+/* Type */
+.ph{margin-bottom:22px}
+.ph h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.15}
+.ph p{font-size:15px;line-height:1.55;color:var(--ink-muted);margin-top:8px;max-width:600px}
+.ph .eb{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-orange-ink);margin-bottom:8px}
+.ph-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.h2{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.3}
+.h3{font-size:16px;font-weight:700}
+.sub{font-size:13px;color:var(--ink-muted);margin-top:2px}
+.eb2{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
+.mut{color:var(--ink-muted)}
+
+/* Buttons & inputs */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:var(--radius-pill);font-size:15px;font-weight:700;background:var(--accent-orange);color:var(--surface-navy);white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px}
+.btn.ghost{background:var(--surface-card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--border-default)}
+.btn.navy{background:var(--surface-navy);color:var(--text-on-navy)}
+.dark .btn.navy{background:var(--ink);color:var(--surface-navy)}
+.btn.full{width:100%;height:52px;font-size:16px}
+.btn.dis{opacity:.4}
+.ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink-muted);flex-shrink:0}
+.ib.b{box-shadow:inset 0 0 0 1.5px var(--border-default);background:var(--surface-card);color:var(--ink)}
+.inp{display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border-radius:var(--radius-md);background:var(--surface-card);border:1.5px solid var(--border-default);font-size:15px;color:var(--ink-muted)}
+.inp.lg{height:56px;border-radius:var(--radius-pill);padding:0 20px;font-size:16px;box-shadow:0 1px 0 rgba(11,18,51,.03)}
+.inp.focus{border-color:var(--accent-orange);box-shadow:0 0 0 4px var(--accent-orange-tint)}
+.inp .v{color:var(--ink)}
+.inp .grow{flex:1}
+.fld{display:grid;gap:7px}
+.fld label{font-size:13px;font-weight:700}
+.fld .hint{font-size:12px;color:var(--ink-muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sw{width:44px;height:26px;border-radius:99px;background:var(--fill-subtle);box-shadow:inset 0 0 0 1.5px var(--border-default);position:relative;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface-card);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--accent-orange);box-shadow:none}
+.sw.on::after{left:21px;background:#fff}
+.stack{display:grid;gap:12px}
+.hr{height:1px;background:var(--border-default)}
+
+/* Panels & tiles */
+.panel{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:20px 22px}
+.panel-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.panel-h .grow{flex:1}
+.kchip{width:34px;height:34px;border-radius:var(--radius-sm);display:grid;place-items:center;flex-shrink:0}
+.kchip.lg{width:44px;height:44px;border-radius:var(--radius-md)}
+.k-opp{background:var(--accent-orange-tint);color:var(--accent-orange-ink)}
+.k-job{background:var(--surface-navy);color:var(--text-on-navy)}
+.k-evt{background:var(--accent-lime-tint);color:var(--ink)}
+.k-res{background:var(--surface-card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--border-default)}
+.k-neu{background:var(--fill-subtle);color:var(--ink)}
+.dark .k-job{background:var(--ink);color:var(--surface-navy)}
+.dark .k-evt{color:var(--accent-lime)}
+.dark .k-res{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
+.stat{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:16px 18px}
+.stat .top{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--ink-muted)}
+.stat .v{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1;margin-top:10px}
+.stat .d{font-size:12px;color:var(--ink-muted);margin-top:4px}
+.stat.navy{background:var(--surface-navy);border-color:transparent;color:var(--text-on-navy)}
+.stat.navy .top,.stat.navy .d{color:var(--accent-orange)}
+.dark .stat.navy{background:#141D4A;box-shadow:0 0 0 1px rgba(255,106,0,.35)}
+.banner{display:flex;align-items:center;gap:14px;background:var(--accent-orange-tint);border-radius:var(--radius-xl);padding:14px 18px}
+.banner .grow{flex:1}
+.banner b{font-size:14px;display:block}
+.banner span{font-size:13px;color:var(--ink-muted)}
+.meter{height:8px;border-radius:99px;background:var(--fill-subtle);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--accent-orange)}
+
+/* Feed card (from home proposal) */
+.disclose{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding-left:4px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.disclose .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-orange)}
+.card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:18px 20px 12px;position:relative}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.kind{display:flex;align-items:center;gap:10px;min-width:0;font-size:13px}
+.kind b{font-weight:700}
+.kind .prov{color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kind .sep{color:var(--sep)}
+.due{font-size:12px;font-weight:700;border-radius:var(--radius-pill);padding:5px 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.due.up{background:var(--fill-subtle);color:var(--ink-muted)}
+.due.soon{background:var(--accent-orange-tint);color:var(--accent-orange-ink)}
+.due.urg{background:var(--accent-orange);color:var(--surface-navy)}
+.due.cl{background:var(--fill-subtle);color:var(--ink-muted)}
+.due.ok{background:var(--accent-lime-tint);color:var(--ink)}
+.card h3{font-size:17px;line-height:1.35;font-weight:700;margin-top:14px}
+.card p.desc{font-size:14px;line-height:1.55;color:var(--ink-muted);margin-top:6px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--ink-muted)}
+.meta > span{display:inline-flex;align-items:center;gap:5px}
+.meta .pay{color:var(--ink);font-weight:700}
+.meta .pay i{font-style:normal;font-weight:500;color:var(--ink-muted)}
+.match{color:var(--accent-orange-ink);font-weight:700}
+.match b{font-family:var(--display);font-weight:700;font-size:13px;margin-right:1px}
+.actions{display:flex;align-items:center;gap:2px;margin-top:12px;padding-top:8px;border-top:1px solid var(--hairline)}
+.act{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;color:var(--ink-muted)}
+.act.on-like{color:var(--accent-orange-ink)} .act.on-like svg{fill:var(--accent-orange);stroke:var(--accent-orange)}
+.act.on-save{color:var(--ink)} .act.on-save svg{fill:currentColor}
+.go{margin-left:auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
+.lead{background:var(--surface-navy);color:var(--text-on-navy);border-radius:var(--radius-xl);padding:22px 22px 18px;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(11,18,51,.22)}
+.lead::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:130px;border-radius:var(--radius-xl);background:var(--accent-orange);transform:rotate(-8deg)}
+.lead::before{content:"";position:absolute;right:30px;top:-26px;width:90px;height:70px;border-radius:var(--radius-lg);background:var(--accent-lime);transform:rotate(6deg);z-index:1}
+.lead > *{position:relative;z-index:2}
+.lead .kind b{color:var(--text-on-navy)} .lead .kind .prov{color:var(--accent-orange)}
+.lead .kchip{background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);color:var(--accent-orange)}
+.lead h3{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.25;margin-top:18px;max-width:78%}
+.lead p.desc{color:var(--accent-orange);font-size:14px;line-height:1.55;margin-top:8px;max-width:90%}
+.lead .meta{color:var(--accent-orange)} .lead .meta .pay,.lead .match{color:var(--text-on-navy)}
+.lead .row{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+.lead .due.soon{background:rgba(255,106,0,.18);color:var(--accent-orange)}
+.dark .lead{background:#141D4A;box-shadow:0 0 0 1px rgba(255,106,0,.4),0 20px 50px rgba(0,0,0,.55)}
+.skel{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:18px 20px}
+.skel i{display:block;background:var(--hairline);border-radius:99px;height:12px}
+
+/* List rows */
+.rows{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);overflow:hidden}
+.ri{display:flex;align-items:center;gap:14px;padding:14px 18px;border-top:1px solid var(--hairline)}
+.ri:first-child{border-top:0}
+.ri .body{flex:1;min-width:0}
+.ri .t{font-size:15px;font-weight:700;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri .m{font-size:13px;color:var(--ink-muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ri .m span{display:inline-flex;align-items:center;gap:4px}
+.dd{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--border-default);font-size:12px;font-weight:700;color:var(--ink);background:var(--surface-card);white-space:nowrap}
+.dd.hot{background:var(--accent-orange);color:var(--surface-navy);box-shadow:none}
+.bucket{margin-top:26px}
+.bucket-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.bucket-h .n{font-family:var(--display);font-size:13px;font-weight:700}
+.bucket p.h{font-size:13px;color:var(--ink-muted);margin:4px 0 12px}
+.bucket.first .rows{border-color:var(--accent-orange);box-shadow:0 0 0 3px var(--accent-orange-tint)}
+
+/* Playlist cover — the card-stack motif, coloured by what's inside */
+.cover{position:relative;background:var(--surface-navy);border-radius:var(--radius-lg);overflow:hidden;flex-shrink:0}
+.cover i{position:absolute;border-radius:10px}
+.cover i:nth-child(1){width:62%;height:48%;left:10%;top:14%;transform:rotate(-8deg)}
+.cover i:nth-child(2){width:58%;height:44%;left:34%;top:34%;transform:rotate(6deg)}
+.cover i:nth-child(3){width:40%;height:30%;left:16%;top:62%;transform:rotate(-3deg)}
+.c-opp{background:var(--accent-orange)} .c-job{background:#FBFAF7} .c-evt{background:var(--accent-lime)} .c-res{background:#5B6BA8}
+.dark .cover{box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.avs{display:flex}
+.avs .av{width:30px;height:30px;font-size:10px;box-shadow:0 0 0 2px var(--surface-page);margin-left:-8px}
+.avs .av:first-child{margin-left:0}
+
+/* Detail hero */
+.dhero{background:var(--surface-navy);color:var(--text-on-navy);border-radius:28px;padding:28px 36px 34px;position:relative;overflow:hidden}
+.dhero::after{content:"";position:absolute;right:-30px;top:-40px;width:240px;height:170px;border-radius:24px;background:var(--accent-orange);transform:rotate(-8deg)}
+.dhero::before{content:"";position:absolute;right:80px;top:-30px;width:120px;height:90px;border-radius:20px;background:var(--accent-lime);transform:rotate(7deg);z-index:1}
+.dhero > *{position:relative;z-index:2}
+.dark .dhero{background:#141D4A;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.dhero .nb{display:flex;justify-content:space-between;max-width:calc(100% - 260px)}
+.dhero .ibn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--text-on-navy)}
+.dhero .eb{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-orange);margin-top:26px}
+.dhero h1{font-family:var(--display);font-weight:700;font-size:36px;line-height:1.15;margin-top:10px;max-width:720px}
+.dhero .st{font-size:15px;color:var(--accent-orange);margin-top:10px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:26px;max-width:600px}
+.tile{background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);border-radius:var(--radius-lg);padding:14px 16px}
+.tile small{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-orange)}
+.tile b{display:block;font-family:var(--display);font-size:22px;margin-top:6px}
+.tile.hot{background:var(--accent-orange);box-shadow:none}
+.tile.hot small,.tile.hot b{color:var(--surface-navy)}
+.d-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;margin-top:24px;align-items:start}
+.sec{padding:22px 0;border-top:1px solid var(--hairline)}
+.sec:first-child{border-top:0;padding-top:0}
+.sec h4{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:10px}
+.sec p{font-size:15px;line-height:1.65}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fact{display:flex;gap:10px;align-items:flex-start}
+.fact small{display:block;font-size:12px;color:var(--ink-muted)}
+.fact b{font-size:14px}
+.why{background:var(--accent-orange-tint);border-radius:var(--radius-xl);padding:18px 20px}
+.why .hd{display:flex;justify-content:space-between;align-items:center}
+.why .pct{font-family:var(--display);font-weight:700;font-size:15px;color:var(--accent-orange-ink)}
+.why ul{list-style:none;display:grid;gap:8px;margin-top:12px}
+.why li{display:flex;gap:10px;font-size:14px;line-height:1.45}
+.why li svg{color:var(--accent-orange-ink);margin-top:1px}
+.rail{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:20px;display:grid;gap:12px}
+.applybar{position:absolute;left:0;right:0;bottom:0;background:var(--bar-bg);backdrop-filter:blur(12px);border-top:1px solid var(--border-default);padding:12px 16px 26px;display:flex;gap:10px;align-items:center}
+
+/* Onboarding / auth */
+.segp{display:flex;gap:6px}
+.segp i{flex:1;height:5px;border-radius:99px;background:var(--fill-subtle)}
+.segp i.on{background:var(--accent-orange)}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 16px;border-radius:var(--radius-lg);border:1.5px solid var(--border-default);background:var(--surface-card);font-size:15px;font-weight:600}
+.opt .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--border-hover);display:grid;place-items:center;color:transparent}
+.opt.on{border-color:var(--surface-navy);background:var(--surface-navy);color:var(--text-on-navy)}
+.opt.on .ck{background:var(--accent-orange);box-shadow:none;color:var(--surface-navy)}
+.dark .opt.on{border-color:var(--accent-orange);background:#141D4A}
+.payoff{display:flex;align-items:center;gap:14px;border-radius:var(--radius-lg);background:var(--accent-lime-tint);padding:14px 16px;font-size:13px;line-height:1.4}
+.payoff b{font-family:var(--display);font-size:22px}
+.auth{display:grid;grid-template-columns:1.1fr 1fr;height:100%}
+.auth-l{background:var(--surface-navy);color:var(--text-on-navy);padding:48px 56px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.dark .auth-l{box-shadow:inset -1px 0 0 rgba(255,255,255,.08)}
+.auth-l h1{font-family:var(--display);font-weight:700;font-size:44px;line-height:1.1;margin-top:auto}
+.auth-l h1 em{font-style:normal;color:var(--accent-orange)}
+.auth-l p.s{font-size:17px;line-height:1.6;color:var(--accent-orange);margin-top:16px;max-width:460px}
+.auth-pts{display:grid;gap:12px;margin-top:32px;margin-bottom:24px}
+.auth-pt{display:flex;gap:14px;align-items:flex-start;background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);border-radius:var(--radius-lg);padding:14px 16px;max-width:460px}
+.auth-pt .kchip{background:rgba(255,106,0,.18);color:var(--accent-orange)}
+.auth-pt b{font-size:14px;display:block}
+.auth-pt span{font-size:13px;color:var(--text-on-navy-muted)}
+.stackart{position:absolute;right:-60px;top:40px;width:360px;height:260px}
+.stackart i{position:absolute;border-radius:22px}
+.stackart i:nth-child(1){width:220px;height:150px;left:40px;top:20px;background:#1C2554;transform:rotate(-8deg)}
+.stackart i:nth-child(2){width:200px;height:140px;left:120px;top:70px;background:var(--accent-orange);transform:rotate(5deg)}
+.stackart i:nth-child(3){width:120px;height:86px;left:70px;top:150px;background:var(--accent-lime);transform:rotate(-4deg)}
+.auth-r{display:flex;align-items:center;justify-content:center;padding:40px}
+.auth-card{width:100%;max-width:420px}
+.auth-card h2{font-family:var(--display);font-weight:700;font-size:28px}
+.pill-live{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-on-navy-muted);border:1px solid var(--border-on-navy);border-radius:99px;padding:6px 12px;width:max-content}
+.pill-live i{width:8px;height:8px;border-radius:50%;background:var(--accent-lime)}
+.codes{display:flex;gap:10px}
+.codes span{width:52px;height:60px;border-radius:var(--radius-md);border:1.5px solid var(--border-default);background:var(--surface-card);display:grid;place-items:center;font-family:var(--display);font-size:22px;font-weight:700}
+.codes span.f{border-color:var(--accent-orange);box-shadow:0 0 0 4px var(--accent-orange-tint)}
+.rulesl{display:grid;gap:6px;font-size:13px}
+.rulesl span{display:flex;gap:8px;align-items:center;color:var(--ink-muted)}
+.rulesl span.ok{color:var(--ink)} .rulesl span.ok svg{color:var(--accent-orange-ink)}
+
+/* Analytics */
+.la{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:18px 20px}
+.la-top{display:flex;align-items:center;gap:12px}
+.la-top .t{flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eng{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-muted);margin-top:10px}
+.eng b{color:var(--ink);font-weight:700;margin-right:3px}
+.fun{display:flex;height:14px;border-radius:99px;overflow:hidden;margin-top:14px;gap:2px}
+.fun i{display:block;height:100%}
+.f1{background:var(--surface-navy)} .f2{background:var(--accent-orange)} .f3{background:var(--accent-lime)} .f4{background:var(--sep)} .f5{background:var(--fill-subtle);box-shadow:inset 0 0 0 1px var(--border-default)}
+.dark .f1{background:#FBFAF7}
+.fleg{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-muted)}
+.fleg span{display:inline-flex;align-items:center;gap:6px}
+.fleg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.fleg b{color:var(--ink)}
+.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--hairline)}
+.rates small{display:block;font-size:11px;color:var(--ink-muted)}
+.rates b{font-family:var(--display);font-size:15px}
+
+/* Settings */
+.set-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px}
+.vnav{display:grid;gap:4px;align-content:start}
+.vnav a{display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;border-radius:99px;font-size:14px;font-weight:600;color:var(--ink-muted)}
+.vnav a.on{background:var(--surface-navy);color:var(--text-on-navy)}
+.vnav a.on svg{color:var(--accent-orange)}
+.dark .vnav a.on{background:var(--ink);color:var(--surface-navy)}
+.dark .vnav a.on svg{color:#B8551E}
+.sset{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:20px 22px}
+.sset .h3{margin-bottom:2px}
+.sset .sub{margin-bottom:16px}
+.tg{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--hairline)}
+.tg:first-of-type{border-top:0}
+.tg .body{flex:1}
+.tg b{font-size:14px;display:block}
+.tg span{font-size:13px;color:var(--ink-muted)}
+
+/* Mobile */
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:700;flex-shrink:0}
+.m{display:flex;flex-direction:column;height:100%}
+.m-top{padding:6px 16px 10px;background:var(--bar-bg);border-bottom:1px solid var(--border-default)}
+.m-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.m-mk{font-family:var(--display);font-weight:800;font-size:12px;width:32px;height:32px;border-radius:10px;background:var(--accent-orange);color:var(--surface-navy);display:grid;place-items:center}
+.m-title{font-family:var(--display);font-weight:700;font-size:18px}
+.m-tabs{display:flex;gap:6px;overflow:hidden;margin-top:10px;margin-right:-16px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.m-tabs .tab{height:34px;padding:0 13px;font-size:13px}
+.m-body{flex:1;overflow:hidden;padding:16px}
+.m-body.pb{padding-bottom:0}
+.bnav{height:78px;flex-shrink:0;background:var(--surface-card);border-top:1px solid var(--border-default);display:flex;justify-content:space-around;align-items:flex-start;padding-top:8px}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--ink-muted);width:64px}
+.bnav a .p{width:52px;height:30px;border-radius:99px;display:grid;place-items:center}
+.bnav a.on{color:var(--ink)}
+.bnav a.on .p{background:var(--surface-navy);color:var(--accent-orange)}
+.dark .bnav a.on .p{background:var(--ink);color:var(--surface-navy)}
+.hind{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--ink);z-index:9}
+.phone .ph h1{font-size:24px}
+.phone .ph p{font-size:14px}
+.phone .card{padding:16px 16px 8px}
+.phone .card h3{font-size:16px;margin-top:12px}
+.phone .lead{padding:18px}
+.phone .lead h3{font-size:18px;max-width:80%}
+.phone .lead::after{width:130px;height:100px;right:-40px;top:-44px}
+.phone .lead::before{width:64px;height:52px;right:22px;top:-22px}
+.phone .act{padding:0 8px}
+.phone .panel{padding:16px}
+.phone .stat{padding:14px}
+.phone .stat .v{font-size:24px}
+.phone .ri{padding:12px 14px}
+.phone .dhero{border-radius:0 0 28px 28px;padding:12px 20px 24px}
+.phone .dhero .nb{max-width:none}
+.phone .dhero h1{font-size:24px}
+.phone .dhero::after{width:150px;height:110px;right:-40px;top:-30px}
+.phone .dhero::before{width:80px;height:60px;right:40px;top:-24px}
+.phone .tiles{gap:8px;margin-top:18px}
+.phone .tile{padding:10px 12px}
+.phone .tile b{font-size:17px}
+.phone .la{padding:14px 16px}
+.phone .rates{grid-template-columns:repeat(3,1fr)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="star" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol>
+<symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6"/></symbol>
+<symbol id="brief" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M3 12.5h18"/></symbol>
+<symbol id="cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></symbol>
+<symbol id="book" viewBox="0 0 24 24"><path d="M5 5.5A2.5 2.5 0 017.5 3H19v15H7.5A2.5 2.5 0 005 20.5z"/><path d="M5 20.5A2.5 2.5 0 017.5 18H19v3H7.5"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 01-1.5 1.5H15v-6h-6v6H5.5A1.5 1.5 0 014 19z"/></symbol>
+<symbol id="plist" viewBox="0 0 24 24"><path d="M4 6h12M4 11h12M4 16h7"/><circle cx="16.5" cy="17" r="2.5"/><path d="M19 17V9.5l2-1"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/></symbol>
+<symbol id="tick" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0115 0"/></symbol>
+<symbol id="heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-9.8A4 4 0 0112 7.6a4 4 0 017 2.6C19 15.7 12 20 12 20z"/></symbol>
+<symbol id="mark" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-3.8-5.5 3.8z"/></symbol>
+<symbol id="ladd" viewBox="0 0 24 24"><path d="M4 6h13M4 11.5h9M4 17h6M17 14v7M13.5 17.5h7"/></symbol>
+<symbol id="share" viewBox="0 0 24 24"><circle cx="17.5" cy="5.5" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><circle cx="17.5" cy="18.5" r="2.5"/><path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4"/></symbol>
+<symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+<symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+<symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+<symbol id="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+<symbol id="chevr" viewBox="0 0 24 24"><path d="M10 7l5 5-5 5"/></symbol>
+<symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+<symbol id="grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></symbol>
+<symbol id="dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></symbol>
+<symbol id="out" viewBox="0 0 24 24"><path d="M14.5 4H18a2 2 0 012 2v12a2 2 0 01-2 2h-3.5M10 8l-4 4 4 4M6 12h10"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="eye" viewBox="0 0 24 24"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+<symbol id="side" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+<symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="18.5" r="1.4" fill="currentColor"/></symbol>
+<symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 018 0v2.5"/></symbol>
+<symbol id="users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0112 0M16 4.5a3.5 3.5 0 010 7M17.5 14.5A6 6 0 0121 20"/></symbol>
+<symbol id="trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M4.2 7.5l2.2 1.3M17.6 15.2l2.2 1.3M4.2 16.5l2.2-1.3M17.6 8.8l2.2-1.3"/><circle cx="12" cy="12" r="6.5"/></symbol>
+<symbol id="bars" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V5M19 20v-12"/></symbol>
+<symbol id="file" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/></symbol>
+<symbol id="bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+<symbol id="mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></symbol>
+<symbol id="key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2"/></symbol>
+<symbol id="upload" viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 20h14"/></symbol>
+<symbol id="link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
+<symbol id="filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
+<symbol id="inbox" viewBox="0 0 24 24"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></symbol>
+<symbol id="grad" viewBox="0 0 24 24"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.5 3.5 2.2 5.5 2.2s4-.7 5.5-2.2V11"/></symbol>
+<symbol id="tools" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 00-5 5L4 17l3 3 5.5-5.5a4 4 0 005-5l-2.5 2.5-2.5-.5-.5-2.5z"/></symbol>
+<symbol id="bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9V16h7v-2.1A6 6 0 0012 3z"/></symbol>
+<symbol id="refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 00-14.3-4.3L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0014.3 4.3L20 15.5M20 20v-4.5h-4.5"/></symbol>
+<symbol id="shuffle" viewBox="0 0 24 24"><path d="M4 7h3l10 10h3M17 20l3-3-3-3M4 17h3l3-3M14 10l3-3h3M17 4l3 3-3 3"/></symbol>
+<symbol id="building" viewBox="0 0 24 24"><rect x="4" y="3" width="11" height="18" rx="1.5"/><path d="M15 9h5v12h-5M8 7h3M8 11h3M8 15h3"/></symbol>
+<symbol id="camera" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.5"/><path d="M9 7l1.5-2.5h3L15 7"/></symbol>
+<symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></symbol>
+<symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+<symbol id="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+</defs></svg>
+
+<div class="topbar"><div class="in">
+  <b>UP</b><span style="font-size:13px;opacity:.7">Platform design v1</span>
+  <span class="grow"></span>
+  <details class="jump" id="jump"><summary>Jump to a screen<svg class="i sm"><use href="#chev"/></svg></summary><nav class="jump-menu" id="jump-menu" aria-label="Screens"></nav></details>
+  <div class="theme" role="group" aria-label="Artboard theme">
+    <button id="t-light" class="on" type="button"><svg class="i sm"><use href="#sun"/></svg>Light</button>
+    <button id="t-dark" type="button"><svg class="i sm"><use href="#moon"/></svg>Dark</button>
+  </div>
+</div></div>
+
+<header class="doc-hero"><div class="wrap">
+  <div class="eyebrow">UP · Every user-facing page · Design proposal v1</div>
+  <h1>One language from sign-up to provider hub.</h1>
+  <p class="lede">Every page a person can reach, redrawn in UP Design v1: seekers, providers and monitors. Each screen keeps its current flow, meaning the same steps, tabs, actions and order. Only the look changes. Use the switch at the top to see every screen in dark mode.</p>
+  <div class="doc-meta"><span>24 Sep 2026</span><span>21 screens · desktop 1440 + mobile 390</span><span>Light and dark</span><span>Proposal only — no code changed</span></div>
+</div></header>
+
+<section class="idx"><div class="wrap">
+  <div class="eyebrow">Index</div>
+  <h2>What's covered</h2>
+  <div class="idx-groups" id="idx"></div>
+  <div class="rules">
+    <div class="rule"><b>Navy is a place</b><span>Every sidebar, detail hero, auth panel and the extreme card. Never a small chip on light surfaces, except the job chip.</span></div>
+    <div class="rule"><b>One orange action</b><span>Each screen has one solid orange button: Apply, Continue, Post, Sign in. Everything else is outlined or navy.</span></div>
+    <div class="rule"><b>Four type chips</b><span>Opportunity orange tint · Job navy · Event lime · Resource outline, the same on every page.</span></div>
+    <div class="rule"><b>Unbounded for moments</b><span>Page titles, big numbers, match %, and the lead card. Listing titles and everything else you read use Plus Jakarta.</span></div>
+  </div>
+</div></section>
+
+<main id="screens"></main>
+
+<footer class="doc"><div class="wrap"><span>UP is a product by Outside Solutions</span><span>Platform design proposal v1 · 24 Sep 2026</span></div></footer>
+
+<script>
+/* ═══ Helpers ═══════════════════════════════════════════════════════════ */
+const I=(n,c='')=>`<svg class="i ${c}"><use href="#${n}"/></svg>`;
+const K={opp:['k-opp','target','Opportunity'],job:['k-job','brief','Job'],evt:['k-evt','cal','Event'],res:['k-res','book','Resource']};
+const kchip=(k,c='')=>`<span class="kchip ${K[k][0]} ${c}">${I(K[k][1])}</span>`;
+
+function card(o){
+  const due=o.due?`<span class="due ${o.due[0]}">${o.due[0]==='urg'||o.due[0]==='soon'?I('clock','sm'):''}${o.due[1]}</span>`:'';
+  const meta=(o.meta||[]).map(m=>`<span>${m}</span>`).join('')+(o.pay?`<span class="pay">${o.pay}</span>`:'')+(o.match?`<span class="match"><b>${o.match}</b>% match</span>`:'');
+  const a=o.a||[0,0,0,0];
+  const inner=`<div class="card-top"><div class="kind">${kchip(o.k)}<b>${o.label||K[o.k][2]}</b><span class="sep">·</span><span class="prov">${o.prov}</span></div>${due}</div>
+    <h3>${o.title}</h3>${o.desc?`<p class="desc">${o.desc}</p>`:''}<div class="meta">${meta}</div>
+    <div class="actions"><span class="act ${o.liked?'on-like':''}">${I('heart')}${a[0]||''}</span><span class="act ${o.saved?'on-save':''}">${I('mark')}${a[1]||''}</span><span class="act">${I('ladd')}${a[2]||''}</span><span class="act">${I('share')}${a[3]||''}</span><span class="go">${I('arrow')}</span></div>`;
+  return (o.sponsored?`<div><div class="disclose"><span class="dot"></span>Sponsored</div>`:'<div>')+`<article class="card">${inner}</article></div>`;
+}
+function lead(m){
+  return `<div><div class="disclose"><span class="dot"></span>Sponsored · Featured</div><article class="lead">
+    <div class="kind">${`<span class="kchip">${I('target')}</span>`}<b>Fellowship</b><span class="sep">·</span><span class="prov">Savanna Fund</span></div>
+    <h3>Savanna Founders Fellowship 2027${m?'':' — $25k grant + 12-week residency'}</h3>
+    <p class="desc">${m?'$25k grant + 12-week residency for builders aged 18–30.':'For builders aged 18–30 working on climate, fintech or agritech across West and East Africa. Mentors, demo day in Nairobi, no equity taken.'}</p>
+    <div class="meta"><span>${I('pin','sm')}Remote</span>${m?'':'<span class="pay">$25,000</span>'}<span class="match"><b>94</b>% match</span></div>
+    <div class="row"><span class="btn ${m?'sm':''}">See the fellowship${I('arrow','sm')}</span><span class="due soon">${I('clock','sm')}3 days left</span></div>
+  </article></div>`;
+}
+const C={
+  job:{k:'job',prov:'Kora Labs',due:['up','6 days left'],title:'Junior Product Designer (Hybrid)',desc:'Design flows for a payments app used by 400k small traders. Portfolio over degree.',meta:[I('pin','sm')+'Lagos, Nigeria'],pay:'₦450,000/mo <i>≈ $290</i>',match:88,a:[96,41,12,9],liked:1,saved:1},
+  evt:{k:'evt',prov:'Sahel Design Week',due:['urg','14h 22m left'],title:'Portfolio review night with senior designers',meta:['Accra, Ghana','Free'],match:81,a:[58,20,0,4]},
+  opp:{k:'opp',prov:'Tinuke Academy',title:'Fully funded data analytics bootcamp — 16 weeks, laptop included',desc:'Evening cohort for recent graduates. Ends with a placement interview.',meta:['Remote','Due Nov 12'],match:77,a:[133,67,8,15]},
+  res:{k:'res',prov:'UP Library',title:'The CV template that got 40 UP members interviews',desc:'One page, ATS-safe, with notes on what recruiters skim for.',meta:['Free download','3,410 views'],match:69,a:[402,311,57,88]},
+  opp2:{k:'opp',prov:'Pan-African Youth Forum',due:['soon','2 days left'],title:'Youth delegate programme — Kigali summit',meta:['Kigali, Rwanda','Travel covered'],a:[77,30,0,6],sponsored:1},
+};
+const mC=o=>Object.assign({},o,{desc:null,meta:(o.meta||[]).slice(0,1),pay:o.pay?o.pay.replace(/ <i>.*<\/i>/,'').replace(',000','k'):null});
+
+/* ═══ Shells ════════════════════════════════════════════════════════════ */
+function seekerSide(on){
+  const n=(id,ic,l)=>`<a class="${on===id?'on':''}">${I(ic)}${l}</a>`;
+  return `<aside class="side"><div class="brand"><div class="mark">UP</div><div><b>UP</b><small>Your growth hub</small></div>${I('side','collapse')}</div>
+  <nav class="nav">${n('home','home','Home')}${n('playlist','plist','Playlist')}${n('search','search','Search')}${n('tracker','check','Tracker')}
+  <div class="nav-label">Playlists</div>${n('mine','plist','My playlists')}${n('discover','compass','Discover')}
+  <div class="nav-label">Library</div>${n('profile','user','My profile')}${n('prov','grid','Provider hub')}</nav>
+  <div class="side-foot nav">${n('settings','gear','Settings')}${n('x','dl','Install app')}${n('x','out','Log out')}
+  <div class="me"><div class="av">KO</div><div><b>Kachi O.</b><small>Lagos, Nigeria</small></div></div></div></aside>`;
+}
+function provSide(on){
+  const n=(id,ic,l)=>`<a class="${on===id?'on':''}">${I(ic)}${l}</a>`;
+  return `<aside class="side"><div class="brand"><div class="mark">UP</div><div><b>Provider hub</b><small>Publish and measure</small></div></div>
+  <div class="org"><div class="logo">SF</div><div><b>Savanna Fund</b><small>${I('check','sm')}Verified</small></div></div>
+  <nav class="nav">${n('overview','grid','Overview')}${n('content','file','Content')}${n('promotions','bolt','Promotions')}${n('analytics','bars','Analytics')}
+  <div class="nav-label">Quick links</div>${n('settings','gear','Settings')}${n('x','home','Back to UP')}</nav>
+  <div class="side-foot"><div class="quota"><div class="top"><span>Listings this cycle</span><b>12 / 20</b></div><div class="bar"><i style="width:60%"></i></div></div>
+  <div class="me"><div class="av o">AM</div><div><b>Amara M.</b><small>Provider</small></div></div></div></aside>`;
+}
+function monSide(on){
+  const n=(id,ic,l)=>`<a class="${on===id?'on':''}">${I(ic)}${l}</a>`;
+  return `<aside class="side"><div class="brand"><div class="mark">UP</div><div><b>Monitor</b><small>Watch, don't edit</small></div></div>
+  <div style="padding:16px 8px 0"><span class="ro">${I('eye','sm')}Read-only</span></div>
+  <nav class="nav">${n('listings','eye','Listings')}${n('analytics','bars','Analytics')}<div class="nav-label">Quick links</div>${n('x','home','Back to UP')}</nav>
+  <div class="side-foot"><div class="me"><div class="av c">TB</div><div><b>Tobi B.</b><small>Monitor · 8 listings</small></div></div></div></aside>`;
+}
+const desk=(side,main)=>`<div class="app">${side}<div class="main">${main}</div></div>`;
+const dhead=(eb,t,right='')=>`<div class="dash-head"><div class="t"><small>${eb}</small><b>${t}</b></div><span class="grow"></span>${right}</div>`;
+
+const BN={seeker:[['home','home','Home'],['plist','plist','Playlists'],['search','search','Search'],['tracker','check','Tracker'],['profile','user','Profile']],
+  prov:[['overview','grid','Overview'],['content','file','Content'],['promotions','bolt','Promote'],['analytics','bars','Analytics']],
+  mon:[['listings','eye','Listings'],['analytics','bars','Analytics'],['home','home','UP']]};
+const bnav=(set,on)=>`<nav class="bnav">${BN[set].map(([id,ic,l])=>`<a class="${id===on?'on':''}"><span class="p">${I(ic)}</span>${l}</a>`).join('')}</nav>`;
+const phone=(top,body,nav,opt={})=>`<div class="m"><div class="status"><span>9:41</span><span>●●● ▮</span></div>${top||''}<div class="m-body ${opt.pb?'pb':''}" style="${opt.style||''}">${body}</div>${nav||''}</div>${opt.after||''}<div class="hind"></div>`;
+const mtop=(title,right='',extra='')=>`<div class="m-top"><div class="m-row">${title}${right}</div>${extra}</div>`;
+const tabsRow=(list,on,cls='tabs')=>`<div class="${cls}">${list.map(([id,ic,l,n])=>`<span class="tab ${id===on?'on':''}">${ic?I(ic,'sm'):''}${l}${n!=null?` <span class="n">${n}</span>`:''}</span>`).join('')}</div>`;
+const FEEDTABS=[['all','star','For You'],['opp','target','Opportunities'],['job','brief','Jobs'],['evt','cal','Events'],['res','book','Resources']];
+
+/* ═══ Screens ═══════════════════════════════════════════════════════════ */
+const S=[];
+const add=(o)=>S.push(o);
+
+/* 01 Home */
+add({id:'home',g:'Seeker app',t:'Home — For You',r:'/',h:1000,
+ keep:['Fixed tab bar with 5 tabs and the country picker','One-line greeting on For You only','Extreme campaign first, a sponsored item after every 4 posts','Title opens the listing; like, save, playlist and share; infinite scroll'],
+ chg:['Full detail in <b>design_home_up_v1/Home.html</b>','Type chips, orange deadline pills, navy active tab','Extreme campaign keeps its own navy card'],
+ d:desk(seekerSide('home'),`<div class="tbar"><div class="bar-in">${tabsRow(FEEDTABS,'all')}<span class="pill">${I('globe','sm')}Nigeria${I('chev','sm')}</span></div></div>
+   <div class="pg" style="max-width:672px"><div style="margin-bottom:20px"><div class="h2" style="font-size:22px">Hey, Kachi</div><div class="sub" style="font-size:14px">Picks to help you glow up.</div></div>
+   <div class="stack">${lead()}${card(C.job)}${card(C.evt)}</div></div>`),
+ m:phone(mtop('<span class="m-mk">UP</span>',`<span class="pill" style="height:32px">${I('globe','sm')}NG${I('chev','sm')}</span>`,tabsRow(FEEDTABS,'all','m-tabs')),
+   `<div style="margin-bottom:14px"><div class="h2">Hey, Kachi</div><div class="sub">Picks to help you glow up.</div></div><div class="stack">${lead(1)}${card(mC(C.job))}</div>`,bnav('seeker','home'))});
+
+/* 02 Hub */
+const hubHead=(m)=>`<div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">${kchip('opp','lg')}<div><div class="h2" style="font-size:${m?20:26}px">Opportunities</div><div class="sub" style="font-size:14px">Scholarships, fellowships, grants, and programs</div></div></div>
+ <div class="inp lg">${I('search')}<span>Search opportunities${m?'…':' by title, category, or provider…'}</span></div>
+ <div class="chips" style="margin-top:12px"><span class="lbl-s">Popular:</span>${['Scholarship','Fellowship','Internship','Grant'].concat(m?[]:['Competition','Mentorship']).map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+ <div class="panel" style="margin:18px 0;display:flex;gap:14px;align-items:flex-start;background:var(--fill-subtle);border-color:transparent;padding:16px 18px">${`<span class="kchip k-opp">${I('shuffle')}</span>`}<div><div class="h3" style="font-size:14px">This page isn't personalized</div><p class="sub" style="font-size:13px;line-height:1.5;margin-top:4px">${m?'Every live opportunity, soonest-closing first, reshuffled each visit.':'No recommendation algorithm runs here. You\'re seeing every opportunity that\'s live, ordered by how soon it closes and reshuffled on each visit.'}</p><span class="match" style="font-size:13px;display:inline-flex;gap:6px;align-items:center;margin-top:8px">Go to your personalized feed${I('arrow','sm')}</span></div></div>`;
+add({id:'hub',g:'Seeker app',t:'Hubs — Opportunities, Jobs, Events, Resources',r:'/opportunities · /jobs · /events · /resources',h:1060,
+ keep:['Header with icon tile, heading and subheading','Search bar, then "Popular" tag shortcuts','"This page isn\'t personalized" notice with a link back to For You','Extreme campaign first, sponsored every 4, no sponsored cards on a search'],
+ chg:['Icon tile uses the type chip, so each hub reads in its own type colour','Popular tags become pills; the notice becomes a quiet grey panel, not a gradient card','Same template for all four hubs: only the chip, heading and tags change'],
+ d:desk(seekerSide('home'),`<div class="pg" style="max-width:672px">${hubHead()}<div class="stack">${lead()}${card(C.opp)}</div></div>`),
+ m:phone(mtop('<span class="m-mk">UP</span>',''),`${hubHead(1)}<div class="stack">${lead(1)}</div>`,bnav('seeker','home'))});
+
+/* 03 Detail */
+const dHero=(m)=>`<div class="dhero"><div class="nb"><span class="ibn">${I('back')}</span><span class="ibn">${I('share')}</span></div>
+  <div class="eb">Fellowship · Savanna Fund</div><h1>Savanna Founders Fellowship 2027</h1><div class="st">$25k grant + 12-week residency · Remote / Nairobi</div>
+  <div class="tiles"><div class="tile"><small>Award</small><b>$25k</b></div><div class="tile hot"><small>Closes in</small><b>3 days</b></div><div class="tile"><small>Match</small><b>94%</b></div></div></div>`;
+const why=`<div class="why"><div class="hd"><div class="h3">Why you're seeing this</div><span class="pct">94% match</span></div><ul>
+  <li>${I('tick','sm')}You picked Entrepreneurship &amp; Funding in onboarding</li><li>${I('tick','sm')}Open to Nigeria, where you're based</li><li>${I('tick','sm')}Built for 18–30, which matches your age</li></ul></div>`;
+add({id:'detail',g:'Seeker app',t:'Listing detail',r:'/opportunities/[id] · /jobs/[id] · /events/[id] · /resources/[id]',h:1080,
+ keep:['Hero with back, share, eyebrow, title, subtitle and three stat tiles','"Why you\'re seeing this" with the same match number as the feed card','About, Eligibility (verbatim), Requirements, What you get, Dates, Location, trust bar, Similar','Desktop: sticky Apply rail. Mobile: sticky Apply bar'],
+ chg:['Hero moves from slate-950 to <b>surface-navy</b> with the card-stack tiles, so detail pages become one of the navy "places"','The closing-date tile turns solid orange when the deadline is 3 days away or less','"Apply on savannafund.org" is the page\'s only orange button'],
+ d:desk(seekerSide('home'),`<div class="pg wide" style="max-width:1160px;margin:0 auto">${dHero()}
+  <div class="d-grid"><div class="panel" style="padding:24px 28px">
+   <div class="sec">${why}</div>
+   <div class="sec"><h4>About</h4><p>A 12-week residency for founders building for African markets. Each fellow receives a $25,000 non-dilutive grant, weekly mentor sessions and a demo day in Nairobi in front of 40 investors.</p></div>
+   <div class="sec"><h4>Requirements</h4><div class="facts"><div class="fact">${kchip('opp')}<div><small>Age</small><b>18–30</b></div></div><div class="fact">${`<span class="kchip k-neu">${I('pin')}</span>`}<div><small>Citizenship</small><b>Any African country</b></div></div><div class="fact">${`<span class="kchip k-neu">${I('brief')}</span>`}<div><small>Career</small><b>Early-stage founder</b></div></div><div class="fact">${`<span class="kchip k-neu">${I('tools')}</span>`}<div><small>Skills</small><b>Product, sales</b></div></div></div></div>
+  </div>
+  <div style="display:grid;gap:16px"><div class="rail"><span class="btn full">Apply on savannafund.org${I('ext','sm')}</span><div style="display:flex;gap:10px;align-items:center"><span class="ib b">${I('mark')}</span><span class="ib b">${I('ladd')}</span><span class="sub" style="margin:0">Save it and we'll remind you before it closes.</span></div><div class="sub" style="text-align:center">Closes 27 Sep 2026</div></div>
+   <div class="panel"><div class="eb2" style="margin-bottom:10px">Similar, also open</div><div class="stack" style="gap:10px"><div class="fact">${kchip('opp')}<div><b>Lagos Tech Fellowship</b><small>Closes Oct 4</small></div></div><div class="fact">${kchip('evt')}<div><b>Founder office hours</b><small>Oct 9 · Lagos</small></div></div></div></div></div></div></div>`),
+ m:phone('',`<div style="margin:-16px -16px 0">${dHero(1)}</div><div style="padding-top:18px">${why}<div class="sec" style="margin-top:6px"><h4>About</h4><p style="font-size:14px">A 12-week residency for founders building for African markets. Each fellow receives a $25,000 grant…</p></div></div>`,'',
+   {pb:1,after:`<div class="applybar" style="bottom:0"><span class="ib b">${I('mark')}</span><span class="btn" style="flex:1;height:50px">Apply on savannafund.org</span></div>`})});
+
+/* 04 Search */
+const sTop=(m)=>`<div class="inp lg focus">${I('search')}<span class="v grow">design internship</span>${I('x','sm')}</div>
+ <div style="margin-top:14px">${tabsRow([['all','','All'],['opp','',m?'Opps':'Opportunities'],['evt','','Events'],['job','','Jobs'],['res','','Resources']],'job','tabs')}</div>
+ <div class="chips" style="margin-top:12px"><span class="pill">${I('globe','sm')}Nigeria${I('chev','sm')}</span><span class="pill">${I('pin','sm')}Anywhere${I('chev','sm')}</span>${m?'':`<span class="pill">Any type${I('chev','sm')}</span>`}<span class="chip on">Remote</span><span class="chip">Paid</span>${m?'':'<span class="chip" style="border:0">'+I('x','sm')+'Clear all</span>'}</div>
+ <div class="chips" style="margin-top:10px"><span class="lbl-s">Closing in</span><span class="chip">Today</span><span class="chip">3 days</span><span class="chip on">7 days</span><span class="chip">30 days</span>${m?'':'<span class="chip">3 months</span>'}</div>
+ <p class="sub" style="margin:14px 0 12px">6 results · Jobs · remote · closing within 7 days</p>`;
+add({id:'search',g:'Seeker app',t:'Search',r:'/search',h:1040,
+ keep:['Title and explainer, then a sticky search field with clear button','Type tabs All / Opportunities / Events / Jobs / Resources (short labels on mobile)','Filters: country, city, type, Remote, Paid, Clear all; "Closing in" presets','Result count line, feed cards, empty states for no results or no date match'],
+ chg:['Search field becomes a 56px pill with an orange focus ring','The active type tab is the navy pill, the same as the feed tab bar','Remote/Paid toggles and date presets are all chips; the selected one fills navy'],
+ d:desk(seekerSide('search'),`<div class="pg" style="max-width:720px"><div class="ph"><h1>Search</h1><p>Same listings as home — search by keyword, or filter by what is closing soon, where it is, and when it was added.</p></div>${sTop()}<div class="stack">${card(C.job)}</div></div>`),
+ m:phone('',`<div class="ph" style="margin-bottom:12px"><h1>Search</h1></div>${sTop(1)}<div class="stack">${card(mC(C.job))}</div>`,bnav('seeker','search'))});
+
+/* 05 Playlists */
+const cov=(t,s=56)=>`<div class="cover" style="width:${s}px;height:${s}px">${t.map(x=>`<i class="c-${x}"></i>`).join('')}</div>`;
+const plRow=(t,n,meta,d,own)=>`<div class="ri">${cov(t)}<div class="body"><div class="t">${n}</div><div class="m"><span>${meta[0]==='pub'?I('globe','sm')+'Public':I('lock','sm')+'Private'}</span><span>${meta[1]} items</span>${meta[2]?`<span>${I('users','sm')}${meta[2]}</span>`:''}</div>${d?`<div class="m" style="margin-top:4px">${d}</div>`:''}</div><span class="ib">${I(own?'more':'mark')}</span></div>`;
+const plList=(m)=>`<div class="rows">${plRow(['opp','evt','job'],'Scholarships to apply for in Q4',['pub',12,'3 creators'],m?'':'Fully funded only, with deadlines before January.',1)}${plRow(['job','res'],'Remote design roles',['priv',7],m?'':'Junior and mid-level, Africa-friendly time zones.',1)}${plRow(['evt','evt','opp'],'Lagos events this month',['pub',5],'',1)}${plRow(['res','res'],'CV and interview kit',['priv',9],'',1)}</div>`;
+add({id:'playlists',g:'Seeker app',t:'Playlists',r:'/playlists',h:900,
+ keep:['Sticky header: title, one-line description, "New" button','Discover / Saved / Mine / Shared with counts (Discover only for guests)','Rows: cover, name, public or private, item count, collaborators, description, actions','Owner menu with edit and delete; save or unsave on other people\'s playlists'],
+ chg:['Covers become the <b>card-stack motif</b>: navy tile with rotated cards coloured by what\'s inside, instead of random-hue gradients','Tabs become a segmented pill; "New" is the orange action','Rows sit in one white panel with hairlines'],
+ d:desk(seekerSide('mine'),`<div class="pg"><div class="ph-row ph"><div><h1>Playlists</h1><p>Opportunities, jobs, and events — grouped the way you think about them.</p></div><span class="btn">${I('plus','sm')}New</span></div>
+  <div class="seg" style="margin-bottom:18px">${tabsRow([['d','','Discover'],['s','','Saved',4],['m','','Mine',6],['sh','','Shared',2]],'m','tabs')}</div>${plList()}</div>`),
+ m:phone(mtop('<span class="m-title">Playlists</span>',`<span class="btn sm" style="width:40px;padding:0">${I('plus')}</span>`,`<div class="seg" style="margin-top:12px;width:100%">${tabsRow([['d','','Discover'],['s','','Saved',4],['m','','Mine',6],['sh','','Shared']],'m','tabs')}</div>`),plList(1),bnav('seeker','plist'))});
+
+/* 06 Playlist detail */
+const itRow=(k,t,m)=>`<div class="ri">${kchip(k)}<div class="body"><div class="t">${t}</div><div class="m">${m}</div></div><span class="ib">${I('ext','sm')}</span><span class="ib">${I('trash','sm')}</span></div>`;
+const pdHead=(m)=>`<div style="display:flex;gap:${m?16:24}px;align-items:${m?'flex-start':'flex-end'};flex-direction:${m?'column':'row'}">${cov(['opp','evt','job'],m?120:168)}<div style="flex:1">
+  <div class="eb2">Playlist</div><div style="font-family:var(--display);font-weight:700;font-size:${m?24:38}px;line-height:1.12;margin-top:6px">Scholarships to apply for in Q4</div>
+  <div class="m" style="display:flex;gap:12px;font-size:13px;color:var(--ink-muted);margin-top:10px">${I('globe','sm')}Public · 12 items · 48 saved</div>
+  <p class="sub" style="font-size:14px;margin-top:8px">Fully funded only, with deadlines before January.</p>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:14px"><div class="avs"><div class="av">KO</div><div class="av o">AM</div><div class="av c">TB</div></div><span class="sub" style="margin:0">3 creators</span><span class="btn sm ghost">${I('users','sm')}Invite</span><span class="ib b">${I('pencil','sm')}</span></div></div></div>`;
+const pdItems=(m)=>`<div style="display:flex;justify-content:space-between;align-items:center;margin:${m?20:28}px 0 12px"><span class="eb2">Items</span><span class="btn sm navy">${I('plus','sm')}Add</span></div>
+  <div class="chips" style="margin-bottom:12px"><span class="chip on">All 12</span><span class="chip">Opportunity 7</span><span class="chip">Event 3</span>${m?'':'<span class="chip">Job 2</span>'}</div>
+  <div class="rows">${itRow('opp','Chevening Scholarship 2027','Closes Nov 5 · UK')}${itRow('opp','Mastercard Scholars — MSc',`Closes Dec 1 · <span class="due soon" style="padding:2px 8px">${I('clock','sm')}3 days</span>`)}${itRow('evt','Scholarship essay workshop','Oct 12 · Online')}${m?'':itRow('job','Research Assistant — AfDB','Closes Nov 20 · Abidjan')}</div>`;
+add({id:'playlist',g:'Seeker app',t:'Playlist detail',r:'/playlists/[id]',h:980,
+ keep:['Back to Playlists, large cover, name, public/private, item count, saved count, description','Creators with Invite; owner edit and more menu','Items header with Add, type filter chips with counts','Item rows: open in new tab, remove (owner)'],
+ chg:['The cover grows into a hero-sized card-stack; the title is in Unbounded','Type filters use the same chips as Search','Item rows use the type chips, and a deadline pill appears when it\'s close'],
+ d:desk(seekerSide('mine'),`<div class="pg"><div style="display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;color:var(--ink-muted);margin-bottom:22px">${I('back','sm')}Playlists</div>${pdHead()}${pdItems()}</div>`),
+ m:phone('',`<div style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--ink-muted);margin-bottom:14px">${I('back','sm')}Playlists</div>${pdHead(1)}${pdItems(1)}`,bnav('seeker','plist'))});
+
+/* 07 Tracker */
+const tRow=(t,m,dd,hot,due)=>`<div class="ri"><div class="body"><div class="t">${t}</div><div class="m"><span>${m}</span>${due||''}</div></div><span class="dd ${hot?'hot':''}">${dd}${I('chev','sm')}</span></div>`;
+const tracker=(m)=>`<div class="bucket first" style="margin-top:0"><div class="bucket-h"><span class="eb2" style="color:var(--accent-orange-ink)">Needs an answer</span><span class="n">2</span></div><p class="h">You left for these and never said how it went.</p>
+  <div class="rows">${tRow('Savanna Founders Fellowship','Savanna Fund','How did it go?',1,`<span class="due soon" style="padding:2px 8px">${I('clock','sm')}Closes in 3 days</span>`)}${tRow('Junior Product Designer','Kora Labs','How did it go?',1,'<span>Closes in 6 days</span>')}</div></div>
+ <div class="bucket"><div class="bucket-h"><span class="eb2">Unfinished</span><span class="n">1</span></div><p class="h">Started but not sent. These are the ones with time left on them.</p><div class="rows">${tRow('Data analytics bootcamp','Tinuke Academy','Started, not finished',0,'<span>Closes Nov 12</span>')}</div></div>
+ <div class="bucket"><div class="bucket-h"><span class="eb2">Submitted</span><span class="n">3</span></div><p class="h">In, and still open.</p><div class="rows">${tRow('Chevening Scholarship 2027','Chevening','Submitted',0,'<span>Closes Nov 5</span>')}${m?'':tRow('Graduate Operations Trainee','Northstar Logistics','Submitted',0,'<span>Closes Oct 30</span>')}</div></div>
+ ${m?'':`<div class="bucket"><div class="bucket-h"><span class="eb2">Closed</span><span class="n">4</span></div><p class="h">Done, one way or another.</p><div class="rows">${tRow('Youth delegate programme','Pan-African Youth Forum',`<span class="due ok" style="padding:0;background:none">Accepted</span>`,0,'<span>Closed 12d ago</span>')}</div></div>`}`;
+add({id:'tracker',g:'Seeker app',t:'Tracker',r:'/tracker',h:1080,
+ keep:['Title plus the honest explainer ("We can\'t see other sites…")','Buckets in order: Needs an answer, Unfinished, Submitted, Awaiting answer, Closed, each with a hint and count','Status dropdown per row; closing-soon pill; empty and error states','Row title links to the listing'],
+ chg:['"Needs an answer" is the one highlighted bucket: orange ring, and the status control becomes a solid orange "How did it go?" pill','Other buckets stay quiet white panels','The closing-soon pill matches the feed card; "Accepted" gets a lime pill'],
+ d:desk(seekerSide('tracker'),`<div class="pg" style="max-width:680px"><div class="ph"><h1>Tracker</h1><p>Everything you left UP to apply for. We can't see other sites, so this is built entirely from what you tell us on the way back.</p></div>${tracker()}</div>`),
+ m:phone('',`<div class="ph" style="margin-bottom:16px"><h1>Tracker</h1><p style="font-size:13px">Everything you left UP to apply for.</p></div>${tracker(1)}`,bnav('seeker','tracker'))});
+
+/* 08 Profile */
+const profHead=(m)=>`<div class="dhero" style="padding:${m?'20px':'28px 32px'}"><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+  <div class="av" style="width:${m?72:92}px;height:${m?72:92}px;font-size:${m?22:28}px;box-shadow:0 0 0 4px rgba(255,255,255,.12)">KO</div>
+  <div style="flex:1;min-width:0"><div style="font-family:var(--display);font-weight:700;font-size:${m?22:30}px">Kachi Okafor</div><div style="color:var(--accent-orange);font-size:14px;margin-top:4px">Product designer · Building for African SMEs</div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--text-on-navy-muted)"><span>${I('pin','sm')} Lagos, Nigeria</span><span>${I('grad','sm')} Early career</span>${m?'':`<span>${I('cal','sm')} Joined Mar 2025</span>`}</div></div></div>
+  <div style="display:flex;gap:10px;margin-top:18px"><span class="btn ${m?'sm':''}" style="flex:${m?1:'none'}">${I('gear','sm')}Edit profile</span><span class="ibn" style="width:${m?36:44}px;height:${m?36:44}px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)">${I('share','sm')}</span></div></div>`;
+const profBody=(m)=>`<div class="banner" style="margin-top:16px"><span class="kchip k-opp">${I('user')}</span><div class="grow"><b>Your profile is 70% done</b><span>Add a headline and 2 skills to sharpen your matches.</span><div class="meter" style="margin-top:8px;max-width:260px"><i style="width:70%"></i></div></div>${m?'':'<span class="btn sm ghost">Finish in Settings</span>'}</div>
+ <div class="panel" style="margin-top:16px"><div class="h3" style="margin-bottom:14px">About</div><div class="stack" style="gap:14px">
+  <div class="fact"><span class="kchip k-neu">${I('tools')}</span><div><small>Skills</small><div class="chips" style="margin-top:6px"><span class="chip">Figma</span><span class="chip">UX research</span><span class="chip">Prototyping</span></div></div></div>
+  <div class="fact"><span class="kchip k-neu">${I('target')}</span><div><small>Interests</small><div class="chips" style="margin-top:6px"><span class="chip or">Scholarships &amp; Grants</span><span class="chip or">Entrepreneurship</span></div></div></div>
+  ${m?'':`<div class="fact"><span class="kchip k-neu">${I('grad')}</span><div><small>Education</small><b>BSc Computer Science · University of Lagos</b></div></div>`}</div></div>
+ <div class="seg" style="margin:18px 0 12px">${tabsRow([['p','plist','Playlists'],['s','mark','Saved']],'p','tabs')}</div>
+ <div class="rows">${plRow(['opp','evt','job'],'Scholarships to apply for in Q4',['pub',12,'3 creators'],'',1)}</div>`;
+add({id:'profile',g:'Seeker app',t:'Profile',r:'/profile/[id]',h:1060,
+ keep:['Avatar, name, headline, bio, work, career stage, location, website, socials, joined date','Edit profile (goes to Settings) and share','Incomplete-profile checklist that links to Settings','About: Skills, Interests, Education, Looking for. Owner tabs: Playlists / Saved'],
+ chg:['The header becomes a navy "place" with the name in Unbounded and the headline in orange','"Your profile is incomplete" changes from destructive red to an orange-tint progress banner, because it\'s a nudge, not an error','Interests use orange-tint chips and skills use neutral chips'],
+ d:desk(seekerSide('profile'),`<div class="pg">${profHead()}${profBody()}</div>`),
+ m:phone('',profHead(1)+profBody(1),bnav('seeker','profile'))});
+
+/* 09 Settings */
+const setNav=[['basic','user','Profile'],['bg','target','Background'],['notif','bell','Notifications'],['priv','lock','Privacy'],['acct','shield','Account']];
+add({id:'settings',g:'Seeker app',t:'Settings',r:'/profile/settings',h:1000,
+ keep:['Tabs: Profile, Background, Notifications, Privacy, Account','Sections keep their titles and one-line descriptions (Photo, About you, Contact, Work and education…)','Notification toggles save as you switch them','Account: password, "Your access" (Provider Hub, Monitor, Founder Batch), 2FA, session, danger zone'],
+ chg:['Desktop gets a vertical tab rail; the active tab is a navy pill','Each section is a white panel; switches are orange when on','<b>Flag:</b> "When connections post" and "Channel posts" toggles belong to deprecated features. Proposed: drop them while notifications are rebuilt'],
+ d:desk(seekerSide('settings'),`<div class="pg" style="max-width:900px"><div class="ph"><h1>Settings</h1></div><div class="set-grid"><nav class="vnav">${setNav.map(([id,ic,l])=>`<a class="${id==='basic'?'on':''}">${I(ic)}${l}</a>`).join('')}</nav>
+  <div class="stack" style="gap:16px"><div class="sset"><div class="h3">Photo</div><div class="sub">Shown on your profile and next to your posts.</div><div style="display:flex;gap:16px;align-items:center"><div class="av" style="width:64px;height:64px;font-size:20px">KO</div><span class="btn sm ghost">${I('camera','sm')}Change photo</span><span class="sub" style="margin:0">Remove</span></div></div>
+  <div class="sset"><div class="h3">About you</div><div class="sub">How you are introduced across the platform.</div><div class="grid2"><div class="fld"><label>First name</label><div class="inp"><span class="v">Kachi</span></div></div><div class="fld"><label>Last name</label><div class="inp"><span class="v">Okafor</span></div></div></div><div class="fld" style="margin-top:14px"><label>Headline</label><div class="inp focus"><span class="v">Product designer · Building for African SMEs</span></div></div></div>
+  <div class="sset"><div class="h3">Contact</div><div class="sub">Your email is how you sign in and cannot be changed here.</div><div class="grid2"><div class="fld"><label>Email</label><div class="inp">${I('mail','sm')}<span>kachi@example.com</span>${I('lock','sm')}</div></div><div class="fld"><label>Phone</label><div class="inp">${I('phone','sm')}<span class="v">+234 801 234 5678</span></div></div></div></div></div></div></div>`),
+ m:phone(mtop('<span class="m-title">Settings</span>','',tabsRow(setNav.map(([a,b,c])=>[a,b,c]),'notif','m-tabs')),
+  `<div class="sset"><div class="h3">Push</div><div class="sub">Saved the moment you switch them.</div>
+   <div class="tg"><div class="body"><b>Saved opportunities</b><span>Deadline reminders for opportunities you saved</span></div><span class="sw on"></span></div>
+   <div class="tg"><div class="body"><b>Saved events</b><span>Reminders for events you saved</span></div><span class="sw on"></span></div>
+   <div class="tg"><div class="body"><b>Saved jobs</b><span>Deadline reminders for jobs you saved</span></div><span class="sw"></span></div>
+   <div class="tg"><div class="body"><b>Featured listings</b><span>Occasional sponsored listings, at most twice per campaign</span></div><span class="sw on"></span></div></div>`,bnav('seeker','profile'))});
+
+/* 10 Sign in */
+const authL=(h,s,pts)=>`<div class="auth-l"><div class="stackart"><i></i><i></i><i></i></div><div style="display:flex;align-items:center;gap:12px;position:relative"><div class="mark">UP</div></div>
+  <div style="position:relative;margin-top:auto"><span class="pill-live"><i></i>${pts[0]}</span><h1 style="margin-top:18px">${h}</h1><p class="s">${s}</p></div>
+  <div class="auth-pts">${pts.slice(1).map(([ic,b,t])=>`<div class="auth-pt"><span class="kchip">${I(ic)}</span><div><b>${b}</b><span>${t}</span></div></div>`).join('')}</div></div>`;
+const mAuthTop=(h)=>`<div style="background:var(--surface-navy);color:var(--text-on-navy);margin:-16px -16px 20px;padding:18px 20px 26px;border-radius:0 0 28px 28px;position:relative;overflow:hidden"><div class="stackart" style="transform:scale(.45);transform-origin:top right;right:-40px;top:-14px"><i></i><i></i><i></i></div><div class="mark" style="width:38px;height:38px;font-size:15px;position:relative">UP</div><div style="font-family:var(--display);font-weight:700;font-size:26px;line-height:1.15;margin-top:36px;position:relative;max-width:64%">${h}</div></div>`;
+const signinForm=`<div class="auth-card"><h2>Sign in</h2><p class="sub" style="font-size:15px;margin:6px 0 24px">Enter your details to access your UP dashboard.</p>
+  <div class="stack" style="gap:16px"><div class="fld"><label>Email</label><div class="inp focus">${I('mail','sm')}<span class="v">kachi@example.com</span></div></div><div class="fld"><label>Password</label><div class="inp">${I('lock','sm')}<span class="grow">••••••••••</span>${I('eye','sm')}</div></div>
+  <span class="btn full">Sign in</span><div style="display:flex;justify-content:space-between;font-size:14px"><span class="match" style="font-weight:600">Forgot your password?</span><span class="mut">New here? <b style="color:var(--ink)">Create account</b></span></div></div>
+  <p class="sub" style="font-size:12px;margin-top:24px">By signing in you agree to the Terms of Service and Privacy Policy.</p></div>`;
+add({id:'signin',g:'Account & onboarding',t:'Sign in',r:'/login · /forgot-password · /reset-password',h:900,
+ keep:['Left: "Secure UP login", "Welcome back to UP", explainer, three value points','Right: Sign in card with Email, Password, Sign in, forgot-password and create-account links, terms line','Error message sits above the form','Forgot and reset password use the same frame with one field each'],
+ chg:['The left side becomes a full-height navy panel with the card-stack motif; "UP" in the headline is solid orange, with no gradient text','The emerald "secure" dot becomes a lime dot','Inputs get the orange focus ring; Sign in is the only orange action'],
+ d:`<div class="auth">${authL('Welcome back to <em>UP</em>','Sign in to pick up where you left off, track your opportunities, and stay locked in on your goals.',['Secure UP login',['star','Personalized feed','See opportunities, jobs, and events tuned to your profile.'],['lock','Account protected','Your data is encrypted and secured behind your login.'],['target','Stay locked in','Keep your progress, playlists, and saved items in one place.']])}<div class="auth-r">${signinForm}</div></div>`,
+ m:phone('',mAuthTop('Welcome back to <span style="color:var(--accent-orange)">UP</span>')+signinForm.replace('<h2>Sign in</h2>','<h2 style="font-size:22px">Sign in</h2>'),'')});
+
+/* 11 Sign up */
+const signupForm=(m)=>`<div class="auth-card"><h2 style="font-size:${m?22:28}px">Create your account</h2><p class="sub" style="font-size:15px;margin:6px 0 22px">Free for seekers. Takes about a minute.</p>
+  <div class="stack" style="gap:14px"><div class="grid2"><div class="fld"><label>First name</label><div class="inp"><span class="v">Kachi</span></div></div><div class="fld"><label>Last name</label><div class="inp"><span class="v">Okafor</span></div></div></div>
+  <div class="fld"><label>Email</label><div class="inp">${I('mail','sm')}<span class="v">kachi@example.com</span></div></div>
+  ${m?'':`<div class="fld"><label>Date of birth</label><div class="inp">${I('cal','sm')}<span class="v">14 / 06 / 2001</span></div></div>`}
+  <div class="fld"><label>Password</label><div class="inp focus">${I('lock','sm')}<span class="grow v">••••••••</span>${I('eye','sm')}</div>
+  <div class="rulesl" style="margin-top:6px"><span class="ok">${I('tick','sm')}At least 8 characters</span><span class="ok">${I('tick','sm')}One uppercase letter (A-Z)</span><span>${I('x','sm')}One number (0-9)</span></div></div>
+  <span class="btn full dis">Create account</span><div style="text-align:center;font-size:14px" class="mut">Already on UP? <b style="color:var(--ink)">Sign in</b></div></div></div>`;
+add({id:'signup',g:'Account & onboarding',t:'Sign up',r:'/signup',h:980,
+ keep:['Left: context and three points (For seekers, Founder Batch, Built for growth)','First name, last name, email, date of birth, password with live rules','Registers as a seeker; Founder Batch is bought after joining, not chosen here','Goes to Verify email next'],
+ chg:['Same navy left panel as Sign in, so the two read as one flow','Password rules tick orange as they pass, with no red/green pair','Create account stays disabled until the rules pass'],
+ d:`<div class="auth">${authL('Your glow-up starts <em>here</em>','Real opportunities, resources and support for young Africans preparing to lead the future of global work.',['Join 10,000+ members',['user','For seekers','Discover roles, programs, and events that match your goals.'],['bolt','Founder Batch','Upgrade after joining to publish your own opportunities and events.'],['plist','Built for growth','Use playlists, sessions, and tracking to stay consistent.']])}<div class="auth-r">${signupForm()}</div></div>`,
+ m:phone('',mAuthTop('Get access. Get <span style="color:var(--accent-orange)">UP</span>.')+signupForm(1),'')});
+
+/* 12 Verify */
+const verify=(m)=>`<div class="auth-card"><span class="kchip k-opp lg">${I('mail','lg')}</span><h2 style="font-size:${m?22:28}px;margin-top:18px">Verify your email</h2><p class="sub" style="font-size:15px;margin:8px 0 22px">We sent a 6-digit code to <b style="color:var(--ink)">kachi@example.com</b>.</p>
+  <div class="codes">${'4 8 1'.split(' ').map(x=>`<span>${x}</span>`).join('')}<span class="f"></span><span></span><span></span></div>
+  <span class="btn full" style="margin-top:22px">Verify</span><p class="sub" style="text-align:center;margin-top:14px;font-size:14px">Didn't get it? <b class="match">Resend in 0:42</b></p>
+  <div class="stack" style="gap:10px;margin-top:26px">${[['shield','Keep your account safe','The code expires in 10 minutes.'],['inbox','Check the right inbox','Look in Promotions or Spam if it isn\'t there.'],['arrow','Then complete onboarding','Seven quick questions build your feed.']].map(([ic,b,t])=>`<div class="fact"><span class="kchip k-neu">${I(ic)}</span><div><b>${b}</b><small>${t}</small></div></div>`).join('')}</div></div>`;
+add({id:'verify',g:'Account & onboarding',t:'Verify email',r:'/verify-email',h:900,
+ keep:['6-digit code entry, Verify and resend','Tips: Keep your account safe, Check the right inbox, Then complete onboarding','Leads straight into onboarding'],
+ chg:['Six separate code boxes with an orange focus ring','Tips move below the form as quiet rows','Uses the same navy panel on desktop'],
+ d:`<div class="auth">${authL('One code, then you\'re <em>in</em>','Verifying keeps fake accounts off UP and makes sure deadline reminders reach you.',['Almost there',['shield','Keep your account safe','Codes expire quickly and work once.'],['arrow','Then complete onboarding','Seven quick questions build your feed.']])}<div class="auth-r">${verify()}</div></div>`,
+ m:phone('',verify(1),'',{style:'padding-top:32px'})});
+
+/* 13 Onboarding */
+const IO=['Jobs & Career Opportunities','Scholarships & Grants','Training & Workshops','Networking Events','Volunteering & Community Service','Entrepreneurship & Funding','Remote Work & Digital Skills'];
+const onb=(m)=>`<div class="segp">${[1,1,1,1,0,0,0].map(x=>`<i class="${x?'on':''}"></i>`).join('')}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin:18px 0 20px"><span class="ib b" style="width:34px;height:34px">${I('back','sm')}</span><span class="eb2" style="color:var(--accent-orange-ink)">Step 4 of 7</span></div>
+  <div style="font-family:var(--display);font-weight:700;font-size:${m?24:30}px;line-height:1.2">What are you here for?</div><p class="sub" style="font-size:15px;margin:8px 0 20px;line-height:1.5">Pick everything that applies. This is the strongest signal in your feed ranking.</p>
+  <div class="opts">${IO.slice(0,m?6:7).map((o,i)=>`<div class="opt ${[1,5,6].includes(i)?'on':''}">${o}<span class="ck">${I('tick','sm')}</span></div>`).join('')}</div>
+  <div class="payoff" style="margin-top:14px"><b>3</b><span>categories selected. Your feed is built from these first.</span></div>`;
+const onbFoot=`<span class="btn full">Continue</span><p class="sub" style="text-align:center;margin-top:8px">You can change any of this later in Settings.</p>`;
+add({id:'onboarding',g:'Account & onboarding',t:'Onboarding',r:'/onboarding',h:1000,
+ keep:['Seven steps: Location, Phone, Education, Interests, Industry, Skills, Aspirations','Segmented progress, "Step N of 7", back arrow','Step header and description, option grid, payoff line with the count','One full-width Continue, disabled until valid; "Finish setup" on the last step'],
+ chg:['Selected options fill navy with an orange check, so they\'re clear without relying on colour alone','The payoff line becomes a lime-tint panel with the count in Unbounded','Desktop adds a navy side panel showing the finished feed taking shape; the flow itself stays a single column'],
+ d:`<div style="display:grid;grid-template-columns:minmax(0,1fr) 520px;height:100%"><div style="display:flex;justify-content:center;padding:48px 40px;overflow:hidden"><div style="width:100%;max-width:520px">${onb()}<div style="margin-top:22px">${onbFoot}</div></div></div>
+  <div class="auth-l" style="justify-content:flex-end"><div class="stackart" style="top:80px;right:-20px"><i></i><i></i><i></i></div><span class="pill-live" style="position:relative"><i></i>Your feed, so far</span><div style="font-family:var(--display);font-size:30px;font-weight:700;line-height:1.2;margin-top:16px;position:relative">3 interests · Lagos · Early career</div><p class="s" style="font-size:15px">Every answer moves real listings up or down. You'll see the result the moment you finish.</p></div></div>`,
+ m:phone('',onb(1),'',{after:`<div class="applybar" style="display:block;padding:12px 16px 26px">${onbFoot}</div>`})});
+
+/* 14 Provider overview */
+const pStats=(m)=>`<div class="${m?'grid2':'grid4'}" style="gap:12px"><div class="stat navy"><div class="top">Live${I('check','sm')}</div><div class="v">12</div><div class="d">of 20 this cycle</div></div><div class="stat"><div class="top">Views${I('eye','sm')}</div><div class="v">18.2k</div><div class="d">+12% this week</div></div><div class="stat"><div class="top">Applied${I('arrow','sm')}</div><div class="v">642</div><div class="d">3.5% of views</div></div><div class="stat"><div class="top">Pending${I('clock','sm')}</div><div class="v">2</div><div class="d">Awaiting approval</div></div></div>`;
+const pCreate=(m)=>`<div class="panel"><div class="panel-h"><span class="kchip k-neu">${I('plus')}</span><div class="grow"><div class="h3">Create</div><div class="sub">Start a new listing</div></div></div><div class="${m?'grid2':'grid4'}" style="gap:10px">${['opp','job','evt','res'].map(k=>`<div style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--border-default);border-radius:var(--radius-lg);font-weight:700;font-size:14px">${kchip(k)}${K[k][2]}</div>`).join('')}</div></div>`;
+const actRow=(k,t,m,st)=>`<div class="ri">${kchip(k)}<div class="body"><div class="t">${t}</div><div class="m">${m}</div></div>${st}</div>`;
+add({id:'provider',g:'Provider hub',t:'Provider — Overview',r:'/dashboard/provider',h:1060,
+ keep:['Provider shell: own sidebar (Overview, Content, Promotions, Analytics + Post, Settings, Home), quota meter, header with New post','Onboarding banner until verification is done','Stat tiles Live / Views / Applied / Pending; Create panel with 4 types','Recent activity, My content, Promotions, Engagement, Content mix, Applications'],
+ chg:['The provider sidebar goes navy too, with the organisation card and a verified lime tick','The "Live" tile is the one navy tile, and numbers are in Unbounded','Create uses the four type chips; emerald/amber tones map to lime and orange tints'],
+ d:desk(provSide('overview'),dhead('Provider hub','Overview',`<span class="ib b">${I('refresh','sm')}</span><span class="btn">${I('plus','sm')}New post</span>`)+`<div class="pg wide"><div class="stack" style="gap:16px">
+  <div class="banner"><span class="kchip k-opp">${I('shield')}</span><div class="grow"><b>Verification 80% complete</b><span>Upload one document to publish without review.</span></div><span class="btn sm ghost">Continue setup</span></div>${pStats()}
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px">${pCreate()}<div class="panel"><div class="panel-h"><span class="kchip k-neu">${I('clock')}</span><div class="grow"><div class="h3">Recent activity</div><div class="sub">14 total listings</div></div></div><div class="rows" style="border:0">${actRow('opp','Savanna Founders Fellowship','Posted 2d ago · 4,210 views','<span class="due ok">Live</span>')}${actRow('evt','Founder office hours','Posted 5d ago · 890 views','<span class="due soon">Pending</span>')}</div></div></div></div></div>`),
+ m:phone(mtop('<div><div class="eb2" style="color:var(--accent-orange-ink)">Provider hub</div><div class="m-title">Overview</div></div>',`<span class="btn sm">${I('plus','sm')}Post</span>`),`<div class="stack" style="gap:12px"><div class="banner" style="padding:12px 14px"><div class="grow"><b>Verification 80%</b><div class="meter" style="margin-top:8px"><i style="width:80%"></i></div></div></div>${pStats(1)}${pCreate(1)}</div>`,bnav('prov','overview'))});
+
+/* 15 Post content */
+const postForm=(m)=>`<div class="sub" style="margin-bottom:10px;font-size:13px;font-weight:700;color:var(--ink)">What would you like to post?</div><div class="${m?'grid2':'grid4'}" style="gap:10px">${['opp','job','evt','res'].map(k=>`<div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius-lg);font-weight:700;font-size:14px;${k==='evt'?'border:1.5px solid var(--surface-navy);background:var(--accent-lime-tint)':'border:1.5px solid var(--border-default);background:var(--surface-card)'}">${kchip(k)}${K[k][2]}</div>`).join('')}</div>
+ <div class="sset" style="margin-top:16px"><div class="h3">Basics</div><div class="sub">What people see on the card.</div><div class="stack" style="gap:14px"><div class="fld"><label>Title</label><div class="inp focus"><span class="v">Founder office hours — Lagos</span></div></div><div class="fld"><label>Description</label><div class="inp" style="height:${m?88:110}px;align-items:flex-start;padding-top:12px"><span class="v">Thirty-minute 1:1s with our investment team. Bring a deck or just an idea…</span></div></div>${m?'':`<div class="fld"><label>Tags</label><div class="inp"><span class="chip or">Startups</span><span class="chip or">Funding</span><span>Add a tag…</span></div></div>`}</div></div>
+ <div class="sset" style="margin-top:16px"><div class="h3">Location</div><div class="sub">Used to rank it for people nearby.</div><div class="${m?'stack':'grid3'}" style="gap:14px;align-items:end"><div class="fld"><label>Country</label><div class="inp"><span class="v grow">Nigeria</span>${I('chev','sm')}</div></div><div class="fld"><label>City</label><div class="inp"><span class="v">Lagos</span></div></div>${m?'':`<div class="tg" style="border:0;padding:0 0 12px"><div class="body"><b>Virtual</b><span>Online only</span></div><span class="sw"></span></div>`}</div></div>
+ ${m?'':`<div class="sset" style="margin-top:16px"><div class="h3">Dates</div><div class="sub">Deadlines drive the countdown people see.</div><div class="grid3"><div class="fld"><label>Start date</label><div class="inp">${I('cal','sm')}<span class="v">9 Oct 2026</span></div></div><div class="fld"><label>End date</label><div class="inp">${I('cal','sm')}<span class="v">9 Oct 2026</span></div></div><div class="fld"><label>Registration deadline</label><div class="inp">${I('clock','sm')}<span class="v">7 Oct 2026</span></div></div></div></div>`}`;
+add({id:'posting',g:'Provider hub',t:'Provider — Post content',r:'/dashboard/provider/posting',h:1160,
+ keep:['"Complete onboarding to publish" gate','Type selector, then fields that change by type: description, tags, location/virtual, dates, pay, requirements, capacity, links or uploads','"Posted successfully" confirmation'],
+ chg:['The type selector uses the four chips; the chosen type is outlined navy on its own tint','Every group becomes a titled panel with a line on why it matters ("Deadlines drive the countdown…")','One sticky orange Publish button'],
+ d:desk(provSide('content'),dhead('Provider hub','Create content',`<span class="btn ghost sm">Save draft</span><span class="btn">Publish</span>`)+`<div class="pg" style="max-width:820px">${postForm()}</div>`),
+ m:phone(mtop('<div class="m-title">Create content</div>',`<span class="ib">${I('x')}</span>`),postForm(1),'',{after:`<div class="applybar"><span class="btn ghost" style="height:50px">Draft</span><span class="btn" style="flex:1;height:50px">Publish</span></div>`})});
+
+/* 16 Provider analytics */
+const la=(k,t,m)=>`<div class="la"><div class="la-top">${kchip(k)}<span class="t">${t}</span><span class="due ok">Live</span></div>
+ <div class="eng"><span><b>4,210</b>views</span><span><b>3,180</b>people</span><span><b>212</b>saves</span><span><b>388</b>clicks</span></div>
+ <div class="fun"><i class="f1" style="width:44%"></i><i class="f2" style="width:22%"></i><i class="f3" style="width:12%"></i><i class="f4" style="width:8%"></i><i class="f5" style="width:14%"></i></div>
+ <div class="fleg"><span><i class="f1"></i>Applied <b>171</b></span><span><i class="f2"></i>Still applying <b>85</b></span><span><i class="f3"></i>Not for me <b>47</b></span>${m?'':`<span><i class="f4"></i>Couldn't apply <b>31</b></span><span><i class="f5"></i>No answer yet <b>54</b></span>`}</div>
+ <div class="rates"><div><small>Click-through</small><b>9.2%</b></div><div><small>Submit rate</small><b>44%</b></div><div><small>Save rate</small><b>5.0%</b></div>${m?'':'<div><small>Couldn\'t apply</small><b>8.0%</b></div><div><small>Answered</small><b>86%</b></div>'}</div></div>`;
+const laFilters=(m)=>`<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px"><div class="seg">${tabsRow([['a','','All'],['o','',m?'Opps':'Opportunities'],['j','','Jobs'],['e','','Events']].concat(m?[]:[['r','','Resources']]),'a','tabs')}</div>${m?'':`<span class="pill">Most applied${I('chev','sm')}</span>`}</div>`;
+add({id:'p-analytics',g:'Provider hub',t:'Provider — Analytics',r:'/dashboard/provider/analytics',h:1000,
+ keep:['"Everything you\'ve posted" with type filter and sort (Newest, Most viewed, Most applied, Most saved)','Per-listing engagement: views, people, likes, saves, clicks','Funnel: Applied / Still applying / Not for me / Couldn\'t apply / No answer yet, then outcomes','Rates: click-through, submit, save, couldn\'t apply, answered'],
+ chg:['Funnel colours are navy, orange, lime, grey and outline, told apart by lightness, with a direct label on every segment','Rates in Unbounded numerals','Same card is reused in the Monitor portal'],
+ d:desk(provSide('analytics'),dhead('Provider hub','Analytics',`<span class="ib b">${I('refresh','sm')}</span><span class="btn">${I('plus','sm')}New post</span>`)+`<div class="pg wide"><div class="h2" style="margin-bottom:4px">Everything you've posted</div><div class="sub" style="margin-bottom:16px">14 listings · last 30 days</div>${laFilters()}<div class="stack">${la('opp','Savanna Founders Fellowship 2027')}${la('evt','Founder office hours — Lagos')}</div></div>`),
+ m:phone(mtop('<div><div class="eb2" style="color:var(--accent-orange-ink)">Provider hub</div><div class="m-title">Analytics</div></div>',''),laFilters(1)+`<div class="stack">${la('opp','Savanna Founders Fellowship',1)}</div>`,bnav('prov','analytics'))});
+
+/* 17 Promotions */
+const prRow=(k,t,tier,prog,d,x)=>`<div class="ri">${kchip(k)}<div class="body"><div class="t">${t}</div><div class="m"><span class="due ${tier[0]}" style="padding:2px 8px">${tier[1]}</span><span>${d}</span></div><div class="meter" style="margin-top:8px;max-width:320px"><i style="width:${prog}%"></i></div></div>${x?'':'<span class="btn sm ghost">Extend</span><span class="ib">'+I('more')+'</span>'}</div>`;
+add({id:'promotions',g:'Provider hub',t:'Provider — Promotions',r:'/dashboard/provider/promotions',h:940,
+ keep:['Live / Promote / Past tabs','Running promotions you can extend, shorten or stop','Promote: everything without a promotion, best candidates first','Past: completed, expired or stopped'],
+ chg:['Each row shows its tier and a run-length bar; the extreme tier is a solid orange pill','<b>Copy flag:</b> "Put budget behind…" should not mention budget. Promotions are granted, never billed. Proposed: "Get it in front of more people."','No prices or wallet anywhere on this screen'],
+ d:desk(provSide('promotions'),dhead('Provider hub','Promotions',`<span class="btn">${I('bolt','sm')}Promote</span>`)+`<div class="pg wide"><div class="seg" style="margin-bottom:18px">${tabsRow([['l','','Live',3],['p','','Promote',9],['x','','Past',5]],'l','tabs')}</div>
+  <div class="panel-h"><div class="grow"><div class="h3">Running promotions</div><div class="sub">Extend, shorten or stop any of them</div></div></div>
+  <div class="rows">${prRow('opp','Savanna Founders Fellowship 2027',['urg','Extreme'],30,'Day 6 of 21 · 12,480 impressions')}${prRow('evt','Founder office hours — Lagos',['soon','Boost'],70,'Day 5 of 7 · 3,020 impressions')}${prRow('job','Investment Analyst Intern',['up','Standard'],45,'Day 9 of 20 · 1,450 impressions')}</div></div>`),
+ m:phone(mtop('<div><div class="eb2" style="color:var(--accent-orange-ink)">Provider hub</div><div class="m-title">Promotions</div></div>',''),`<div class="seg" style="margin-bottom:14px;width:100%">${tabsRow([['l','','Live',3],['p','','Promote',9],['x','','Past',5]],'l','tabs')}</div><div class="rows">${prRow('opp','Savanna Founders Fellowship',['urg','Extreme'],30,'Day 6 of 21',1)}${prRow('evt','Founder office hours',['soon','Boost'],70,'Day 5 of 7',1)}</div>`,bnav('prov','promotions'))});
+
+/* 18 Provider settings */
+const psNav=[['ov','grid','Overview'],['pr','user','Profile'],['org','building','Organization'],['pref','gear','Preferences'],['sec','shield','Security']];
+add({id:'p-settings',g:'Provider hub',t:'Provider — Settings',r:'/dashboard/provider/settings',h:940,
+ keep:['Tabs: Overview, Profile, Organization, Preferences, Security','Overview: onboarding status, verification progress, organisation at a glance','Profile: name, email (locked), date of birth, location','Organisation and contact details'],
+ chg:['Same vertical tab rail and panels as seeker Settings, so the two feel like one product','Verification is a progress meter with a lime "Completed" state','Read-only fields show a lock icon instead of greyed-out text'],
+ d:desk(provSide('settings'),dhead('Provider hub','Settings')+`<div class="pg wide"><div class="set-grid"><nav class="vnav">${psNav.map(([id,ic,l])=>`<a class="${id==='ov'?'on':''}">${I(ic)}${l}</a>`).join('')}</nav><div class="stack" style="gap:16px">
+  <div class="sset"><div class="h3">Verification progress</div><div class="sub">Verified providers publish without review.</div><div style="display:flex;gap:16px;align-items:center"><div class="meter" style="flex:1"><i style="width:80%"></i></div><b style="font-family:var(--display)">80%</b></div>
+  <div class="grid3" style="margin-top:16px"><div class="fact"><span class="kchip k-evt">${I('tick')}</span><div><small>Organisation details</small><b>Completed</b></div></div><div class="fact"><span class="kchip k-evt">${I('tick')}</span><div><small>Contact information</small><b>Completed</b></div></div><div class="fact"><span class="kchip k-opp">${I('upload')}</span><div><small>Verification documents</small><b>1 missing</b></div></div></div></div>
+  <div class="sset"><div class="h3">Organization</div><div class="sub">At a glance</div><div class="grid3"><div class="fact"><div><small>Name</small><b>Savanna Fund</b></div></div><div class="fact"><div><small>Sector</small><b>Venture philanthropy</b></div></div><div class="fact"><div><small>HQ</small><b>Nairobi, Kenya</b></div></div></div></div></div></div></div>`),
+ m:phone(mtop('<div class="m-title">Settings</div>','',tabsRow(psNav,'ov','m-tabs')),`<div class="sset"><div class="h3">Verification progress</div><div class="sub">Verified providers publish without review.</div><div class="meter"><i style="width:80%"></i></div><div class="stack" style="gap:12px;margin-top:16px"><div class="fact"><span class="kchip k-evt">${I('tick')}</span><div><small>Organisation details</small><b>Completed</b></div></div><div class="fact"><span class="kchip k-opp">${I('upload')}</span><div><small>Verification documents</small><b>1 missing</b></div></div></div></div>`,bnav('prov','overview'))});
+
+/* 19 Provider onboarding */
+const poSteps=(on)=>['Organization details','Contact information','Verification documents','Terms & conditions'].map((s,i)=>`<div style="display:flex;gap:12px;align-items:center;padding:10px 0"><span style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:12px;font-weight:700;${i<on?'background:var(--accent-lime);color:var(--surface-navy)':i===on?'background:var(--accent-orange);color:var(--surface-navy)':'box-shadow:inset 0 0 0 1.5px var(--border-on-navy);color:var(--text-on-navy-muted)'}">${i<on?'✓':i+1}</span><span style="font-size:14px;font-weight:${i===on?700:500};color:${i===on?'var(--text-on-navy)':'var(--text-on-navy-muted)'}">${s}</span></div>`).join('');
+const poForm=(m)=>`<div class="eb2" style="color:var(--accent-orange-ink)">Step 3 of 4</div><div style="font-family:var(--display);font-weight:700;font-size:${m?22:28}px;margin:8px 0 6px">Verification documents</div><p class="sub" style="font-size:15px;margin-bottom:20px">One document that proves the organisation exists. Reviewed within two working days.</p>
+ <div style="border:2px dashed var(--border-hover);border-radius:var(--radius-xl);padding:${m?24:36}px;text-align:center;background:var(--surface-card)"><span class="kchip k-opp lg" style="margin:0 auto">${I('upload','lg')}</span><div class="h3" style="margin-top:12px">Click to upload a file</div><div class="sub">PDF, JPG or PNG, up to 10 MB</div></div>
+ <div class="ri" style="border:1px solid var(--border-default);border-radius:var(--radius-lg);margin-top:12px;background:var(--surface-card)"><span class="kchip k-evt">${I('file')}</span><div class="body"><div class="t">CAC certificate.pdf</div><div class="m">1.2 MB · uploaded</div></div><span class="ib">${I('trash','sm')}</span></div>
+ <div style="display:flex;gap:10px;margin-top:22px"><span class="btn ghost">Previous</span><span class="btn" style="flex:1">Continue</span></div>`;
+add({id:'p-onboarding',g:'Provider hub',t:'Provider — Onboarding',r:'/dashboard/provider/onboarding',h:900,
+ keep:['"Provider setup" with progress','Four steps: Organization details, Contact information, Verification documents, Terms & conditions','Previous / Next, then "Complete registration"'],
+ chg:['Desktop gets a navy step rail: done steps lime, current step orange','Upload is a large dashed drop zone; uploaded files list below it','Mobile keeps the segmented progress bar from seeker onboarding'],
+ d:`<div style="display:grid;grid-template-columns:380px minmax(0,1fr);height:100%"><div class="auth-l" style="padding:40px"><div class="mark">UP</div><div style="font-family:var(--display);font-size:26px;font-weight:700;margin-top:40px">Provider setup</div><p class="s" style="font-size:14px">Four steps. Your progress saves as you go.</p><div style="margin-top:28px">${poSteps(2)}</div></div><div style="display:flex;justify-content:center;padding:56px 48px"><div style="width:100%;max-width:560px">${poForm()}</div></div></div>`,
+ m:phone('',`<div class="segp" style="margin-bottom:22px"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>${poForm(1)}`,'',{style:'padding-top:20px'})});
+
+/* 20 Monitor listings */
+add({id:'monitor',g:'Monitor portal',t:'Monitor — Assigned listings',r:'/dashboard/monitor',h:1000,
+ keep:['Monitor shell with Listings and Analytics; read-only everywhere','"What you\'re watching" with the assigned count; admins get the monitor picker','Type filter and sort (Newest, Recently assigned, Most viewed, Most applied)','Same per-listing analytics card as providers, with no edit, promote or wallet'],
+ chg:['A lime "Read-only" badge sits in the sidebar and header, so the role is always clear','The sidebar says "Watch, don\'t edit", with no Post button anywhere','Admin monitor picker is a pill in the header'],
+ d:desk(monSide('listings'),dhead('Monitor','Assigned listings',`<span class="ro">${I('eye','sm')}Read-only</span><span class="pill">${I('users','sm')}Viewing as Tobi B.${I('chev','sm')}</span>`)+`<div class="pg wide"><div class="h2" style="margin-bottom:4px">What you're watching</div><div class="sub" style="margin-bottom:16px">8 listings assigned</div>${laFilters()}<div class="stack">${la('job','Investment Analyst Intern — Kora Capital')}${la('opp','Women in Tech Scholarship')}</div></div>`),
+ m:phone(mtop('<div><div class="eb2" style="color:var(--accent-orange-ink)">Monitor</div><div class="m-title">Assigned listings</div></div>',`<span class="ro">${I('eye','sm')}</span>`),`<div class="sub" style="margin-bottom:12px">8 listings assigned</div>${laFilters(1)}<div class="stack">${la('job','Investment Analyst Intern',1)}</div>`,bnav('mon','listings'))});
+
+/* 21 Monitor analytics */
+const monStats=(m)=>`<div class="${m?'grid2':'grid4'}" style="gap:12px"><div class="stat navy"><div class="top">Views${I('eye','sm')}</div><div class="v">24.6k</div><div class="d">8 listings</div></div><div class="stat"><div class="top">Saves${I('mark','sm')}</div><div class="v">1,208</div><div class="d">4.9% of views</div></div><div class="stat"><div class="top">Applications${I('arrow','sm')}</div><div class="v">930</div><div class="d">3.8% of views</div></div><div class="stat"><div class="top">Engagement${I('heart','sm')}</div><div class="v">7.1%</div><div class="d">likes + saves + shares</div></div></div>`;
+add({id:'m-analytics',g:'Monitor portal',t:'Monitor — Analytics',r:'/dashboard/monitor/analytics',h:980,
+ keep:['Totals across assigned listings: Views, Saves, Applications, Engagement','Combined application funnel','Promotions on assigned listings, view only','Empty state when nothing is assigned'],
+ chg:['Same stat tiles as the provider overview; Views is the one navy tile','Promotions panel shows tier and run length, with no controls','Read-only badge stays in the header'],
+ d:desk(monSide('analytics'),dhead('Monitor','Analytics',`<span class="ro">${I('eye','sm')}Read-only</span>`)+`<div class="pg wide"><div class="stack" style="gap:16px">${monStats()}
+  <div class="panel"><div class="panel-h"><span class="kchip k-neu">${I('bars')}</span><div class="grow"><div class="h3">Application funnel</div><div class="sub">All 8 assigned listings</div></div></div><div class="fun" style="height:22px"><i class="f1" style="width:40%"></i><i class="f2" style="width:20%"></i><i class="f3" style="width:15%"></i><i class="f4" style="width:9%"></i><i class="f5" style="width:16%"></i></div><div class="fleg" style="font-size:13px"><span><i class="f1"></i>Applied <b>372</b></span><span><i class="f2"></i>Still applying <b>186</b></span><span><i class="f3"></i>Not for me <b>140</b></span><span><i class="f4"></i>Couldn't apply <b>84</b></span><span><i class="f5"></i>No answer yet <b>148</b></span></div></div>
+  <div class="panel"><div class="panel-h"><span class="kchip k-neu">${I('bolt')}</span><div class="grow"><div class="h3">Promotions</div><div class="sub">On listings you watch · view only</div></div></div><div class="rows" style="border:0">${prRow('job','Investment Analyst Intern — Kora Capital',['urg','Extreme'],55,'Day 11 of 21 · 18,300 impressions',1)}</div></div></div></div>`),
+ m:phone(mtop('<div><div class="eb2" style="color:var(--accent-orange-ink)">Monitor</div><div class="m-title">Analytics</div></div>',`<span class="ro">${I('eye','sm')}</span>`),`<div class="stack" style="gap:12px">${monStats(1)}<div class="panel"><div class="h3" style="margin-bottom:10px">Application funnel</div><div class="fun"><i class="f1" style="width:40%"></i><i class="f2" style="width:20%"></i><i class="f3" style="width:15%"></i><i class="f4" style="width:9%"></i><i class="f5" style="width:16%"></i></div><div class="fleg"><span><i class="f1"></i>Applied <b>372</b></span><span><i class="f2"></i>Still applying <b>186</b></span><span><i class="f3"></i>Not for me <b>140</b></span></div></div></div>`,bnav('mon','analytics'))});
+
+/* ═══ Render ════════════════════════════════════════════════════════════ */
+const groups={};S.forEach((s,i)=>{s.n=String(i+1).padStart(2,'0');(groups[s.g]=groups[s.g]||[]).push(s)});
+document.getElementById('idx').innerHTML=Object.entries(groups).map(([g,l])=>`<div class="idx-g"><h3>${g}</h3>${l.map(s=>`<a href="#${s.id}"><span>${s.n}</span>${s.t}</a>`).join('')}</div>`).join('');
+// Plain anchor links, so jumping works even if scripting stalls; the script only closes the menu.
+const jump=document.getElementById('jump');
+document.getElementById('jump-menu').innerHTML=Object.entries(groups).map(([g,l])=>`<h5>${g}</h5>${l.map(s=>`<a href="#${s.id}"><span>${s.n}</span>${s.t}</a>`).join('')}`).join('');
+// Scroll in script rather than following the #hash: the preview pane serves this file
+// as a data: URL, where browsers refuse fragment navigation. Covers the index cards too.
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]'); if(!a) return;
+  const el=document.getElementById(a.getAttribute('href').slice(1)); if(!el) return;
+  e.preventDefault(); jump.open=false; el.scrollIntoView({behavior:'smooth',block:'start'});
+  try{history.replaceState(null,'',a.getAttribute('href'))}catch(_){}
+});
+document.addEventListener('click',e=>{if(!jump.contains(e.target))jump.open=false});
+document.getElementById('screens').innerHTML=S.map(s=>`<section class="screen" id="${s.id}"><div class="wrap">
+  <div class="screen-head"><div><div class="eyebrow">${s.n} · ${s.g}</div><h2>${s.t}</h2></div><span class="route">${s.r}</span></div>
+  <div class="notes"><div class="note"><h4>Flow kept</h4><ul>${s.keep.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="note chg"><h4>What changes</h4><ul>${s.chg.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>
+  <div class="stage"><div><div class="cap">Desktop · 1440</div><div class="scaler" data-w="1440" data-h="${s.h}"><div class="art board" style="width:1440px;height:${s.h}px">${s.d}</div></div></div>
+  <div class="mcol"><div class="cap">Mobile · 390</div><div class="art phone">${s.m}</div></div></div></div></section>`).join('');
+
+function fit(){document.querySelectorAll('.scaler').forEach(s=>{const w=+s.dataset.w,h=+s.dataset.h,k=Math.min(1,s.clientWidth/w);s.firstElementChild.style.transform=`scale(${k})`;s.style.height=(h*k)+'px'})}
+addEventListener('resize',fit);fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+
+function setTheme(d){document.querySelectorAll('.art').forEach(a=>a.classList.toggle('dark',d));document.body.classList.toggle('is-dark',d);
+  document.getElementById('t-dark').classList.toggle('on',d);document.getElementById('t-light').classList.toggle('on',!d);
+  try{localStorage.setItem('up-theme',d?'dark':'light')}catch(e){}}
+document.getElementById('t-dark').onclick=()=>setTheme(true);
+document.getElementById('t-light').onclick=()=>setTheme(false);
+try{if(localStorage.getItem('up-theme')==='dark')setTheme(true)}catch(e){}
+</script>
+</body>
+</html>

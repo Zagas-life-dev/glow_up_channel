@@ -30,6 +30,9 @@ import {
   RiPlayList2Fill,
   RiAddLine,
   RiArrowRightUpLine,
+  RiHeartLine,
+  RiHeartFill,
+  RiEyeLine,
 } from "react-icons/ri"
 import {
   DropdownMenu,
@@ -47,7 +50,14 @@ import {
 } from "@/components/ui/sheet"
 import { toast } from "sonner"
 import { typeConfigFor, typeIconClass, playlistItemHref } from "@/lib/playlist-item-display"
-import { trackPlaylistOpen } from '@/lib/tracking'
+import { trackPlaylistOpen, trackPlaylistShare } from '@/lib/tracking'
+import {
+  formatCount,
+  recordPlaylistClick,
+  recordPlaylistShare,
+  recordPlaylistView,
+  setPlaylistLiked,
+} from '@/lib/playlist-engagement'
 
 /** Type filter chips only earn their space on a playlist long and mixed enough to need them. */
 const FILTER_MIN_ITEMS = 8
@@ -77,6 +87,7 @@ export default function PlaylistDetailPage() {
   const [showCreators, setShowCreators] = useState(false)
   const [removingItemId, setRemovingItemId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLiking, setIsLiking] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [isCondensed, setIsCondensed] = useState(false)
@@ -99,7 +110,12 @@ export default function PlaylistDetailPage() {
           // Primary tier: opening a playlist and looking at what is in it counts
           // on its own. Reported only on a playlist that actually resolved — a
           // 403 or a dead id is not someone using their library.
-          if (found) trackPlaylistOpen(playlistId)
+          if (found) {
+            trackPlaylistOpen(playlistId)
+            // The public view count. Deduped server-side to one per viewer per day,
+            // and the owner's own visits never count, so this is safe on every open.
+            void recordPlaylistView(playlistId)
+          }
         }
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status
@@ -207,6 +223,12 @@ export default function PlaylistDetailPage() {
   const handleShare = async () => {
     if (!playlist) return
 
+    // Only a completed share counts — a cancelled share sheet is not one.
+    const counted = (source: string) => {
+      trackPlaylistShare(playlist._id)
+      void recordPlaylistShare(playlist._id, source)
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -214,12 +236,42 @@ export default function PlaylistDetailPage() {
           text: playlist.description,
           url: window.location.href
         })
+        counted("native")
       } catch (err) {
         // User cancelled
       }
     } else {
-      navigator.clipboard.writeText(window.location.href)
-      toast.success("Link copied to clipboard!")
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        toast.success("Link copied to clipboard!")
+        counted("copy_link")
+      } catch {
+        toast.error("Couldn't copy the link")
+      }
+    }
+  }
+
+  const handleLike = async () => {
+    if (!playlist || !isAuthenticated || isLiking) return
+    const next = !playlist.isLiked
+    const before = playlist
+    const likeCount = Math.max(0, (playlist.metrics?.likeCount ?? 0) + (next ? 1 : -1))
+    // Optimistic: the heart answers the tap, and rolls back if the server says no.
+    setPlaylist({ ...playlist, isLiked: next, metrics: { ...playlist.metrics, likeCount } })
+    setIsLiking(true)
+    try {
+      const result = await setPlaylistLiked(playlist._id, next)
+      setPlaylist((current) =>
+        current
+          ? { ...current, isLiked: result.isLiked, metrics: { ...current.metrics, likeCount: result.likeCount } }
+          : current,
+      )
+    } catch (err) {
+      console.error("Error updating like:", err)
+      setPlaylist(before)
+      toast.error("Couldn't update your like")
+    } finally {
+      setIsLiking(false)
     }
   }
 
@@ -235,6 +287,9 @@ export default function PlaylistDetailPage() {
         await savePlaylist(playlist._id)
         toast.success("Playlist saved")
       }
+      setPlaylist((current) =>
+        current ? { ...current, saveCount: Math.max(0, (current.saveCount ?? 0) + (isSaved ? -1 : 1)) } : current,
+      )
     } catch (err) {
       console.error("Error saving playlist:", err)
       toast.error("Failed to save playlist")
@@ -426,6 +481,7 @@ export default function PlaylistDetailPage() {
                 seed={playlist._id}
                 types={items.map((item) => item.contentType)}
                 empty={items.length === 0}
+                imageUrl={playlist.coverImage}
                 className="h-[4.5rem] w-[4.5rem] shadow-lg shadow-black/10 sm:h-24 sm:w-24 lg:mb-6 lg:h-44 lg:w-44 lg:shadow-2xl lg:shadow-black/25"
                 rounded="rounded-2xl lg:rounded-[1.75rem]"
               />
@@ -441,13 +497,38 @@ export default function PlaylistDetailPage() {
                   </span>
                   <span aria-hidden>·</span>
                   <span className="tabular-nums">{playlist.itemCount ?? items.length} items</span>
+                  {(playlist.metrics?.viewCount ?? 0) > 0 ? (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        <RiEyeLine className="h-3.5 w-3.5" aria-hidden />
+                        {formatCount(playlist.metrics?.viewCount)} views
+                      </span>
+                    </>
+                  ) : null}
                   {(playlist.saveCount ?? 0) > 0 ? (
                     <>
                       <span aria-hidden>·</span>
-                      <span className="tabular-nums">{playlist.saveCount} saved</span>
+                      <span className="tabular-nums">{formatCount(playlist.saveCount)} saved</span>
+                    </>
+                  ) : null}
+                  {(playlist.metrics?.likeCount ?? 0) > 0 ? (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="tabular-nums">{formatCount(playlist.metrics?.likeCount)} likes</span>
                     </>
                   ) : null}
                 </p>
+                {/* Reach is the owner's number: only owners and collaborators receive these fields. */}
+                {playlist.metrics?.impressionCount !== undefined ? (
+                  <p className="mt-1 text-[12px] tabular-nums text-muted-foreground/80">
+                    Seen {formatCount(playlist.metrics.impressionCount)} times in Discover
+                    {" · "}
+                    {formatCount(playlist.metrics.shareCount)} shares
+                    {" · "}
+                    {formatCount(playlist.metrics.clickCount)} click-throughs
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -484,6 +565,23 @@ export default function PlaylistDetailPage() {
 
             <div className="mt-4 flex items-center gap-2 lg:flex-col lg:items-stretch">
               {renderPrimaryAction("full")}
+              {isAuthenticated && !canEdit ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  aria-pressed={Boolean(playlist.isLiked)}
+                  aria-label={playlist.isLiked ? "Unlike playlist" : "Like playlist"}
+                  className={cn(
+                    "h-11 min-w-11 rounded-2xl px-3 lg:w-full",
+                    playlist.isLiked && "border-rose-500/40 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 dark:text-rose-400",
+                  )}
+                >
+                  {playlist.isLiked ? <RiHeartFill className="h-5 w-5" /> : <RiHeartLine className="h-5 w-5" />}
+                  <span className="ml-1.5 hidden text-sm lg:inline">{playlist.isLiked ? "Liked" : "Like"}</span>
+                </Button>
+              ) : null}
               {isOwner ? (
                 <Button
                   type="button"
@@ -599,6 +697,7 @@ export default function PlaylistDetailPage() {
                           <h3 className="text-[15px] font-medium leading-snug text-foreground">
                             <Link
                               href={detailUrl}
+                              onClick={() => void recordPlaylistClick(playlist._id)}
                               className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-primary sm:line-clamp-1"
                             >
                               {item.title}
@@ -613,7 +712,10 @@ export default function PlaylistDetailPage() {
                         <div className="relative z-10 flex shrink-0 items-center">
                           <button
                             type="button"
-                            onClick={() => window.open(detailUrl, "_blank")}
+                            onClick={() => {
+                              void recordPlaylistClick(playlist._id)
+                              window.open(detailUrl, "_blank")
+                            }}
                             className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 sm:flex"
                             aria-label={`Open ${item.title} in a new tab`}
                           >

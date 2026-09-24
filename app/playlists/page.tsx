@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,8 @@ import {
   RiGlobalLine,
   RiLockLine,
   RiPlayList2Fill,
+  RiEyeLine,
+  RiLoader4Line,
 } from "react-icons/ri"
 import {
   DropdownMenu,
@@ -31,6 +33,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PageShell } from "@/components/layout/page-shell"
 import { trackPlaylistDiscover } from '@/lib/tracking'
+import { useDiscoverPlaylists } from '@/hooks/use-discover-playlists'
+import { formatCount, queuePlaylistImpression } from '@/lib/playlist-engagement'
+import { useTranslation } from '@/lib/i18n/context'
+import type { TranslationKey } from '@/lib/i18n/translate'
 
 type TabType = "my" | "shared" | "saved" | "public"
 
@@ -70,12 +76,10 @@ function PlaylistsPageInner() {
   const router = useRouter()
   const {
     playlists,
-    publicPlaylists,
     sharedPlaylists,
     savedPlaylists,
-    isLoading,
+    isLoading: isLibraryLoading,
     deletePlaylist,
-    fetchPublicPlaylists,
     fetchPlaylists,
     fetchSavedPlaylists,
     isPlaylistSaved,
@@ -83,10 +87,18 @@ function PlaylistsPageInner() {
     unsavePlaylist,
   } = usePlaylist()
   const { isAuthenticated, user } = useAuth()
+  const t = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>("public")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  // Discover is its own ranked, paged feed; the other tabs are the reader's library.
+  const discover = useDiscoverPlaylists(user?._id ?? "anon", activeTab === "public")
+  const isDiscover = activeTab === "public"
+  const isLoading = isDiscover ? discover.isLoading && discover.playlists.length === 0 : isLibraryLoading
+  const listRef = useRef<HTMLUListElement | null>(null)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const tabParam = searchParams.get("tab")
@@ -106,12 +118,49 @@ function PlaylistsPageInner() {
   }, [searchParams, isAuthenticated, router])
 
   useEffect(() => {
-    fetchPublicPlaylists()
     if (isAuthenticated) {
       fetchPlaylists()
       fetchSavedPlaylists()
     }
-  }, [fetchPublicPlaylists, fetchPlaylists, fetchSavedPlaylists, isAuthenticated])
+  }, [fetchPlaylists, fetchSavedPlaylists, isAuthenticated])
+
+  /** Infinite scroll: ask for the next page a screen before the end. */
+  const { loadMore } = discover
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!isDiscover || !sentinel) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore()
+      },
+      { rootMargin: "600px 0px" },
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [isDiscover, loadMore, discover.playlists.length])
+
+  /**
+   * Impressions: a card counts as seen once half of it has been on screen. These are
+   * the denominator of open rate in the ranking, so only Discover reports them — the
+   * reader's own shelves are not somewhere a list competes for attention.
+   */
+  useEffect(() => {
+    const list = listRef.current
+    if (!isDiscover || !list) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const id = (entry.target as HTMLElement).dataset.playlistId
+          if (id) queuePlaylistImpression(id)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.5 },
+    )
+    list.querySelectorAll<HTMLElement>("[data-playlist-id]").forEach((row) => observer.observe(row))
+    return () => observer.disconnect()
+  }, [isDiscover, discover.playlists])
 
   /**
    * Browsing Discover — the explore-and-find-more surface for playlists.
@@ -146,7 +195,7 @@ function PlaylistsPageInner() {
       case "saved":
         return savedPlaylists
       case "public":
-        return publicPlaylists
+        return discover.playlists
       default:
         return []
     }
@@ -270,7 +319,8 @@ function PlaylistsPageInner() {
               ) : null}
             </div>
           ) : (
-            <ul className="divide-y divide-border/50">
+            <>
+            <ul ref={listRef} className="divide-y divide-border/50">
               {currentPlaylists.map((playlist, index) => {
                 const acceptedCollaborators =
                   playlist.collaborators?.filter((c) => c.status === "accepted") || []
@@ -284,12 +334,14 @@ function PlaylistsPageInner() {
                 return (
                   <li
                     key={playlist._id}
+                    data-playlist-id={isDiscover ? playlist._id : undefined}
                     className={cn(
                       "group relative animate-fade-in-up",
                       deletingId === playlist._id && "pointer-events-none opacity-40",
                     )}
                     style={{
-                      animationDelay: `${Math.min(index, 8) * 35}ms`,
+                      // Stagger by position within its page, so page 3 doesn't wait 800ms to appear.
+                      animationDelay: `${Math.min(index % 20, 8) * 35}ms`,
                       animationFillMode: "both",
                     }}
                   >
@@ -298,6 +350,7 @@ function PlaylistsPageInner() {
                         seed={playlist._id}
                         types={(playlist.items ?? []).map((item) => item.contentType)}
                         empty={(playlist.itemCount || 0) === 0}
+                        imageUrl={playlist.coverImage}
                         className="h-16 w-16 shadow-md shadow-black/10 transition-transform duration-200 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem]"
                       />
 
@@ -322,6 +375,26 @@ function PlaylistsPageInner() {
                           </span>
                           <span aria-hidden>·</span>
                           <span className="tabular-nums">{playlist.itemCount || 0} items</span>
+                          {(playlist.metrics?.viewCount ?? 0) > 0 ? (
+                            <>
+                              <span aria-hidden>·</span>
+                              <span className="inline-flex items-center gap-1 tabular-nums">
+                                <RiEyeLine className="h-3.5 w-3.5" aria-hidden />
+                                {formatCount(playlist.metrics?.viewCount)}
+                                <span className="sr-only">views</span>
+                              </span>
+                            </>
+                          ) : null}
+                          {(playlist.saveCount ?? 0) > 0 ? (
+                            <>
+                              <span aria-hidden>·</span>
+                              <span className="inline-flex items-center gap-1 tabular-nums">
+                                <RiBookmarkLine className="h-3.5 w-3.5" aria-hidden />
+                                {formatCount(playlist.saveCount)}
+                                <span className="sr-only">saves</span>
+                              </span>
+                            </>
+                          ) : null}
                           {acceptedCollaborators.length > 0 ? (
                             <>
                               <span aria-hidden>·</span>
@@ -342,6 +415,12 @@ function PlaylistsPageInner() {
                         {playlist.description ? (
                           <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground/80">
                             {playlist.description}
+                          </p>
+                        ) : null}
+
+                        {isDiscover && playlist.reason ? (
+                          <p className="mt-1 text-[12px] font-medium text-primary">
+                            {t(`reasons.${playlist.reason}` as TranslationKey)}
                           </p>
                         ) : null}
                       </div>
@@ -384,6 +463,11 @@ function PlaylistsPageInner() {
                               try {
                                 if (saved) await unsavePlaylist(playlist._id)
                                 else await savePlaylist(playlist._id)
+                                // Keep the card's count in step without refetching the feed.
+                                discover.patch(playlist._id, (p) => ({
+                                  ...p,
+                                  saveCount: Math.max(0, (p.saveCount ?? 0) + (saved ? -1 : 1)),
+                                }))
                               } catch (err) {
                                 console.error(err)
                               }
@@ -406,6 +490,25 @@ function PlaylistsPageInner() {
                 )
               })}
             </ul>
+
+            {isDiscover ? (
+              <div ref={sentinelRef} className="flex min-h-16 items-center justify-center py-6" aria-live="polite">
+                {discover.isLoadingMore ? (
+                  <RiLoader4Line className="h-5 w-5 animate-spin text-muted-foreground" aria-label="Loading more playlists" />
+                ) : discover.error ? (
+                  <button
+                    type="button"
+                    onClick={discover.reload}
+                    className="min-h-11 rounded-xl px-4 text-sm font-medium text-primary hover:bg-primary/10"
+                  >
+                    Try again
+                  </button>
+                ) : !discover.hasMore && currentPlaylists.length > 20 ? (
+                  <p className="text-[13px] text-muted-foreground">You&apos;ve reached the end — refresh for a new mix.</p>
+                ) : null}
+              </div>
+            ) : null}
+            </>
           )}
         </main>
       </div>

@@ -19,24 +19,37 @@ Two documents govern this folder:
 
 ## The flow
 
+Built so someone who has never bought anything online can get through it: one
+menu, one form, one button that goes to Paystack.
+
 ```
-Landing (hero, proof, why UP, how it works)
-     │
-     ▼
-What are you trying to achieve?
-              ├─ Submit  →  pick a type  →  (paid: 7-day or 30-day)   ─┐
-              │              (resource: pick terms)  →  form           │
-              │              (jobs and paid events: one form per       │
-              │               listing, added on the same screen)       │
-              ├─ Promote →  pick a bundle, or build your own  →  form ─┤
-              └─ Partner →  pitch  →  /founder-batch  [hidden by flag] │
-                                                                       ▼
-                                                Check it over (cost breakdown)
-                                                                       │
-                                      free ─────────┬──────── paid ────┘
+What would you like to do?   — the page opens straight on this menu, no cover page
+     ├─ Post a job / paid event   →  form (7 or 30 days picked on the form)  ─┐
+     ├─ Share an opportunity / free event  →  form                            │
+     ├─ Sell a course or guide  →  pick terms  →  form                        │
+     ├─ Promote something  →  tap a bundle (or build your own)  →  form       │
+     └─ Partner  →  pitch  →  /founder-batch  [hidden by flag]                │
+                                                                              ▼
+                        Form ends in the total, the terms and "Pay ₦X" — no separate review screen
+                                                                              │
+                                      free ─────────┬──────── paid ───────────┘
                                                     ▼                  ▼
                                                   Done          Paystack → back here → Done
+                                                                       │
+                                                               not paid ─→ "Try paying again"
 ```
+
+Nobody types anything twice. `draft.ts` keeps two things in browser storage:
+the contact details, which prefill the next form, and an order sent to
+Paystack but not paid for. Coming back unpaid — Paystack's cancel, the browser's
+Back button, or a fresh visit within a week — offers that order back with one
+"Finish paying" button, which saves it again under a new reference. The unpaid
+original stays `awaiting_payment` and never reaches the queue. A retry is only
+offered when Paystack has actually said "not paid"; if we could not check, the
+page tells them not to pay again and hands them to WhatsApp.
+
+Links are accepted however they are typed: `mysite.com` becomes
+`https://mysite.com`, in the browser and again in `server/payload.ts`.
 
 ## Files
 
@@ -45,9 +58,10 @@ What are you trying to achieve?
 | `config.ts` | **Prices, items, bundles, contact details, form fields.** Change things here, nowhere else. |
 | `copy.ts` | **Every customer-facing line** — hero, selector, review terms, success page, status wording. |
 | `admin/mail.ts` | The email templates the review queue opens in Gmail. |
-| `page.tsx` | Moves between screens, handles the trip back from Paystack. |
+| `page.tsx` | The menu, sending the order, and the trip back from Paystack — paid, unpaid, or unknown. |
 | `submit-track.tsx` / `promote-track.tsx` / `partner-track.tsx` | The three branches. |
-| `ui.tsx` | The shared bits — step wrapper, choice card, form fields. |
+| `ui.tsx` | The shared bits — step wrapper, choice card, form fields, and the pay footer every form ends in. |
+| `draft.ts` | Remembers contact details and an unpaid order in the browser, so a cancelled payment is one tap to retry. |
 | `admin/review-queue.tsx` | The review screen, mounted at `/dashboard/admin/work-with-us`. |
 | `lookup.ts` | Searches the four public list APIs, for pointing a promotion at something live. **Not wired up yet** — nothing imports it, so a promotion never records what it runs against. See "Promotion targets" below. |
 | `api/submissions` | Saves an order and its items, and starts the payment if there is one. |
@@ -86,7 +100,7 @@ posted by hand. The queue is told the outcome afterwards.
 | `POST /api/work-with-us/orders` | Stores a submission. Mints the reference; derives the status from the amount. |
 | `GET /api/work-with-us/orders/:ref` | One order. |
 | `POST /api/work-with-us/orders/:ref/paid` | Records a payment Paystack has confirmed, and releases the items. Safe to call twice. |
-| `GET /api/work-with-us/audience` | The audience figure for the trust strip. |
+| `GET /api/work-with-us/audience` | The audience figure. Unused since the cover page was removed — `api/stats` still serves it. |
 | `GET /api/work-with-us/items` | The review queue, with counts. Admin token required. |
 | `GET /api/work-with-us/items/:ref` | One item, plus whether it can be approved and what a promotion would run against. |
 | `POST /api/work-with-us/items/:ref/review` | Records a decision. Attributed to the admin whose token the call carries. |
@@ -235,7 +249,7 @@ deploy loses the feature, not the site.
 
 | Missing | What stops | What the reader is told |
 | --- | --- | --- |
-| `NEXT_PUBLIC_BACKEND_URL` or `WORK_WITH_US_SERVICE_KEY` | Every read and write of an order. | A 503 naming **both** variables if both are unset. The sales page still loads; its trust strip just shows no number. |
+| `NEXT_PUBLIC_BACKEND_URL` or `WORK_WITH_US_SERVICE_KEY` | Every read and write of an order. | A 503 naming **both** variables if both are unset. The menu still loads. |
 | `PAYSTACK_SECRET_KEY` | Taking money, and confirming it. | Free submissions are unaffected. A paid one is **saved first**, then the customer gets its reference and a note that we will send a payment link. Coming back from Paystack holds the reference open rather than reporting a failed payment. |
 | `AWS_*` / `SES_SENDER_EMAIL` | Both automatic emails. | Nothing, to the customer — the order is saved, confirmed and queued either way. The miss is logged against the order's ref. |
 | `SES_CONTACT_RECIPIENT_EMAIL` | The team notification only. | Nothing. The customer's copy still sends. |

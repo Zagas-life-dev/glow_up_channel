@@ -13,97 +13,40 @@
  */
 
 // ---------------------------------------------------------------------------
-// The commercial landing — pipeline §3
-// ---------------------------------------------------------------------------
-
-export const HERO = {
-  title: "Have something valuable to put in front of young Africans?",
-  body:
-    "UP helps organisations distribute jobs, opportunities, events and relevant initiatives to a young African audience through our platform, community and social channels.",
-  promise: "Choose what you need. Pay online. Send us the details. We'll handle the distribution.",
-  cta: "Choose a distribution option",
-  secondary: "Not sure what you need? Talk to UP",
-}
-
-/**
- * Audience proof. The pipeline forbids hard-coding stale numbers, so there is
- * no figure here — the page counts the real users at request time through
- * `/work-with-us/api/stats` and renders nothing at all if that read fails.
- */
-export const PROOF = {
-  intro: "Built around an existing audience of young Africans.",
-  /** Rounded down to the nearest hundred, so the claim is never an overstatement. */
-  figure: (users: number) =>
-    `${(Math.floor(users / 100) * 100).toLocaleString("en-NG")}+ people on UP`,
-}
-
-export const MODEL = {
-  title: "You already have something our audience needs.",
-  body:
-    "Whether you're listing an opportunity, pushing it further on UP, reaching the community or creating social content, you choose the level of distribution that fits your goal.",
-}
-
-/** Why UP — pipeline §3.6. Five benefits, outcome-first. */
-export const WHY_UP: { title: string; body: string }[] = [
-  {
-    title: "A relevant audience",
-    body:
-      "Young Africans actively looking for opportunities, growth, work, learning and useful information.",
-  },
-  {
-    title: "Several surfaces",
-    body: "The UP platform, the community and our social channels, depending on what you choose.",
-  },
-  {
-    title: "No sales call",
-    body: "Pick a product and pay online. Nothing here is priced behind a conversation.",
-  },
-  {
-    title: "Useful-first, not an ad feed",
-    body: "The audience is here for opportunities and resources, so that is what lands well.",
-  },
-  {
-    title: "A defined scope",
-    body: "Every product states exactly what you get, so you know what you are buying.",
-  },
-]
-
-/** What happens, start to finish — pipeline §1.1, comms §02. */
-export const HOW_IT_WORKS = [
-  "Choose what you need.",
-  "Tell us what you're promoting.",
-  "Check it over and pay securely.",
-  "We review the submission before anything goes live.",
-  "We publish or distribute exactly what you bought.",
-  "We confirm when it's done.",
-]
-
-// ---------------------------------------------------------------------------
 // The selector — pipeline §4. Start with the outcome, not the line item.
 // ---------------------------------------------------------------------------
 
 export const SELECTOR = {
-  title: "What are you trying to achieve?",
-  microcopy:
-    "Start with what you're trying to do — we'll show you the simplest option that fits.",
-  submit: {
-    label: "Get an opportunity, job or event onto UP",
-    blurb:
-      "Listed on the platform with its own page and application link. Opportunities and free events cost nothing.",
-    cta: "List it on UP",
-  },
-  promote: {
-    label: "Reach more people with something",
-    blurb:
-      "Feature it on the platform, push it to the community, or have us make social content for it.",
-    cta: "Choose my distribution",
+  title: "What would you like to do?",
+  microcopy: "Put it in front of young Africans on UP. Tap one to start.",
+  /**
+   * One flat menu instead of "submit or promote?" followed by "which kind?" —
+   * every extra screen before the form is a place to give up. Plain verbs,
+   * no product names, so nobody has to know what a "listing" is.
+   */
+  options: {
+    job: { label: "Post a job", blurb: "Advertise a role to young Africans looking for work." },
+    "paid-event": { label: "Post a paid event", blurb: "Sell tickets to your event." },
+    "free-opportunity": {
+      label: "Share a free opportunity",
+      blurb: "Scholarships, grants, fellowships, competitions.",
+    },
+    "free-event": { label: "Post a free event", blurb: "Anything people can attend for free." },
+    resource: {
+      label: "Sell a course, guide or template",
+      blurb: "We list it and take a share only when it sells.",
+    },
+    promotion: {
+      label: "Promote something",
+      blurb: "Get more people to see it — on UP, in our community and on social media.",
+    },
   },
   partner: {
     label: "Distribute with us regularly",
     blurb: "A longer arrangement instead of paying per listing.",
     cta: "Talk about partnership",
   },
-  help: "Not sure which is right? Talk to UP",
+  help: "Not sure which one? Ask us",
 }
 
 // ---------------------------------------------------------------------------
@@ -111,22 +54,34 @@ export const SELECTOR = {
 // ---------------------------------------------------------------------------
 
 export const INTAKE = {
-  intro: "Give us the details we need to deliver this. You'll review everything before paying.",
-  why:
-    "We review paid distribution before it goes live. It's how we protect the quality of what we put in front of the UP audience.",
   reassurance:
-    "You don't need to write a perfect brief. Accurate information, a working link and the assets we ask for is plenty.",
+    "You don't need to write a perfect brief. Accurate details and a working link are plenty.",
 }
 
-export const REVIEW = {
-  title: "Check it over",
-  notice:
-    "Please check your details carefully. Once payment is completed, your order goes into UP's review and fulfilment process.",
+/**
+ * The bottom of every form. There is no separate "check it over" screen any
+ * more — the total, the terms and the email sit right above the pay button, so
+ * the review happens on the way past instead of as one more step.
+ */
+export const PAY = {
   terms:
-    "By continuing you confirm the information is accurate, and you understand that payment confirms your order but does not guarantee publication if the submission does not meet UP's review standards.",
-  payCta: "Continue to secure payment",
+    "By paying you confirm the details are correct. We review everything before it goes live, so payment does not guarantee publication.",
+  freeTerms: "We review everything before it goes live.",
+  payCta: (amount: string) => `Pay ${amount}`,
   freeCta: "Send it in",
-  paystackNote: "Payment is processed securely through Paystack, then you come straight back here.",
+  paystackNote: "You'll pay on Paystack's secure page, then come straight back here.",
+}
+
+/** When someone comes back from Paystack without having paid. */
+export const UNPAID = {
+  title: "Your payment wasn't finished",
+  body: "No money was taken. Your details are saved, so you don't need to type anything again.",
+  retry: "Try paying again",
+  edit: "Change my details",
+  help: "Stuck? Message us on WhatsApp",
+  resume: "You didn't finish paying for",
+  resumeCta: "Finish paying",
+  discard: "Start fresh instead",
 }
 
 // ---------------------------------------------------------------------------

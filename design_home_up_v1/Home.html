@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP Home Proposal</title>
+<meta name="description" content="Proposed redesign of the signed-in home feed in UP Design v1 — same flow, UP's visual language.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* ── UP Design v1 tokens (project/tokens.json) ───────────────────────── */
+:root{
+  --surface-page:#FBFAF7; --surface-card:#FFFFFF; --surface-navy:#0B1233;
+  --surface-navy-subtle:rgba(255,255,255,.06);
+  --border-default:#E7E4DC; --border-on-navy:rgba(255,255,255,.12);
+  --ink:#0B1233; --ink-muted:#5B5847;
+  --text-on-navy:#FBFAF7; --text-on-navy-muted:rgba(251,250,247,.65); --text-on-navy-faint:rgba(251,250,247,.4);
+  --accent-orange:#FF6A00; --accent-orange-ink:#B8551E; --accent-orange-tint:rgba(255,106,0,.12);
+  --accent-lime:#D6FF3F; --accent-lime-tint:rgba(214,255,63,.35);
+  --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-14:56px; --space-16:64px; --space-24:96px;
+  --radius-sm:12px; --radius-md:14px; --radius-lg:18px; --radius-xl:20px; --radius-pill:999px;
+  --shadow-card-float:0 30px 60px rgba(0,0,0,.35);
+  --display:'Unbounded',sans-serif; --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  /* Proposed additions to UP Design v1 — neutrals the feed needs that the landing page never did */
+  --fill-subtle:#F2EFE8; --hairline:#F0EDE6; --sep:#C9C4B6; --border-hover:#D8D3C6; --bar-bg:rgba(251,250,247,.94);
+}
+/* ── Proposed dark theme ─────────────────────────────────────────────────
+   Page drops below the brand navy so the navy sidebar and the lead card
+   still read as "places" in the dark. Orange/lime stay; their tints and
+   the text-safe orange lift for dark grounds. */
+.dark{
+  --surface-page:#070A1C; --surface-card:#10173A;
+  --border-default:rgba(255,255,255,.09); --border-hover:rgba(255,255,255,.18);
+  --ink:#FBFAF7; --ink-muted:rgba(251,250,247,.66);
+  --accent-orange-ink:#FF8A3D; --accent-orange-tint:rgba(255,106,0,.16);
+  --accent-lime-tint:rgba(214,255,63,.14);
+  --fill-subtle:rgba(255,255,255,.07); --hairline:rgba(255,255,255,.07); --sep:rgba(255,255,255,.25);
+  --bar-bg:rgba(7,10,28,.9);
+}
+.board,.phone,.states{color:var(--ink)}
+.dark .side{box-shadow:inset -1px 0 0 rgba(255,255,255,.08)}
+.dark .k-job{background:var(--ink);color:var(--surface-navy)}
+.dark .k-evt{color:var(--accent-lime)}
+.dark .k-res{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
+.dark .tab.on{background:var(--ink);color:var(--surface-navy)}
+.dark .tab.on svg{color:#B8551E}
+.dark .bnav a.on .pill{background:var(--ink);color:var(--surface-navy)}
+.dark .lead{background:#141D4A;box-shadow:0 0 0 1px rgba(255,106,0,.4),0 20px 50px rgba(0,0,0,.55)}
+.dark .lead .kchip{background:rgba(255,255,255,.08)}
+.phone.dark{box-shadow:0 0 0 10px #1B2352,0 30px 60px rgba(0,0,0,.5)}
+.stage.stage-dark{background:#03050F}
+.stage-dark .stage-label,.stage-dark .mobile-col .cap{color:rgba(251,250,247,.6)}
+.states.dark{background:var(--surface-page);padding:20px;border-radius:14px}
+.states.dark .lbl span{color:var(--ink-muted)}
+table.flow td.d{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.tok{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.scope{margin-top:var(--space-8);background:var(--surface-navy);color:var(--text-on-navy);border-radius:var(--radius-xl);padding:var(--space-6) var(--space-8)}
+.scope h3{font-family:var(--display);font-size:19px;font-weight:700}
+.scope p,.scope li{color:var(--accent-orange);font-size:15px;line-height:1.6}
+.scope ul{margin-top:var(--space-3);padding-left:20px;display:grid;gap:6px}
+.scope li b{color:var(--text-on-navy)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--surface-page);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:22px;height:22px}
+
+/* ── Document chrome ─────────────────────────────────────────────────── */
+.doc-hero{background:var(--surface-navy);color:var(--text-on-navy);padding:var(--space-16) var(--space-6) var(--space-14)}
+.wrap{max-width:1180px;margin:0 auto}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-orange-ink)}
+.doc-hero .eyebrow{color:var(--accent-orange)}
+.doc-hero h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.4vw,54px);line-height:1.1;margin-top:var(--space-4);max-width:900px}
+.doc-hero p.lede{margin-top:var(--space-5);font-size:18px;line-height:1.6;color:var(--accent-orange);max-width:760px}
+.doc-meta{margin-top:var(--space-8);display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.doc-meta span{font-size:13px;font-weight:500;border:1px solid var(--border-on-navy);color:var(--text-on-navy-muted);border-radius:var(--radius-pill);padding:6px 12px}
+section.block{padding:var(--space-16) var(--space-6) 0}
+section.block:last-of-type{padding-bottom:var(--space-24)}
+h2.sec{font-family:var(--display);font-weight:700;font-size:clamp(22px,2.6vw,34px);line-height:1.2;margin-top:var(--space-2)}
+p.sec-sub{margin-top:var(--space-3);font-size:15px;line-height:1.55;color:var(--ink-muted);max-width:720px}
+.glance{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin-top:var(--space-8)}
+.glance .g{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:var(--space-6)}
+.glance .g h3{font-family:var(--display);font-size:19px;line-height:1.3;font-weight:700;margin:var(--space-4) 0 var(--space-3)}
+.glance .g ul{list-style:none;display:grid;gap:10px}
+.glance .g li{font-size:15px;line-height:1.5;color:var(--ink-muted);padding-left:18px;position:relative}
+.glance .g li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:50%;background:var(--ink)}
+.glance .g.change li::before{background:var(--accent-orange)}
+.glance .g.ask li::before{background:transparent;border:1.5px solid var(--ink)}
+.glance .chipicon{width:44px;height:44px;border-radius:var(--radius-md);display:grid;place-items:center}
+@media (max-width:900px){.glance{grid-template-columns:1fr}}
+
+/* Artboard frames */
+.stage{margin-top:var(--space-8);background:#EFECE4;border-radius:var(--radius-xl);padding:var(--space-6);overflow:hidden}
+.stage-label{display:flex;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;font-size:13px;font-weight:600;color:var(--ink-muted);margin-bottom:var(--space-4)}
+.scaler{position:relative;width:100%}
+.scaler > .board{position:absolute;top:0;left:0;transform-origin:0 0}
+.board{background:var(--surface-page);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 rgba(11,18,51,.06),0 12px 40px rgba(11,18,51,.12);position:relative}
+.mobile-row{display:flex;gap:var(--space-8);justify-content:center;flex-wrap:wrap}
+.mobile-col{display:flex;flex-direction:column;align-items:center;gap:var(--space-3)}
+.mobile-col .cap{font-size:13px;font-weight:600;color:var(--ink-muted)}
+
+/* ── App: sidebar (desktop) ──────────────────────────────────────────── */
+.app{display:flex;height:100%}
+.side{width:280px;flex-shrink:0;background:var(--surface-navy);color:var(--text-on-navy);display:flex;flex-direction:column;padding:var(--space-6) var(--space-4)}
+.brand{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-2) var(--space-6);border-bottom:1px solid var(--border-on-navy)}
+.brand .mark{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;background:var(--accent-orange);color:var(--surface-navy);width:44px;height:44px;border-radius:var(--radius-md);display:grid;place-items:center}
+.brand b{font-family:var(--display);font-weight:700;font-size:18px;display:block}
+.brand small{font-size:13px;color:var(--accent-orange);opacity:.85}
+.nav{display:grid;gap:4px;padding-top:var(--space-5)}
+.nav a{display:flex;align-items:center;gap:var(--space-3);padding:11px 12px;border-radius:var(--radius-pill);font-size:14px;font-weight:500;color:var(--text-on-navy);text-decoration:none}
+.nav a svg{color:var(--text-on-navy-muted)}
+.nav a.on{background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);font-weight:700}
+.nav a.on svg{color:var(--accent-orange)}
+.nav-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-orange);opacity:.75;padding:var(--space-5) 12px var(--space-2)}
+.side-foot{margin-top:auto;display:grid;gap:4px;border-top:1px solid var(--border-on-navy);padding-top:var(--space-4)}
+.me{display:flex;align-items:center;gap:var(--space-3);padding:10px 12px;margin-top:var(--space-2);border-radius:var(--radius-lg);background:var(--surface-navy-subtle)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-lime);color:var(--surface-navy);font-family:var(--display);font-weight:700;font-size:13px;display:grid;place-items:center;flex-shrink:0}
+.me b{font-size:14px;display:block}
+.me small{font-size:12px;color:var(--accent-orange);opacity:.8}
+.collapse{margin-left:auto;color:var(--text-on-navy-faint)}
+
+/* ── App: main column ───────────────────────────────────────────────── */
+.main{flex:1;min-width:0;position:relative;overflow:hidden}
+.tabbar{position:sticky;top:0;z-index:5;background:var(--bar-bg);backdrop-filter:blur(14px);border-bottom:1px solid var(--border-default)}
+.tabbar-in{max-width:672px;margin:0 auto;display:flex;align-items:center;gap:var(--space-2);padding:14px 0}
+.tabs{display:flex;gap:6px;overflow:hidden;flex:1;min-width:0}
+.tab{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:var(--radius-pill);font-size:14px;font-weight:600;color:var(--ink-muted);white-space:nowrap;flex-shrink:0}
+.tab.on{background:var(--surface-navy);color:var(--text-on-navy)}
+.tab.on svg{color:var(--accent-orange)}
+.country{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px 0 10px;border:1px solid var(--border-default);background:var(--surface-card);border-radius:var(--radius-pill);font-size:13px;font-weight:600;flex-shrink:0}
+.feed{max-width:672px;margin:0 auto;padding:var(--space-6) 0 var(--space-10)}
+.hello{min-height:44px;margin-bottom:var(--space-5);display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4)}
+.hello h1{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.3}
+.hello p{font-size:14px;color:var(--ink-muted);margin-top:2px}
+.stack{display:grid;gap:var(--space-3)}
+
+/* ── Feed card ──────────────────────────────────────────────────────── */
+.disclose{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding-left:4px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.disclose .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-orange)}
+.card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:18px 20px 12px;position:relative}
+.card:hover{border-color:var(--border-hover)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.kind{display:flex;align-items:center;gap:10px;min-width:0;font-size:13px}
+.kchip{width:34px;height:34px;border-radius:var(--radius-sm);display:grid;place-items:center;flex-shrink:0}
+.k-opp{background:var(--accent-orange-tint);color:var(--accent-orange-ink)}
+.k-job{background:var(--surface-navy);color:var(--text-on-navy)}
+.k-evt{background:var(--accent-lime-tint);color:var(--ink)}
+.k-res{background:var(--surface-card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--border-default)}
+.kind b{font-weight:700;color:var(--ink)}
+.kind span.prov{color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kind .sep{color:var(--sep)}
+.due{font-size:12px;font-weight:700;border-radius:var(--radius-pill);padding:5px 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.due.upcoming{background:var(--fill-subtle);color:var(--ink-muted)}
+.due.soon{background:var(--accent-orange-tint);color:var(--accent-orange-ink)}
+.due.urgent{background:var(--accent-orange);color:var(--surface-navy)}
+.due.closed{background:var(--fill-subtle);color:var(--ink-muted);text-decoration:line-through;text-decoration-thickness:1px}
+.card h3{font-size:17px;line-height:1.35;font-weight:700;margin-top:14px;letter-spacing:-.005em}
+.card p.desc{font-size:14px;line-height:1.55;color:var(--ink-muted);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px;font-size:13px;color:var(--ink-muted)}
+.meta > span{display:inline-flex;align-items:center;gap:5px}
+.meta .pay{color:var(--ink);font-weight:700}
+.meta .pay i{font-style:normal;font-weight:500;color:var(--ink-muted)}
+.match{color:var(--accent-orange-ink);font-weight:700}
+.match b{font-family:var(--display);font-weight:700;font-size:13px}
+.actions{display:flex;align-items:center;gap:2px;margin-top:12px;padding-top:8px;border-top:1px solid var(--hairline)}
+.act{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.act.on-like{color:var(--accent-orange-ink)} .act.on-like svg{fill:var(--accent-orange);stroke:var(--accent-orange)}
+.act.on-save{color:var(--ink)} .act.on-save svg{fill:var(--ink)}
+.act.hover{background:var(--fill-subtle);color:var(--ink)}
+.go{margin-left:auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
+.card.is-hover .go{background:var(--accent-orange);color:var(--surface-navy)}
+.card.closed h3{color:var(--ink-muted)}
+
+/* Extreme lead — the page's one elevated navy moment */
+.lead{background:var(--surface-navy);color:var(--text-on-navy);border-radius:var(--radius-xl);padding:22px 22px 18px;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(11,18,51,.22)}
+.lead::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:130px;border-radius:var(--radius-xl);background:var(--accent-orange);transform:rotate(-8deg);opacity:.95}
+.lead::before{content:"";position:absolute;right:30px;top:-26px;width:90px;height:70px;border-radius:var(--radius-lg);background:var(--accent-lime);transform:rotate(6deg);z-index:1}
+.lead > *{position:relative;z-index:2}
+.lead .kind b{color:var(--text-on-navy)}
+.lead .kind span.prov{color:var(--accent-orange)}
+.lead .kchip{background:var(--surface-navy-subtle);box-shadow:inset 0 0 0 1px var(--border-on-navy);color:var(--accent-orange)}
+.lead h3{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.25;margin-top:18px;max-width:78%}
+.lead p.desc{color:var(--accent-orange);opacity:.9;font-size:14px;line-height:1.55;margin-top:8px;max-width:90%}
+.lead .meta{color:var(--accent-orange)}
+.lead .meta .pay{color:var(--text-on-navy)}
+.lead .match{color:var(--text-on-navy)}
+.lead .row{display:flex;align-items:center;gap:var(--space-3);margin-top:18px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:var(--radius-pill);font-size:15px;font-weight:700;background:var(--accent-orange);color:var(--surface-navy)}
+.lead .act{color:var(--text-on-navy-muted)}
+.lead .due.soon{background:rgba(255,106,0,.18);color:var(--accent-orange)}
+.lead .lead-actions{display:flex;gap:2px;margin-left:auto}
+.disclose.on-lead{color:var(--ink-muted)}
+
+/* Skeleton + end */
+.skel{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:18px 20px}
+.skel i{display:block;background:var(--hairline);border-radius:var(--radius-pill);height:12px}
+.skel .row{display:flex;gap:10px;align-items:center}
+.skel .sq{width:34px;height:34px;border-radius:var(--radius-sm);background:var(--hairline)}
+.end{text-align:center;padding:var(--space-8) 0 var(--space-4)}
+.end .up{font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink);display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--accent-orange-tint)}
+.end p{margin-top:10px;font-size:13px;color:var(--ink-muted)}
+
+/* ── Mobile ─────────────────────────────────────────────────────────── */
+.phone{width:390px;height:844px;border-radius:44px;background:var(--surface-page);overflow:hidden;position:relative;box-shadow:0 0 0 10px #0B1233,0 30px 60px rgba(11,18,51,.25)}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:700}
+.m-top{padding:6px 16px 10px;background:var(--bar-bg);border-bottom:1px solid var(--border-default)}
+.m-row{display:flex;align-items:center;justify-content:space-between}
+.m-brand{font-family:var(--display);font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px}
+.m-brand .mk{width:30px;height:30px;border-radius:10px;background:var(--accent-orange);color:var(--surface-navy);display:grid;place-items:center;font-size:12px}
+.m-tabs{display:flex;gap:6px;overflow:hidden;margin-top:10px;margin-right:-16px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.m-tabs .tab{height:34px;padding:0 13px;font-size:13px}
+.m-feed{padding:16px;height:calc(844px - 44px - 104px - 78px);overflow:hidden}
+.m-feed .hello h1{font-size:19px}
+.m-feed .hello p{font-size:13px}
+.m-feed .card{padding:16px 16px 8px}
+.m-feed .card h3{font-size:16px;margin-top:12px}
+.m-feed .lead{padding:18px 18px 16px}
+.m-feed .lead h3{font-size:18px;max-width:80%}
+.m-feed .lead::after{width:130px;height:100px;right:-40px;top:-44px}
+.m-feed .lead::before{width:64px;height:52px;right:22px;top:-22px}
+.m-feed .act{padding:0 8px}
+.bnav{position:absolute;left:0;right:0;bottom:0;height:78px;background:var(--surface-card);border-top:1px solid var(--border-default);display:flex;justify-content:space-around;align-items:flex-start;padding-top:8px}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--ink-muted);width:64px}
+.bnav a .pill{width:52px;height:30px;border-radius:var(--radius-pill);display:grid;place-items:center}
+.bnav a.on{color:var(--ink)}
+.bnav a.on .pill{background:var(--surface-navy);color:var(--accent-orange)}
+.home-ind{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--ink)}
+
+/* ── States grid ────────────────────────────────────────────────────── */
+.states{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-6);margin-top:var(--space-8)}
+.state .lbl{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;gap:8px;align-items:baseline}
+.state .lbl span{font-weight:500;color:var(--ink-muted)}
+@media (max-width:900px){.states{grid-template-columns:1fr}}
+
+/* Tables & swatches */
+table.flow{width:100%;border-collapse:separate;border-spacing:0;margin-top:var(--space-8);background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);overflow:hidden;font-size:14px}
+table.flow th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:14px 18px;background:#F6F4EE;border-bottom:1px solid var(--border-default)}
+table.flow td{padding:14px 18px;vertical-align:top;line-height:1.5;border-bottom:1px solid var(--hairline)}
+table.flow tr:last-child td{border-bottom:0}
+table.flow td:first-child{font-weight:700;width:22%}
+table.flow td:nth-child(2){color:var(--ink-muted);width:36%}
+table.flow code{font-size:12px;background:var(--fill-subtle);border-radius:6px;padding:1px 6px}
+.tbl-wrap{overflow-x:auto}
+.swap{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-8)}
+.swap .col{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:var(--space-6)}
+.swap h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:var(--space-4)}
+.sw{display:flex;align-items:center;gap:var(--space-3);padding:8px 0;font-size:14px}
+.sw i{width:34px;height:34px;border-radius:var(--radius-sm);flex-shrink:0;display:grid;place-items:center}
+.sw small{display:block;color:var(--ink-muted);font-size:12px}
+@media (max-width:760px){.swap{grid-template-columns:1fr}}
+.qs{display:grid;gap:var(--space-3);margin-top:var(--space-8)}
+.q{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:var(--space-5) var(--space-6);display:grid;grid-template-columns:40px 1fr;gap:var(--space-4)}
+.q .n{font-family:var(--display);font-weight:700;font-size:15px;width:40px;height:40px;border-radius:50%;background:var(--surface-navy);color:var(--accent-orange);display:grid;place-items:center}
+.q h4{font-size:16px;font-weight:700}
+.q p{font-size:14px;line-height:1.55;color:var(--ink-muted);margin-top:4px}
+.q p b{color:var(--ink)}
+footer.doc{margin-top:var(--space-16);padding:var(--space-8) var(--space-6);background:var(--surface-navy);color:var(--accent-orange);font-size:13px}
+footer.doc .wrap{display:flex;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
+@media (max-width:640px){.stage{padding:var(--space-3)} .phone{transform:scale(.82);transform-origin:top center;margin-bottom:-150px}}
+</style>
+</head>
+<body>
+
+<!-- Stroke icon set: 24px grid, 1.6 stroke, round caps (UP Design v1 · Iconography) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="star" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol>
+    <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6"/></symbol>
+    <symbol id="brief" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M3 12.5h18"/></symbol>
+    <symbol id="cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></symbol>
+    <symbol id="book" viewBox="0 0 24 24"><path d="M5 5.5A2.5 2.5 0 017.5 3H19v15H7.5A2.5 2.5 0 005 20.5z"/><path d="M5 20.5A2.5 2.5 0 017.5 18H19v3H7.5"/></symbol>
+    <symbol id="home" viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 01-1.5 1.5H15v-6h-6v6H5.5A1.5 1.5 0 014 19z"/></symbol>
+    <symbol id="plist" viewBox="0 0 24 24"><path d="M4 6h12M4 11h12M4 16h7"/><circle cx="16.5" cy="17" r="2.5"/><path d="M19 17V9.5l2-1"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.4l2.6 2.6 5-5.4"/></symbol>
+    <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0115 0"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-9.8A4 4 0 0112 7.6a4 4 0 017 2.6C19 15.7 12 20 12 20z"/></symbol>
+    <symbol id="mark" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-3.8-5.5 3.8z"/></symbol>
+    <symbol id="ladd" viewBox="0 0 24 24"><path d="M4 6h13M4 11.5h9M4 17h6M17 14v7M13.5 17.5h7"/></symbol>
+    <symbol id="share" viewBox="0 0 24 24"><circle cx="17.5" cy="5.5" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><circle cx="17.5" cy="18.5" r="2.5"/><path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+    <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+    <symbol id="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+    <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></symbol>
+    <symbol id="dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="out" viewBox="0 0 24 24"><path d="M14.5 4H18a2 2 0 012 2v12a2 2 0 01-2 2h-3.5M10 8l-4 4 4 4M6 12h10"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="eye" viewBox="0 0 24 24"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+    <symbol id="side" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/></symbol>
+  </defs>
+</svg>
+
+<!-- ═════════════ Document header ═════════════ -->
+<header class="doc-hero">
+  <div class="wrap">
+    <div class="eyebrow">UP · Signed-in home · Design proposal v1</div>
+    <h1>Same feed, same flow — now it looks like UP.</h1>
+    <p class="lede">The landing page speaks navy, orange and Unbounded. The moment someone signs in, the home feed switches to a generic grey card list in sky, emerald and violet. This proposal brings the signed-in home into UP Design v1 without moving a single step of how the feed works.</p>
+    <div class="doc-meta">
+      <span>24 Sep 2026</span>
+      <span>Built on UP Design v1 tokens</span>
+      <span>Source: app/home-client.tsx · components/feed-card.tsx</span>
+      <span>v1.1 — decisions settled, dark mode added</span>
+      <span>Proposal only — no code changed</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═════════════ At a glance ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">At a glance</div>
+  <h2 class="sec">What moves, and what doesn't</h2>
+  <div class="glance">
+    <div class="g">
+      <div class="chipicon k-job"><svg class="i lg"><use href="#check"/></svg></div>
+      <h3>The flow stays</h3>
+      <ul>
+        <li>Fixed tab bar: For You, Opportunities, Jobs, Events, Resources, and the country picker</li>
+        <li>A one-line greeting, shown only on For You</li>
+        <li>The extreme campaign always first, a sponsored item after every four posts, "Sponsored" always shown above the card</li>
+        <li>Clicking the title opens the listing. Like, save, add to playlist and share work as they do now</li>
+        <li>Infinite scroll, skeletons while loading, and the end-of-feed line</li>
+      </ul>
+    </div>
+    <div class="g change">
+      <div class="chipicon k-opp"><svg class="i lg"><use href="#star"/></svg></div>
+      <h3>The look changes</h3>
+      <ul>
+        <li>Four off-brand type colours become UP-palette chips told apart by lightness</li>
+        <li>Red/amber deadline rails become orange pills that escalate by urgency</li>
+        <li>The navy sidebar becomes the "place" you're in, and the active tab becomes a navy pill</li>
+        <li>The extreme campaign becomes the page's one elevated navy card</li>
+        <li>Unbounded is used only for the greeting, the match number and the lead title</li>
+      </ul>
+    </div>
+    <div class="g ask">
+      <div class="chipicon k-evt"><svg class="i lg"><use href="#compass"/></svg></div>
+      <h3>Decided</h3>
+      <ul>
+        <li>Lime stays as the Events colour</li>
+        <li>The extreme campaign keeps its own navy look, because it's meant to grab attention</li>
+        <li>The desktop sidebar goes navy</li>
+        <li>Dark mode is now designed (see below)</li>
+        <li>All four apply to every user-facing page, not just home</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════════ Desktop ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">Desktop · 1440</div>
+  <h2 class="sec">For You, signed in</h2>
+  <p class="sec-sub">Same frame as today: a 280px sidebar, a 672px feed column and a sticky tab bar that lines up with the content column. The navy sidebar is the one big block of navy; the feed stays on cream so reading stays calm.</p>
+  <div class="stage">
+    <div class="stage-label"><span>Desktop — For You tab, top of feed</span><span>Scaled to fit</span></div>
+    <div class="scaler" data-w="1440" data-h="1180">
+      <div class="board" style="width:1440px;height:1180px">
+        <div class="app">
+          <aside class="side">
+            <div class="brand">
+              <div class="mark">UP</div>
+              <div><b>UP</b><small>Your growth hub</small></div>
+              <svg class="i collapse"><use href="#side"/></svg>
+            </div>
+            <nav class="nav">
+              <a class="on"><svg class="i"><use href="#home"/></svg>Home</a>
+              <a><svg class="i"><use href="#plist"/></svg>Playlist</a>
+              <a><svg class="i"><use href="#search"/></svg>Search</a>
+              <a><svg class="i"><use href="#check"/></svg>Tracker</a>
+              <div class="nav-label">Playlists</div>
+              <a><svg class="i"><use href="#plist"/></svg>My playlists</a>
+              <a><svg class="i"><use href="#compass"/></svg>Discover</a>
+              <div class="nav-label">Library</div>
+              <a><svg class="i"><use href="#user"/></svg>My profile</a>
+              <a><svg class="i"><use href="#grid"/></svg>Provider hub</a>
+            </nav>
+            <div class="side-foot nav">
+              <a><svg class="i"><use href="#dl"/></svg>Install app</a>
+              <a><svg class="i"><use href="#out"/></svg>Log out</a>
+              <div class="me"><div class="avatar">KO</div><div><b>Kachi O.</b><small>Lagos, Nigeria</small></div></div>
+            </div>
+          </aside>
+
+          <div class="main">
+            <div class="tabbar"><div class="tabbar-in">
+              <div class="tabs">
+                <span class="tab on"><svg class="i sm"><use href="#star"/></svg>For You</span>
+                <span class="tab"><svg class="i sm"><use href="#target"/></svg>Opportunities</span>
+                <span class="tab"><svg class="i sm"><use href="#brief"/></svg>Jobs</span>
+                <span class="tab"><svg class="i sm"><use href="#cal"/></svg>Events</span>
+                <span class="tab"><svg class="i sm"><use href="#book"/></svg>Resources</span>
+              </div>
+              <span class="country"><svg class="i sm"><use href="#globe"/></svg>Nigeria<svg class="i sm"><use href="#chev"/></svg></span>
+            </div></div>
+
+            <div class="feed">
+              <div class="hello"><div><h1>Hey, Kachi</h1><p>Picks to help you glow up.</p></div></div>
+              <div class="stack">
+                <div>
+                  <div class="disclose on-lead"><span class="dot"></span>Sponsored · Featured</div>
+                  <article class="lead">
+                    <div class="card-top">
+                      <div class="kind"><span class="kchip"><svg class="i"><use href="#target"/></svg></span><b>Fellowship</b><span class="sep">·</span><span class="prov">Savanna Fund</span></div>
+                    </div>
+                    <h3>Savanna Founders Fellowship 2027 — $25k grant + 12-week residency</h3>
+                    <p class="desc">For builders aged 18–30 working on climate, fintech or agritech across West and East Africa. Mentors, demo day in Nairobi, no equity taken.</p>
+                    <div class="meta"><span><svg class="i sm"><use href="#pin"/></svg>Remote · Nairobi</span><span class="pay">$25,000 <i>≈ ₦38.6m</i></span><span class="match"><b>94</b>% match</span></div>
+                    <div class="row">
+                      <span class="btn">See the fellowship<svg class="i"><use href="#arrow"/></svg></span>
+                      <span class="due soon"><svg class="i sm"><use href="#clock"/></svg>3 days left</span>
+                      <div class="lead-actions"><span class="act"><svg class="i"><use href="#heart"/></svg>412</span><span class="act"><svg class="i"><use href="#mark"/></svg>188</span><span class="act"><svg class="i"><use href="#share"/></svg></span></div>
+                    </div>
+                  </article>
+                </div>
+
+                <article class="card is-hover">
+                  <div class="card-top">
+                    <div class="kind"><span class="kchip k-job"><svg class="i"><use href="#brief"/></svg></span><b>Job</b><span class="sep">·</span><span class="prov">Kora Labs</span></div>
+                    <span class="due upcoming">6 days left</span>
+                  </div>
+                  <h3>Junior Product Designer (Hybrid)</h3>
+                  <p class="desc">Design flows for a payments app used by 400k small traders. Portfolio over degree — two case studies is enough.</p>
+                  <div class="meta"><span><svg class="i sm"><use href="#pin"/></svg>Lagos, Nigeria</span><span class="pay">₦450,000/mo <i>≈ $290</i></span><span class="match"><b>88</b>% match</span><span><svg class="i sm"><use href="#eye"/></svg>1,204 views</span></div>
+                  <div class="actions"><span class="act on-like"><svg class="i"><use href="#heart"/></svg>96</span><span class="act on-save"><svg class="i"><use href="#mark"/></svg>41</span><span class="act hover"><svg class="i"><use href="#ladd"/></svg>12</span><span class="act"><svg class="i"><use href="#share"/></svg>9</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-top">
+                    <div class="kind"><span class="kchip k-evt"><svg class="i"><use href="#cal"/></svg></span><b>Event</b><span class="sep">·</span><span class="prov">Sahel Design Week</span></div>
+                    <span class="due urgent"><svg class="i sm"><use href="#clock"/></svg>14h 22m left</span>
+                  </div>
+                  <h3>Portfolio review night: get your work critiqued by senior designers</h3>
+                  <div class="meta"><span><svg class="i sm"><use href="#pin"/></svg>Accra, Ghana</span><span>Free</span><span class="match"><b>81</b>% match</span></div>
+                  <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>58</span><span class="act"><svg class="i"><use href="#mark"/></svg>20</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>4</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-top">
+                    <div class="kind"><span class="kchip k-opp"><svg class="i"><use href="#target"/></svg></span><b>Opportunity</b><span class="sep">·</span><span class="prov">Tinuke Academy</span></div>
+                  </div>
+                  <h3>Fully funded data analytics bootcamp — 16 weeks, laptop included</h3>
+                  <p class="desc">Evening cohort for recent graduates. Ends with a placement interview at one of 30 partner companies.</p>
+                  <div class="meta"><span>Remote</span><span>Due Nov 12</span><span class="match"><b>77</b>% match</span><span>860 views</span></div>
+                  <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>133</span><span class="act"><svg class="i"><use href="#mark"/></svg>67</span><span class="act"><svg class="i"><use href="#ladd"/></svg>8</span><span class="act"><svg class="i"><use href="#share"/></svg>15</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════════ Mobile ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">Mobile · 390</div>
+  <h2 class="sec">Thumb-first, light chrome</h2>
+  <p class="sec-sub">On a phone the tab bar and bottom nav stay light, and navy only appears in the active pill and the lead card. A navy frame around a small screen made the feed feel boxed in. The tab row scrolls sideways and fades at the edge, as it does now.</p>
+  <div class="stage">
+    <div class="mobile-row">
+      <div class="mobile-col">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="m-top">
+            <div class="m-row"><div class="m-brand"><span class="mk">UP</span></div><span class="country" style="height:32px"><svg class="i sm"><use href="#globe"/></svg>NG<svg class="i sm"><use href="#chev"/></svg></span></div>
+            <div class="m-tabs">
+              <span class="tab on"><svg class="i sm"><use href="#star"/></svg>For You</span>
+              <span class="tab"><svg class="i sm"><use href="#target"/></svg>Opportunities</span>
+              <span class="tab"><svg class="i sm"><use href="#brief"/></svg>Jobs</span>
+              <span class="tab"><svg class="i sm"><use href="#cal"/></svg>Events</span>
+            </div>
+          </div>
+          <div class="m-feed">
+            <div class="hello" style="margin-bottom:14px"><div><h1>Hey, Kachi</h1><p>Picks to help you glow up.</p></div></div>
+            <div class="stack">
+              <div>
+                <div class="disclose"><span class="dot"></span>Sponsored · Featured</div>
+                <article class="lead">
+                  <div class="kind"><span class="kchip"><svg class="i"><use href="#target"/></svg></span><b>Fellowship</b><span class="sep">·</span><span class="prov">Savanna Fund</span></div>
+                  <h3>Savanna Founders Fellowship 2027</h3>
+                  <p class="desc">$25k grant + 12-week residency for builders aged 18–30.</p>
+                  <div class="meta"><span>Remote</span><span class="match"><b>94</b>% match</span></div>
+                  <div class="row"><span class="btn" style="height:40px;font-size:14px;padding:0 16px">See the fellowship<svg class="i sm"><use href="#arrow"/></svg></span><span class="due soon">3 days left</span></div>
+                </article>
+              </div>
+              <article class="card">
+                <div class="card-top">
+                  <div class="kind"><span class="kchip k-job"><svg class="i"><use href="#brief"/></svg></span><b>Job</b><span class="sep">·</span><span class="prov">Kora Labs</span></div>
+                  <span class="due upcoming">6 days</span>
+                </div>
+                <h3>Junior Product Designer (Hybrid)</h3>
+                <div class="meta"><span>Lagos</span><span class="pay">₦450k/mo</span><span class="match"><b>88</b>%</span></div>
+                <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>96</span><span class="act"><svg class="i"><use href="#mark"/></svg>41</span><span class="act"><svg class="i"><use href="#ladd"/></svg>12</span><span class="act"><svg class="i"><use href="#share"/></svg>9</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+              </article>
+            </div>
+          </div>
+          <nav class="bnav">
+            <a class="on"><span class="pill"><svg class="i"><use href="#home"/></svg></span>Home</a>
+            <a><span class="pill"><svg class="i"><use href="#plist"/></svg></span>Playlists</a>
+            <a><span class="pill"><svg class="i"><use href="#search"/></svg></span>Search</a>
+            <a><span class="pill"><svg class="i"><use href="#check"/></svg></span>Tracker</a>
+            <a><span class="pill"><svg class="i"><use href="#user"/></svg></span>Profile</a>
+          </nav>
+          <div class="home-ind"></div>
+        </div>
+        <span class="cap">For You: greeting, lead card, first result</span>
+      </div>
+
+      <div class="mobile-col">
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="m-top">
+            <div class="m-row"><div class="m-brand"><span class="mk">UP</span></div><span class="country" style="height:32px"><svg class="i sm"><use href="#globe"/></svg>NG<svg class="i sm"><use href="#chev"/></svg></span></div>
+            <div class="m-tabs">
+              <span class="tab"><svg class="i sm"><use href="#star"/></svg>For You</span>
+              <span class="tab"><svg class="i sm"><use href="#target"/></svg>Opportunities</span>
+              <span class="tab"><svg class="i sm"><use href="#brief"/></svg>Jobs</span>
+              <span class="tab on"><svg class="i sm"><use href="#cal"/></svg>Events</span>
+            </div>
+          </div>
+          <div class="m-feed">
+            <div class="stack">
+              <article class="card">
+                <div class="card-top">
+                  <div class="kind"><span class="kchip k-evt"><svg class="i"><use href="#cal"/></svg></span><b>Event</b><span class="sep">·</span><span class="prov">Sahel Design Week</span></div>
+                  <span class="due urgent">14h 22m</span>
+                </div>
+                <h3>Portfolio review night with senior designers</h3>
+                <div class="meta"><span>Accra</span><span>Free</span></div>
+                <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>58</span><span class="act"><svg class="i"><use href="#mark"/></svg>20</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>4</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+              </article>
+              <div>
+                <div class="disclose"><span class="dot"></span>Sponsored</div>
+                <article class="card">
+                  <div class="card-top">
+                    <div class="kind"><span class="kchip k-evt"><svg class="i"><use href="#cal"/></svg></span><b>Event</b><span class="sep">·</span><span class="prov">Lagos Startup Week</span></div>
+                    <span class="due soon">2 days</span>
+                  </div>
+                  <h3>Pitch clinic: 5 minutes with an angel investor</h3>
+                  <div class="meta"><span>Lagos</span><span class="pay">₦5,000</span></div>
+                  <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>21</span><span class="act"><svg class="i"><use href="#mark"/></svg>9</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>2</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+                </article>
+              </div>
+              <div class="skel"><div class="row"><span class="sq"></span><i style="width:140px"></i></div><i style="width:85%;margin-top:16px;height:14px"></i><i style="width:55%;margin-top:10px"></i></div>
+            </div>
+          </div>
+          <nav class="bnav">
+            <a class="on"><span class="pill"><svg class="i"><use href="#home"/></svg></span>Home</a>
+            <a><span class="pill"><svg class="i"><use href="#plist"/></svg></span>Playlists</a>
+            <a><span class="pill"><svg class="i"><use href="#search"/></svg></span>Search</a>
+            <a><span class="pill"><svg class="i"><use href="#check"/></svg></span>Tracker</a>
+            <a><span class="pill"><svg class="i"><use href="#user"/></svg></span>Profile</a>
+          </nav>
+          <div class="home-ind"></div>
+        </div>
+        <span class="cap">Events tab: no greeting, sponsored item, loading more</span>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════════ Card states ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">The feed card</div>
+  <h2 class="sec">Every state the card has today</h2>
+  <p class="sec-sub">Same anatomy as <code>FeedCard</code>: type and provider, deadline, title as the link, a two-line description, one line of details, then actions. Deadline urgency still escalates in the same steps (7 days, 3 days, 24 hours, closed). It's now shown with orange weight instead of red and amber rails.</p>
+  <div class="states">
+    <div class="state">
+      <div class="lbl">Opportunity <span>· no deadline pressure</span></div>
+      <article class="card">
+        <div class="card-top"><div class="kind"><span class="kchip k-opp"><svg class="i"><use href="#target"/></svg></span><b>Opportunity</b><span class="sep">·</span><span class="prov">Tinuke Academy</span></div></div>
+        <h3>Fully funded data analytics bootcamp — 16 weeks</h3>
+        <p class="desc">Evening cohort for recent graduates, ending in a placement interview.</p>
+        <div class="meta"><span>Remote</span><span>Due Nov 12</span><span class="match"><b>77</b>% match</span><span>860 views</span></div>
+        <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>133</span><span class="act"><svg class="i"><use href="#mark"/></svg>67</span><span class="act"><svg class="i"><use href="#ladd"/></svg>8</span><span class="act"><svg class="i"><use href="#share"/></svg>15</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Job <span>· salary, local ≈ beside it, 4–7 days</span></div>
+      <article class="card">
+        <div class="card-top"><div class="kind"><span class="kchip k-job"><svg class="i"><use href="#brief"/></svg></span><b>Job</b><span class="sep">·</span><span class="prov">Kora Labs</span></div><span class="due upcoming">6 days left</span></div>
+        <h3>Junior Product Designer (Hybrid)</h3>
+        <div class="meta"><span><svg class="i sm"><use href="#pin"/></svg>Lagos, Nigeria</span><span class="pay">₦450,000/mo <i>≈ $290</i></span><span class="match"><b>88</b>% match</span></div>
+        <div class="actions"><span class="act on-like"><svg class="i"><use href="#heart"/></svg>96</span><span class="act on-save"><svg class="i"><use href="#mark"/></svg>41</span><span class="act"><svg class="i"><use href="#ladd"/></svg>12</span><span class="act"><svg class="i"><use href="#share"/></svg>9</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Soon <span>· 2–3 days, orange tint</span></div>
+      <article class="card">
+        <div class="card-top"><div class="kind"><span class="kchip k-evt"><svg class="i"><use href="#cal"/></svg></span><b>Event</b><span class="sep">·</span><span class="prov">Lagos Startup Week</span></div><span class="due soon"><svg class="i sm"><use href="#clock"/></svg>2 days left</span></div>
+        <h3>Pitch clinic: 5 minutes with an angel investor</h3>
+        <div class="meta"><span>Lagos</span><span class="pay">₦5,000</span><span class="match"><b>72</b>% match</span></div>
+        <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>21</span><span class="act"><svg class="i"><use href="#mark"/></svg>9</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>2</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Urgent <span>· under 24h, live countdown, solid orange</span></div>
+      <article class="card">
+        <div class="card-top"><div class="kind"><span class="kchip k-evt"><svg class="i"><use href="#cal"/></svg></span><b>Event</b><span class="sep">·</span><span class="prov">Sahel Design Week</span></div><span class="due urgent"><svg class="i sm"><use href="#clock"/></svg>14h 22m left</span></div>
+        <h3>Portfolio review night with senior designers</h3>
+        <div class="meta"><span>Accra, Ghana</span><span>Free</span><span class="match"><b>81</b>% match</span></div>
+        <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>58</span><span class="act"><svg class="i"><use href="#mark"/></svg>20</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>4</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Resource <span>· no deadline, outlined chip</span></div>
+      <article class="card">
+        <div class="card-top"><div class="kind"><span class="kchip k-res"><svg class="i"><use href="#book"/></svg></span><b>Resource</b><span class="sep">·</span><span class="prov">UP Library</span></div></div>
+        <h3>The CV template that got 40 UP members interviews</h3>
+        <p class="desc">One page, ATS-safe, with notes on what recruiters in Lagos and Nairobi skim for.</p>
+        <div class="meta"><span>Free download</span><span class="match"><b>69</b>% match</span><span>3,410 views</span></div>
+        <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>402</span><span class="act"><svg class="i"><use href="#mark"/></svg>311</span><span class="act"><svg class="i"><use href="#ladd"/></svg>57</span><span class="act"><svg class="i"><use href="#share"/></svg>88</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Closed <span>· kept in the feed, title muted</span></div>
+      <article class="card closed">
+        <div class="card-top"><div class="kind"><span class="kchip k-opp"><svg class="i"><use href="#target"/></svg></span><b>Opportunity</b><span class="sep">·</span><span class="prov">Pan-African Youth Forum</span></div><span class="due closed">Application closed</span></div>
+        <h3>Youth delegate programme — Kigali summit</h3>
+        <div class="meta"><span>Kigali, Rwanda</span><span class="match"><b>74</b>% match</span></div>
+        <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>77</span><span class="act"><svg class="i"><use href="#mark"/></svg>30</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>6</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+      </article>
+    </div>
+    <div class="state">
+      <div class="lbl">Sponsored <span>· ordinary card, disclosure above it</span></div>
+      <div>
+        <div class="disclose"><span class="dot"></span>Sponsored</div>
+        <article class="card">
+          <div class="card-top"><div class="kind"><span class="kchip k-job"><svg class="i"><use href="#brief"/></svg></span><b>Job</b><span class="sep">·</span><span class="prov">Northstar Logistics</span></div><span class="due upcoming">5 days left</span></div>
+          <h3>Graduate Operations Trainee — 2027 intake</h3>
+          <div class="meta"><span>Abuja</span><span class="pay">₦320,000/mo</span><span class="match"><b>79</b>% match</span></div>
+          <div class="actions"><span class="act"><svg class="i"><use href="#heart"/></svg>44</span><span class="act"><svg class="i"><use href="#mark"/></svg>18</span><span class="act"><svg class="i"><use href="#ladd"/></svg></span><span class="act"><svg class="i"><use href="#share"/></svg>3</span><span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+        </article>
+      </div>
+    </div>
+    <div class="state">
+      <div class="lbl">Loading more and end of feed</div>
+      <div class="stack">
+        <div class="skel"><div class="row"><span class="sq"></span><i style="width:160px"></i></div><i style="width:80%;margin-top:16px;height:14px"></i><i style="width:50%;margin-top:10px"></i></div>
+        <div class="end"><span class="up">UP</span><p>You've reached the end</p></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════════ Flow kept ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">Flow check</div>
+  <h2 class="sec">Every behaviour, before and after</h2>
+  <p class="sec-sub">Each row is something <code>home-client.tsx</code> or <code>feed-card.tsx</code> does today. The middle column is the current look; the right column is what this proposal changes. The behaviour itself doesn't change in any row.</p>
+  <div class="tbl-wrap"><table class="flow">
+    <thead><tr><th>Behaviour</th><th>Today</th><th>Proposed</th></tr></thead>
+    <tbody>
+      <tr><td>Tab bar</td><td>Fixed at top, aligned to the content column, grey active tab with an orange icon</td><td>Same position and measured spacer. Active tab becomes a navy pill with an orange icon, and all tabs are full pills (<code>radius-pill</code>)</td></tr>
+      <tr><td>Country selector</td><td>Right end of the tab bar</td><td>Same spot, as a white outlined pill with a globe icon (no flag emoji). Shortened to the country code on mobile</td></tr>
+      <tr><td>Greeting</td><td>One line, For You only, fixed min-height so the feed doesn't shift</td><td>Same rules and height. "Hey, Kachi" is set in Unbounded, sub-line unchanged</td></tr>
+      <tr><td>Extreme campaign</td><td>Always the first card, same look as organic cards, "Sponsored" label</td><td>Still first and still labelled ("Sponsored · Featured"). Shown as the page's one navy card with a single orange action. <b>Decided: keep it.</b></td></tr>
+      <tr><td>Sponsored slot</td><td>Ordinary <code>FeedCard</code> after every four posts, label above the card</td><td>Unchanged structure. The label gets an orange dot so it's easier to spot, and the card itself stays organic-looking</td></tr>
+      <tr><td>Content type</td><td>Orange / sky / emerald / violet icon and label</td><td>A 34px icon chip: orange-tint for opportunities, solid navy for jobs, lime-tint for events, outlined white for resources. Told apart by lightness and icon, not hue alone</td></tr>
+      <tr><td>Deadline urgency</td><td>Grey for 4–7 days, amber rail + pill for 2–3 days, red rail + border + countdown under 24h</td><td>Same thresholds and live countdown. Neutral pill → orange-tint pill → solid orange pill with navy text. No coloured left rails</td></tr>
+      <tr><td>Title and description</td><td>Title is the stretched link, 2-line clamps</td><td>Same. Title in Plus Jakarta 700 17px, because Unbounded is too wide for 2-line listing titles</td></tr>
+      <tr><td>Details line</td><td>Location · date · price (emerald) · N% match (orange) · views</td><td>Same order. Price in bold ink with the ≈ local price muted. Match number in Unbounded, orange-ink</td></tr>
+      <tr><td>Actions</td><td>Like (red when on), save, playlist, share, arrow. Guests get the sign-up prompt, and offline mode hides the write actions</td><td>Same four, same guest and offline rules. Like turns orange when on, save turns navy, and the arrow fills orange on hover</td></tr>
+      <tr><td>Paging</td><td>Infinite scroll, 2 skeleton cards, "You've reached the end"</td><td>Same. Skeletons match the new card shape, and the end line gets a small UP mark</td></tr>
+      <tr><td>Sidebar (desktop)</td><td>Light card with noise texture: Home, Playlist, Search, Tracker, Playlists, Library, Install, Log out</td><td>Same items and collapse control, on <code>surface-navy</code>. Section labels in orange per the landing page's on-navy rule</td></tr>
+      <tr><td>Bottom nav (mobile)</td><td>Home, Playlists, Search, Tracker, Profile</td><td>Same five. The active item gets a navy pill with an orange icon</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<!-- ═════════════ Colour swap ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">Colour</div>
+  <h2 class="sec">Out: Tailwind defaults. In: UP tokens.</h2>
+  <div class="swap">
+    <div class="col">
+      <h4>Today (feed-card.tsx)</h4>
+      <div class="sw"><i style="background:#F97316"></i><div>orange-500 <small>opportunity</small></div></div>
+      <div class="sw"><i style="background:#0EA5E9"></i><div>sky-500 <small>job</small></div></div>
+      <div class="sw"><i style="background:#10B981"></i><div>emerald-500 <small>event and price</small></div></div>
+      <div class="sw"><i style="background:#8B5CF6"></i><div>violet-500 <small>resource and playlist hover</small></div></div>
+      <div class="sw"><i style="background:#EF4444"></i><div>red-500 / amber-500 <small>deadline urgency and like</small></div></div>
+    </div>
+    <div class="col">
+      <h4>Proposed (UP Design v1)</h4>
+      <div class="sw"><i class="k-opp"><svg class="i"><use href="#target"/></svg></i><div>accent-orange-tint + orange-ink <small>opportunity; soon pill; like on</small></div></div>
+      <div class="sw"><i class="k-job"><svg class="i"><use href="#brief"/></svg></i><div>surface-navy + text-on-navy <small>job; active tab; sidebar; lead card</small></div></div>
+      <div class="sw"><i class="k-evt"><svg class="i"><use href="#cal"/></svg></i><div>accent-lime-tint + ink <small>event (same as the landing page event chip)</small></div></div>
+      <div class="sw"><i class="k-res"><svg class="i"><use href="#book"/></svg></i><div>surface-card + border-default <small>resource</small></div></div>
+      <div class="sw"><i style="background:var(--accent-orange)"></i><div>accent-orange + ink text <small>urgent pill; the lead's one CTA; hover arrow</small></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════════ Dark mode ═════════════ -->
+<section class="block" id="dark"><div class="wrap">
+  <div class="eyebrow">Dark mode · new</div>
+  <h2 class="sec">The same home, after dark</h2>
+  <p class="sec-sub">The page background drops below brand navy (<code>#070A1C</code>), so the navy sidebar and the extreme card still read as distinct areas instead of blending into the page. Cards lift to a lighter navy. Orange and lime keep their full strength, only their tints get quieter. Solid-navy chips (jobs, active tab, active nav) flip to cream so they don't disappear.</p>
+
+  <div class="stage stage-dark">
+    <div class="stage-label"><span>Desktop · dark · For You tab</span><span>Scaled to fit</span></div>
+    <div class="scaler" data-w="1440" data-h="1180" id="dark-desk"></div>
+  </div>
+  <div class="stage stage-dark">
+    <div class="mobile-row" id="dark-phones"></div>
+  </div>
+  <div class="stage stage-dark">
+    <div class="stage-label"><span>Card states · dark</span></div>
+    <div id="dark-states"></div>
+  </div>
+
+  <div class="tbl-wrap"><table class="flow">
+    <thead><tr><th>Token</th><th>Light</th><th>Dark (proposed)</th></tr></thead>
+    <tbody>
+      <tr><td>surface-page</td><td class="d"><span class="tok" style="background:#FBFAF7"></span>#FBFAF7 cream</td><td class="d"><span class="tok" style="background:#070A1C"></span>#070A1C: below navy, so navy stays a distinct area</td></tr>
+      <tr><td>surface-card</td><td class="d"><span class="tok" style="background:#fff"></span>#FFFFFF</td><td class="d"><span class="tok" style="background:#10173A"></span>#10173A lifted navy</td></tr>
+      <tr><td>surface-navy</td><td class="d"><span class="tok" style="background:#0B1233"></span>#0B1233</td><td class="d"><span class="tok" style="background:#0B1233"></span>#0B1233 unchanged (sidebar); lead card #141D4A + orange hairline</td></tr>
+      <tr><td>ink / ink-muted</td><td class="d">#0B1233 / #5B5847</td><td class="d">#FBFAF7 / cream at 66%</td></tr>
+      <tr><td>border-default</td><td class="d">#E7E4DC</td><td class="d">white at 9%</td></tr>
+      <tr><td>accent-orange</td><td class="d"><span class="tok" style="background:#FF6A00"></span>#FF6A00</td><td class="d"><span class="tok" style="background:#FF6A00"></span>#FF6A00 unchanged, with navy text on it in both themes</td></tr>
+      <tr><td>accent-orange-ink</td><td class="d"><span class="tok" style="background:#B8551E"></span>#B8551E</td><td class="d"><span class="tok" style="background:#FF8A3D"></span>#FF8A3D, lighter so it's readable as text on dark cards</td></tr>
+      <tr><td>accent-orange-tint</td><td class="d">orange at 12%</td><td class="d">orange at 16%</td></tr>
+      <tr><td>accent-lime-tint</td><td class="d">lime at 35%, ink icon</td><td class="d">lime at 14%, lime icon</td></tr>
+      <tr><td>Job chip / active pill</td><td class="d">navy fill, cream icon</td><td class="d">cream fill, navy icon (flipped)</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<!-- ═════════════ Decisions ═════════════ -->
+<section class="block"><div class="wrap">
+  <div class="eyebrow">Decided · 24 Sep 2026</div>
+  <h2 class="sec">Four calls, settled</h2>
+  <div class="qs">
+    <div class="q"><span class="n">1</span><div><h4>Lime is the Events colour</h4><p>Used as a tint behind the events chip and never as text colour, matching the landing page. <b>Kept.</b></p></div></div>
+    <div class="q"><span class="n">2</span><div><h4>The extreme campaign gets its own look</h4><p>The navy card with the orange and lime tiles and one orange action. It's meant to catch the eye. Every other promoted tier still looks like an ordinary card, and the "Sponsored · Featured" label stays in the same spot. <b>Kept.</b></p></div></div>
+    <div class="q"><span class="n">3</span><div><h4>Navy sidebar on desktop</h4><p>The same navy sidebar appears on every signed-in page. Mobile keeps the light bottom nav. <b>Approved.</b></p></div></div>
+    <div class="q"><span class="n">4</span><div><h4>Dark mode</h4><p>Designed above as a proposed dark theme for UP Design v1. <b>Added for review.</b></p></div></div>
+  </div>
+
+  <div class="scope">
+    <h3>These apply across the platform, not just home</h3>
+    <p style="margin-top:8px">They cover every user-facing page. Provider and admin dashboards are out of scope for now.</p>
+    <ul>
+      <li><b>Lime = Events</b> everywhere a content type is shown: feed, hub lists, search results, playlists, tracker, detail pages.</li>
+      <li><b>The extreme look</b> applies on every surface where the campaign appears first: For You, the Opportunities / Jobs / Events / Resources tabs, and the hub pages.</li>
+      <li><b>Navy sidebar</b> on every signed-in desktop page.</li>
+      <li><b>Dark mode</b> covers every user-facing page, using the tokens in the table above.</li>
+    </ul>
+  </div>
+</div></section>
+
+<footer class="doc"><div class="wrap"><span>UP is a product by Outside Solutions</span><span>Home feed proposal v1.1 · 24 Sep 2026</span></div></footer>
+
+<script>
+  // Dark artboards are clones of the light ones with the proposed dark tokens applied,
+  // so both themes always show the exact same layout.
+  (function(){
+    var desk=document.querySelector('.scaler .board');
+    if(desk){ var d=desk.cloneNode(true); d.classList.add('dark'); document.getElementById('dark-desk').appendChild(d); }
+    var phones=document.getElementById('dark-phones');
+    document.querySelectorAll('.mobile-row .mobile-col').forEach(function(c){
+      if(phones.contains(c)) return;
+      var k=c.cloneNode(true); k.querySelector('.phone').classList.add('dark'); phones.appendChild(k);
+    });
+    var st=document.querySelector('.states');
+    if(st){ var s=st.cloneNode(true); s.classList.add('dark'); s.style.marginTop='0'; document.getElementById('dark-states').appendChild(s); }
+  })();
+  // Scale fixed-size artboards to their container so the 1440 board fits any viewport.
+  function fit(){
+    document.querySelectorAll('.scaler').forEach(function(s){
+      var w=+s.dataset.w, h=+s.dataset.h, k=Math.min(1, s.clientWidth / w);
+      s.firstElementChild.style.transform='scale('+k+')';
+      s.style.height=(h*k)+'px';
+    });
+  }
+  window.addEventListener('resize', fit); fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+</script>
+</body>
+</html>

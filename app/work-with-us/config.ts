@@ -458,6 +458,16 @@ export const DETAIL_FIELDS: Record<Kind, DetailField[]> = {
   ],
 }
 
+/**
+ * Anyone who types "mysite.com" or "www.mysite.com" means https://mysite.com.
+ * The server does the same, so a link is never rejected for a missing prefix.
+ */
+export function normaliseLink(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed || /^([a-z][a-z0-9+.-]*:\/\/|mailto:|tel:)/i.test(trimmed)) return trimmed
+  return `https://${trimmed.replace(/^\/+/, "")}`
+}
+
 // ---------------------------------------------------------------------------
 // The order
 // ---------------------------------------------------------------------------

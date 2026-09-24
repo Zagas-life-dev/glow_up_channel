@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Shield, Upload, FileText, CheckCircle } from 'lucide-react'
+import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 
 interface VerificationDocumentsProps {
   data: any
@@ -18,9 +19,19 @@ export default function VerificationDocuments({ data, updateData, isComplete }: 
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState<string | null>(null)
 
-  const handleFileUpload = async (file: File, fieldName: string) => {
+  const handleFileUpload = async (original: File, fieldName: string) => {
     setIsUploading(true)
     try {
+      // Photos of documents and raster logos are brought to what the server keeps
+      // before upload. PDFs, Word files and SVG logos pass through untouched; a
+      // logo keeps its transparency.
+      const target = fieldName === 'verificationDocument'
+        ? IMAGE_TARGETS.verificationDocument
+        : IMAGE_TARGETS.organizationLogo
+      const prepared = await prepareImageUpload(original, target)
+      if (!prepared.ok) throw new Error(prepareErrorMessage(prepared, original, target))
+      const file = prepared.file
+
       const formData = new FormData()
       formData.append(fieldName === 'verificationDocument' ? 'document' : 'logo', file)
       

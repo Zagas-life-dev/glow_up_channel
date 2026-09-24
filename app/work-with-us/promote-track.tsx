@@ -17,18 +17,17 @@ import {
   type SubmissionPayload,
 } from "./config"
 import { INTAKE } from "./copy"
+import { loadContact } from "./draft"
 import {
   Choice,
   ContactFields,
   DetailFields,
   NeedMore,
+  PayFooter,
   QuantityStepper,
   Step,
-  SubmitButton,
   TalkToUs,
 } from "./ui"
-
-const EMPTY_CONTACT: Contact = { name: "", email: "", phone: "", organisation: "" }
 
 const GROUPS = [...new Set(PROMOTION_ITEMS.map((item) => item.group))]
 
@@ -68,22 +67,35 @@ function BundleCard({
           <li key={line}>· {line}</li>
         ))}
       </ul>
+      <span className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium text-primary-foreground">
+        Choose {bundle.label}
+      </span>
     </button>
   )
 }
 
 export default function PromoteTrack({
-  onDone,
+  initial,
+  busy,
+  error,
+  onSubmit,
   onExit,
 }: {
-  onDone: (payload: SubmissionPayload) => void
+  /** A saved order to pick back up — its answers fill the form. */
+  initial?: SubmissionPayload | null
+  busy: boolean
+  error: string | null
+  onSubmit: (payload: SubmissionPayload) => void
   onExit: () => void
 }) {
-  const [stage, setStage] = useState<"pick" | "form">("pick")
-  const [bundleId, setBundleId] = useState<string | null>(null)
-  const [picked, setPicked] = useState<Record<string, number>>({})
-  const [details, setDetails] = useState<Record<string, string>>({})
-  const [contact, setContact] = useState<Contact>(EMPTY_CONTACT)
+  const resume = initial?.kind === "promotion" ? initial : null
+  const [stage, setStage] = useState<"pick" | "form">(resume ? "form" : "pick")
+  const [bundleId, setBundleId] = useState<string | null>(resume?.bundleId ?? null)
+  const [picked, setPicked] = useState<Record<string, number>>(() =>
+    Object.fromEntries((resume?.promotions ?? []).map((item) => [item.id, item.quantity])),
+  )
+  const [details, setDetails] = useState<Record<string, string>>(resume?.entries[0] ?? {})
+  const [contact, setContact] = useState<Contact>(() => resume?.contact ?? loadContact())
 
   const promotions = Object.entries(picked).map(([id, quantity]) => ({ id, quantity }))
   const payload: SubmissionPayload = {
@@ -100,9 +112,11 @@ export default function PromoteTrack({
 
   // A bundle already contains the individual items, so holding both would
   // charge twice for the same work. Picking either side clears the other.
+  // A bundle is the whole decision, so tapping one goes straight to the form.
   const chooseBundle = (id: string) => {
-    setBundleId((current) => (current === id ? null : id))
+    setBundleId(id)
     setPicked({})
+    setStage("form")
   }
 
   const toggle = (id: string) => {
@@ -119,7 +133,7 @@ export default function PromoteTrack({
     return (
       <Step
         title="How far do you want this to travel?"
-        description="Most people take a bundle — one decision instead of nine. You can also build your own from the menu underneath."
+        description="Most people tap a bundle. Or build your own from the list underneath."
         onBack={onExit}
       >
         <div className="space-y-3">
@@ -176,15 +190,18 @@ export default function PromoteTrack({
 
         <NeedMore>Running something long term, or want a mix we have not listed?</NeedMore>
 
-        <div className="sticky bottom-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-lg backdrop-blur">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Total</span>
-            <span className="text-lg font-semibold">{naira(order.total)}</span>
+        {/* Only once something is picked — an empty bar with a dead button is a question mark. */}
+        {chosen && (
+          <div className="sticky bottom-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-lg backdrop-blur">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-lg font-semibold">{naira(order.total)}</span>
+            </div>
+            <Button size="lg" className="h-12 w-full" onClick={() => setStage("form")}>
+              Continue
+            </Button>
           </div>
-          <Button size="lg" className="w-full" disabled={!chosen} onClick={() => setStage("form")}>
-            Continue
-          </Button>
-        </div>
+        )}
       </Step>
     )
   }
@@ -192,33 +209,40 @@ export default function PromoteTrack({
   return (
     <Step
       title="Tell us what to promote"
-      description={INTAKE.intro}
+      description={INTAKE.reassurance}
       onBack={() => setStage("pick")}
     >
       <form
         className="space-y-6"
         onSubmit={(event) => {
           event.preventDefault()
-          onDone(payload)
+          onSubmit(payload)
         }}
       >
-        {bundleId && (
-          <div className="rounded-2xl border border-border/70 bg-card/80 p-4 text-sm">
-            <p className="font-medium">
-              {BUNDLES.find((bundle) => bundle.id === bundleId)?.label} includes a platform listing.
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              Fill in what you can here and we will come back to you for anything else the listing
-              needs.
-            </p>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setStage("pick")}
+          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-card/80 p-4 text-left text-sm"
+        >
+          <span>
+            <span className="block font-medium">
+              {bundleId
+                ? BUNDLES.find((bundle) => bundle.id === bundleId)?.label
+                : `${promotions.length} item${promotions.length === 1 ? "" : "s"} picked`}
+            </span>
+            {bundleId && (
+              <span className="mt-1 block text-muted-foreground">
+                Includes a platform listing. Fill in what you can — we'll ask for anything else.
+              </span>
+            )}
+          </span>
+          <span className="flex-shrink-0 font-medium text-primary">Change</span>
+        </button>
 
         <DetailFields fields={DETAIL_FIELDS.promotion} values={details} onChange={setDetails} />
         <ContactFields value={contact} onChange={setContact} />
 
-        <p className="text-sm text-muted-foreground">{INTAKE.why}</p>
-        <SubmitButton>Continue to payment</SubmitButton>
+        <PayFooter payload={payload} busy={busy} error={error} />
       </form>
     </Step>
   )

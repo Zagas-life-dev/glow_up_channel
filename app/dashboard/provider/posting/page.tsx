@@ -15,6 +15,7 @@ import { getPostingLimit } from "@/lib/posting-limits"
 import AuthGuard from "@/components/auth-guard"
 import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
+import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
 import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
 import { AmountCurrencyField, type PayPeriod } from "@/components/posting/AmountCurrencyField"
@@ -648,13 +649,24 @@ function PostingContent() {
                                 type="file"
                                 accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.avif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png,image/gif,image/webp,image/avif"
                                 className="hidden"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0] ?? null
-                                  if (f && f.size > 25 * 1024 * 1024) {
+                                onChange={async (e) => {
+                                  const picked = e.target.files?.[0] ?? null
+                                  if (!picked) {
+                                    setResourceFile(null)
+                                    return
+                                  }
+                                  // An image resource is brought to a readable 2560px before
+                                  // upload; documents pass through untouched.
+                                  const prepared = await prepareImageUpload(picked, IMAGE_TARGETS.resourceImage)
+                                  if (!prepared.ok) {
+                                    toast.error(prepareErrorMessage(prepared, picked, IMAGE_TARGETS.resourceImage))
+                                    return
+                                  }
+                                  if (prepared.file.size > IMAGE_TARGETS.resourceImage.maxBytes) {
                                     toast.error('File is too large. Maximum size is 25MB.')
                                     return
                                   }
-                                  setResourceFile(f)
+                                  setResourceFile(prepared.file)
                                 }}
                               />
                             </label>

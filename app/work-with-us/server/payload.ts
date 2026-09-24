@@ -7,6 +7,7 @@ import {
   PROMOTION_ITEMS,
   REVENUE_SHARE_OPTIONS,
   allowsMultiple,
+  normaliseLink,
   type Duration,
   type Kind,
   type SubmissionPayload,
@@ -32,7 +33,8 @@ function parseEntry(
   const source = (raw ?? {}) as Record<string, unknown>
   const entry: Record<string, string> = {}
   for (const field of DETAIL_FIELDS[kind]) {
-    const value = text(source[field.name], field.type === "textarea" ? 5000 : 500)
+    const typed = text(source[field.name], field.type === "textarea" ? 5000 : 500)
+    const value = field.type === "url" ? normaliseLink(typed) : typed
     if (!value && !field.optional) return { error: `${field.label}${position} is required` }
     if (value) entry[field.name] = value
   }

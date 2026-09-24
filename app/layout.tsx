@@ -27,6 +27,7 @@ import GiftPopup from "@/components/gifts/gift-popup"
 import PromotionAnnouncementPopup from "@/components/promotion/promotion-announcement-popup"
 import AnnouncementAttribution from "@/components/promotion/announcement-attribution"
 import VisitTracker from "@/components/visit-tracker"
+import BackgroundPrefetcher from "@/components/background-prefetcher"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
 import OfflineBanner from "@/components/offline-banner"
@@ -192,6 +193,8 @@ export default async function RootLayout({
                         <PageProvider>
                           <AppLayout>
                             <VisitTracker />
+                            {/* Renders nothing. Warms every feed while the browser is idle. */}
+                            <BackgroundPrefetcher />
                             <RegisterSw />
                             <OfflineBanner />
                             <PwaInstallBanner />

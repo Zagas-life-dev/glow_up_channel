@@ -95,6 +95,11 @@ interface PlaylistCoverProps {
   empty?: boolean
   className?: string
   rounded?: string
+  /**
+   * An uploaded cover. Wins over the generated art — and over `empty`, since a
+   * creator who set a cover on a new list wants to see it before it has items.
+   */
+  imageUrl?: string | null
 }
 
 export function PlaylistCover({
@@ -103,8 +108,25 @@ export function PlaylistCover({
   empty = false,
   className,
   rounded = "rounded-2xl",
+  imageUrl,
 }: PlaylistCoverProps) {
   const art = playlistArt(seed, types)
+
+  if (imageUrl) {
+    return (
+      <div
+        aria-hidden
+        className={cn("relative shrink-0 overflow-hidden bg-muted", rounded, className)}
+        // The generated art sits underneath while the photo loads, so there is no
+        // grey flash in a list of covers.
+        style={{ background: art.background }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary already sizes and formats it */}
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+        <div className={cn("absolute inset-0 ring-1 ring-inset ring-black/10 dark:ring-white/10", rounded)} />
+      </div>
+    )
+  }
 
   if (empty) {
     return (

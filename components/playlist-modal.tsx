@@ -1,23 +1,24 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { usePlaylist, Playlist } from '@/contexts/playlist-context'
-import { cn } from '@/lib/utils'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
-import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { usePlaylist, Playlist } from "@/contexts/playlist-context"
+import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { X } from 'lucide-react'
-import { RiPlayList2Fill } from "react-icons/ri"
+import { PlaylistCover } from "@/components/playlists/playlist-cover"
+import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from "@/lib/images/compress-image"
+import {
+  RiCloseLine,
+  RiGlobalLine,
+  RiImageAddLine,
+  RiLoader4Line,
+  RiLockLine,
+  RiDeleteBinLine,
+} from "react-icons/ri"
 
 interface PlaylistModalProps {
   isOpen: boolean
@@ -26,10 +27,16 @@ interface PlaylistModalProps {
   onSuccess?: (playlist: Playlist) => void
 }
 
+/** The backend's limits (Playlist.validate), enforced here so they are never a server error. */
+const NAME_MAX = 50
+const DESCRIPTION_MAX = 200
+const HASHTAG_MAX = 10
+const COVER_TYPES = "image/jpeg,image/png,image/webp,image/avif,image/gif"
+
 function getErrorStatus(err: unknown): number | undefined {
-  if (!err || typeof err !== 'object' || !('status' in err)) return undefined
+  if (!err || typeof err !== "object" || !("status" in err)) return undefined
   const s = (err as { status: unknown }).status
-  return typeof s === 'number' ? s : undefined
+  return typeof s === "number" ? s : undefined
 }
 
 function formatPlaylistSaveError(err: unknown): string {
@@ -40,229 +47,447 @@ function formatPlaylistSaveError(err: unknown): string {
     return `${msg} You may not have permission for this action.`
   }
   if (status === 502 || /cannot reach backend/i.test(msg)) {
-    return `${msg} Check NEXT_PUBLIC_BACKEND_URL or BACKEND_URL and that the API server is running.`
+    return "We couldn't reach the server. Check your connection and try again."
   }
   return msg
 }
 
-export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess }: PlaylistModalProps) {
-  const { createPlaylist, updatePlaylist } = usePlaylist()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [hashtags, setHashtags] = useState<string[]>([])
-  const [isPublic, setIsPublic] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
+/** Normalise a typed tag: no `#`, no spaces, lower-case. */
+function cleanTag(raw: string): string {
+  return raw.trim().replace(/^#+/, "").replace(/\s+/g, "").toLowerCase().slice(0, 30)
+}
 
-  // Reset form when modal opens/closes or editPlaylist changes
+/**
+ * Create or edit a playlist.
+ *
+ * The cover sits first because it is the first thing anyone sees of a playlist —
+ * in Discover, on the page, in a share. It is optional: without one the list keeps
+ * its generated art, which the preview shows live so the creator knows what they
+ * get either way.
+ *
+ * A new cover is uploaded *after* the playlist is saved, against its id. The
+ * server only accepts covers from someone who can edit the list and only stores
+ * URLs it hosted itself, and an abandoned form never leaves an orphan image. If
+ * the upload fails the playlist still exists; the creator is told and can add the
+ * cover from Edit.
+ */
+export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess }: PlaylistModalProps) {
+  const { createPlaylist, updatePlaylist, uploadPlaylistCover, removePlaylistCover } = usePlaylist()
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [hashtags, setHashtags] = useState<string[]>([])
+  const [tagDraft, setTagDraft] = useState("")
+  const [isPublic, setIsPublic] = useState(false)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [coverRemoved, setCoverRemoved] = useState(false)
+  const [coverBusy, setCoverBusy] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [phase, setPhase] = useState<"idle" | "saving" | "uploading">("idle")
+  const [error, setError] = useState("")
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Reset the form whenever it opens, or the playlist being edited changes.
   useEffect(() => {
-    if (isOpen) {
-      if (editPlaylist) {
-        setName(editPlaylist.name)
-        setDescription(editPlaylist.description || '')
-        setHashtags(editPlaylist.hashtags || [])
-        setIsPublic(editPlaylist.isPublic || false)
-      } else {
-        setName('')
-        setDescription('')
-        setHashtags([])
-        setIsPublic(false)
-      }
-      setError('')
-    }
+    if (!isOpen) return
+    setName(editPlaylist?.name ?? "")
+    setDescription(editPlaylist?.description ?? "")
+    setHashtags(editPlaylist?.hashtags ?? [])
+    setIsPublic(editPlaylist?.isPublic ?? false)
+    setTagDraft("")
+    setCoverFile(null)
+    setCoverPreview(null)
+    setCoverRemoved(false)
+    setError("")
+    setPhase("idle")
   }, [isOpen, editPlaylist])
+
+  // Object URLs hold the file in memory until revoked.
+  useEffect(() => {
+    if (!coverPreview) return
+    return () => URL.revokeObjectURL(coverPreview)
+  }, [coverPreview])
+
+  const existingCover = editPlaylist?.coverImage && !coverRemoved ? editPlaylist.coverImage : null
+  const shownCover = coverPreview ?? existingCover
+  const previewSeed = useMemo(() => editPlaylist?._id ?? (name.trim() || "new-playlist"), [editPlaylist?._id, name])
+  const isSubmitting = phase !== "idle"
+
+  const pickCover = async (file: File | undefined) => {
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      setError("Choose an image file — JPEG, PNG, WebP or GIF.")
+      return
+    }
+    setError("")
+    setCoverBusy(true)
+    try {
+      // Brought to the 1200px square the server keeps, so a phone photo uploads
+      // in a fraction of the time instead of shipping megabytes it would discard.
+      const outcome = await prepareImageUpload(file, IMAGE_TARGETS.playlistCover)
+      if (!outcome.ok) {
+        setError(prepareErrorMessage(outcome, file, IMAGE_TARGETS.playlistCover))
+        return
+      }
+      setCoverFile(outcome.file)
+      setCoverPreview(URL.createObjectURL(outcome.file))
+      setCoverRemoved(false)
+    } catch {
+      setError("That image couldn't be read. Try a different file.")
+    } finally {
+      setCoverBusy(false)
+    }
+  }
+
+  const clearCover = () => {
+    setCoverFile(null)
+    setCoverPreview(null)
+    if (editPlaylist?.coverImage) setCoverRemoved(true)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const addTag = (raw: string) => {
+    const tag = cleanTag(raw)
+    if (!tag || hashtags.includes(tag) || hashtags.length >= HASHTAG_MAX) return
+    setHashtags((prev) => [...prev, tag])
+  }
+
+  const handleTagKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "," || e.key === " ") {
+      e.preventDefault()
+      addTag(tagDraft)
+      setTagDraft("")
+    } else if (e.key === "Backspace" && !tagDraft && hashtags.length) {
+      setHashtags((prev) => prev.slice(0, -1))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!name.trim()) {
-      setError('Playlist name is required')
+      setError("Give your playlist a name.")
       return
     }
+    // A tag still sitting in the input counts — people rarely press Enter on the last one.
+    const tags = tagDraft.trim() && hashtags.length < HASHTAG_MAX
+      ? Array.from(new Set([...hashtags, cleanTag(tagDraft)].filter(Boolean)))
+      : hashtags
 
-    setIsSubmitting(true)
-    setError('')
-
+    setError("")
+    setPhase("saving")
     try {
-      if (editPlaylist) {
-        // Update existing playlist
-        const updatePayload: Parameters<typeof updatePlaylist>[1] = {
-          name: name.trim(),
-          description: description.trim(),
-          hashtags,
-          isPublic
+      const details = { name: name.trim(), description: description.trim(), hashtags: tags, isPublic }
+      let saved = editPlaylist
+        ? await updatePlaylist(editPlaylist._id, details)
+        : await createPlaylist(details)
+
+      if (coverFile || coverRemoved) {
+        setPhase("uploading")
+        try {
+          if (coverFile) {
+            const coverImage = await uploadPlaylistCover(saved._id, coverFile)
+            saved = { ...saved, coverImage }
+          } else {
+            await removePlaylistCover(saved._id)
+            saved = { ...saved, coverImage: null }
+          }
+        } catch (coverErr) {
+          // The playlist itself is saved; don't lose that over the image.
+          toast.error(
+            editPlaylist
+              ? "Details saved, but the cover didn't update. Try again from Edit."
+              : "Playlist created, but the cover didn't upload. You can add it from Edit.",
+          )
+          console.error("Cover update failed:", coverErr)
         }
-        const updated = await updatePlaylist(editPlaylist._id, updatePayload)
-        onSuccess?.(updated)
-      } else {
-        // Create new playlist
-        const newPlaylist = await createPlaylist({
-          name: name.trim(),
-          description: description.trim(),
-          hashtags,
-          isPublic
-        })
-        onSuccess?.(newPlaylist)
       }
-      
+
+      toast.success(editPlaylist ? "Playlist updated" : "Playlist created")
+      onSuccess?.(saved)
       onClose()
     } catch (err: unknown) {
-      setError(formatPlaylistSaveError(err) || 'Failed to save playlist')
+      setError(formatPlaylistSaveError(err) || "Failed to save playlist")
     } finally {
-      setIsSubmitting(false)
+      setPhase("idle")
     }
   }
 
-  const handleHashtagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      const value = e.currentTarget.value.trim().replace('#', '').replace(/\s+/g, '')
-      if (value && !hashtags.includes(value)) {
-        setHashtags([...hashtags, value])
-        e.currentTarget.value = ''
-      }
-    }
-  }
-
-  const removeHashtag = (tag: string) => {
-    setHashtags(hashtags.filter(t => t !== tag))
-  }
+  const submitLabel =
+    phase === "saving"
+      ? editPlaylist ? "Saving…" : "Creating…"
+      : phase === "uploading"
+        ? "Uploading cover…"
+        : editPlaylist ? "Save changes" : "Create playlist"
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[85vh] bg-card/95 backdrop-blur-xl border-border/70 rounded-t-3xl p-0 overflow-hidden">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
+      <SheetContent
+        side="bottom"
+        className="flex max-h-[92vh] flex-col gap-0 overflow-hidden rounded-t-3xl border-border/70 bg-card p-0 [&>button]:hidden"
+      >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/60 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center">
-                <RiPlayList2Fill className="w-5 h-5 text-orange-400" />
-              </div>
-              <div>
-                <SheetTitle className="text-foreground">
-                  {editPlaylist ? 'Edit Playlist' : 'Create Playlist'}
-                </SheetTitle>
-                <SheetDescription className="text-muted-foreground text-xs">
-                  {editPlaylist ? 'Update your playlist details' : 'Start a new collection'}
-                </SheetDescription>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted/70 transition-colors">
-              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
-            </button>
+        <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 pb-3 pt-4 sm:px-6">
+          <div className="min-w-0">
+            <SheetTitle className="text-lg font-semibold tracking-tight text-foreground">
+              {editPlaylist ? "Edit playlist" : "New playlist"}
+            </SheetTitle>
+            <SheetDescription className="text-[13px] text-muted-foreground">
+              {editPlaylist ? "Update the details people see." : "Group listings you want to keep together."}
+            </SheetDescription>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            aria-label="Close"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+          >
+            <RiCloseLine className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto h-[calc(85vh-80px)] p-6">
-          {/* Error */}
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* Name */}
-          <div className="mb-4">
-            <Label htmlFor="name" className="text-muted-foreground mb-2 block">
-              Playlist Name *
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="My Awesome Playlist"
-              className="bg-muted/60 border-border/60 rounded-xl text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div className="mb-4">
-            <Label htmlFor="description" className="text-muted-foreground mb-2 block">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What's this playlist about?"
-              rows={3}
-              className="bg-muted/60 border-border/60 rounded-xl text-foreground placeholder:text-muted-foreground resize-none focus:border-orange-500/60 focus:ring-orange-500/30"
-            />
-          </div>
-
-          {/* Hashtags */}
-          <div className="mb-4">
-            <Label htmlFor="hashtags" className="text-muted-foreground mb-2 block">
-              Hashtags
-            </Label>
-            <Input
-              id="hashtags"
-              onKeyDown={handleHashtagInput}
-              placeholder="Type and press Enter or comma to add"
-              className="bg-muted/60 border-border/60 rounded-xl text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30"
-            />
-            {hashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {hashtags.map((tag) => (
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-lg space-y-6 px-5 pb-6 pt-2 sm:px-6">
+              {/* Cover */}
+              <section className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setIsDragging(true)
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setIsDragging(false)
+                    void pickCover(e.dataTransfer.files?.[0])
+                  }}
+                  disabled={isSubmitting || coverBusy}
+                  aria-label={shownCover ? "Change cover image" : "Upload cover image"}
+                  className={cn(
+                    "group relative h-28 w-28 shrink-0 rounded-2xl outline-none ring-offset-2 ring-offset-card transition focus-visible:ring-2 focus-visible:ring-primary sm:h-32 sm:w-32",
+                    isDragging && "ring-2 ring-primary",
+                  )}
+                >
+                  <PlaylistCover seed={previewSeed} imageUrl={shownCover} className="h-full w-full shadow-md shadow-black/10" />
                   <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/20 text-orange-400 text-xs font-medium"
+                    className={cn(
+                      "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/45 text-xs font-medium text-white transition-opacity",
+                      coverBusy || isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
+                    )}
                   >
-                    #{tag}
-                    <button
-                      type="button"
-                      onClick={() => removeHashtag(tag)}
-                      className="hover:text-orange-300"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    {coverBusy ? (
+                      <RiLoader4Line className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <RiImageAddLine className="h-5 w-5" />
+                        {isDragging ? "Drop image" : shownCover ? "Change" : "Add cover"}
+                      </>
+                    )}
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
+                </button>
 
-          {/* Public/Private Toggle */}
-          <div className="mb-4 flex items-center justify-between p-4 rounded-2xl bg-muted/60 border border-border/60">
-            <div className="flex items-center gap-3">
-              {isPublic ? (
-                <FlaticonIcon name="globe" className="w-5 h-5 text-orange-500" aria-hidden />
-              ) : (
-                <FlaticonIcon name="lock" className="w-5 h-5 text-muted-foreground" aria-hidden />
-              )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">Cover image</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+                    {shownCover
+                      ? "Shown in Discover and when people share it."
+                      : "Optional. Without one, your playlist gets its own generated art."}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSubmitting || coverBusy}
+                      className="h-9 rounded-xl"
+                    >
+                      <RiImageAddLine className="mr-1.5 h-4 w-4" />
+                      {shownCover ? "Change" : "Upload"}
+                    </Button>
+                    {shownCover ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearCover}
+                        disabled={isSubmitting || coverBusy}
+                        className="h-9 rounded-xl text-muted-foreground hover:text-destructive"
+                      >
+                        <RiDeleteBinLine className="mr-1.5 h-4 w-4" />
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={COVER_TYPES}
+                  className="sr-only"
+                  tabIndex={-1}
+                  onChange={(e) => void pickCover(e.target.files?.[0])}
+                />
+              </section>
+
+              {/* Name */}
               <div>
-                <p className="font-medium text-foreground">
-                  {isPublic ? 'Public Playlist' : 'Private Playlist'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {isPublic ? 'Anyone can view this playlist' : 'Only you can see this playlist'}
-                </p>
+                <div className="mb-1.5 flex items-baseline justify-between">
+                  <Label htmlFor="playlist-name" className="text-sm font-medium text-foreground">
+                    Name
+                  </Label>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {name.length}/{NAME_MAX}
+                  </span>
+                </div>
+                <Input
+                  id="playlist-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
+                  placeholder="e.g. Tech internships for summer"
+                  maxLength={NAME_MAX}
+                  autoFocus={!editPlaylist}
+                  required
+                  className="h-11 rounded-xl"
+                />
               </div>
+
+              {/* Description */}
+              <div>
+                <div className="mb-1.5 flex items-baseline justify-between">
+                  <Label htmlFor="playlist-description" className="text-sm font-medium text-foreground">
+                    Description <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {description.length}/{DESCRIPTION_MAX}
+                  </span>
+                </div>
+                <Textarea
+                  id="playlist-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value.slice(0, DESCRIPTION_MAX))}
+                  placeholder="What's this playlist for?"
+                  maxLength={DESCRIPTION_MAX}
+                  rows={3}
+                  className="resize-none rounded-xl"
+                />
+              </div>
+
+              {/* Hashtags — chips live inside the field, like a tag input people already know. */}
+              <div>
+                <div className="mb-1.5 flex items-baseline justify-between">
+                  <Label htmlFor="playlist-tags" className="text-sm font-medium text-foreground">
+                    Hashtags <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {hashtags.length}/{HASHTAG_MAX}
+                  </span>
+                </div>
+                <div
+                  className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-input bg-background px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
+                  onClick={() => document.getElementById("playlist-tags")?.focus()}
+                >
+                  {hashtags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-[13px] font-medium text-foreground"
+                    >
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => setHashtags((prev) => prev.filter((t) => t !== tag))}
+                        aria-label={`Remove #${tag}`}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/15 hover:text-foreground"
+                      >
+                        <RiCloseLine className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    id="playlist-tags"
+                    value={tagDraft}
+                    onChange={(e) => setTagDraft(e.target.value)}
+                    onKeyDown={handleTagKey}
+                    onBlur={() => {
+                      addTag(tagDraft)
+                      setTagDraft("")
+                    }}
+                    disabled={hashtags.length >= HASHTAG_MAX}
+                    placeholder={hashtags.length ? "" : "scholarships, remote…"}
+                    className="min-w-[8rem] flex-1 bg-transparent py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">Press Enter or comma after each one. They help people find it in Discover.</p>
+              </div>
+
+              {/* Visibility — two real choices, so two options rather than a switch. */}
+              <fieldset>
+                <legend className="mb-1.5 text-sm font-medium text-foreground">Who can see it</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: true, icon: RiGlobalLine, title: "Public", body: "Anyone, and it can appear in Discover" },
+                    { value: false, icon: RiLockLine, title: "Private", body: "Only you and people you invite" },
+                  ] as const).map((option) => {
+                    const selected = isPublic === option.value
+                    const Icon = option.icon
+                    return (
+                      <button
+                        key={option.title}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setIsPublic(option.value)}
+                        className={cn(
+                          "rounded-2xl border p-3 text-left transition-colors",
+                          selected
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:bg-muted/60",
+                        )}
+                      >
+                        <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                          <Icon className={cn("h-4 w-4", selected ? "text-primary" : "text-muted-foreground")} />
+                          {option.title}
+                        </span>
+                        <span className="mt-1 block text-xs leading-snug text-muted-foreground">{option.body}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+
+              {error ? (
+                <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                  {error}
+                </p>
+              ) : null}
             </div>
-            <Switch
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
-            />
           </div>
 
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            disabled={isSubmitting || !name.trim()}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-md shadow-orange-500/20 font-semibold"
-          >
-            {isSubmitting ? (
-              <>
-                <FlaticonIcon name="spinner" className="w-4 h-4 mr-2 animate-spin" aria-hidden />
-                {editPlaylist ? 'Updating...' : 'Creating...'}
-              </>
-            ) : (
-              editPlaylist ? 'Update Playlist' : 'Create Playlist'
-            )}
-          </Button>
+          {/* Actions stay reachable above the keyboard however long the form gets. */}
+          <div className="border-t border-border/60 bg-card pb-safe">
+            <div className="mx-auto flex w-full max-w-lg gap-2 px-5 py-3 sm:px-6">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="h-11 flex-1 rounded-2xl sm:flex-none sm:px-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || coverBusy || !name.trim()}
+                className="h-11 flex-[2] rounded-2xl bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:flex-1"
+              >
+                {isSubmitting ? <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {submitLabel}
+              </Button>
+            </div>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

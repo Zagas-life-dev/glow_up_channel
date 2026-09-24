@@ -2,16 +2,35 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { RiArrowLeftLine, RiCheckLine, RiWhatsappLine, RiMailLine, RiPhoneLine } from "react-icons/ri"
+import {
+  RiArrowLeftLine,
+  RiCheckLine,
+  RiLoader4Line,
+  RiLockLine,
+  RiMailLine,
+  RiPhoneLine,
+  RiWhatsappLine,
+} from "react-icons/ri"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { whatsappHref } from "@/lib/contact"
 import { PARTNER_PROGRAMME_ENABLED } from "@/lib/feature-flags"
 import { cn } from "@/lib/utils"
 
-import { CONTACT, PARTNER, naira, type Contact, type DetailField } from "./config"
+import {
+  CONTACT,
+  PARTNER,
+  buildOrder,
+  naira,
+  normaliseLink,
+  type Contact,
+  type DetailField,
+  type SubmissionPayload,
+} from "./config"
+import { PAY } from "./copy"
 
 /** Title, back button and body for one step of the flow. */
 export function Step({
@@ -83,56 +102,6 @@ export function Choice({
   )
 }
 
-/**
- * A product card in the pipeline's formula (§4.1): name, one-line outcome,
- * price, what's included, timing, one CTA — in that order. The outcome sits
- * above the deliverables on purpose; the buyer decides on the outcome.
- */
-export function ProductCard({
-  label,
-  outcome,
-  price,
-  includes,
-  timing,
-  cta,
-  onClick,
-}: {
-  label: string
-  outcome: string
-  price: string
-  includes: string[]
-  timing: string
-  cta: string
-  onClick: () => void
-}) {
-  return (
-    <div className="rounded-2xl border border-border/70 bg-card/80 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="font-medium">{label}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{outcome}</p>
-        </div>
-        <span className="flex-shrink-0 text-sm font-semibold text-primary">{price}</span>
-      </div>
-
-      <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
-        {includes.map((line) => (
-          <li key={line} className="flex gap-2">
-            <RiCheckLine className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
-            {line}
-          </li>
-        ))}
-      </ul>
-
-      <p className="mt-3 text-xs text-muted-foreground">{timing}</p>
-
-      <Button className="mt-4 w-full" variant="outline" onClick={onClick}>
-        {cta}
-      </Button>
-    </div>
-  )
-}
-
 export function QuantityStepper({
   value,
   onChange,
@@ -172,6 +141,12 @@ export function QuantityStepper({
 
 const FIELD_CLASS = "space-y-2"
 
+/**
+ * Big enough to hit with a thumb, and 16px text everywhere so iOS never zooms
+ * the page when a field is tapped.
+ */
+const INPUT_CLASS = "h-12 text-base md:text-base"
+
 export function ContactFields({
   value,
   onChange,
@@ -183,31 +158,62 @@ export function ContactFields({
     onChange({ ...value, [key]: event.target.value })
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 rounded-2xl border border-border/70 bg-card/50 p-4">
+      <p className="font-medium">Your details</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={FIELD_CLASS}>
           <Label htmlFor="wwu-name">Your name</Label>
-          <Input id="wwu-name" value={value.name} onChange={set("name")} required />
+          <Input
+            id="wwu-name"
+            className={INPUT_CLASS}
+            autoComplete="name"
+            value={value.name}
+            onChange={set("name")}
+            required
+          />
         </div>
         <div className={FIELD_CLASS}>
-          <Label htmlFor="wwu-org">Organisation</Label>
+          <Label htmlFor="wwu-phone">Phone number</Label>
           <Input
-            id="wwu-org"
-            value={value.organisation}
-            onChange={set("organisation")}
-            placeholder="Optional"
+            id="wwu-phone"
+            className={INPUT_CLASS}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={value.phone}
+            onChange={set("phone")}
+            required
           />
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className={FIELD_CLASS}>
-          <Label htmlFor="wwu-email">Email</Label>
-          <Input id="wwu-email" type="email" value={value.email} onChange={set("email")} required />
-        </div>
-        <div className={FIELD_CLASS}>
-          <Label htmlFor="wwu-phone">Phone</Label>
-          <Input id="wwu-phone" type="tel" value={value.phone} onChange={set("phone")} required />
-        </div>
+      <div className={FIELD_CLASS}>
+        <Label htmlFor="wwu-email">Email</Label>
+        <Input
+          id="wwu-email"
+          className={INPUT_CLASS}
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={value.email}
+          onChange={set("email")}
+          required
+        />
+        <p className="text-sm text-muted-foreground">Your receipt and updates go here.</p>
+      </div>
+      <div className={FIELD_CLASS}>
+        <Label htmlFor="wwu-org">
+          Company or organisation
+          <span className="ml-1 text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="wwu-org"
+          className={INPUT_CLASS}
+          autoComplete="organization"
+          value={value.organisation}
+          onChange={set("organisation")}
+        />
       </div>
     </div>
   )
@@ -235,6 +241,7 @@ export function DetailFields({
     <div className="space-y-4">
       {fields.map((field) => {
         const id = `${idPrefix}-${field.name}`
+        const value = values[field.name] ?? ""
         return (
           <div key={field.name} className={FIELD_CLASS}>
             <Label htmlFor={id}>
@@ -245,16 +252,38 @@ export function DetailFields({
               <Textarea
                 id={id}
                 rows={4}
-                value={values[field.name] ?? ""}
+                className="text-base md:text-base"
+                value={value}
                 onChange={set(field.name)}
+                placeholder={field.placeholder}
+                required={!field.optional}
+              />
+            ) : field.type === "url" ? (
+              // A plain text box, not type="url": the browser's own check
+              // rejects "mysite.com" with a message most people cannot act on.
+              <Input
+                id={id}
+                className={INPUT_CLASS}
+                type="text"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={value}
+                onChange={set(field.name)}
+                onBlur={() => {
+                  const fixed = normaliseLink(value)
+                  if (fixed !== value) onChange({ ...values, [field.name]: fixed })
+                }}
                 placeholder={field.placeholder}
                 required={!field.optional}
               />
             ) : (
               <Input
                 id={id}
-                type={field.type === "url" ? "url" : field.type}
-                value={values[field.name] ?? ""}
+                className={INPUT_CLASS}
+                type={field.type}
+                value={value}
                 onChange={set(field.name)}
                 placeholder={field.placeholder}
                 required={!field.optional}
@@ -339,18 +368,86 @@ export function NeedMore({ children }: { children: string }) {
   )
 }
 
-export function SubmitButton({
-  children,
+/**
+ * The end of every form: total, terms, where the receipt goes, any error, and
+ * one button that goes straight to Paystack. This used to be a whole "check it
+ * over" screen; folding it in here takes a step out of every purchase.
+ */
+export function PayFooter({
+  payload,
   busy,
-  disabled,
+  error,
 }: {
-  children: React.ReactNode
-  busy?: boolean
-  disabled?: boolean
+  payload: SubmissionPayload
+  busy: boolean
+  error: string | null
 }) {
+  const order = buildOrder(payload)
+  const paid = order.total > 0
+
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={busy || disabled}>
-      {busy ? "Please wait…" : children}
-    </Button>
+    <div className="space-y-4">
+      {paid && (
+        <div className="rounded-2xl border border-border/70 bg-card/80 p-4">
+          <ul className="space-y-2">
+            {order.lines.map((line) => (
+              <li key={line.label} className="flex items-start justify-between gap-4 text-sm">
+                <span>
+                  {line.label}
+                  {line.quantity > 1 && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      × {line.quantity} at {naira(line.unitPrice)}
+                    </span>
+                  )}
+                </span>
+                <span className="font-medium tabular-nums">{naira(line.total)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
+            <span className="text-sm text-muted-foreground">Total</span>
+            <span className="text-xl font-semibold tabular-nums">{naira(order.total)}</span>
+          </div>
+        </div>
+      )}
+
+      <p className="text-sm text-muted-foreground">{paid ? PAY.terms : PAY.freeTerms}</p>
+
+      {error && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm"
+        >
+          <p className="font-medium text-destructive">{error}</p>
+          <a
+            href={whatsappHref(`Hi UP, I'm stuck on the Work with us form: "${error}"`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+          >
+            <RiWhatsappLine className="h-4 w-4" aria-hidden />
+            Get help on WhatsApp
+          </a>
+        </div>
+      )}
+
+      <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={busy}>
+        {busy ? (
+          <>
+            <RiLoader4Line className="mr-2 h-5 w-5 animate-spin" aria-hidden />
+            {paid ? "Opening secure payment…" : "Sending…"}
+          </>
+        ) : paid ? (
+          <>
+            <RiLockLine className="mr-2 h-5 w-5" aria-hidden />
+            {PAY.payCta(naira(order.total))}
+          </>
+        ) : (
+          PAY.freeCta
+        )}
+      </Button>
+      {paid && <p className="text-center text-sm text-muted-foreground">{PAY.paystackNote}</p>}
+    </div>
   )
 }
