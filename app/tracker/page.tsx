@@ -11,10 +11,9 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import {
-  RiArrowRightUpLine,
+  RiArrowDownSLine,
   RiCheckLine,
   RiInboxLine,
-  RiTimeLine,
 } from "react-icons/ri"
 import AuthGuard from "@/components/auth-guard"
 import { PageShell } from "@/components/layout/page-shell"
@@ -42,6 +41,7 @@ import {
   type TrackerStatus,
 } from "@/lib/tracker/types"
 import { cn } from "@/lib/utils"
+import { DeadlinePill, KindChip, toUpKind } from "@/components/up/kind"
 
 /** What a person can move an entry to from this page, per bucket. */
 const NEXT_STATUSES: Partial<Record<TrackerBucket, TrackerStatus[]>> = {
@@ -106,44 +106,51 @@ function EntryRow({
     issueSummary(entry),
   ].filter(Boolean)
 
+  const needsAnswer = entry.bucket === "needs_answer"
+
   return (
-    <li className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3.5">
+    <li className="flex items-center gap-3.5 px-4 py-3.5 sm:px-[18px]">
+      <KindChip kind={toUpKind(entry.contentType)} className="hidden xs:inline-grid" />
       <div className="min-w-0 flex-1">
         <Link
           href={hrefFor(entry)}
-          className="group flex items-start gap-1.5 text-[15px] font-semibold leading-snug text-foreground hover:underline"
+          className="line-clamp-2 text-[15px] font-bold leading-snug text-foreground transition-colors hover:text-up-orange-ink sm:line-clamp-1"
         >
-          <span className="min-w-0 break-words">{entry.contentTitle || "Untitled listing"}</span>
-          <RiArrowRightUpLine
-            className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-            aria-hidden
-          />
+          {entry.contentTitle || "Untitled listing"}
         </Link>
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
           {meta.length > 0 && (
-            <p className="text-body-sm text-muted-foreground">{meta.join(" · ")}</p>
+            <p className="text-[13px] text-muted-foreground">{meta.join(" · ")}</p>
           )}
-          {deadlineLabel && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption font-medium",
-                urgent
-                  ? "bg-orange-500/[0.14] text-orange-600 dark:text-orange-400"
-                  : "bg-muted text-muted-foreground",
-              )}
+          {entry.status === "accepted" ? (
+            <DeadlinePill tone="ok" className="px-2 py-0.5 text-[11px]">
+              Accepted
+            </DeadlinePill>
+          ) : deadlineLabel ? (
+            <DeadlinePill
+              tone={urgent ? "soon" : "upcoming"}
+              icon
+              className="px-2 py-0.5 text-[11px] [&>svg]:h-3 [&>svg]:w-3"
             >
-              <RiTimeLine className="h-3 w-3" aria-hidden />
               {deadlineLabel}
-            </span>
-          )}
+            </DeadlinePill>
+          ) : null}
         </div>
       </div>
 
       {options.length > 0 && (
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex-shrink-0 rounded-full border border-border px-3 py-1.5 text-caption font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
-            Update
+          <DropdownMenuTrigger
+            className={cn(
+              "inline-flex h-[34px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-bold transition-colors",
+              needsAnswer
+                ? "bg-up-orange text-up-navy hover:brightness-105"
+                : "bg-card text-foreground shadow-[inset_0_0_0_1.5px_hsl(var(--border))] hover:shadow-[inset_0_0_0_1.5px_var(--up-border-hover)]",
+            )}
+          >
+            {needsAnswer ? "How did it go?" : STATUS_LABELS[entry.status] ?? "Update"}
+            <RiArrowDownSLine className="h-4 w-4" aria-hidden />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {options.map((status) => (
@@ -217,8 +224,7 @@ function TrackerContent() {
         {[0, 1, 2].map((i) => (
           <div key={i} className="space-y-2.5">
             <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-[74px] w-full rounded-2xl" />
-            <Skeleton className="h-[74px] w-full rounded-2xl" />
+            <Skeleton className="h-[148px] w-full rounded-up-xl" />
           </div>
         ))}
       </div>
@@ -245,17 +251,17 @@ function TrackerContent() {
   if (total === 0) {
     return (
       <div className="py-20 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-up-lg bg-up-fill">
           <RiInboxLine className="h-6 w-6 text-muted-foreground" aria-hidden />
         </div>
-        <h2 className="mt-4 text-[17px] font-semibold">Nothing tracked yet</h2>
+        <h2 className="mt-4 font-display text-lg font-bold">Nothing tracked yet</h2>
         <p className="mx-auto mt-2 max-w-xs text-body-sm leading-relaxed text-muted-foreground">
           When you tap Apply on a listing, it lands here — and we&apos;ll ask how it went when
           you get back.
         </p>
         <Link
           href="/"
-          className="mt-5 inline-flex rounded-full bg-primary px-5 py-2.5 text-body-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          className="mt-5 inline-flex h-11 items-center rounded-full bg-primary px-5 text-[15px] font-bold text-primary-foreground transition-[filter] hover:brightness-105"
         >
           Find something to apply for
         </Link>
@@ -264,24 +270,29 @@ function TrackerContent() {
   }
 
   return (
-    <div className="space-y-8 pt-6">
+    <div className="space-y-[26px] pt-6">
       {BUCKET_ORDER.map((bucket) => {
         const entries = buckets[bucket]
         if (entries.length === 0) return null
 
         return (
           <section key={bucket}>
-            <div className="mb-1 flex items-baseline justify-between gap-3">
-              <h2 className="text-caption font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                {BUCKET_LABELS[bucket]}
-              </h2>
-              <span className="text-caption tabular-nums text-muted-foreground">
-                {entries.length}
-              </span>
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="text-base font-bold text-foreground">{BUCKET_LABELS[bucket]}</h2>
+              <span className="font-display text-[13px] font-bold tabular-nums">{entries.length}</span>
             </div>
-            <p className="mb-3 text-body-sm text-muted-foreground">{BUCKET_HINTS[bucket]}</p>
+            <p className="mb-3 mt-1 text-[13px] text-muted-foreground">{BUCKET_HINTS[bucket]}</p>
 
-            <ul className="space-y-2.5">
+            {/* "Needs an answer" is the one highlighted bucket: an orange ring
+                around its panel. The others stay quiet white panels. */}
+            <ul
+              className={cn(
+                "divide-y divide-up-hairline overflow-hidden rounded-up-xl border bg-card",
+                bucket === "needs_answer"
+                  ? "border-up-orange shadow-[0_0_0_3px_var(--up-orange-tint)]"
+                  : "border-border",
+              )}
+            >
               {entries.map((entry) => (
                 <EntryRow key={entry._id} entry={entry} onStatusChange={handleStatusChange} />
               ))}
@@ -299,8 +310,8 @@ export default function TrackerPage() {
       <PageShell>
         <div className="mx-auto w-full max-w-[680px]">
           <header className="pt-6">
-            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">Tracker</h1>
-            <p className="mt-1.5 text-body-sm leading-relaxed text-muted-foreground">
+            <h1 className="font-display text-[28px] font-bold leading-tight sm:text-[34px]">Tracker</h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
               Everything you left UP to apply for. We can&apos;t see other sites, so this is
               built entirely from what you tell us on the way back.
             </p>

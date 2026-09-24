@@ -84,8 +84,8 @@ const QUICK_START_STEPS = [
 ]
 
 /** Shared field styling so every control in the sheet matches. */
-const FIELD_CLASS = "h-11 rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground"
-const FIELD_SM_CLASS = "h-10 rounded-lg border-border bg-muted/60 text-sm text-foreground placeholder:text-muted-foreground"
+const FIELD_CLASS = "h-11 text-foreground placeholder:text-muted-foreground"
+const FIELD_SM_CLASS = "h-10 text-sm text-foreground placeholder:text-muted-foreground"
 
 /** A bordered group inside the form (Location, Compensation, Dates). */
 function FormSection({
@@ -100,11 +100,13 @@ function FormSection({
   children?: ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card/50 p-3.5">
+    <div className="rounded-up-xl border border-border bg-card px-4 py-4 sm:px-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-body-sm font-semibold text-foreground">{title}</span>
+        <div className="flex items-center gap-3">
+          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm bg-up-fill text-foreground">
+            <Icon className="h-[18px] w-[18px]" />
+          </span>
+          <span className="text-base font-bold text-foreground">{title}</span>
         </div>
         {toggle}
       </div>
@@ -115,9 +117,9 @@ function FormSection({
 
 function FieldLabel({ children, required }: { children: ReactNode; required?: boolean }) {
   return (
-    <Label className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+    <Label className="text-[13px] font-bold text-foreground">
       {children}
-      {required ? <span className="ml-0.5 text-primary">*</span> : null}
+      {required ? <span className="ml-0.5 text-up-orange-ink">*</span> : null}
     </Label>
   )
 }
@@ -451,16 +453,16 @@ function PostingContent() {
       </Panel>
 
       {/* Quick start — one compact row instead of a four-row card */}
-      <div className="rounded-2xl border border-border/60 bg-card/70 px-3.5 py-3 backdrop-blur-sm">
+      <div className="rounded-up-xl border border-border bg-card px-3.5 py-3">
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <Sparkles className="h-3.5 w-3.5 text-up-orange-ink" />
           Quick start
         </div>
         <ol className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2">
           {QUICK_START_STEPS.map((step, index) => (
             <li key={step} className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card/50 px-2 py-1">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-1">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-up-orange-tint text-[10px] font-bold text-up-orange-ink">
                   {index + 1}
                 </span>
                 <span className="text-[11px] text-muted-foreground">{step}</span>
@@ -478,15 +480,15 @@ function PostingContent() {
         <SheetContent side="bottom" className="flex h-[92vh] flex-col overflow-hidden rounded-t-3xl border-border bg-page p-0">
           {selectedType && (
             <>
-              <SheetHeader className="shrink-0 space-y-0 border-b border-border/60 px-4 py-3.5 text-left sm:px-6">
+              <SheetHeader className="shrink-0 space-y-0 border-b border-border px-4 py-3.5 text-left sm:px-6">
                 <div className="flex items-center gap-3 pr-8">
                   <span
                     className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
-                      getTypeConfig(selectedType).color === 'orange' && "border-orange-500/25 bg-orange-500/10",
-                      getTypeConfig(selectedType).color === 'primary' && "border-primary/25 bg-primary/10",
-                      getTypeConfig(selectedType).color === 'emerald' && "border-emerald-500/25 bg-emerald-500/10",
-                      getTypeConfig(selectedType).color === 'violet' && "border-violet-500/25 bg-violet-500/10",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-up-md border",
+                      getTypeConfig(selectedType).color === 'orange' && "border-transparent bg-up-orange-tint",
+                      getTypeConfig(selectedType).color === 'primary' && "border-up-orange bg-up-orange-tint",
+                      getTypeConfig(selectedType).color === 'emerald' && "border-transparent bg-up-lime-tint",
+                      getTypeConfig(selectedType).color === 'violet' && "border-transparent bg-up-fill",
                     )}
                   >
                     {(() => {
@@ -495,10 +497,10 @@ function PostingContent() {
                         <Icon
                           className={cn(
                             "h-5 w-5",
-                            getTypeConfig(selectedType).color === 'orange' && "text-orange-500",
-                            getTypeConfig(selectedType).color === 'primary' && "text-primary",
-                            getTypeConfig(selectedType).color === 'emerald' && "text-emerald-500",
-                            getTypeConfig(selectedType).color === 'violet' && "text-violet-500",
+                            getTypeConfig(selectedType).color === 'orange' && "text-up-orange-ink",
+                            getTypeConfig(selectedType).color === 'primary' && "text-up-orange-ink",
+                            getTypeConfig(selectedType).color === 'emerald' && "text-foreground",
+                            getTypeConfig(selectedType).color === 'violet' && "text-foreground",
                           )}
                         />
                       )
@@ -517,8 +519,8 @@ function PostingContent() {
 
               {submitStatus === 'success' ? (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10">
-                    <CheckCircle className="h-8 w-8 text-emerald-500" />
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-transparent bg-up-lime-tint">
+                    <CheckCircle className="h-8 w-8 text-foreground" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground">Posted successfully</h3>
                   <p className="mt-1 text-body-sm text-muted-foreground">
@@ -530,14 +532,14 @@ function PostingContent() {
                   <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
                     <div className="mx-auto max-w-2xl space-y-4">
                       {submitStatus === 'error' && (
-                        <div ref={errorRef} className="flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-3">
-                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                        <div ref={errorRef} className="flex items-start gap-3 rounded-up-md border border-destructive/30 bg-destructive/10 p-3">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                           <div className="min-w-0 flex-1">
-                            <p className="break-words text-body-sm text-red-500 dark:text-red-400">{errorMessage}</p>
+                            <p className="break-words text-body-sm text-destructive">{errorMessage}</p>
                             <button
                               type="button"
                               onClick={() => setSubmitStatus('idle')}
-                              className="mt-1 text-xs text-red-500 hover:underline"
+                              className="mt-1 text-xs text-destructive hover:underline"
                             >
                               Dismiss
                             </button>
@@ -575,7 +577,7 @@ function PostingContent() {
                           <SelectTrigger className={FIELD_CLASS}>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
-                          <SelectContent className="border-border bg-surface">
+                          <SelectContent className="border-border bg-popover">
                             {typeOptions.map((t) => (
                               <SelectItem key={t} value={t} className="text-foreground">{t}</SelectItem>
                             ))}
@@ -591,7 +593,7 @@ function PostingContent() {
                           placeholder="Describe in detail..."
                           required
                           rows={4}
-                          className="resize-none rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground"
+                          className="resize-none text-foreground placeholder:text-muted-foreground"
                         />
                       </div>
 
@@ -599,7 +601,7 @@ function PostingContent() {
                       {selectedType === 'resource' ? (
                         <div className="space-y-2">
                           <FieldLabel required>Resource source</FieldLabel>
-                          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+                          <div className="grid grid-cols-2 gap-1 rounded-up-md bg-muted p-1">
                             <button
                               type="button"
                               onClick={() => { setResourceSource('link'); setResourceFile(null) }}
@@ -628,8 +630,8 @@ function PostingContent() {
                               <Input name="url" type="url" placeholder="https://..." className={cn(FIELD_CLASS, "pl-10")} />
                             </div>
                           ) : (
-                            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/40 p-6 text-center transition-colors hover:border-violet-500/60">
-                              <FileText className="h-8 w-8 text-violet-500" />
+                            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-up-md border-2 border-dashed border-border bg-up-fill p-6 text-center transition-colors hover:border-up-border-hover">
+                              <FileText className="h-8 w-8 text-foreground" />
                               {resourceFile ? (
                                 <>
                                   <span className="break-all text-body-sm font-medium text-foreground">{resourceFile.name}</span>
@@ -810,7 +812,7 @@ function PostingContent() {
                             name="requirements"
                             placeholder="List the requirements..."
                             rows={3}
-                            className="resize-none rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground"
+                            className="resize-none text-foreground placeholder:text-muted-foreground"
                           />
                         </div>
                       )}
@@ -831,12 +833,12 @@ function PostingContent() {
                   </div>
 
                   {/* Submit stays in reach instead of scrolling away at the bottom */}
-                  <div className="shrink-0 border-t border-border/60 bg-page px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+                  <div className="shrink-0 border-t border-border bg-page px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
                     <div className="mx-auto max-w-2xl">
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="h-12 w-full rounded-xl bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+                        className="h-[52px] w-full text-base"
                       >
                         {isSubmitting ? (
                           <>

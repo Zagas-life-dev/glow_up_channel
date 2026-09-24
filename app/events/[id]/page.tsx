@@ -48,7 +48,7 @@ import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type EventPageProps = { params: Promise<{ id: string }> }
 
-const ACCENT_ICON = 'text-emerald-500'
+const ACCENT_ICON = 'text-up-orange-ink'
 
 /** The registration deadline, or the start date when there is no separate one. */
 function closingDate(event: any): string | undefined {
@@ -202,14 +202,14 @@ function EventPageContent({ params }: EventPageProps) {
       Registration closed {formatDate(event.dates.registrationDeadline)}.
     </p>
   ) : !isAuthenticated ? (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`}>
         Sign in to register
         <RiExternalLinkLine className="h-4 w-4" aria-hidden />
       </Link>
     </Button>
   ) : (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <a
         href={cleanUrl(registrationUrl)}
         target="_blank"
@@ -226,7 +226,7 @@ function EventPageContent({ params }: EventPageProps) {
     <button
       type="button"
       onClick={() => setShowPlaylistModal(true)}
-      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
       aria-label="Add to a playlist"
     >
       <RiAddLine className="h-5 w-5" aria-hidden />
@@ -343,7 +343,7 @@ function EventPageContent({ params }: EventPageProps) {
               <Fact icon={RiTimeLine} label="Registration" iconClassName={ACCENT_ICON}>
                 {formatDate(event.dates.registrationDeadline)}
                 {!registrationOpen && (
-                  <Badge className="ml-2 border-0 bg-red-500/20 text-[10px] text-red-400">Closed</Badge>
+                  <Badge className="ml-2 border-0 bg-up-fill text-[10px] text-muted-foreground">Closed</Badge>
                 )}
               </Fact>
             )}
@@ -414,7 +414,7 @@ function EventPageContent({ params }: EventPageProps) {
             {event.capacity.maxAttendees != null && `Max ${event.capacity.maxAttendees}`}
             {event.capacity.currentAttendees != null && ` · ${event.capacity.currentAttendees} attending`}
             {event.capacity.isFull && (
-              <Badge className="ml-2 border-0 bg-red-500/20 text-[10px] text-red-400">Full</Badge>
+              <Badge className="ml-2 border-0 bg-up-fill text-[10px] text-muted-foreground">Full</Badge>
             )}
           </p>
         </DetailSection>

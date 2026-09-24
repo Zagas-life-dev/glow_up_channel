@@ -7,13 +7,12 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist, findSavedPlaylist, type Playlist as PlaylistWithItems } from '@/contexts/playlist-context'
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
+import { KindChip, toUpKind } from '@/components/up/kind'
+import { PlaylistCover } from '@/components/playlists/playlist-cover'
 import {
   typeConfigFor,
   playlistItemHref,
-  typeIconClass,
-  typeBadgeSmallClass,
 } from '@/lib/playlist-item-display'
 import PostCard from '@/components/post-card'
 import GiftList from '@/components/gifts/gift-list'
@@ -296,8 +295,8 @@ function AboutRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="px-4 py-3.5 sm:px-5">
-      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="px-4 py-3.5 sm:px-[22px]">
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
         <Icon className="h-3 w-3" aria-hidden />
         {label}
       </div>
@@ -324,16 +323,16 @@ function ChipList({
         <span
           key={`${item}-${i}`}
           className={cn(
-            "rounded-xl border px-2.5 py-1 text-caption font-medium",
+            "inline-flex h-8 items-center rounded-full px-3 text-[13px] font-semibold",
             tone === "accent"
-              ? "border-primary/20 bg-primary/10 text-primary"
-              : "border-border/70 bg-muted/50 text-foreground"
+              ? "bg-up-orange-tint text-up-orange-ink"
+              : "bg-up-fill text-foreground"
           )}
         >
           {item}
         </span>
       ))}
-      {rest > 0 ? <span className="px-2.5 py-1 text-caption text-muted-foreground">+{rest}</span> : null}
+      {rest > 0 ? <span className="inline-flex h-8 items-center px-2 text-[13px] font-semibold text-muted-foreground">+{rest}</span> : null}
     </div>
   )
 }
@@ -676,29 +675,12 @@ export default function ProfilePage() {
 
   return (
     <PageShell fullWidth className="relative font-sans">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div
-          className="absolute -top-28 right-0 h-80 w-80 rounded-full opacity-[0.11] dark:opacity-[0.16] blur-3xl"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 72%)" }}
-        />
-        <div
-          className="absolute left-0 top-1/3 h-64 w-64 -translate-x-1/4 rounded-full opacity-[0.05] blur-3xl dark:opacity-[0.09]"
-          style={{ background: "radial-gradient(circle, hsl(222 41% 38%) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.28] dark:opacity-[0.16]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.48'/%3E%3C/svg%3E")`,
-          }}
-        />
-      </div>
-
       <div className="relative mx-auto w-full max-w-2xl">
-        <div className="sticky top-0 z-20 -mx-1 mb-1 flex items-center justify-between gap-2 border-b border-border/50 bg-page/90 px-2 py-2.5 pt-[max(0.25rem,env(safe-area-inset-top))] backdrop-blur-xl supports-[backdrop-filter]:bg-page/75 sm:static sm:mx-0 sm:mb-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-3 sm:pt-0 sm:backdrop-blur-0">
+        <div className="sticky top-0 z-20 -mx-1 mb-1 flex items-center justify-between gap-2 border-b border-border bg-up-bar px-2 py-2.5 pt-[max(0.25rem,env(safe-area-inset-top))] backdrop-blur-xl sm:static sm:mx-0 sm:mb-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-3 sm:pt-0 sm:backdrop-blur-0">
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-2xl text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground sm:min-w-0 sm:justify-start sm:px-3"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full text-muted-foreground transition-colors hover:bg-up-fill hover:text-foreground sm:min-w-0 sm:justify-start sm:px-3"
             aria-label="Go back"
           >
             <RiArrowLeftLine className="h-5 w-5 shrink-0" aria-hidden />
@@ -732,11 +714,14 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile hero */}
-        <div className="mb-5 overflow-hidden rounded-[1.35rem] border border-border/60 bg-gradient-to-b from-card/95 via-card/88 to-muted/10 shadow-[inset_0_1px_0_0_hsl(var(--primary)/0.06)] backdrop-blur-sm">
-          <div className="p-4 sm:p-6">
+        {/* A navy "place": name in Unbounded, headline in orange, card-stack tiles off the corner. */}
+        <div className="relative mb-5 overflow-hidden rounded-[28px] bg-up-lead text-up-on-navy dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
+          <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-[130px] w-[180px] -rotate-[8deg] rounded-up-xl bg-up-orange" />
+          <span aria-hidden className="pointer-events-none absolute -top-7 right-12 z-[1] h-[70px] w-[90px] rotate-[7deg] rounded-up-lg bg-up-lime" />
+          <div className="relative z-[2] p-5 sm:p-7">
             <div className="mb-5 flex items-start">
               <div className="relative shrink-0">
-                <div className="h-24 w-24 overflow-hidden rounded-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-card sm:h-28 sm:w-28">
+                <div className="h-24 w-24 overflow-hidden rounded-full ring-4 ring-up-navy-subtle sm:h-28 sm:w-28">
                   {profile.profileImage ? (
                     <Image
                       src={profile.profileImage}
@@ -746,41 +731,41 @@ export default function ProfilePage() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-primary/70">
-                      <span className="text-3xl font-bold text-primary-foreground sm:text-4xl">
+                    <div className="flex h-full w-full items-center justify-center bg-up-lime">
+                      <span className="font-display text-3xl font-bold text-up-navy sm:text-4xl">
                         {displayName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
                 {profile.isPrivate && (
-                  <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm">
-                    <RiLockLine className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                  <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-up-on-navy">
+                    <RiLockLine className="h-3.5 w-3.5 text-up-navy" aria-hidden />
                   </div>
                 )}
               </div>
             </div>
 
             <div className="mb-1 flex flex-wrap items-center gap-2">
-              <h1 className="text-display-sm font-bold tracking-tight text-foreground sm:text-display-md">{displayName}</h1>
+              <h1 className="font-display text-[26px] font-bold leading-tight sm:text-[32px]">{displayName}</h1>
               {isFounderBatch(profile.role) && (
-                <span className="rounded-lg border border-primary/25 bg-primary/12 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-primary">
+                <span className="rounded-full bg-up-lime px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-up-navy">
                   Founder Batch
                 </span>
               )}
               {(profile.role === "admin" || profile.role === "super_admin") && (
-                <span className="flex items-center gap-1 rounded-lg border border-border/70 bg-muted/50 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
-                  <RiShieldLine className="h-3 w-3 text-primary" aria-hidden />
+                <span className="flex items-center gap-1 rounded-full bg-up-navy-subtle px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]">
+                  <RiShieldLine className="h-3 w-3 text-up-orange" aria-hidden />
                   Admin
                 </span>
               )}
             </div>
-            {profile.headline && <p className="mb-2 text-body-sm text-muted-foreground sm:text-body">{profile.headline}</p>}
+            {profile.headline && <p className="mb-2 text-[15px] font-semibold text-up-orange">{profile.headline}</p>}
             {profile.bio && (
-              <p className="whitespace-pre-line text-body-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-up-on-navy-muted">{profile.bio}</p>
             )}
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-up-on-navy-muted">
               {profile.onboarding?.country && (
                 <span className="flex items-center gap-1">
                   <RiMapPinLine className="w-3 h-3 opacity-70" aria-hidden />
@@ -818,7 +803,7 @@ export default function ProfilePage() {
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-caption font-medium text-primary transition-colors hover:text-primary/80"
+                    className="flex items-center gap-1 text-[13px] font-bold text-up-orange transition-colors hover:opacity-80"
                   >
                     <RiLink className="w-3 h-3" aria-hidden />
                     {new URL(profile.website).hostname.replace('www.', '')}
@@ -833,7 +818,7 @@ export default function ProfilePage() {
                       href={url as string}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cn("text-muted-foreground transition-colors", config.color)}
+                      className="text-up-on-navy-muted transition-colors hover:text-up-on-navy"
                       title={config.label}
                     >
                       {config.icon}
@@ -851,7 +836,7 @@ export default function ProfilePage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 min-h-11 w-full rounded-2xl border-border/70 bg-card/80 text-body-sm font-semibold"
+                    className="h-11 min-h-11 w-full border-up-border-on-navy bg-up-navy-subtle text-up-on-navy hover:border-up-border-on-navy hover:bg-white/[0.12] hover:text-up-on-navy"
                   >
                     <RiSettingsLine className="mr-2 h-4 w-4" aria-hidden />
                     Edit profile
@@ -864,12 +849,12 @@ export default function ProfilePage() {
                     onClick={handleConnect}
                     disabled={connectLoading}
                     className={cn(
-                      "h-11 min-h-11 min-w-0 flex-1 rounded-2xl border text-body-sm font-semibold transition-all",
+                      "h-11 min-h-11 min-w-0 flex-1 border text-sm font-bold transition-all",
                       connectionStatus?.isFollowing
-                        ? "border-border/60 bg-card/80 text-foreground hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                        ? "border-up-border-on-navy bg-up-navy-subtle text-up-on-navy hover:bg-white/[0.12]"
                         : connectionStatus?.isPending
-                          ? "border-border/60 bg-muted/40 text-muted-foreground"
-                          : "border-transparent bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90",
+                          ? "border-up-border-on-navy bg-transparent text-up-on-navy-muted"
+                          : "border-transparent bg-up-orange text-up-navy hover:brightness-105",
                     )}
                   >
                     {connectionStatus?.isFollowing ? (
@@ -890,7 +875,7 @@ export default function ProfilePage() {
                     type="button"
                     variant="outline"
                     disabled
-                    className="h-11 min-h-11 min-w-0 flex-1 rounded-2xl border-border/60 bg-muted/30 text-body-sm font-medium text-muted-foreground"
+                    className="h-11 min-h-11 min-w-0 flex-1 border-up-border-on-navy bg-transparent text-sm font-semibold text-up-on-navy-faint"
                   >
                     Message soon
                   </Button>
@@ -909,27 +894,27 @@ export default function ProfilePage() {
           const shown = incomplete.slice(0, 4)
 
           return (
-            <section className="mb-5 overflow-hidden rounded-[1.25rem] border border-destructive/40 bg-destructive/5">
-              <div className="flex items-start gap-3 border-b border-destructive/25 p-4 sm:p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-destructive/15">
-                  <RiErrorWarningLine className="h-5 w-5 text-destructive" aria-hidden />
+            <section className="mb-5 overflow-hidden rounded-up-xl bg-up-orange-tint">
+              <div className="flex items-start gap-3.5 px-4 pt-4 sm:px-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-up-md bg-up-orange text-up-navy">
+                  <RiErrorWarningLine className="h-5 w-5" aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-body-sm font-bold text-destructive">Your profile is incomplete</h2>
-                  <p className="mt-0.5 text-caption text-muted-foreground">
+                  <h2 className="text-sm font-bold text-foreground">Your profile is incomplete</h2>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
                     {incomplete.length} {incomplete.length === 1 ? 'thing is' : 'things are'} missing.
                     Finishing this is how we match you to the right opportunities.
                   </p>
                 </div>
-                <span className="shrink-0 text-body-sm font-bold tabular-nums text-destructive">
+                <span className="shrink-0 font-display text-lg font-bold tabular-nums text-up-orange-ink">
                   {completionPercentage}%
                 </span>
               </div>
 
               <div className="p-4 sm:p-5">
-                <div className="mb-4 h-2 overflow-hidden rounded-full bg-destructive/15">
+                <div className="mb-4 h-2 overflow-hidden rounded-full bg-card">
                   <div
-                    className="h-full rounded-full bg-destructive transition-all duration-500"
+                    className="h-full rounded-full bg-up-orange transition-all duration-500"
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
@@ -937,7 +922,7 @@ export default function ProfilePage() {
                 <ul className="mb-4 space-y-2">
                   {shown.map((item) => (
                     <li key={item.id} className="flex items-center gap-2.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive/60" aria-hidden />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-up-orange" aria-hidden />
                       <span className="min-w-0 flex-1 truncate text-body-sm text-foreground">{item.label}</span>
                     </li>
                   ))}
@@ -951,7 +936,7 @@ export default function ProfilePage() {
                 <Link href="/profile/settings" className="block">
                   <Button
                     type="button"
-                    className="h-11 w-full rounded-2xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    className="h-11 w-full"
                   >
                     Complete onboarding
                     <RiArrowRightLine className="ml-1.5 h-4 w-4" aria-hidden />
@@ -982,12 +967,12 @@ export default function ProfilePage() {
           }
 
           return (
-            <section className="mb-5 rounded-[1.25rem] border border-border/60 bg-card/70">
-              <div className="border-b border-border/60 px-4 py-3 sm:px-5">
-                <h2 className="text-body-sm font-bold text-foreground">About</h2>
+            <section className="mb-5 rounded-up-xl border border-border bg-card">
+              <div className="border-b border-up-hairline px-4 py-3.5 sm:px-[22px]">
+                <h2 className="text-base font-bold text-foreground">About</h2>
               </div>
 
-              <div className="divide-y divide-border/50">
+              <div className="divide-y divide-up-hairline">
                 {skills.length > 0 && (
                   <AboutRow icon={RiToolsLine} label="Skills">
                     <ChipList items={skills} limit={8} />
@@ -1034,7 +1019,7 @@ export default function ProfilePage() {
 
         {/* Follows You: soft pill */}
         {!isOwner && connectionStatus?.followsYou && (
-          <div className="mb-5 px-4 py-2.5 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 text-center">
+          <div className="mb-5 rounded-full bg-up-lime-tint px-4 py-2.5 text-center">
             <span className="text-xs text-muted-foreground font-medium">Partners you</span>
           </div>
         )}
@@ -1042,17 +1027,17 @@ export default function ProfilePage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Only owners get a second tab (Saved) — a lone always-active tab is noise, so hide the bar. */}
           {isOwner && (
-            <TabsList className="mb-4 flex h-auto w-full gap-2 overflow-x-auto bg-transparent p-0 scrollbar-hide sm:justify-stretch">
+            <TabsList className="mb-4 flex h-auto w-full gap-1 overflow-x-auto rounded-full bg-up-fill p-1 scrollbar-hide sm:justify-stretch">
               <TabsTrigger
                 value="playlists"
-                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                className="h-[34px] shrink-0 flex-1 rounded-full px-3 text-[13px] font-semibold text-muted-foreground transition-colors data-[state=active]:bg-up-solid data-[state=active]:text-up-on-solid data-[state=active]:shadow-none"
               >
                 <RiPlayList2Fill className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Lists
               </TabsTrigger>
               <TabsTrigger
                 value="bookmarks"
-                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                className="h-[34px] shrink-0 flex-1 rounded-full px-3 text-[13px] font-semibold text-muted-foreground transition-colors data-[state=active]:bg-up-solid data-[state=active]:text-up-on-solid data-[state=active]:shadow-none"
               >
                 <RiBookmarkLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Saved
@@ -1061,7 +1046,7 @@ export default function ProfilePage() {
                   reached through your own profile, so the tab is owner-only. */}
               <TabsTrigger
                 value={GIFTS_TAB}
-                className="min-h-11 shrink-0 flex-1 rounded-2xl border border-transparent bg-card/40 px-3 py-2.5 text-body-sm font-semibold text-muted-foreground transition-all data-[state=active]:border-primary/30 data-[state=active]:bg-primary/12 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                className="h-[34px] shrink-0 flex-1 rounded-full px-3 text-[13px] font-semibold text-muted-foreground transition-colors data-[state=active]:bg-up-solid data-[state=active]:text-up-on-solid data-[state=active]:shadow-none"
               >
                 <RiGiftLine className="mr-1.5 h-4 w-4 sm:mr-2" aria-hidden />
                 Gifts
@@ -1075,7 +1060,7 @@ export default function ProfilePage() {
               <div className="space-y-4 py-8 animate-pulse">
                 <div className="grid grid-cols-2 gap-4">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="rounded-2xl bg-card border border-border h-32" />
+                    <div key={i} className="h-32 rounded-up-xl border border-border bg-card" />
                   ))}
                 </div>
               </div>
@@ -1086,8 +1071,8 @@ export default function ProfilePage() {
 
               if (!hasAnyPlaylists) {
                 return (
-                  <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                  <div className="rounded-up-xl border border-dashed border-border bg-card py-14 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-up-lg bg-up-fill">
                       <RiPlayList2Fill className="h-7 w-7 text-muted-foreground" aria-hidden />
                     </div>
                     <p className="text-body-sm font-bold text-foreground">No playlists</p>
@@ -1096,7 +1081,7 @@ export default function ProfilePage() {
                     </p>
                     {isOwner && (
                       <Link href="/playlists">
-                        <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                        <Button type="button" size="sm" className="mt-6 h-10 px-6">
                           Create playlist
                         </Button>
                       </Link>
@@ -1110,8 +1095,7 @@ export default function ProfilePage() {
                   {hasOwnPlaylists && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <RiPlayList2Fill className="w-4 h-4 text-orange-400" aria-hidden />
+                        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                           Your Playlists
                         </h3>
                         {isOwner && (
@@ -1128,13 +1112,11 @@ export default function ProfilePage() {
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-2xl border border-transparent transition-all duration-200 hover:bg-muted/70 hover:border-border/50"
+                            className="group flex items-center gap-4 rounded-up-xl border border-border bg-card p-3 transition-colors hover:border-up-border-hover"
                           >
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border bg-gradient-to-br from-orange-500/20 to-rose-500/15 border-orange-500/20">
-                              <RiPlayList2Fill className="w-5 h-5 text-orange-400" aria-hidden />
-                            </div>
+                            <PlaylistCover seed={playlist._id} className="h-12 w-12" rounded="rounded-up-md" />
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium truncate transition-colors text-foreground group-hover:text-orange-400">
+                              <h4 className="truncate font-bold text-foreground transition-colors group-hover:text-up-orange-ink">
                                 {playlist.name}
                               </h4>
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
@@ -1164,8 +1146,7 @@ export default function ProfilePage() {
                   {hasSavedPlaylists && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <RiPlayList2Fill className="w-4 h-4 text-orange-400" aria-hidden />
+                        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                           Saved Playlists
                         </h3>
                         <Link href="/playlists">
@@ -1179,13 +1160,11 @@ export default function ProfilePage() {
                           <Link 
                             key={playlist._id}
                             href={`/playlists/${playlist._id}`}
-                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors"
+                            className="group flex items-center gap-4 rounded-up-xl border border-border bg-card p-3 transition-colors hover:border-up-border-hover"
                           >
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/40 to-rose-500/40 flex items-center justify-center flex-shrink-0">
-                              <RiPlayList2Fill className="w-5 h-5 text-foreground" aria-hidden />
-                            </div>
+                            <PlaylistCover seed={playlist._id} className="h-12 w-12" rounded="rounded-up-md" />
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-foreground truncate group-hover:text-orange-400 transition-colors">
+                              <h4 className="truncate font-bold text-foreground transition-colors group-hover:text-up-orange-ink">
                                 {playlist.name}
                               </h4>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1227,8 +1206,7 @@ export default function ProfilePage() {
                     {/* Saved content — the account's permanent "Saved" playlist */}
                     <section className="space-y-3">
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
-                          <RiBookmarkLine className="h-4 w-4 text-orange-400" aria-hidden />
+                        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                           Saved items
                           {savedItems.length > 0 && (
                             <span className="text-xs font-normal text-muted-foreground">
@@ -1256,9 +1234,9 @@ export default function ProfilePage() {
                           {[...Array(4)].map((_, i) => (
                             <div
                               key={i}
-                              className="flex min-h-[4.5rem] animate-pulse items-center gap-3 rounded-[1.15rem] border border-border/70 bg-card/70 p-3 sm:gap-4 sm:p-4"
+                              className="flex min-h-[4.5rem] animate-pulse items-center gap-3 rounded-up-xl border border-border bg-card p-3 sm:gap-4 sm:p-4"
                             >
-                              <div className="h-12 w-12 shrink-0 rounded-2xl bg-muted" />
+                              <div className="h-11 w-11 shrink-0 rounded-up-md bg-up-fill" />
                               <div className="min-w-0 flex-1 space-y-2">
                                 <div className="h-3 w-20 rounded-full bg-muted" />
                                 <div className="h-4 w-3/4 rounded-full bg-muted" />
@@ -1268,8 +1246,8 @@ export default function ProfilePage() {
                           ))}
                         </div>
                       ) : savedItems.length === 0 ? (
-                        <div className="rounded-[1.25rem] border border-border/60 bg-card/50 py-14 text-center">
-                          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50">
+                        <div className="rounded-up-xl border border-dashed border-border bg-card py-14 text-center">
+                          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-up-lg bg-up-fill">
                             <RiBookmarkLine className="h-7 w-7 text-muted-foreground" aria-hidden />
                           </div>
                           <p className="text-body-sm font-bold text-foreground">No saved items</p>
@@ -1277,7 +1255,7 @@ export default function ProfilePage() {
                             Tap the bookmark on any opportunity, job, event, or resource and it lands here.
                           </p>
                           <Link href="/">
-                            <Button type="button" size="sm" className="mt-6 h-10 rounded-2xl bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                            <Button type="button" size="sm" className="mt-6 h-10 px-6">
                               Browse content
                             </Button>
                           </Link>
@@ -1286,7 +1264,6 @@ export default function ProfilePage() {
                         <div className="space-y-2">
                           {savedItems.map((item) => {
                             const config = typeConfigFor(item.contentType)
-                            const Icon = config.icon
                             const source = item.company || item.organization || item.author
                             const addedAt = item.addedAt ? new Date(item.addedAt) : null
                             const addedLabel =
@@ -1298,21 +1275,12 @@ export default function ProfilePage() {
                               <Link
                                 key={item._id}
                                 href={playlistItemHref(item)}
-                                className="group flex min-h-[4.5rem] items-center gap-3 rounded-[1.15rem] border border-border/70 bg-card/70 p-3 transition-all duration-200 hover:border-primary/20 hover:bg-muted/40 active:scale-[0.99] sm:gap-4 sm:p-4"
+                                className="group flex min-h-[4.5rem] items-center gap-3 rounded-up-xl border border-border bg-card p-3 transition-colors duration-200 hover:border-up-border-hover active:scale-[0.99] sm:gap-4 sm:p-4"
                               >
-                                <div
-                                  className={cn(
-                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br',
-                                    config.gradient,
-                                  )}
-                                >
-                                  <Icon className={cn('h-6 w-6', typeIconClass(config.color))} aria-hidden />
-                                </div>
+                                <KindChip kind={toUpKind(item.contentType)} size="lg" />
                                 <div className="min-w-0 flex-1">
-                                  <Badge variant="outline" className={typeBadgeSmallClass(config.color)}>
-                                    {config.label}
-                                  </Badge>
-                                  <h4 className="mt-1 truncate font-medium text-foreground transition-colors group-hover:text-orange-400">
+                                  <p className="text-xs font-bold text-muted-foreground">{config.label}</p>
+                                  <h4 className="mt-0.5 truncate font-bold text-foreground transition-colors group-hover:text-up-orange-ink">
                                     {item.title}
                                   </h4>
                                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
@@ -1347,8 +1315,7 @@ export default function ProfilePage() {
                     {/* Bookmarked community posts — a different kind of save, kept separate */}
                     {(loadingBookmarks || bookmarks.length > 0) && (
                       <section className="space-y-3">
-                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
-                          <RiBookmarkLine className="h-4 w-4 text-orange-400" aria-hidden />
+                        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                           Saved posts
                         </h3>
                         {loadingBookmarks ? (

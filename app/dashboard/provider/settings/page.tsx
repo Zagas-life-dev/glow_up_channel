@@ -76,7 +76,7 @@ interface ProviderOnboardingData {
 
 type SettingsTab = 'overview' | 'profile' | 'organization' | 'preferences' | 'security'
 
-const INPUT_CLASS = "h-11 rounded-xl border-border bg-muted/60 text-foreground placeholder:text-muted-foreground"
+const INPUT_CLASS = "h-11 text-foreground placeholder:text-muted-foreground"
 
 function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
@@ -418,7 +418,10 @@ export default function ProviderSettings() {
       onRefresh={() => loadProviderData()}
       refreshing={loading}
     >
-      <SegmentedTabs items={settingsTabs} value={activeTab} onChange={setActiveTab} />
+      {/* Same frame as seeker Settings: a vertical tab rail on desktop, panels beside it. */}
+      <div className="lg:grid lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
+      <SegmentedTabs items={settingsTabs} value={activeTab} onChange={setActiveTab} vertical className="mb-4 lg:mb-0" />
+      <div className="min-w-0 space-y-4">
 
       {error && <ErrorBanner message={error} onRetry={() => loadProviderData()} />}
 
@@ -430,26 +433,30 @@ export default function ProviderSettings() {
               <div className="space-y-4">
                 <div>
                   <div className="mb-2 flex items-baseline justify-between">
-                    <span className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">Completion</span>
-                    <span className="text-body font-bold tabular-nums text-foreground">{onboardingData.completionPercentage}%</span>
+                    <span className="text-[13px] font-semibold text-muted-foreground">Completion</span>
+                    {onboardingData.completionPercentage >= 100 ? (
+                      <span className="rounded-full bg-up-lime-tint px-2.5 py-0.5 text-xs font-bold text-foreground">Completed</span>
+                    ) : (
+                      <span className="font-display text-base font-bold tabular-nums text-foreground">{onboardingData.completionPercentage}%</span>
+                    )}
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-2 overflow-hidden rounded-full bg-up-fill">
                     <div
-                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      className={cn("h-full rounded-full transition-all duration-500", onboardingData.completionPercentage >= 100 ? "bg-up-lime" : "bg-up-orange")}
                       style={{ width: `${onboardingData.completionPercentage}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2.5 border-t border-border/50 pt-3">
+                <div className="space-y-2.5 border-t border-border pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-body-sm text-muted-foreground">Status</span>
                     <Badge
                       className={cn(
                         "rounded-md px-1.5 py-0 text-[10px] font-semibold",
                         onboardingData.isCompleted
-                          ? "border border-emerald-500/25 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                          : "border border-amber-500/25 bg-amber-500/15 text-amber-600 dark:text-amber-400",
+                          ? "border border-transparent bg-up-lime-tint text-foreground "
+                          : "border border-transparent bg-up-orange-tint text-up-orange-ink ",
                       )}
                     >
                       {onboardingData.isCompleted ? 'Completed' : 'In progress'}
@@ -470,7 +477,7 @@ export default function ProviderSettings() {
                 <Button
                   asChild
                   variant="outline"
-                  className="min-h-11 w-full rounded-xl border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="min-h-11 w-full border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <Link href="/dashboard/provider/onboarding">
                     <Edit className="mr-2 h-4 w-4" />
@@ -500,7 +507,7 @@ export default function ProviderSettings() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('organization')}
-                  className="h-8 shrink-0 rounded-lg px-2 text-xs text-primary hover:bg-primary/10"
+                  className="h-8 shrink-0 px-2 text-xs text-up-orange-ink hover:bg-up-orange-tint"
                 >
                   Full details
                   <ArrowRight className="ml-1 h-3.5 w-3.5" />
@@ -511,8 +518,8 @@ export default function ProviderSettings() {
           >
             {onboardingData ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
-                  <Building2 className="h-7 w-7 text-primary" />
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-up-xl border border-up-orange bg-up-orange-tint">
+                  <Building2 className="h-7 w-7 text-up-orange-ink" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-body-lg font-semibold text-foreground">{onboardingData.organizationName}</p>
@@ -523,7 +530,7 @@ export default function ProviderSettings() {
                       <span className="truncate">{onboardingData.officialEmail}</span>
                     </span>
                     {onboardingData.isRegistered ? (
-                      <Badge className="rounded-md border border-emerald-500/25 bg-emerald-500/15 px-1.5 py-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <Badge className="rounded-md border border-transparent bg-up-lime-tint px-1.5 py-0 text-[10px] font-semibold text-foreground">
                         Registered
                       </Badge>
                     ) : null}
@@ -554,7 +561,7 @@ export default function ProviderSettings() {
               <Button
                 onClick={() => setIsEditing(true)}
                 size="sm"
-                className="h-9 shrink-0 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90"
+                className="h-9 shrink-0 bg-primary px-3 text-primary-foreground hover:bg-primary/90"
               >
                 <Edit3 className="mr-1.5 h-4 w-4" />
                 Edit
@@ -565,7 +572,7 @@ export default function ProviderSettings() {
                   onClick={handleCancel}
                   variant="outline"
                   size="sm"
-                  className="h-9 rounded-xl border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="h-9 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   Cancel
                 </Button>
@@ -573,7 +580,7 @@ export default function ProviderSettings() {
                   onClick={handleSave}
                   disabled={isSaving}
                   size="sm"
-                  className="h-9 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90"
+                  className="h-9 bg-primary px-3 text-primary-foreground hover:bg-primary/90"
                 >
                   {isSaving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
                   {isSaving ? 'Saving...' : 'Save'}
@@ -624,7 +631,7 @@ export default function ProviderSettings() {
               </div>
             </div>
 
-            <div className="space-y-3 border-t border-border/50 pt-4">
+            <div className="space-y-3 border-t border-border pt-4">
               <p className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">Location</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
@@ -678,7 +685,7 @@ export default function ProviderSettings() {
                   <Field label="Contact person" value={onboardingData.contactPersonName} />
                   <Field label="Role" value={onboardingData.contactPersonRole} />
                 </div>
-                <div className="grid grid-cols-1 gap-3 border-t border-border/50 pt-3">
+                <div className="grid grid-cols-1 gap-3 border-t border-border pt-3">
                   <Field label="Address" value={onboardingData.providerAddress} />
                   <Field label="About organization" value={onboardingData.aboutOrganization} />
                 </div>
@@ -694,7 +701,7 @@ export default function ProviderSettings() {
                   <Field label="Year established" value={onboardingData.yearEstablished} />
                 </div>
                 {(onboardingData.website || onboardingData.socialMediaHandles) && (
-                  <div className="grid grid-cols-1 gap-3 border-t border-border/50 pt-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-2">
                     {onboardingData.website && <Field label="Website" value={onboardingData.website} />}
                     {onboardingData.socialMediaHandles && <Field label="Social media" value={onboardingData.socialMediaHandles} />}
                   </div>
@@ -823,7 +830,7 @@ export default function ProviderSettings() {
               <Button
                 onClick={handleChangePassword}
                 disabled={isChangingPassword}
-                className="min-h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                className="min-h-11"
               >
                 {isChangingPassword ? (
                   <>
@@ -846,24 +853,24 @@ export default function ProviderSettings() {
               <Button
                 variant="outline"
                 onClick={() => toast.info('Two-factor authentication is coming soon.')}
-                className="min-h-11 w-full shrink-0 rounded-xl border-primary/30 text-primary hover:bg-primary/10 sm:w-auto"
+                className="min-h-11 w-full shrink-0 border-up-orange text-up-orange-ink hover:bg-up-orange-tint sm:w-auto"
               >
                 Enable 2FA
               </Button>
             </div>
           </Panel>
 
-          <Panel icon={AlertCircle} title="Danger zone" className="border-red-500/25">
-            <div className="flex flex-col gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <Panel icon={AlertCircle} title="Danger zone" className="border-destructive/30">
+            <div className="flex flex-col gap-3 rounded-up-md border border-destructive/30 bg-destructive/10 p-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-body-sm font-semibold text-red-500 dark:text-red-400">Delete account</p>
-                <p className="text-[11px] text-red-500/80 dark:text-red-400/80">
+                <p className="text-body-sm font-semibold text-destructive">Delete account</p>
+                <p className="text-[11px] text-destructive/80">
                   Once you delete your account, there is no going back. Please be certain.
                 </p>
               </div>
               <Button
                 variant="outline"
-                className="min-h-11 w-full shrink-0 rounded-xl border-red-500/30 text-red-500 hover:bg-red-500/10 dark:text-red-400 sm:w-auto"
+                className="min-h-11 w-full shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 sm:w-auto"
                 onClick={handleDeleteAccount}
                 disabled={isDeletingAccount}
               >
@@ -883,6 +890,8 @@ export default function ProviderSettings() {
           </Panel>
         </div>
       )}
+      </div>
+      </div>
     </ProviderShell>
   )
 }

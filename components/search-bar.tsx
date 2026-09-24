@@ -11,13 +11,13 @@ interface SearchBarProps {
 
 export default function SearchBar({ value, onValueChange, placeholder }: SearchBarProps) {
   return (
-    <div className="relative w-full max-w-md mx-auto">
+    <div className="relative w-full">
       <FlaticonIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" aria-hidden />
       <Input
         type="search"
         placeholder={placeholder}
         value={value}
-        className="w-full pl-12 pr-4 py-3 text-base bg-muted backdrop-blur-sm border-border rounded-full focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/30 focus:bg-muted transition-all text-foreground placeholder:text-muted-foreground"
+        className="h-12 w-full rounded-full border-[1.5px] border-border bg-card pl-12 pr-5 text-base text-foreground shadow-[0_1px_0_rgba(11,18,51,0.03)] transition-all placeholder:text-muted-foreground focus-visible:border-up-orange focus-visible:ring-4 focus-visible:ring-up-orange-tint focus-visible:ring-offset-0"
         onChange={(e) => onValueChange(e.target.value)}
       />
     </div>

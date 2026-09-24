@@ -22,7 +22,6 @@ import {
   Plus,
   Settings,
   Home,
-  Crown,
   RefreshCw,
   MoreVertical,
 } from "lucide-react"
@@ -60,8 +59,7 @@ export function providerTabForPath(pathname?: string | null): ProviderTab {
   return "overview"
 }
 
-export const PROVIDER_PAGE_BACKGROUND =
-  "bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.16),transparent_58%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)]"
+export const PROVIDER_PAGE_BACKGROUND = "bg-page"
 
 interface ProviderShellProps {
   user: any
@@ -110,15 +108,19 @@ export function ProviderShell({
           postingLimit={postingLimit}
         />
 
-        <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
-          <header className="sticky top-0 z-20 border-b border-border/60 bg-page/80 backdrop-blur-xl">
-            <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 pt-[max(0rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 lg:hidden">
-                <Crown className="h-4 w-4 text-primary" />
-              </span>
+        <div className="flex min-w-0 flex-1 flex-col lg:pl-[280px]">
+          <header className="sticky top-0 z-20 border-b border-border bg-up-bar backdrop-blur-xl">
+            <div className="mx-auto flex min-h-[64px] max-w-6xl items-center gap-3 px-4 pt-[max(0rem,env(safe-area-inset-top))] sm:px-6 lg:px-10">
+              <Link
+                href="/"
+                aria-label="UP home"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-up-sm bg-up-orange font-display text-sm font-extrabold text-up-navy lg:hidden"
+              >
+                UP
+              </Link>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Provider Hub</p>
-                <h1 className="truncate text-body font-semibold leading-tight text-foreground">{title}</h1>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-up-orange-ink">Provider hub</p>
+                <h1 className="truncate font-display text-lg font-bold leading-tight text-foreground sm:text-xl">{title}</h1>
               </div>
 
               {onRefresh ? (
@@ -137,7 +139,7 @@ export function ProviderShell({
               {actions}
 
               {showNewPost ? (
-                <Button asChild size="sm" className="h-9 shrink-0 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90">
+                <Button asChild size="sm" className="h-9 shrink-0 px-3.5">
                   <Link href="/dashboard/provider/posting">
                     <Plus className="h-4 w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">New post</span>
@@ -154,14 +156,14 @@ export function ProviderShell({
                 <DropdownMenuContent align="end" className="w-48 p-1">
                   <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
                     <Link href="/dashboard/provider/settings" className="flex w-full items-center gap-2.5">
-                      <Settings className="h-4 w-4 text-primary" />
+                      <Settings className="h-4 w-4" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
                     <Link href="/" className="flex w-full items-center gap-2.5">
-                      <Home className="h-4 w-4 text-primary" />
+                      <Home className="h-4 w-4" />
                       <span>Home</span>
                     </Link>
                   </DropdownMenuItem>
@@ -171,7 +173,7 @@ export function ProviderShell({
           </header>
 
           <main className="flex-1 overflow-y-auto pb-28 lg:pb-10">
-            <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:px-6 md:py-6 lg:px-8">{children}</div>
+            <div className="mx-auto max-w-6xl space-y-4 px-4 py-5 sm:px-6 md:py-7 lg:px-10">{children}</div>
           </main>
 
           <ProviderDashboardBottomNav navItems={PROVIDER_NAV_ITEMS} activeTab={activeTab} onTabChange={onTabChange} />

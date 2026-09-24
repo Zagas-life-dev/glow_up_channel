@@ -146,8 +146,9 @@ const PUSH_TOPICS = [
   { key: 'pushEvents', label: 'Saved events', desc: 'Reminders for events you saved' },
   { key: 'pushJobs', label: 'Saved jobs', desc: 'Deadline reminders for jobs you saved' },
   { key: 'pushLockedInReminders', label: 'Locked In reminders', desc: 'A daily nudge to lock in' },
-  { key: 'pushConnectionPosts', label: 'When connections post', desc: 'When someone you follow posts in Community' },
-  { key: 'pushChannelPosts', label: 'Channel posts', desc: 'New posts in channels you are in' },
+  // "When connections post" and "Channel posts" were dropped from this list:
+  // both belong to the deprecated community/channels features, and
+  // notifications are being rebuilt. The stored prefs are left untouched.
   { key: 'pushFunReminders', label: 'Fun and motivational', desc: 'Occasional goals and motivation, about once a day' },
   { key: 'pushPromotions', label: 'Featured listings', desc: 'Occasional sponsored listings, at most twice per campaign' },
 ]
@@ -166,12 +167,12 @@ function SettingsSection({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card">
-      <div className="border-b border-border px-5 py-4">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+    <section className="rounded-up-xl border border-border bg-card">
+      <div className="border-b border-up-hairline px-5 py-4 sm:px-[22px]">
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
         {description ? <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-5 sm:px-[22px]">{children}</div>
     </section>
   )
 }
@@ -189,7 +190,7 @@ function SettingsField({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={htmlFor} className="text-xs font-medium text-muted-foreground">
+      <Label htmlFor={htmlFor} className="text-[13px] font-bold text-foreground">
         {label}
       </Label>
       {children}
@@ -218,7 +219,7 @@ function ToggleRow({
   return (
     <div className="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
       <div className="min-w-0">
-        <Label htmlFor={id} className="text-sm font-medium text-foreground">
+        <Label htmlFor={id} className="text-sm font-bold text-foreground">
           {label}
         </Label>
         {description ? (
@@ -256,10 +257,10 @@ function ChipPicker({
             onClick={() => onToggle(option)}
             aria-pressed={active}
             className={cn(
-              'rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+              'inline-flex h-8 items-center rounded-full border px-3 text-[13px] font-semibold transition-colors',
               active
-                ? 'border-primary/40 bg-primary/10 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'border-up-solid bg-up-solid text-up-on-solid'
+                : 'border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground'
             )}
           >
             {option}
@@ -287,14 +288,14 @@ function AccessRow({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:bg-muted/50"
+      className="group flex items-center gap-3 rounded-up-lg border border-border px-4 py-3 transition-colors hover:border-up-border-hover"
     >
-      <Icon className="h-4 w-4 shrink-0 text-primary" />
+      <Icon className="h-4 w-4 shrink-0 text-up-orange-ink" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-foreground">{title}</p>
         <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>
-      <span className="shrink-0 text-xs font-medium text-primary">{cta}</span>
+      <span className="shrink-0 text-xs font-bold text-up-orange-ink">{cta}</span>
     </Link>
   )
 }
@@ -847,12 +848,12 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-page">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4 border border-red-500/30">
-            <User className="w-8 h-8 text-red-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-destructive/10 rounded-full mb-4">
+            <User className="w-8 h-8 text-destructive" />
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">Profile Not Found</h2>
           <p className="text-muted-foreground mb-4">Unable to load your profile data. Please try logging in again.</p>
-          <Button onClick={logout} className="bg-primary hover:bg-primary/90 rounded-xl">
+          <Button onClick={logout}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
@@ -883,12 +884,12 @@ export default function SettingsPage() {
             <Link
               href={profileHref}
               aria-label="Back to profile"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+              <h1 className="font-display text-[26px] font-bold leading-tight text-foreground sm:text-[34px]">Settings</h1>
               <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
             </div>
           </div>
@@ -899,7 +900,7 @@ export default function SettingsPage() {
               aria-live="polite"
               className={cn(
                 'mt-1 hidden shrink-0 items-center gap-1.5 text-xs sm:inline-flex',
-                isDirty ? 'text-muted-foreground' : 'text-emerald-600 dark:text-emerald-400'
+                isDirty ? 'text-muted-foreground' : 'rounded-full bg-up-lime-tint px-2.5 py-1 font-bold text-foreground'
               )}
             >
               {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
@@ -924,13 +925,13 @@ export default function SettingsPage() {
                     onClick={() => setActiveTab(section.id)}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-colors lg:w-full lg:justify-start',
+                      'flex h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 text-sm font-semibold transition-colors lg:w-full lg:justify-start',
                       active
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                        ? 'bg-up-solid text-up-on-solid'
+                        : 'text-muted-foreground hover:bg-up-fill hover:text-foreground'
                     )}
                   >
-                    <Icon className={cn('h-4 w-4 shrink-0', active && 'text-primary')} />
+                    <Icon className={cn('h-4 w-4 shrink-0', active && 'text-up-orange dark:text-[#B8551E]')} />
                     {section.label}
                   </button>
                 )
@@ -949,8 +950,8 @@ export default function SettingsPage() {
                         {profileImage ? (
                           <Image src={profileImage} alt="Profile" width={80} height={80} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-500 to-violet-500">
-                            <span className="text-2xl font-semibold text-white">
+                          <div className="flex h-full w-full items-center justify-center bg-up-lime">
+                            <span className="font-display text-2xl font-bold text-up-navy">
                               {(firstName?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase()}
                             </span>
                           </div>
@@ -980,19 +981,19 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="First name" htmlFor="firstName">
-                        <Input id="firstName" value={firstName} onChange={(e) => editField(setFirstName)(e.target.value)} placeholder="John" className="h-11 rounded-xl" />
+                        <Input id="firstName" value={firstName} onChange={(e) => editField(setFirstName)(e.target.value)} placeholder="John" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Last name" htmlFor="lastName">
-                        <Input id="lastName" value={lastName} onChange={(e) => editField(setLastName)(e.target.value)} placeholder="Doe" className="h-11 rounded-xl" />
+                        <Input id="lastName" value={lastName} onChange={(e) => editField(setLastName)(e.target.value)} placeholder="Doe" className="h-11" />
                       </SettingsField>
                     </div>
 
                     <SettingsField label="Headline" htmlFor="headline" hint="A short line under your name, up to 100 characters.">
-                      <Input id="headline" value={headline} onChange={(e) => editField(setHeadline)(e.target.value)} maxLength={100} placeholder="e.g. Software Engineer | Entrepreneur" className="h-11 rounded-xl" />
+                      <Input id="headline" value={headline} onChange={(e) => editField(setHeadline)(e.target.value)} maxLength={100} placeholder="e.g. Software Engineer | Entrepreneur" className="h-11" />
                     </SettingsField>
 
                     <SettingsField label="Bio" htmlFor="bio">
-                      <Textarea id="bio" value={bio} onChange={(e) => editField(setBio)(e.target.value)} rows={4} placeholder="Tell people a little about yourself." className="rounded-xl" />
+                      <Textarea id="bio" value={bio} onChange={(e) => editField(setBio)(e.target.value)} rows={4} placeholder="Tell people a little about yourself." />
                     </SettingsField>
                   </div>
                 </SettingsSection>
@@ -1000,20 +1001,20 @@ export default function SettingsPage() {
                 <SettingsSection title="Contact" description="Your email is how you sign in and cannot be changed here.">
                   <div className="space-y-4">
                     <SettingsField label="Email address" htmlFor="email">
-                      <Input id="email" value={user?.email || ''} disabled className="h-11 rounded-xl" />
+                      <Input id="email" value={user?.email || ''} disabled className="h-11" />
                     </SettingsField>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-up-lg border border-border px-4 py-3">
                       <span className="inline-flex items-center gap-2 text-sm">
                         {emailVerified ? (
                           <>
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                            <span className="font-medium text-emerald-600 dark:text-emerald-400">Email verified</span>
+                            <CheckCircle2 className="h-4 w-4 text-foreground" />
+                            <span className="rounded-full bg-up-lime-tint px-2 py-0.5 font-bold text-foreground">Email verified</span>
                           </>
                         ) : (
                           <>
-                            <XCircle className="h-4 w-4 text-amber-500" />
-                            <span className="font-medium text-amber-700 dark:text-amber-400">Email not verified</span>
+                            <XCircle className="h-4 w-4 text-up-orange-ink" />
+                            <span className="font-bold text-up-orange-ink">Email not verified</span>
                           </>
                         )}
                       </span>
@@ -1035,7 +1036,7 @@ export default function SettingsPage() {
                             }
                           }}
                           disabled={isResendingCode}
-                          className="h-9 rounded-xl"
+                          className="h-9"
                         >
                           {isResendingCode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
                           Verify
@@ -1044,7 +1045,7 @@ export default function SettingsPage() {
                     </div>
 
                     <SettingsField label="Phone number" htmlFor="phone">
-                      <Input id="phone" value={phoneNumber} onChange={(e) => editField(setPhoneNumber)(e.target.value)} placeholder="+234 000 0000 000" className="h-11 rounded-xl" />
+                      <Input id="phone" value={phoneNumber} onChange={(e) => editField(setPhoneNumber)(e.target.value)} placeholder="+234 000 0000 000" className="h-11" />
                     </SettingsField>
                   </div>
                 </SettingsSection>
@@ -1053,22 +1054,22 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="Job title" htmlFor="workTitle">
-                        <Input id="workTitle" value={workTitle} onChange={(e) => editField(setWorkTitle)(e.target.value)} placeholder="Product Designer" className="h-11 rounded-xl" />
+                        <Input id="workTitle" value={workTitle} onChange={(e) => editField(setWorkTitle)(e.target.value)} placeholder="Product Designer" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Company" htmlFor="workCompany">
-                        <Input id="workCompany" value={workCompany} onChange={(e) => editField(setWorkCompany)(e.target.value)} placeholder="Acme Inc." className="h-11 rounded-xl" />
+                        <Input id="workCompany" value={workCompany} onChange={(e) => editField(setWorkCompany)(e.target.value)} placeholder="Acme Inc." className="h-11" />
                       </SettingsField>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="School" htmlFor="eduSchool">
-                        <Input id="eduSchool" value={educationSchool} onChange={(e) => editField(setEducationSchool)(e.target.value)} placeholder="University of Lagos" className="h-11 rounded-xl" />
+                        <Input id="eduSchool" value={educationSchool} onChange={(e) => editField(setEducationSchool)(e.target.value)} placeholder="University of Lagos" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Degree" htmlFor="eduDegree">
-                        <Input id="eduDegree" value={educationDegree} onChange={(e) => editField(setEducationDegree)(e.target.value)} placeholder="BSc" className="h-11 rounded-xl" />
+                        <Input id="eduDegree" value={educationDegree} onChange={(e) => editField(setEducationDegree)(e.target.value)} placeholder="BSc" className="h-11" />
                       </SettingsField>
                     </div>
                     <SettingsField label="Field of study" htmlFor="eduField">
-                      <Input id="eduField" value={educationField} onChange={(e) => editField(setEducationField)(e.target.value)} placeholder="Computer Science" className="h-11 rounded-xl" />
+                      <Input id="eduField" value={educationField} onChange={(e) => editField(setEducationField)(e.target.value)} placeholder="Computer Science" className="h-11" />
                     </SettingsField>
                   </div>
                 </SettingsSection>
@@ -1104,9 +1105,9 @@ export default function SettingsPage() {
                         }
                       }}
                       placeholder="Add a skill"
-                      className="h-11 rounded-xl"
+                      className="h-11"
                     />
-                    <Button type="button" variant="outline" onClick={() => { addSkill(); setIsDirty(true) }} className="h-11 shrink-0 rounded-xl">
+                    <Button type="button" variant="outline" onClick={() => { addSkill(); setIsDirty(true) }} className="h-11 shrink-0">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1115,7 +1116,7 @@ export default function SettingsPage() {
                 <SettingsSection title="Links" description="Where people can find you.">
                   <div className="space-y-4">
                     <SettingsField label="Website" htmlFor="website">
-                      <Input id="website" value={website} onChange={(e) => editField(setWebsite)(e.target.value)} placeholder="https://yoursite.com" className="h-11 rounded-xl" />
+                      <Input id="website" value={website} onChange={(e) => editField(setWebsite)(e.target.value)} placeholder="https://yoursite.com" className="h-11" />
                     </SettingsField>
                     <div className="grid gap-4 sm:grid-cols-2">
                       {socialPlatforms.map((platform) => (
@@ -1125,7 +1126,7 @@ export default function SettingsPage() {
                             value={socialLinks[platform.key] || ''}
                             onChange={(e) => { updateSocialLink(platform.key, e.target.value); setIsDirty(true) }}
                             placeholder={platform.placeholder}
-                            className="h-11 rounded-xl"
+                            className="h-11"
                           />
                         </SettingsField>
                       ))}
@@ -1142,14 +1143,14 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="Country" htmlFor="country">
-                        <Input id="country" value={country} onChange={(e) => editField(setCountry)(e.target.value)} placeholder="Nigeria" className="h-11 rounded-xl" />
+                        <Input id="country" value={country} onChange={(e) => editField(setCountry)(e.target.value)} placeholder="Nigeria" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Province or state" htmlFor="province">
-                        <Input id="province" value={province} onChange={(e) => editField(setProvince)(e.target.value)} placeholder="Lagos" className="h-11 rounded-xl" />
+                        <Input id="province" value={province} onChange={(e) => editField(setProvince)(e.target.value)} placeholder="Lagos" className="h-11" />
                       </SettingsField>
                     </div>
                     <SettingsField label="City" htmlFor="city" hint="Optional.">
-                      <Input id="city" value={city} onChange={(e) => editField(setCity)(e.target.value)} placeholder="Ikeja" className="h-11 rounded-xl" />
+                      <Input id="city" value={city} onChange={(e) => editField(setCity)(e.target.value)} placeholder="Ikeja" className="h-11" />
                     </SettingsField>
                   </div>
                 </SettingsSection>
@@ -1158,7 +1159,7 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <SettingsField label="Career stage">
                       <Select value={careerStage} onValueChange={(v) => editField(setCareerStage)(v)}>
-                        <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select career stage" /></SelectTrigger>
+                        <SelectTrigger className="h-11"><SelectValue placeholder="Select career stage" /></SelectTrigger>
                         <SelectContent>
                           {careerStages.map((stage) => <SelectItem key={stage} value={stage}>{stage}</SelectItem>)}
                         </SelectContent>
@@ -1167,7 +1168,7 @@ export default function SettingsPage() {
 
                     <SettingsField label="Education level">
                       <Select value={educationLevel} onValueChange={(v) => editField(setEducationLevel)(v)}>
-                        <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select education level" /></SelectTrigger>
+                        <SelectTrigger className="h-11"><SelectValue placeholder="Select education level" /></SelectTrigger>
                         <SelectContent>
                           {educationLevels.map((level) => <SelectItem key={level} value={level}>{level}</SelectItem>)}
                         </SelectContent>
@@ -1176,10 +1177,10 @@ export default function SettingsPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="Field of study" htmlFor="fieldOfStudy">
-                        <Input id="fieldOfStudy" value={fieldOfStudy} onChange={(e) => editField(setFieldOfStudy)(e.target.value)} placeholder="Economics" className="h-11 rounded-xl" />
+                        <Input id="fieldOfStudy" value={fieldOfStudy} onChange={(e) => editField(setFieldOfStudy)(e.target.value)} placeholder="Economics" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Institution" htmlFor="institution">
-                        <Input id="institution" value={institution} onChange={(e) => editField(setInstitution)(e.target.value)} placeholder="University of Lagos" className="h-11 rounded-xl" />
+                        <Input id="institution" value={institution} onChange={(e) => editField(setInstitution)(e.target.value)} placeholder="University of Lagos" className="h-11" />
                       </SettingsField>
                     </div>
                   </div>
@@ -1343,17 +1344,17 @@ export default function SettingsPage() {
                 <SettingsSection title="Password" description="At least 8 characters, with an uppercase letter, a lowercase letter and a number.">
                   <div className="space-y-4">
                     <SettingsField label="Current password" htmlFor="currentPassword">
-                      <Input id="currentPassword" type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="h-11 rounded-xl" />
+                      <Input id="currentPassword" type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="h-11" />
                     </SettingsField>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <SettingsField label="New password" htmlFor="newPassword">
-                        <Input id="newPassword" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" className="h-11 rounded-xl" />
+                        <Input id="newPassword" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" className="h-11" />
                       </SettingsField>
                       <SettingsField label="Confirm new password" htmlFor="confirmPassword">
-                        <Input id="confirmPassword" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="h-11 rounded-xl" />
+                        <Input id="confirmPassword" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="h-11" />
                       </SettingsField>
                     </div>
-                    <Button type="button" onClick={handleChangePassword} disabled={isChangingPassword} className="h-10 rounded-xl">
+                    <Button type="button" onClick={handleChangePassword} disabled={isChangingPassword} className="h-10">
                       {isChangingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
                       Update password
                     </Button>
@@ -1412,7 +1413,7 @@ export default function SettingsPage() {
                 <SettingsSection title="Two-factor authentication" description="An extra step when signing in.">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm text-muted-foreground">Not available yet.</p>
-                    <Button variant="outline" className="h-10 rounded-xl" disabled>
+                    <Button variant="outline" className="h-10" disabled>
                       Enable 2FA
                     </Button>
                   </div>
@@ -1424,7 +1425,7 @@ export default function SettingsPage() {
                       <p className="text-sm font-medium text-foreground">Sign out</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">You can sign back in anytime.</p>
                     </div>
-                    <Button variant="outline" onClick={logout} className="h-10 rounded-xl">
+                    <Button variant="outline" onClick={logout} className="h-10">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign out
                     </Button>
@@ -1432,9 +1433,9 @@ export default function SettingsPage() {
                 </SettingsSection>
 
                 {/* Destructive actions live last, alone, and clearly marked */}
-                <section className="rounded-2xl border border-red-500/30 bg-red-500/[0.03]">
-                  <div className="border-b border-red-500/20 px-5 py-4">
-                    <h2 className="text-sm font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
+                <section className="rounded-up-xl border border-destructive/40 bg-card">
+                  <div className="border-b border-destructive/20 px-5 py-4 sm:px-[22px]">
+                    <h2 className="text-base font-bold text-destructive">Danger zone</h2>
                     <p className="mt-0.5 text-xs text-muted-foreground">This cannot be undone.</p>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3 p-5">
@@ -1448,7 +1449,7 @@ export default function SettingsPage() {
                       variant="outline"
                       onClick={handleDeleteAccount}
                       disabled={isDeletingAccount}
-                      className="h-10 rounded-xl border-red-500/40 text-red-600 hover:bg-red-500/10 dark:text-red-400"
+                      className="h-10 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       {isDeletingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                       Delete account
@@ -1501,7 +1502,7 @@ export default function SettingsPage() {
                 type="email"
                 value={upgradeForm.email}
                 onChange={(e) => setUpgradeForm((prev) => ({ ...prev, email: e.target.value }))}
-                className="bg-muted border-border rounded-xl"
+               
                 required
                 disabled
               />
@@ -1516,12 +1517,12 @@ export default function SettingsPage() {
                   setUpgradeError(null)
                 }}
                 placeholder="Enter your password to confirm"
-                className="bg-muted border-border rounded-xl"
+               
                 required
               />
             </div>
             {upgradeError && (
-              <p className="text-sm text-red-400">{upgradeError}</p>
+              <p className="text-sm text-destructive">{upgradeError}</p>
             )}
             <DialogFooter>
               <Button
@@ -1532,11 +1533,11 @@ export default function SettingsPage() {
                   setUpgradeError(null)
                 }}
                 disabled={isUpgrading}
-                className="rounded-xl"
+               
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isUpgrading} className="bg-primary hover:bg-primary/90 rounded-xl gap-2">
+              <Button type="submit" disabled={isUpgrading} className="gap-2">
                 {isUpgrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
                 Upgrade
               </Button>

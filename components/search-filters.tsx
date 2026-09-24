@@ -64,7 +64,7 @@ function Select({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">
+      <Label htmlFor={id} className="text-[13px] font-bold text-foreground">
         {label}
       </Label>
       <div className="relative">
@@ -73,7 +73,7 @@ function Select({
           value={value ?? ""}
           onChange={(event) => onChange(event.target.value || undefined)}
           disabled={options.length === 0}
-          className="h-10 w-full appearance-none rounded-xl border border-border/70 bg-background px-3 pr-8 text-sm disabled:opacity-50"
+          className="h-11 w-full appearance-none rounded-up-md border-[1.5px] border-border bg-card px-4 pr-8 text-sm disabled:opacity-50"
         >
           <option value="">{options.length === 0 ? "None yet" : placeholder}</option>
           {options.map((option) => (
@@ -107,15 +107,15 @@ function Toggle({
       type="button"
       onClick={() => onChange(next)}
       className={cn(
-        "rounded-xl border px-3 py-2 text-sm transition-colors",
+        "inline-flex h-8 items-center rounded-full border px-3 text-[13px] font-semibold transition-colors",
         value === undefined
-          ? "border-border/70 text-muted-foreground hover:text-foreground"
-          : "border-primary bg-primary/10 font-medium text-foreground",
+          ? "border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground"
+          : "border-up-solid bg-up-solid text-up-on-solid",
       )}
     >
       {label}
       {value !== undefined && (
-        <span className="ml-1.5 text-primary">{value ? "yes" : "no"}</span>
+        <span className="ml-1.5 text-up-orange dark:text-up-orange-ink">{value ? "yes" : "no"}</span>
       )}
     </button>
   )
@@ -162,12 +162,12 @@ export default function SearchFiltersPanel({
           size="sm"
           onClick={() => setOpen((current) => !current)}
           aria-expanded={open}
-          className="shrink-0 rounded-xl"
+          className="shrink-0"
         >
           <SlidersHorizontal className="mr-2 h-4 w-4" aria-hidden />
           Filters
           {active > 0 && (
-            <span className="ml-2 rounded-full bg-primary/20 px-1.5 text-xs font-medium">
+            <span className="ml-2 rounded-full bg-up-orange px-1.5 text-xs font-bold text-up-navy">
               {active}
             </span>
           )}
@@ -180,7 +180,7 @@ export default function SearchFiltersPanel({
             type="button"
             variant="ghost"
             size="sm"
-            className="shrink-0 rounded-xl px-2 text-muted-foreground sm:px-3"
+            className="shrink-0 px-2 text-muted-foreground sm:px-3"
             onClick={() => onChange({})}
             aria-label="Clear all filters"
           >
@@ -192,7 +192,7 @@ export default function SearchFiltersPanel({
       </div>
 
       {open && (
-        <div className="space-y-4 rounded-2xl border border-border/70 bg-card/70 p-4">
+        <div className="space-y-4 rounded-up-xl border border-border bg-card px-[22px] py-5">
           {hasLocation && (
             <div className="grid gap-4 sm:grid-cols-2">
               <Select

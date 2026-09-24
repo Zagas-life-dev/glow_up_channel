@@ -56,10 +56,10 @@ function Chip({
       aria-label={preset.label}
       title={preset.label}
       className={cn(
-        "min-h-9 shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-[0.97]",
+        "inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-[13px] font-semibold transition-colors",
         active
-          ? "border-primary/40 bg-primary/15 text-foreground shadow-sm ring-1 ring-primary/20"
-          : "border-border/60 bg-card/50 text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
+          ? "border-up-solid bg-up-solid text-up-on-solid"
+          : "border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground",
       )}
     >
       {preset.chip}
@@ -100,7 +100,7 @@ export function DatePresetChips({
     >
       <span
         id={headingId}
-        className="shrink-0 text-caption font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+        className="shrink-0 text-xs font-bold text-muted-foreground"
       >
         {heading}
       </span>
@@ -147,7 +147,7 @@ export function DateRangeFields({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="filter-date-basis" className="text-xs text-muted-foreground">
+          <Label htmlFor="filter-date-basis" className="text-[13px] font-bold text-foreground">
             Dates measure
           </Label>
           <div className="relative">
@@ -157,7 +157,7 @@ export function DateRangeFields({
               onChange={(event) =>
                 onChange(setDateBasis(filters, event.target.value as DateBasis))
               }
-              className="h-10 w-full appearance-none rounded-xl border border-border/70 bg-background px-3 pr-8 text-sm"
+              className="h-11 w-full appearance-none rounded-up-md border-[1.5px] border-border bg-card px-4 pr-8 text-sm"
             >
               <option value="deadline">Closing date</option>
               <option value="posted">Date added</option>
@@ -170,7 +170,7 @@ export function DateRangeFields({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="filter-date-from" className="text-xs text-muted-foreground">
+          <Label htmlFor="filter-date-from" className="text-[13px] font-bold text-foreground">
             From
           </Label>
           <Input
@@ -179,12 +179,12 @@ export function DateRangeFields({
             value={filters.dateFrom ?? ""}
             max={filters.dateTo || undefined}
             onChange={(event) => set({ dateFrom: event.target.value || undefined })}
-            className="rounded-xl"
+           
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="filter-date-to" className="text-xs text-muted-foreground">
+          <Label htmlFor="filter-date-to" className="text-[13px] font-bold text-foreground">
             To
           </Label>
           <Input
@@ -193,7 +193,7 @@ export function DateRangeFields({
             value={filters.dateTo ?? ""}
             min={filters.dateFrom || undefined}
             onChange={(event) => set({ dateTo: event.target.value || undefined })}
-            className="rounded-xl"
+           
           />
         </div>
       </div>

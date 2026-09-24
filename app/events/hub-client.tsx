@@ -13,8 +13,6 @@ const config: PublicHubConfig = {
   subheading: "Conferences, workshops, and networking events",
   searchPlaceholder: "Search events by title, category, or location...",
   icon: RiCalendarLine,
-  iconClassName: "text-emerald-400",
-  tileClassName: "border-emerald-500/20 bg-emerald-500/15",
   suggestionTags: [
     "Conference",
     "Workshop",

@@ -13,8 +13,6 @@ const config: PublicHubConfig = {
   subheading: "Guides, templates, toolkits, and courses",
   searchPlaceholder: "Search resources by title, category, or topic...",
   icon: RiBookLine,
-  iconClassName: "text-violet-400",
-  tileClassName: "border-violet-500/20 bg-violet-500/15",
   suggestionTags: [
     "E-books",
     "Courses",

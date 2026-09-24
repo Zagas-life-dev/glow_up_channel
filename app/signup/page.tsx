@@ -10,10 +10,18 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { Target } from 'lucide-react'
+import { RiCheckLine, RiCloseLine, RiEyeLine, RiEyeOffLine, RiFlashlightLine, RiPlayList2Line, RiUserLine } from 'react-icons/ri'
+import { cn } from '@/lib/utils'
+import { AuthShell, AuthHeading, AuthError } from '@/components/up/auth-shell'
 import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
+
+/** Mirrors the password rules in the schema below, so the checklist ticks live. */
+const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
+  { label: 'At least 8 characters', test: (v) => v.length >= 8 },
+  { label: 'One uppercase letter (A-Z)', test: (v) => /[A-Z]/.test(v) },
+  { label: 'One lowercase letter (a-z)', test: (v) => /[a-z]/.test(v) },
+  { label: 'One number (0-9)', test: (v) => /[0-9]/.test(v) },
+]
 
 const signupSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -40,6 +48,7 @@ export default function SignupPage() {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -77,266 +86,158 @@ export default function SignupPage() {
     }
   }
 
+  const password = watch('password') ?? ''
+  const rulesPass = PASSWORD_RULES.every((rule) => rule.test(password))
+  const fieldError = (message?: string) =>
+    message ? <p className="text-[13px] font-semibold text-destructive">{message}</p> : null
+
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-rose-500/6 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
-        {/* Left: Story / benefits */}
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Create your UP account
-            </span>
+    <AuthShell
+      badge="Join 10,000+ members"
+      headline={<>Your glow-up starts <em>here</em></>}
+      mobileHeadline={<>Get access. Get <em>UP</em>.</>}
+      subtitle="Real opportunities, resources and support for young Africans preparing to lead the future of global work."
+      points={[
+        { icon: RiUserLine, title: 'For seekers', text: 'Discover roles, programs, and events that match your goals.' },
+        { icon: RiFlashlightLine, title: 'Founder Batch', text: 'Upgrade after joining to publish your own opportunities and events.' },
+        { icon: RiPlayList2Line, title: 'Built for growth', text: 'Use playlists, sessions, and tracking to stay consistent.' },
+      ]}
+    >
+      <AuthHeading title="Create your account">Free for seekers. Takes about a minute.</AuthHeading>
+
+      {error && <AuthError>{error}</AuthError>}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+        <div className="grid grid-cols-2 gap-3.5">
+          <div className="space-y-[7px]">
+            <Label htmlFor="firstName" className="text-[13px] font-bold text-foreground">
+              First name
+            </Label>
+            <Controller
+              name="firstName"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} id="firstName" placeholder="First name" className="h-12" disabled={isLoading} required />
+              )}
+            />
+            {fieldError(errors.firstName?.message)}
           </div>
 
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Join a community that{" "}
-              <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                stays locked in
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-              Build your profile once, then use UP to find opportunities, track your
-              progress, and stay focused with Locked In sessions.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3 text-xs sm:text-sm">
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <FlaticonIcon name="users" className="w-4 h-4" aria-hidden />
-                <span className="font-medium">For seekers</span>
-              </div>
-              <p className="text-muted-foreground">
-                Discover roles, programs, and events that match your goals.
-              </p>
-            </div>
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <Target className="w-4 h-4 text-orange-400" aria-hidden />
-                <span className="font-medium">Founder Batch</span>
-              </div>
-              <p className="text-muted-foreground">
-                Upgrade after joining to publish your own opportunities and events.
-              </p>
-            </div>
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <FlaticonIcon name="sparkles" className="w-4 h-4" aria-hidden />
-                <span className="font-medium">Built for growth</span>
-              </div>
-              <p className="text-muted-foreground">
-                Use playlists, sessions, and tracking to stay consistent.
-              </p>
-            </div>
+          <div className="space-y-[7px]">
+            <Label htmlFor="lastName" className="text-[13px] font-bold text-foreground">
+              Last name
+            </Label>
+            <Controller
+              name="lastName"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} id="lastName" placeholder="Last name" className="h-12" disabled={isLoading} required />
+              )}
+            />
+            {fieldError(errors.lastName?.message)}
           </div>
         </div>
 
-        {/* Right: Signup card */}
-        <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
-          <CardHeader className="space-y-1 text-left pb-4">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              Create your UP account
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              It takes less than a minute to get set up.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-
-            {/* Error Message */}
-            {error && (
-              <div className="flex items-center gap-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
-                <FlaticonIcon name="exclamation" className="w-4 h-4" aria-hidden />
-                <span className="text-sm">{error}</span>
-              </div>
+        <div className="space-y-[7px]">
+          <Label htmlFor="email" className="text-[13px] font-bold text-foreground">
+            Email
+          </Label>
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} id="email" type="email" placeholder="you@example.com" className="h-12" disabled={isLoading} />
             )}
+          />
+          {fieldError(errors.email?.message)}
+        </div>
 
-            {/* Signup Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-foreground font-semibold text-sm">
-                    First Name <span className="text-red-400">*</span>
-                  </Label>
-                  <Controller
-                    name="firstName"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="firstName"
-                        placeholder="First name"
-                        className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                        required
-                      />
-                    )}
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-red-400">{errors.firstName.message}</p>
-                  )}
-                </div>
+        <div className="space-y-[7px]">
+          <Label htmlFor="dateOfBirth" className="text-[13px] font-bold text-foreground">
+            Date of birth
+          </Label>
+          <Controller
+            name="dateOfBirth"
+            control={control}
+            render={({ field }) => {
+              const { min, max } = getDatePickerPropsFor5Plus()
+              return (
+                <Input {...field} id="dateOfBirth" type="date" min={min} max={max} className="h-12" disabled={isLoading} required />
+              )
+            }}
+          />
+          <p className="text-xs text-muted-foreground">You must be at least 5 years old to create an account.</p>
+          {fieldError(errors.dateOfBirth?.message)}
+        </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-foreground font-semibold text-sm">
-                    Last Name <span className="text-red-400">*</span>
-                  </Label>
-                  <Controller
-                    name="lastName"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="lastName"
-                        placeholder="Last name"
-                        className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                        required
-                      />
-                    )}
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-red-400">{errors.lastName.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-semibold text-sm">
-                  Email
-                </Label>
-                <Controller
-                  name="email"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      className="h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                      disabled={isLoading}
-                    />
-                  )}
+        <div className="space-y-[7px]">
+          <Label htmlFor="password" className="text-[13px] font-bold text-foreground">
+            Password
+          </Label>
+          <div className="relative">
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Create a password"
+                  className="h-12 pr-11"
+                  disabled={isLoading}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-400">{errors.email.message}</p>
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground"
+              disabled={isLoading}
+            >
+              {showPassword ? <RiEyeOffLine className="h-4 w-4" aria-hidden /> : <RiEyeLine className="h-4 w-4" aria-hidden />}
+            </button>
+          </div>
+          {/* Rules tick orange as they pass — no red/green pair. */}
+          <ul className="grid gap-1.5 pt-1.5 text-[13px]" aria-label="Password rules">
+            {PASSWORD_RULES.map((rule) => {
+              const ok = rule.test(password)
+              return (
+                <li key={rule.label} className={cn('flex items-center gap-2', ok ? 'text-foreground' : 'text-muted-foreground')}>
+                  {ok ? (
+                    <RiCheckLine className="h-4 w-4 text-up-orange-ink" aria-hidden />
+                  ) : (
+                    <RiCloseLine className="h-4 w-4" aria-hidden />
                   )}
-              </div>
+                  {rule.label}
+                  <span className="sr-only">{ok ? '(met)' : '(not met)'}</span>
+                </li>
+              )
+            })}
+          </ul>
+          {fieldError(errors.password?.message)}
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="text-foreground font-semibold text-sm">
-                  Date of Birth
-                </Label>
-                <Controller
-                  name="dateOfBirth"
-                  control={control}
-                  render={({ field }) => {
-                    const { min, max } = getDatePickerPropsFor5Plus()
-                    
-                    return (
-                      <Input
-                        {...field}
-                        id="dateOfBirth"
-                        type="date"
-                        min={min}
-                        max={max}
-                        className="h-11 bg-muted/60 border-border/60 text-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                        required
-                      />
-                    )
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  You must be at least 5 years old to create an account.
-                </p>
-                {errors.dateOfBirth && (
-                  <p className="text-sm text-red-400">{errors.dateOfBirth.message}</p>
-                  )}
-              </div>
+        <Button type="submit" className="h-[52px] w-full text-base" disabled={isLoading || !rulesPass}>
+          {isLoading ? 'Creating your account…' : 'Create account'}
+        </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-semibold text-sm">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Controller
-                    name="password"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Create a password"
-                        className="pr-10 h-11 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                      />
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <FlaticonIcon name="eye-off" className="h-5 w-5" aria-hidden /> : <FlaticonIcon name="eye" className="h-5 w-5" aria-hidden />}
-                  </button>
-                </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p>Password must contain:</p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-2">
-                    <li>At least 8 characters</li>
-                    <li>One uppercase letter (A-Z)</li>
-                    <li>One lowercase letter (a-z)</li>
-                    <li>One number (0-9)</li>
-                  </ul>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-red-400">{errors.password.message}</p>
-                  )}
-              </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Already on UP?{' '}
+          <Link href="/login" className="font-bold text-foreground hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </form>
 
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200"
-                disabled={isLoading}
-              >
-                <FlaticonIcon name="user-plus" className="w-4 h-4 mr-2" aria-hidden />
-                Create Account
-              </Button>
-            </form>
-
-            <div className="space-y-2 text-left text-sm text-muted-foreground">
-              <div>
-                Already have an account?{' '}
-                <Link
-                  href="/login"
-                  className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                >
-                  Sign in
-                </Link>
-              </div>
-              <p className="text-xs max-w-sm">
-                By creating an account, you agree to our{' '}
-                <Link
-                  href="/privacy-policy"
-                  className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline"
-                >
-                  Privacy Policy
-                </Link>
-                .
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      <p className="mt-6 text-xs text-muted-foreground">
+        By creating an account, you agree to our{' '}
+        <Link href="/privacy-policy" className="font-semibold text-foreground underline-offset-2 hover:underline">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+    </AuthShell>
   )
 }
-

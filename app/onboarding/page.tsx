@@ -126,34 +126,43 @@ export default function OnboardingPage() {
   const CurrentStepComponent = steps[currentStep].component
   const isLastStep = currentStep === steps.length - 1
 
+  // What the finished feed will be built from, so far — shown in the desktop side panel.
+  const feedSummary = [
+    Array.isArray(formData.interests) && formData.interests.length > 0
+      ? `${formData.interests.length} interest${formData.interests.length === 1 ? '' : 's'}`
+      : null,
+    formData.city || formData.province || formData.country || null,
+    formData.careerStage || null,
+  ].filter(Boolean) as string[]
+
   return (
-    <div className="flex min-h-screen flex-col bg-page">
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6">
+    <div className="-mt-4 flex min-h-screen bg-page lg:grid lg:grid-cols-[minmax(0,1fr)_520px]">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6 lg:max-w-[520px] lg:py-12">
         {/* Segmented progress — how much is left is legible at a glance, unlike one long bar */}
         <div className="mb-5 flex items-center gap-1.5" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={steps.length}>
           {steps.map((step, index) => (
             <span
               key={step.id}
               className={cn(
-                'h-1 flex-1 rounded-full transition-colors duration-300',
-                index <= currentStep ? 'bg-primary' : 'bg-muted',
+                'h-[5px] flex-1 rounded-full transition-colors duration-300',
+                index <= currentStep ? 'bg-up-orange' : 'bg-up-fill',
               )}
             />
           ))}
         </div>
 
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-6 flex items-center gap-2.5">
           {currentStep > 0 ? (
             <button
               type="button"
               onClick={() => setCurrentStep((prev) => prev - 1)}
               aria-label="Back"
-              className="-ml-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
             >
-              <RiArrowLeftLine className="h-4.5 w-4.5" />
+              <RiArrowLeftLine className="h-4 w-4" />
             </button>
           ) : null}
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-up-orange-ink">
             Step {currentStep + 1} of {steps.length}
           </p>
         </div>
@@ -174,7 +183,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={() => stepComponentRef.current?.submit()}
             disabled={!stepValid || isCompleting}
-            className="h-14 w-full rounded-2xl text-base font-semibold shadow-lg shadow-primary/20 disabled:opacity-40 disabled:shadow-none"
+            className="h-[52px] w-full text-base disabled:opacity-40"
           >
             {isCompleting ? (
               <>
@@ -192,6 +201,25 @@ export default function OnboardingPage() {
           </p>
         </div>
       </div>
+
+      {/* Desktop: the finished feed taking shape. The flow itself stays one column. */}
+      <aside className="relative hidden overflow-hidden bg-up-navy px-14 py-12 text-up-on-navy lg:flex lg:flex-col lg:justify-end">
+        <div aria-hidden className="pointer-events-none absolute -right-5 top-20 h-[260px] w-[360px]">
+          <i className="absolute left-10 top-5 h-[150px] w-[220px] -rotate-[8deg] rounded-[22px] bg-[#1C2554]" />
+          <i className="absolute left-[120px] top-[70px] h-[140px] w-[200px] rotate-[5deg] rounded-[22px] bg-up-orange" />
+          <i className="absolute left-[70px] top-[150px] h-[86px] w-[120px] -rotate-[4deg] rounded-[22px] bg-up-lime" />
+        </div>
+        <span className="relative inline-flex w-max items-center gap-2 rounded-full border border-up-border-on-navy px-3 py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-up-on-navy-muted">
+          <i className="h-2 w-2 rounded-full bg-up-lime" aria-hidden />
+          Your feed, so far
+        </span>
+        <p className="relative mt-4 font-display text-[30px] font-bold leading-[1.2]">
+          {feedSummary.length > 0 ? feedSummary.join(' · ') : 'A few answers away'}
+        </p>
+        <p className="relative mt-4 max-w-[420px] text-[15px] leading-relaxed text-up-orange">
+          Every answer moves real listings up or down. You&apos;ll see the result the moment you finish.
+        </p>
+      </aside>
     </div>
   )
 }

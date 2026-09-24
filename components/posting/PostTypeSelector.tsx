@@ -2,6 +2,22 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { UP_KIND, type UpKind } from "@/components/up/kind";
+
+/** Legacy colour names on the options map to the UP content kinds. */
+const COLOR_KIND: Record<PostTypeColor, UpKind> = {
+  orange: "opportunity",
+  primary: "job",
+  emerald: "event",
+  violet: "resource",
+};
+
+const ACTIVE_BG: Record<UpKind, string> = {
+  opportunity: "bg-up-orange-tint",
+  job: "bg-up-fill",
+  event: "bg-up-lime-tint",
+  resource: "bg-up-fill",
+};
 
 export type PostTypeColor = "orange" | "primary" | "emerald" | "violet";
 
@@ -31,6 +47,7 @@ export function PostTypeSelector<TId extends string>({
       {types.map((type) => {
         const Icon = type.icon;
         const isActive = selectedType === type.id;
+        const kind = COLOR_KIND[type.color ?? "orange"];
 
         return (
           <button
@@ -40,39 +57,21 @@ export function PostTypeSelector<TId extends string>({
               if (!disabled) onSelect(type.id);
             }}
             disabled={disabled}
+            aria-pressed={isActive}
             className={cn(
-              "p-4 rounded-2xl border text-left transition-all duration-200 group",
-              "bg-card border-border",
-              "hover:bg-muted hover:border-border",
-              disabled && "opacity-50 cursor-not-allowed",
-              isActive && !disabled && "border-orange-500/40 ring-1 ring-orange-500/30"
+              "group rounded-up-lg border-[1.5px] p-4 text-left transition-colors duration-200",
+              disabled && "cursor-not-allowed opacity-50",
+              // The chosen type: outlined navy (cream on dark) on its own tint.
+              isActive && !disabled
+                ? cn("border-up-solid", ACTIVE_BG[kind])
+                : "border-border bg-card hover:border-up-border-hover"
             )}
           >
-            <div
-              className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center mb-3",
-                type.color === "orange" && "bg-primary/10",
-                type.color === "primary" && "bg-primary/10",
-                type.color === "emerald" && "bg-emerald-500/10",
-                type.color === "violet" && "bg-violet-500/10"
-              )}
-            >
-              <Icon
-                className={cn(
-                  "w-5 h-5",
-                  type.color === "orange" && "text-orange-500",
-                  type.color === "primary" && "text-primary",
-                  type.color === "emerald" && "text-emerald-500",
-                  type.color === "violet" && "text-violet-500"
-                )}
-              />
-            </div>
-            <h3 className="font-semibold text-foreground mb-1 group-hover:text-orange-400 transition-colors">
-              {type.title}
-            </h3>
-            {type.desc && (
-              <p className="text-xs text-muted-foreground">{type.desc}</p>
-            )}
+            <span className={cn("mb-3 grid h-11 w-11 place-items-center rounded-up-md", UP_KIND[kind].chip)}>
+              <Icon className="h-[22px] w-[22px]" />
+            </span>
+            <h3 className="mb-1 font-bold text-foreground">{type.title}</h3>
+            {type.desc && <p className="text-xs text-muted-foreground">{type.desc}</p>}
           </button>
         );
       })}
@@ -81,4 +80,3 @@ export function PostTypeSelector<TId extends string>({
 }
 
 export default PostTypeSelector;
-

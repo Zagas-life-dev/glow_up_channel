@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
+import { UP_KIND } from '@/components/up/kind'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -140,16 +141,16 @@ function ContentRow({
   const Icon = config.icon
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card/40 p-3 transition-colors hover:border-primary/20 hover:bg-card/80">
-      <div className="flex items-start gap-3">
-        <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border", config.bg, config.border)}>
-          <Icon className={cn("h-4 w-4", config.text)} />
+    <div className="rounded-up-lg border border-border bg-card px-4 py-3.5 transition-colors hover:border-up-border-hover">
+      <div className="flex items-start gap-3.5">
+        <span className={cn("grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm", config.bg, config.border)}>
+          <Icon className={cn("h-[18px] w-[18px]", config.text)} />
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-foreground">{item.title}</h3>
-            <Badge className={cn("shrink-0 rounded-md px-1.5 py-0 text-[10px] font-semibold", getStatusColor(item.status, item.isApproved))}>
+            <h3 className="min-w-0 flex-1 truncate text-[15px] font-bold text-foreground">{item.title}</h3>
+            <Badge className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold hover:bg-inherit", getStatusColor(item.status, item.isApproved))}>
               {getStatusText(item.status, item.isApproved)}
             </Badge>
             {showActions ? (
@@ -166,7 +167,7 @@ function ContentRow({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44 p-1">
                   <DropdownMenuItem onClick={() => onPromote?.(item)} className="cursor-pointer rounded-lg">
-                    <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                    <TrendingUp className="mr-2 h-4 w-4 text-up-orange-ink" />
                     Promote
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onEdit?.(item)} className="cursor-pointer rounded-lg">
@@ -180,7 +181,7 @@ function ContentRow({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => onDelete?.(item)}
-                    className="cursor-pointer rounded-lg text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                    className="cursor-pointer rounded-lg text-destructive focus:bg-destructive/10 focus:text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
@@ -190,8 +191,8 @@ function ContentRow({
             ) : null}
           </div>
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <span className="font-medium text-foreground/70">{config.label}</span>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+            <span className="font-bold text-foreground">{config.label}</span>
             <span className="opacity-40">·</span>
             <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
             {item.location ? (
@@ -205,12 +206,12 @@ function ContentRow({
               {item.metrics?.viewCount || 0}
             </span>
             <span className="inline-flex items-center gap-1 tabular-nums">
-              <Heart className="h-3 w-3 text-red-400" />
+              <Heart className="h-3 w-3" />
               {item.metrics?.likeCount || 0}
             </span>
             {showSaves ? (
               <span className="inline-flex items-center gap-1 tabular-nums">
-                <Bookmark className="h-3 w-3 text-primary" />
+                <Bookmark className="h-3 w-3" />
                 {item.metrics?.saveCount || 0}
               </span>
             ) : null}
@@ -465,22 +466,23 @@ export default function ProviderDashboard() {
 
   const getTypeConfig = (type: string) => {
     const configs = {
-      'job': { icon: Briefcase, bg: 'bg-primary/10', border: 'border-primary/30', text: 'text-primary', label: 'Job' },
-      'event': { icon: Calendar, bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-500 dark:text-emerald-400', label: 'Event' },
-      'opportunity': { icon: Target, bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-500 dark:text-orange-400', label: 'Opportunity' },
-      'resource': { icon: BookOpen, bg: 'bg-violet-500/10', border: 'border-violet-500/30', text: 'text-violet-500 dark:text-violet-400', label: 'Resource' }
+      // UP type chips: opportunity orange tint, job navy, event lime tint, resource outlined.
+      'job': { icon: Briefcase, bg: UP_KIND.job.chip, border: '', text: '', label: 'Job' },
+      'event': { icon: Calendar, bg: UP_KIND.event.chip, border: '', text: '', label: 'Event' },
+      'opportunity': { icon: Target, bg: UP_KIND.opportunity.chip, border: '', text: '', label: 'Opportunity' },
+      'resource': { icon: BookOpen, bg: UP_KIND.resource.chip, border: '', text: '', label: 'Resource' }
     }
     return configs[type as keyof typeof configs] || configs.opportunity
   }
 
   const getStatusColor = (status: string, isApproved: boolean) => {
-    if (status === 'draft' && !isApproved) return 'bg-primary/15 text-primary border border-primary/25'
-    if (status === 'draft' && isApproved) return 'bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/25'
-    if (status === 'inactive' && !isApproved) return 'bg-red-500/15 text-red-500 dark:text-red-400 border border-red-500/25'
-    if (status === 'inactive' && isApproved) return 'bg-muted text-muted-foreground border border-border'
-    if (status === 'active' && !isApproved) return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25'
-    if (status === 'active' && isApproved) return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
-    return 'bg-muted text-muted-foreground border border-border'
+    if (status === 'draft' && !isApproved) return 'bg-up-fill text-muted-foreground border border-transparent'
+    if (status === 'draft' && isApproved) return 'bg-up-fill text-foreground border border-transparent'
+    if (status === 'inactive' && !isApproved) return 'bg-destructive/10 text-destructive border border-transparent'
+    if (status === 'inactive' && isApproved) return 'bg-up-fill text-muted-foreground border border-transparent'
+    if (status === 'active' && !isApproved) return 'bg-up-orange-tint text-up-orange-ink border border-transparent'
+    if (status === 'active' && isApproved) return 'bg-up-lime-tint text-foreground border border-transparent'
+    return 'bg-up-fill text-muted-foreground border border-transparent'
   }
 
   const getStatusText = (status: string, isApproved: boolean) => {
@@ -563,17 +565,17 @@ export default function ProviderDashboard() {
   if (!canPublishContent(user.role)) {
     return (
       <div className={cn("flex min-h-screen items-center justify-center px-4", PROVIDER_PAGE_BACKGROUND)}>
-        <div className="max-w-md rounded-2xl border border-border/70 bg-card/80 p-6 text-center backdrop-blur-sm">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
-            <Crown className="h-6 w-6 text-primary" />
+        <div className="max-w-md rounded-up-xl border border-border bg-card p-6 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-up-md bg-up-orange-tint text-up-orange-ink">
+            <Crown className="h-6 w-6" />
           </div>
           <h2 className="mb-2 text-xl font-semibold text-foreground">Provider Access Required</h2>
           <p className="mb-5 text-body-sm text-muted-foreground">You need to be an opportunity provider to access this dashboard.</p>
           <div className="flex flex-col justify-center gap-3 sm:flex-row">
-            <Button asChild variant="outline" className="min-h-11 rounded-xl border-border text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Button asChild variant="outline" className="min-h-11">
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
-            <Button asChild className="min-h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button asChild className="min-h-11">
               <Link href="/profile/settings">Upgrade Account</Link>
             </Button>
           </div>
@@ -583,10 +585,10 @@ export default function ProviderDashboard() {
   }
 
   const createTypes = [
-    { label: 'Opportunity', icon: Target, tone: 'text-orange-500 dark:text-orange-400', ring: 'border-orange-500/25 bg-orange-500/10' },
-    { label: 'Event', icon: Calendar, tone: 'text-emerald-500 dark:text-emerald-400', ring: 'border-emerald-500/25 bg-emerald-500/10' },
-    { label: 'Job', icon: Briefcase, tone: 'text-primary', ring: 'border-primary/25 bg-primary/10' },
-    { label: 'Resource', icon: BookOpen, tone: 'text-violet-500 dark:text-violet-400', ring: 'border-violet-500/25 bg-violet-500/10' },
+    { label: 'Opportunity', icon: Target, tone: '', ring: UP_KIND.opportunity.chip },
+    { label: 'Job', icon: Briefcase, tone: '', ring: UP_KIND.job.chip },
+    { label: 'Event', icon: Calendar, tone: '', ring: UP_KIND.event.chip },
+    { label: 'Resource', icon: BookOpen, tone: '', ring: UP_KIND.resource.chip },
   ]
 
   const totalPostings = stats.totalOpportunities + stats.totalEvents + stats.totalJobs + stats.totalResources
@@ -601,7 +603,7 @@ export default function ProviderDashboard() {
   ]
 
   const engagement = [
-    { label: 'Views', value: stats.totalViews, icon: Eye, tone: 'primary' as Tone },
+    { label: 'Views', value: stats.totalViews, icon: Eye, tone: 'navy' as Tone },
     { label: 'Likes', value: stats.totalLikes, icon: Heart, tone: 'amber' as Tone },
     { label: 'Saves', value: stats.totalSaves, icon: Bookmark, tone: 'violet' as Tone },
     { label: 'Registrations', value: stats.totalRegistrations, icon: Users, tone: 'emerald' as Tone },
@@ -633,7 +635,7 @@ export default function ProviderDashboard() {
       {!isLoading && activeTab === 'overview' && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2.5 md:gap-3 lg:grid-cols-4">
-            <StatTile label="Live" value={stats.activePostings} icon={CheckCircle2} tone="emerald" />
+            <StatTile label="Live" value={stats.activePostings} icon={CheckCircle2} tone="navy" />
             <StatTile label="Views" value={stats.totalViews} icon={Eye} tone="primary" />
             <StatTile
               label="Applied"
@@ -654,10 +656,10 @@ export default function ProviderDashboard() {
                 <Link
                   key={label}
                   href="/dashboard/provider/posting"
-                  className="flex min-h-11 items-center gap-2.5 rounded-xl border border-border/50 bg-card/40 px-3 py-2.5 text-body-sm font-medium text-foreground transition-colors hover:border-primary/25 hover:bg-card"
+                  className="flex min-h-14 items-center gap-2.5 rounded-up-lg border-[1.5px] border-border bg-card p-3 text-sm font-bold text-foreground transition-colors hover:border-up-border-hover"
                 >
-                  <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border", ring)}>
-                    <Icon className={cn("h-3.5 w-3.5", tone)} />
+                  <span className={cn("grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm", ring)}>
+                    <Icon className={cn("h-[18px] w-[18px]", tone)} />
                   </span>
                   <span className="truncate">{label}</span>
                 </Link>
@@ -675,7 +677,7 @@ export default function ProviderDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('content')}
-                  className="h-8 shrink-0 rounded-lg px-2 text-xs text-primary hover:bg-primary/10"
+                  className="h-8 shrink-0 px-3 text-xs text-up-orange-ink hover:bg-up-orange-tint hover:text-up-orange-ink"
                 >
                   View all
                   <ArrowRight className="ml-1 h-3.5 w-3.5" />
@@ -721,7 +723,7 @@ export default function ProviderDashboard() {
               : undefined
           }
           action={
-            <Button asChild size="sm" className="h-9 shrink-0 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90">
+            <Button asChild size="sm" className="h-9 shrink-0 px-3.5">
               <Link href="/dashboard/provider/posting">
                 <Plus className="mr-1.5 h-4 w-4" />
                 New post
@@ -768,7 +770,7 @@ export default function ProviderDashboard() {
           <EmptyState
             icon={Zap}
             title="Promote your content"
-            description="Put budget behind an opportunity, event, job, or resource to get it in front of more people."
+            description="Pick an opportunity, event, job, or resource and get it in front of more people."
             ctaHref="/dashboard/provider/promotions"
             ctaLabel="Manage promotions"
           />
@@ -816,7 +818,7 @@ export default function ProviderDashboard() {
             title="Per listing"
             subtitle="Open a listing for its full breakdown"
             action={
-              <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard/provider/analytics">
                   Full analytics
                   <ArrowRight className="ml-1.5 h-3.5 w-3.5" />

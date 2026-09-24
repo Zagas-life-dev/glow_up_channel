@@ -120,8 +120,8 @@ const EducationStep = forwardRef<any, EducationStepProps>(
                     aria-pressed={active}
                     className={
                       active
-                        ? 'rounded-xl border border-primary bg-primary/10 px-4 py-2 text-sm font-medium text-primary'
-                        : 'rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground/90 transition-colors hover:bg-muted/50'
+                        ? 'inline-flex h-9 items-center rounded-full border border-up-solid bg-up-solid px-4 text-sm font-semibold text-up-on-solid'
+                        : 'inline-flex h-9 items-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-up-border-hover'
                     }
                   >
                     {field}

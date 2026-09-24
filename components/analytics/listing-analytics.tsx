@@ -46,6 +46,12 @@ const STAGE_FILL: Record<string, string> = {
   pending: "hsl(var(--funnel-pending))",
 }
 
+/** Lime and the neutral sit close to the card surface, so they carry a hairline. */
+const STAGE_OUTLINE: Record<string, string | undefined> = {
+  notForMe: "inset 0 0 0 1px rgba(11,18,51,0.14)",
+  pending: "inset 0 0 0 1px hsl(var(--border))",
+}
+
 /* ------------------------------------------------------------------ metrics */
 
 /**
@@ -89,12 +95,12 @@ export function EngagementStrip({
   return (
     <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5", className)}>
       {items.map((item) => (
-        <div key={item.label} className="rounded-xl border border-border/60 bg-card/60 px-3 py-2.5">
+        <div key={item.label} className="rounded-up-lg border border-border bg-card px-3.5 py-3">
           <div className="flex items-center gap-1.5">
             <item.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
             <p className="truncate text-[11px] font-medium text-muted-foreground">{item.label}</p>
           </div>
-          <p className="mt-1 text-xl font-semibold tabular-nums tracking-tight text-foreground">
+          <p className="mt-1 font-display text-xl font-bold tabular-nums text-foreground">
             {formatCount(item.value)}
           </p>
           {item.hint ? <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.hint}</p> : null}
@@ -147,7 +153,7 @@ export function ApplyFunnelBar({
   return (
     <div className={className}>
       <div
-        className="flex h-3 w-full gap-[2px] overflow-hidden rounded-full"
+        className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full"
         role="img"
         aria-label={segments.map((s) => `${s.label}: ${s.value}`).join(", ")}
       >
@@ -160,6 +166,7 @@ export function ApplyFunnelBar({
               style={{
                 width: `${segment.pct}%`,
                 background: STAGE_FILL[segment.key as string],
+                boxShadow: STAGE_OUTLINE[segment.key as string],
                 opacity: hovered && hovered !== segment.key ? 0.35 : 1,
               }}
               onMouseEnter={() => setHovered(segment.key as string)}
@@ -180,15 +187,15 @@ export function ApplyFunnelBar({
             >
               <dt className="flex items-center gap-1.5">
                 <span
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
-                  style={{ background: STAGE_FILL[segment.key as string] }}
+                  className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                  style={{ background: STAGE_FILL[segment.key as string], boxShadow: STAGE_OUTLINE[segment.key as string] }}
                   aria-hidden
                 />
                 <span className="truncate text-[11px] text-muted-foreground" title={segment.hint}>
                   {segment.label}
                 </span>
               </dt>
-              <dd className="mt-0.5 pl-3.5 text-sm font-semibold tabular-nums text-foreground">
+              <dd className="mt-0.5 pl-4 font-display text-sm font-bold tabular-nums text-foreground">
                 {formatCount(segment.value)}
                 <span className="ml-1 text-[11px] font-normal text-muted-foreground">
                   {Math.round(segment.pct)}%
@@ -259,7 +266,7 @@ export function RejectionReasonBars({
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-[4px]"
-                style={{ width: `${(row.count / max) * 100}%`, background: STAGE_FILL.notForMe }}
+                style={{ width: `${(row.count / max) * 100}%`, background: STAGE_FILL.notForMe, boxShadow: STAGE_OUTLINE.notForMe }}
               />
             </div>
           </div>
@@ -343,7 +350,7 @@ export function IssueNoteList({
         {notes.map((note, index) => (
           <li
             key={`${note.at ?? "undated"}-${index}`}
-            className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2"
+            className="rounded-up-sm bg-up-fill px-3 py-2"
           >
             <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground">
               {note.note}
@@ -386,7 +393,7 @@ export function ListingAnalyticsCard({
   const statusLabel = listingStatusLabel(row)
 
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div className="rounded-up-xl border border-border bg-card">
       <div className="flex items-start gap-3 p-3 sm:p-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -477,7 +484,7 @@ export function ListingAnalyticsSummary({
     <div className={cn("space-y-4", className)}>
       <EngagementStrip engagement={totals.engagement} />
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-up-xl border border-border bg-card p-4">
         <div className="mb-3 flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden />
           <h3 className="text-sm font-semibold text-foreground">Application funnel</h3>
@@ -492,11 +499,11 @@ export function ListingAnalyticsSummary({
       <div className="flex flex-col gap-4 sm:flex-row sm:[&>*]:flex-1">
         <RejectionReasonBars
           reasons={totals.rejectionReasons}
-          className="rounded-xl border border-border bg-card p-4"
+          className="rounded-up-xl border border-border bg-card p-4"
         />
         <ReportedIssueBars
           issues={totals.reportedIssues}
-          className="rounded-xl border border-border bg-card p-4"
+          className="rounded-up-xl border border-border bg-card p-4"
         />
       </div>
     </div>

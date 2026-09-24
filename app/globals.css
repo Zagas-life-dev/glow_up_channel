@@ -9,28 +9,67 @@
   :root {
     /* Inter loaded via link in layout.tsx (avoids build-time fetch) */
     --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
-    /* Light: blue-tinted neutrals (lighter variants of #0b1222), primary #ff6700 */
-    --background: 222 25% 98%;
-    --foreground: 222 47% 11%;
-    --card: 222 20% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 222 20% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 24 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 25% 94%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 222 25% 94%;
-    --muted-foreground: 222 20% 45%;
-    --accent: 24 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
+    /*
+     * UP Design v1 (design_platform_up_v1/index.html). The shadcn slots are
+     * mapped onto the UP palette so every page inherits it: page #FBFAF7,
+     * card #FFF, ink = navy #0B1233, muted ink #5B5847, orange #FF6A00 with
+     * navy text on it, fill-subtle #F2EFE8 for hovers and neutral pills.
+     */
+    --background: 45 33% 98%;
+    --foreground: 230 65% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 65% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 65% 12%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 230 65% 12%;
+    --secondary: 42 28% 93%;
+    --secondary-foreground: 230 65% 12%;
+    --muted: 42 28% 93%;
+    --muted-foreground: 51 12% 32%;
+    --accent: 42 28% 93%;
+    --accent-foreground: 230 65% 12%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 25% 90%;
-    --input: 222 25% 90%;
-    --ring: 24 100% 50%;
-    --radius: 0.5rem;
-    --page: 222 25% 98%;
+    --border: 44 19% 88%;
+    --input: 44 19% 88%;
+    --ring: 25 100% 50%;
+    --radius: 0.875rem;
+    --page: 45 33% 98%;
+    /* Aliases tailwind.config.ts has always referenced but nothing defined
+       (they rendered transparent). They follow the slots above in both themes. */
+    --surface: var(--card);
+    --surface-elevated: var(--card);
+    --surface-overlay: var(--popover);
+    --text-primary: var(--foreground);
+    --text-secondary: var(--muted-foreground);
+    --text-muted: var(--muted-foreground);
+    --border-default: var(--border);
+    --border-subtle: var(--border);
+
+    /* Raw UP tokens for the pieces the shadcn slots can't express. Full
+       colour values on purpose: Tailwind drops `/opacity` on var() hex. */
+    --up-navy: #0B1233;
+    --up-navy-subtle: rgba(255, 255, 255, 0.06);
+    --up-on-navy: #FBFAF7;
+    --up-on-navy-muted: rgba(251, 250, 247, 0.65);
+    --up-on-navy-faint: rgba(251, 250, 247, 0.4);
+    --up-border-on-navy: rgba(255, 255, 255, 0.12);
+    --up-orange: #FF6A00;
+    --up-orange-ink: #B8551E;
+    --up-orange-tint: rgba(255, 106, 0, 0.12);
+    --up-lime: #D6FF3F;
+    --up-lime-tint: rgba(214, 255, 63, 0.35);
+    --up-lime-ink: #0B1233;
+    --up-fill-subtle: #F2EFE8;
+    --up-hairline: #F0EDE6;
+    --up-sep: #C9C4B6;
+    --up-border-hover: #D8D3C6;
+    --up-bar-bg: rgba(251, 250, 247, 0.94);
+    /* Navy-filled chips/tabs: navy on light, flips to cream on dark. */
+    --up-solid: #0B1233;
+    --up-on-solid: #FBFAF7;
+    --up-lead: #0B1233;
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
     --chart-3: 222 47% 25%;
@@ -38,61 +77,69 @@
     --chart-5: 222 20% 65%;
 
     /*
-     * Apply-funnel categories, used by the listing analytics in both the admin
-     * and provider portals. Validated against a white chart surface for the
-     * OKLCH lightness band, chroma floor, adjacent-pair CVD separation and 3:1
-     * contrast — do not substitute these by eye. The dark steps below are
-     * separately chosen and separately validated, not a lightness flip.
-     * "No answer yet" is the absence of an answer rather than a category, so it
-     * stays neutral and always carries its own label.
-     *
-     * "Couldn't apply" is indigo rather than a second red, and that is a
-     * statement about the data: it is not a worse rejection, it is a different
-     * kind of fact — the listing failed, not the fit. Hue 277 sits far from the
-     * other three (58, 163, 12) so the four stay apart under protanopia and
-     * deuteranopia, which is where amber and emerald crowd each other most.
+     * Apply-funnel categories (provider and monitor analytics), on the UP
+     * palette: applied = navy, still applying = orange, not for me = lime,
+     * couldn't apply = grey, no answer yet = the outlined neutral. They are told
+     * apart by lightness as well as hue, and every segment carries a direct
+     * label in the legend, so no stage depends on colour alone. Lime and the
+     * neutral get a hairline outline in the component (they sit close to the
+     * card surface).
      */
-    --funnel-started: #b45309;
-    --funnel-applied: #059669;
-    --funnel-not-for-me: #9f1239;
-    --funnel-other: #4338ca;
-    --funnel-pending: 222 20% 72%;
+    --funnel-started: #FF6A00;
+    --funnel-applied: #0B1233;
+    --funnel-not-for-me: #D6FF3F;
+    --funnel-other: #C9C4B6;
+    --funnel-pending: 42 28% 93%;
   }
 
   .dark {
-    /* Dark: logo blue #0b1222 (222 51% 9%) as base, lighter variants for cards/borders; primary #ff6700 */
-    --background: 222 51% 9%;
-    --foreground: 222 25% 95%;
-    --card: 222 41% 12%;
-    --card-foreground: 222 25% 95%;
-    --popover: 222 41% 12%;
-    --popover-foreground: 222 25% 95%;
-    --primary: 24 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 41% 16%;
-    --secondary-foreground: 222 25% 95%;
-    --muted: 222 41% 16%;
-    --muted-foreground: 222 20% 55%;
-    --accent: 24 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 222 25% 95%;
-    --border: 222 41% 18%;
-    --input: 222 41% 18%;
-    --ring: 24 100% 50%;
-    --page: 222 51% 9%;
+    /* UP dark: page #070A1C sits below navy so navy stays a distinct area;
+       cards #10173A; cream ink; orange-ink lifts to #FF8A3D. */
+    --background: 231 60% 7%;
+    --foreground: 45 33% 98%;
+    --card: 230 57% 15%;
+    --card-foreground: 45 33% 98%;
+    --popover: 230 57% 15%;
+    --popover-foreground: 45 33% 98%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 230 65% 12%;
+    --secondary: 231 37% 21%;
+    --secondary-foreground: 45 33% 98%;
+    --muted: 231 37% 21%;
+    --muted-foreground: 40 8% 68%;
+    --accent: 231 37% 21%;
+    --accent-foreground: 45 33% 98%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 45 33% 98%;
+    --border: 231 30% 21%;
+    --input: 231 30% 21%;
+    --ring: 25 100% 50%;
+    --page: 231 60% 7%;
+
+    --up-orange-ink: #FF8A3D;
+    --up-orange-tint: rgba(255, 106, 0, 0.16);
+    --up-lime-tint: rgba(214, 255, 63, 0.14);
+    --up-lime-ink: #D6FF3F;
+    --up-fill-subtle: rgba(255, 255, 255, 0.07);
+    --up-hairline: rgba(255, 255, 255, 0.07);
+    --up-sep: rgba(255, 255, 255, 0.25);
+    --up-border-hover: rgba(255, 255, 255, 0.18);
+    --up-bar-bg: rgba(7, 10, 28, 0.9);
+    --up-solid: #FBFAF7;
+    --up-on-solid: #0B1233;
+    --up-lead: #141D4A;
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
     --chart-3: 222 25% 70%;
     --chart-4: 222 25% 80%;
     --chart-5: 222 25% 90%;
 
-    /* Dark funnel steps, validated against the dark card surface (#121a2b). */
-    --funnel-started: #c2740a;
-    --funnel-applied: #059669;
-    --funnel-not-for-me: #f43f5e;
-    --funnel-other: #818cf8;
-    --funnel-pending: 222 20% 42%;
+    /* Dark funnel steps: navy would vanish on the dark card, so applied flips to cream. */
+    --funnel-started: #FF6A00;
+    --funnel-applied: #FBFAF7;
+    --funnel-not-for-me: #D6FF3F;
+    --funnel-other: rgba(255, 255, 255, 0.35);
+    --funnel-pending: 231 37% 21%;
   }
 }
 
@@ -107,7 +154,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow-x: hidden;
     max-width: 100vw;
@@ -374,8 +421,8 @@
 
 /* Custom Selection */
 ::selection {
-  background: rgba(249, 115, 22, 0.3);
-  color: white;
+  background: rgba(255, 106, 0, 0.3);
+  color: inherit;
 }
 
 /* Hide Number Input Arrows */

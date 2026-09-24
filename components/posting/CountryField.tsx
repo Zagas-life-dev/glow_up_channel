@@ -64,7 +64,7 @@ export function CountryField({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "h-10 w-full justify-between rounded-lg border-border bg-muted/60 px-3 font-normal",
+            "h-10 w-full justify-between rounded-lg border-border bg-up-fill px-3 font-normal",
             !value && "text-muted-foreground",
             className,
           )}

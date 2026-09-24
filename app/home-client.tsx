@@ -459,14 +459,14 @@ export default function Home() {
   return (
     <PageShell
       fullWidth
-      className="relative font-sans bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.12),transparent_60%),radial-gradient(circle_at_bottom,_rgba(251,146,60,0.08),transparent_55%)]"
+      className="relative font-sans"
     >
       {/* Tab bar: fixed to the viewport so it never leaves the screen, the same way the
           bottom nav behaves. `left` follows the content column (0 on mobile, sidebar
           width on desktop) so it never covers the sidebar. */}
       <div
         ref={tabBarRef}
-        className="fixed right-0 top-0 z-40 bg-page/95 px-4 pt-[max(0.25rem,env(safe-area-inset-top)+0.25rem)] pb-2 backdrop-blur-xl transition-[left] duration-300 ease-in-out sm:px-6 lg:px-8"
+        className="fixed right-0 top-0 z-40 border-b border-border bg-up-bar px-4 pt-[max(0.5rem,env(safe-area-inset-top)+0.5rem)] pb-2.5 backdrop-blur-xl transition-[left] duration-300 ease-in-out sm:px-6 lg:px-8"
         style={{ left: 'var(--app-content-left, 0px)' }}
       >
         <div className="mx-auto flex max-w-2xl items-center gap-2">
@@ -496,20 +496,20 @@ export default function Home() {
             fold. It says the same thing in one line, and reserves its own height so the feed
             never shifts when it swaps in. */}
         {activeTab === "all" && (
-          <div className="mb-4 min-h-[2.75rem]">
+          <div className="mb-5 min-h-[2.75rem]">
             {feedLoading ? (
               <div className="animate-pulse space-y-2" aria-hidden>
-                <div className="h-5 w-40 rounded-full bg-muted/60" />
-                <div className="h-3 w-56 max-w-full rounded-full bg-muted/60" />
+                <div className="h-5 w-40 rounded-full bg-up-fill" />
+                <div className="h-3 w-56 max-w-full rounded-full bg-up-hairline" />
               </div>
             ) : allContent.length > 0 || !isAuthenticated ? (
               <>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                <h1 className="font-display text-xl font-bold leading-tight text-foreground sm:text-[22px]">
                   {isAuthenticated
                     ? `Hey${user?.firstName ? `, ${user.firstName}` : ""}`
                     : "Discover opportunities"}
                 </h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {isAuthenticated
                     ? "Picks to help you glow up."
                     : "Sign in to get personalised recommendations."}

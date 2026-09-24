@@ -55,7 +55,7 @@ import { useOptionalTracker } from '@/contexts/tracker-context'
 
 type ResourcePageProps = { params: Promise<{ id: string }> }
 
-const ACCENT_ICON = 'text-violet-500'
+const ACCENT_ICON = 'text-up-orange-ink'
 
 /**
  * The three numbers worth reading before anything else.
@@ -205,14 +205,14 @@ function ResourcePageContent({ params }: ResourcePageProps) {
   const tiles = buildStatTiles(resource)
 
   const accessButton = !accessUrl ? null : !isAuthenticated ? (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>
         Sign in to view
         <RiExternalLinkLine className="h-4 w-4" aria-hidden />
       </Link>
     </Button>
   ) : (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <a
         href={cleanUrl(accessUrl)}
         target="_blank"
@@ -232,7 +232,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
   const action =
     accessButton ??
     (isFileResource && !isAuthenticated ? (
-      <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
         <Link href={`/login?callbackUrl=${encodeURIComponent(`/resources/${id}`)}`}>
           Sign in to read
         </Link>
@@ -257,7 +257,7 @@ function ResourcePageContent({ params }: ResourcePageProps) {
     <button
       type="button"
       onClick={() => setShowPlaylistModal(true)}
-      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
       aria-label="Add to a playlist"
     >
       <RiAddLine className="h-5 w-5" aria-hidden />

@@ -87,8 +87,8 @@ export function ChipMultiSelect({
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                     isSelected
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-card/50 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                      ? "border-primary bg-up-orange-tint text-up-orange-ink"
+                      : "border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground",
                     // A chip that cannot be chosen should look unavailable rather
                     // than merely fail to respond.
                     !isSelected && atLimit && "cursor-not-allowed opacity-40 hover:border-border hover:text-muted-foreground",

@@ -8,8 +8,9 @@ import * as z from 'zod'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { RiArrowLeftLine, RiCheckLine, RiEyeLine, RiEyeOffLine, RiLoader4Line } from 'react-icons/ri'
+import { AuthShell, AuthHeading } from '@/components/up/auth-shell'
 import Link from 'next/link'
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -114,271 +115,159 @@ function ResetPasswordContent() {
     }
   }
 
+  const backToLogin = (
+    <Link href="/login" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:underline">
+      <RiArrowLeftLine className="h-4 w-4" aria-hidden />
+      Back to login
+    </Link>
+  )
+
+  const passwordField = (
+    name: 'newPassword' | 'confirmPassword',
+    label: string,
+    placeholder: string,
+    shown: boolean,
+    toggle: () => void,
+  ) => (
+    <div className="space-y-[7px]">
+      <Label htmlFor={name} className="text-[13px] font-bold text-foreground">
+        {label}
+      </Label>
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
+          <div className="relative">
+            <Input
+              {...field}
+              id={name}
+              type={shown ? 'text' : 'password'}
+              placeholder={placeholder}
+              className="h-12 pr-11"
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={shown ? 'Hide password' : 'Show password'}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {shown ? <RiEyeOffLine className="h-4 w-4" aria-hidden /> : <RiEyeLine className="h-4 w-4" aria-hidden />}
+            </button>
+          </div>
+        )}
+      />
+      {errors[name] && <p className="text-[13px] font-semibold text-destructive">{errors[name]?.message}</p>}
+    </div>
+  )
+
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
-          {/* Left: Context similar to login */}
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Password reset complete
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                You&#39;re{" "}
-                <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                  all set
-                </span>
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-                Your password has been updated. Use your new details next time you sign in to keep your
-                UP journey secure.
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Success card */}
-          <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
-            <CardHeader className="space-y-1 text-left pb-4">
-              <CardTitle className="text-2xl font-bold tracking-tight">
-                Password reset successful
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                You can now sign in with your new password.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <FlaticonIcon name="check-circle" className="w-7 h-7 text-emerald-500" aria-hidden />
-                </div>
-              </div>
-              <Button
-                onClick={() => router.push('/login')}
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200"
-              >
-                Go to login
-              </Button>
-            </CardContent>
-          </Card>
+      <AuthShell
+        badge="Password reset complete"
+        headline={<>You&#39;re <em>all set</em></>}
+        subtitle="Your password has been updated. Use your new details next time you sign in."
+      >
+        <span className="grid h-11 w-11 place-items-center rounded-up-md bg-up-lime-tint text-foreground">
+          <RiCheckLine className="h-[22px] w-[22px]" aria-hidden />
+        </span>
+        <div className="mt-[18px]">
+          <AuthHeading title="Password updated">Taking you to sign in…</AuthHeading>
         </div>
-      </div>
+        <Button onClick={() => router.push('/login')} className="h-[52px] w-full text-base">
+          Go to sign in
+        </Button>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-rose-500/6 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
-        {/* Left: Brand/context, mirroring login page */}
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-orange-400" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Secure password reset
-            </span>
-          </div>
+    <AuthShell
+      badge="Secure password reset"
+      headline={<>Set a <em>new password</em></>}
+      subtitle="Enter the 6-digit code we sent to your email and choose a strong new password to protect your UP account."
+    >
+      <AuthHeading title="Reset your password">
+        {email ? (
+          <>Enter the 6-digit code sent to <b className="text-foreground">{email}</b> and your new password.</>
+        ) : (
+          'Enter the 6-digit code and your new password.'
+        )}
+      </AuthHeading>
 
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Set a{" "}
-              <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                new password
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-              Enter the 6-digit code we sent to your email and choose a strong new password to protect
-              your UP account.
-            </p>
-          </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-[7px]">
+          <Label htmlFor="code" className="text-[13px] font-bold text-foreground">
+            Reset code
+          </Label>
+          <Controller
+            name="code"
+            control={control}
+            render={({ field }) => (
+              <InputOTP
+                id="code"
+                maxLength={6}
+                inputMode="numeric"
+                value={field.value ?? ''}
+                onChange={(value) => handleCodeChange(value, field.onChange)}
+                disabled={isLoading}
+                autoFocus
+              >
+                <InputOTPGroup className="w-full justify-between gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      className="h-[56px] w-full max-w-[52px] rounded-up-md border-[1.5px] bg-card font-display text-xl font-bold first:rounded-up-md first:border-l-[1.5px] last:rounded-up-md"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+            )}
+          />
+          {errors.code && <p className="text-[13px] font-semibold text-destructive">{errors.code.message}</p>}
         </div>
 
-        {/* Right: Reset form card */}
-        <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
-          <CardHeader className="space-y-1 text-left pb-4">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              Reset your password
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {email ? (
-                <span>Enter the 6-digit code sent to <strong>{email}</strong> and your new password.</span>
-              ) : (
-                'Enter the 6-digit code and your new password.'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code" className="text-foreground font-semibold text-sm">
-                  Reset code
-                </Label>
-                <Controller
-                  name="code"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="code"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="000000"
-                      maxLength={6}
-                      onChange={(e) => handleCodeChange(e.target.value, field.onChange)}
-                      className="h-14 text-center text-2xl tracking-[0.5em] font-mono bg-muted/60 border-border/60 focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                      disabled={isLoading}
-                      autoFocus
-                    />
-                  )}
-                />
-                {errors.code && (
-                  <p className="text-sm text-red-500">{errors.code.message}</p>
-                )}
-              </div>
+        {passwordField('newPassword', 'New password', 'Enter new password', showPassword, () => setShowPassword(!showPassword))}
+        {passwordField('confirmPassword', 'Confirm new password', 'Confirm new password', showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword))}
 
-              <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-foreground font-semibold text-sm">
-                  New password
-                </Label>
-                <Controller
-                  name="newPassword"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        id="newPassword"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter new password"
-                        className="h-11 pr-10 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? (
-                          <FlaticonIcon name="eye-off" className="w-4 h-4" aria-hidden />
-                        ) : (
-                          <FlaticonIcon name="eye" className="w-4 h-4" aria-hidden />
-                        )}
-                      </button>
-                    </div>
-                  )}
-                />
-                {errors.newPassword && (
-                  <p className="text-sm text-red-500">{errors.newPassword.message}</p>
-                )}
-              </div>
+        <Button type="submit" className="h-[52px] w-full text-base" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <RiLoader4Line className="h-4 w-4 animate-spin" aria-hidden />
+              Resetting…
+            </>
+          ) : (
+            'Reset password'
+          )}
+        </Button>
+      </form>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-foreground font-semibold text-sm">
-                  Confirm new password
-                </Label>
-                <Controller
-                  name="confirmPassword"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm new password"
-                        className="h-11 pr-10 bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showConfirmPassword ? (
-                          <FlaticonIcon name="eye-off" className="w-4 h-4" aria-hidden />
-                        ) : (
-                          <FlaticonIcon name="eye" className="w-4 h-4" aria-hidden />
-                        )}
-                      </button>
-                    </div>
-                  )}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
-                )}
-              </div>
+      <p className="mt-3.5 text-center text-sm text-muted-foreground">
+        Didn&apos;t get it?{' '}
+        <button
+          type="button"
+          onClick={handleResendCode}
+          disabled={isResending || !email}
+          className="font-bold text-up-orange-ink hover:underline disabled:opacity-60"
+        >
+          {isResending ? 'Sending…' : 'Resend code'}
+        </button>
+      </p>
 
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                    <span>Resetting…</span>
-                  </div>
-                ) : (
-                  'Reset password'
-                )}
-              </Button>
-            </form>
-
-            <div className="space-y-3 pt-2 text-sm text-muted-foreground">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResendCode}
-                disabled={isResending || !email}
-                className="w-full border-border/60"
-              >
-                {isResending ? (
-                  <div className="flex items-center space-x-2">
-                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                    <span>Sending code…</span>
-                  </div>
-                ) : (
-                  'Resend code'
-                )}
-              </Button>
-
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center w-full text-sm text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                <FlaticonIcon name="arrow-left" className="w-4 h-4 mr-2" aria-hidden />
-                Back to login
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      {backToLogin}
+    </AuthShell>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center">
-              <FlaticonIcon name="spinner" className="w-8 h-8 animate-spin text-primary" aria-hidden />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center bg-page p-4">
+        <RiLoader4Line className="h-8 w-8 animate-spin text-up-orange" aria-hidden />
       </div>
     }>
       <ResetPasswordContent />
     </Suspense>
   )
 }
-

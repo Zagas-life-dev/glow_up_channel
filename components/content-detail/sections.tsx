@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 /** Quiet uppercase label above a block. */
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
       {children}
     </p>
   )
@@ -52,7 +52,7 @@ export function DetailProse({ children }: { children: ReactNode }) {
 export function Fact({
   icon: Icon,
   label,
-  iconClassName = "text-primary",
+  iconClassName = "text-up-orange-ink",
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>
@@ -64,7 +64,7 @@ export function Fact({
     <li className="flex gap-2.5">
       <Icon className={cn("mt-0.5 h-4 w-4 flex-shrink-0", iconClassName)} aria-hidden />
       <span className="min-w-0">
-        <strong className="font-medium text-foreground">{label}:</strong>{" "}
+        <strong className="font-bold text-foreground">{label}:</strong>{" "}
         <span className="text-muted-foreground">{children}</span>
       </span>
     </li>
@@ -96,11 +96,8 @@ export function BulletList({ items }: { items: string[] }) {
 export function TrustBar({ parts }: { parts: string[] }) {
   if (parts.length === 0) return null
   return (
-    <div className="flex items-center gap-2.5 rounded-2xl bg-emerald-500/10 px-4 py-3 text-[15px] text-emerald-700 dark:text-emerald-400">
-      <RiCheckboxCircleFill
-        className="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400"
-        aria-hidden
-      />
+    <div className="flex items-center gap-2.5 rounded-up-lg bg-up-lime-tint px-4 py-3 text-[15px] font-semibold text-foreground">
+      <RiCheckboxCircleFill className="h-5 w-5 flex-shrink-0" aria-hidden />
       <span className="min-w-0">{parts.join(" · ")}</span>
     </div>
   )
@@ -134,34 +131,28 @@ export function WhyCard({
   if (reasons.length === 0) return null
 
   return (
-    <section className="rounded-[1.25rem] border border-border/70 bg-card/80 p-4 lg:p-5">
+    <section className="rounded-up-xl border border-border bg-card p-4 lg:px-[22px] lg:py-5">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-[17px] font-semibold text-foreground">Why you&apos;re seeing this</h2>
+        <h2 className="text-base font-bold text-foreground">Why you&apos;re seeing this</h2>
         {match !== null && (
-          <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
-            {match}% match
+          <span className="shrink-0 rounded-full bg-up-orange-tint px-2.5 py-1 text-xs font-bold text-up-orange-ink">
+            <b className="font-display">{match}</b>% match
           </span>
         )}
       </div>
       <ul className="mt-4 space-y-3">
         {reasons.map((reason, i) => (
           <li key={i} className="flex gap-3 text-[15px] leading-snug text-foreground">
-            <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-              <RiCheckboxCircleLine
-                className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
-                aria-hidden
-              />
+            <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-up-lime-tint text-foreground">
+              <RiCheckboxCircleLine className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="min-w-0">{reason}</span>
           </li>
         ))}
         {caveat && (
           <li className="flex gap-3 text-[15px] leading-snug text-foreground">
-            <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/15">
-              <RiErrorWarningLine
-                className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400"
-                aria-hidden
-              />
+            <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-up-orange-tint text-up-orange-ink">
+              <RiErrorWarningLine className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="min-w-0 text-muted-foreground">{caveat}</span>
           </li>
@@ -201,7 +192,7 @@ export function SimilarList({
           <li key={row._id}>
             <Link
               href={`${basePath}/${row._id}`}
-              className="block text-[15px] leading-snug text-foreground transition-colors hover:text-orange-500"
+              className="block text-[15px] leading-snug text-foreground transition-colors hover:text-up-orange-ink"
             >
               {row.title}
               {row.meta && <span className="text-muted-foreground"> · {row.meta}</span>}

@@ -61,7 +61,7 @@ const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData, on
                   key={skill}
                   type="button"
                   onClick={() => addSkill(skill)}
-                  className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                  className="inline-flex h-8 items-center rounded-full border border-border bg-card px-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:border-up-border-hover hover:text-foreground"
                 >
                   + {skill}
                 </button>

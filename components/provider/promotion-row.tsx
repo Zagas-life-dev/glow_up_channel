@@ -180,34 +180,34 @@ export function PromotionRow({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card/40 p-3 transition-colors",
-        extreme ? "border-primary/30 bg-primary/[0.03]" : "border-border/50",
-        !managing && "hover:border-primary/20 hover:bg-card/80",
+        "rounded-up-lg border bg-card px-4 py-3.5 transition-colors",
+        extreme ? "border-up-orange" : "border-border",
+        !managing && "hover:border-up-border-hover hover:bg-card",
       )}
     >
       <div className="flex items-start gap-3">
         <span
           className={cn(
-            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
-            extreme ? "border-primary/40 bg-primary/15" : "border-primary/25 bg-primary/10",
+            "mt-0.5 flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-up-sm",
+            extreme ? "bg-up-orange text-up-navy" : "bg-up-fill text-foreground",
           )}
         >
-          <Icon className="h-4 w-4 text-primary" />
+          <Icon className="h-[18px] w-[18px]" />
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-foreground">
+            <h3 className="min-w-0 flex-1 truncate text-[15px] font-bold text-foreground">
               {promotion.content?.title || "Listing removed"}
             </h3>
             {extreme && (
-              <Badge className="shrink-0 rounded-md bg-primary px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
+              <Badge className="shrink-0 rounded-full border-transparent bg-up-orange px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-up-navy hover:bg-up-orange">
                 Extreme
               </Badge>
             )}
             <Badge
               className={cn(
-                "shrink-0 rounded-md px-1.5 py-0 text-[10px] font-semibold capitalize",
+                "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize hover:bg-inherit",
                 statusToneClass(promotion.status),
               )}
             >
@@ -215,7 +215,7 @@ export function PromotionRow({
             </Badge>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
             <span className="capitalize">{promotion.contentType || "—"}</span>
             <span className="opacity-40">·</span>
             <span className="tabular-nums">{promotion.duration ?? 0} days</span>
@@ -229,9 +229,9 @@ export function PromotionRow({
               says nothing about whether that is most of the run or the tail. */}
           {!finished && start && end && (
             <div className="mt-2.5">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-up-fill">
                 <div
-                  className="h-full rounded-full bg-primary transition-[width]"
+                  className="h-full rounded-full bg-up-orange transition-[width]"
                   style={{ width: `${Math.round(progress * 100)}%` }}
                 />
               </div>
@@ -249,7 +249,7 @@ export function PromotionRow({
 
           {extreme && !finished && (
             <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
-              <Megaphone className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden />
+              <Megaphone className="mt-0.5 h-3 w-3 shrink-0 text-up-orange-ink" aria-hidden />
               Announced to each reader on {announcementDayCount}{" "}
               {announcementDayCount === 1 ? "day" : "separate days"} of this campaign,
               with a push notification and an email slot.
@@ -279,7 +279,7 @@ export function PromotionRow({
 
       {/* Management panel. */}
       {managing && !finished && (
-        <div className="mt-3 space-y-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+        <div className="mt-3 space-y-3 rounded-lg border border-border bg-up-fill p-3">
           <div className="space-y-2">
             <p className="text-xs font-medium text-foreground">
               Total length, counted from the day it started
@@ -312,7 +312,7 @@ export function PromotionRow({
 
             <p className="text-[11px] text-muted-foreground">
               {previewEndsNow ? (
-                <span className="text-amber-600 dark:text-amber-400">
+                <span className="text-up-orange-ink">
                   That is shorter than this campaign has already run — saving will
                   end it now.
                 </span>
@@ -325,7 +325,7 @@ export function PromotionRow({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
             <Button
               type="button"
               size="sm"

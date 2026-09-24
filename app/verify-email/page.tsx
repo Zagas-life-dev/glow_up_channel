@@ -6,11 +6,9 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FlaticonIcon } from '@/components/ui/flaticon-icon'
-import { Mail } from 'lucide-react'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+import { RiArrowLeftLine, RiArrowRightLine, RiInboxLine, RiLoader4Line, RiMailLine, RiShieldCheckLine } from 'react-icons/ri'
+import { AuthShell } from '@/components/up/auth-shell'
 import Link from 'next/link'
 import ApiClient from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
@@ -107,171 +105,119 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-rose-500/6 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative w-full max-w-5xl grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
-        {/* Left: Context / explanation */}
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 border border-border/70 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              One quick step to secure your account
-            </span>
-          </div>
+    <AuthShell
+      badge="Almost there"
+      headline={<>One code, then you&apos;re <em>in</em></>}
+      subtitle="Verifying keeps fake accounts off UP and makes sure deadline reminders reach you."
+      points={[
+        { icon: RiShieldCheckLine, title: 'Keep your account safe', text: 'Codes expire quickly and work once.' },
+        { icon: RiArrowRightLine, title: 'Then complete onboarding', text: 'Seven quick questions build your feed.' },
+      ]}
+    >
+      <span className="grid h-11 w-11 place-items-center rounded-up-md bg-up-orange-tint text-up-orange-ink">
+        <RiMailLine className="h-[22px] w-[22px]" aria-hidden />
+      </span>
+      <h2 className="mt-[18px] font-display text-[22px] font-bold leading-tight text-foreground lg:text-[28px]">
+        Verify your email
+      </h2>
+      <p className="mb-[22px] mt-2 text-[15px] leading-relaxed text-muted-foreground">
+        {email ? (
+          <>
+            We sent a 6-digit code to <b className="text-foreground">{email}</b>.
+          </>
+        ) : (
+          'We sent a 6-digit code to your email address.'
+        )}
+      </p>
 
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Verify your{" "}
-              <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
-                UP email
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-              We&apos;ve sent a 6-digit code to your email. Enter it on the right to confirm it&apos;s really you
-              and unlock your personalized UP experience.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3 text-xs sm:text-sm">
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <FlaticonIcon name="lock" className="w-4 h-4" aria-hidden />
-                <span className="font-medium">Keep your account safe</span>
-              </div>
-              <p className="text-muted-foreground">
-                Email verification helps us protect your progress and saved opportunities.
-              </p>
-            </div>
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <FlaticonIcon name="envelope" className="w-4 h-4" aria-hidden />
-                <span className="font-medium">Check the right inbox</span>
-              </div>
-              <p className="text-muted-foreground">
-                Look in your primary inbox and spam folder for the UP code email.
-              </p>
-            </div>
-            <div className="rounded-xl bg-card/60 border border-border/70 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-foreground">
-                <FlaticonIcon name="sparkles" className="w-4 h-4" aria-hidden />
-                <span className="font-medium">Then complete onboarding</span>
-              </div>
-              <p className="text-muted-foreground">
-                Once verified, you&apos;ll go straight into a quick profile setup.
-              </p>
-            </div>
-          </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-[22px]">
+        <div className="space-y-2">
+          <Controller
+            name="code"
+            control={control}
+            render={({ field }) => (
+              <InputOTP
+                maxLength={6}
+                inputMode="numeric"
+                value={field.value ?? ''}
+                onChange={(value) => handleCodeChange(value, field.onChange)}
+                disabled={isLoading}
+                autoFocus
+                aria-label="Verification code"
+              >
+                <InputOTPGroup className="w-full justify-between gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      className="h-[60px] w-full max-w-[52px] rounded-up-md border-[1.5px] bg-card font-display text-[22px] font-bold first:rounded-up-md first:border-l-[1.5px] last:rounded-up-md"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+            )}
+          />
+          {errors.code && (
+            <p className="text-[13px] font-semibold text-destructive">{errors.code.message}</p>
+          )}
         </div>
 
-        {/* Right: Verify card */}
-        <Card className="w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl">
-          <CardHeader className="space-y-1 text-left pb-4">
-            <CardTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20">
-                <Mail className="w-5 h-5 text-orange-400" />
-              </span>
-              <span>Verify your email</span>
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {email ? (
-                <span>
-                  We&apos;ve sent a 6-digit verification code to <strong>{email}</strong>. Enter it below to continue.
-                </span>
-              ) : (
-                'We’ve sent a 6-digit verification code to your email address.'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code" className="text-foreground font-semibold text-sm text-center block">
-                  Enter verification code
-                </Label>
-                <Controller
-                  name="code"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="code"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="000000"
-                      maxLength={6}
-                      onChange={(e) => handleCodeChange(e.target.value, field.onChange)}
-                      className="h-14 text-center text-2xl tracking-[0.5em] font-mono bg-muted/60 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-orange-500/60 focus:ring-orange-500/30 rounded-xl"
-                      disabled={isLoading}
-                      autoFocus
-                    />
-                  )}
-                />
-                {errors.code && (
-                  <p className="text-sm text-red-400 text-center">{errors.code.message}</p>
-                )}
-                <p className="text-xs text-muted-foreground text-center">
-                  Codes expire after a short time. You can always request a new one.
-                </p>
-              </div>
+        <Button type="submit" className="h-[52px] w-full text-base" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <RiLoader4Line className="h-4 w-4 animate-spin" aria-hidden />
+              Verifying…
+            </>
+          ) : (
+            'Verify'
+          )}
+        </Button>
+      </form>
 
-              <Button
-                type="submit"
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                    <span>Verifying...</span>
-                  </div>
-                ) : (
-                  'Verify email'
-                )}
-              </Button>
-            </form>
+      <p className="mt-3.5 text-center text-sm text-muted-foreground">
+        Didn&apos;t get it?{' '}
+        <button
+          type="button"
+          onClick={handleResendCode}
+          disabled={isResending}
+          className="font-bold text-up-orange-ink hover:underline disabled:opacity-60"
+        >
+          {isResending ? 'Sending…' : 'Resend code'}
+        </button>
+      </p>
 
-            <div className="space-y-3 pt-4 border-t border-border/60">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResendCode}
-                disabled={isResending}
-                className="w-full border-border/70"
-              >
-                {isResending ? (
-                  <div className="flex items-center space-x-2">
-                    <FlaticonIcon name="spinner" className="w-4 h-4 animate-spin" aria-hidden />
-                    <span>Sending...</span>
-                  </div>
-                ) : (
-                  'Resend code'
-                )}
-              </Button>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center text-orange-400 hover:text-orange-300 transition-colors"
-                >
-                  <FlaticonIcon name="arrow-left" className="w-3.5 h-3.5 mr-1.5" aria-hidden />
-                  Back to login
-                </Link>
-                <span>
-                  Wrong email?{' '}
-                  <Link
-                    href="/signup"
-                    className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                  >
-                    Create a new account
-                  </Link>
-                </span>
-              </div>
+      {/* Tips sit below the form as quiet rows. */}
+      <div className="mt-[26px] grid gap-2.5">
+        {[
+          { icon: RiShieldCheckLine, title: 'Keep your account safe', text: 'Codes expire after a short time. You can always request a new one.' },
+          { icon: RiInboxLine, title: 'Check the right inbox', text: "Look in Promotions or Spam if it isn't there." },
+          { icon: RiArrowRightLine, title: 'Then complete onboarding', text: 'Seven quick questions build your feed.' },
+        ].map(({ icon: Icon, title, text }) => (
+          <div key={title} className="flex items-start gap-3">
+            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm bg-up-fill text-foreground">
+              <Icon className="h-[18px] w-[18px]" aria-hidden />
+            </span>
+            <div>
+              <b className="block text-sm text-foreground">{title}</b>
+              <small className="text-[13px] text-muted-foreground">{text}</small>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
-    </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-up-hairline pt-4 text-[13px] text-muted-foreground">
+        <Link href="/login" className="inline-flex items-center gap-1.5 font-semibold text-foreground hover:underline">
+          <RiArrowLeftLine className="h-3.5 w-3.5" aria-hidden />
+          Back to login
+        </Link>
+        <span>
+          Wrong email?{' '}
+          <Link href="/signup" className="font-bold text-foreground hover:underline">
+            Create a new account
+          </Link>
+        </span>
+      </div>
+    </AuthShell>
   )
 }
 

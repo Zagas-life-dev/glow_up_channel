@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import PlaylistModal from "@/components/playlist-modal"
 import InviteCollaboratorModal from "@/components/invite-collaborator-modal"
 import PlaylistDetailSkeleton from "@/components/skeletons/playlist-detail-skeleton"
-import { PlaylistCover, playlistArt } from "@/components/playlists/playlist-cover"
+import { PlaylistCover } from "@/components/playlists/playlist-cover"
 import {
   RiArrowLeftLine,
   RiGlobalLine,
@@ -29,7 +29,6 @@ import {
   RiRefreshLine,
   RiPlayList2Fill,
   RiAddLine,
-  RiArrowRightUpLine,
   RiHeartLine,
   RiHeartFill,
   RiEyeLine,
@@ -49,7 +48,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { toast } from "sonner"
-import { typeConfigFor, typeIconClass, playlistItemHref } from "@/lib/playlist-item-display"
+import { typeConfigFor, playlistItemHref } from "@/lib/playlist-item-display"
+import { KindChip, toUpKind } from "@/components/up/kind"
 import { trackPlaylistOpen, trackPlaylistShare } from '@/lib/tracking'
 import {
   formatCount,
@@ -307,13 +307,13 @@ export default function PlaylistDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-page px-4">
         <div className="max-w-sm text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-muted">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-up-lg bg-up-fill">
             <RiPlayList2Fill className="h-7 w-7 text-muted-foreground" />
           </div>
           <h2 className="mb-2 text-lg font-semibold text-foreground">Playlist not found</h2>
           <p className="mb-6 text-sm text-muted-foreground">This playlist may have been deleted or is private.</p>
           <Link href="/playlists">
-            <Button variant="outline" className="h-11 rounded-2xl px-6">
+            <Button variant="outline" className="h-11 px-6">
               <RiArrowLeftLine className="mr-2 h-4 w-4" />
               Back to playlists
             </Button>
@@ -337,7 +337,7 @@ export default function PlaylistDetailPage() {
   const renderPrimaryAction = (variant: "full" | "compact") => {
     if (!primaryAction) return null
     const compact = variant === "compact"
-    const base = compact ? "h-10 rounded-xl px-4 text-sm" : "h-11 min-h-11 flex-1 rounded-2xl px-5 lg:w-full lg:flex-none"
+    const base = compact ? "h-10 px-4 text-sm" : "h-11 min-h-11 flex-1 px-5 lg:w-full lg:flex-none"
 
     if (primaryAction === "save") {
       return (
@@ -348,7 +348,7 @@ export default function PlaylistDetailPage() {
           className={cn(
             base,
             isSaved
-              ? "border border-primary/35 bg-primary/10 text-primary hover:bg-primary/15"
+              ? "border-[1.5px] border-border bg-card text-foreground hover:bg-accent"
               : "bg-primary text-primary-foreground hover:bg-primary/90",
           )}
         >
@@ -388,7 +388,7 @@ export default function PlaylistDetailPage() {
           type="button"
           variant="ghost"
           size="icon"
-          className="h-11 w-11 shrink-0 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground"
           aria-label="More playlist actions"
         >
           <RiMore2Line className="h-5 w-5" />
@@ -433,24 +433,16 @@ export default function PlaylistDetailPage() {
     </DropdownMenu>
   )
 
-  const art = playlistArt(playlist._id, items.map((item) => item.contentType))
 
   return (
     <div className="relative min-h-screen bg-page pb-24 font-sans lg:pb-12">
-      {/* Ambient wash pulled from this playlist's cover art, so every page carries its own colour. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[26rem]"
-        style={{
-          background: `radial-gradient(115% 62% at 50% 0%, hsl(${art.hue} 92% 55% / 0.22), transparent 68%)`,
-        }}
-      />
 
       {/* Top bar: back at rest, title + primary action once the header scrolls away. */}
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-page/85 backdrop-blur-xl supports-[backdrop-filter]:bg-page/70">
+      <header className="sticky top-0 z-40 border-b border-border bg-up-bar backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-4 sm:px-6 lg:h-16">
           <Link
             href="/playlists"
-            className="group -ml-2 inline-flex h-11 min-w-11 items-center gap-2 rounded-xl px-2 text-muted-foreground transition-colors hover:text-foreground"
+            className="group -ml-2 inline-flex h-11 min-w-11 items-center gap-2 rounded-full px-2 text-muted-foreground transition-colors hover:text-foreground"
           >
             <RiArrowLeftLine className="h-5 w-5" />
             <span className={cn("text-sm font-medium", isCondensed ? "hidden" : "hidden sm:inline")}>Playlists</span>
@@ -482,12 +474,12 @@ export default function PlaylistDetailPage() {
                 types={items.map((item) => item.contentType)}
                 empty={items.length === 0}
                 imageUrl={playlist.coverImage}
-                className="h-[4.5rem] w-[4.5rem] shadow-lg shadow-black/10 sm:h-24 sm:w-24 lg:mb-6 lg:h-44 lg:w-44 lg:shadow-2xl lg:shadow-black/25"
+                className="h-[4.5rem] w-[4.5rem] sm:h-24 sm:w-24 lg:mb-6 lg:h-60 lg:w-full lg:rounded-up-xl"
                 rounded="rounded-2xl lg:rounded-[1.75rem]"
               />
 
               <div className="min-w-0 flex-1">
-                <h1 className="text-[1.75rem] font-bold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-4xl lg:text-[2.75rem]">
+                <h1 className="font-display text-[24px] font-bold leading-[1.15] text-foreground sm:text-[30px] lg:text-[34px]">
                   {playlist.name}
                 </h1>
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted-foreground">
@@ -542,10 +534,10 @@ export default function PlaylistDetailPage() {
             <button
               type="button"
               onClick={() => setShowCreators(true)}
-              className="mt-4 -ml-1 flex min-h-11 w-full items-center gap-2.5 rounded-xl px-1 text-left transition-colors hover:bg-muted/50"
+              className="mt-4 -ml-1 flex min-h-11 w-full items-center gap-2.5 rounded-full px-1 text-left transition-colors hover:bg-up-fill"
             >
               <span className="flex -space-x-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-2 ring-page">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-up-lime font-display text-[10px] font-bold text-up-navy ring-2 ring-page">
                   {initialOf(playlist.createdBy)}
                 </span>
                 {acceptedCollaborators.slice(0, 2).map((collab) => (
@@ -574,8 +566,8 @@ export default function PlaylistDetailPage() {
                   aria-pressed={Boolean(playlist.isLiked)}
                   aria-label={playlist.isLiked ? "Unlike playlist" : "Like playlist"}
                   className={cn(
-                    "h-11 min-w-11 rounded-2xl px-3 lg:w-full",
-                    playlist.isLiked && "border-rose-500/40 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 dark:text-rose-400",
+                    "h-11 min-w-11 px-3 lg:w-full",
+                    playlist.isLiked && "border-transparent bg-up-orange-tint text-up-orange-ink hover:bg-up-orange-tint",
                   )}
                 >
                   {playlist.isLiked ? <RiHeartFill className="h-5 w-5" /> : <RiHeartLine className="h-5 w-5" />}
@@ -587,7 +579,7 @@ export default function PlaylistDetailPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setShowInviteModal(true)}
-                  className="hidden h-11 rounded-2xl lg:inline-flex"
+                  className="hidden h-11 lg:inline-flex"
                 >
                   <RiUserAddLine className="mr-2 h-4 w-4" />
                   Invite
@@ -601,7 +593,7 @@ export default function PlaylistDetailPage() {
                   <Link
                     key={tag}
                     href={`/community?hashtag=${tag}`}
-                    className="text-[13px] text-muted-foreground transition-colors hover:text-primary"
+                    className="text-[13px] font-semibold text-muted-foreground transition-colors hover:text-up-orange-ink"
                   >
                     #{tag}
                   </Link>
@@ -614,14 +606,14 @@ export default function PlaylistDetailPage() {
 
           {/* Items — one list at every width, hairline-separated instead of stacked cards. */}
           <section className="pb-8 lg:py-8">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="flex items-center justify-between gap-3 pb-3">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 {items.length} {items.length === 1 ? "item" : "items"}
               </h2>
               {canEdit && items.length > 0 ? (
                 <Link
                   href="/"
-                  className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-up-orange-ink transition-colors hover:opacity-80"
                 >
                   <RiAddLine className="h-4 w-4" />
                   Add items
@@ -630,7 +622,7 @@ export default function PlaylistDetailPage() {
             </div>
 
             {showTypeFilter ? (
-              <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 py-3 sm:mx-0 sm:px-0">
+              <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
                 {[["all", `All ${items.length}`] as const, ...Array.from(typeCounts.entries()).map(
                   ([type, count]) => [type, `${typeConfigFor(type).label} ${count}`] as const,
                 )].map(([value, label]) => (
@@ -640,10 +632,10 @@ export default function PlaylistDetailPage() {
                     onClick={() => setTypeFilter(value)}
                     aria-pressed={typeFilter === value}
                     className={cn(
-                      "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+                      "inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-[13px] font-semibold transition-colors",
                       typeFilter === value
-                        ? "border-primary/40 bg-primary/10 text-primary"
-                        : "border-border/70 text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                        ? "border-up-solid bg-up-solid text-up-on-solid"
+                        : "border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground",
                     )}
                   >
                     {label}
@@ -653,19 +645,19 @@ export default function PlaylistDetailPage() {
             ) : null}
 
             {items.length === 0 ? (
-              <div className="mt-6 rounded-3xl border border-dashed border-border px-6 py-14 text-center">
-                <h3 className="text-base font-semibold text-foreground">Nothing here yet</h3>
+              <div className="mt-2 rounded-up-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+                <h3 className="font-display text-lg font-bold text-foreground">Nothing here yet</h3>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted-foreground">
                   Add opportunities, jobs, events, or resources to build this playlist out.
                 </p>
                 <Link href="/">
-                  <Button type="button" className="mt-6 h-11 rounded-2xl px-6">
+                  <Button type="button" className="mt-6 h-11 px-6">
                     Browse content
                   </Button>
                 </Link>
               </div>
             ) : (
-              <ul className="divide-y divide-border/50">
+              <ul className="overflow-hidden rounded-up-xl border border-border bg-card divide-y divide-up-hairline">
                 {visibleItems.map((item, index) => {
                   const config = typeConfigFor(item.contentType)
                   const detailUrl = playlistItemHref(item)
@@ -684,27 +676,22 @@ export default function PlaylistDetailPage() {
                         animationFillMode: "both",
                       }}
                     >
-                      <div className="-mx-3 flex items-center gap-3.5 rounded-2xl px-3 py-3.5 transition-colors group-hover:bg-muted/40 sm:gap-4">
-                        {/* Track number, trading places with an open glyph on hover. */}
-                        <span className="relative flex h-6 w-7 shrink-0 items-center justify-center">
-                          <span className="text-[13px] font-semibold tabular-nums text-muted-foreground/60 transition-opacity group-hover:opacity-0">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <RiArrowRightUpLine className="absolute h-4 w-4 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
-                        </span>
+                      <div className="flex items-center gap-3.5 px-4 py-3.5 transition-colors group-hover:bg-up-fill sm:gap-4 sm:px-[18px]">
+                        {/* The item's type chip, the same one the feed card leads with. */}
+                        <KindChip kind={toUpKind(item.contentType)} />
 
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-[15px] font-medium leading-snug text-foreground">
+                          <h3 className="text-[15px] font-bold leading-snug text-foreground">
                             <Link
                               href={detailUrl}
                               onClick={() => void recordPlaylistClick(playlist._id)}
-                              className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-primary sm:line-clamp-1"
+                              className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-up-orange-ink sm:line-clamp-1"
                             >
                               {item.title}
                             </Link>
                           </h3>
                           <p className="mt-1 truncate text-[13px] text-muted-foreground">
-                            <span className={cn("font-semibold", typeIconClass(config.color))}>{config.label}</span>
+                            <span className="font-bold text-foreground">{config.label}</span>
                             {meta ? ` · ${meta}` : null}
                           </p>
                         </div>
@@ -716,7 +703,7 @@ export default function PlaylistDetailPage() {
                               void recordPlaylistClick(playlist._id)
                               window.open(detailUrl, "_blank")
                             }}
-                            className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 sm:flex"
+                            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-card hover:text-foreground group-hover:opacity-100 sm:flex"
                             aria-label={`Open ${item.title} in a new tab`}
                           >
                             <RiExternalLinkLine className="h-4 w-4" />
@@ -725,7 +712,7 @@ export default function PlaylistDetailPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveItem(item._id)}
-                              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                              className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
                               aria-label={`Remove ${item.title} from playlist`}
                             >
                               <RiCloseLine className="h-4 w-4" />
@@ -760,12 +747,12 @@ export default function PlaylistDetailPage() {
 
           <ul className="space-y-1">
             <li className="flex items-center gap-3 rounded-xl px-1 py-2.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-up-lime font-display text-xs font-bold text-up-navy">
                 {initialOf(playlist.createdBy)}
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{displayNameOf(playlist.createdBy)}</p>
-                <p className="flex items-center gap-1 text-xs text-primary">
+                <p className="flex items-center gap-1 text-xs font-semibold text-up-orange-ink">
                   <RiVipCrownLine className="h-3 w-3" />
                   Owner
                 </p>
@@ -788,7 +775,7 @@ export default function PlaylistDetailPage() {
             <Button
               type="button"
               variant="outline"
-              className="mt-5 h-11 w-full rounded-2xl"
+              className="mt-5 h-11 w-full"
               onClick={() => {
                 setShowCreators(false)
                 setShowInviteModal(true)

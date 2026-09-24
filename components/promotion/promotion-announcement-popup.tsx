@@ -132,7 +132,7 @@ export default function PromotionAnnouncementPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[110] flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="promo-announcement-title"
@@ -163,10 +163,10 @@ export default function PromotionAnnouncementPopup() {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <RiMegaphoneFill className="h-16 w-16 text-primary drop-shadow" aria-hidden />
+              <RiMegaphoneFill className="h-16 w-16 text-up-orange-ink drop-shadow" aria-hidden />
             </div>
           )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-up-fill" />
         </div>
 
         <div className="px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
@@ -178,7 +178,7 @@ export default function PromotionAnnouncementPopup() {
               <RiMegaphoneFill className="h-3.5 w-3.5" aria-hidden />
               Sponsored
             </span>
-            <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-medium capitalize text-primary">
+            <span className="rounded-full bg-up-orange-tint px-2.5 py-1 text-xs font-medium capitalize text-up-orange-ink">
               {campaign.contentType}
             </span>
           </div>
@@ -199,7 +199,7 @@ export default function PromotionAnnouncementPopup() {
             <Button
               type="button"
               onClick={handleView}
-              className="h-11 flex-1 rounded-xl text-sm font-semibold"
+              className="h-11 flex-1 text-sm font-semibold"
             >
               Take a look
               <RiArrowRightLine className="ml-1.5 h-4 w-4" aria-hidden />
@@ -208,7 +208,7 @@ export default function PromotionAnnouncementPopup() {
               type="button"
               variant="outline"
               onClick={handleDismiss}
-              className="h-11 flex-1 rounded-xl text-sm font-semibold"
+              className="h-11 flex-1 text-sm font-semibold"
             >
               Not now
             </Button>

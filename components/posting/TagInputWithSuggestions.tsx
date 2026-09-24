@@ -213,10 +213,10 @@ export function TagInputWithSuggestions({
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleAddTag}
           placeholder="Type to search tags (press Enter to add)"
-          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-xl"
+          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-up-md"
         />
         {showTagSuggestions && (isTagLoading || tagSuggestions.length > 0) && (
-          <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-border bg-card/90 backdrop-blur-sm shadow-md shadow-black/20">
+          <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-48 overflow-y-auto rounded-up-md border border-border bg-card shadow-md shadow-black/20">
             {isTagLoading && tagSuggestions.length === 0 && (
               <div className="px-3 py-2 text-xs text-muted-foreground">
                 Searching tags...

@@ -13,8 +13,6 @@ const config: PublicHubConfig = {
   subheading: "Scholarships, fellowships, grants, and programs",
   searchPlaceholder: "Search opportunities by title, category, or provider...",
   icon: RiFocus3Line,
-  iconClassName: "text-orange-500",
-  tileClassName: "border-orange-500/20 bg-orange-500/15",
   suggestionTags: [
     "Scholarship",
     "Fellowship",

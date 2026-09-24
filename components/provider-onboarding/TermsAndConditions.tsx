@@ -17,8 +17,8 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-          <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-up-lime rounded-full mb-4">
+          <CheckCircle className="w-8 h-8 text-foreground" />
           </div>
             <h3 className="text-lg font-semibold text-foreground">Terms & Conditions</h3>
         <p className="text-sm text-gray-600">Please review and agree to our terms</p>
@@ -29,7 +29,7 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center space-x-2">
-              <FileText className="w-5 h-5 text-orange-600" />
+              <FileText className="w-5 h-5 text-up-orange-ink" />
               <span>Terms of Service, Privacy Policy, and Community Guidelines</span>
             </CardTitle>
           </CardHeader>
@@ -80,7 +80,7 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center space-x-2">
-              <Users className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-up-orange-ink" />
               <span>Community Guidelines</span>
             </CardTitle>
           </CardHeader>
@@ -121,7 +121,7 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
         </Card>
 
         {/* Agreement Checkbox */}
-        <Card className="border-2 border-orange-200 bg-orange-50">
+        <Card className="border-2 border-orange-200 bg-up-orange">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
               <Checkbox
@@ -148,8 +148,8 @@ export default function TermsAndConditions({ data, updateData, isComplete }: Ter
 
       {/* Completion Status */}
       {isComplete && (
-        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+        <div className="flex items-center space-x-2 text-foreground bg-up-lime p-3 rounded-lg">
+          <div className="w-5 h-5 bg-up-lime rounded-full flex items-center justify-center">
             <span className="text-foreground text-xs">✓</span>
           </div>
               <span className="text-sm font-medium">Terms and conditions accepted</span>

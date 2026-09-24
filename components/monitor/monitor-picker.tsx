@@ -62,7 +62,7 @@ export function MonitorPicker({
         Viewing as
       </span>
       <Select value={value} onValueChange={onChange} disabled={loading}>
-        <SelectTrigger className="h-9 w-[200px] rounded-xl text-sm">
+        <SelectTrigger className="h-9 w-[200px] rounded-full text-sm font-semibold">
           {loading ? (
             <span className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

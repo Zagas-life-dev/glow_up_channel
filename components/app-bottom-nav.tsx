@@ -104,7 +104,7 @@ export default function AppBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-page/90 font-sans backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card font-sans lg:hidden"
       aria-label="Main navigation"
     >
       <div className="mx-auto flex max-w-lg items-stretch px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
@@ -114,25 +114,27 @@ export default function AppBottomNav() {
 
           const inner = (
             <>
-              {/* Indicator sits inside the tab's own box, so nothing reflows when it appears. */}
+              {/* UP active state: a navy pill behind the icon (cream on dark). The pill is
+                  always there at the same size, so nothing reflows when it lights up. */}
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-x-3 top-0 h-[2px] rounded-full transition-colors",
-                  active ? "bg-primary" : "bg-transparent",
+                  "flex h-[30px] w-[52px] items-center justify-center rounded-full transition-colors",
+                  active ? "bg-up-solid" : "bg-transparent",
                 )}
-              />
-              <Icon
-                className={cn(
-                  "h-[1.375rem] w-[1.375rem] shrink-0 transition-colors",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
-                aria-hidden
-              />
+              >
+                <Icon
+                  className={cn(
+                    "h-[1.3rem] w-[1.3rem] shrink-0 transition-colors",
+                    active ? "text-up-orange dark:text-up-navy" : "text-muted-foreground",
+                  )}
+                  aria-hidden
+                />
+              </span>
               <span
                 className={cn(
                   "max-w-full truncate text-[11px] leading-none tracking-tight transition-colors",
-                  active ? "font-semibold text-primary" : "font-medium text-muted-foreground",
+                  active ? "font-bold text-foreground" : "font-semibold text-muted-foreground",
                 )}
               >
                 {item.name}
@@ -142,7 +144,7 @@ export default function AppBottomNav() {
 
           // One class for every tab, active or not — identical height, padding and icon size.
           const tabClass =
-            "relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 pt-1.5 outline-none transition-colors active:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/40"
+            "relative flex min-h-[3.5rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-up-sm px-0.5 pt-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-up-orange"
 
           if (item.kind === "action") {
             return (

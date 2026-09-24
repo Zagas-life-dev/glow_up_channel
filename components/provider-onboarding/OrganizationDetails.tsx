@@ -45,7 +45,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.organizationName || ''}
             onChange={(e) => updateData({ organizationName: e.target.value })}
             placeholder="Enter your organization name"
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-up-md"
           />
         </div>
 
@@ -60,7 +60,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             className="grid grid-cols-1 sm:grid-cols-2 gap-3"
           >
             {PROVIDER_TYPES.map((type) => (
-              <div key={type.value} className="flex items-center space-x-3 p-3 rounded-xl bg-muted border border-border hover:bg-muted transition-colors">
+              <div key={type.value} className="flex items-center space-x-3 p-3 rounded-up-md bg-muted border border-border hover:bg-muted transition-colors">
                 <RadioGroupItem value={type.value} id={type.value} className="border-border data-[state=checked]:border-orange-500 data-[state=checked]:bg-primary" />
                 <Label htmlFor={type.value} className="text-sm text-muted-foreground cursor-pointer flex-1">
                   {type.label}
@@ -74,7 +74,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
               value={data.otherProviderType || ''}
               onChange={(e) => updateData({ otherProviderType: e.target.value })}
               placeholder="Please specify"
-              className="mt-3 bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
+              className="mt-3 bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-up-md"
             />
           )}
         </div>
@@ -89,7 +89,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonName || ''}
             onChange={(e) => updateData({ contactPersonName: e.target.value })}
             placeholder="Full name"
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-up-md"
           />
         </div>
 
@@ -102,7 +102,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             value={data.contactPersonRole || ''}
             onChange={(e) => updateData({ contactPersonRole: e.target.value })}
             placeholder="e.g., HR Manager, CEO"
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-up-md"
           />
         </div>
 
@@ -117,7 +117,7 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ providerAddress: e.target.value })}
             placeholder="Enter complete address"
             rows={3}
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-up-md resize-none"
           />
         </div>
 
@@ -132,16 +132,16 @@ export default function OrganizationDetails({ data, updateData, isComplete }: Or
             onChange={(e) => updateData({ aboutOrganization: e.target.value })}
             placeholder="Describe your organization, mission, and what you do"
             rows={4}
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl resize-none"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-up-md resize-none"
           />
         </div>
       </div>
 
       {/* Completion Status */}
       {isComplete && (
-        <div className="flex items-center gap-3 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl">
-          <div className="w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-emerald-400 text-xs">✓</span>
+        <div className="flex items-center gap-3 text-foreground bg-up-lime-tint border border-transparent p-3 rounded-up-md">
+          <div className="w-5 h-5 bg-up-lime-tint rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-foreground text-xs">✓</span>
           </div>
           <span className="text-sm font-medium">Organization details completed</span>
         </div>

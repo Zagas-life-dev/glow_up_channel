@@ -346,7 +346,7 @@ export default function ProviderOnboarding() {
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-primary rounded-full transition-all duration-300"
+              className="h-full rounded-full bg-up-orange transition-all duration-300"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
@@ -390,9 +390,9 @@ export default function ProviderOnboarding() {
               <span className="text-muted-foreground">Step {currentStep + 1} of {STEPS.length}</span>
               <span className="text-muted-foreground font-medium">{completionPercentage}% Complete</span>
             </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-2 overflow-hidden rounded-full bg-up-fill">
               <div 
-                className="h-full bg-primary rounded-full transition-all duration-300"
+                className="h-full rounded-full bg-up-orange transition-all duration-300"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>
@@ -404,8 +404,9 @@ export default function ProviderOnboarding() {
       <div className="flex-1 flex flex-col lg:flex-row max-w-6xl mx-auto w-full px-4 lg:px-6 py-4 lg:py-8 gap-6">
         {/* Step Indicator - Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 flex-shrink-0">
-          <Card className="bg-card border-border sticky top-24">
-            <CardContent className="p-4 space-y-2">
+          {/* Navy step rail: done steps lime, current step orange. */}
+          <Card className="sticky top-24 border-transparent bg-up-navy text-up-on-navy dark:bg-[#141D4A]">
+            <CardContent className="space-y-1.5 p-3">
               {STEPS.map((step, index) => {
                 const Icon = step.icon
                 const isCompleted = completedSteps.includes(index) || isStepComplete(index)
@@ -418,23 +419,21 @@ export default function ProviderOnboarding() {
                     onClick={() => goToStep(index)}
                     disabled={!canAccess}
                     className={cn(
-                      "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all",
+                      "w-full flex items-center gap-3 rounded-up-lg p-3 text-left transition-colors",
                       isCurrent
-                        ? "bg-primary/10 text-orange-400 border border-orange-500/20"
-                        : isCompleted
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        ? "bg-up-navy-subtle shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]"
                         : canAccess
-                        ? "text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent"
-                        : "text-muted-foreground cursor-not-allowed border border-transparent"
+                        ? "hover:bg-up-navy-subtle"
+                        : "cursor-not-allowed opacity-60"
                     )}
                   >
                     <div className={cn(
-                      "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
+                      "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
                       isCompleted
-                        ? "bg-emerald-500/20 text-emerald-400"
+                        ? "bg-up-lime text-up-navy"
                         : isCurrent
-                        ? "bg-primary/20 text-orange-400"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-up-orange text-up-navy"
+                        : "bg-up-navy-subtle text-up-on-navy-muted shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]"
                     )}>
                       {isCompleted ? (
                         <Check className="w-4 h-4" />
@@ -443,11 +442,11 @@ export default function ProviderOnboarding() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{step.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{step.description}</p>
+                      <p className={cn("truncate text-sm", isCurrent ? "font-bold" : "font-semibold")}>{step.title}</p>
+                      <p className="truncate text-xs text-up-on-navy-muted">{step.description}</p>
                     </div>
                     {isCurrent && (
-                      <ChevronRight className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-up-orange" />
                     )}
                   </button>
                 )
@@ -462,11 +461,11 @@ export default function ProviderOnboarding() {
             <CardContent className="p-4 md:p-6 lg:p-8">
               {/* Step Header */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  {React.createElement(STEPS[currentStep].icon, { className: "w-6 h-6 text-orange-400" })}
+                <div className="w-12 h-12 rounded-up-md bg-up-orange-tint flex items-center justify-center flex-shrink-0">
+                  {React.createElement(STEPS[currentStep].icon, { className: "w-6 h-6 text-up-orange-ink" })}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+                  <h2 className="mb-1 font-display text-xl font-bold text-foreground md:text-2xl">
                     {STEPS[currentStep].title}
                   </h2>
                   <p className="text-sm text-muted-foreground">{STEPS[currentStep].description}</p>
@@ -481,7 +480,7 @@ export default function ProviderOnboarding() {
                         index === currentStep
                           ? "w-6 bg-primary"
                           : index < currentStep
-                          ? "bg-emerald-500"
+                          ? "bg-up-lime"
                           : "bg-muted"
                       )}
                     />
@@ -517,7 +516,7 @@ export default function ProviderOnboarding() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!canProceed || isSubmitting}
-                    className="bg-primary hover:bg-primary/90 text-foreground px-6 md:px-8 flex items-center gap-2"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 md:px-8 flex items-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
@@ -536,7 +535,7 @@ export default function ProviderOnboarding() {
                     onClick={nextStep}
                     disabled={!canProceed}
                     className={cn(
-                      "bg-primary hover:bg-primary/90 text-foreground px-6 md:px-8 flex items-center gap-2",
+                      "bg-primary hover:bg-primary/90 text-primary-foreground px-6 md:px-8 flex items-center gap-2",
                       !canProceed && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -566,18 +565,18 @@ export default function ProviderOnboarding() {
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-2 transition-all",
                   isCurrent
-                    ? "text-orange-400"
+                    ? "text-up-orange-ink"
                     : isCompleted
-                    ? "text-emerald-400"
+                    ? "text-foreground"
                     : "text-muted-foreground"
                 )}
               >
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center",
                   isCurrent
-                    ? "bg-primary/20"
+                    ? "bg-up-orange-tint"
                     : isCompleted
-                    ? "bg-emerald-500/20"
+                    ? "bg-up-lime-tint"
                     : "bg-muted"
                 )}>
                   {isCompleted ? (
@@ -588,7 +587,7 @@ export default function ProviderOnboarding() {
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium truncate w-full text-center",
-                  isCurrent && "text-orange-400"
+                  isCurrent && "text-up-orange-ink"
                 )}>
                   {step.shortTitle}
                 </span>

@@ -190,14 +190,14 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
 
   const applyButton = applyUrl ? (
     !isAuthenticated ? (
-      <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
         <Link href={`/login?callbackUrl=${encodeURIComponent(`/opportunities/${id}`)}`}>
           Sign in to apply
           <RiExternalLinkLine className="h-4 w-4" aria-hidden />
         </Link>
       </Button>
     ) : (
-      <Button asChild size="lg" className="h-14 w-full rounded-full text-[15px] font-semibold">
+      <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
         <a
           href={cleanUrl(applyUrl)}
           target="_blank"
@@ -226,7 +226,7 @@ function OpportunityPageContent({ params }: OpportunityPageProps) {
     <button
       type="button"
       onClick={() => setShowPlaylistModal(true)}
-      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
       aria-label="Add to a playlist"
     >
       <RiAddLine className="h-5 w-5" aria-hidden />

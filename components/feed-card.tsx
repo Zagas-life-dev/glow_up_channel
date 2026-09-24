@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo, Fragment } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { IconType } from 'react-icons'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
   RiFocus3Line,
@@ -13,8 +11,6 @@ import {
   RiBookLine,
   RiArrowRightLine,
   RiMapPinLine,
-  RiTimeLine,
-  RiMoneyDollarCircleLine,
   RiHeartLine,
   RiHeartFill,
   RiBookmarkLine,
@@ -22,8 +18,6 @@ import {
   RiListOrdered,
   RiShareLine,
   RiShareFill,
-  RiChat1Line,
-  RiEyeLine,
 } from 'react-icons/ri'
 import { useAuth } from '@/lib/auth-context'
 import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-popup'
@@ -39,6 +33,8 @@ import {
 } from '@/lib/feed-content-type'
 import { toast } from 'sonner'
 import { useListingPrice } from '@/lib/currency/use-listing-price'
+import { KindChip, DeadlinePill, SponsoredLabel, UP_KIND } from '@/components/up/kind'
+import { isExtremePromotion } from '@/lib/promotion-boost'
 
 interface FeedCardProps {
   item: {
@@ -197,9 +193,9 @@ function FeedAction({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        'inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors',
+        'inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors',
         active ? activeClass : cn('text-muted-foreground', hoverClass),
-        'hover:bg-muted'
+        'hover:bg-up-fill'
       )}
     >
       <Icon className="h-4 w-4" aria-hidden />
@@ -231,7 +227,6 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
   const contentKind: FeedContentKind = resolveFeedContentKind(item.type)
   const engagementApiType = toEngagementApiPlural(contentKind)
   const config = typeConfig[contentKind] || typeConfig.opportunity
-  const TypeIcon = config.icon
   /** The post's own page — everything about this item lives there. */
   const detailHref = `/${config.path}/${item._id}`
 
@@ -651,27 +646,103 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
   /** Facts read as one quiet line instead of a row of bordered chips. */
   const metaParts: React.ReactNode[] = []
-  if (getLocationString()) metaParts.push(<span key="loc">{getLocationString()}</span>)
+  if (getLocationString()) {
+    metaParts.push(
+      <span key="loc" className="inline-flex items-center gap-[5px]">
+        <RiMapPinLine className="h-3.5 w-3.5" aria-hidden />
+        {getLocationString()}
+      </span>
+    )
+  }
   if (!urgency && getDateString()) metaParts.push(<span key="date">{getDateString()}</span>)
   // Reads all four money shapes, so a job's salary finally reaches the card —
   // it was previously looked up only under `financial` and `price`, neither of
   // which a job has, and printed with no currency beside it.
   if (price.primary) {
     metaParts.push(
-      <span key="paid" className="font-medium text-emerald-600 dark:text-emerald-400">
+      <span key="paid" className="font-bold text-foreground">
         {price.primary}
         {price.approx ? (
-          <span className="ml-1 font-normal text-muted-foreground">{price.approx}</span>
+          <span className="ml-1 font-medium text-muted-foreground">{price.approx}</span>
         ) : null}
       </span>
     )
   }
   if (typeof item.score === 'number') {
     metaParts.push(
-      <span key="score" className="font-medium text-primary">{Math.round(item.score)}% match</span>
+      <span key="score" className="font-bold text-up-orange-ink">
+        <b className="mr-px font-display text-[13px] font-bold">{Math.round(item.score)}</b>% match
+      </span>
     )
   }
   if (viewCount > 0) metaParts.push(<span key="views">{viewCount.toLocaleString()} views</span>)
+
+  const kindMeta = UP_KIND[contentKind] || UP_KIND.opportunity
+  /**
+   * The extreme campaign keeps its own look (approved 2026-09-24): a navy card
+   * with the orange/lime tile stack and one orange CTA. Every other promoted
+   * tier stays an ordinary card with "Sponsored" above it.
+   */
+  const isLead = isExtremePromotion(item)
+
+  const actionRow = (
+    <div
+      className={cn(
+        'relative z-10 mt-3 flex items-center gap-0.5 border-t pt-2',
+        isLead ? 'border-up-border-on-navy [&_button]:text-up-on-navy-muted [&_button:hover]:bg-up-navy-subtle [&_button:hover]:text-up-on-navy' : 'border-up-hairline'
+      )}
+    >
+      {!readOnly && (
+        <>
+          <FeedAction
+            onClick={handleLike}
+            active={isLiked}
+            activeClass="text-up-orange-ink [&>svg]:text-up-orange"
+            hoverClass="hover:text-up-orange-ink"
+            icon={isLiked ? RiHeartFill : RiHeartLine}
+            count={likeCount}
+            label="Like"
+          />
+          <FeedAction
+            onClick={handleSave}
+            active={isSaved}
+            activeClass="text-foreground"
+            hoverClass="hover:text-foreground"
+            icon={isSaved ? RiBookmarkFill : RiBookmarkLine}
+            count={saveCount}
+            label="Save"
+          />
+          {/* Shown to guests too: the count is public like every other one here, and
+              pressing it prompts sign-up rather than silently doing nothing. */}
+          <FeedAction
+            onClick={handleAddToPlaylist}
+            hoverClass="hover:text-foreground"
+            icon={RiListOrdered}
+            count={playlistAddCount}
+            label="Add to playlist"
+          />
+        </>
+      )}
+      <FeedAction
+        onClick={handleShare}
+        active={justShared}
+        activeClass="text-foreground"
+        hoverClass="hover:text-foreground"
+        icon={justShared ? RiShareFill : RiShareLine}
+        count={shareCount}
+        label="Share"
+      />
+
+      {!isLead ? (
+        <span
+          aria-hidden
+          className="ml-auto grid h-9 w-9 place-items-center rounded-full text-foreground transition-colors group-hover:bg-up-fill"
+        >
+          <RiArrowRightLine className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5" />
+        </span>
+      ) : null}
+    </div>
+  )
 
   return (
     <>
@@ -684,64 +755,100 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
           placement biased upward has to say that it was paid for, and putting
           the label here means every surface discloses it the same way without
           each one having to remember to. */}
-      {item.isPromoted ? (
-        <p className="mb-1.5 pl-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
-          Sponsored
-        </p>
+      {isLead ? (
+        <SponsoredLabel>Sponsored · Featured</SponsoredLabel>
+      ) : item.isPromoted ? (
+        <SponsoredLabel />
       ) : null}
-      <article
-        className={cn(
-          'group relative w-full overflow-hidden rounded-2xl border bg-card transition-colors duration-200',
-          'border-border hover:bg-muted/30',
-          urgency === 'urgent' && 'border-red-500/40'
-        )}
-      >
-        {/* Urgency reads as a thin rail rather than a coloured glow around the whole card. */}
-        {urgency === 'urgent' || urgency === 'soon' ? (
-          <span
-            aria-hidden
-            className={cn(
-              'absolute inset-y-0 left-0 w-[3px]',
-              urgency === 'urgent' ? 'bg-red-500' : 'bg-amber-500'
-            )}
-          />
-        ) : null}
+      {isLead ? (
+        <article className="group relative w-full overflow-hidden rounded-up-xl bg-up-lead px-5 pb-3 pt-[22px] text-up-on-navy shadow-[0_18px_40px_rgba(11,18,51,0.22)] dark:shadow-[0_0_0_1px_rgba(255,106,0,0.4),0_20px_50px_rgba(0,0,0,0.55)]">
+          {/* Card-stack motif: rotated orange and lime tiles off the top-right corner. */}
+          <span aria-hidden className="pointer-events-none absolute -right-10 -top-[50px] h-[130px] w-[170px] -rotate-[8deg] rounded-up-xl bg-up-orange" />
+          <span aria-hidden className="pointer-events-none absolute -top-[26px] right-[30px] z-[1] h-[70px] w-[90px] rotate-[6deg] rounded-up-lg bg-up-lime" />
 
-        <div className="p-4">
-          {/* Type, provider, and how long is left */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-1.5 text-xs">
-              <TypeIcon className={cn('h-3.5 w-3.5 shrink-0', config.accent)} aria-hidden />
-              <span className={cn('font-medium', config.accent)}>{config.label}</span>
+          <div className="relative z-[2]">
+            <div className="flex min-w-0 items-center gap-2.5 text-[13px]">
+              <span className="inline-grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm bg-up-navy-subtle text-up-orange shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]">
+                <kindMeta.icon className="h-[18px] w-[18px]" aria-hidden />
+              </span>
+              <span className="font-bold">{kindMeta.label}</span>
               {getProviderName() ? (
                 <>
-                  <span className="text-muted-foreground/40" aria-hidden>·</span>
+                  <span className="text-up-on-navy-faint" aria-hidden>·</span>
+                  <span className="truncate text-up-orange">{getProviderName()}</span>
+                </>
+              ) : null}
+            </div>
+
+            <h3 className="mt-[18px] max-w-[78%] font-display text-lg font-bold leading-tight sm:text-[21px]">
+              <Link href={detailHref} onClick={handleReadMore} className="line-clamp-3 before:absolute before:inset-0">
+                {item.title}
+              </Link>
+            </h3>
+
+            {item.description ? (
+              <p className="mt-2 line-clamp-2 max-w-[90%] text-sm leading-relaxed text-up-orange">{item.description}</p>
+            ) : null}
+
+            {metaParts.length > 0 ? (
+              <div className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[13px] text-up-orange [&_.font-bold]:text-up-on-navy [&_.text-muted-foreground]:text-up-on-navy-muted">
+                {metaParts}
+              </div>
+            ) : null}
+
+            <div className="relative z-10 mt-[18px] flex flex-wrap items-center gap-3">
+              <Link
+                href={detailHref}
+                onClick={handleReadMore}
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-up-orange px-5 text-[15px] font-bold text-up-navy transition-[filter] hover:brightness-105"
+              >
+                See the {kindMeta.label.toLowerCase()}
+                <RiArrowRightLine className="h-4 w-4" aria-hidden />
+              </Link>
+              {urgency && deadlineLabel ? (
+                <DeadlinePill
+                  tone={urgency}
+                  className={urgency !== 'urgent' ? 'bg-[rgba(255,106,0,0.18)] text-up-orange' : undefined}
+                >
+                  {deadlineLabel}
+                </DeadlinePill>
+              ) : null}
+            </div>
+
+            {actionRow}
+          </div>
+        </article>
+      ) : (
+      <article
+        className={cn(
+          'group relative w-full overflow-hidden rounded-up-xl border border-border bg-card transition-colors duration-200',
+          'hover:border-up-border-hover'
+        )}
+      >
+        <div className="px-4 pb-2.5 pt-4 sm:px-5 sm:pt-[18px]">
+          {/* Type chip, provider, and how long is left */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5 text-[13px]">
+              <KindChip kind={contentKind} />
+              <span className="font-bold text-foreground">{kindMeta.label}</span>
+              {getProviderName() ? (
+                <>
+                  <span className="text-up-sep" aria-hidden>·</span>
                   <span className="truncate text-muted-foreground">{getProviderName()}</span>
                 </>
               ) : null}
             </div>
 
-            {urgency && deadlineLabel ? (
-              <span
-                className={cn(
-                  'shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
-                  urgency === 'urgent' && 'bg-red-500/10 text-red-600 dark:text-red-400',
-                  urgency === 'soon' && 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-                  urgency === 'upcoming' && 'bg-muted text-muted-foreground'
-                )}
-              >
-                {deadlineLabel}
-              </span>
-            ) : null}
+            {urgency && deadlineLabel ? <DeadlinePill tone={urgency}>{deadlineLabel}</DeadlinePill> : null}
           </div>
 
           {/* The title is the link — the old card spent a whole row on a "Read more" button
               that went to the same place. */}
-          <h3 className="mt-2 text-[15px] font-semibold leading-snug text-foreground sm:text-base">
+          <h3 className="mt-3.5 text-base font-bold leading-snug text-foreground sm:text-[17px]">
             <Link
               href={detailHref}
               onClick={handleReadMore}
-              className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-primary"
+              className="line-clamp-2 transition-colors before:absolute before:inset-0 group-hover:text-up-orange-ink"
             >
               {item.title}
             </Link>
@@ -754,66 +861,15 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
           ) : null}
 
           {metaParts.length > 0 ? (
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
-              {metaParts.map((part, index) => (
-                <Fragment key={index}>
-                  {index > 0 ? <span className="text-muted-foreground/40" aria-hidden>·</span> : null}
-                  {part}
-                </Fragment>
-              ))}
+            <div className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground">
+              {metaParts}
             </div>
           ) : null}
 
-          {/* Actions sit above the title's stretched link */}
-          <div className="relative z-10 mt-3 flex items-center gap-0.5 border-t border-border/60 pt-2.5">
-            {!readOnly && (
-              <>
-                <FeedAction
-                  onClick={handleLike}
-                  active={isLiked}
-                  activeClass="text-red-500"
-                  hoverClass="hover:text-red-500"
-                  icon={isLiked ? RiHeartFill : RiHeartLine}
-                  count={likeCount}
-                  label="Like"
-                />
-                <FeedAction
-                  onClick={handleSave}
-                  active={isSaved}
-                  activeClass="text-primary"
-                  hoverClass="hover:text-primary"
-                  icon={isSaved ? RiBookmarkFill : RiBookmarkLine}
-                  count={saveCount}
-                  label="Save"
-                />
-                {/* Shown to guests too: the count is public like every other one here, and
-                    pressing it prompts sign-up rather than silently doing nothing. */}
-                <FeedAction
-                  onClick={handleAddToPlaylist}
-                  hoverClass="hover:text-violet-500"
-                  icon={RiListOrdered}
-                  count={playlistAddCount}
-                  label="Add to playlist"
-                />
-              </>
-            )}
-            <FeedAction
-              onClick={handleShare}
-              active={justShared}
-              activeClass="text-foreground"
-              hoverClass="hover:text-foreground"
-              icon={justShared ? RiShareFill : RiShareLine}
-              count={shareCount}
-              label="Share"
-            />
-
-            <RiArrowRightLine
-              className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
-              aria-hidden
-            />
-          </div>
+          {actionRow}
         </div>
       </article>
+      )}
 
       {/* Content Share Composer */}
       {showShareComposer && (

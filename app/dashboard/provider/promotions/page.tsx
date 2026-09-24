@@ -97,18 +97,18 @@ function PromotableContentRow({
   const metrics: any = (content as any).metrics || {}
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/40 p-3 transition-colors hover:border-primary/20 hover:bg-card/80">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
-        <Icon className="h-4 w-4 text-primary" />
+    <div className="flex items-center gap-3 rounded-up-md border border-border bg-card p-3 transition-colors hover:border-up-border-hover hover:bg-card">
+      <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-up-sm bg-up-fill text-foreground">
+        <Icon className="h-[18px] w-[18px]" />
       </span>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="min-w-0 truncate text-body-sm font-semibold text-foreground">
+          <p className="min-w-0 truncate text-[15px] font-bold text-foreground">
             {content.title}
           </p>
           {recommended && (
-            <Badge className="shrink-0 rounded-md bg-primary/12 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-primary">
+            <Badge className="shrink-0 rounded-full border-transparent bg-up-orange-tint px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-up-orange-ink hover:bg-up-orange-tint">
               Suggested
             </Badge>
           )}
@@ -127,7 +127,7 @@ function PromotableContentRow({
       <Button
         size="sm"
         onClick={() => onPromote(content)}
-        className="h-9 shrink-0 rounded-xl bg-primary px-3 text-primary-foreground hover:bg-primary/90"
+        className="h-9 shrink-0 px-3.5"
       >
         <TrendingUp className="h-4 w-4 sm:mr-1.5" />
         <span className="hidden sm:inline">Promote</span>

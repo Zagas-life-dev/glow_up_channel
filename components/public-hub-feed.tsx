@@ -12,6 +12,8 @@ import PublicHubDisclaimer from "@/components/public-hub-disclaimer"
 import { PageShell } from "@/components/layout/page-shell"
 import { FeedCardSkeleton } from "@/components/skeletons/feed-card-skeleton"
 import { buildFeedWithSponsored } from "@/lib/feed-ads"
+import { cn } from "@/lib/utils"
+import { UP_KIND, toUpKind } from "@/components/up/kind"
 import { normalizeFeedListItem } from "@/lib/feed-content-type"
 import { getFeedSessionSeed } from "@/lib/feed-session-seed"
 import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
@@ -37,9 +39,6 @@ export interface PublicHubConfig {
   subheading: string
   searchPlaceholder: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  /** Tailwind classes for the header icon tile. */
-  iconClassName: string
-  tileClassName: string
   suggestionTags: string[]
 }
 
@@ -72,8 +71,6 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
     subheading,
     searchPlaceholder,
     icon: Icon,
-    iconClassName,
-    tileClassName,
     suggestionTags,
   } = config
 
@@ -292,15 +289,17 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
     <PageShell fullWidth>
       <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
         <header className="mb-5">
-          <div className="mb-4 flex items-center gap-3">
-            <div
-              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border ${tileClassName}`}
+          <div className="mb-5 flex items-center gap-3.5">
+            {/* The hub's type chip, so each hub reads in its own type colour. */}
+            <span
+              aria-hidden
+              className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-up-md", UP_KIND[toUpKind(type)].chip)}
             >
-              <Icon className={`h-5 w-5 ${iconClassName}`} aria-hidden />
-            </div>
+              <Icon className="h-[22px] w-[22px]" aria-hidden />
+            </span>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-foreground sm:text-2xl">{heading}</h1>
-              <p className="text-sm text-muted-foreground">{subheading}</p>
+              <h1 className="font-display text-2xl font-bold leading-tight text-foreground sm:text-[28px]">{heading}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{subheading}</p>
             </div>
           </div>
 
@@ -313,13 +312,13 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Popular:</span>
+            <span className="text-xs font-bold text-muted-foreground">Popular</span>
             {suggestionTags.map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => setSearchInput(tag)}
-                className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                className="inline-flex h-8 items-center rounded-full border border-border bg-card px-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:border-up-border-hover hover:text-foreground"
               >
                 {tag}
               </button>

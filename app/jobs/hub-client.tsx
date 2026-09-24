@@ -13,8 +13,6 @@ const config: PublicHubConfig = {
   subheading: "Roles, internships, and contract work",
   searchPlaceholder: "Search jobs by title, company, or location...",
   icon: RiBriefcaseLine,
-  iconClassName: "text-primary",
-  tileClassName: "border-primary/20 bg-primary/15",
   suggestionTags: [
     "Remote",
     "Full-time",

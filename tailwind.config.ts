@@ -26,8 +26,9 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // UP Design v1: Plus Jakarta Sans for body, Unbounded for headings/figures.
+        sans: ["var(--font-up-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-up-display)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-lg": ["2.25rem", { lineHeight: "1.2", letterSpacing: "-0.02em" }],
@@ -82,6 +83,29 @@ const config: Config = {
         "content-muted": "hsl(var(--text-muted))",
         "border-default": "hsl(var(--border-default))",
         "border-subtle": "hsl(var(--border-subtle))",
+        // UP raw tokens (app/globals.css). Full values, so no `/opacity` on these.
+        up: {
+          navy: "var(--up-navy)",
+          "navy-subtle": "var(--up-navy-subtle)",
+          "on-navy": "var(--up-on-navy)",
+          "on-navy-muted": "var(--up-on-navy-muted)",
+          "on-navy-faint": "var(--up-on-navy-faint)",
+          "border-on-navy": "var(--up-border-on-navy)",
+          orange: "var(--up-orange)",
+          "orange-ink": "var(--up-orange-ink)",
+          "orange-tint": "var(--up-orange-tint)",
+          lime: "var(--up-lime)",
+          "lime-tint": "var(--up-lime-tint)",
+          "lime-ink": "var(--up-lime-ink)",
+          fill: "var(--up-fill-subtle)",
+          hairline: "var(--up-hairline)",
+          sep: "var(--up-sep)",
+          "border-hover": "var(--up-border-hover)",
+          bar: "var(--up-bar-bg)",
+          solid: "var(--up-solid)",
+          "on-solid": "var(--up-on-solid)",
+          lead: "var(--up-lead)",
+        },
         "brand-orange": "#ff6700",
         "brand-blue": "#0b1222",
         "orange": {
@@ -101,6 +125,11 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        // UP radii: 12 / 14 / 18 / 20
+        "up-sm": "12px",
+        "up-md": "14px",
+        "up-lg": "18px",
+        "up-xl": "20px",
       },
       keyframes: {
         "accordion-down": {

@@ -4,33 +4,35 @@ import { RiPlayList2Fill } from "react-icons/ri"
 import { cn } from "@/lib/utils"
 
 /**
- * Generated cover art — the one loud element on the playlist pages.
+ * Generated cover art — the card-stack motif from UP Design v1.
  *
- * Every playlist gets its own mesh gradient, deterministic from its id so it never changes,
- * hue-anchored on the content types it holds. Colours stay inside the brand arc (orange
- * #ff6700 through coral/magenta down to the logo blue #0b1222), so a wall of covers reads
- * as one product rather than a swatch book.
+ * A navy tile with three rotated cards, each coloured by a content type the
+ * playlist holds: opportunity = orange, job = cream, event = lime, resource =
+ * a muted blue. So a cover says what's inside at a glance, and a wall of covers
+ * reads as one product rather than a swatch book. The tilt of the stack is
+ * seeded from the playlist id, so two lists with the same mix still differ.
  *
- * Size comes entirely from `className` — the same component works at 64px in a row and
- * 176px in a page header.
+ * Size comes entirely from `className` — the same component works at 64px in a
+ * row and 176px in a page header.
  */
 
 const ITEM_TYPES = ["opportunity", "job", "event", "resource"] as const
 type ItemType = (typeof ITEM_TYPES)[number]
 
-/** Warm brand hues per type; resource pulls toward the logo blue for contrast in a mixed list. */
-const TYPE_HUE: Record<ItemType, number> = {
-  opportunity: 24,
-  job: 8,
-  event: 42,
-  resource: 258,
+const TYPE_FILL: Record<ItemType, string> = {
+  opportunity: "#FF6A00",
+  job: "#FBFAF7",
+  event: "#D6FF3F",
+  resource: "#5B6BA8",
 }
 
-/** Used when a playlist's items aren't loaded — keeps a list of covers visibly distinct. */
-const FALLBACK_HUES = [24, 8, 42, 350, 258, 14, 336, 32]
-
-/** The logo blue, used as every cover's deep anchor. */
-const BRAND_BLUE = 222
+/** Hue used for a page's ambient wash, keyed to the first type present. */
+const TYPE_HUE: Record<ItemType, number> = {
+  opportunity: 25,
+  job: 45,
+  event: 73,
+  resource: 229,
+}
 
 function seedHash(seed: string): number {
   let h = 2166136261
@@ -45,44 +47,35 @@ function isItemType(value: unknown): value is ItemType {
   return ITEM_TYPES.includes(value as ItemType)
 }
 
+/** The three card colours, in stack order. Falls back to a seeded mix when types aren't loaded. */
+function stackFills(seed: string, types: (string | undefined)[]): string[] {
+  const present: ItemType[] = []
+  for (const type of types) {
+    const resolved = isItemType(type) ? type : "opportunity"
+    if (!present.includes(resolved)) present.push(resolved)
+    if (present.length === 3) break
+  }
+  if (present.length === 0) {
+    const h = seedHash(seed)
+    const start = h % ITEM_TYPES.length
+    for (let i = 0; i < 3; i++) present.push(ITEM_TYPES[(start + i) % ITEM_TYPES.length])
+  }
+  while (present.length < 3) present.push(present[present.length - 1])
+  return present.map((t) => TYPE_FILL[t])
+}
+
 export interface PlaylistArt {
-  /** Ready-to-use CSS `background` shorthand for the cover. */
+  /** Ready-to-use CSS `background` shorthand for the cover ground. */
   background: string
   /** Dominant hue, so a page can tint its ambient wash to match the art. */
   hue: number
 }
 
-/**
- * Three seeded colour blooms over a diagonal base. Positions and hues both vary with the
- * seed, so two playlists holding the same content types still look different.
- */
 export function playlistArt(seed: string, types: (string | undefined)[] = []): PlaylistArt {
-  const h = seedHash(seed)
-
-  const present: ItemType[] = []
-  for (const type of types) {
-    const resolved = isItemType(type) ? type : "opportunity"
-    if (!present.includes(resolved)) present.push(resolved)
-    if (present.length === ITEM_TYPES.length) break
-  }
-
-  const hueA = present.length
-    ? (TYPE_HUE[present[0]] + (h % 21) - 10 + 360) % 360
-    : FALLBACK_HUES[h % FALLBACK_HUES.length]
-  // Second bloom rotates backwards into coral/magenta rather than forwards into green.
-  const hueB = (hueA - 10 - ((h >> 5) % 30) + 360) % 360
-  const hueC = BRAND_BLUE + ((h >> 9) % 21) - 10
-
-  const at = (shift: number, min: number, span: number) => min + ((h >> shift) % span)
-
+  const first = types.find(isItemType) as ItemType | undefined
   return {
-    hue: hueA,
-    background: [
-      `radial-gradient(circle at ${at(2, 12, 32)}% ${at(6, 10, 30)}%, hsl(${hueA} 100% 60%) 0%, transparent 58%)`,
-      `radial-gradient(circle at ${at(10, 56, 34)}% ${at(14, 16, 32)}%, hsl(${hueB} 96% 54%) 0%, transparent 55%)`,
-      `radial-gradient(circle at ${at(18, 22, 50)}% ${at(22, 66, 30)}%, hsl(${hueC} 72% 32%) 0%, transparent 62%)`,
-      `linear-gradient(${at(26, 115, 80)}deg, hsl(${hueA} 88% 46%), hsl(${hueC} 68% 15%))`,
-    ].join(", "),
+    background: "#0B1233",
+    hue: first ? TYPE_HUE[first] : TYPE_HUE.opportunity,
   }
 }
 
@@ -107,20 +100,12 @@ export function PlaylistCover({
   types = [],
   empty = false,
   className,
-  rounded = "rounded-2xl",
+  rounded = "rounded-up-lg",
   imageUrl,
 }: PlaylistCoverProps) {
-  const art = playlistArt(seed, types)
-
   if (imageUrl) {
     return (
-      <div
-        aria-hidden
-        className={cn("relative shrink-0 overflow-hidden bg-muted", rounded, className)}
-        // The generated art sits underneath while the photo loads, so there is no
-        // grey flash in a list of covers.
-        style={{ background: art.background }}
-      >
+      <div aria-hidden className={cn("relative shrink-0 overflow-hidden bg-up-navy", rounded, className)}>
         {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary already sizes and formats it */}
         <img src={imageUrl} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
         <div className={cn("absolute inset-0 ring-1 ring-inset ring-black/10 dark:ring-white/10", rounded)} />
@@ -133,28 +118,36 @@ export function PlaylistCover({
       <div
         aria-hidden
         className={cn(
-          "flex shrink-0 items-center justify-center border border-dashed border-border bg-muted/40",
+          "flex shrink-0 items-center justify-center border border-dashed border-border bg-up-fill",
           rounded,
           className,
         )}
       >
-        <RiPlayList2Fill className="h-[34%] w-[34%] text-muted-foreground/50" />
+        <RiPlayList2Fill className="h-[34%] w-[34%] text-muted-foreground" />
       </div>
     )
   }
 
+  const fills = stackFills(seed, types)
+  const tilt = (seedHash(seed) % 5) - 2
+
   return (
     <div
       aria-hidden
-      className={cn("relative shrink-0 overflow-hidden", rounded, className)}
-      style={{ background: art.background }}
+      className={cn("relative shrink-0 overflow-hidden bg-up-navy dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]", rounded, className)}
     >
-      {/* Gloss + inner edge — gives the art a physical, pressed-glass feel. */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(155deg, rgba(255,255,255,0.28), transparent 46%)" }}
+      <i
+        className="absolute left-[10%] top-[14%] h-[48%] w-[62%] rounded-[18%]"
+        style={{ background: fills[0], transform: `rotate(${-8 + tilt}deg)` }}
       />
-      <div className={cn("absolute inset-0 ring-1 ring-inset ring-white/15", rounded)} />
+      <i
+        className="absolute left-[34%] top-[34%] h-[44%] w-[58%] rounded-[18%]"
+        style={{ background: fills[1], transform: `rotate(${6 - tilt}deg)` }}
+      />
+      <i
+        className="absolute left-[16%] top-[62%] h-[30%] w-[40%] rounded-[18%]"
+        style={{ background: fills[2], transform: `rotate(${-3 + tilt}deg)` }}
+      />
     </div>
   )
 }

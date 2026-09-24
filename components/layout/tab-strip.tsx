@@ -20,7 +20,7 @@ export function TabStrip({ tabs, activeId, onChange, className }: TabStripProps)
   return (
     <div className={cn("relative", className)}>
       <div
-        className="flex overflow-x-auto scrollbar-hide px-1 sm:px-0"
+        className="flex gap-1.5 overflow-x-auto scrollbar-hide px-1 sm:px-0"
         style={{ scrollBehavior: "smooth" }}
       >
         {tabs.map((tab) => {
@@ -35,7 +35,7 @@ export function TabStrip({ tabs, activeId, onChange, className }: TabStripProps)
                   className: cn(
                     "h-4 w-4 flex-shrink-0",
                     (tab.icon as React.ReactElement<{ className?: string }>).props?.className,
-                    isActive && "text-orange-500"
+                    isActive && "text-up-orange dark:text-[#B8551E]"
                   ),
                 }
               );
@@ -45,7 +45,7 @@ export function TabStrip({ tabs, activeId, onChange, className }: TabStripProps)
                 <IconComp
                   className={cn(
                     "h-4 w-4 flex-shrink-0",
-                    isActive && "text-orange-500"
+                    isActive && "text-up-orange dark:text-[#B8551E]"
                   )}
                   aria-hidden
                 />
@@ -58,10 +58,10 @@ export function TabStrip({ tabs, activeId, onChange, className }: TabStripProps)
               key={tab.id}
               onClick={() => onChange(tab.id)}
               className={cn(
-                "flex min-h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors",
+                "flex h-[38px] flex-shrink-0 items-center gap-[7px] whitespace-nowrap rounded-full px-[15px] text-sm font-semibold transition-colors",
                 isActive
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  ? "bg-up-solid text-up-on-solid"
+                  : "text-muted-foreground hover:bg-up-fill hover:text-foreground"
               )}
             >
               {iconNode}

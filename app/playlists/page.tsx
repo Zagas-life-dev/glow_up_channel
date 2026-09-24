@@ -219,17 +219,11 @@ function PlaylistsPageInner() {
 
   return (
     <PageShell fullWidth className="relative font-sans">
-      {/* A single soft wash at the top — the page's only decoration. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 opacity-70"
-        style={{ background: "linear-gradient(to bottom, hsl(var(--primary) / 0.07), transparent)" }}
-      />
-
       <div className="mx-auto max-w-3xl">
-        <header className="sticky top-0 z-30 -mx-4 border-b border-border/50 bg-page/85 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-page/70 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <header className="sticky top-0 z-30 -mx-4 border-b border-border bg-up-bar px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex items-center justify-between gap-3 pb-4 pt-4 pt-safe">
             <div className="min-w-0">
-              <h1 className="text-[1.75rem] font-bold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-4xl">
+              <h1 className="font-display text-[26px] font-bold leading-[1.15] text-foreground sm:text-[34px]">
                 Playlists
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -240,7 +234,7 @@ function PlaylistsPageInner() {
               <Button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
-                className="h-11 w-11 shrink-0 rounded-2xl bg-primary p-0 text-primary-foreground shadow-sm shadow-primary/20 transition-transform active:scale-95 sm:w-auto sm:px-5"
+                className="h-11 w-11 shrink-0 rounded-full p-0 transition-transform active:scale-95 sm:w-auto sm:px-5"
                 aria-label="New playlist"
               >
                 <RiAddLine className="h-5 w-5 sm:mr-2 sm:h-4 sm:w-4" />
@@ -250,7 +244,7 @@ function PlaylistsPageInner() {
           </div>
 
           {/* Segmented control — four tabs share the width on mobile, no horizontal scroll. */}
-          <nav className="flex gap-1 pb-3" aria-label="Playlist categories">
+          <nav className="mb-3 flex w-full gap-1 rounded-full bg-up-fill p-1 sm:w-max" aria-label="Playlist categories">
             {visibleTabs.map((tab) => {
               const count = tab.count?.(countCtx) ?? 0
               const active = activeTab === tab.id
@@ -261,15 +255,15 @@ function PlaylistsPageInner() {
                   onClick={() => setTab(tab.id)}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-medium transition-colors sm:flex-none sm:px-4",
+                    "flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold transition-colors sm:flex-none sm:px-4",
                     active
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                      ? "bg-up-solid text-up-on-solid"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {tab.label}
                   {tab.count && count > 0 ? (
-                    <span className={cn("text-xs tabular-nums", active ? "text-muted-foreground" : "text-muted-foreground/70")}>
+                    <span className="text-xs tabular-nums opacity-70">
                       {count}
                     </span>
                   ) : null}
@@ -281,20 +275,20 @@ function PlaylistsPageInner() {
 
         <main className="pb-8 pt-2">
           {isLoading ? (
-            <ul className="divide-y divide-border/50" aria-busy="true">
+            <ul className="overflow-hidden rounded-up-xl border border-border bg-card divide-y divide-up-hairline" aria-busy="true">
               {[...Array(6)].map((_, i) => (
-                <li key={i} className="flex animate-pulse items-center gap-3.5 py-4">
-                  <div className="h-14 w-14 shrink-0 rounded-2xl bg-muted/70" />
+                <li key={i} className="flex animate-pulse items-center gap-3.5 px-[18px] py-3.5">
+                  <div className="h-14 w-14 shrink-0 rounded-up-lg bg-up-fill" />
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className="h-4 w-2/5 rounded-full bg-muted/70" />
-                    <div className="h-3 w-3/5 rounded-full bg-muted/50" />
+                    <div className="h-4 w-2/5 rounded-full bg-up-fill" />
+                    <div className="h-3 w-3/5 rounded-full bg-up-hairline" />
                   </div>
                 </li>
               ))}
             </ul>
           ) : currentPlaylists.length === 0 ? (
-            <div className="mx-auto mt-8 max-w-sm animate-fade-in-up rounded-3xl border border-dashed border-border px-6 py-14 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+            <div className="mx-auto mt-8 max-w-sm animate-fade-in-up rounded-up-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-up-md bg-up-fill">
                 {activeTab === "shared" ? (
                   <RiUserAddLine className="h-5 w-5 text-muted-foreground" />
                 ) : activeTab === "saved" ? (
@@ -305,13 +299,13 @@ function PlaylistsPageInner() {
                   <RiPlayList2Fill className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
-              <h2 className="text-base font-semibold text-foreground">{empty.title}</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{empty.title}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{empty.body}</p>
               {isAuthenticated && (activeTab === "my" || activeTab === "public") ? (
                 <Button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-6 h-11 rounded-2xl px-6"
+                  className="mt-6 h-11 px-6"
                 >
                   <RiAddLine className="mr-2 h-4 w-4" />
                   Create playlist
@@ -320,7 +314,7 @@ function PlaylistsPageInner() {
             </div>
           ) : (
             <>
-            <ul ref={listRef} className="divide-y divide-border/50">
+            <ul ref={listRef} className="overflow-hidden rounded-up-xl border border-border bg-card divide-y divide-up-hairline">
               {currentPlaylists.map((playlist, index) => {
                 const acceptedCollaborators =
                   playlist.collaborators?.filter((c) => c.status === "accepted") || []
@@ -345,20 +339,20 @@ function PlaylistsPageInner() {
                       animationFillMode: "both",
                     }}
                   >
-                    <div className="-mx-3 flex items-center gap-3.5 rounded-2xl px-3 py-4 transition-colors group-hover:bg-muted/40">
+                    <div className="flex items-center gap-3.5 px-[18px] py-3.5 transition-colors group-hover:bg-up-fill">
                       <PlaylistCover
                         seed={playlist._id}
                         types={(playlist.items ?? []).map((item) => item.contentType)}
                         empty={(playlist.itemCount || 0) === 0}
                         imageUrl={playlist.coverImage}
-                        className="h-16 w-16 shadow-md shadow-black/10 transition-transform duration-200 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem]"
+                        className="h-14 w-14 transition-transform duration-200 group-hover:scale-[1.04] sm:h-16 sm:w-16"
                       />
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-[15px] font-semibold leading-snug text-foreground sm:text-base">
+                        <h3 className="text-[15px] font-bold leading-snug text-foreground">
                           <Link
                             href={`/playlists/${playlist._id}`}
-                            className="line-clamp-1 transition-colors before:absolute before:inset-0 group-hover:text-primary"
+                            className="line-clamp-1 transition-colors before:absolute before:inset-0 group-hover:text-up-orange-ink"
                           >
                             {playlist.name}
                           </Link>
@@ -419,7 +413,7 @@ function PlaylistsPageInner() {
                         ) : null}
 
                         {isDiscover && playlist.reason ? (
-                          <p className="mt-1 text-[12px] font-medium text-primary">
+                          <p className="mt-1 text-[12px] font-bold text-up-orange-ink">
                             {t(`reasons.${playlist.reason}` as TranslationKey)}
                           </p>
                         ) : null}
@@ -432,7 +426,7 @@ function PlaylistsPageInner() {
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
                                 aria-label={`Actions for ${playlist.name}`}
                               >
                                 <RiMore2Line className="h-5 w-5" />
@@ -475,10 +469,10 @@ function PlaylistsPageInner() {
                             aria-pressed={saved}
                             aria-label={saved ? `Unsave ${playlist.name}` : `Save ${playlist.name}`}
                             className={cn(
-                              "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
+                              "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
                               saved
-                                ? "text-primary hover:bg-primary/10"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                ? "text-foreground hover:bg-card"
+                                : "text-muted-foreground hover:bg-card hover:text-foreground",
                             )}
                           >
                             {saved ? <RiBookmarkFill className="h-5 w-5" /> : <RiBookmarkLine className="h-5 w-5" />}
@@ -499,7 +493,7 @@ function PlaylistsPageInner() {
                   <button
                     type="button"
                     onClick={discover.reload}
-                    className="min-h-11 rounded-xl px-4 text-sm font-medium text-primary hover:bg-primary/10"
+                    className="min-h-11 rounded-full px-4 text-sm font-bold text-up-orange-ink hover:bg-up-orange-tint"
                   >
                     Try again
                   </button>

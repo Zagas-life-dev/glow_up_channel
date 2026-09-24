@@ -29,8 +29,8 @@ export default function ContactInformation({ data, updateData, isComplete }: Con
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-          <Mail className="w-8 h-8 text-primary" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-up-orange-tint rounded-full mb-4">
+          <Mail className="w-8 h-8 text-up-orange-ink" />
         </div>
         <h3 className="text-lg font-semibold text-foreground">Contact Information</h3>
         <p className="text-sm text-gray-600">How can we reach you?</p>
@@ -142,7 +142,7 @@ export default function ContactInformation({ data, updateData, isComplete }: Con
       {/* Registration Status Section */}
       <div className="mt-8 pt-6 border-t border-gray-200">
         <div className="flex items-center space-x-2 mb-4">
-          <Shield className="w-5 h-5 text-orange-600" />
+          <Shield className="w-5 h-5 text-up-orange-ink" />
           <h4 className="text-lg font-semibold text-foreground">Registration Status</h4>
         </div>
         
@@ -250,8 +250,8 @@ export default function ContactInformation({ data, updateData, isComplete }: Con
 
       {/* Completion Status */}
       {isComplete && (
-        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+        <div className="flex items-center space-x-2 text-foreground bg-up-lime p-3 rounded-lg">
+          <div className="w-5 h-5 bg-up-lime rounded-full flex items-center justify-center">
             <span className="text-foreground text-xs">✓</span>
           </div>
           <span className="text-sm font-medium">Contact information completed</span>

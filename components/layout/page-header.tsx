@@ -36,16 +36,16 @@ export function PageHeader({
     >
       <div className="flex items-start gap-3 min-w-0">
         {icon && (
-          <div className="flex-shrink-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center">
+          <div className="flex-shrink-0 w-11 h-11 rounded-up-md bg-up-fill text-foreground flex items-center justify-center">
             {icon}
           </div>
         )}
         <div className="space-y-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+          <h1 className="font-display text-2xl sm:text-[34px] sm:leading-[1.15] font-bold text-foreground truncate">
             {title}
           </h1>
           {description && (
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-sm sm:text-[15px] leading-relaxed text-muted-foreground max-w-[600px]">
               {description}
             </p>
           )}
@@ -61,7 +61,7 @@ export function PageHeader({
 
   const wrapped =
     variant === "gradient" ? (
-      <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/20 to-orange-600/10 px-4 sm:px-6 py-4 sm:py-5">
+      <div className="rounded-up-xl bg-up-orange-tint px-4 sm:px-6 py-4 sm:py-5">
         {base}
       </div>
     ) : (
@@ -73,7 +73,7 @@ export function PageHeader({
   }
 
   return (
-    <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border/60 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-3">
+    <div className="sticky top-0 z-30 bg-up-bar backdrop-blur-xl border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-3">
       {wrapped}
     </div>
   );

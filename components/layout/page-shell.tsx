@@ -22,7 +22,7 @@ export function PageShell({
       className={cn(
         chatMode
           ? "flex min-h-0 flex-1 flex-col overflow-x-hidden bg-transparent"
-          : "min-h-screen bg-page bg-gradient-to-b from-background via-background to-background",
+          : "min-h-screen bg-page",
         className
       )}
       {...props}

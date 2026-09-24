@@ -207,7 +207,7 @@ function MonitorListingsContent() {
               value={formatCount(totals.engagement.uniqueViewers)}
               hint={`${formatCount(totals.engagement.views)} total opens`}
               icon={Users}
-              tone="primary"
+              tone="navy"
             />
             <StatTile
               label="Clicked through"

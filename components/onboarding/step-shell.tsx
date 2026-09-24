@@ -23,7 +23,7 @@ export function StepHeader({
 }) {
   return (
     <div className="mb-7">
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] tracking-[-0.02em] text-foreground sm:text-4xl">
+      <h1 className="font-display text-2xl font-bold leading-[1.2] text-foreground sm:text-[30px]">
         {title}
       </h1>
       {description ? (
@@ -51,10 +51,10 @@ export function StepField({
     <div className="space-y-2">
       <Label
         htmlFor={htmlFor}
-        className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+        className="text-[13px] font-bold text-foreground"
       >
         {label}
-        {optional ? <span className="ml-1.5 font-normal normal-case tracking-normal opacity-70">— optional</span> : null}
+        {optional ? <span className="ml-1.5 font-medium text-muted-foreground">— optional</span> : null}
       </Label>
       {children}
       {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
@@ -75,11 +75,11 @@ export function StepPayoff({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center gap-3.5 rounded-xl border border-primary/25 bg-primary/[0.07] px-4 py-3.5">
+    <div className="flex items-center gap-3.5 rounded-up-lg bg-up-lime-tint px-4 py-3.5">
       {value ? (
-        <span className="shrink-0 text-lg font-bold tabular-nums text-primary">{value}</span>
+        <span className="shrink-0 font-display text-[22px] font-bold tabular-nums text-foreground">{value}</span>
       ) : null}
-      <p className="min-w-0 text-[13px] leading-snug text-foreground/90">{children}</p>
+      <p className="min-w-0 text-[13px] leading-snug text-foreground">{children}</p>
     </div>
   )
 }
@@ -100,7 +100,7 @@ export function OptionGrid({
   columns?: 1 | 2
 }) {
   return (
-    <div className={cn('grid gap-2', columns === 2 && 'sm:grid-cols-2')}>
+    <div className={cn('grid gap-2.5', columns === 2 && 'sm:grid-cols-2')}>
       {options.map((option) => {
         const active = selected.includes(option.value)
         return (
@@ -110,32 +110,31 @@ export function OptionGrid({
             onClick={() => onToggle(option.value)}
             aria-pressed={active}
             className={cn(
-              'flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors',
+              // Selected fills navy with an orange check, so it reads without relying on colour alone.
+              'flex min-h-14 items-center gap-3 rounded-up-lg border-[1.5px] px-4 py-3 text-left transition-colors',
               active
-                ? 'border-primary bg-primary/10'
-                : 'border-border bg-card hover:border-border hover:bg-muted/50',
+                ? 'border-up-navy bg-up-navy text-up-on-navy dark:border-up-orange dark:bg-[#141D4A]'
+                : 'border-border bg-card text-foreground hover:border-up-border-hover',
             )}
           >
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold">{option.label}</span>
+              {option.hint ? (
+                <span className={cn('mt-0.5 block text-xs', active ? 'text-up-on-navy-muted' : 'text-muted-foreground')}>
+                  {option.hint}
+                </span>
+              ) : null}
+            </span>
             <span
               aria-hidden
               className={cn(
-                'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
-                active ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                'flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors',
+                active ? 'bg-up-orange text-up-navy' : 'shadow-[inset_0_0_0_1.5px_var(--up-border-hover)] text-transparent',
               )}
             >
-              {active ? (
-                <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M2.5 6.5l2.5 2.5 4.5-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : null}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className={cn('block text-sm font-medium', active ? 'text-foreground' : 'text-foreground/90')}>
-                {option.label}
-              </span>
-              {option.hint ? (
-                <span className="mt-0.5 block text-xs text-muted-foreground">{option.hint}</span>
-              ) : null}
+              <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M2.5 6.5l2.5 2.5 4.5-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
           </button>
         )
@@ -146,4 +145,4 @@ export function OptionGrid({
 
 /** Shared input styling so every step's fields match. */
 export const stepInputClass =
-  'h-12 rounded-xl border-border bg-card text-[15px] text-foreground placeholder:text-muted-foreground/70'
+  'h-12 text-[15px] text-foreground placeholder:text-muted-foreground'

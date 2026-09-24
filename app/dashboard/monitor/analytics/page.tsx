@@ -194,14 +194,14 @@ function MonitorAnalyticsContent() {
                 {promotions.map((promotion) => (
                   <div
                     key={promotion.promotionId}
-                    className="rounded-xl border border-border bg-card p-3 sm:p-4"
+                    className="rounded-up-md border border-border bg-card p-3 sm:p-4"
                   >
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
                         {titleFor(listings, promotion)}
                       </h3>
                       {promotion.packageName ? (
-                        <span className="shrink-0 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        <span className="shrink-0 rounded-md border border-border bg-up-fill px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                           {promotion.packageName}
                         </span>
                       ) : null}

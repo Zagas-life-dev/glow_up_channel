@@ -93,7 +93,7 @@ export function CountrySelector({
         <Button
           variant="outline"
           size="sm"
-          className={cn("h-8 max-w-[13rem] gap-1.5 rounded-full px-3", className)}
+          className={cn("h-[38px] max-w-[13rem] gap-1.5 rounded-full px-[13px]", className)}
           aria-label={t("location.chooseCountry")}
         >
           {selection.mode === "anywhere" ? (
@@ -101,7 +101,7 @@ export function CountrySelector({
           ) : (
             <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
           )}
-          <span className="truncate text-xs font-medium">{activeLabel}</span>
+          <span className="truncate text-[13px] font-semibold">{activeLabel}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
         </Button>
       </DropdownMenuTrigger>

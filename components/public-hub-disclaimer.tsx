@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { RiShuffleLine, RiArrowRightLine } from "react-icons/ri"
 import { useAuth } from "@/lib/auth-context"
-import { SectionCard } from "@/components/layout/section-card"
 
 /**
  * Says plainly that a hub page is not personalized.
@@ -22,13 +21,13 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
   const { isAuthenticated } = useAuth()
 
   return (
-    <SectionCard className="mb-5">
+    <div className="mb-5 rounded-up-xl bg-up-fill px-[18px] py-4">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/20 to-rose-500/15">
-          <RiShuffleLine className="h-5 w-5 text-orange-500" aria-hidden />
+        <div className="mt-0.5 flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-up-sm bg-card text-foreground">
+          <RiShuffleLine className="h-[18px] w-[18px]" aria-hidden />
         </div>
         <div className="min-w-0 space-y-2">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-bold text-foreground">
             This page isn&apos;t personalized
           </p>
           <p className="text-sm leading-relaxed text-muted-foreground">
@@ -39,7 +38,7 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
           {isAuthenticated ? (
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-500 transition-colors hover:text-orange-400"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-up-orange-ink underline-offset-4 transition-colors hover:underline"
             >
               Go to your personalized feed
               <RiArrowRightLine className="h-4 w-4" aria-hidden />
@@ -48,14 +47,14 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
             <p className="text-sm text-muted-foreground">
               <Link
                 href="/signup"
-                className="font-medium text-orange-500 transition-colors hover:text-orange-400"
+                className="font-bold text-up-orange-ink underline-offset-4 transition-colors hover:underline"
               >
                 Sign up
               </Link>
               {" or "}
               <Link
                 href="/login"
-                className="font-medium text-orange-500 transition-colors hover:text-orange-400"
+                className="font-bold text-up-orange-ink underline-offset-4 transition-colors hover:underline"
               >
                 sign in
               </Link>
@@ -64,6 +63,6 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
           )}
         </div>
       </div>
-    </SectionCard>
+    </div>
   )
 }

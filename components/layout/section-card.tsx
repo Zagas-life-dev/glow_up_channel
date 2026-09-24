@@ -27,25 +27,25 @@ export function SectionCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border backdrop-blur-sm",
+        "rounded-up-xl border bg-card",
         emphasized
-          ? "border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-600/5"
-          : "border-border/70 bg-card/80",
+          ? "border-up-orange shadow-[0_0_0_3px_var(--up-orange-tint)]"
+          : "border-border",
         className
       )}
       {...props}
     >
       {headerPresent && (
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-[22px] py-3 sm:py-4 border-b border-up-hairline">
           <div className="flex items-center gap-3 min-w-0">
             {icon && (
-              <div className="flex-shrink-0 w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500/20 to-rose-500/15 border border-orange-500/20 flex items-center justify-center">
+              <div className="flex-shrink-0 w-[34px] h-[34px] rounded-up-sm bg-up-fill text-foreground flex items-center justify-center">
                 {icon}
               </div>
             )}
             <div className="space-y-0.5 min-w-0">
               {title && (
-                <h2 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                <h2 className="text-base font-bold text-foreground truncate">
                   {title}
                 </h2>
               )}
@@ -63,7 +63,7 @@ export function SectionCard({
           )}
         </div>
       )}
-      <div className={cn("px-4 sm:px-5 py-4", !headerPresent && "pt-4")}>
+      <div className={cn("px-4 sm:px-[22px] py-4 sm:py-5", !headerPresent && "pt-4")}>
         {children}
       </div>
     </div>

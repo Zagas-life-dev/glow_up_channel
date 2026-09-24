@@ -58,7 +58,7 @@ export function ContentDetailShell({
         {hero}
 
         <div className="relative -mt-5 rounded-t-[1.75rem] bg-page pt-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8 lg:rounded-none lg:bg-transparent lg:pt-0">
-          <main className="mx-auto w-full max-w-[680px] space-y-7 px-5 lg:mx-0 lg:max-w-none lg:rounded-[1.5rem] lg:border lg:border-border/70 lg:bg-card/60 lg:p-8">
+          <main className="mx-auto w-full max-w-[680px] space-y-7 px-5 lg:mx-0 lg:max-w-none lg:rounded-up-xl lg:border lg:border-border lg:bg-card lg:p-8">
             {/* Phones get the action before the read: the pinned bottom bar can sit under
                 browser chrome or a keyboard, so the exit is offered where the eye already is. */}
             {hasInlineAction && (
@@ -88,7 +88,7 @@ export function ContentDetailShell({
             <aside className="hidden lg:block">
               <div className="sticky top-8 space-y-6">
                 {hasActionBar && (
-                  <div className="space-y-3 rounded-[1.5rem] border border-border/70 bg-card/60 p-5">
+                  <div className="space-y-3 rounded-up-xl border border-border bg-card p-5">
                     {action}
                     {secondaryAction && (
                       <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export function ContentDetailShell({
 
       {/* Phone and tablet action bar */}
       {hasActionBar && (
-        <div className="sticky bottom-0 z-30 mt-6 border-t border-border bg-page/95 backdrop-blur-md lg:hidden">
+        <div className="sticky bottom-0 z-30 mt-6 border-t border-border bg-up-bar backdrop-blur-md lg:hidden">
           <div className="mx-auto flex max-w-[680px] items-center gap-3 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {secondaryAction}
             <div className="min-w-0 flex-1">{action}</div>

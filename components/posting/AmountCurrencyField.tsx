@@ -167,7 +167,7 @@ export function AmountCurrencyField({
       ) : null}
 
       {ratesStale && entry.amount ? (
-        <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500">
+        <p className="flex items-center gap-1.5 text-xs text-up-orange-ink">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
           Live rates are unavailable, so conversions use a saved rate and may be
           out of date. Enter the amount in its own currency to be safe.
