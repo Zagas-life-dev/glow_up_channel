@@ -49,8 +49,6 @@ import {
   Eye,
   EyeOff,
   Link as LinkIcon,
-  Plus,
-  X,
   Sparkles,
   TrendingUp,
   Building2,
@@ -68,6 +66,10 @@ import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { canAccessMonitorPortal, canPublishContent, isMonitor } from '@/lib/roles'
 import { trackProfileEdit } from '@/lib/tracking'
 import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
+import { SkillPicker } from '@/components/tags/skill-picker'
+import { LocationControls } from '@/components/settings/location-controls'
+import { labelFor, tagsInFacet } from '@/lib/taxonomy'
+import { useLocale } from '@/lib/i18n/context'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -325,7 +327,9 @@ export default function SettingsPage() {
   const [headline, setHeadline] = useState('')
   const [website, setWebsite] = useState('')
   const [skills, setSkills] = useState<string[]>([])
-  const [newSkill, setNewSkill] = useState('')
+  // Community group tag ids ("community:women"), chosen at onboarding.
+  const [communities, setCommunities] = useState<string[]>([])
+  const { locale } = useLocale()
   const [workCompany, setWorkCompany] = useState('')
   const [workTitle, setWorkTitle] = useState('')
   const [educationSchool, setEducationSchool] = useState('')
@@ -502,6 +506,7 @@ export default function SettingsPage() {
       setFieldOfStudy(profile.fieldOfStudy || '')
       setInstitution(profile.institution || '')
       setAspirations(profile.aspirations || [])
+      setCommunities(Array.isArray((profile as any).communities) ? (profile as any).communities : [])
       setPhoneNumber(profile.phoneNumber || '')
     } else if (user && (user as any).phoneNumber) {
       // Fallback: if there is no separate onboarding profile yet, fall back
@@ -677,20 +682,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Add skill
-  const addSkill = () => {
-    const trimmed = newSkill.trim()
-    if (trimmed && !skills.includes(trimmed) && skills.length < 20) {
-      setSkills([...skills, trimmed])
-      setNewSkill('')
-    }
-  }
-
-  // Remove skill
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill))
-  }
-
   // Update social link
   const updateSocialLink = (platform: string, url: string) => {
     setSocialLinks({ ...socialLinks, [platform]: url })
@@ -754,6 +745,7 @@ export default function SettingsPage() {
         institution: institution || undefined,
         skills,
         aspirations,
+        communities,
         phoneNumber: phoneNumber || undefined
       }
 
@@ -1074,43 +1066,15 @@ export default function SettingsPage() {
                   </div>
                 </SettingsSection>
 
-                <SettingsSection title="Skills" description="Used to match you with relevant opportunities.">
-                  <div className="flex flex-wrap gap-2">
-                    {skills.map((skill) => (
-                      <span key={skill} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
-                        {skill}
-                        <button
-                          type="button"
-                          onClick={() => { removeSkill(skill); setIsDirty(true) }}
-                          aria-label={`Remove ${skill}`}
-                          className="text-muted-foreground transition-colors hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                    {skills.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No skills added yet.</p>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Input
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          addSkill()
-                          setIsDirty(true)
-                        }
-                      }}
-                      placeholder="Add a skill"
-                      className="h-11"
-                    />
-                    <Button type="button" variant="outline" onClick={() => { addSkill(); setIsDirty(true) }} className="h-11 shrink-0">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <SettingsSection title="Skills" description="Pick from the list so we can match you accurately.">
+                  {skills.length === 0 ? (
+                    <p className="mb-2 text-xs text-muted-foreground">No skills added yet.</p>
+                  ) : null}
+                  <SkillPicker
+                    value={skills}
+                    onChange={(next) => { setSkills(next); setIsDirty(true) }}
+                    max={20}
+                  />
                 </SettingsSection>
 
                 <SettingsSection title="Links" description="Where people can find you.">
@@ -1152,6 +1116,8 @@ export default function SettingsPage() {
                     <SettingsField label="City" htmlFor="city" hint="Optional.">
                       <Input id="city" value={city} onChange={(e) => editField(setCity)(e.target.value)} placeholder="Ikeja" className="h-11" />
                     </SettingsField>
+                    {/* Device location: use it, or clear what the server saved. */}
+                    <LocationControls />
                   </div>
                 </SettingsSection>
 
@@ -1192,6 +1158,36 @@ export default function SettingsPage() {
                     selected={interests}
                     onToggle={(value) => { toggleArrayItem(interests, value, setInterests); setIsDirty(true) }}
                   />
+                </SettingsSection>
+
+                <SettingsSection
+                  title="Communities"
+                  description="Groups that describe you. We show you opportunities made specifically for them."
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {tagsInFacet('community').map((tag) => {
+                      const active = communities.includes(tag.id)
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => {
+                            setCommunities(active ? communities.filter((id) => id !== tag.id) : [...communities, tag.id])
+                            setIsDirty(true)
+                          }}
+                          className={cn(
+                            'inline-flex h-8 items-center rounded-full border px-3 text-[13px] font-semibold transition-colors',
+                            active
+                              ? 'border-up-solid bg-up-solid text-up-on-solid'
+                              : 'border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground'
+                          )}
+                        >
+                          {labelFor(tag.id, locale)}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </SettingsSection>
 
                 <SettingsSection title="Industry sectors" description="The industries you work in or want to enter.">

@@ -28,6 +28,7 @@ import {
   ListingAnalyticsCard,
   ListingAnalyticsSummary,
 } from "@/components/analytics/listing-analytics"
+import { LocationAudiencePanel } from "@/components/analytics/location-audience-panel"
 import {
   EMPTY_TOTALS,
   fetchListingAnalytics,
@@ -164,6 +165,9 @@ export default function ProviderAnalyticsPage() {
           >
             <ListingAnalyticsSummary totals={totals} />
           </Panel>
+
+          {/* Totals only, never individual people; small places arrive folded. */}
+          <LocationAudiencePanel />
 
           <Panel
             icon={BarChart3}

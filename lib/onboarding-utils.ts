@@ -78,6 +78,8 @@ export function transformOnboardingData(formData: any) {
     fieldOfStudy: formData.fieldOfStudy || undefined,
     institution: formData.institution || undefined,
     skills: formData.skills || [],
+    // Community group tag ids ("community:women"), from their own step.
+    communities: Array.isArray(formData.communities) ? formData.communities : [],
     // Collected on its own step now, stored E.164 (dial code + national digits, no trunk zero).
     phoneNumber: formData.phoneNumber || undefined,
     aspirations: (formData.aspirations || []).map((aspiration: string) => 

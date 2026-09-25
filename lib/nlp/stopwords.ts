@@ -36,6 +36,18 @@ lhe lhes mais mas me mesmo meu meus minha minhas muito na nao nas nem no nos nos
 num numa o os ou para pela pelas pelo pelos por qual quando que quem se sem ser seu seus so sua suas
 tambem te tem tinha ter teu teus tu tua tuas um uma umas uns voce voces assim entao`
 
+// Swahili function words only — none of them is an English, French, Spanish or
+// Portuguese content word, so adding them to the union below cannot delete
+// meaning from a listing in another language.
+const SW = `na ya wa kwa za la cha vya katika kwamba hii huu hiyo hizi ni si kuwa pia au lakini
+ambayo ambao ambaye ambapo kama sana tu bado hadi kutoka baada kabla wakati kila yote wote zote
+yake zake wao sisi wewe mimi yeye nini gani jinsi hivyo hapa pale huko kuhusu dhidi bila`
+
+// Amharic stands as words only where it is not a clitic; the prefixes (የ, ለ,
+// በ, ከ) attach to the next word and never appear alone.
+const AM = `እና ነው ናቸው ነበር ላይ ውስጥ ወደ ይህ ይህን ያ እንደ ግን ወይም ሁሉ ሁሉም ብቻ ደግሞ
+እንዲሁም ስለ ጋር ነገር እኛ እርስዎ እሱ እሷ እነሱ ምን ማን የት መቼ`
+
 function toSet(text: string): Set<string> {
   return new Set(text.split(/\s+/).filter(Boolean))
 }
@@ -45,6 +57,8 @@ export const STOPWORDS: Record<SupportedLanguage, Set<string>> = {
   fr: toSet(FR),
   es: toSet(ES),
   pt: toSet(PT),
+  sw: toSet(SW),
+  am: toSet(AM),
 }
 
 /** Union of every list — for when the language is unknown or mixed. */

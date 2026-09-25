@@ -1,12 +1,35 @@
 'use client'
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
-import { RiCloseLine } from 'react-icons/ri'
+/**
+ * Skills, picked from the official list.
+ *
+ * Free typing produced 1,670 distinct profile skills — "graphic design",
+ * "graphics design", "graphicdesign" — none of which reliably matched a
+ * listing. Picking from the tag list means a skill here is the same id a
+ * listing is tagged with. See components/tags/skill-picker.tsx.
+ */
 
-import SkillsInput from '@/components/ui/skills-input'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+
+import { SkillPicker } from '@/components/tags/skill-picker'
+import { useLocale } from '@/lib/i18n/context'
+import { TAG_BY_ID } from '@/lib/nlp/taxonomy'
+import { labelFor } from '@/lib/taxonomy'
 import { StepField, StepHeader, StepPayoff } from './step-shell'
 
-const POPULAR = ['JavaScript', 'Python', 'React', 'Project Management', 'Communication', 'Leadership']
+const MAX_SKILLS = 15
+
+/** Shown alongside the search: the skills most profiles already hold. */
+const POPULAR = [
+  'skill:communication',
+  'skill:leadership',
+  'skill:project-management',
+  'skill:copywriting',
+  'skill:python',
+  'skill:graphic-design',
+  'skill:data-analysis',
+  'skill:customer-service',
+]
 
 interface SkillsStepProps {
   onSubmit: (data: { skills: string[] }) => void
@@ -15,7 +38,8 @@ interface SkillsStepProps {
 }
 
 const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData, onValidityChange }, ref) => {
-  const [skills, setSkills] = useState<string[]>(initialData?.skills || [])
+  const { t, locale } = useLocale()
+  const [skills, setSkills] = useState<string[]>(Array.isArray(initialData?.skills) ? initialData.skills : [])
 
   const isValid = skills.length >= 1
 
@@ -30,40 +54,30 @@ const SkillsStep = forwardRef<any, SkillsStepProps>(({ onSubmit, initialData, on
     },
   }))
 
-  const addSkill = (skill: string) => {
-    setSkills((prev) => (prev.includes(skill) ? prev : [...prev, skill]))
-  }
+  const popular = POPULAR.map((id) => TAG_BY_ID.get(id)?.label).filter(
+    (label): label is string => Boolean(label) && !skills.includes(label as string),
+  )
 
   return (
     <div>
-      <StepHeader
-        title="What can you do?"
-        description="Skills are matched against listing requirements directly. Add at least one."
-      />
+      <StepHeader title="What can you do?" description={t('onboarding.skillsHelp')} />
 
       <div className="space-y-5">
         <StepField label="Your skills">
-          <SkillsInput
-            value={skills}
-            onChange={setSkills}
-            placeholder="Start typing a skill…"
-            maxSkills={15}
-          />
+          <SkillPicker value={skills} onChange={setSkills} max={MAX_SKILLS} />
         </StepField>
 
-        {/* Suggestions stay available after the first skill — the old step hid them once you
-            had one, which is exactly when people are still thinking of more. */}
-        {skills.length < 15 && (
+        {skills.length < MAX_SKILLS && popular.length > 0 && (
           <StepField label="Common ones" optional>
             <div className="flex flex-wrap gap-2">
-              {POPULAR.filter((skill) => !skills.includes(skill)).map((skill) => (
+              {POPULAR.filter((id) => popular.includes(TAG_BY_ID.get(id)?.label ?? '')).map((id) => (
                 <button
-                  key={skill}
+                  key={id}
                   type="button"
-                  onClick={() => addSkill(skill)}
+                  onClick={() => setSkills((prev) => [...prev, TAG_BY_ID.get(id)!.label])}
                   className="inline-flex h-8 items-center rounded-full border border-border bg-card px-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:border-up-border-hover hover:text-foreground"
                 >
-                  + {skill}
+                  + {labelFor(id, locale)}
                 </button>
               ))}
             </div>

@@ -31,8 +31,16 @@ const MAX_PASSES = 3
 
 type Rule = { suffix: string; replacement: string; minLength?: number }
 
-/** Applied in order, first match wins. Longest suffixes must come first. */
+/**
+ * Applied in order, first match wins. Longest suffixes must come first.
+ *
+ * Swahili inflects at the front of the word (m-/wa-, ki-/vi-) and Amharic is
+ * not in Latin script, so neither has suffix rules; their taxonomy aliases list
+ * the forms that matter instead.
+ */
 const RULES: Record<SupportedLanguage, Rule[]> = {
+  sw: [],
+  am: [],
   en: [
     { suffix: "ies", replacement: "y", minLength: 5 },
     // These four shorten by two, so six characters is enough to leave a stem of

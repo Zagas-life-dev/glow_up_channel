@@ -1,0 +1,4816 @@
+{
+ "version": 1,
+ "countries": [
+  {
+   "code": "DZ",
+   "name": "Algeria",
+   "subregion": "north-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 28.03,
+   "lng": 1.66
+  },
+  {
+   "code": "EG",
+   "name": "Egypt",
+   "subregion": "north-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 26.82,
+   "lng": 30.8
+  },
+  {
+   "code": "LY",
+   "name": "Libya",
+   "subregion": "north-africa",
+   "languages": [],
+   "lat": 26.34,
+   "lng": 17.23
+  },
+  {
+   "code": "MA",
+   "name": "Morocco",
+   "subregion": "north-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 31.79,
+   "lng": -7.09
+  },
+  {
+   "code": "SD",
+   "name": "Sudan",
+   "subregion": "north-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 12.86,
+   "lng": 30.22
+  },
+  {
+   "code": "TN",
+   "name": "Tunisia",
+   "subregion": "north-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 33.89,
+   "lng": 9.54
+  },
+  {
+   "code": "EH",
+   "name": "Western Sahara",
+   "subregion": "north-africa",
+   "languages": [
+    "es"
+   ],
+   "lat": 24.22,
+   "lng": -12.89
+  },
+  {
+   "code": "BJ",
+   "name": "Benin",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 9.31,
+   "lng": 2.32
+  },
+  {
+   "code": "BF",
+   "name": "Burkina Faso",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 12.24,
+   "lng": -1.56
+  },
+  {
+   "code": "CV",
+   "name": "Cabo Verde",
+   "subregion": "west-africa",
+   "languages": [
+    "pt"
+   ],
+   "lat": 16,
+   "lng": -24.01
+  },
+  {
+   "code": "CI",
+   "name": "Côte d'Ivoire",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 7.54,
+   "lng": -5.55
+  },
+  {
+   "code": "GM",
+   "name": "Gambia",
+   "subregion": "west-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 13.44,
+   "lng": -15.31
+  },
+  {
+   "code": "GH",
+   "name": "Ghana",
+   "subregion": "west-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 7.95,
+   "lng": -1.02
+  },
+  {
+   "code": "GN",
+   "name": "Guinea",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 9.95,
+   "lng": -9.7
+  },
+  {
+   "code": "GW",
+   "name": "Guinea-Bissau",
+   "subregion": "west-africa",
+   "languages": [
+    "pt"
+   ],
+   "lat": 11.8,
+   "lng": -15.18
+  },
+  {
+   "code": "LR",
+   "name": "Liberia",
+   "subregion": "west-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 6.43,
+   "lng": -9.43
+  },
+  {
+   "code": "ML",
+   "name": "Mali",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 17.57,
+   "lng": -4
+  },
+  {
+   "code": "MR",
+   "name": "Mauritania",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 21.01,
+   "lng": -10.94
+  },
+  {
+   "code": "NE",
+   "name": "Niger",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 17.61,
+   "lng": 8.08
+  },
+  {
+   "code": "NG",
+   "name": "Nigeria",
+   "subregion": "west-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 9.08,
+   "lng": 8.68
+  },
+  {
+   "code": "SN",
+   "name": "Senegal",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 14.5,
+   "lng": -14.45
+  },
+  {
+   "code": "SL",
+   "name": "Sierra Leone",
+   "subregion": "west-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 8.46,
+   "lng": -11.78
+  },
+  {
+   "code": "TG",
+   "name": "Togo",
+   "subregion": "west-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 8.62,
+   "lng": 0.82
+  },
+  {
+   "code": "AO",
+   "name": "Angola",
+   "subregion": "central-africa",
+   "languages": [
+    "pt"
+   ],
+   "lat": -11.2,
+   "lng": 17.87
+  },
+  {
+   "code": "CM",
+   "name": "Cameroon",
+   "subregion": "central-africa",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 7.37,
+   "lng": 12.35
+  },
+  {
+   "code": "CF",
+   "name": "Central African Republic",
+   "subregion": "central-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 6.61,
+   "lng": 20.94
+  },
+  {
+   "code": "TD",
+   "name": "Chad",
+   "subregion": "central-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 15.45,
+   "lng": 18.73
+  },
+  {
+   "code": "CG",
+   "name": "Congo",
+   "subregion": "central-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -0.23,
+   "lng": 15.83
+  },
+  {
+   "code": "CD",
+   "name": "DR Congo",
+   "subregion": "central-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -4.04,
+   "lng": 21.76
+  },
+  {
+   "code": "GQ",
+   "name": "Equatorial Guinea",
+   "subregion": "central-africa",
+   "languages": [
+    "es",
+    "pt",
+    "fr"
+   ],
+   "lat": 1.65,
+   "lng": 10.27
+  },
+  {
+   "code": "GA",
+   "name": "Gabon",
+   "subregion": "central-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -0.8,
+   "lng": 11.61
+  },
+  {
+   "code": "ST",
+   "name": "São Tomé and Príncipe",
+   "subregion": "central-africa",
+   "languages": [
+    "pt"
+   ],
+   "lat": 0.19,
+   "lng": 6.61
+  },
+  {
+   "code": "BI",
+   "name": "Burundi",
+   "subregion": "east-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -3.37,
+   "lng": 29.92
+  },
+  {
+   "code": "KM",
+   "name": "Comoros",
+   "subregion": "east-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -11.65,
+   "lng": 43.33
+  },
+  {
+   "code": "DJ",
+   "name": "Djibouti",
+   "subregion": "east-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": 11.83,
+   "lng": 42.59
+  },
+  {
+   "code": "ER",
+   "name": "Eritrea",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 15.18,
+   "lng": 39.78
+  },
+  {
+   "code": "ET",
+   "name": "Ethiopia",
+   "subregion": "east-africa",
+   "languages": [
+    "am",
+    "en"
+   ],
+   "lat": 9.15,
+   "lng": 40.49
+  },
+  {
+   "code": "KE",
+   "name": "Kenya",
+   "subregion": "east-africa",
+   "languages": [
+    "en",
+    "sw"
+   ],
+   "lat": -0.02,
+   "lng": 37.91
+  },
+  {
+   "code": "MG",
+   "name": "Madagascar",
+   "subregion": "east-africa",
+   "languages": [
+    "fr"
+   ],
+   "lat": -18.77,
+   "lng": 46.87
+  },
+  {
+   "code": "MW",
+   "name": "Malawi",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -13.25,
+   "lng": 34.3
+  },
+  {
+   "code": "MU",
+   "name": "Mauritius",
+   "subregion": "east-africa",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": -20.35,
+   "lng": 57.55
+  },
+  {
+   "code": "MZ",
+   "name": "Mozambique",
+   "subregion": "east-africa",
+   "languages": [
+    "pt"
+   ],
+   "lat": -18.67,
+   "lng": 35.53
+  },
+  {
+   "code": "RW",
+   "name": "Rwanda",
+   "subregion": "east-africa",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": -1.94,
+   "lng": 29.87
+  },
+  {
+   "code": "SC",
+   "name": "Seychelles",
+   "subregion": "east-africa",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": -4.68,
+   "lng": 55.49
+  },
+  {
+   "code": "SO",
+   "name": "Somalia",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 5.15,
+   "lng": 46.2
+  },
+  {
+   "code": "SS",
+   "name": "South Sudan",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": 6.88,
+   "lng": 31.31
+  },
+  {
+   "code": "TZ",
+   "name": "Tanzania",
+   "subregion": "east-africa",
+   "languages": [
+    "sw",
+    "en"
+   ],
+   "lat": -6.37,
+   "lng": 34.89
+  },
+  {
+   "code": "UG",
+   "name": "Uganda",
+   "subregion": "east-africa",
+   "languages": [
+    "en",
+    "sw"
+   ],
+   "lat": 1.37,
+   "lng": 32.29
+  },
+  {
+   "code": "ZM",
+   "name": "Zambia",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -13.13,
+   "lng": 27.85
+  },
+  {
+   "code": "ZW",
+   "name": "Zimbabwe",
+   "subregion": "east-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -19.02,
+   "lng": 29.15
+  },
+  {
+   "code": "BW",
+   "name": "Botswana",
+   "subregion": "southern-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -22.33,
+   "lng": 24.68
+  },
+  {
+   "code": "SZ",
+   "name": "Eswatini",
+   "subregion": "southern-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -26.52,
+   "lng": 31.47
+  },
+  {
+   "code": "LS",
+   "name": "Lesotho",
+   "subregion": "southern-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -29.61,
+   "lng": 28.23
+  },
+  {
+   "code": "NA",
+   "name": "Namibia",
+   "subregion": "southern-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -22.96,
+   "lng": 18.49
+  },
+  {
+   "code": "ZA",
+   "name": "South Africa",
+   "subregion": "southern-africa",
+   "languages": [
+    "en"
+   ],
+   "lat": -30.56,
+   "lng": 22.94
+  },
+  {
+   "code": "DK",
+   "name": "Denmark",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 56.26,
+   "lng": 9.5
+  },
+  {
+   "code": "EE",
+   "name": "Estonia",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 58.6,
+   "lng": 25.01
+  },
+  {
+   "code": "FI",
+   "name": "Finland",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 61.92,
+   "lng": 25.75
+  },
+  {
+   "code": "IS",
+   "name": "Iceland",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 64.96,
+   "lng": -19.02
+  },
+  {
+   "code": "IE",
+   "name": "Ireland",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 53.41,
+   "lng": -8.24
+  },
+  {
+   "code": "LV",
+   "name": "Latvia",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 56.88,
+   "lng": 24.6
+  },
+  {
+   "code": "LT",
+   "name": "Lithuania",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 55.17,
+   "lng": 23.88
+  },
+  {
+   "code": "NO",
+   "name": "Norway",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 60.47,
+   "lng": 8.47
+  },
+  {
+   "code": "SE",
+   "name": "Sweden",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 60.13,
+   "lng": 18.64
+  },
+  {
+   "code": "GB",
+   "name": "United Kingdom",
+   "subregion": "north-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 55.38,
+   "lng": -3.44
+  },
+  {
+   "code": "AT",
+   "name": "Austria",
+   "subregion": "west-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 47.52,
+   "lng": 14.55
+  },
+  {
+   "code": "BE",
+   "name": "Belgium",
+   "subregion": "west-europe",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 50.5,
+   "lng": 4.47
+  },
+  {
+   "code": "FR",
+   "name": "France",
+   "subregion": "west-europe",
+   "languages": [
+    "fr"
+   ],
+   "lat": 46.23,
+   "lng": 2.21
+  },
+  {
+   "code": "DE",
+   "name": "Germany",
+   "subregion": "west-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 51.17,
+   "lng": 10.45
+  },
+  {
+   "code": "LI",
+   "name": "Liechtenstein",
+   "subregion": "west-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 47.17,
+   "lng": 9.56
+  },
+  {
+   "code": "LU",
+   "name": "Luxembourg",
+   "subregion": "west-europe",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 49.82,
+   "lng": 6.13
+  },
+  {
+   "code": "MC",
+   "name": "Monaco",
+   "subregion": "west-europe",
+   "languages": [
+    "fr"
+   ],
+   "lat": 43.75,
+   "lng": 7.41
+  },
+  {
+   "code": "NL",
+   "name": "Netherlands",
+   "subregion": "west-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 52.13,
+   "lng": 5.29
+  },
+  {
+   "code": "CH",
+   "name": "Switzerland",
+   "subregion": "west-europe",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 46.82,
+   "lng": 8.23
+  },
+  {
+   "code": "AL",
+   "name": "Albania",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.15,
+   "lng": 20.17
+  },
+  {
+   "code": "AD",
+   "name": "Andorra",
+   "subregion": "south-europe",
+   "languages": [
+    "es",
+    "fr"
+   ],
+   "lat": 42.55,
+   "lng": 1.6
+  },
+  {
+   "code": "BA",
+   "name": "Bosnia and Herzegovina",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 43.92,
+   "lng": 17.68
+  },
+  {
+   "code": "HR",
+   "name": "Croatia",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 45.1,
+   "lng": 15.2
+  },
+  {
+   "code": "GR",
+   "name": "Greece",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 39.07,
+   "lng": 21.82
+  },
+  {
+   "code": "IT",
+   "name": "Italy",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.87,
+   "lng": 12.57
+  },
+  {
+   "code": "MT",
+   "name": "Malta",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 35.94,
+   "lng": 14.38
+  },
+  {
+   "code": "ME",
+   "name": "Montenegro",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 42.71,
+   "lng": 19.37
+  },
+  {
+   "code": "MK",
+   "name": "North Macedonia",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.61,
+   "lng": 21.75
+  },
+  {
+   "code": "PT",
+   "name": "Portugal",
+   "subregion": "south-europe",
+   "languages": [
+    "pt"
+   ],
+   "lat": 39.4,
+   "lng": -8.22
+  },
+  {
+   "code": "SM",
+   "name": "San Marino",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 43.94,
+   "lng": 12.46
+  },
+  {
+   "code": "RS",
+   "name": "Serbia",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 44.02,
+   "lng": 21.01
+  },
+  {
+   "code": "SI",
+   "name": "Slovenia",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 46.15,
+   "lng": 14.99
+  },
+  {
+   "code": "ES",
+   "name": "Spain",
+   "subregion": "south-europe",
+   "languages": [
+    "es"
+   ],
+   "lat": 40.46,
+   "lng": -3.75
+  },
+  {
+   "code": "VA",
+   "name": "Vatican City",
+   "subregion": "south-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.9,
+   "lng": 12.45
+  },
+  {
+   "code": "BY",
+   "name": "Belarus",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 53.71,
+   "lng": 27.95
+  },
+  {
+   "code": "BG",
+   "name": "Bulgaria",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 42.73,
+   "lng": 25.49
+  },
+  {
+   "code": "CZ",
+   "name": "Czechia",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 49.82,
+   "lng": 15.47
+  },
+  {
+   "code": "HU",
+   "name": "Hungary",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 47.16,
+   "lng": 19.5
+  },
+  {
+   "code": "MD",
+   "name": "Moldova",
+   "subregion": "east-europe",
+   "languages": [
+    "fr"
+   ],
+   "lat": 47.41,
+   "lng": 28.37
+  },
+  {
+   "code": "PL",
+   "name": "Poland",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 51.92,
+   "lng": 19.15
+  },
+  {
+   "code": "RO",
+   "name": "Romania",
+   "subregion": "east-europe",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 45.94,
+   "lng": 24.97
+  },
+  {
+   "code": "RU",
+   "name": "Russia",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 61.52,
+   "lng": 105.32
+  },
+  {
+   "code": "SK",
+   "name": "Slovakia",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 48.67,
+   "lng": 19.7
+  },
+  {
+   "code": "UA",
+   "name": "Ukraine",
+   "subregion": "east-europe",
+   "languages": [
+    "en"
+   ],
+   "lat": 48.38,
+   "lng": 31.17
+  },
+  {
+   "code": "CA",
+   "name": "Canada",
+   "subregion": "north-america",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": 56.13,
+   "lng": -106.35
+  },
+  {
+   "code": "US",
+   "name": "United States",
+   "subregion": "north-america",
+   "languages": [
+    "en",
+    "es"
+   ],
+   "lat": 37.09,
+   "lng": -95.71
+  },
+  {
+   "code": "BZ",
+   "name": "Belize",
+   "subregion": "central-america",
+   "languages": [
+    "en",
+    "es"
+   ],
+   "lat": 17.19,
+   "lng": -88.5
+  },
+  {
+   "code": "CR",
+   "name": "Costa Rica",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 9.75,
+   "lng": -83.75
+  },
+  {
+   "code": "SV",
+   "name": "El Salvador",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 13.79,
+   "lng": -88.9
+  },
+  {
+   "code": "GT",
+   "name": "Guatemala",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 15.78,
+   "lng": -90.23
+  },
+  {
+   "code": "HN",
+   "name": "Honduras",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 15.2,
+   "lng": -86.24
+  },
+  {
+   "code": "MX",
+   "name": "Mexico",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 23.63,
+   "lng": -102.55
+  },
+  {
+   "code": "NI",
+   "name": "Nicaragua",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 12.87,
+   "lng": -85.21
+  },
+  {
+   "code": "PA",
+   "name": "Panama",
+   "subregion": "central-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 8.54,
+   "lng": -80.78
+  },
+  {
+   "code": "AG",
+   "name": "Antigua and Barbuda",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 17.06,
+   "lng": -61.8
+  },
+  {
+   "code": "BS",
+   "name": "Bahamas",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 25.03,
+   "lng": -77.4
+  },
+  {
+   "code": "BB",
+   "name": "Barbados",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 13.19,
+   "lng": -59.54
+  },
+  {
+   "code": "CU",
+   "name": "Cuba",
+   "subregion": "caribbean",
+   "languages": [
+    "es"
+   ],
+   "lat": 21.52,
+   "lng": -77.78
+  },
+  {
+   "code": "DM",
+   "name": "Dominica",
+   "subregion": "caribbean",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": 15.41,
+   "lng": -61.37
+  },
+  {
+   "code": "DO",
+   "name": "Dominican Republic",
+   "subregion": "caribbean",
+   "languages": [
+    "es"
+   ],
+   "lat": 18.74,
+   "lng": -70.16
+  },
+  {
+   "code": "GD",
+   "name": "Grenada",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 12.12,
+   "lng": -61.68
+  },
+  {
+   "code": "HT",
+   "name": "Haiti",
+   "subregion": "caribbean",
+   "languages": [
+    "fr"
+   ],
+   "lat": 18.97,
+   "lng": -72.29
+  },
+  {
+   "code": "JM",
+   "name": "Jamaica",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 18.11,
+   "lng": -77.3
+  },
+  {
+   "code": "KN",
+   "name": "Saint Kitts and Nevis",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 17.36,
+   "lng": -62.78
+  },
+  {
+   "code": "LC",
+   "name": "Saint Lucia",
+   "subregion": "caribbean",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": 13.91,
+   "lng": -60.98
+  },
+  {
+   "code": "VC",
+   "name": "Saint Vincent and the Grenadines",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 12.98,
+   "lng": -61.29
+  },
+  {
+   "code": "TT",
+   "name": "Trinidad and Tobago",
+   "subregion": "caribbean",
+   "languages": [
+    "en"
+   ],
+   "lat": 10.69,
+   "lng": -61.22
+  },
+  {
+   "code": "PR",
+   "name": "Puerto Rico",
+   "subregion": "caribbean",
+   "languages": [
+    "es",
+    "en"
+   ],
+   "lat": 18.22,
+   "lng": -66.59
+  },
+  {
+   "code": "AR",
+   "name": "Argentina",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -38.42,
+   "lng": -63.62
+  },
+  {
+   "code": "BO",
+   "name": "Bolivia",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -16.29,
+   "lng": -63.59
+  },
+  {
+   "code": "BR",
+   "name": "Brazil",
+   "subregion": "south-america",
+   "languages": [
+    "pt"
+   ],
+   "lat": -14.24,
+   "lng": -51.93
+  },
+  {
+   "code": "CL",
+   "name": "Chile",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -35.68,
+   "lng": -71.54
+  },
+  {
+   "code": "CO",
+   "name": "Colombia",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 4.57,
+   "lng": -74.3
+  },
+  {
+   "code": "EC",
+   "name": "Ecuador",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -1.83,
+   "lng": -78.18
+  },
+  {
+   "code": "GY",
+   "name": "Guyana",
+   "subregion": "south-america",
+   "languages": [
+    "en"
+   ],
+   "lat": 4.86,
+   "lng": -58.93
+  },
+  {
+   "code": "PY",
+   "name": "Paraguay",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -23.44,
+   "lng": -58.44
+  },
+  {
+   "code": "PE",
+   "name": "Peru",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -9.19,
+   "lng": -75.02
+  },
+  {
+   "code": "SR",
+   "name": "Suriname",
+   "subregion": "south-america",
+   "languages": [
+    "en"
+   ],
+   "lat": 3.92,
+   "lng": -56.03
+  },
+  {
+   "code": "UY",
+   "name": "Uruguay",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": -32.52,
+   "lng": -55.77
+  },
+  {
+   "code": "VE",
+   "name": "Venezuela",
+   "subregion": "south-america",
+   "languages": [
+    "es"
+   ],
+   "lat": 6.42,
+   "lng": -66.59
+  },
+  {
+   "code": "KZ",
+   "name": "Kazakhstan",
+   "subregion": "central-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 48.02,
+   "lng": 66.92
+  },
+  {
+   "code": "KG",
+   "name": "Kyrgyzstan",
+   "subregion": "central-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.2,
+   "lng": 74.77
+  },
+  {
+   "code": "TJ",
+   "name": "Tajikistan",
+   "subregion": "central-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 38.86,
+   "lng": 71.28
+  },
+  {
+   "code": "TM",
+   "name": "Turkmenistan",
+   "subregion": "central-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 38.97,
+   "lng": 59.56
+  },
+  {
+   "code": "UZ",
+   "name": "Uzbekistan",
+   "subregion": "central-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 41.38,
+   "lng": 64.59
+  },
+  {
+   "code": "CN",
+   "name": "China",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 35.86,
+   "lng": 104.2
+  },
+  {
+   "code": "HK",
+   "name": "Hong Kong",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 22.32,
+   "lng": 114.17
+  },
+  {
+   "code": "JP",
+   "name": "Japan",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 36.2,
+   "lng": 138.25
+  },
+  {
+   "code": "KP",
+   "name": "North Korea",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 40.34,
+   "lng": 127.51
+  },
+  {
+   "code": "KR",
+   "name": "South Korea",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 35.91,
+   "lng": 127.77
+  },
+  {
+   "code": "MO",
+   "name": "Macao",
+   "subregion": "east-asia",
+   "languages": [
+    "pt",
+    "en"
+   ],
+   "lat": 22.2,
+   "lng": 113.54
+  },
+  {
+   "code": "MN",
+   "name": "Mongolia",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 46.86,
+   "lng": 103.85
+  },
+  {
+   "code": "TW",
+   "name": "Taiwan",
+   "subregion": "east-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 23.7,
+   "lng": 120.96
+  },
+  {
+   "code": "BN",
+   "name": "Brunei",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 4.54,
+   "lng": 114.73
+  },
+  {
+   "code": "KH",
+   "name": "Cambodia",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": 12.57,
+   "lng": 104.99
+  },
+  {
+   "code": "ID",
+   "name": "Indonesia",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": -0.79,
+   "lng": 113.92
+  },
+  {
+   "code": "LA",
+   "name": "Laos",
+   "subregion": "southeast-asia",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 19.86,
+   "lng": 102.5
+  },
+  {
+   "code": "MY",
+   "name": "Malaysia",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 4.21,
+   "lng": 101.98
+  },
+  {
+   "code": "MM",
+   "name": "Myanmar",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 21.91,
+   "lng": 95.96
+  },
+  {
+   "code": "PH",
+   "name": "Philippines",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en",
+    "es"
+   ],
+   "lat": 12.88,
+   "lng": 121.77
+  },
+  {
+   "code": "SG",
+   "name": "Singapore",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 1.35,
+   "lng": 103.82
+  },
+  {
+   "code": "TH",
+   "name": "Thailand",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 15.87,
+   "lng": 100.99
+  },
+  {
+   "code": "TL",
+   "name": "Timor-Leste",
+   "subregion": "southeast-asia",
+   "languages": [
+    "pt"
+   ],
+   "lat": -8.87,
+   "lng": 125.73
+  },
+  {
+   "code": "VN",
+   "name": "Vietnam",
+   "subregion": "southeast-asia",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": 14.06,
+   "lng": 108.28
+  },
+  {
+   "code": "AF",
+   "name": "Afghanistan",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 33.94,
+   "lng": 67.71
+  },
+  {
+   "code": "BD",
+   "name": "Bangladesh",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 23.68,
+   "lng": 90.36
+  },
+  {
+   "code": "BT",
+   "name": "Bhutan",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 27.51,
+   "lng": 90.43
+  },
+  {
+   "code": "IN",
+   "name": "India",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 20.59,
+   "lng": 78.96
+  },
+  {
+   "code": "IR",
+   "name": "Iran",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 32.43,
+   "lng": 53.69
+  },
+  {
+   "code": "MV",
+   "name": "Maldives",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 3.2,
+   "lng": 73.22
+  },
+  {
+   "code": "NP",
+   "name": "Nepal",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 28.39,
+   "lng": 84.12
+  },
+  {
+   "code": "PK",
+   "name": "Pakistan",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 30.38,
+   "lng": 69.35
+  },
+  {
+   "code": "LK",
+   "name": "Sri Lanka",
+   "subregion": "south-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 7.87,
+   "lng": 80.77
+  },
+  {
+   "code": "AM",
+   "name": "Armenia",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 40.07,
+   "lng": 45.04
+  },
+  {
+   "code": "AZ",
+   "name": "Azerbaijan",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 40.14,
+   "lng": 47.58
+  },
+  {
+   "code": "BH",
+   "name": "Bahrain",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 25.93,
+   "lng": 50.64
+  },
+  {
+   "code": "CY",
+   "name": "Cyprus",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 35.13,
+   "lng": 33.43
+  },
+  {
+   "code": "GE",
+   "name": "Georgia",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 42.32,
+   "lng": 43.36
+  },
+  {
+   "code": "IQ",
+   "name": "Iraq",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 33.22,
+   "lng": 43.68
+  },
+  {
+   "code": "IL",
+   "name": "Israel",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 31.05,
+   "lng": 34.85
+  },
+  {
+   "code": "JO",
+   "name": "Jordan",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 30.59,
+   "lng": 36.24
+  },
+  {
+   "code": "KW",
+   "name": "Kuwait",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 29.31,
+   "lng": 47.48
+  },
+  {
+   "code": "LB",
+   "name": "Lebanon",
+   "subregion": "west-asia",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 33.85,
+   "lng": 35.86
+  },
+  {
+   "code": "OM",
+   "name": "Oman",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 21.51,
+   "lng": 55.92
+  },
+  {
+   "code": "PS",
+   "name": "Palestine",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 31.95,
+   "lng": 35.23
+  },
+  {
+   "code": "QA",
+   "name": "Qatar",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 25.35,
+   "lng": 51.18
+  },
+  {
+   "code": "SA",
+   "name": "Saudi Arabia",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 23.89,
+   "lng": 45.08
+  },
+  {
+   "code": "SY",
+   "name": "Syria",
+   "subregion": "west-asia",
+   "languages": [
+    "fr",
+    "en"
+   ],
+   "lat": 34.8,
+   "lng": 39
+  },
+  {
+   "code": "TR",
+   "name": "Turkey",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 38.96,
+   "lng": 35.24
+  },
+  {
+   "code": "AE",
+   "name": "United Arab Emirates",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 23.42,
+   "lng": 53.85
+  },
+  {
+   "code": "YE",
+   "name": "Yemen",
+   "subregion": "west-asia",
+   "languages": [
+    "en"
+   ],
+   "lat": 15.55,
+   "lng": 48.52
+  },
+  {
+   "code": "AU",
+   "name": "Australia",
+   "subregion": "australasia",
+   "languages": [
+    "en"
+   ],
+   "lat": -25.27,
+   "lng": 133.78
+  },
+  {
+   "code": "NZ",
+   "name": "New Zealand",
+   "subregion": "australasia",
+   "languages": [
+    "en"
+   ],
+   "lat": -40.9,
+   "lng": 174.89
+  },
+  {
+   "code": "FJ",
+   "name": "Fiji",
+   "subregion": "melanesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -17.71,
+   "lng": 178.07
+  },
+  {
+   "code": "NC",
+   "name": "New Caledonia",
+   "subregion": "melanesia",
+   "languages": [
+    "fr"
+   ],
+   "lat": -20.9,
+   "lng": 165.62
+  },
+  {
+   "code": "PG",
+   "name": "Papua New Guinea",
+   "subregion": "melanesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -6.31,
+   "lng": 143.96
+  },
+  {
+   "code": "SB",
+   "name": "Solomon Islands",
+   "subregion": "melanesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -9.65,
+   "lng": 160.16
+  },
+  {
+   "code": "VU",
+   "name": "Vanuatu",
+   "subregion": "melanesia",
+   "languages": [
+    "en",
+    "fr"
+   ],
+   "lat": -15.38,
+   "lng": 166.96
+  },
+  {
+   "code": "FM",
+   "name": "Micronesia",
+   "subregion": "micronesia",
+   "languages": [
+    "en"
+   ],
+   "lat": 7.43,
+   "lng": 150.55
+  },
+  {
+   "code": "KI",
+   "name": "Kiribati",
+   "subregion": "micronesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -3.37,
+   "lng": -168.73
+  },
+  {
+   "code": "MH",
+   "name": "Marshall Islands",
+   "subregion": "micronesia",
+   "languages": [
+    "en"
+   ],
+   "lat": 7.13,
+   "lng": 171.18
+  },
+  {
+   "code": "NR",
+   "name": "Nauru",
+   "subregion": "micronesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -0.52,
+   "lng": 166.93
+  },
+  {
+   "code": "PW",
+   "name": "Palau",
+   "subregion": "micronesia",
+   "languages": [
+    "en"
+   ],
+   "lat": 7.51,
+   "lng": 134.58
+  },
+  {
+   "code": "PF",
+   "name": "French Polynesia",
+   "subregion": "polynesia",
+   "languages": [
+    "fr"
+   ],
+   "lat": -17.68,
+   "lng": -149.41
+  },
+  {
+   "code": "WS",
+   "name": "Samoa",
+   "subregion": "polynesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -13.76,
+   "lng": -172.1
+  },
+  {
+   "code": "TO",
+   "name": "Tonga",
+   "subregion": "polynesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -21.18,
+   "lng": -175.2
+  },
+  {
+   "code": "TV",
+   "name": "Tuvalu",
+   "subregion": "polynesia",
+   "languages": [
+    "en"
+   ],
+   "lat": -7.11,
+   "lng": 177.65
+  }
+ ],
+ "countryAliases": {
+  "ivory coast": "CI",
+  "cote divoire": "CI",
+  "cote d ivoire": "CI",
+  "republic of cote divoire": "CI",
+  "cape verde": "CV",
+  "united states of america": "US",
+  "usa": "US",
+  "u s a": "US",
+  "america": "US",
+  "uk": "GB",
+  "great britain": "GB",
+  "britain": "GB",
+  "england": "GB",
+  "scotland": "GB",
+  "wales": "GB",
+  "northern ireland": "GB",
+  "united kingdom of great britain and northern ireland": "GB",
+  "uae": "AE",
+  "emirates": "AE",
+  "drc": "CD",
+  "dr congo": "CD",
+  "democratic republic of the congo": "CD",
+  "democratic republic of congo": "CD",
+  "congo kinshasa": "CD",
+  "zaire": "CD",
+  "republic of the congo": "CG",
+  "congo brazzaville": "CG",
+  "south korea": "KR",
+  "korea republic of": "KR",
+  "republic of korea": "KR",
+  "north korea": "KP",
+  "swaziland": "SZ",
+  "sao tome and principe": "ST",
+  "sao tome": "ST",
+  "burma": "MM",
+  "east timor": "TL",
+  "timor leste": "TL",
+  "holland": "NL",
+  "the netherlands": "NL",
+  "czech republic": "CZ",
+  "russian federation": "RU",
+  "vatican": "VA",
+  "holy see": "VA",
+  "macedonia": "MK",
+  "turkiye": "TR",
+  "viet nam": "VN",
+  "brasil": "BR",
+  "espana": "ES",
+  "deutschland": "DE",
+  "tanzania united republic of": "TZ",
+  "united republic of tanzania": "TZ",
+  "gambia the": "GM",
+  "the gambia": "GM",
+  "bahamas the": "BS",
+  "trinidad": "TT",
+  "palestinian territories": "PS",
+  "state of palestine": "PS",
+  "hong kong sar": "HK",
+  "macau": "MO",
+  "remote": "",
+  "worldwide": "",
+  "global": "",
+  "anywhere": "",
+  "online": "",
+  "dza": "DZ",
+  "egy": "EG",
+  "lby": "LY",
+  "mar": "MA",
+  "sdn": "SD",
+  "tun": "TN",
+  "esh": "EH",
+  "ben": "BJ",
+  "bfa": "BF",
+  "cpv": "CV",
+  "civ": "CI",
+  "gmb": "GM",
+  "gha": "GH",
+  "gin": "GN",
+  "gnb": "GW",
+  "lbr": "LR",
+  "mli": "ML",
+  "mrt": "MR",
+  "ner": "NE",
+  "nga": "NG",
+  "sen": "SN",
+  "sle": "SL",
+  "tgo": "TG",
+  "ago": "AO",
+  "cmr": "CM",
+  "caf": "CF",
+  "tcd": "TD",
+  "cog": "CG",
+  "cod": "CD",
+  "gnq": "GQ",
+  "gab": "GA",
+  "stp": "ST",
+  "bdi": "BI",
+  "com": "KM",
+  "dji": "DJ",
+  "eri": "ER",
+  "eth": "ET",
+  "ken": "KE",
+  "mdg": "MG",
+  "mwi": "MW",
+  "mus": "MU",
+  "moz": "MZ",
+  "rwa": "RW",
+  "syc": "SC",
+  "som": "SO",
+  "ssd": "SS",
+  "tza": "TZ",
+  "uga": "UG",
+  "zmb": "ZM",
+  "zwe": "ZW",
+  "bwa": "BW",
+  "swz": "SZ",
+  "lso": "LS",
+  "nam": "NA",
+  "zaf": "ZA",
+  "dnk": "DK",
+  "est": "EE",
+  "fin": "FI",
+  "isl": "IS",
+  "irl": "IE",
+  "lva": "LV",
+  "ltu": "LT",
+  "nor": "NO",
+  "swe": "SE",
+  "gbr": "GB",
+  "aut": "AT",
+  "bel": "BE",
+  "fra": "FR",
+  "deu": "DE",
+  "lie": "LI",
+  "lux": "LU",
+  "mco": "MC",
+  "nld": "NL",
+  "che": "CH",
+  "alb": "AL",
+  "and": "AD",
+  "bih": "BA",
+  "hrv": "HR",
+  "grc": "GR",
+  "ita": "IT",
+  "mlt": "MT",
+  "mne": "ME",
+  "mkd": "MK",
+  "prt": "PT",
+  "smr": "SM",
+  "srb": "RS",
+  "svn": "SI",
+  "esp": "ES",
+  "vat": "VA",
+  "blr": "BY",
+  "bgr": "BG",
+  "cze": "CZ",
+  "hun": "HU",
+  "mda": "MD",
+  "pol": "PL",
+  "rou": "RO",
+  "rus": "RU",
+  "svk": "SK",
+  "ukr": "UA",
+  "can": "CA",
+  "hnd": "HN",
+  "mex": "MX",
+  "nic": "NI",
+  "pan": "PA",
+  "atg": "AG",
+  "bhs": "BS",
+  "brb": "BB",
+  "cub": "CU",
+  "dma": "DM",
+  "dom": "DO",
+  "grd": "GD",
+  "hti": "HT",
+  "jam": "JM",
+  "kna": "KN",
+  "lca": "LC",
+  "vct": "VC",
+  "tto": "TT",
+  "pri": "PR",
+  "arg": "AR",
+  "bol": "BO",
+  "bra": "BR",
+  "chl": "CL",
+  "col": "CO",
+  "ecu": "EC",
+  "guy": "GY",
+  "pry": "PY",
+  "per": "PE",
+  "sur": "SR",
+  "ury": "UY",
+  "ven": "VE",
+  "kaz": "KZ",
+  "kgz": "KG",
+  "tjk": "TJ",
+  "tkm": "TM",
+  "uzb": "UZ",
+  "chn": "CN",
+  "hkg": "HK",
+  "jpn": "JP",
+  "prk": "KP",
+  "kor": "KR",
+  "mac": "MO",
+  "mng": "MN",
+  "twn": "TW",
+  "brn": "BN",
+  "khm": "KH",
+  "idn": "ID",
+  "lao": "LA",
+  "mys": "MY",
+  "mmr": "MM",
+  "phl": "PH",
+  "sgp": "SG",
+  "tha": "TH",
+  "tls": "TL",
+  "vnm": "VN",
+  "afg": "AF",
+  "bgd": "BD",
+  "btn": "BT",
+  "ind": "IN",
+  "irn": "IR",
+  "mdv": "MV",
+  "npl": "NP",
+  "pak": "PK",
+  "lka": "LK",
+  "arm": "AM",
+  "aze": "AZ",
+  "bhr": "BH",
+  "cyp": "CY",
+  "geo": "GE",
+  "irq": "IQ",
+  "isr": "IL",
+  "jor": "JO",
+  "kwt": "KW",
+  "lbn": "LB",
+  "omn": "OM",
+  "pse": "PS",
+  "qat": "QA",
+  "sau": "SA",
+  "syr": "SY",
+  "tur": "TR",
+  "are": "AE",
+  "yem": "YE",
+  "aus": "AU",
+  "nzl": "NZ",
+  "fji": "FJ",
+  "ncl": "NC",
+  "png": "PG",
+  "slb": "SB",
+  "vut": "VU",
+  "fsm": "FM",
+  "kir": "KI",
+  "mhl": "MH",
+  "nru": "NR",
+  "plw": "PW",
+  "pyf": "PF",
+  "wsm": "WS",
+  "ton": "TO",
+  "tuv": "TV",
+  "nigerian": "NG",
+  "nigery": "NG",
+  "nigerai": "NG",
+  "nigeris": "NG",
+  "nigria": "NG",
+  "nigeria no": "NG",
+  "naija": "NG",
+  "federal republic of nigeria": "NG",
+  "ghanaian": "GH",
+  "kenyan": "KE",
+  "ethiopian": "ET",
+  "cameroonian": "CM",
+  "ugandan": "UG",
+  "tanzanian": "TZ",
+  "rwandan": "RW",
+  "senegalese": "SN",
+  "zimbabwean": "ZW",
+  "malawian": "MW",
+  "zambian": "ZM",
+  "south african": "ZA",
+  "liberian": "LR",
+  "sierra leonean": "SL",
+  "brundi": "BI",
+  "united states": "US",
+  "u.s.": "US",
+  "us": "US"
+ },
+ "ambiguousCountries": {
+  "niger": [
+   "NE",
+   "NG"
+  ]
+ },
+ "regions": {
+  "NG": {
+   "label": "State",
+   "regions": [
+    {
+     "name": "Abia",
+     "lat": 5.53,
+     "lng": 7.49,
+     "aliases": [
+      "abia state"
+     ],
+     "cities": [
+      {
+       "name": "Umuahia",
+       "lat": 5.53,
+       "lng": 7.49,
+       "aliases": []
+      },
+      {
+       "name": "Aba",
+       "lat": 5.11,
+       "lng": 7.37,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Adamawa",
+     "lat": 9.2,
+     "lng": 12.48,
+     "aliases": [
+      "adamawa state"
+     ],
+     "cities": [
+      {
+       "name": "Yola",
+       "lat": 9.2,
+       "lng": 12.48,
+       "aliases": [
+        "jimeta"
+       ]
+      },
+      {
+       "name": "Mubi",
+       "lat": 10.27,
+       "lng": 13.27,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Akwa Ibom",
+     "lat": 5.04,
+     "lng": 7.91,
+     "aliases": [
+      "akwa ibom state",
+      "awka ibom",
+      "akwaibom"
+     ],
+     "cities": [
+      {
+       "name": "Uyo",
+       "lat": 5.04,
+       "lng": 7.91,
+       "aliases": []
+      },
+      {
+       "name": "Eket",
+       "lat": 4.65,
+       "lng": 7.93,
+       "aliases": []
+      },
+      {
+       "name": "Ikot Ekpene",
+       "lat": 5.18,
+       "lng": 7.71,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Anambra",
+     "lat": 6.21,
+     "lng": 7.07,
+     "aliases": [
+      "anambra state"
+     ],
+     "cities": [
+      {
+       "name": "Awka",
+       "lat": 6.21,
+       "lng": 7.07,
+       "aliases": []
+      },
+      {
+       "name": "Onitsha",
+       "lat": 6.15,
+       "lng": 6.79,
+       "aliases": []
+      },
+      {
+       "name": "Nnewi",
+       "lat": 6.02,
+       "lng": 6.92,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bauchi",
+     "lat": 10.31,
+     "lng": 9.84,
+     "aliases": [
+      "bauchi state"
+     ],
+     "cities": [
+      {
+       "name": "Bauchi",
+       "lat": 10.31,
+       "lng": 9.84,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bayelsa",
+     "lat": 4.92,
+     "lng": 6.26,
+     "aliases": [
+      "bayelsa state"
+     ],
+     "cities": [
+      {
+       "name": "Yenagoa",
+       "lat": 4.92,
+       "lng": 6.26,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Benue",
+     "lat": 7.73,
+     "lng": 8.54,
+     "aliases": [
+      "benue state"
+     ],
+     "cities": [
+      {
+       "name": "Makurdi",
+       "lat": 7.73,
+       "lng": 8.54,
+       "aliases": []
+      },
+      {
+       "name": "Otukpo",
+       "lat": 7.19,
+       "lng": 8.13,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Borno",
+     "lat": 11.83,
+     "lng": 13.15,
+     "aliases": [
+      "borno state"
+     ],
+     "cities": [
+      {
+       "name": "Maiduguri",
+       "lat": 11.83,
+       "lng": 13.15,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Cross River",
+     "lat": 4.95,
+     "lng": 8.32,
+     "aliases": [
+      "cross river state"
+     ],
+     "cities": [
+      {
+       "name": "Calabar",
+       "lat": 4.95,
+       "lng": 8.32,
+       "aliases": []
+      },
+      {
+       "name": "Ikom",
+       "lat": 5.96,
+       "lng": 8.71,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Delta",
+     "lat": 6.2,
+     "lng": 6.73,
+     "aliases": [
+      "delta state"
+     ],
+     "cities": [
+      {
+       "name": "Asaba",
+       "lat": 6.2,
+       "lng": 6.73,
+       "aliases": []
+      },
+      {
+       "name": "Warri",
+       "lat": 5.52,
+       "lng": 5.75,
+       "aliases": [
+        "effurun"
+       ]
+      },
+      {
+       "name": "Sapele",
+       "lat": 5.89,
+       "lng": 5.68,
+       "aliases": []
+      },
+      {
+       "name": "Ughelli",
+       "lat": 5.49,
+       "lng": 6,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Ebonyi",
+     "lat": 6.32,
+     "lng": 8.11,
+     "aliases": [
+      "ebonyi state"
+     ],
+     "cities": [
+      {
+       "name": "Abakaliki",
+       "lat": 6.32,
+       "lng": 8.11,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Edo",
+     "lat": 6.34,
+     "lng": 5.63,
+     "aliases": [
+      "edo state"
+     ],
+     "cities": [
+      {
+       "name": "Benin City",
+       "lat": 6.34,
+       "lng": 5.63,
+       "aliases": [
+        "benin"
+       ]
+      },
+      {
+       "name": "Auchi",
+       "lat": 7.07,
+       "lng": 6.27,
+       "aliases": []
+      },
+      {
+       "name": "Ekpoma",
+       "lat": 6.74,
+       "lng": 6.14,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Ekiti",
+     "lat": 7.62,
+     "lng": 5.22,
+     "aliases": [
+      "ekiti state"
+     ],
+     "cities": [
+      {
+       "name": "Ado-Ekiti",
+       "lat": 7.62,
+       "lng": 5.22,
+       "aliases": [
+        "ado ekiti"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Enugu",
+     "lat": 6.46,
+     "lng": 7.55,
+     "aliases": [
+      "enugu state"
+     ],
+     "cities": [
+      {
+       "name": "Enugu",
+       "lat": 6.46,
+       "lng": 7.55,
+       "aliases": []
+      },
+      {
+       "name": "Nsukka",
+       "lat": 6.86,
+       "lng": 7.4,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "FCT",
+     "lat": 9.06,
+     "lng": 7.5,
+     "aliases": [
+      "federal capital territory",
+      "abuja fct",
+      "fct abuja"
+     ],
+     "cities": [
+      {
+       "name": "Abuja",
+       "lat": 9.06,
+       "lng": 7.5,
+       "aliases": [
+        "kubwa",
+        "lugbe",
+        "gwarinpa",
+        "asokoro",
+        "wuse",
+        "maitama",
+        "garki",
+        "jabi",
+        "utako",
+        "wuye",
+        "lokogoma",
+        "kado",
+        "karu",
+        "nyanya",
+        "dutse",
+        "bwari",
+        "life camp",
+        "apo",
+        "gudu",
+        "durumi",
+        "katampe",
+        "mabushi",
+        "jahi",
+        "dawaki",
+        "kuje",
+        "gwagwalada",
+        "lugbe district",
+        "central area"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Gombe",
+     "lat": 10.29,
+     "lng": 11.17,
+     "aliases": [
+      "gombe state"
+     ],
+     "cities": [
+      {
+       "name": "Gombe",
+       "lat": 10.29,
+       "lng": 11.17,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Imo",
+     "lat": 5.48,
+     "lng": 7.03,
+     "aliases": [
+      "imo state"
+     ],
+     "cities": [
+      {
+       "name": "Owerri",
+       "lat": 5.48,
+       "lng": 7.03,
+       "aliases": []
+      },
+      {
+       "name": "Orlu",
+       "lat": 5.8,
+       "lng": 7.04,
+       "aliases": []
+      },
+      {
+       "name": "Okigwe",
+       "lat": 5.83,
+       "lng": 7.35,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Jigawa",
+     "lat": 11.76,
+     "lng": 9.34,
+     "aliases": [
+      "jigawa state"
+     ],
+     "cities": [
+      {
+       "name": "Dutse",
+       "lat": 11.76,
+       "lng": 9.34,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kaduna",
+     "lat": 10.52,
+     "lng": 7.44,
+     "aliases": [
+      "kaduna state"
+     ],
+     "cities": [
+      {
+       "name": "Kaduna",
+       "lat": 10.52,
+       "lng": 7.44,
+       "aliases": []
+      },
+      {
+       "name": "Zaria",
+       "lat": 11.09,
+       "lng": 7.71,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kano",
+     "lat": 12,
+     "lng": 8.52,
+     "aliases": [
+      "kano state"
+     ],
+     "cities": [
+      {
+       "name": "Kano",
+       "lat": 12,
+       "lng": 8.52,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Katsina",
+     "lat": 12.99,
+     "lng": 7.6,
+     "aliases": [
+      "katsina state"
+     ],
+     "cities": [
+      {
+       "name": "Katsina",
+       "lat": 12.99,
+       "lng": 7.6,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kebbi",
+     "lat": 12.45,
+     "lng": 4.2,
+     "aliases": [
+      "kebbi state"
+     ],
+     "cities": [
+      {
+       "name": "Birnin Kebbi",
+       "lat": 12.45,
+       "lng": 4.2,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kogi",
+     "lat": 7.8,
+     "lng": 6.74,
+     "aliases": [
+      "kogi state"
+     ],
+     "cities": [
+      {
+       "name": "Lokoja",
+       "lat": 7.8,
+       "lng": 6.74,
+       "aliases": []
+      },
+      {
+       "name": "Anyigba",
+       "lat": 7.49,
+       "lng": 7.17,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kwara",
+     "lat": 8.5,
+     "lng": 4.55,
+     "aliases": [
+      "kwara state"
+     ],
+     "cities": [
+      {
+       "name": "Ilorin",
+       "lat": 8.5,
+       "lng": 4.55,
+       "aliases": []
+      },
+      {
+       "name": "Offa",
+       "lat": 8.15,
+       "lng": 4.72,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Lagos",
+     "lat": 6.52,
+     "lng": 3.38,
+     "aliases": [
+      "lagos state"
+     ],
+     "cities": [
+      {
+       "name": "Lagos",
+       "lat": 6.52,
+       "lng": 3.38,
+       "aliases": [
+        "ikeja",
+        "lekki",
+        "yaba",
+        "surulere",
+        "ajah",
+        "festac",
+        "ojo",
+        "alimosho",
+        "gbagada",
+        "ikotun",
+        "victoria island",
+        "ikoyi",
+        "apapa",
+        "maryland",
+        "magodo",
+        "ogba",
+        "agege",
+        "oshodi",
+        "isolo",
+        "mushin",
+        "egbeda",
+        "ketu",
+        "ojota",
+        "ogudu",
+        "ilupeju",
+        "lagos island",
+        "ebute metta",
+        "sangotedo",
+        "ibeju lekki",
+        "amuwo odofin",
+        "satellite town",
+        "okota",
+        "ejigbo",
+        "idimu",
+        "igando",
+        "iyana ipaja",
+        "abule egba",
+        "ipaja",
+        "ayobo",
+        "berger",
+        "ojodu",
+        "akoka",
+        "bariga",
+        "somolu",
+        "shomolu",
+        "ogudu",
+        "chevron",
+        "vgc",
+        "oniru",
+        "obalende",
+        "marina",
+        "ilasamaja",
+        "ijesha",
+        "ikate",
+        "eko",
+        "lasu"
+       ]
+      },
+      {
+       "name": "Ikorodu",
+       "lat": 6.62,
+       "lng": 3.51,
+       "aliases": []
+      },
+      {
+       "name": "Epe",
+       "lat": 6.58,
+       "lng": 3.98,
+       "aliases": []
+      },
+      {
+       "name": "Badagry",
+       "lat": 6.42,
+       "lng": 2.89,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nasarawa",
+     "lat": 8.49,
+     "lng": 8.52,
+     "aliases": [
+      "nasarawa state"
+     ],
+     "cities": [
+      {
+       "name": "Lafia",
+       "lat": 8.49,
+       "lng": 8.52,
+       "aliases": []
+      },
+      {
+       "name": "Keffi",
+       "lat": 8.85,
+       "lng": 7.87,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Niger",
+     "lat": 9.61,
+     "lng": 6.56,
+     "aliases": [
+      "niger state"
+     ],
+     "cities": [
+      {
+       "name": "Minna",
+       "lat": 9.61,
+       "lng": 6.56,
+       "aliases": []
+      },
+      {
+       "name": "Bida",
+       "lat": 9.08,
+       "lng": 6.01,
+       "aliases": []
+      },
+      {
+       "name": "Suleja",
+       "lat": 9.18,
+       "lng": 7.18,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Ogun",
+     "lat": 7.16,
+     "lng": 3.35,
+     "aliases": [
+      "ogun state"
+     ],
+     "cities": [
+      {
+       "name": "Abeokuta",
+       "lat": 7.16,
+       "lng": 3.35,
+       "aliases": []
+      },
+      {
+       "name": "Ijebu-Ode",
+       "lat": 6.82,
+       "lng": 3.92,
+       "aliases": [
+        "ijebu ode"
+       ]
+      },
+      {
+       "name": "Sagamu",
+       "lat": 6.84,
+       "lng": 3.65,
+       "aliases": [
+        "shagamu"
+       ]
+      },
+      {
+       "name": "Ota",
+       "lat": 6.69,
+       "lng": 3.23,
+       "aliases": [
+        "sango ota",
+        "sango"
+       ]
+      },
+      {
+       "name": "Mowe",
+       "lat": 6.81,
+       "lng": 3.43,
+       "aliases": [
+        "ibafo"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Ondo",
+     "lat": 7.25,
+     "lng": 5.19,
+     "aliases": [
+      "ondo state"
+     ],
+     "cities": [
+      {
+       "name": "Akure",
+       "lat": 7.25,
+       "lng": 5.19,
+       "aliases": []
+      },
+      {
+       "name": "Ondo",
+       "lat": 7.09,
+       "lng": 4.84,
+       "aliases": []
+      },
+      {
+       "name": "Owo",
+       "lat": 7.2,
+       "lng": 5.59,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Osun",
+     "lat": 7.77,
+     "lng": 4.56,
+     "aliases": [
+      "osun state"
+     ],
+     "cities": [
+      {
+       "name": "Osogbo",
+       "lat": 7.77,
+       "lng": 4.56,
+       "aliases": [
+        "oshogbo"
+       ]
+      },
+      {
+       "name": "Ile-Ife",
+       "lat": 7.47,
+       "lng": 4.56,
+       "aliases": [
+        "ile ife",
+        "ife"
+       ]
+      },
+      {
+       "name": "Ilesa",
+       "lat": 7.62,
+       "lng": 4.74,
+       "aliases": [
+        "ilesha"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Oyo",
+     "lat": 7.38,
+     "lng": 3.94,
+     "aliases": [
+      "oyo state"
+     ],
+     "cities": [
+      {
+       "name": "Ibadan",
+       "lat": 7.38,
+       "lng": 3.94,
+       "aliases": [
+        "bodija",
+        "ui",
+        "dugbe",
+        "challenge",
+        "ring road",
+        "mokola",
+        "sango ibadan"
+       ]
+      },
+      {
+       "name": "Ogbomosho",
+       "lat": 8.13,
+       "lng": 4.24,
+       "aliases": [
+        "ogbomoso"
+       ]
+      },
+      {
+       "name": "Oyo",
+       "lat": 7.85,
+       "lng": 3.93,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Plateau",
+     "lat": 9.9,
+     "lng": 8.86,
+     "aliases": [
+      "plateau state"
+     ],
+     "cities": [
+      {
+       "name": "Jos",
+       "lat": 9.9,
+       "lng": 8.86,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Rivers",
+     "lat": 4.82,
+     "lng": 7.03,
+     "aliases": [
+      "rivers state"
+     ],
+     "cities": [
+      {
+       "name": "Port Harcourt",
+       "lat": 4.82,
+       "lng": 7.03,
+       "aliases": [
+        "portharcourt",
+        "ph",
+        "phc",
+        "rumuokoro",
+        "rumuola",
+        "trans amadi",
+        "gra port harcourt",
+        "choba",
+        "eleme",
+        "obio akpor"
+       ]
+      },
+      {
+       "name": "Bonny",
+       "lat": 4.45,
+       "lng": 7.17,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Sokoto",
+     "lat": 13.06,
+     "lng": 5.24,
+     "aliases": [
+      "sokoto state"
+     ],
+     "cities": [
+      {
+       "name": "Sokoto",
+       "lat": 13.06,
+       "lng": 5.24,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Taraba",
+     "lat": 8.89,
+     "lng": 11.36,
+     "aliases": [
+      "taraba state"
+     ],
+     "cities": [
+      {
+       "name": "Jalingo",
+       "lat": 8.89,
+       "lng": 11.36,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Yobe",
+     "lat": 11.75,
+     "lng": 11.96,
+     "aliases": [
+      "yobe state"
+     ],
+     "cities": [
+      {
+       "name": "Damaturu",
+       "lat": 11.75,
+       "lng": 11.96,
+       "aliases": []
+      },
+      {
+       "name": "Potiskum",
+       "lat": 11.71,
+       "lng": 11.08,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Zamfara",
+     "lat": 12.17,
+     "lng": 6.66,
+     "aliases": [
+      "zamfara state"
+     ],
+     "cities": [
+      {
+       "name": "Gusau",
+       "lat": 12.17,
+       "lng": 6.66,
+       "aliases": []
+      }
+     ]
+    }
+   ]
+  },
+  "GH": {
+   "label": "Region",
+   "regions": [
+    {
+     "name": "Greater Accra",
+     "lat": 5.6,
+     "lng": -0.19,
+     "aliases": [
+      "greater accra region"
+     ],
+     "cities": [
+      {
+       "name": "Accra",
+       "lat": 5.6,
+       "lng": -0.19,
+       "aliases": [
+        "east legon",
+        "osu",
+        "madina",
+        "adenta",
+        "spintex",
+        "airport residential",
+        "cantonments",
+        "dansoman"
+       ]
+      },
+      {
+       "name": "Tema",
+       "lat": 5.67,
+       "lng": -0.02,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Ashanti",
+     "lat": 6.69,
+     "lng": -1.62,
+     "aliases": [
+      "ashanti region"
+     ],
+     "cities": [
+      {
+       "name": "Kumasi",
+       "lat": 6.69,
+       "lng": -1.62,
+       "aliases": []
+      },
+      {
+       "name": "Obuasi",
+       "lat": 6.2,
+       "lng": -1.66,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Western",
+     "lat": 4.9,
+     "lng": -1.76,
+     "aliases": [
+      "western region"
+     ],
+     "cities": [
+      {
+       "name": "Sekondi-Takoradi",
+       "lat": 4.9,
+       "lng": -1.76,
+       "aliases": [
+        "takoradi",
+        "sekondi"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Central",
+     "lat": 5.11,
+     "lng": -1.25,
+     "aliases": [
+      "central region"
+     ],
+     "cities": [
+      {
+       "name": "Cape Coast",
+       "lat": 5.11,
+       "lng": -1.25,
+       "aliases": []
+      },
+      {
+       "name": "Winneba",
+       "lat": 5.35,
+       "lng": -0.62,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Eastern",
+     "lat": 6.09,
+     "lng": -0.26,
+     "aliases": [
+      "eastern region"
+     ],
+     "cities": [
+      {
+       "name": "Koforidua",
+       "lat": 6.09,
+       "lng": -0.26,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Volta",
+     "lat": 6.6,
+     "lng": 0.47,
+     "aliases": [
+      "volta region"
+     ],
+     "cities": [
+      {
+       "name": "Ho",
+       "lat": 6.6,
+       "lng": 0.47,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Northern",
+     "lat": 9.4,
+     "lng": -0.85,
+     "aliases": [
+      "northern region"
+     ],
+     "cities": [
+      {
+       "name": "Tamale",
+       "lat": 9.4,
+       "lng": -0.85,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Upper East",
+     "lat": 10.79,
+     "lng": -0.85,
+     "aliases": [
+      "upper east region"
+     ],
+     "cities": [
+      {
+       "name": "Bolgatanga",
+       "lat": 10.79,
+       "lng": -0.85,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Upper West",
+     "lat": 10.06,
+     "lng": -2.5,
+     "aliases": [
+      "upper west region"
+     ],
+     "cities": [
+      {
+       "name": "Wa",
+       "lat": 10.06,
+       "lng": -2.5,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bono",
+     "lat": 7.34,
+     "lng": -2.33,
+     "aliases": [
+      "bono region",
+      "brong ahafo"
+     ],
+     "cities": [
+      {
+       "name": "Sunyani",
+       "lat": 7.34,
+       "lng": -2.33,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bono East",
+     "lat": 7.59,
+     "lng": -1.94,
+     "aliases": [
+      "bono east region"
+     ],
+     "cities": [
+      {
+       "name": "Techiman",
+       "lat": 7.59,
+       "lng": -1.94,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Ahafo",
+     "lat": 6.8,
+     "lng": -2.52,
+     "aliases": [
+      "ahafo region"
+     ],
+     "cities": [
+      {
+       "name": "Goaso",
+       "lat": 6.8,
+       "lng": -2.52,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Western North",
+     "lat": 6.2,
+     "lng": -2.49,
+     "aliases": [
+      "western north region"
+     ],
+     "cities": [
+      {
+       "name": "Sefwi Wiawso",
+       "lat": 6.2,
+       "lng": -2.49,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Oti",
+     "lat": 7.9,
+     "lng": 0.29,
+     "aliases": [
+      "oti region"
+     ],
+     "cities": [
+      {
+       "name": "Dambai",
+       "lat": 7.9,
+       "lng": 0.29,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Savannah",
+     "lat": 9.08,
+     "lng": -1.82,
+     "aliases": [
+      "savannah region"
+     ],
+     "cities": [
+      {
+       "name": "Damongo",
+       "lat": 9.08,
+       "lng": -1.82,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "North East",
+     "lat": 10.52,
+     "lng": -0.37,
+     "aliases": [
+      "north east region"
+     ],
+     "cities": [
+      {
+       "name": "Nalerigu",
+       "lat": 10.52,
+       "lng": -0.37,
+       "aliases": []
+      }
+     ]
+    }
+   ]
+  },
+  "KE": {
+   "label": "County",
+   "regions": [
+    {
+     "name": "Nairobi",
+     "lat": -1.29,
+     "lng": 36.82,
+     "aliases": [
+      "nairobi county"
+     ],
+     "cities": [
+      {
+       "name": "Nairobi",
+       "lat": -1.29,
+       "lng": 36.82,
+       "aliases": [
+        "westlands",
+        "kilimani",
+        "upper hill",
+        "karen",
+        "kasarani",
+        "embakasi",
+        "industrial area",
+        "cbd nairobi",
+        "lavington",
+        "parklands",
+        "ruaka",
+        "kileleshwa",
+        "south b",
+        "south c",
+        "langata",
+        "ngong road",
+        "gigiri"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Mombasa",
+     "lat": -4.04,
+     "lng": 39.67,
+     "aliases": [
+      "mombasa county"
+     ],
+     "cities": [
+      {
+       "name": "Mombasa",
+       "lat": -4.04,
+       "lng": 39.67,
+       "aliases": [
+        "nyali",
+        "bamburi",
+        "likoni"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Kisumu",
+     "lat": -0.09,
+     "lng": 34.77,
+     "aliases": [
+      "kisumu county"
+     ],
+     "cities": [
+      {
+       "name": "Kisumu",
+       "lat": -0.09,
+       "lng": 34.77,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nakuru",
+     "lat": -0.3,
+     "lng": 36.07,
+     "aliases": [
+      "nakuru county"
+     ],
+     "cities": [
+      {
+       "name": "Nakuru",
+       "lat": -0.3,
+       "lng": 36.07,
+       "aliases": []
+      },
+      {
+       "name": "Naivasha",
+       "lat": -0.72,
+       "lng": 36.43,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Uasin Gishu",
+     "lat": 0.51,
+     "lng": 35.27,
+     "aliases": [
+      "uasin gishu county"
+     ],
+     "cities": [
+      {
+       "name": "Eldoret",
+       "lat": 0.51,
+       "lng": 35.27,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kiambu",
+     "lat": -1.17,
+     "lng": 36.83,
+     "aliases": [
+      "kiambu county"
+     ],
+     "cities": [
+      {
+       "name": "Kiambu",
+       "lat": -1.17,
+       "lng": 36.83,
+       "aliases": []
+      },
+      {
+       "name": "Thika",
+       "lat": -1.03,
+       "lng": 37.07,
+       "aliases": []
+      },
+      {
+       "name": "Ruiru",
+       "lat": -1.15,
+       "lng": 36.96,
+       "aliases": []
+      },
+      {
+       "name": "Kikuyu",
+       "lat": -1.25,
+       "lng": 36.66,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Machakos",
+     "lat": -1.52,
+     "lng": 37.26,
+     "aliases": [
+      "machakos county"
+     ],
+     "cities": [
+      {
+       "name": "Machakos",
+       "lat": -1.52,
+       "lng": 37.26,
+       "aliases": []
+      },
+      {
+       "name": "Athi River",
+       "lat": -1.45,
+       "lng": 36.98,
+       "aliases": [
+        "mavoko",
+        "syokimau"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Kajiado",
+     "lat": -1.85,
+     "lng": 36.78,
+     "aliases": [
+      "kajiado county"
+     ],
+     "cities": [
+      {
+       "name": "Kajiado",
+       "lat": -1.85,
+       "lng": 36.78,
+       "aliases": []
+      },
+      {
+       "name": "Kitengela",
+       "lat": -1.47,
+       "lng": 36.96,
+       "aliases": []
+      },
+      {
+       "name": "Ngong",
+       "lat": -1.36,
+       "lng": 36.66,
+       "aliases": []
+      },
+      {
+       "name": "Ongata Rongai",
+       "lat": -1.4,
+       "lng": 36.76,
+       "aliases": [
+        "rongai"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Kilifi",
+     "lat": -3.63,
+     "lng": 39.85,
+     "aliases": [
+      "kilifi county"
+     ],
+     "cities": [
+      {
+       "name": "Kilifi",
+       "lat": -3.63,
+       "lng": 39.85,
+       "aliases": []
+      },
+      {
+       "name": "Malindi",
+       "lat": -3.22,
+       "lng": 40.12,
+       "aliases": []
+      },
+      {
+       "name": "Kaloleni",
+       "lat": -3.81,
+       "lng": 39.63,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kwale",
+     "lat": -4.17,
+     "lng": 39.45,
+     "aliases": [
+      "kwale county"
+     ],
+     "cities": [
+      {
+       "name": "Kwale",
+       "lat": -4.17,
+       "lng": 39.45,
+       "aliases": []
+      },
+      {
+       "name": "Ukunda",
+       "lat": -4.28,
+       "lng": 39.57,
+       "aliases": [
+        "diani"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Taita-Taveta",
+     "lat": -3.4,
+     "lng": 38.56,
+     "aliases": [
+      "taita taveta county"
+     ],
+     "cities": [
+      {
+       "name": "Voi",
+       "lat": -3.4,
+       "lng": 38.56,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Tana River",
+     "lat": -1.5,
+     "lng": 40.03,
+     "aliases": [
+      "tana river county"
+     ],
+     "cities": [
+      {
+       "name": "Hola",
+       "lat": -1.5,
+       "lng": 40.03,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Lamu",
+     "lat": -2.27,
+     "lng": 40.9,
+     "aliases": [
+      "lamu county"
+     ],
+     "cities": [
+      {
+       "name": "Lamu",
+       "lat": -2.27,
+       "lng": 40.9,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Garissa",
+     "lat": -0.45,
+     "lng": 39.65,
+     "aliases": [
+      "garissa county"
+     ],
+     "cities": [
+      {
+       "name": "Garissa",
+       "lat": -0.45,
+       "lng": 39.65,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Wajir",
+     "lat": 1.75,
+     "lng": 40.06,
+     "aliases": [
+      "wajir county"
+     ],
+     "cities": [
+      {
+       "name": "Wajir",
+       "lat": 1.75,
+       "lng": 40.06,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Mandera",
+     "lat": 3.94,
+     "lng": 41.86,
+     "aliases": [
+      "mandera county"
+     ],
+     "cities": [
+      {
+       "name": "Mandera",
+       "lat": 3.94,
+       "lng": 41.86,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Marsabit",
+     "lat": 2.33,
+     "lng": 37.99,
+     "aliases": [
+      "marsabit county"
+     ],
+     "cities": [
+      {
+       "name": "Marsabit",
+       "lat": 2.33,
+       "lng": 37.99,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Isiolo",
+     "lat": 0.35,
+     "lng": 37.58,
+     "aliases": [
+      "isiolo county"
+     ],
+     "cities": [
+      {
+       "name": "Isiolo",
+       "lat": 0.35,
+       "lng": 37.58,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Meru",
+     "lat": 0.05,
+     "lng": 37.65,
+     "aliases": [
+      "meru county"
+     ],
+     "cities": [
+      {
+       "name": "Meru",
+       "lat": 0.05,
+       "lng": 37.65,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Tharaka-Nithi",
+     "lat": -0.3,
+     "lng": 37.87,
+     "aliases": [
+      "tharaka nithi county"
+     ],
+     "cities": [
+      {
+       "name": "Chuka",
+       "lat": -0.33,
+       "lng": 37.65,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Embu",
+     "lat": -0.53,
+     "lng": 37.45,
+     "aliases": [
+      "embu county"
+     ],
+     "cities": [
+      {
+       "name": "Embu",
+       "lat": -0.53,
+       "lng": 37.45,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kitui",
+     "lat": -1.37,
+     "lng": 38.01,
+     "aliases": [
+      "kitui county"
+     ],
+     "cities": [
+      {
+       "name": "Kitui",
+       "lat": -1.37,
+       "lng": 38.01,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Makueni",
+     "lat": -1.8,
+     "lng": 37.62,
+     "aliases": [
+      "makueni county"
+     ],
+     "cities": [
+      {
+       "name": "Wote",
+       "lat": -1.78,
+       "lng": 37.63,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nyandarua",
+     "lat": -0.18,
+     "lng": 36.52,
+     "aliases": [
+      "nyandarua county"
+     ],
+     "cities": [
+      {
+       "name": "Ol Kalou",
+       "lat": -0.27,
+       "lng": 36.38,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nyeri",
+     "lat": -0.42,
+     "lng": 36.95,
+     "aliases": [
+      "nyeri county"
+     ],
+     "cities": [
+      {
+       "name": "Nyeri",
+       "lat": -0.42,
+       "lng": 36.95,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kirinyaga",
+     "lat": -0.66,
+     "lng": 37.31,
+     "aliases": [
+      "kirinyaga county"
+     ],
+     "cities": [
+      {
+       "name": "Kerugoya",
+       "lat": -0.5,
+       "lng": 37.28,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Murang'a",
+     "lat": -0.72,
+     "lng": 37.15,
+     "aliases": [
+      "muranga county",
+      "murang a county"
+     ],
+     "cities": [
+      {
+       "name": "Murang'a",
+       "lat": -0.72,
+       "lng": 37.15,
+       "aliases": [
+        "muranga"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Turkana",
+     "lat": 3.12,
+     "lng": 35.6,
+     "aliases": [
+      "turkana county"
+     ],
+     "cities": [
+      {
+       "name": "Lodwar",
+       "lat": 3.12,
+       "lng": 35.6,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "West Pokot",
+     "lat": 1.24,
+     "lng": 35.12,
+     "aliases": [
+      "west pokot county"
+     ],
+     "cities": [
+      {
+       "name": "Kapenguria",
+       "lat": 1.24,
+       "lng": 35.12,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Samburu",
+     "lat": 1.1,
+     "lng": 36.7,
+     "aliases": [
+      "samburu county"
+     ],
+     "cities": [
+      {
+       "name": "Maralal",
+       "lat": 1.1,
+       "lng": 36.7,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Trans-Nzoia",
+     "lat": 1.02,
+     "lng": 35,
+     "aliases": [
+      "trans nzoia county"
+     ],
+     "cities": [
+      {
+       "name": "Kitale",
+       "lat": 1.02,
+       "lng": 35,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Elgeyo-Marakwet",
+     "lat": 0.67,
+     "lng": 35.51,
+     "aliases": [
+      "elgeyo marakwet county"
+     ],
+     "cities": [
+      {
+       "name": "Iten",
+       "lat": 0.67,
+       "lng": 35.51,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nandi",
+     "lat": 0.2,
+     "lng": 35.1,
+     "aliases": [
+      "nandi county"
+     ],
+     "cities": [
+      {
+       "name": "Kapsabet",
+       "lat": 0.2,
+       "lng": 35.1,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Baringo",
+     "lat": 0.49,
+     "lng": 35.74,
+     "aliases": [
+      "baringo county"
+     ],
+     "cities": [
+      {
+       "name": "Kabarnet",
+       "lat": 0.49,
+       "lng": 35.74,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Laikipia",
+     "lat": 0.02,
+     "lng": 37.07,
+     "aliases": [
+      "laikipia county"
+     ],
+     "cities": [
+      {
+       "name": "Nanyuki",
+       "lat": 0.02,
+       "lng": 37.07,
+       "aliases": []
+      },
+      {
+       "name": "Nyahururu",
+       "lat": 0.04,
+       "lng": 36.36,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Narok",
+     "lat": -1.08,
+     "lng": 35.87,
+     "aliases": [
+      "narok county"
+     ],
+     "cities": [
+      {
+       "name": "Narok",
+       "lat": -1.08,
+       "lng": 35.87,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kericho",
+     "lat": -0.37,
+     "lng": 35.28,
+     "aliases": [
+      "kericho county"
+     ],
+     "cities": [
+      {
+       "name": "Kericho",
+       "lat": -0.37,
+       "lng": 35.28,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bomet",
+     "lat": -0.78,
+     "lng": 35.34,
+     "aliases": [
+      "bomet county"
+     ],
+     "cities": [
+      {
+       "name": "Bomet",
+       "lat": -0.78,
+       "lng": 35.34,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kakamega",
+     "lat": 0.28,
+     "lng": 34.75,
+     "aliases": [
+      "kakamega county"
+     ],
+     "cities": [
+      {
+       "name": "Kakamega",
+       "lat": 0.28,
+       "lng": 34.75,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Vihiga",
+     "lat": 0.08,
+     "lng": 34.72,
+     "aliases": [
+      "vihiga county"
+     ],
+     "cities": [
+      {
+       "name": "Mbale",
+       "lat": 0.08,
+       "lng": 34.72,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Bungoma",
+     "lat": 0.56,
+     "lng": 34.56,
+     "aliases": [
+      "bungoma county"
+     ],
+     "cities": [
+      {
+       "name": "Bungoma",
+       "lat": 0.56,
+       "lng": 34.56,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Busia",
+     "lat": 0.46,
+     "lng": 34.11,
+     "aliases": [
+      "busia county"
+     ],
+     "cities": [
+      {
+       "name": "Busia",
+       "lat": 0.46,
+       "lng": 34.11,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Siaya",
+     "lat": 0.06,
+     "lng": 34.29,
+     "aliases": [
+      "siaya county"
+     ],
+     "cities": [
+      {
+       "name": "Siaya",
+       "lat": 0.06,
+       "lng": 34.29,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Homa Bay",
+     "lat": -0.53,
+     "lng": 34.46,
+     "aliases": [
+      "homa bay county"
+     ],
+     "cities": [
+      {
+       "name": "Homa Bay",
+       "lat": -0.53,
+       "lng": 34.46,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Migori",
+     "lat": -1.06,
+     "lng": 34.47,
+     "aliases": [
+      "migori county"
+     ],
+     "cities": [
+      {
+       "name": "Migori",
+       "lat": -1.06,
+       "lng": 34.47,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Kisii",
+     "lat": -0.68,
+     "lng": 34.77,
+     "aliases": [
+      "kisii county"
+     ],
+     "cities": [
+      {
+       "name": "Kisii",
+       "lat": -0.68,
+       "lng": 34.77,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Nyamira",
+     "lat": -0.56,
+     "lng": 34.94,
+     "aliases": [
+      "nyamira county"
+     ],
+     "cities": [
+      {
+       "name": "Nyamira",
+       "lat": -0.56,
+       "lng": 34.94,
+       "aliases": []
+      }
+     ]
+    }
+   ]
+  },
+  "ET": {
+   "label": "Region",
+   "regions": [
+    {
+     "name": "Addis Ababa",
+     "lat": 9.03,
+     "lng": 38.74,
+     "aliases": [
+      "addis ababa city",
+      "addis abeba",
+      "finfinne"
+     ],
+     "cities": [
+      {
+       "name": "Addis Ababa",
+       "lat": 9.03,
+       "lng": 38.74,
+       "aliases": [
+        "addis",
+        "bole",
+        "kazanchis",
+        "piassa",
+        "megenagna",
+        "cmc",
+        "sarbet",
+        "mexico addis",
+        "merkato",
+        "4 kilo",
+        "6 kilo"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Dire Dawa",
+     "lat": 9.6,
+     "lng": 41.86,
+     "aliases": [
+      "dire dawa city"
+     ],
+     "cities": [
+      {
+       "name": "Dire Dawa",
+       "lat": 9.6,
+       "lng": 41.86,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Oromia",
+     "lat": 8.54,
+     "lng": 39.27,
+     "aliases": [
+      "oromia region",
+      "oromiya"
+     ],
+     "cities": [
+      {
+       "name": "Adama",
+       "lat": 8.54,
+       "lng": 39.27,
+       "aliases": [
+        "nazret",
+        "nazareth"
+       ]
+      },
+      {
+       "name": "Jimma",
+       "lat": 7.67,
+       "lng": 36.83,
+       "aliases": []
+      },
+      {
+       "name": "Bishoftu",
+       "lat": 8.75,
+       "lng": 38.98,
+       "aliases": [
+        "debre zeit"
+       ]
+      },
+      {
+       "name": "Shashamane",
+       "lat": 7.2,
+       "lng": 38.6,
+       "aliases": []
+      },
+      {
+       "name": "Nekemte",
+       "lat": 9.09,
+       "lng": 36.55,
+       "aliases": []
+      },
+      {
+       "name": "Ambo",
+       "lat": 8.98,
+       "lng": 37.86,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Amhara",
+     "lat": 11.59,
+     "lng": 37.39,
+     "aliases": [
+      "amhara region"
+     ],
+     "cities": [
+      {
+       "name": "Bahir Dar",
+       "lat": 11.59,
+       "lng": 37.39,
+       "aliases": [
+        "bahirdar"
+       ]
+      },
+      {
+       "name": "Gondar",
+       "lat": 12.6,
+       "lng": 37.47,
+       "aliases": [
+        "gonder"
+       ]
+      },
+      {
+       "name": "Dessie",
+       "lat": 11.13,
+       "lng": 39.63,
+       "aliases": []
+      },
+      {
+       "name": "Debre Markos",
+       "lat": 10.35,
+       "lng": 37.73,
+       "aliases": []
+      },
+      {
+       "name": "Debre Birhan",
+       "lat": 9.68,
+       "lng": 39.53,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Tigray",
+     "lat": 13.5,
+     "lng": 39.47,
+     "aliases": [
+      "tigray region"
+     ],
+     "cities": [
+      {
+       "name": "Mekelle",
+       "lat": 13.5,
+       "lng": 39.47,
+       "aliases": [
+        "mekele"
+       ]
+      },
+      {
+       "name": "Adigrat",
+       "lat": 14.28,
+       "lng": 39.46,
+       "aliases": []
+      },
+      {
+       "name": "Axum",
+       "lat": 14.12,
+       "lng": 38.72,
+       "aliases": [
+        "aksum"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Sidama",
+     "lat": 7.06,
+     "lng": 38.48,
+     "aliases": [
+      "sidama region"
+     ],
+     "cities": [
+      {
+       "name": "Hawassa",
+       "lat": 7.06,
+       "lng": 38.48,
+       "aliases": [
+        "awassa"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "South Ethiopia",
+     "lat": 6.03,
+     "lng": 37.55,
+     "aliases": [
+      "south ethiopia region",
+      "snnpr"
+     ],
+     "cities": [
+      {
+       "name": "Arba Minch",
+       "lat": 6.03,
+       "lng": 37.55,
+       "aliases": []
+      },
+      {
+       "name": "Wolaita Sodo",
+       "lat": 6.86,
+       "lng": 37.76,
+       "aliases": [
+        "sodo"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Central Ethiopia",
+     "lat": 7.55,
+     "lng": 37.85,
+     "aliases": [
+      "central ethiopia region"
+     ],
+     "cities": [
+      {
+       "name": "Hosaena",
+       "lat": 7.55,
+       "lng": 37.85,
+       "aliases": [
+        "hossana"
+       ]
+      },
+      {
+       "name": "Butajira",
+       "lat": 8.12,
+       "lng": 38.37,
+       "aliases": []
+      },
+      {
+       "name": "Welkite",
+       "lat": 8.28,
+       "lng": 37.78,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "South West Ethiopia",
+     "lat": 7.23,
+     "lng": 35.53,
+     "aliases": [
+      "south west ethiopia peoples region",
+      "southwest ethiopia"
+     ],
+     "cities": [
+      {
+       "name": "Bonga",
+       "lat": 7.27,
+       "lng": 36.24,
+       "aliases": []
+      },
+      {
+       "name": "Mizan Teferi",
+       "lat": 6.99,
+       "lng": 35.59,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Somali",
+     "lat": 9.35,
+     "lng": 42.8,
+     "aliases": [
+      "somali region"
+     ],
+     "cities": [
+      {
+       "name": "Jijiga",
+       "lat": 9.35,
+       "lng": 42.8,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Afar",
+     "lat": 11.79,
+     "lng": 41,
+     "aliases": [
+      "afar region"
+     ],
+     "cities": [
+      {
+       "name": "Semera",
+       "lat": 11.79,
+       "lng": 41,
+       "aliases": []
+      }
+     ]
+    },
+    {
+     "name": "Benishangul-Gumuz",
+     "lat": 10.07,
+     "lng": 34.53,
+     "aliases": [
+      "benishangul gumuz region"
+     ],
+     "cities": [
+      {
+       "name": "Assosa",
+       "lat": 10.07,
+       "lng": 34.53,
+       "aliases": [
+        "asosa"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Gambela",
+     "lat": 8.25,
+     "lng": 34.59,
+     "aliases": [
+      "gambela region",
+      "gambella"
+     ],
+     "cities": [
+      {
+       "name": "Gambela",
+       "lat": 8.25,
+       "lng": 34.59,
+       "aliases": [
+        "gambella"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Harari",
+     "lat": 9.31,
+     "lng": 42.12,
+     "aliases": [
+      "harari region"
+     ],
+     "cities": [
+      {
+       "name": "Harar",
+       "lat": 9.31,
+       "lng": 42.12,
+       "aliases": []
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

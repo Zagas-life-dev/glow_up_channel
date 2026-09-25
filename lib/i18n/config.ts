@@ -36,6 +36,8 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   fr: "Français",
   es: "Español",
   pt: "Português",
+  sw: "Kiswahili",
+  am: "አማርኛ",
 }
 
 /** BCP-47 tags for `Intl` — dates and numbers, not content. */
@@ -44,6 +46,8 @@ export const LOCALE_TAGS: Record<Locale, string> = {
   fr: "fr-FR",
   es: "es-ES",
   pt: "pt-BR",
+  sw: "sw-KE",
+  am: "am-ET",
 }
 
 export function normalizeLocale(value: unknown): Locale | null {

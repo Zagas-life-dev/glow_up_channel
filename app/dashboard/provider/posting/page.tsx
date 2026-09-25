@@ -17,15 +17,19 @@ import { cn } from "@/lib/utils"
 import { toast } from 'sonner'
 import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 import PostTypeSelector, { PostTypeOption } from "@/components/posting/PostTypeSelector"
-import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestions"
 import { AmountCurrencyField, type PayPeriod } from "@/components/posting/AmountCurrencyField"
-import { ChipMultiSelect } from "@/components/posting/ChipMultiSelect"
-import { CountryField, type CountryValue } from "@/components/posting/CountryField"
+import {
+  ListingLocationFields,
+  EMPTY_LISTING_LOCATION,
+  isListingLocationComplete,
+  type ListingLocationValue,
+} from "@/components/posting/ListingLocationFields"
+import { TagPicker } from "@/components/tags/tag-picker"
+import { missingRequired } from "@/lib/taxonomy"
 import { useRates } from "@/lib/currency/use-rates"
 import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
-import { INDUSTRY_SECTORS, TARGET_AUDIENCE_GROUPS } from "@/lib/listings/taxonomy"
 import { useUserLocation } from "@/hooks/use-user-location"
 import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
 import { Panel, QuotaMeter, OnboardingBanner } from '@/components/provider/provider-ui'
@@ -135,7 +139,6 @@ function PostingContent() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const tagInputContainerRef = useRef<HTMLDivElement | null>(null)
   const errorRef = useRef<HTMLDivElement | null>(null)
 
   // Permission state
@@ -149,12 +152,14 @@ function PostingContent() {
 
   // Form states
   const [isPaid, setIsPaid] = useState(false)
-  const [isRemote, setIsRemote] = useState(false)
-  const [tags, setTags] = useState<string[]>([])
-  const [country, setCountry] = useState<CountryValue>(null)
-  const [industrySectors, setIndustrySectors] = useState<string[]>([])
-  const [targetAudience, setTargetAudience] = useState<string[]>([])
+  // Official tag ids from the picker; replaces the free-text tags, industries
+  // and audience fields, whose values never lined up with anything.
+  const [canonicalTags, setCanonicalTags] = useState<string[]>([])
+  const [place, setPlace] = useState<ListingLocationValue>(EMPTY_LISTING_LOCATION)
+  // Title and description as typed, only so the tag picker can suggest from them.
+  const [draftText, setDraftText] = useState<{ title: string; description: string }>({ title: '', description: '' })
   const [period, setPeriod] = useState<PayPeriod>('monthly')
+  const country = place.country
 
   // Rates load once per page and are shared with every other money field.
   const { rates, stale: ratesStale } = useRates()
@@ -250,12 +255,10 @@ function PostingContent() {
     setIsSheetOpen(true)
     setSubmitStatus('idle')
     setErrorMessage('')
-    setTags([])
+    setCanonicalTags([])
     setIsPaid(false)
-    setIsRemote(false)
-    setCountry(null)
-    setIndustrySectors([])
-    setTargetAudience([])
+    setPlace(EMPTY_LISTING_LOCATION)
+    setDraftText({ title: '', description: '' })
     setPeriod('monthly')
     amount.reset(null, defaultCurrency)
     setResourceSource('link')
@@ -281,6 +284,26 @@ function PostingContent() {
         )
         return
       }
+    }
+
+    // The backend refuses both of these; saying so here keeps the form open with
+    // everything the provider typed, instead of a round trip to a 400.
+    if (selectedType !== 'resource' && !isListingLocationComplete(place)) {
+      setSubmitStatus('error')
+      setErrorMessage('Choose the country and state or region this listing is in, or mark it as remote.')
+      return
+    }
+    const missingGroups = missingRequired(canonicalTags, selectedType)
+    if (missingGroups.length > 0) {
+      setSubmitStatus('error')
+      setErrorMessage(
+        missingGroups.includes('industry')
+          ? 'Pick at least one industry in Tags.'
+          : missingGroups.includes('level')
+            ? 'Pick the career level this is for in Tags.'
+            : 'Pick the event format in Tags.',
+      )
+      return
     }
 
     setIsSubmitting(true)
@@ -310,17 +333,16 @@ function PostingContent() {
         url: str(data.url),
         organizationName: str(data.organizer) ?? str(data.company) ?? str(data.author),
         type: str(data.type),
-        tags,
-        industrySectors,
-        targetAudience,
+        canonicalTags,
         location: selectedType === 'resource'
           ? undefined
           : {
-              country: country?.name,
-              countryCode: country?.code,
-              province: str(data.province),
-              city: str(data.city),
-              isRemote,
+              country: place.country?.name,
+              countryCode: place.country?.code,
+              province: place.province.trim() || undefined,
+              city: place.city.trim() || undefined,
+              isRemote: place.isRemote,
+              remoteCountries: place.remoteCountries,
             },
         money: isPaid ? amount.payload : null,
         isPaid,
@@ -555,6 +577,10 @@ function PostingContent() {
                             name="title"
                             placeholder={`${getTypeConfig(selectedType).title} title`}
                             required
+                            onChange={(event) => {
+                              const title = event.target.value
+                              setDraftText((current) => ({ ...current, title }))
+                            }}
                             className={FIELD_CLASS}
                           />
                         </div>
@@ -593,6 +619,10 @@ function PostingContent() {
                           placeholder="Describe in detail..."
                           required
                           rows={4}
+                          onChange={(event) => {
+                            const description = event.target.value
+                            setDraftText((current) => ({ ...current, description }))
+                          }}
                           className="resize-none text-foreground placeholder:text-muted-foreground"
                         />
                       </div>
@@ -686,26 +716,12 @@ function PostingContent() {
 
                       {/* Location (not for resource) */}
                       {selectedType !== 'resource' && (
-                        <FormSection
-                          icon={MapPin}
-                          title="Location"
-                          toggle={
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">Virtual</span>
-                              <Switch checked={isRemote} onCheckedChange={setIsRemote} />
-                            </div>
-                          }
-                        >
-                          {!isRemote && (
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                              {/* Picked, not typed: the ranker matches ISO codes, and
-                                  "nigeria" / "Nigeria " / "NGA" were three different
-                                  places to it. Choosing here also sets the currency. */}
-                              <CountryField value={country} onChange={setCountry} />
-                              <Input name="province" placeholder="State/Province" className={FIELD_SM_CLASS} />
-                              <Input name="city" placeholder="City" className={FIELD_SM_CLASS} />
-                            </div>
-                          )}
+                        <FormSection icon={MapPin} title="Location">
+                          {/* Picked, not typed: country, then the state or region
+                              from the places table, then optionally the city — so
+                              a reader's GPS position can be matched against it.
+                              Choosing the country also sets the currency. */}
+                          <ListingLocationFields value={place} onChange={setPlace} />
                         </FormSection>
                       )}
 
@@ -774,34 +790,15 @@ function PostingContent() {
                         </FormSection>
                       )}
 
-                      {/* Tags */}
-                      <div ref={tagInputContainerRef}>
-                        <TagInputWithSuggestions
-                          tags={tags}
-                          onTagsChange={setTags}
-                          label="Tags"
-                          helperText="Add up to 10 tags for better discovery"
-                        />
-                      </div>
-
-                      {/* Both vocabularies are the ones users answer at onboarding,
-                          so a listing tagged "Technology, Student" matches a profile
-                          holding those exact values instead of being fuzzy-matched. */}
-                      <ChipMultiSelect
-                        label="Industries"
-                        options={INDUSTRY_SECTORS}
-                        selected={industrySectors}
-                        onChange={setIndustrySectors}
-                        max={3}
-                        helperText="Who this is relevant to. Shown to people who picked these at signup."
-                      />
-
-                      <ChipMultiSelect
-                        label="Who is this for?"
-                        groups={TARGET_AUDIENCE_GROUPS}
-                        selected={targetAudience}
-                        onChange={setTargetAudience}
-                        max={4}
+                      {/* Tags come from the official list only, suggested from the
+                          title and description. The backend fills anything left
+                          empty with its own tagger, and the AI after that. */}
+                      <TagPicker
+                        kind={selectedType}
+                        value={canonicalTags}
+                        onChange={setCanonicalTags}
+                        draft={draftText}
+                        className="rounded-up-xl border border-border bg-card px-4 py-4 sm:px-5"
                       />
 
                       {/* Requirements (opportunity only) */}

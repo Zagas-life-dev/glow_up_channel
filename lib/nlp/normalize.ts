@@ -19,22 +19,41 @@ const DIACRITICS = /[̀-ͯ]/g
 /** l' d' j' n' s' c' m' t' qu' — French and Italian-style elisions. */
 const ELISION = /\b(l|d|j|n|s|c|m|t|qu)['’]/gi
 
+/**
+ * Everything but Latin letters, digits, + and #, and Ge'ez letters/numerals.
+ * Ge'ez script (Amharic) survives; its punctuation (U+1360–1368, the word
+ * space and full stop) does not. Without this an Amharic listing normalised
+ * to an empty string and matched nothing.
+ */
+const NON_WORD = /[^a-z0-9+#ሀ-፟፩-᎟ⶀ-⷟]+/g
+
+/**
+ * Amharic proclitics — የ "of", በ "in/by", ለ "for", ከ "from" — are written
+ * joined to the next word, so "የሂሳብ" (of accounts) never matched the alias
+ * "ሂሳብ". Stripped from any Ge'ez word with at least two letters left; text and
+ * aliases both pass through here, so the few words that merely begin with one
+ * of these letters are shortened identically on both sides.
+ */
+const AMHARIC_PROCLITIC = /(^| )[የበለከ](?=[ሀ-፟]{2,})/g
+
 export function stripDiacritics(text: string): string {
   return text.normalize("NFD").replace(DIACRITICS, "")
 }
 
 /**
  * Lowercased, unaccented, punctuation-free text with single spaces.
- * Phrase matching runs against this form.
+ * Phrase matching runs against this form. Mirrored by the backend's
+ * src/taxonomy/text.js — lib/taxonomy/parity.test.ts holds them equal.
  */
 export function normalizeText(text: string): string {
   if (!text) return ""
   return stripDiacritics(text)
     .replace(ELISION, "$1 ")
     .toLowerCase()
-    .replace(/[^a-z0-9+#]+/g, " ")
+    .replace(NON_WORD, " ")
     .replace(/\s+/g, " ")
     .trim()
+    .replace(AMHARIC_PROCLITIC, "$1")
 }
 
 /**

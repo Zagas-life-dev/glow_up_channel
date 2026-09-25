@@ -113,8 +113,8 @@ BI|Burundi|east-africa|fr|-3.37|29.92
 KM|Comoros|east-africa|fr|-11.65|43.33
 DJ|Djibouti|east-africa|fr|11.83|42.59
 ER|Eritrea|east-africa|en|15.18|39.78
-ET|Ethiopia|east-africa|en|9.15|40.49
-KE|Kenya|east-africa|en|-0.02|37.91
+ET|Ethiopia|east-africa|am,en|9.15|40.49
+KE|Kenya|east-africa|en,sw|-0.02|37.91
 MG|Madagascar|east-africa|fr|-18.77|46.87
 MW|Malawi|east-africa|en|-13.25|34.30
 MU|Mauritius|east-africa|en,fr|-20.35|57.55
@@ -123,8 +123,8 @@ RW|Rwanda|east-africa|en,fr|-1.94|29.87
 SC|Seychelles|east-africa|en,fr|-4.68|55.49
 SO|Somalia|east-africa|en|5.15|46.20
 SS|South Sudan|east-africa|en|6.88|31.31
-TZ|Tanzania|east-africa|en|-6.37|34.89
-UG|Uganda|east-africa|en|1.37|32.29
+TZ|Tanzania|east-africa|sw,en|-6.37|34.89
+UG|Uganda|east-africa|en,sw|1.37|32.29
 ZM|Zambia|east-africa|en|-13.13|27.85
 ZW|Zimbabwe|east-africa|en|-19.02|29.15
 BW|Botswana|southern-africa|en|-22.33|24.68

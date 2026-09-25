@@ -28,6 +28,8 @@ import {
   RiBarChartBoxLine,
   RiArchiveLine,
   RiUserAddLine,
+  RiPriceTag3Line,
+  RiMapPinLine,
 } from "react-icons/ri"
 import type { IconType } from "react-icons"
 import { toast } from "sonner"
@@ -91,6 +93,18 @@ const QUICK_ACTIONS: QuickAction[] = [
     description: "Engagement and content performance",
     href: "/dashboard/admin/analytics",
     icon: RiBarChartBoxLine,
+  },
+  {
+    label: "Location analytics",
+    description: "Where users are, and supply vs demand",
+    href: "/dashboard/admin/analytics/locations",
+    icon: RiMapPinLine,
+  },
+  {
+    label: "Tagging",
+    description: "AI queue, AI-made tags, missing locations",
+    href: "/dashboard/admin/tagging",
+    icon: RiPriceTag3Line,
   },
   {
     label: "Past posts",

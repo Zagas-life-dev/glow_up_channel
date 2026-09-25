@@ -1,6 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 import { getOrCreateAnonId, clearAnonId } from '@/lib/anon-id';
+import { viewerGeoHeaders } from '@/lib/geo/viewer-geo';
 
 /** Listing kinds that carry public engagement metrics. */
 export type FeedMetricItemType = 'opportunity' | 'job' | 'event' | 'resource';
@@ -193,6 +194,9 @@ export class ApiClient {
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
+      // Coarse reader place (country/state/city) for location analytics on
+      // views, clicks and applications. See lib/geo/viewer-geo.ts.
+      ...viewerGeoHeaders(),
     };
   }
 
@@ -1289,6 +1293,7 @@ export class ApiClient {
             'X-View-Source': 'client',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...(getOrCreateAnonId() ? { 'X-Anon-Id': getOrCreateAnonId() } : {}),
+            ...viewerGeoHeaders(),
           },
           body: JSON.stringify({ source: source ?? null }),
         }

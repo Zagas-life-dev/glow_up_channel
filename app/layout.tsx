@@ -26,6 +26,8 @@ import TrackerReturnSheet from "@/components/tracker/return-sheet"
 import GiftPopup from "@/components/gifts/gift-popup"
 import PromotionAnnouncementPopup from "@/components/promotion/promotion-announcement-popup"
 import AnnouncementAttribution from "@/components/promotion/announcement-attribution"
+import LocationConsent from "@/components/location-consent"
+import LocationConfirmPrompt from "@/components/location-confirm-prompt"
 import VisitTracker from "@/components/visit-tracker"
 import BackgroundPrefetcher from "@/components/background-prefetcher"
 import PwaInstallBanner from "@/components/pwa-install-banner"
@@ -215,6 +217,13 @@ export default async function RootLayout({
                                 links, so a visit arriving from one is credited
                                 to it instead of looking like any other click. */}
                             <AnnouncementAttribution />
+                            {/* Asks for location once, on first load, with our
+                                explanation before the browser's prompt — and
+                                reports the reader's place to the server. */}
+                            <LocationConsent />
+                            {/* Once, for existing users whose typed location
+                                could not be read cleanly. */}
+                            <LocationConfirmPrompt />
                             <Toaster position="bottom-center" />
                           </AppLayout>
                         </PageProvider>

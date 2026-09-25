@@ -24,6 +24,7 @@ import {
 import { SUPPORTED_GROUPS, type SupportedRegion } from '@/lib/geo/supported'
 import { lookupCountry } from '@/lib/geo/countries'
 import { flagEmoji } from '@/lib/geo/dial-codes'
+import { citiesOf, hasRegions, regionLabel, regionsOf } from '@/lib/geo/places'
 import { StepField, StepHeader, StepPayoff, stepInputClass } from './step-shell'
 
 const REGION_LABELS: Record<SupportedRegion, string> = {
@@ -78,7 +79,7 @@ const LocationStep = forwardRef<any, LocationStepProps>(({ onSubmit, initialData
 
       <div className="space-y-5">
         <StepField label="Country" error={touched && !countryCode ? 'Pick your country to continue' : undefined}>
-          <Select value={countryCode} onValueChange={(value) => { setCountryCode(value); setTouched(false) }}>
+          <Select value={countryCode} onValueChange={(value) => { setCountryCode(value); setProvince(''); setCity(''); setTouched(false) }}>
             <SelectTrigger className={stepInputClass}>
               <SelectValue placeholder="Select your country" />
             </SelectTrigger>
@@ -100,28 +101,57 @@ const LocationStep = forwardRef<any, LocationStepProps>(({ onSubmit, initialData
           </Select>
         </StepField>
 
+        {/* In the focus countries the state and city are picked from the
+            places table, so "Ikeja", "ikeja " and "Lagos" stop being three
+            places; elsewhere they stay free text. */}
         <StepField
-          label="State"
+          label={regionLabel(countryCode)}
           htmlFor="province"
           error={touched && province.trim().length < 2 ? 'Tell us which state or province' : undefined}
         >
-          <Input
-            id="province"
-            value={province}
-            onChange={(e) => { setProvince(e.target.value); setTouched(false) }}
-            placeholder="Lagos"
-            className={stepInputClass}
-          />
+          {hasRegions(countryCode) ? (
+            <Select value={province || undefined} onValueChange={(value) => { setProvince(value); setCity(''); setTouched(false) }}>
+              <SelectTrigger id="province" className={stepInputClass}>
+                <SelectValue placeholder={`Select your ${regionLabel(countryCode).toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent className="max-h-[18rem]">
+                {regionsOf(countryCode).map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id="province"
+              value={province}
+              onChange={(e) => { setProvince(e.target.value); setTouched(false) }}
+              placeholder="Lagos"
+              className={stepInputClass}
+            />
+          )}
         </StepField>
 
         <StepField label="City" htmlFor="city" optional>
-          <Input
-            id="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Yaba, Surulere…"
-            className={stepInputClass}
-          />
+          {hasRegions(countryCode) && citiesOf(countryCode, province).length > 0 ? (
+            <Select value={city || undefined} onValueChange={setCity}>
+              <SelectTrigger id="city" className={stepInputClass}>
+                <SelectValue placeholder="Select your city" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[18rem]">
+                {citiesOf(countryCode, province).map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id="city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Yaba, Surulere…"
+              className={stepInputClass}
+            />
+          )}
         </StepField>
 
         {country ? (

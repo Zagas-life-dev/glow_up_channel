@@ -15,7 +15,7 @@ import {
 import { termFrequency, tokenize } from "@/lib/nlp/normalize"
 import { stemAll } from "@/lib/nlp/stem"
 import { removeStopwords } from "@/lib/nlp/stopwords"
-import { expandRelated, matchTagsDetailed } from "@/lib/nlp/taxonomy"
+import { expandRelated, knownTagIds, matchTagsDetailed } from "@/lib/nlp/taxonomy"
 
 export type TextProfile = {
   language: SupportedLanguage | null
@@ -111,16 +111,33 @@ function asString(value: unknown): string {
 }
 
 /**
+ * Replace a profile's tags with official ids someone already decided.
+ *
+ * Stored tags were chosen by a publisher, an admin, the AI or the backend's
+ * tagger with the full listing in view; re-deriving them from a truncated
+ * card on every render would only add noise. Keywords still come from the
+ * text — they catch the specific vocabulary no tag list covers.
+ */
+function withStoredTags(profile: TextProfile, ids: string[], extra?: Map<string, number>): TextProfile {
+  if (ids.length === 0) return profile
+  const core = new Map<string, number>(extra ?? [])
+  for (const id of ids) core.set(id, 1)
+  return { ...profile, tags: expandRelated(core), coreTags: core }
+}
+
+/**
  * Profile a content item.
  *
- * Publisher-supplied `tags` are trusted above prose — someone deliberately
- * tagged the listing — but they are still run through the taxonomy rather than
- * used raw, so "Bourses" and "Scholarships" land on the same id.
+ * When the listing carries `canonicalTags` (every listing does once the
+ * migration has run), those are its tags. Otherwise publisher-supplied `tags`
+ * are trusted above prose — someone deliberately tagged the listing — but still
+ * run through the taxonomy rather than used raw, so "Bourses" and
+ * "Scholarships" land on the same id.
  */
 export function profileContent(item: Record<string, unknown>): TextProfile {
   const language = contentLanguage(item)
 
-  return buildTextProfile(
+  const profile = buildTextProfile(
     [
       { text: asString(item.title) || asString(item.name), weight: 3 },
       { text: asString(item.tags), weight: 2.5 },
@@ -131,6 +148,7 @@ export function profileContent(item: Record<string, unknown>): TextProfile {
     ],
     language,
   )
+  return withStoredTags(profile, knownTagIds(item.canonicalTags))
 }
 
 /**
@@ -148,12 +166,16 @@ export function profileUser(
     aspirations?: unknown
     fieldOfStudy?: unknown
     careerStage?: unknown
+    /** Community group ids chosen at onboarding ("community:women"). */
+    communities?: unknown
+    /** Official tags the backend derived from this profile. */
+    canonicalTags?: unknown
   } | null | undefined,
   language?: SupportedLanguage | null,
 ): TextProfile {
   if (!profile) return EMPTY_PROFILE
 
-  return buildTextProfile(
+  const fromText = buildTextProfile(
     [
       { text: asString(profile.interests), weight: 3 },
       { text: asString(profile.skills), weight: 2 },
@@ -163,4 +185,8 @@ export function profileUser(
     ],
     language,
   )
+  // Stored tags and chosen communities are what the user said, at full weight;
+  // anything the text adds beyond them (aspirations, mostly) is kept.
+  const stated = [...knownTagIds(profile.canonicalTags), ...knownTagIds(profile.communities)]
+  return withStoredTags(fromText, stated, fromText.coreTags)
 }

@@ -27,6 +27,7 @@ import LocationStep from '@/components/onboarding/location-step'
 import PhoneStep from '@/components/onboarding/phone-step'
 import EducationStep from '@/components/onboarding/education-step'
 import InterestsStep from '@/components/onboarding/interests-step'
+import CommunitiesStep from '@/components/onboarding/communities-step'
 import IndustryStep from '@/components/onboarding/industry-step'
 import SkillsStep from '@/components/onboarding/skills-step'
 import AspirationsStep from '@/components/onboarding/aspirations-step'
@@ -36,6 +37,7 @@ const steps = [
   { id: 'phone', component: PhoneStep },
   { id: 'education', component: EducationStep },
   { id: 'interests', component: InterestsStep },
+  { id: 'communities', component: CommunitiesStep },
   { id: 'industry', component: IndustryStep },
   { id: 'skills', component: SkillsStep },
   { id: 'aspirations', component: AspirationsStep },

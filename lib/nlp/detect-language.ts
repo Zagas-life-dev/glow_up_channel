@@ -1,5 +1,5 @@
 /**
- * Which of our four languages is this text in?
+ * Which of our six languages is this text in?
  *
  * Scored on three kinds of evidence, because none is enough alone:
  *
@@ -36,9 +36,9 @@
 import { stripDiacritics, tokenizeForDetection } from "@/lib/nlp/normalize"
 import { STOPWORDS } from "@/lib/nlp/stopwords"
 
-export type SupportedLanguage = "en" | "fr" | "es" | "pt"
+export type SupportedLanguage = "en" | "fr" | "es" | "pt" | "sw" | "am"
 
-export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ["en", "fr", "es", "pt"]
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ["en", "fr", "es", "pt", "sw", "am"]
 
 export function isSupportedLanguage(value: unknown): value is SupportedLanguage {
   return typeof value === "string" && SUPPORTED_LANGUAGES.includes(value as SupportedLanguage)
@@ -91,6 +91,18 @@ const LEXICAL_MARKERS: Record<SupportedLanguage, Marker[]> = {
       weight: 1.5,
     },
   ],
+  sw: [
+    { pattern: /\b(na|ya|wa|kwa|za|katika|kwamba|hii|ni|kuwa|pia|ambayo|kama|au)\b/g, weight: 1 },
+    // Infinitives and the commonest noun-class prefixes on a word stem.
+    { pattern: /\b(ku|wa|ma|vi|mi)[a-z]{4,}\b/g, weight: 0.4 },
+    {
+      pattern:
+        /\b(kazi|nafasi|mafunzo|ufadhili|udhamini|maombi|mwombaji|waombaji|wanafunzi|mwanafunzi|elimu|ajira|mshahara|uzoefu|shahada)\b/g,
+      weight: 1.5,
+    },
+  ],
+  // Amharic is decided by its script — see ACCENT_MARKERS.
+  am: [],
 }
 
 /**
@@ -103,6 +115,10 @@ const ACCENT_MARKERS: Record<SupportedLanguage, Marker[]> = {
   fr: [{ pattern: /[àèéêëîïôûù]/g, weight: 0.5 }],
   es: [{ pattern: /[ñ¿¡]/g, weight: 2 }],
   pt: [{ pattern: /[ãõ]/g, weight: 1.5 }],
+  sw: [],
+  // Ge'ez script is used by no other supported language: any run of it is
+  // decisive, and a whole Amharic sentence is overwhelming.
+  am: [{ pattern: /[ሀ-፿]+/g, weight: 3 }],
 }
 
 /**
@@ -136,7 +152,7 @@ export type LanguageGuess = {
  *   score, before we commit. 0.34 means "clearly ahead of a four-way tie".
  */
 export function detectLanguage(text: string, minConfidence = 0.34): LanguageGuess {
-  const scores: Record<SupportedLanguage, number> = { en: 0, fr: 0, es: 0, pt: 0 }
+  const scores: Record<SupportedLanguage, number> = { en: 0, fr: 0, es: 0, pt: 0, sw: 0, am: 0 }
   const empty: LanguageGuess = { language: null, confidence: 0, scores }
 
   if (!text || !text.trim()) return empty

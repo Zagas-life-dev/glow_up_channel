@@ -1,0 +1,8018 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "fr",
+    "es",
+    "pt",
+    "sw",
+    "am"
+  ],
+  "facets": [
+    "type",
+    "format",
+    "work",
+    "level",
+    "community",
+    "industry",
+    "skill"
+  ],
+  "limits": {
+    "type": 2,
+    "format": 2,
+    "work": 2,
+    "level": 2,
+    "industry": 2,
+    "skill": 5,
+    "community": 3
+  },
+  "required": {
+    "job": [
+      "industry",
+      "level"
+    ],
+    "event": [
+      "industry",
+      "format"
+    ],
+    "opportunity": [
+      "industry"
+    ],
+    "resource": [
+      "industry"
+    ]
+  },
+  "tags": [
+    {
+      "id": "type:job",
+      "facet": "type",
+      "labels": {
+        "en": "Job",
+        "fr": "Emploi",
+        "es": "Empleo",
+        "pt": "Emprego",
+        "sw": "Kazi",
+        "am": "ሥራ"
+      },
+      "aliases": {
+        "en": [
+          "jobs",
+          "vacancy",
+          "job seekers",
+          "graduate jobs",
+          "seniorleveljob",
+          "sales job",
+          "marketing job",
+          "reomtejob",
+          "multiple roles"
+        ],
+        "fr": [
+          "emploi",
+          "emplois",
+          "offre d'emploi",
+          "poste"
+        ],
+        "es": [
+          "empleo",
+          "empleos",
+          "trabajo",
+          "vacante",
+          "vacantes"
+        ],
+        "pt": [
+          "emprego",
+          "empregos",
+          "vaga",
+          "vagas",
+          "trabalho"
+        ],
+        "sw": [
+          "kazi",
+          "nafasi ya kazi",
+          "nafasi za kazi",
+          "ajira"
+        ],
+        "am": [
+          "ሥራ",
+          "የሥራ ማስታወቂያ",
+          "ክፍት የሥራ ቦታ"
+        ]
+      },
+      "exactAliases": [
+        "job"
+      ],
+      "weakAliases": {
+        "es": [
+          "puesto"
+        ]
+      }
+    },
+    {
+      "id": "type:internship",
+      "facet": "type",
+      "labels": {
+        "en": "Internship",
+        "fr": "Stage",
+        "es": "Pasantía",
+        "pt": "Estágio",
+        "sw": "Mafunzo kazini",
+        "am": "የሥራ ልምምድ"
+      },
+      "aliases": {
+        "en": [
+          "internship",
+          "intern",
+          "intership",
+          "industrial attachment",
+          "nysc"
+        ],
+        "fr": [
+          "stagiaire",
+          "offre de stage",
+          "stage de fin d'études",
+          "stage rémunéré",
+          "stagiaires"
+        ],
+        "es": [
+          "pasantía",
+          "pasantías",
+          "prácticas",
+          "becario"
+        ],
+        "pt": [
+          "estágio",
+          "estágios",
+          "estagiário"
+        ],
+        "sw": [
+          "mafunzo kazini",
+          "internship",
+          "mwanafunzi wa mafunzo"
+        ],
+        "am": [
+          "የሥራ ልምምድ",
+          "ተለማማጅ"
+        ]
+      },
+      "related": [
+        "level:student",
+        "level:entry",
+        "type:graduate-trainee"
+      ],
+      "weakAliases": {
+        "fr": [
+          "stage",
+          "stages"
+        ]
+      }
+    },
+    {
+      "id": "type:graduate-trainee",
+      "facet": "type",
+      "labels": {
+        "en": "Graduate trainee",
+        "fr": "Jeune diplômé stagiaire",
+        "es": "Programa de graduados",
+        "pt": "Programa de trainee",
+        "sw": "Mhitimu mwanafunzi",
+        "am": "የተመራቂ ሰልጣኝ"
+      },
+      "aliases": {
+        "en": [
+          "graduate trainee",
+          "young professionals",
+          "trainee programme",
+          "management trainee"
+        ],
+        "fr": [
+          "jeune diplômé stagiaire",
+          "programme jeunes diplômés",
+          "jeunes professionnels"
+        ],
+        "es": [
+          "programa de graduados",
+          "jóvenes profesionales",
+          "trainee"
+        ],
+        "pt": [
+          "programa de trainee",
+          "trainee",
+          "jovens profissionais"
+        ],
+        "sw": [
+          "mhitimu mwanafunzi",
+          "programu ya wahitimu"
+        ],
+        "am": [
+          "የተመራቂ ሰልጣኝ",
+          "የወጣት ባለሙያዎች ፕሮግራም"
+        ]
+      },
+      "related": [
+        "level:entry",
+        "type:internship",
+        "type:job"
+      ]
+    },
+    {
+      "id": "type:apprenticeship",
+      "facet": "type",
+      "labels": {
+        "en": "Apprenticeship",
+        "fr": "Apprentissage",
+        "es": "Aprendizaje",
+        "pt": "Aprendizagem",
+        "sw": "Uanagenzi",
+        "am": "የሙያ ተለማማጅነት"
+      },
+      "aliases": {
+        "en": [
+          "apprenticeship",
+          "apprentice"
+        ],
+        "fr": [
+          "apprentissage",
+          "apprenti",
+          "alternance"
+        ],
+        "es": [
+          "aprendizaje",
+          "aprendiz"
+        ],
+        "pt": [
+          "aprendizagem",
+          "aprendiz"
+        ],
+        "sw": [
+          "uanagenzi",
+          "mwanagenzi"
+        ],
+        "am": [
+          "የሙያ ተለማማጅነት"
+        ]
+      },
+      "related": [
+        "industry:trades",
+        "type:training-programme"
+      ]
+    },
+    {
+      "id": "type:scholarship",
+      "facet": "type",
+      "labels": {
+        "en": "Scholarship",
+        "fr": "Bourse d'études",
+        "es": "Beca",
+        "pt": "Bolsa de estudos",
+        "sw": "Ufadhili wa masomo",
+        "am": "የትምህርት ዕድል"
+      },
+      "aliases": {
+        "en": [
+          "scholarship",
+          "bursary",
+          "bourse",
+          "scholarship funding",
+          "scholarship application",
+          "scholarship applicants",
+          "tuition"
+        ],
+        "fr": [
+          "bourse d'études",
+          "frais de scolarité",
+          "entièrement financée",
+          "bourses d'études",
+          "bourse d'excellence",
+          "bourse de master",
+          "bourse de doctorat",
+          "bourse complète"
+        ],
+        "es": [
+          "beca",
+          "becas",
+          "matrícula",
+          "totalmente financiada"
+        ],
+        "pt": [
+          "bolsa de estudos",
+          "bolsa",
+          "bolsas",
+          "mensalidade",
+          "totalmente financiada"
+        ],
+        "sw": [
+          "ufadhili wa masomo",
+          "udhamini wa masomo",
+          "ada ya masomo"
+        ],
+        "am": [
+          "የትምህርት ዕድል",
+          "ስኮላርሺፕ",
+          "የነፃ ትምህርት ዕድል"
+        ]
+      },
+      "related": [
+        "type:grant",
+        "type:fellowship",
+        "community:researchers",
+        "level:student"
+      ],
+      "weakAliases": {
+        "fr": [
+          "bourse",
+          "bourses"
+        ]
+      }
+    },
+    {
+      "id": "type:grant",
+      "facet": "type",
+      "labels": {
+        "en": "Grant & funding",
+        "fr": "Subvention et financement",
+        "es": "Subvención y financiación",
+        "pt": "Subsídio e financiamento",
+        "sw": "Ruzuku na ufadhili",
+        "am": "የገንዘብ ድጋፍ"
+      },
+      "aliases": {
+        "en": [
+          "grant",
+          "seed funding",
+          "business opportunity",
+          "growth & investment program"
+        ],
+        "fr": [
+          "subvention et financement",
+          "subvention",
+          "subventions",
+          "financement",
+          "levée de fonds"
+        ],
+        "es": [
+          "subvención y financiación",
+          "subvención",
+          "subvenciones",
+          "financiación"
+        ],
+        "pt": [
+          "subsídio e financiamento",
+          "subvenção",
+          "subsídio",
+          "financiamento"
+        ],
+        "sw": [
+          "ruzuku na ufadhili",
+          "ruzuku",
+          "ufadhili"
+        ],
+        "am": [
+          "የገንዘብ ድጋፍ",
+          "ድጋፍ",
+          "ፈንድ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "funding"
+        ]
+      },
+      "related": [
+        "community:founders",
+        "type:scholarship",
+        "type:competition"
+      ]
+    },
+    {
+      "id": "type:fellowship",
+      "facet": "type",
+      "labels": {
+        "en": "Fellowship",
+        "fr": "Fellowship",
+        "es": "Fellowship",
+        "pt": "Fellowship",
+        "sw": "Ushirika wa kitaaluma",
+        "am": "ፌሎውሺፕ"
+      },
+      "aliases": {
+        "en": [
+          "fellowship",
+          "fellow",
+          "postdoc"
+        ],
+        "fr": [
+          "fellowship",
+          "bourse de recherche",
+          "programme de fellowship"
+        ],
+        "es": [
+          "fellowship",
+          "beca de investigación"
+        ],
+        "pt": [
+          "fellowship",
+          "bolsa de pesquisa"
+        ],
+        "sw": [
+          "ushirika wa kitaaluma",
+          "fellowship"
+        ],
+        "am": [
+          "ፌሎውሺፕ"
+        ]
+      },
+      "related": [
+        "type:scholarship",
+        "type:training-programme",
+        "community:researchers"
+      ]
+    },
+    {
+      "id": "type:training-programme",
+      "facet": "type",
+      "labels": {
+        "en": "Training programme",
+        "fr": "Programme de formation",
+        "es": "Programa de formación",
+        "pt": "Programa de formação",
+        "sw": "Programu ya mafunzo",
+        "am": "የሥልጠና ፕሮግራም"
+      },
+      "aliases": {
+        "en": [
+          "training program",
+          "training programme",
+          "founders programme",
+          "bootcamp",
+          "bootcamps",
+          "certification",
+          "tvet"
+        ],
+        "fr": [
+          "programme de formation",
+          "formation",
+          "formations",
+          "bootcamp",
+          "certification",
+          "renforcement des capacités"
+        ],
+        "es": [
+          "programa de formación",
+          "formación",
+          "capacitación",
+          "bootcamp",
+          "certificación"
+        ],
+        "pt": [
+          "programa de formação",
+          "formação",
+          "capacitação",
+          "treinamento",
+          "certificação"
+        ],
+        "sw": [
+          "programu ya mafunzo",
+          "mafunzo",
+          "kozi ya mafunzo",
+          "cheti"
+        ],
+        "am": [
+          "የሥልጠና ፕሮግራም",
+          "ሥልጠና",
+          "ምስክር ወረቀት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "program"
+        ]
+      },
+      "related": [
+        "type:course",
+        "format:workshop",
+        "skill:career-development"
+      ]
+    },
+    {
+      "id": "type:mentorship",
+      "facet": "type",
+      "labels": {
+        "en": "Mentorship",
+        "fr": "Mentorat",
+        "es": "Mentoría",
+        "pt": "Mentoria",
+        "sw": "Ushauri elekezi",
+        "am": "አማካሪነት"
+      },
+      "aliases": {
+        "en": [
+          "mentorship",
+          "mentorship program",
+          "coaching"
+        ],
+        "fr": [
+          "mentorat",
+          "mentor",
+          "accompagnement",
+          "coaching"
+        ],
+        "es": [
+          "mentoría",
+          "mentor",
+          "acompañamiento",
+          "coaching"
+        ],
+        "pt": [
+          "mentoria",
+          "mentor",
+          "acompanhamento",
+          "coaching"
+        ],
+        "sw": [
+          "ushauri elekezi",
+          "mshauri",
+          "ulezi"
+        ],
+        "am": [
+          "አማካሪነት",
+          "አማካሪ",
+          "ምክር"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "mentor"
+        ]
+      },
+      "related": [
+        "format:networking",
+        "skill:career-development"
+      ]
+    },
+    {
+      "id": "type:competition",
+      "facet": "type",
+      "labels": {
+        "en": "Competition",
+        "fr": "Concours",
+        "es": "Concurso",
+        "pt": "Concurso",
+        "sw": "Shindano",
+        "am": "ውድድር"
+      },
+      "aliases": {
+        "en": [
+          "competition",
+          "pitch competition",
+          "contest"
+        ],
+        "fr": [
+          "concours",
+          "compétition",
+          "appel à candidatures",
+          "challenge"
+        ],
+        "es": [
+          "concurso",
+          "competencia",
+          "convocatoria"
+        ],
+        "pt": [
+          "concurso",
+          "competição",
+          "chamada"
+        ],
+        "sw": [
+          "shindano",
+          "mashindano"
+        ],
+        "am": [
+          "ውድድር"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "challenge"
+        ]
+      },
+      "related": [
+        "type:hackathon",
+        "type:award",
+        "community:founders"
+      ]
+    },
+    {
+      "id": "type:hackathon",
+      "facet": "type",
+      "labels": {
+        "en": "Hackathon",
+        "fr": "Hackathon",
+        "es": "Hackatón",
+        "pt": "Hackathon",
+        "sw": "Hackathon",
+        "am": "ሃካቶን"
+      },
+      "aliases": {
+        "en": [
+          "hackathon",
+          "hackaton"
+        ],
+        "fr": [
+          "hackathon"
+        ],
+        "es": [
+          "hackatón",
+          "hackathon"
+        ],
+        "pt": [
+          "hackathon"
+        ],
+        "sw": [
+          "hackathon"
+        ],
+        "am": [
+          "ሃካቶን"
+        ]
+      },
+      "related": [
+        "type:competition",
+        "community:tech",
+        "industry:technology"
+      ]
+    },
+    {
+      "id": "type:award",
+      "facet": "type",
+      "labels": {
+        "en": "Award",
+        "fr": "Prix",
+        "es": "Premio",
+        "pt": "Prêmio",
+        "sw": "Tuzo",
+        "am": "ሽልማት"
+      },
+      "aliases": {
+        "en": [
+          "prize"
+        ],
+        "fr": [
+          "prix",
+          "récompense",
+          "distinction"
+        ],
+        "es": [
+          "premio",
+          "galardón",
+          "reconocimiento"
+        ],
+        "pt": [
+          "prêmio",
+          "premiação",
+          "reconhecimento"
+        ],
+        "sw": [
+          "tuzo",
+          "zawadi"
+        ],
+        "am": [
+          "ሽልማት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "award",
+          "awards"
+        ]
+      }
+    },
+    {
+      "id": "type:volunteering",
+      "facet": "type",
+      "labels": {
+        "en": "Volunteering",
+        "fr": "Bénévolat",
+        "es": "Voluntariado",
+        "pt": "Voluntariado",
+        "sw": "Kujitolea",
+        "am": "በጎ ፈቃደኝነት"
+      },
+      "aliases": {
+        "en": [
+          "volunteer",
+          "volunteering",
+          "community service"
+        ],
+        "fr": [
+          "bénévolat",
+          "bénévole",
+          "volontariat",
+          "service communautaire"
+        ],
+        "es": [
+          "voluntariado",
+          "voluntario",
+          "servicio comunitario"
+        ],
+        "pt": [
+          "voluntariado",
+          "voluntário",
+          "serviço comunitário"
+        ],
+        "sw": [
+          "kujitolea",
+          "huduma kwa jamii"
+        ],
+        "am": [
+          "በጎ ፈቃደኝነት",
+          "በጎ ፈቃደኛ"
+        ]
+      },
+      "related": [
+        "community:changemakers",
+        "industry:development"
+      ]
+    },
+    {
+      "id": "type:tender",
+      "facet": "type",
+      "labels": {
+        "en": "Tender & contract bid",
+        "fr": "Appel d'offres",
+        "es": "Licitación",
+        "pt": "Licitação",
+        "sw": "Zabuni",
+        "am": "ጨረታ"
+      },
+      "aliases": {
+        "en": [
+          "tender",
+          "tenders",
+          "bidding",
+          "international bidding",
+          "international bidders",
+          "e-gp",
+          "egp"
+        ],
+        "fr": [
+          "appel d'offres",
+          "appels d'offres",
+          "marché public",
+          "soumission"
+        ],
+        "es": [
+          "licitación",
+          "licitaciones",
+          "concurso público"
+        ],
+        "pt": [
+          "licitação",
+          "concurso público",
+          "concorrência"
+        ],
+        "sw": [
+          "zabuni",
+          "zabuni ya umma"
+        ],
+        "am": [
+          "ጨረታ",
+          "የጨረታ ማስታወቂያ"
+        ]
+      }
+    },
+    {
+      "id": "type:course",
+      "facet": "type",
+      "labels": {
+        "en": "Course",
+        "fr": "Cours",
+        "es": "Curso",
+        "pt": "Curso",
+        "sw": "Kozi",
+        "am": "ኮርስ"
+      },
+      "aliases": {
+        "en": [
+          "course",
+          "online course",
+          "masterclass"
+        ],
+        "fr": [
+          "cours",
+          "cours en ligne",
+          "module"
+        ],
+        "es": [
+          "curso",
+          "curso en línea"
+        ],
+        "pt": [
+          "curso",
+          "curso online"
+        ],
+        "sw": [
+          "kozi",
+          "kozi ya mtandaoni"
+        ],
+        "am": [
+          "ኮርስ",
+          "የኦንላይን ኮርስ"
+        ]
+      },
+      "related": [
+        "type:training-programme",
+        "skill:career-development"
+      ]
+    },
+    {
+      "id": "type:article",
+      "facet": "type",
+      "labels": {
+        "en": "Article & guide",
+        "fr": "Article et guide",
+        "es": "Artículo y guía",
+        "pt": "Artigo e guia",
+        "sw": "Makala na mwongozo",
+        "am": "ጽሑፍ እና መመሪያ"
+      },
+      "aliases": {
+        "en": [
+          "article",
+          "guide",
+          "toolkit"
+        ],
+        "fr": [
+          "article et guide",
+          "article",
+          "guide",
+          "boîte à outils"
+        ],
+        "es": [
+          "artículo y guía",
+          "artículo",
+          "guía"
+        ],
+        "pt": [
+          "artigo e guia",
+          "artigo",
+          "guia"
+        ],
+        "sw": [
+          "makala na mwongozo",
+          "makala",
+          "mwongozo"
+        ],
+        "am": [
+          "ጽሑፍ እና መመሪያ",
+          "መመሪያ"
+        ]
+      }
+    },
+    {
+      "id": "type:event",
+      "facet": "type",
+      "labels": {
+        "en": "Event",
+        "fr": "Événement",
+        "es": "Evento",
+        "pt": "Evento",
+        "sw": "Tukio",
+        "am": "ዝግጅት"
+      },
+      "aliases": {
+        "en": [],
+        "fr": [
+          "événement",
+          "événements"
+        ],
+        "es": [
+          "evento",
+          "eventos"
+        ],
+        "pt": [
+          "evento",
+          "eventos"
+        ],
+        "sw": [
+          "tukio",
+          "matukio"
+        ],
+        "am": [
+          "ዝግጅት"
+        ]
+      },
+      "exactAliases": [
+        "event",
+        "events"
+      ]
+    },
+    {
+      "id": "format:conference",
+      "facet": "format",
+      "labels": {
+        "en": "Conference",
+        "fr": "Conférence",
+        "es": "Conferencia",
+        "pt": "Conferência",
+        "sw": "Kongamano",
+        "am": "ጉባኤ"
+      },
+      "aliases": {
+        "en": [
+          "conference",
+          "annual conference",
+          "digitalconference",
+          "parenting conference",
+          "music conference"
+        ],
+        "fr": [
+          "conférence",
+          "congrès",
+          "colloque"
+        ],
+        "es": [
+          "conferencia",
+          "congreso"
+        ],
+        "pt": [
+          "conferência",
+          "congresso"
+        ],
+        "sw": [
+          "kongamano",
+          "mkutano mkuu"
+        ],
+        "am": [
+          "ጉባኤ",
+          "ኮንፈረንስ"
+        ]
+      },
+      "related": [
+        "format:summit",
+        "format:networking",
+        "type:event"
+      ]
+    },
+    {
+      "id": "format:summit",
+      "facet": "format",
+      "labels": {
+        "en": "Summit",
+        "fr": "Sommet",
+        "es": "Cumbre",
+        "pt": "Cúpula",
+        "sw": "Mkutano wa kilele",
+        "am": "የመሪዎች ጉባኤ"
+      },
+      "aliases": {
+        "en": [
+          "summit"
+        ],
+        "fr": [
+          "sommet"
+        ],
+        "es": [
+          "cumbre"
+        ],
+        "pt": [
+          "cúpula",
+          "cimeira"
+        ],
+        "sw": [
+          "mkutano wa kilele"
+        ],
+        "am": [
+          "የመሪዎች ጉባኤ"
+        ]
+      },
+      "related": [
+        "format:conference",
+        "format:networking"
+      ]
+    },
+    {
+      "id": "format:workshop",
+      "facet": "format",
+      "labels": {
+        "en": "Workshop",
+        "fr": "Atelier",
+        "es": "Taller",
+        "pt": "Workshop (oficina)",
+        "sw": "Warsha",
+        "am": "ዎርክሾፕ"
+      },
+      "aliases": {
+        "en": [
+          "workshop",
+          "workshops",
+          "training & workshops"
+        ],
+        "fr": [
+          "atelier",
+          "ateliers"
+        ],
+        "es": [
+          "taller",
+          "talleres"
+        ],
+        "pt": [
+          "workshop",
+          "oficina prática",
+          "oficinas práticas"
+        ],
+        "sw": [
+          "warsha"
+        ],
+        "am": [
+          "ዎርክሾፕ",
+          "የሥራ ላይ ሥልጠና"
+        ]
+      },
+      "related": [
+        "type:training-programme",
+        "format:seminar"
+      ],
+      "weakAliases": {
+        "pt": [
+          "oficina"
+        ]
+      }
+    },
+    {
+      "id": "format:seminar",
+      "facet": "format",
+      "labels": {
+        "en": "Seminar",
+        "fr": "Séminaire",
+        "es": "Seminario",
+        "pt": "Seminário",
+        "sw": "Semina",
+        "am": "ሴሚናር"
+      },
+      "aliases": {
+        "en": [
+          "seminar"
+        ],
+        "fr": [
+          "séminaire"
+        ],
+        "es": [
+          "seminario"
+        ],
+        "pt": [
+          "seminário"
+        ],
+        "sw": [
+          "semina"
+        ],
+        "am": [
+          "ሴሚናር"
+        ]
+      }
+    },
+    {
+      "id": "format:webinar",
+      "facet": "format",
+      "labels": {
+        "en": "Webinar / online event",
+        "fr": "Webinaire / événement en ligne",
+        "es": "Webinar / evento en línea",
+        "pt": "Webinar / evento online",
+        "sw": "Semina ya mtandaoni",
+        "am": "የኦንላይን ዝግጅት"
+      },
+      "aliases": {
+        "en": [
+          "webinar",
+          "webinars",
+          "virtual event",
+          "online event"
+        ],
+        "fr": [
+          "webinaire / événement en ligne",
+          "webinaire",
+          "en ligne",
+          "virtuel"
+        ],
+        "es": [
+          "webinar / evento en línea",
+          "seminario web",
+          "virtual"
+        ],
+        "pt": [
+          "webinar / evento online",
+          "webinário",
+          "virtual"
+        ],
+        "sw": [
+          "semina ya mtandaoni",
+          "tukio la mtandaoni"
+        ],
+        "am": [
+          "የኦንላይን ዝግጅት",
+          "ዌቢናር"
+        ]
+      },
+      "related": [
+        "format:seminar",
+        "work:remote"
+      ]
+    },
+    {
+      "id": "format:networking",
+      "facet": "format",
+      "labels": {
+        "en": "Networking",
+        "fr": "Réseautage",
+        "es": "Networking",
+        "pt": "Networking",
+        "sw": "Mtandao wa kitaaluma",
+        "am": "የትውውቅ መድረክ"
+      },
+      "aliases": {
+        "en": [
+          "networking",
+          "networking events",
+          "meetup",
+          "mixer"
+        ],
+        "fr": [
+          "réseautage",
+          "rencontre",
+          "meetup"
+        ],
+        "es": [
+          "networking",
+          "encuentro"
+        ],
+        "pt": [
+          "networking",
+          "encontro"
+        ],
+        "sw": [
+          "mtandao wa kitaaluma",
+          "kukutana na wataalamu"
+        ],
+        "am": [
+          "የትውውቅ መድረክ",
+          "ኔትወርኪንግ"
+        ]
+      },
+      "related": [
+        "format:conference",
+        "type:mentorship"
+      ]
+    },
+    {
+      "id": "format:exhibition",
+      "facet": "format",
+      "labels": {
+        "en": "Exhibition & expo",
+        "fr": "Exposition et salon",
+        "es": "Exposición y feria",
+        "pt": "Exposição e feira",
+        "sw": "Maonyesho",
+        "am": "ኤግዚቢሽን"
+      },
+      "aliases": {
+        "en": [
+          "exhibition",
+          "expo",
+          "trade fair",
+          "trade show"
+        ],
+        "fr": [
+          "exposition et salon",
+          "foire",
+          "exposition",
+          "salon professionnel",
+          "salon de l'emploi",
+          "salon international"
+        ],
+        "es": [
+          "exposición y feria",
+          "feria",
+          "expo"
+        ],
+        "pt": [
+          "exposição e feira",
+          "feira",
+          "expo"
+        ],
+        "sw": [
+          "maonyesho",
+          "maonesho"
+        ],
+        "am": [
+          "ኤግዚቢሽን",
+          "ባዛር"
+        ]
+      },
+      "weakAliases": {
+        "fr": [
+          "salon"
+        ]
+      }
+    },
+    {
+      "id": "format:festival",
+      "facet": "format",
+      "labels": {
+        "en": "Festival & show",
+        "fr": "Festival et spectacle",
+        "es": "Festival y espectáculo",
+        "pt": "Festival e espetáculo",
+        "sw": "Tamasha",
+        "am": "ፌስቲቫል"
+      },
+      "aliases": {
+        "en": [
+          "festival",
+          "concert"
+        ],
+        "fr": [
+          "festival et spectacle",
+          "festival",
+          "concert",
+          "spectacle"
+        ],
+        "es": [
+          "festival y espectáculo",
+          "festival",
+          "concierto"
+        ],
+        "pt": [
+          "festival e espetáculo",
+          "festival",
+          "show"
+        ],
+        "sw": [
+          "tamasha",
+          "onyesho"
+        ],
+        "am": [
+          "ፌስቲቫል",
+          "ትርኢት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "entertainment",
+          "show"
+        ]
+      }
+    },
+    {
+      "id": "format:talk",
+      "facet": "format",
+      "labels": {
+        "en": "Talk & town hall",
+        "fr": "Conférence-débat et forum",
+        "es": "Charla y foro",
+        "pt": "Palestra e fórum",
+        "sw": "Mazungumzo na baraza",
+        "am": "ንግግር እና መድረክ"
+      },
+      "aliases": {
+        "en": [
+          "tedx",
+          "townhall",
+          "town hall",
+          "panel",
+          "fireside"
+        ],
+        "fr": [
+          "conférence-débat et forum",
+          "table ronde",
+          "panel",
+          "forum citoyen"
+        ],
+        "es": [
+          "charla y foro",
+          "mesa redonda",
+          "panel"
+        ],
+        "pt": [
+          "palestra e fórum",
+          "mesa redonda",
+          "painel"
+        ],
+        "sw": [
+          "mazungumzo na baraza",
+          "jopo"
+        ],
+        "am": [
+          "ንግግር እና መድረክ",
+          "የውይይት መድረክ"
+        ]
+      }
+    },
+    {
+      "id": "work:full-time",
+      "facet": "work",
+      "labels": {
+        "en": "Full-time",
+        "fr": "Temps plein",
+        "es": "Tiempo completo",
+        "pt": "Tempo integral",
+        "sw": "Muda wote",
+        "am": "ሙሉ ጊዜ"
+      },
+      "aliases": {
+        "en": [
+          "full-time",
+          "full time",
+          "permanent"
+        ],
+        "fr": [
+          "temps plein",
+          "cdi",
+          "permanent"
+        ],
+        "es": [
+          "tiempo completo",
+          "jornada completa"
+        ],
+        "pt": [
+          "tempo integral",
+          "efetivo"
+        ],
+        "sw": [
+          "muda wote",
+          "kazi ya kudumu"
+        ],
+        "am": [
+          "ሙሉ ጊዜ",
+          "ቋሚ"
+        ]
+      }
+    },
+    {
+      "id": "work:part-time",
+      "facet": "work",
+      "labels": {
+        "en": "Part-time",
+        "fr": "Temps partiel",
+        "es": "Medio tiempo",
+        "pt": "Meio período",
+        "sw": "Muda mfupi",
+        "am": "የትርፍ ሰዓት"
+      },
+      "aliases": {
+        "en": [
+          "part-time",
+          "part time"
+        ],
+        "fr": [
+          "temps partiel"
+        ],
+        "es": [
+          "medio tiempo",
+          "tiempo parcial"
+        ],
+        "pt": [
+          "meio período",
+          "tempo parcial"
+        ],
+        "sw": [
+          "muda mfupi",
+          "nusu muda"
+        ],
+        "am": [
+          "የትርፍ ሰዓት",
+          "ግማሽ ጊዜ"
+        ]
+      }
+    },
+    {
+      "id": "work:contract",
+      "facet": "work",
+      "labels": {
+        "en": "Contract / project-based",
+        "fr": "Contrat / par projet",
+        "es": "Contrato / por proyecto",
+        "pt": "Contrato / por projeto",
+        "sw": "Mkataba / kwa mradi",
+        "am": "ኮንትራት"
+      },
+      "aliases": {
+        "en": [
+          "project-based",
+          "fixed-term",
+          "freelance",
+          "consultancy",
+          "gig"
+        ],
+        "fr": [
+          "contrat / par projet",
+          "cdd",
+          "freelance",
+          "consultance"
+        ],
+        "es": [
+          "contrato / por proyecto",
+          "freelance",
+          "consultoría"
+        ],
+        "pt": [
+          "contrato / por projeto",
+          "freelance",
+          "consultoria"
+        ],
+        "sw": [
+          "mkataba / kwa mradi",
+          "kazi ya mkataba",
+          "ushauri"
+        ],
+        "am": [
+          "ኮንትራት",
+          "በፕሮጀክት",
+          "ማማከር"
+        ]
+      },
+      "exactAliases": [
+        "contract"
+      ]
+    },
+    {
+      "id": "work:remote",
+      "facet": "work",
+      "labels": {
+        "en": "Remote",
+        "fr": "À distance",
+        "es": "Remoto",
+        "pt": "Remoto",
+        "sw": "Kazi ya mbali",
+        "am": "ከርቀት"
+      },
+      "aliases": {
+        "en": [
+          "remote",
+          "remote work",
+          "remotework",
+          "remote roles",
+          "remote jobs",
+          "work from home",
+          "remote work & digital skills"
+        ],
+        "fr": [
+          "à distance",
+          "télétravail",
+          "travail à distance"
+        ],
+        "es": [
+          "remoto",
+          "teletrabajo",
+          "trabajo remoto"
+        ],
+        "pt": [
+          "remoto",
+          "teletrabalho",
+          "trabalho remoto"
+        ],
+        "sw": [
+          "kazi ya mbali",
+          "kufanya kazi ukiwa nyumbani"
+        ],
+        "am": [
+          "ከርቀት",
+          "የርቀት ሥራ",
+          "ከቤት ሥራ"
+        ]
+      },
+      "related": [
+        "community:freelancers"
+      ]
+    },
+    {
+      "id": "work:hybrid",
+      "facet": "work",
+      "labels": {
+        "en": "Hybrid",
+        "fr": "Hybride",
+        "es": "Híbrido",
+        "pt": "Híbrido",
+        "sw": "Mseto",
+        "am": "ድብልቅ"
+      },
+      "aliases": {
+        "en": [
+          "hybrid"
+        ],
+        "fr": [
+          "hybride"
+        ],
+        "es": [
+          "híbrido"
+        ],
+        "pt": [
+          "híbrido"
+        ],
+        "sw": [
+          "mseto"
+        ],
+        "am": [
+          "ድብልቅ"
+        ]
+      }
+    },
+    {
+      "id": "level:student",
+      "facet": "level",
+      "labels": {
+        "en": "Student",
+        "fr": "Étudiant",
+        "es": "Estudiante",
+        "pt": "Estudante",
+        "sw": "Mwanafunzi",
+        "am": "ተማሪ"
+      },
+      "aliases": {
+        "en": [
+          "student",
+          "undergraduate",
+          "undergrad",
+          "undargrad",
+          "high school",
+          "graduate students",
+          "bcom insurance students",
+          "international students",
+          "foreign students",
+          "african students",
+          "ghanaian students",
+          "logistics students",
+          "healthcare students",
+          "office management students",
+          "kids",
+          "juniors"
+        ],
+        "fr": [
+          "étudiant",
+          "étudiants",
+          "élève",
+          "licence"
+        ],
+        "es": [
+          "estudiante",
+          "estudiantes",
+          "universitario"
+        ],
+        "pt": [
+          "estudante",
+          "estudantes",
+          "universitário"
+        ],
+        "sw": [
+          "mwanafunzi",
+          "wanafunzi"
+        ],
+        "am": [
+          "ተማሪ",
+          "ተማሪዎች"
+        ]
+      }
+    },
+    {
+      "id": "level:entry",
+      "facet": "level",
+      "labels": {
+        "en": "Entry-level (0–2 years)",
+        "fr": "Débutant (0–2 ans)",
+        "es": "Nivel inicial (0–2 años)",
+        "pt": "Nível inicial (0–2 anos)",
+        "sw": "Anayeanza (miaka 0–2)",
+        "am": "ጀማሪ (0–2 ዓመት)"
+      },
+      "aliases": {
+        "en": [
+          "entry-level (0-2 years)",
+          "entry level",
+          "entry-level",
+          "graduate",
+          "graduates",
+          "fresh graduates",
+          "recent graduates",
+          "beginner",
+          "0–2 years",
+          "0-2 years",
+          "junior",
+          "it graduates",
+          "tvet college graduates"
+        ],
+        "fr": [
+          "débutant (0–2 ans)",
+          "jeune diplômé",
+          "jeunes diplômés",
+          "premier emploi"
+        ],
+        "es": [
+          "nivel inicial (0–2 años)",
+          "recién graduado",
+          "recién graduados",
+          "sin experiencia"
+        ],
+        "pt": [
+          "nível inicial (0–2 anos)",
+          "recém-formado",
+          "recém-formados",
+          "júnior"
+        ],
+        "sw": [
+          "anayeanza (miaka 0–2)",
+          "mhitimu mpya",
+          "wahitimu wapya"
+        ],
+        "am": [
+          "ጀማሪ (0–2 ዓመት)",
+          "አዲስ ተመራቂ",
+          "አዲስ ተመራቂዎች"
+        ]
+      }
+    },
+    {
+      "id": "level:mid",
+      "facet": "level",
+      "labels": {
+        "en": "Mid-career (3–7 years)",
+        "fr": "Intermédiaire (3–7 ans)",
+        "es": "Nivel medio (3–7 años)",
+        "pt": "Pleno (3–7 anos)",
+        "sw": "Wa kati (miaka 3–7)",
+        "am": "መካከለኛ (3–7 ዓመት)"
+      },
+      "aliases": {
+        "en": [
+          "mid-career (3-7 years)",
+          "mid-career",
+          "mid career",
+          "intermediate",
+          "experienced professionals",
+          "3-5 years",
+          "2-4 years"
+        ],
+        "fr": [
+          "intermédiaire (3–7 ans)",
+          "expérimenté",
+          "confirmé"
+        ],
+        "es": [
+          "nivel medio (3–7 años)",
+          "con experiencia"
+        ],
+        "pt": [
+          "pleno (3–7 anos)",
+          "experiente"
+        ],
+        "sw": [
+          "wa kati (miaka 3–7)",
+          "mwenye uzoefu"
+        ],
+        "am": [
+          "መካከለኛ (3–7 ዓመት)",
+          "ልምድ ያለው"
+        ]
+      }
+    },
+    {
+      "id": "level:senior",
+      "facet": "level",
+      "labels": {
+        "en": "Senior & executive (8+ years)",
+        "fr": "Senior et cadre (8+ ans)",
+        "es": "Sénior y directivo (8+ años)",
+        "pt": "Sênior e executivo (8+ anos)",
+        "sw": "Mwandamizi na mtendaji (miaka 8+)",
+        "am": "ከፍተኛ እና ሥራ አስፈፃሚ (8+ ዓመት)"
+      },
+      "aliases": {
+        "en": [
+          "senior/executive (8+ years)",
+          "senior",
+          "executive leaders",
+          "senior management",
+          "ceos",
+          "ceo",
+          "director",
+          "directors",
+          "deputy directors",
+          "head",
+          "heads",
+          "high-level executives",
+          "executive leaders",
+          "executive management",
+          "chief of staff",
+          "board",
+          "advanced",
+          "12+ years",
+          "15 years"
+        ],
+        "fr": [
+          "senior et cadre (8+ ans)",
+          "cadre supérieur",
+          "directeur",
+          "dirigeant"
+        ],
+        "es": [
+          "sénior y directivo (8+ años)",
+          "directivo",
+          "director",
+          "gerente sénior"
+        ],
+        "pt": [
+          "sênior e executivo (8+ anos)",
+          "executivo",
+          "diretor",
+          "gerente sênior"
+        ],
+        "sw": [
+          "mwandamizi na mtendaji (miaka 8+)",
+          "mkurugenzi",
+          "meneja mkuu"
+        ],
+        "am": [
+          "ከፍተኛ እና ሥራ አስፈፃሚ (8+ ዓመት)",
+          "ዳይሬክተር",
+          "ሥራ አስኪያጅ"
+        ]
+      },
+      "exactAliases": [
+        "executive",
+        "executives"
+      ]
+    },
+    {
+      "id": "community:founders",
+      "facet": "community",
+      "labels": {
+        "en": "Founders & entrepreneurs",
+        "fr": "Fondateurs et entrepreneurs",
+        "es": "Fundadores y emprendedores",
+        "pt": "Fundadores e empreendedores",
+        "sw": "Waanzilishi na wajasiriamali",
+        "am": "መሥራቾች እና ሥራ ፈጣሪዎች"
+      },
+      "aliases": {
+        "en": [
+          "founders",
+          "entrepreneur",
+          "entrepreneurs",
+          "aspiring founders",
+          "business owners",
+          "startup",
+          "startups",
+          "becomingafounder",
+          "women entrepreneurs",
+          "female entrepreneurs",
+          "enterprising people",
+          "online business owners",
+          "smes",
+          "agri-smes",
+          "agri-sme",
+          "entrepreneurship & funding"
+        ],
+        "fr": [
+          "fondateurs et entrepreneurs",
+          "entrepreneur",
+          "entrepreneuriat",
+          "fondateur",
+          "start-up",
+          "porteur de projet",
+          "pme"
+        ],
+        "es": [
+          "fundadores y emprendedores",
+          "emprendedor",
+          "emprendimiento",
+          "fundador",
+          "startup",
+          "pyme"
+        ],
+        "pt": [
+          "fundadores e empreendedores",
+          "empreendedor",
+          "empreendedorismo",
+          "fundador",
+          "startup",
+          "pme"
+        ],
+        "sw": [
+          "waanzilishi na wajasiriamali",
+          "mjasiriamali",
+          "ujasiriamali",
+          "mwanzilishi",
+          "biashara ndogo"
+        ],
+        "am": [
+          "መሥራቾች እና ሥራ ፈጣሪዎች",
+          "ሥራ ፈጣሪ",
+          "ሥራ ፈጠራ",
+          "መሥራች",
+          "አነስተኛ ንግድ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "founder"
+        ]
+      },
+      "related": [
+        "skill:entrepreneurship",
+        "type:grant",
+        "industry:business"
+      ]
+    },
+    {
+      "id": "community:creatives",
+      "facet": "community",
+      "labels": {
+        "en": "Creatives",
+        "fr": "Créatifs",
+        "es": "Creativos",
+        "pt": "Criativos",
+        "sw": "Wabunifu",
+        "am": "ፈጠራ ባለሙያዎች"
+      },
+      "aliases": {
+        "en": [
+          "creatives",
+          "creators",
+          "content creators",
+          "artists",
+          "filmmakers",
+          "photographers",
+          "camera operators",
+          "musicians",
+          "designers",
+          "writers"
+        ],
+        "fr": [
+          "créatifs",
+          "créatif",
+          "créateurs",
+          "artistes",
+          "cinéastes"
+        ],
+        "es": [
+          "creativos",
+          "creativo",
+          "creadores",
+          "artistas",
+          "cineastas"
+        ],
+        "pt": [
+          "criativos",
+          "criativo",
+          "criadores",
+          "artistas",
+          "cineastas"
+        ],
+        "sw": [
+          "wabunifu",
+          "wasanii",
+          "watengeneza maudhui"
+        ],
+        "am": [
+          "ፈጠራ ባለሙያዎች",
+          "አርቲስቶች",
+          "ይዘት ፈጣሪዎች"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "creative",
+          "creator"
+        ]
+      },
+      "related": [
+        "industry:media-creative"
+      ]
+    },
+    {
+      "id": "community:tech",
+      "facet": "community",
+      "labels": {
+        "en": "Tech community",
+        "fr": "Communauté tech",
+        "es": "Comunidad tech",
+        "pt": "Comunidade tech",
+        "sw": "Jumuiya ya teknolojia",
+        "am": "የቴክኖሎጂ ማህበረሰብ"
+      },
+      "aliases": {
+        "en": [
+          "techbro",
+          "techsis",
+          "builders",
+          "developers",
+          "womenintech",
+          "student innovators"
+        ],
+        "fr": [
+          "communauté tech",
+          "développeurs",
+          "innovateurs"
+        ],
+        "es": [
+          "comunidad tech",
+          "desarrolladores",
+          "innovadores"
+        ],
+        "pt": [
+          "comunidade tech",
+          "desenvolvedores",
+          "inovadores"
+        ],
+        "sw": [
+          "jumuiya ya teknolojia",
+          "wasanidi programu"
+        ],
+        "am": [
+          "የቴክኖሎጂ ማህበረሰብ",
+          "ገንቢዎች"
+        ]
+      },
+      "related": [
+        "industry:technology",
+        "industry:data-ai"
+      ]
+    },
+    {
+      "id": "community:women",
+      "facet": "community",
+      "labels": {
+        "en": "Women",
+        "fr": "Femmes",
+        "es": "Mujeres",
+        "pt": "Mulheres",
+        "sw": "Wanawake",
+        "am": "ሴቶች"
+      },
+      "aliases": {
+        "en": [
+          "women",
+          "woman",
+          "female",
+          "females",
+          "female only",
+          "female candidates",
+          "womenempowerment",
+          "women's empowerment",
+          "women's work",
+          "womenevents",
+          "happyiwd",
+          "wimbizing",
+          "girls",
+          "women and youth"
+        ],
+        "fr": [
+          "femmes",
+          "femme",
+          "filles",
+          "autonomisation des femmes",
+          "féminin"
+        ],
+        "es": [
+          "mujeres",
+          "mujer",
+          "niñas",
+          "empoderamiento femenino"
+        ],
+        "pt": [
+          "mulheres",
+          "mulher",
+          "meninas",
+          "empoderamento feminino"
+        ],
+        "sw": [
+          "wanawake",
+          "mwanamke",
+          "wasichana",
+          "uwezeshaji wa wanawake"
+        ],
+        "am": [
+          "ሴቶች",
+          "ሴት",
+          "ልጃገረዶች",
+          "የሴቶች ማብቃት"
+        ]
+      }
+    },
+    {
+      "id": "community:youth",
+      "facet": "community",
+      "labels": {
+        "en": "Youth",
+        "fr": "Jeunesse",
+        "es": "Juventud",
+        "pt": "Juventude",
+        "sw": "Vijana",
+        "am": "ወጣቶች"
+      },
+      "aliases": {
+        "en": [
+          "youth",
+          "young people",
+          "youth development",
+          "youth hub",
+          "youth campaign",
+          "un youth townhall",
+          "below 26 years"
+        ],
+        "fr": [
+          "jeunesse",
+          "jeunes",
+          "jeune"
+        ],
+        "es": [
+          "juventud",
+          "jóvenes"
+        ],
+        "pt": [
+          "juventude",
+          "jovens"
+        ],
+        "sw": [
+          "vijana",
+          "kijana"
+        ],
+        "am": [
+          "ወጣቶች",
+          "ወጣት"
+        ]
+      }
+    },
+    {
+      "id": "community:freelancers",
+      "facet": "community",
+      "labels": {
+        "en": "Freelancers & remote workers",
+        "fr": "Freelances et travailleurs à distance",
+        "es": "Freelancers y trabajadores remotos",
+        "pt": "Freelancers e trabalhadores remotos",
+        "sw": "Wafanyakazi huru na wa mbali",
+        "am": "ነፃ ሠራተኞች እና የርቀት ሠራተኞች"
+      },
+      "aliases": {
+        "en": [
+          "freelancer",
+          "freelancers",
+          "virtual assistant",
+          "digital nomad"
+        ],
+        "fr": [
+          "freelances et travailleurs à distance",
+          "freelance",
+          "indépendant",
+          "assistant virtuel"
+        ],
+        "es": [
+          "freelancers y trabajadores remotos",
+          "independiente",
+          "asistente virtual"
+        ],
+        "pt": [
+          "freelancers e trabalhadores remotos",
+          "autônomo",
+          "assistente virtual"
+        ],
+        "sw": [
+          "wafanyakazi huru na wa mbali",
+          "mfanyakazi huru",
+          "msaidizi wa mtandaoni"
+        ],
+        "am": [
+          "ነፃ ሠራተኞች እና የርቀት ሠራተኞች",
+          "ነፃ ሠራተኛ"
+        ]
+      },
+      "related": [
+        "work:remote",
+        "work:contract"
+      ]
+    },
+    {
+      "id": "community:changemakers",
+      "facet": "community",
+      "labels": {
+        "en": "Volunteers & changemakers",
+        "fr": "Bénévoles et acteurs du changement",
+        "es": "Voluntarios y agentes de cambio",
+        "pt": "Voluntários e agentes de mudança",
+        "sw": "Watu wa kujitolea na wanaoleta mabadiliko",
+        "am": "በጎ ፈቃደኞች እና ለውጥ አምጪዎች"
+      },
+      "aliases": {
+        "en": [
+          "ngo",
+          "ngos",
+          "non-profit",
+          "nonprofit",
+          "humanitarian",
+          "community development",
+          "community leaders",
+          "social impact",
+          "societal change",
+          "social transformation",
+          "volunteering & community service",
+          "donors",
+          "allies"
+        ],
+        "fr": [
+          "bénévoles et acteurs du changement",
+          "ong",
+          "association",
+          "humanitaire",
+          "impact social"
+        ],
+        "es": [
+          "voluntarios y agentes de cambio",
+          "ong",
+          "humanitario",
+          "impacto social"
+        ],
+        "pt": [
+          "voluntários e agentes de mudança",
+          "ong",
+          "humanitário",
+          "impacto social"
+        ],
+        "sw": [
+          "watu wa kujitolea na wanaoleta mabadiliko",
+          "shirika lisilo la kiserikali",
+          "athari za kijamii"
+        ],
+        "am": [
+          "በጎ ፈቃደኞች እና ለውጥ አምጪዎች",
+          "መንግሥታዊ ያልሆነ ድርጅት",
+          "ማህበራዊ ተፅዕኖ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "community"
+        ]
+      },
+      "related": [
+        "type:volunteering",
+        "industry:development"
+      ]
+    },
+    {
+      "id": "community:researchers",
+      "facet": "community",
+      "labels": {
+        "en": "Researchers & academics",
+        "fr": "Chercheurs et universitaires",
+        "es": "Investigadores y académicos",
+        "pt": "Pesquisadores e acadêmicos",
+        "sw": "Watafiti na wasomi",
+        "am": "ተመራማሪዎች እና ምሁራን"
+      },
+      "aliases": {
+        "en": [
+          "researcher",
+          "researchers",
+          "academic",
+          "academics",
+          "research & academic opportunities",
+          "phd",
+          "postdoc"
+        ],
+        "fr": [
+          "chercheurs et universitaires",
+          "chercheur",
+          "doctorat",
+          "postdoctoral",
+          "universitaire"
+        ],
+        "es": [
+          "investigadores y académicos",
+          "investigador",
+          "doctorado",
+          "posdoctoral",
+          "académico"
+        ],
+        "pt": [
+          "pesquisadores e acadêmicos",
+          "pesquisador",
+          "doutorado",
+          "pós-doutorado",
+          "acadêmico"
+        ],
+        "sw": [
+          "watafiti na wasomi",
+          "mtafiti",
+          "shahada ya uzamivu"
+        ],
+        "am": [
+          "ተመራማሪዎች እና ምሁራን",
+          "ተመራማሪ",
+          "ዶክትሬት"
+        ]
+      },
+      "related": [
+        "industry:science",
+        "skill:research"
+      ]
+    },
+    {
+      "id": "community:educators",
+      "facet": "community",
+      "labels": {
+        "en": "Teachers & educators",
+        "fr": "Enseignants et éducateurs",
+        "es": "Docentes y educadores",
+        "pt": "Professores e educadores",
+        "sw": "Walimu na waelimishaji",
+        "am": "መምህራን እና አስተማሪዎች"
+      },
+      "aliases": {
+        "en": [
+          "teachers",
+          "educators",
+          "healthcare educators",
+          "school staff",
+          "lecturer",
+          "fltas"
+        ],
+        "fr": [
+          "enseignants et éducateurs",
+          "enseignant",
+          "professeur",
+          "formateur"
+        ],
+        "es": [
+          "docentes y educadores",
+          "docente",
+          "profesor",
+          "maestro"
+        ],
+        "pt": [
+          "professores e educadores",
+          "professor",
+          "educador"
+        ],
+        "sw": [
+          "walimu na waelimishaji",
+          "mwalimu",
+          "walimu"
+        ],
+        "am": [
+          "መምህራን እና አስተማሪዎች",
+          "መምህር",
+          "አስተማሪ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "teacher"
+        ]
+      },
+      "related": [
+        "industry:education",
+        "skill:teaching"
+      ]
+    },
+    {
+      "id": "community:disability",
+      "facet": "community",
+      "labels": {
+        "en": "People with disabilities",
+        "fr": "Personnes handicapées",
+        "es": "Personas con discapacidad",
+        "pt": "Pessoas com deficiência",
+        "sw": "Watu wenye ulemavu",
+        "am": "አካል ጉዳተኞች"
+      },
+      "aliases": {
+        "en": [
+          "physically challenged",
+          "disability",
+          "disabilities",
+          "disability services",
+          "persons with disabilities",
+          "pwd"
+        ],
+        "fr": [
+          "personnes handicapées",
+          "handicap",
+          "personnes en situation de handicap"
+        ],
+        "es": [
+          "personas con discapacidad",
+          "discapacidad"
+        ],
+        "pt": [
+          "pessoas com deficiência",
+          "deficiência",
+          "pcd"
+        ],
+        "sw": [
+          "watu wenye ulemavu",
+          "ulemavu"
+        ],
+        "am": [
+          "አካል ጉዳተኞች",
+          "አካል ጉዳት"
+        ]
+      }
+    },
+    {
+      "id": "community:underserved",
+      "facet": "community",
+      "labels": {
+        "en": "Underserved communities",
+        "fr": "Communautés défavorisées",
+        "es": "Comunidades desatendidas",
+        "pt": "Comunidades carentes",
+        "sw": "Jamii zilizotengwa",
+        "am": "የተገለሉ ማህበረሰቦች"
+      },
+      "aliases": {
+        "en": [
+          "marginalized",
+          "disadvantaged",
+          "financially disadvantaged",
+          "vulnerable groups",
+          "people living in poverty",
+          "rural populations",
+          "orphans",
+          "low-income"
+        ],
+        "fr": [
+          "communautés défavorisées",
+          "défavorisés",
+          "vulnérables",
+          "milieu rural",
+          "orphelins"
+        ],
+        "es": [
+          "comunidades desatendidas",
+          "desfavorecidos",
+          "vulnerables",
+          "zonas rurales"
+        ],
+        "pt": [
+          "comunidades carentes",
+          "desfavorecidos",
+          "vulneráveis",
+          "zonas rurais"
+        ],
+        "sw": [
+          "jamii zilizotengwa",
+          "wasiojiweza",
+          "vijijini",
+          "yatima"
+        ],
+        "am": [
+          "የተገለሉ ማህበረሰቦች",
+          "ተጋላጭ",
+          "ገጠር",
+          "ወላጅ አልባ"
+        ]
+      }
+    },
+    {
+      "id": "community:parents",
+      "facet": "community",
+      "labels": {
+        "en": "Parents & families",
+        "fr": "Parents et familles",
+        "es": "Padres y familias",
+        "pt": "Pais e famílias",
+        "sw": "Wazazi na familia",
+        "am": "ወላጆች እና ቤተሰቦች"
+      },
+      "aliases": {
+        "en": [
+          "parents",
+          "parenting",
+          "family life",
+          "marriage",
+          "couples",
+          "intending couples",
+          "strategic parenting",
+          "family leaders",
+          "intergenerational"
+        ],
+        "fr": [
+          "parents et familles",
+          "parents",
+          "famille",
+          "parentalité",
+          "couples"
+        ],
+        "es": [
+          "padres y familias",
+          "padres",
+          "familia",
+          "crianza"
+        ],
+        "pt": [
+          "pais e famílias",
+          "pais",
+          "família",
+          "parentalidade"
+        ],
+        "sw": [
+          "wazazi na familia",
+          "wazazi",
+          "familia",
+          "malezi"
+        ],
+        "am": [
+          "ወላጆች እና ቤተሰቦች",
+          "ወላጆች",
+          "ቤተሰብ",
+          "አስተዳደግ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "family"
+        ]
+      }
+    },
+    {
+      "id": "industry:technology",
+      "facet": "industry",
+      "labels": {
+        "en": "Technology & software",
+        "fr": "Technologie et logiciels",
+        "es": "Tecnología y software",
+        "pt": "Tecnologia e software",
+        "sw": "Teknolojia na programu",
+        "am": "ቴክኖሎጂ እና ሶፍትዌር"
+      },
+      "aliases": {
+        "en": [
+          "technology",
+          "tech",
+          "information technology",
+          "ict",
+          "it services",
+          "it & telecom",
+          "it & telecoms",
+          "software",
+          "saas",
+          "computer",
+          "computer science",
+          "internet services",
+          "it professionals",
+          "it managers",
+          "it leaders",
+          "tech2026",
+          "techcabal",
+          "digital transformation",
+          "digital systems"
+        ],
+        "fr": [
+          "technologie et logiciels",
+          "technologie",
+          "informatique",
+          "numérique",
+          "tic",
+          "logiciel"
+        ],
+        "es": [
+          "tecnología y software",
+          "tecnología",
+          "informática",
+          "digital",
+          "tic"
+        ],
+        "pt": [
+          "tecnologia e software",
+          "tecnologia",
+          "informática",
+          "digital",
+          "tic"
+        ],
+        "sw": [
+          "teknolojia na programu",
+          "teknolojia",
+          "tehama",
+          "kidijitali"
+        ],
+        "am": [
+          "ቴክኖሎጂ እና ሶፍትዌር",
+          "ቴክኖሎጂ",
+          "አይሲቲ",
+          "ዲጂታል"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "digital"
+        ]
+      },
+      "exactAliases": [
+        "it"
+      ],
+      "related": [
+        "industry:data-ai",
+        "community:tech"
+      ]
+    },
+    {
+      "id": "industry:data-ai",
+      "facet": "industry",
+      "labels": {
+        "en": "Data & AI",
+        "fr": "Données et IA",
+        "es": "Datos e IA",
+        "pt": "Dados e IA",
+        "sw": "Data na AI",
+        "am": "ዳታ እና ሰው ሠራሽ አስተውሎት"
+      },
+      "aliases": {
+        "en": [
+          "artificial intelligence",
+          "aitools",
+          "ai tools",
+          "ai training",
+          "agentic ai",
+          "ai automation",
+          "chatgpt",
+          "claude",
+          "machine learning",
+          "data scientists"
+        ],
+        "fr": [
+          "données et ia",
+          "intelligence artificielle",
+          "ia",
+          "données",
+          "science des données"
+        ],
+        "es": [
+          "datos e ia",
+          "inteligencia artificial",
+          "datos"
+        ],
+        "pt": [
+          "dados e ia",
+          "inteligência artificial",
+          "dados"
+        ],
+        "sw": [
+          "data na ai",
+          "akili bandia",
+          "data"
+        ],
+        "am": [
+          "ዳታ እና ሰው ሠራሽ አስተውሎት",
+          "ሰው ሠራሽ አስተውሎት",
+          "ዳታ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "data",
+          "analytics"
+        ]
+      },
+      "exactAliases": [
+        "ai"
+      ],
+      "related": [
+        "industry:technology"
+      ]
+    },
+    {
+      "id": "industry:finance",
+      "facet": "industry",
+      "labels": {
+        "en": "Finance, banking & accounting",
+        "fr": "Finance, banque et comptabilité",
+        "es": "Finanzas, banca y contabilidad",
+        "pt": "Finanças, banca e contabilidade",
+        "sw": "Fedha, benki na uhasibu",
+        "am": "ፋይናንስ፣ ባንክ እና ሂሳብ"
+      },
+      "aliases": {
+        "en": [
+          "finance",
+          "financial services",
+          "banking",
+          "accounting",
+          "audit",
+          "insurance",
+          "insurance industry",
+          "investment",
+          "investing",
+          "business & finance",
+          "fintech",
+          "financial technology",
+          "wealth management",
+          "private banking",
+          "investment banking",
+          "actuarial science",
+          "tax",
+          "credit",
+          "loans",
+          "mfis",
+          "underwriting",
+          "claims",
+          "finance and accounts",
+          "accounting & auditing",
+          "stockinvesting",
+          "investors",
+          "investing101",
+          "moneymanagement",
+          "financialliteracy",
+          "crypto",
+          "digital payments",
+          "banking and finance"
+        ],
+        "fr": [
+          "finance, banque et comptabilité",
+          "finance",
+          "banque",
+          "comptabilité",
+          "assurance",
+          "audit",
+          "fiscalité",
+          "microfinance"
+        ],
+        "es": [
+          "finanzas, banca y contabilidad",
+          "finanzas",
+          "banca",
+          "contabilidad",
+          "seguros",
+          "auditoría"
+        ],
+        "pt": [
+          "finanças, banca e contabilidade",
+          "finanças",
+          "banco",
+          "contabilidade",
+          "seguros",
+          "auditoria"
+        ],
+        "sw": [
+          "fedha, benki na uhasibu",
+          "fedha",
+          "benki",
+          "uhasibu",
+          "bima",
+          "ukaguzi"
+        ],
+        "am": [
+          "ፋይናንስ፣ ባንክ እና ሂሳብ",
+          "ፋይናንስ",
+          "ባንክ",
+          "ሂሳብ አያያዝ",
+          "ኢንሹራንስ",
+          "ኦዲት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "financial",
+          "bank"
+        ]
+      },
+      "related": [
+        "industry:business"
+      ]
+    },
+    {
+      "id": "industry:business",
+      "facet": "industry",
+      "labels": {
+        "en": "Business & management",
+        "fr": "Commerce et gestion",
+        "es": "Negocios y gestión",
+        "pt": "Negócios e gestão",
+        "sw": "Biashara na usimamizi",
+        "am": "ንግድ እና አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "business",
+          "business development",
+          "business administration",
+          "business management",
+          "corporate",
+          "corporate services",
+          "corporate strategy",
+          "consulting",
+          "business consulting",
+          "b2b",
+          "b2c",
+          "commerce",
+          "import",
+          "import and export",
+          "e-commerce",
+          "e‑commerce",
+          "retail",
+          "fmcg",
+          "consumer goods",
+          "business process outsourcing",
+          "businessinwestafrica",
+          "businessdayng",
+          "business day ng",
+          "private sector",
+          "businesses"
+        ],
+        "fr": [
+          "commerce et gestion",
+          "entreprise",
+          "gestion",
+          "management",
+          "commerce",
+          "développement commercial"
+        ],
+        "es": [
+          "negocios y gestión",
+          "negocios",
+          "empresa",
+          "gestión",
+          "comercio"
+        ],
+        "pt": [
+          "negócios e gestão",
+          "negócios",
+          "empresa",
+          "gestão",
+          "comércio"
+        ],
+        "sw": [
+          "biashara na usimamizi",
+          "biashara",
+          "usimamizi",
+          "uendeshaji"
+        ],
+        "am": [
+          "ንግድ እና አስተዳደር",
+          "ንግድ",
+          "አስተዳደር"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "strategy",
+          "operations",
+          "trade"
+        ]
+      },
+      "exactAliases": [
+        "management"
+      ],
+      "related": [
+        "industry:finance",
+        "industry:sales-marketing"
+      ]
+    },
+    {
+      "id": "industry:sales-marketing",
+      "facet": "industry",
+      "labels": {
+        "en": "Sales & marketing",
+        "fr": "Vente et marketing",
+        "es": "Ventas y marketing",
+        "pt": "Vendas e marketing",
+        "sw": "Mauzo na masoko",
+        "am": "ሽያጭ እና ማርኬቲንግ"
+      },
+      "aliases": {
+        "en": [
+          "sales",
+          "marketing",
+          "digital marketing",
+          "digitalmarketing",
+          "brand",
+          "advertising",
+          "ads",
+          "google ads",
+          "meta ads",
+          "paid media",
+          "media buying",
+          "marketers",
+          "salespeople",
+          "digital growth",
+          "customer experience",
+          "marketingstrategy"
+        ],
+        "fr": [
+          "vente et marketing",
+          "vente",
+          "ventes",
+          "marketing",
+          "commercial",
+          "publicité"
+        ],
+        "es": [
+          "ventas y marketing",
+          "ventas",
+          "marketing",
+          "publicidad",
+          "comercial"
+        ],
+        "pt": [
+          "vendas e marketing",
+          "vendas",
+          "marketing",
+          "publicidade",
+          "comercial"
+        ],
+        "sw": [
+          "mauzo na masoko",
+          "mauzo",
+          "masoko",
+          "matangazo"
+        ],
+        "am": [
+          "ሽያጭ እና ማርኬቲንግ",
+          "ሽያጭ",
+          "ማርኬቲንግ",
+          "ማስታወቂያ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "growth"
+        ]
+      }
+    },
+    {
+      "id": "industry:media-creative",
+      "facet": "industry",
+      "labels": {
+        "en": "Media, arts & creative",
+        "fr": "Médias, arts et création",
+        "es": "Medios, artes y creatividad",
+        "pt": "Mídia, artes e criatividade",
+        "sw": "Vyombo vya habari, sanaa na ubunifu",
+        "am": "ሚዲያ፣ ጥበብ እና ፈጠራ"
+      },
+      "aliases": {
+        "en": [
+          "media",
+          "arts",
+          "creative arts & media",
+          "art / crafts",
+          "handicrafts",
+          "photography",
+          "film",
+          "cinematic",
+          "cinematic production",
+          "tv",
+          "tv production",
+          "broadcasting",
+          "journalism",
+          "news",
+          "newsroom",
+          "publishing",
+          "printing & publishing",
+          "music",
+          "gaming",
+          "acting",
+          "modeling",
+          "content creation",
+          "african stories",
+          "mass communication",
+          "media production",
+          "studio"
+        ],
+        "fr": [
+          "médias, arts et création",
+          "médias",
+          "arts",
+          "cinéma",
+          "photographie",
+          "journalisme",
+          "musique",
+          "design"
+        ],
+        "es": [
+          "medios, artes y creatividad",
+          "medios",
+          "artes",
+          "cine",
+          "fotografía",
+          "periodismo",
+          "música",
+          "diseño"
+        ],
+        "pt": [
+          "mídia, artes e criatividade",
+          "mídia",
+          "artes",
+          "cinema",
+          "fotografia",
+          "jornalismo",
+          "música",
+          "design"
+        ],
+        "sw": [
+          "vyombo vya habari, sanaa na ubunifu",
+          "vyombo vya habari",
+          "sanaa",
+          "filamu",
+          "upigaji picha",
+          "uandishi wa habari",
+          "muziki"
+        ],
+        "am": [
+          "ሚዲያ፣ ጥበብ እና ፈጠራ",
+          "ሚዲያ",
+          "ጥበብ",
+          "ፊልም",
+          "ፎቶግራፍ",
+          "ጋዜጠኝነት",
+          "ሙዚቃ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "art",
+          "entertainment",
+          "culture",
+          "design",
+          "content",
+          "video"
+        ]
+      },
+      "related": [
+        "community:creatives"
+      ]
+    },
+    {
+      "id": "industry:education",
+      "facet": "industry",
+      "labels": {
+        "en": "Education & training",
+        "fr": "Éducation et formation",
+        "es": "Educación y formación",
+        "pt": "Educação e formação",
+        "sw": "Elimu na mafunzo",
+        "am": "ትምህርት እና ሥልጠና"
+      },
+      "aliases": {
+        "en": [
+          "education",
+          "education & training",
+          "teaching",
+          "curriculum development",
+          "curriculum support",
+          "kicd",
+          "examinations",
+          "tutoring",
+          "library & information science",
+          "africaneducation",
+          "educatingskills",
+          "skill development",
+          "skillsdevelopment",
+          "skillbuilding"
+        ],
+        "fr": [
+          "éducation et formation",
+          "éducation",
+          "enseignement",
+          "école",
+          "curriculum",
+          "pédagogie"
+        ],
+        "es": [
+          "educación y formación",
+          "educación",
+          "enseñanza",
+          "escuela",
+          "pedagogía"
+        ],
+        "pt": [
+          "educação e formação",
+          "educação",
+          "ensino",
+          "escola",
+          "pedagogia"
+        ],
+        "sw": [
+          "elimu na mafunzo",
+          "elimu",
+          "ufundishaji",
+          "shule",
+          "mtaala"
+        ],
+        "am": [
+          "ትምህርት እና ሥልጠና",
+          "ትምህርት",
+          "ማስተማር",
+          "ትምህርት ቤት",
+          "ሥርዓተ ትምህርት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "training",
+          "learning",
+          "language",
+          "languages"
+        ]
+      }
+    },
+    {
+      "id": "industry:health",
+      "facet": "industry",
+      "labels": {
+        "en": "Healthcare & life sciences",
+        "fr": "Santé et sciences de la vie",
+        "es": "Salud y ciencias de la vida",
+        "pt": "Saúde e ciências da vida",
+        "sw": "Afya na sayansi ya maisha",
+        "am": "ጤና እና የሕይወት ሳይንስ"
+      },
+      "aliases": {
+        "en": [
+          "healthcare",
+          "medical",
+          "medicine",
+          "medicin",
+          "nursing",
+          "pharma",
+          "pharmaceuticals",
+          "pharmacy",
+          "public health",
+          "international health",
+          "medical devices",
+          "medical device",
+          "healthcare technology",
+          "healthcare services",
+          "phlebotomy",
+          "medics",
+          "medicaldoctors",
+          "hiv",
+          "nurse",
+          "childcare",
+          "laboratory",
+          "health records",
+          "healthy people",
+          "healthcare & sciences",
+          "veterinary",
+          "community health workers"
+        ],
+        "fr": [
+          "santé et sciences de la vie",
+          "santé",
+          "médecine",
+          "médical",
+          "soins infirmiers",
+          "pharmacie",
+          "santé publique"
+        ],
+        "es": [
+          "salud y ciencias de la vida",
+          "salud",
+          "medicina",
+          "médico",
+          "enfermería",
+          "farmacia"
+        ],
+        "pt": [
+          "saúde e ciências da vida",
+          "saúde",
+          "medicina",
+          "médico",
+          "enfermagem",
+          "farmácia"
+        ],
+        "sw": [
+          "afya na sayansi ya maisha",
+          "afya",
+          "tiba",
+          "uuguzi",
+          "famasia",
+          "afya ya jamii"
+        ],
+        "am": [
+          "ጤና እና የሕይወት ሳይንስ",
+          "ጤና",
+          "ሕክምና",
+          "ነርሲንግ",
+          "ፋርማሲ",
+          "የሕብረተሰብ ጤና"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "health"
+        ]
+      }
+    },
+    {
+      "id": "industry:engineering",
+      "facet": "industry",
+      "labels": {
+        "en": "Engineering & construction",
+        "fr": "Ingénierie et construction",
+        "es": "Ingeniería y construcción",
+        "pt": "Engenharia e construção",
+        "sw": "Uhandisi na ujenzi",
+        "am": "ምህንድስና እና ግንባታ"
+      },
+      "aliases": {
+        "en": [
+          "engineering",
+          "construction",
+          "civil engineering",
+          "mechanical engineering",
+          "electrical engineering",
+          "biomedical engineering",
+          "materials engineering",
+          "industrial engineering",
+          "design-build",
+          "rebar",
+          "elevator",
+          "elevator-lift",
+          "mechanic",
+          "electronics",
+          "builders"
+        ],
+        "fr": [
+          "ingénierie et construction",
+          "ingénierie",
+          "ingénieur",
+          "construction",
+          "génie civil",
+          "btp",
+          "maintenance"
+        ],
+        "es": [
+          "ingeniería y construcción",
+          "ingeniería",
+          "ingeniero",
+          "construcción",
+          "mantenimiento"
+        ],
+        "pt": [
+          "engenharia e construção",
+          "engenharia",
+          "engenheiro",
+          "construção",
+          "manutenção"
+        ],
+        "sw": [
+          "uhandisi na ujenzi",
+          "uhandisi",
+          "mhandisi",
+          "ujenzi",
+          "matengenezo"
+        ],
+        "am": [
+          "ምህንድስና እና ግንባታ",
+          "ምህንድስና",
+          "መሐንዲስ",
+          "ግንባታ",
+          "ጥገና"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "infrastructure",
+          "maintenance",
+          "installation",
+          "technical"
+        ]
+      },
+      "related": [
+        "industry:architecture",
+        "industry:energy-environment"
+      ]
+    },
+    {
+      "id": "industry:energy-environment",
+      "facet": "industry",
+      "labels": {
+        "en": "Energy, climate & environment",
+        "fr": "Énergie, climat et environnement",
+        "es": "Energía, clima y medio ambiente",
+        "pt": "Energia, clima e meio ambiente",
+        "sw": "Nishati, hali ya hewa na mazingira",
+        "am": "ኃይል፣ የአየር ንብረት እና አካባቢ"
+      },
+      "aliases": {
+        "en": [
+          "energy",
+          "solar",
+          "geothermal",
+          "oil & gas",
+          "utilities",
+          "energy sector",
+          "energy development",
+          "environment",
+          "climate",
+          "climate action",
+          "cop31",
+          "unfccc",
+          "green futures",
+          "green development",
+          "circular economy",
+          "sustainability",
+          "water",
+          "wash",
+          "sanitation"
+        ],
+        "fr": [
+          "énergie, climat et environnement",
+          "énergie",
+          "solaire",
+          "climat",
+          "environnement",
+          "développement durable",
+          "eau et assainissement"
+        ],
+        "es": [
+          "energía, clima y medio ambiente",
+          "energía",
+          "solar",
+          "clima",
+          "medio ambiente",
+          "sostenibilidad"
+        ],
+        "pt": [
+          "energia, clima e meio ambiente",
+          "energia",
+          "solar",
+          "clima",
+          "meio ambiente",
+          "sustentabilidade"
+        ],
+        "sw": [
+          "nishati, hali ya hewa na mazingira",
+          "nishati",
+          "jua",
+          "mabadiliko ya tabianchi",
+          "mazingira",
+          "maji na usafi"
+        ],
+        "am": [
+          "ኃይል፣ የአየር ንብረት እና አካባቢ",
+          "ኃይል",
+          "የፀሐይ ኃይል",
+          "የአየር ንብረት",
+          "አካባቢ",
+          "ውሃ እና ንፅህና"
+        ]
+      },
+      "related": [
+        "industry:agriculture",
+        "industry:mining"
+      ]
+    },
+    {
+      "id": "industry:agriculture",
+      "facet": "industry",
+      "labels": {
+        "en": "Agriculture & food",
+        "fr": "Agriculture et alimentation",
+        "es": "Agricultura y alimentación",
+        "pt": "Agricultura e alimentação",
+        "sw": "Kilimo na chakula",
+        "am": "ግብርና እና ምግብ"
+      },
+      "aliases": {
+        "en": [
+          "agriculture",
+          "farming",
+          "food industry",
+          "food & beverage",
+          "food processing",
+          "food technology",
+          "food systems",
+          "food safety",
+          "coffee",
+          "agro-processing",
+          "beverage industry",
+          "confectionery",
+          "catering",
+          "marine and fisheries",
+          "agricultural economics"
+        ],
+        "fr": [
+          "agriculture et alimentation",
+          "agriculture",
+          "agricole",
+          "agroalimentaire",
+          "alimentation",
+          "élevage",
+          "café"
+        ],
+        "es": [
+          "agricultura y alimentación",
+          "agricultura",
+          "agrícola",
+          "agroindustria",
+          "alimentos"
+        ],
+        "pt": [
+          "agricultura e alimentação",
+          "agricultura",
+          "agrícola",
+          "agronegócio",
+          "alimentos"
+        ],
+        "sw": [
+          "kilimo na chakula",
+          "kilimo",
+          "mkulima",
+          "chakula",
+          "ufugaji",
+          "kahawa"
+        ],
+        "am": [
+          "ግብርና እና ምግብ",
+          "ግብርና",
+          "አርሶ አደር",
+          "ምግብ",
+          "እንስሳት እርባታ",
+          "ቡና"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "agricultural",
+          "food"
+        ]
+      }
+    },
+    {
+      "id": "industry:logistics",
+      "facet": "industry",
+      "labels": {
+        "en": "Logistics & supply chain",
+        "fr": "Logistique et chaîne d'approvisionnement",
+        "es": "Logística y cadena de suministro",
+        "pt": "Logística e cadeia de suprimentos",
+        "sw": "Usafirishaji na ugavi",
+        "am": "ሎጂስቲክስ እና አቅርቦት"
+      },
+      "aliases": {
+        "en": [
+          "logistics",
+          "supply chain",
+          "supply chain management",
+          "procurement",
+          "freight forwarding",
+          "transportation",
+          "warehousing",
+          "inventory",
+          "fleet management",
+          "dispatch",
+          "sourcing",
+          "customs duties",
+          "maritime"
+        ],
+        "fr": [
+          "logistique et chaîne d'approvisionnement",
+          "logistique",
+          "approvisionnement",
+          "achats",
+          "transport",
+          "entrepôt"
+        ],
+        "es": [
+          "logística y cadena de suministro",
+          "logística",
+          "compras",
+          "transporte",
+          "almacén"
+        ],
+        "pt": [
+          "logística e cadeia de suprimentos",
+          "logística",
+          "compras",
+          "transporte",
+          "armazém"
+        ],
+        "sw": [
+          "usafirishaji na ugavi",
+          "usafirishaji",
+          "ugavi",
+          "ununuzi",
+          "ghala"
+        ],
+        "am": [
+          "ሎጂስቲክስ እና አቅርቦት",
+          "ሎጂስቲክስ",
+          "ግዥ",
+          "ትራንስፖርት",
+          "መጋዘን"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "transport",
+          "driver"
+        ]
+      }
+    },
+    {
+      "id": "industry:manufacturing",
+      "facet": "industry",
+      "labels": {
+        "en": "Manufacturing & industry",
+        "fr": "Industrie et fabrication",
+        "es": "Manufactura e industria",
+        "pt": "Indústria e manufatura",
+        "sw": "Viwanda na uzalishaji",
+        "am": "ማኑፋክቸሪንግ እና ኢንዱስትሪ"
+      },
+      "aliases": {
+        "en": [
+          "manufacturing",
+          "packaging",
+          "chemicals",
+          "textiles",
+          "textiles and garments",
+          "paints",
+          "adhesives",
+          "industrial machinery",
+          "industrial equipment",
+          "assembly",
+          "quality control",
+          "quality assurance",
+          "quality management"
+        ],
+        "fr": [
+          "industrie et fabrication",
+          "industrie",
+          "fabrication",
+          "production",
+          "usine",
+          "contrôle qualité"
+        ],
+        "es": [
+          "manufactura e industria",
+          "manufactura",
+          "fabricación",
+          "producción",
+          "fábrica",
+          "control de calidad"
+        ],
+        "pt": [
+          "indústria e manufatura",
+          "indústria",
+          "fabricação",
+          "produção",
+          "fábrica",
+          "controle de qualidade"
+        ],
+        "sw": [
+          "viwanda na uzalishaji",
+          "viwanda",
+          "uzalishaji",
+          "kiwanda",
+          "udhibiti wa ubora"
+        ],
+        "am": [
+          "ማኑፋክቸሪንግ እና ኢንዱስትሪ",
+          "ኢንዱስትሪ",
+          "ምርት",
+          "ፋብሪካ",
+          "የጥራት ቁጥጥር"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "industrial",
+          "production"
+        ]
+      }
+    },
+    {
+      "id": "industry:real-estate",
+      "facet": "industry",
+      "labels": {
+        "en": "Real estate & property",
+        "fr": "Immobilier",
+        "es": "Bienes raíces",
+        "pt": "Imobiliário",
+        "sw": "Mali isiyohamishika",
+        "am": "ሪል እስቴት"
+      },
+      "aliases": {
+        "en": [
+          "real estate",
+          "realestate",
+          "proptech",
+          "property brokerage",
+          "facilities management"
+        ],
+        "fr": [
+          "immobilier",
+          "propriété",
+          "agence immobilière"
+        ],
+        "es": [
+          "bienes raíces",
+          "inmobiliaria",
+          "propiedad"
+        ],
+        "pt": [
+          "imobiliário",
+          "imobiliária",
+          "imóveis"
+        ],
+        "sw": [
+          "mali isiyohamishika",
+          "nyumba na ardhi",
+          "udalali wa nyumba"
+        ],
+        "am": [
+          "ሪል እስቴት",
+          "ቤት እና መሬት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "property"
+        ]
+      }
+    },
+    {
+      "id": "industry:hospitality",
+      "facet": "industry",
+      "labels": {
+        "en": "Hospitality & tourism",
+        "fr": "Hôtellerie et tourisme",
+        "es": "Hostelería y turismo",
+        "pt": "Hotelaria e turismo",
+        "sw": "Ukarimu na utalii",
+        "am": "መስተንግዶ እና ቱሪዝም"
+      },
+      "aliases": {
+        "en": [
+          "hospitality",
+          "hotel",
+          "hotels",
+          "hotel management",
+          "hotel operations",
+          "tourism",
+          "travel"
+        ],
+        "fr": [
+          "hôtellerie et tourisme",
+          "hôtellerie",
+          "hôtel",
+          "tourisme",
+          "restauration"
+        ],
+        "es": [
+          "hostelería y turismo",
+          "hotelería",
+          "hotel",
+          "turismo"
+        ],
+        "pt": [
+          "hotelaria e turismo",
+          "hotelaria",
+          "hotel",
+          "turismo"
+        ],
+        "sw": [
+          "ukarimu na utalii",
+          "hoteli",
+          "utalii"
+        ],
+        "am": [
+          "መስተንግዶ እና ቱሪዝም",
+          "ሆቴል",
+          "ቱሪዝም"
+        ]
+      }
+    },
+    {
+      "id": "industry:government",
+      "facet": "industry",
+      "labels": {
+        "en": "Government & policy",
+        "fr": "Gouvernement et politiques publiques",
+        "es": "Gobierno y políticas públicas",
+        "pt": "Governo e políticas públicas",
+        "sw": "Serikali na sera",
+        "am": "መንግሥት እና ፖሊሲ"
+      },
+      "aliases": {
+        "en": [
+          "government",
+          "public sector",
+          "public administration",
+          "government & public service",
+          "policy",
+          "policymakers",
+          "politics",
+          "democracy",
+          "opengov",
+          "compliance",
+          "governance",
+          "corporate governance",
+          "national transformation",
+          "state organs",
+          "defense",
+          "navy",
+          "united nations",
+          "international organization"
+        ],
+        "fr": [
+          "gouvernement et politiques publiques",
+          "gouvernement",
+          "secteur public",
+          "administration publique",
+          "politique",
+          "gouvernance"
+        ],
+        "es": [
+          "gobierno y políticas públicas",
+          "gobierno",
+          "sector público",
+          "administración pública",
+          "política"
+        ],
+        "pt": [
+          "governo e políticas públicas",
+          "governo",
+          "setor público",
+          "administração pública",
+          "política"
+        ],
+        "sw": [
+          "serikali na sera",
+          "serikali",
+          "sekta ya umma",
+          "utawala wa umma",
+          "sera"
+        ],
+        "am": [
+          "መንግሥት እና ፖሊሲ",
+          "መንግሥት",
+          "የመንግሥት ዘርፍ",
+          "ሕዝብ አስተዳደር",
+          "ፖሊሲ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "regulatory"
+        ]
+      }
+    },
+    {
+      "id": "industry:development",
+      "facet": "industry",
+      "labels": {
+        "en": "International development & nonprofit",
+        "fr": "Développement international et ONG",
+        "es": "Desarrollo internacional y ONG",
+        "pt": "Desenvolvimento internacional e ONG",
+        "sw": "Maendeleo ya kimataifa na mashirika",
+        "am": "ዓለም አቀፍ ልማት እና ድርጅቶች"
+      },
+      "aliases": {
+        "en": [
+          "humanitarian",
+          "humanitarian aid",
+          "non-profit",
+          "ngo",
+          "world bank",
+          "usaid",
+          "inclusive economic growth",
+          "development work",
+          "social work"
+        ],
+        "fr": [
+          "développement international et ong",
+          "développement international",
+          "humanitaire",
+          "ong",
+          "coopération"
+        ],
+        "es": [
+          "desarrollo internacional y ong",
+          "desarrollo internacional",
+          "humanitario",
+          "cooperación"
+        ],
+        "pt": [
+          "desenvolvimento internacional e ong",
+          "desenvolvimento internacional",
+          "humanitário",
+          "cooperação"
+        ],
+        "sw": [
+          "maendeleo ya kimataifa na mashirika",
+          "maendeleo",
+          "misaada ya kibinadamu"
+        ],
+        "am": [
+          "ዓለም አቀፍ ልማት እና ድርጅቶች",
+          "ልማት",
+          "ሰብዓዊ እርዳታ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "development"
+        ]
+      },
+      "related": [
+        "community:changemakers",
+        "industry:government"
+      ]
+    },
+    {
+      "id": "industry:hr-admin",
+      "facet": "industry",
+      "labels": {
+        "en": "HR & administration",
+        "fr": "RH et administration",
+        "es": "RR. HH. y administración",
+        "pt": "RH e administração",
+        "sw": "Rasilimali watu na utawala",
+        "am": "የሰው ኃይል እና አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "human resources",
+          "hr",
+          "hrm",
+          "hrd",
+          "human resource management",
+          "human resource development",
+          "humanresources",
+          "humanresourcesmanagement",
+          "administration",
+          "administrative",
+          "office administration",
+          "office management",
+          "office support",
+          "secretarial science",
+          "executive support",
+          "personal assistant",
+          "executive assistant",
+          "secretary",
+          "admin"
+        ],
+        "fr": [
+          "rh et administration",
+          "ressources humaines",
+          "rh",
+          "administration",
+          "secrétariat",
+          "assistant de direction"
+        ],
+        "es": [
+          "rr. hh. y administración",
+          "recursos humanos",
+          "administración",
+          "secretaría"
+        ],
+        "pt": [
+          "rh e administração",
+          "recursos humanos",
+          "administração",
+          "secretariado"
+        ],
+        "sw": [
+          "rasilimali watu na utawala",
+          "rasilimali watu",
+          "utawala",
+          "ukatibu"
+        ],
+        "am": [
+          "የሰው ኃይል እና አስተዳደር",
+          "የሰው ኃይል",
+          "አስተዳደር",
+          "ፀሐፊነት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "office",
+          "recruitment"
+        ]
+      }
+    },
+    {
+      "id": "industry:customer-service",
+      "facet": "industry",
+      "labels": {
+        "en": "Customer service & support",
+        "fr": "Service client et support",
+        "es": "Atención al cliente y soporte",
+        "pt": "Atendimento ao cliente e suporte",
+        "sw": "Huduma kwa wateja",
+        "am": "የደንበኞች አገልግሎት"
+      },
+      "aliases": {
+        "en": [
+          "customer service",
+          "customer care",
+          "customer support",
+          "call center",
+          "call centre",
+          "client relations",
+          "front desk"
+        ],
+        "fr": [
+          "service client et support",
+          "service client",
+          "relation client",
+          "centre d'appels"
+        ],
+        "es": [
+          "atención al cliente y soporte",
+          "atención al cliente",
+          "centro de llamadas"
+        ],
+        "pt": [
+          "atendimento ao cliente e suporte",
+          "atendimento ao cliente",
+          "call center"
+        ],
+        "sw": [
+          "huduma kwa wateja",
+          "kituo cha simu"
+        ],
+        "am": [
+          "የደንበኞች አገልግሎት",
+          "የደንበኛ አገልግሎት",
+          "የጥሪ ማዕከል"
+        ]
+      }
+    },
+    {
+      "id": "industry:security",
+      "facet": "industry",
+      "labels": {
+        "en": "Security & safety",
+        "fr": "Sécurité et sûreté",
+        "es": "Seguridad",
+        "pt": "Segurança",
+        "sw": "Usalama na ulinzi",
+        "am": "ደህንነት እና ጥበቃ"
+      },
+      "aliases": {
+        "en": [
+          "security systems",
+          "cctv",
+          "access control",
+          "private security",
+          "occupational safety",
+          "patrols",
+          "emergency response"
+        ],
+        "fr": [
+          "sécurité et sûreté",
+          "sécurité",
+          "gardiennage",
+          "vidéosurveillance"
+        ],
+        "es": [
+          "seguridad",
+          "vigilancia",
+          "seguridad privada"
+        ],
+        "pt": [
+          "segurança",
+          "vigilância",
+          "segurança privada"
+        ],
+        "sw": [
+          "usalama na ulinzi",
+          "ulinzi",
+          "mlinzi"
+        ],
+        "am": [
+          "ደህንነት እና ጥበቃ",
+          "ጥበቃ",
+          "ደህንነት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "security",
+          "safety"
+        ]
+      }
+    },
+    {
+      "id": "industry:beauty-fashion",
+      "facet": "industry",
+      "labels": {
+        "en": "Beauty & fashion",
+        "fr": "Beauté et mode",
+        "es": "Belleza y moda",
+        "pt": "Beleza e moda",
+        "sw": "Urembo na mitindo",
+        "am": "ውበት እና ፋሽን"
+      },
+      "aliases": {
+        "en": [
+          "beauty",
+          "fashion",
+          "beautyinthemotherland",
+          "shoe",
+          "textiles and garments",
+          "africa fashion arts awards"
+        ],
+        "fr": [
+          "beauté et mode",
+          "beauté",
+          "cosmétique",
+          "mode et beauté",
+          "défilé de mode",
+          "créateur de mode",
+          "industrie de la mode"
+        ],
+        "es": [
+          "belleza y moda",
+          "belleza",
+          "moda",
+          "cosmética"
+        ],
+        "pt": [
+          "beleza e moda",
+          "beleza",
+          "moda",
+          "cosmética"
+        ],
+        "sw": [
+          "urembo na mitindo",
+          "urembo",
+          "mitindo"
+        ],
+        "am": [
+          "ውበት እና ፋሽን",
+          "ውበት",
+          "ፋሽን"
+        ]
+      },
+      "related": [
+        "skill:hair-beauty",
+        "skill:tailoring"
+      ],
+      "weakAliases": {
+        "fr": [
+          "mode"
+        ]
+      }
+    },
+    {
+      "id": "industry:science",
+      "facet": "industry",
+      "labels": {
+        "en": "Science & research",
+        "fr": "Sciences et recherche",
+        "es": "Ciencia e investigación",
+        "pt": "Ciência e pesquisa",
+        "sw": "Sayansi na utafiti",
+        "am": "ሳይንስ እና ምርምር"
+      },
+      "aliases": {
+        "en": [
+          "stem",
+          "chemistry",
+          "materials",
+          "physics",
+          "biology",
+          "mathematics",
+          "laboratory testing"
+        ],
+        "fr": [
+          "sciences et recherche",
+          "sciences",
+          "recherche",
+          "laboratoire",
+          "stem"
+        ],
+        "es": [
+          "ciencia e investigación",
+          "ciencia",
+          "investigación",
+          "laboratorio"
+        ],
+        "pt": [
+          "ciência e pesquisa",
+          "ciência",
+          "pesquisa",
+          "laboratório"
+        ],
+        "sw": [
+          "sayansi na utafiti",
+          "sayansi",
+          "utafiti",
+          "maabara"
+        ],
+        "am": [
+          "ሳይንስ እና ምርምር",
+          "ሳይንስ",
+          "ምርምር",
+          "ቤተ ሙከራ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "science",
+          "research"
+        ]
+      },
+      "related": [
+        "community:researchers"
+      ]
+    },
+    {
+      "id": "industry:trades",
+      "facet": "industry",
+      "labels": {
+        "en": "Skilled trades & vocational",
+        "fr": "Métiers et formation professionnelle",
+        "es": "Oficios y formación profesional",
+        "pt": "Ofícios e formação profissional",
+        "sw": "Ufundi na stadi za kazi",
+        "am": "የሙያ ሥራዎች"
+      },
+      "aliases": {
+        "en": [
+          "vocational",
+          "artisan",
+          "trades",
+          "technicalskills",
+          "automobile",
+          "automobileengineering",
+          "carpentry",
+          "masonry",
+          "tiling",
+          "cleaners",
+          "office cleaner",
+          "cleanliness",
+          "surface preparation",
+          "finishing",
+          "electricity"
+        ],
+        "fr": [
+          "métiers et formation professionnelle",
+          "métiers",
+          "artisan",
+          "artisanat",
+          "formation professionnelle"
+        ],
+        "es": [
+          "oficios y formación profesional",
+          "oficios",
+          "artesano",
+          "formación profesional"
+        ],
+        "pt": [
+          "ofícios e formação profissional",
+          "ofícios",
+          "artesão",
+          "ensino técnico"
+        ],
+        "sw": [
+          "ufundi na stadi za kazi",
+          "ufundi",
+          "fundi",
+          "mafunzo ya ufundi"
+        ],
+        "am": [
+          "የሙያ ሥራዎች",
+          "ሙያ",
+          "የእጅ ሥራ",
+          "የቴክኒክና ሙያ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "repair",
+          "cleaning",
+          "hygiene"
+        ]
+      },
+      "related": [
+        "type:apprenticeship"
+      ]
+    },
+    {
+      "id": "industry:space",
+      "facet": "industry",
+      "labels": {
+        "en": "Space, aviation & aerospace",
+        "fr": "Espace, aviation et aérospatiale",
+        "es": "Espacio, aviación y aeroespacial",
+        "pt": "Espaço, aviação e aeroespacial",
+        "sw": "Anga, usafiri wa anga na anga za juu",
+        "am": "ሕዋ፣ አቪዬሽን እና ኤሮስፔስ"
+      },
+      "aliases": {
+        "en": [
+          "space science",
+          "astronomy",
+          "astrophysics",
+          "aerospace",
+          "aerospace engineering",
+          "aeronautical engineering",
+          "aviation",
+          "aircraft",
+          "airline",
+          "pilot",
+          "satellite",
+          "rocketry",
+          "drone",
+          "uav",
+          "space technology",
+          "nasrda"
+        ],
+        "fr": [
+          "espace, aviation et aérospatiale",
+          "spatial",
+          "astronomie",
+          "aérospatiale",
+          "aviation",
+          "satellite",
+          "drone"
+        ],
+        "es": [
+          "espacio, aviación y aeroespacial",
+          "espacial",
+          "astronomía",
+          "aeroespacial",
+          "aviación",
+          "satélite",
+          "dron"
+        ],
+        "pt": [
+          "espaço, aviação e aeroespacial",
+          "espacial",
+          "astronomia",
+          "aeroespacial",
+          "aviação",
+          "satélite",
+          "drone"
+        ],
+        "sw": [
+          "anga, usafiri wa anga na anga za juu",
+          "anga za juu",
+          "elimu ya nyota",
+          "usafiri wa anga",
+          "setilaiti",
+          "ndege isiyo na rubani"
+        ],
+        "am": [
+          "ሕዋ፣ አቪዬሽን እና ኤሮስፔስ",
+          "ሕዋ",
+          "ሥነ ፈለክ",
+          "አቪዬሽን",
+          "ሳተላይት",
+          "ድሮን"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "space"
+        ]
+      },
+      "related": [
+        "industry:engineering",
+        "industry:science"
+      ]
+    },
+    {
+      "id": "industry:architecture",
+      "facet": "industry",
+      "labels": {
+        "en": "Architecture & built environment",
+        "fr": "Architecture et cadre bâti",
+        "es": "Arquitectura y entorno construido",
+        "pt": "Arquitetura e ambiente construído",
+        "sw": "Usanifu majengo na mazingira ya ujenzi",
+        "am": "አርክቴክቸር እና የተገነባ አካባቢ"
+      },
+      "aliases": {
+        "en": [
+          "architecture",
+          "architectural",
+          "architect",
+          "interior design",
+          "interior designer",
+          "interior architect",
+          "urban planning",
+          "town planning",
+          "landscape architecture",
+          "quantity surveying",
+          "surveying and mapping",
+          "surveying"
+        ],
+        "fr": [
+          "architecture et cadre bâti",
+          "architecture",
+          "architecte",
+          "urbanisme",
+          "design d'intérieur",
+          "topographie"
+        ],
+        "es": [
+          "arquitectura y entorno construido",
+          "arquitectura",
+          "arquitecto",
+          "urbanismo",
+          "diseño de interiores"
+        ],
+        "pt": [
+          "arquitetura e ambiente construído",
+          "arquitetura",
+          "arquiteto",
+          "urbanismo",
+          "design de interiores"
+        ],
+        "sw": [
+          "usanifu majengo na mazingira ya ujenzi",
+          "usanifu majengo",
+          "msanifu majengo",
+          "mipango miji",
+          "upimaji ardhi"
+        ],
+        "am": [
+          "አርክቴክቸር እና የተገነባ አካባቢ",
+          "አርክቴክቸር",
+          "አርክቴክት",
+          "የከተማ ፕላን",
+          "ቅየሳ"
+        ]
+      },
+      "related": [
+        "industry:engineering",
+        "industry:real-estate"
+      ]
+    },
+    {
+      "id": "industry:mining",
+      "facet": "industry",
+      "labels": {
+        "en": "Mining & natural resources",
+        "fr": "Mines et ressources naturelles",
+        "es": "Minería y recursos naturales",
+        "pt": "Mineração e recursos naturais",
+        "sw": "Madini na maliasili",
+        "am": "ማዕድን እና የተፈጥሮ ሀብት"
+      },
+      "aliases": {
+        "en": [
+          "mining",
+          "mining engineering",
+          "geology",
+          "geology and mining",
+          "geologist",
+          "mineral",
+          "metallurgical",
+          "metallurgy",
+          "petroleum",
+          "petrochemical",
+          "forestry",
+          "natural resources"
+        ],
+        "fr": [
+          "mines et ressources naturelles",
+          "mines",
+          "minier",
+          "géologie",
+          "pétrole",
+          "forêts"
+        ],
+        "es": [
+          "minería y recursos naturales",
+          "minería",
+          "geología",
+          "petróleo",
+          "forestal"
+        ],
+        "pt": [
+          "mineração e recursos naturais",
+          "mineração",
+          "geologia",
+          "petróleo",
+          "florestal"
+        ],
+        "sw": [
+          "madini na maliasili",
+          "madini",
+          "uchimbaji madini",
+          "jiolojia",
+          "mafuta",
+          "misitu"
+        ],
+        "am": [
+          "ማዕድን እና የተፈጥሮ ሀብት",
+          "ማዕድን",
+          "ጂኦሎጂ",
+          "ነዳጅ",
+          "ደን"
+        ]
+      }
+    },
+    {
+      "id": "industry:law",
+      "facet": "industry",
+      "labels": {
+        "en": "Law & legal",
+        "fr": "Droit et juridique",
+        "es": "Derecho y jurídico",
+        "pt": "Direito e jurídico",
+        "sw": "Sheria",
+        "am": "ሕግ"
+      },
+      "aliases": {
+        "en": [
+          "lawyer",
+          "advocate",
+          "high court advocates",
+          "legal professionals",
+          "legal advisor",
+          "legal strategy",
+          "legal strategists",
+          "legal compliance",
+          "legaldrafting",
+          "legaladvice",
+          "legalassociate",
+          "paralegal",
+          "legal and regulatory"
+        ],
+        "fr": [
+          "droit et juridique",
+          "droit",
+          "juridique",
+          "avocat",
+          "juriste",
+          "conformité juridique"
+        ],
+        "es": [
+          "derecho y jurídico",
+          "derecho",
+          "jurídico",
+          "abogado",
+          "legal"
+        ],
+        "pt": [
+          "direito e jurídico",
+          "direito",
+          "jurídico",
+          "advogado"
+        ],
+        "sw": [
+          "sheria",
+          "wakili",
+          "kisheria"
+        ],
+        "am": [
+          "ሕግ",
+          "ጠበቃ",
+          "የሕግ ባለሙያ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "legal"
+        ]
+      },
+      "exactAliases": [
+        "law"
+      ]
+    },
+    {
+      "id": "industry:social-sciences",
+      "facet": "industry",
+      "labels": {
+        "en": "Social sciences & humanities",
+        "fr": "Sciences sociales et humaines",
+        "es": "Ciencias sociales y humanidades",
+        "pt": "Ciências sociais e humanas",
+        "sw": "Sayansi ya jamii na humanitia",
+        "am": "ማህበራዊ ሳይንስ እና ሰብዓዊነት"
+      },
+      "aliases": {
+        "en": [
+          "social sciences",
+          "humanities",
+          "sociology",
+          "political science",
+          "international relations",
+          "international studies",
+          "international diplomacy",
+          "diplomacy",
+          "peace studies",
+          "peace and conflict resolution",
+          "history",
+          "philosophy",
+          "economics",
+          "psychology",
+          "anthropology",
+          "english literature",
+          "literary studies",
+          "linguistics"
+        ],
+        "fr": [
+          "sciences sociales et humaines",
+          "sciences sociales",
+          "sociologie",
+          "relations internationales",
+          "économie",
+          "psychologie",
+          "histoire"
+        ],
+        "es": [
+          "ciencias sociales y humanidades",
+          "ciencias sociales",
+          "sociología",
+          "relaciones internacionales",
+          "economía",
+          "psicología"
+        ],
+        "pt": [
+          "ciências sociais e humanas",
+          "ciências sociais",
+          "sociologia",
+          "relações internacionais",
+          "economia",
+          "psicologia"
+        ],
+        "sw": [
+          "sayansi ya jamii na humanitia",
+          "sosholojia",
+          "mahusiano ya kimataifa",
+          "uchumi",
+          "saikolojia",
+          "historia"
+        ],
+        "am": [
+          "ማህበራዊ ሳይንስ እና ሰብዓዊነት",
+          "ሶሺዮሎጂ",
+          "ዓለም አቀፍ ግንኙነት",
+          "ኢኮኖሚክስ",
+          "ሳይኮሎጂ",
+          "ታሪክ"
+        ]
+      }
+    },
+    {
+      "id": "industry:sports",
+      "facet": "industry",
+      "labels": {
+        "en": "Sports & fitness",
+        "fr": "Sport et forme physique",
+        "es": "Deporte y fitness",
+        "pt": "Esporte e fitness",
+        "sw": "Michezo na mazoezi",
+        "am": "ስፖርት እና የአካል ብቃት"
+      },
+      "aliases": {
+        "en": [
+          "sports",
+          "sport",
+          "football",
+          "athletics",
+          "fitness",
+          "gym",
+          "esports"
+        ],
+        "fr": [
+          "sport et forme physique",
+          "sport",
+          "football",
+          "athlétisme",
+          "fitness",
+          "bien-être"
+        ],
+        "es": [
+          "deporte y fitness",
+          "deporte",
+          "fútbol",
+          "atletismo",
+          "bienestar"
+        ],
+        "pt": [
+          "esporte e fitness",
+          "esporte",
+          "futebol",
+          "atletismo",
+          "bem-estar"
+        ],
+        "sw": [
+          "michezo na mazoezi",
+          "michezo",
+          "mpira wa miguu",
+          "riadha",
+          "mazoezi"
+        ],
+        "am": [
+          "ስፖርት እና የአካል ብቃት",
+          "ስፖርት",
+          "እግር ኳስ",
+          "አትሌቲክስ",
+          "የአካል ብቃት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "wellness"
+        ]
+      }
+    },
+    {
+      "id": "industry:telecom",
+      "facet": "industry",
+      "labels": {
+        "en": "Telecommunications",
+        "fr": "Télécommunications",
+        "es": "Telecomunicaciones",
+        "pt": "Telecomunicações",
+        "sw": "Mawasiliano ya simu",
+        "am": "ቴሌኮሙኒኬሽን"
+      },
+      "aliases": {
+        "en": [
+          "telecommunications",
+          "telecom"
+        ],
+        "fr": [
+          "télécommunications",
+          "télécoms",
+          "opérateur mobile"
+        ],
+        "es": [
+          "telecomunicaciones",
+          "telecom"
+        ],
+        "pt": [
+          "telecomunicações",
+          "telecom"
+        ],
+        "sw": [
+          "mawasiliano ya simu",
+          "mawasiliano"
+        ],
+        "am": [
+          "ቴሌኮሙኒኬሽን",
+          "ቴሌኮም"
+        ]
+      }
+    },
+    {
+      "id": "industry:web3",
+      "facet": "industry",
+      "labels": {
+        "en": "Blockchain & Web3",
+        "fr": "Blockchain et Web3",
+        "es": "Blockchain y Web3",
+        "pt": "Blockchain e Web3",
+        "sw": "Blockchain na Web3",
+        "am": "ብሎክቼይን እና ዌብ3"
+      },
+      "aliases": {
+        "en": [
+          "web3",
+          "blockchain",
+          "crypto"
+        ],
+        "fr": [
+          "blockchain et web3",
+          "blockchain",
+          "crypto",
+          "cryptomonnaie"
+        ],
+        "es": [
+          "blockchain y web3",
+          "blockchain",
+          "cripto",
+          "criptomoneda"
+        ],
+        "pt": [
+          "blockchain e web3",
+          "blockchain",
+          "cripto",
+          "criptomoeda"
+        ],
+        "sw": [
+          "blockchain na web3",
+          "sarafu za kidijitali"
+        ],
+        "am": [
+          "ብሎክቼይን እና ዌብ3",
+          "ክሪፕቶ"
+        ]
+      }
+    },
+    {
+      "id": "skill:software-development",
+      "facet": "skill",
+      "labels": {
+        "en": "Software development",
+        "fr": "Développement logiciel",
+        "es": "Desarrollo de software",
+        "pt": "Desenvolvimento de software",
+        "sw": "Uundaji wa programu",
+        "am": "የሶፍትዌር ልማት"
+      },
+      "aliases": {
+        "en": [
+          "software development",
+          "software engineering",
+          "softwareengineering",
+          "programming",
+          "coding",
+          "software engineers",
+          "full-stackengineering",
+          "backend",
+          "backenddeveloper",
+          "frontenddeveloper",
+          "system design",
+          "software architecture",
+          "software testing",
+          "github",
+          "android",
+          "google play developers"
+        ],
+        "fr": [
+          "développement logiciel",
+          "programmation",
+          "développeur",
+          "génie logiciel"
+        ],
+        "es": [
+          "desarrollo de software",
+          "programación",
+          "desarrollador"
+        ],
+        "pt": [
+          "desenvolvimento de software",
+          "programação",
+          "desenvolvedor"
+        ],
+        "sw": [
+          "uundaji wa programu",
+          "uandishi wa programu",
+          "msanidi programu"
+        ],
+        "am": [
+          "የሶፍትዌር ልማት",
+          "ፕሮግራሚንግ",
+          "ሶፍትዌር ገንቢ"
+        ]
+      },
+      "parent": "industry:technology",
+      "weakAliases": {
+        "en": [
+          "mobile"
+        ]
+      }
+    },
+    {
+      "id": "skill:web-development",
+      "facet": "skill",
+      "labels": {
+        "en": "Web development",
+        "fr": "Développement web",
+        "es": "Desarrollo web",
+        "pt": "Desenvolvimento web",
+        "sw": "Uundaji wa tovuti",
+        "am": "የድር ልማት"
+      },
+      "aliases": {
+        "en": [
+          "web development",
+          "webdev",
+          "web design",
+          "html",
+          "css",
+          "javascript",
+          "react",
+          "react.js",
+          "next.js",
+          "wordpress",
+          "landingpagedesign",
+          "web developers"
+        ],
+        "fr": [
+          "développement web",
+          "site web",
+          "web"
+        ],
+        "es": [
+          "desarrollo web",
+          "sitio web"
+        ],
+        "pt": [
+          "desenvolvimento web",
+          "site"
+        ],
+        "sw": [
+          "uundaji wa tovuti",
+          "tovuti"
+        ],
+        "am": [
+          "የድር ልማት",
+          "ድረ ገፅ"
+        ]
+      },
+      "parent": "industry:technology",
+      "weakAliases": {
+        "en": [
+          "web"
+        ]
+      }
+    },
+    {
+      "id": "skill:python",
+      "facet": "skill",
+      "labels": {
+        "en": "Python",
+        "fr": "Python",
+        "es": "Python",
+        "pt": "Python",
+        "sw": "Python",
+        "am": "ፓይተን"
+      },
+      "aliases": {
+        "en": [
+          "python"
+        ],
+        "fr": [
+          "python"
+        ],
+        "es": [
+          "python"
+        ],
+        "pt": [
+          "python"
+        ],
+        "sw": [
+          "python"
+        ],
+        "am": [
+          "ፓይተን"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:programming-languages",
+      "facet": "skill",
+      "labels": {
+        "en": "Other programming languages",
+        "fr": "Autres langages de programmation",
+        "es": "Otros lenguajes de programación",
+        "pt": "Outras linguagens de programação",
+        "sw": "Lugha nyingine za programu",
+        "am": "ሌሎች የፕሮግራሚንግ ቋንቋዎች"
+      },
+      "aliases": {
+        "en": [
+          "node js",
+          "nodejs",
+          "typescript",
+          "php",
+          "java",
+          "c++",
+          "c#",
+          "golang",
+          "express js",
+          "kotlin",
+          "flutter",
+          "dart",
+          "git",
+          "linux",
+          "devops"
+        ],
+        "fr": [
+          "autres langages de programmation"
+        ],
+        "es": [
+          "otros lenguajes de programación"
+        ],
+        "pt": [
+          "outras linguagens de programação"
+        ],
+        "sw": [
+          "lugha nyingine za programu"
+        ],
+        "am": [
+          "ሌሎች የፕሮግራሚንግ ቋንቋዎች"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:it-support",
+      "facet": "skill",
+      "labels": {
+        "en": "IT support & networking",
+        "fr": "Support informatique et réseaux",
+        "es": "Soporte informático y redes",
+        "pt": "Suporte de TI e redes",
+        "sw": "Usaidizi wa TEHAMA na mitandao",
+        "am": "የአይቲ ድጋፍ እና ኔትወርክ"
+      },
+      "aliases": {
+        "en": [
+          "it support",
+          "it technician",
+          "network support",
+          "hardware troubleshooting",
+          "troubleshooting",
+          "system administration",
+          "system administrators",
+          "it infrastructure",
+          "tcp/ipnetworkingfundamentals",
+          "networking fundamentals",
+          "it officer"
+        ],
+        "fr": [
+          "support informatique et réseaux",
+          "support informatique",
+          "réseaux",
+          "technicien informatique"
+        ],
+        "es": [
+          "soporte informático y redes",
+          "soporte técnico",
+          "redes"
+        ],
+        "pt": [
+          "suporte de ti e redes",
+          "suporte técnico",
+          "redes"
+        ],
+        "sw": [
+          "usaidizi wa tehama na mitandao",
+          "fundi wa kompyuta",
+          "mitandao"
+        ],
+        "am": [
+          "የአይቲ ድጋፍ እና ኔትወርክ",
+          "የኮምፒውተር ቴክኒሻን",
+          "ኔትወርክ"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:cybersecurity",
+      "facet": "skill",
+      "labels": {
+        "en": "Cybersecurity",
+        "fr": "Cybersécurité",
+        "es": "Ciberseguridad",
+        "pt": "Cibersegurança",
+        "sw": "Usalama wa mtandao",
+        "am": "የሳይበር ደህንነት"
+      },
+      "aliases": {
+        "en": [
+          "ethicalhacking",
+          "ethical hacking",
+          "cybersecurity",
+          "cyber security",
+          "it security",
+          "data security"
+        ],
+        "fr": [
+          "cybersécurité",
+          "sécurité informatique"
+        ],
+        "es": [
+          "ciberseguridad",
+          "seguridad informática"
+        ],
+        "pt": [
+          "cibersegurança",
+          "segurança da informação"
+        ],
+        "sw": [
+          "usalama wa mtandao",
+          "usalama wa kompyuta"
+        ],
+        "am": [
+          "የሳይበር ደህንነት"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:cloud",
+      "facet": "skill",
+      "labels": {
+        "en": "Cloud computing",
+        "fr": "Cloud computing",
+        "es": "Computación en la nube",
+        "pt": "Computação em nuvem",
+        "sw": "Kompyuta ya wingu",
+        "am": "ክላውድ ኮምፒውቲንግ"
+      },
+      "aliases": {
+        "en": [
+          "cloud computing",
+          "azure",
+          "aws",
+          "cloud"
+        ],
+        "fr": [
+          "cloud computing",
+          "informatique en nuage"
+        ],
+        "es": [
+          "computación en la nube",
+          "nube"
+        ],
+        "pt": [
+          "computação em nuvem",
+          "nuvem"
+        ],
+        "sw": [
+          "kompyuta ya wingu",
+          "wingu"
+        ],
+        "am": [
+          "ክላውድ ኮምፒውቲንግ"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:erp",
+      "facet": "skill",
+      "labels": {
+        "en": "ERP & business systems",
+        "fr": "ERP et systèmes de gestion",
+        "es": "ERP y sistemas de gestión",
+        "pt": "ERP e sistemas de gestão",
+        "sw": "ERP na mifumo ya biashara",
+        "am": "ኢአርፒ እና የንግድ ሥርዓቶች"
+      },
+      "aliases": {
+        "en": [
+          "erp",
+          "sap",
+          "odoo",
+          "business systems",
+          "crm",
+          "information systems"
+        ],
+        "fr": [
+          "erp et systèmes de gestion",
+          "progiciel",
+          "crm"
+        ],
+        "es": [
+          "erp y sistemas de gestión",
+          "crm"
+        ],
+        "pt": [
+          "erp e sistemas de gestão",
+          "crm"
+        ],
+        "sw": [
+          "erp na mifumo ya biashara"
+        ],
+        "am": [
+          "ኢአርፒ እና የንግድ ሥርዓቶች"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:product-design",
+      "facet": "skill",
+      "labels": {
+        "en": "UI/UX & product design",
+        "fr": "UI/UX et design produit",
+        "es": "UI/UX y diseño de producto",
+        "pt": "UI/UX e design de produto",
+        "sw": "UI/UX na usanifu wa bidhaa",
+        "am": "ዩአይ/ዩኤክስ እና የምርት ዲዛይን"
+      },
+      "aliases": {
+        "en": [
+          "ui/ux",
+          "ux/ui",
+          "ux",
+          "ui",
+          "product design",
+          "figma"
+        ],
+        "fr": [
+          "ui/ux et design produit",
+          "design d'interface",
+          "expérience utilisateur"
+        ],
+        "es": [
+          "ui/ux y diseño de producto",
+          "diseño de interfaces",
+          "experiencia de usuario"
+        ],
+        "pt": [
+          "ui/ux e design de produto",
+          "design de interface",
+          "experiência do usuário"
+        ],
+        "sw": [
+          "ui/ux na usanifu wa bidhaa"
+        ],
+        "am": [
+          "ዩአይ/ዩኤክስ እና የምርት ዲዛይን"
+        ]
+      },
+      "parent": "industry:technology"
+    },
+    {
+      "id": "skill:data-analysis",
+      "facet": "skill",
+      "labels": {
+        "en": "Data analysis",
+        "fr": "Analyse de données",
+        "es": "Análisis de datos",
+        "pt": "Análise de dados",
+        "sw": "Uchambuzi wa data",
+        "am": "የዳታ ትንተና"
+      },
+      "aliases": {
+        "en": [
+          "power bi",
+          "powerbi",
+          "tableau",
+          "data analysis",
+          "dataanalysis",
+          "data analytics",
+          "data analyst",
+          "business intelligence",
+          "data management",
+          "data quality",
+          "microsoft excel",
+          "excel"
+        ],
+        "fr": [
+          "analyse de données",
+          "analyste de données",
+          "tableaux de bord",
+          "excel"
+        ],
+        "es": [
+          "análisis de datos",
+          "analista de datos",
+          "excel"
+        ],
+        "pt": [
+          "análise de dados",
+          "analista de dados",
+          "excel"
+        ],
+        "sw": [
+          "uchambuzi wa data",
+          "mchambuzi wa data"
+        ],
+        "am": [
+          "የዳታ ትንተና",
+          "የዳታ ተንታኝ"
+        ]
+      },
+      "parent": "industry:data-ai",
+      "weakAliases": {
+        "en": [
+          "analytics"
+        ]
+      }
+    },
+    {
+      "id": "skill:sql",
+      "facet": "skill",
+      "labels": {
+        "en": "SQL & databases",
+        "fr": "SQL et bases de données",
+        "es": "SQL y bases de datos",
+        "pt": "SQL e bancos de dados",
+        "sw": "SQL na hifadhidata",
+        "am": "ኤስኪውኤል እና የመረጃ ቋት"
+      },
+      "aliases": {
+        "en": [
+          "postgresql",
+          "mysql",
+          "mongodb",
+          "sql",
+          "database",
+          "database management",
+          "database administrators"
+        ],
+        "fr": [
+          "sql et bases de données",
+          "base de données"
+        ],
+        "es": [
+          "sql y bases de datos",
+          "base de datos"
+        ],
+        "pt": [
+          "sql e bancos de dados",
+          "banco de dados"
+        ],
+        "sw": [
+          "sql na hifadhidata",
+          "hifadhidata"
+        ],
+        "am": [
+          "ኤስኪውኤል እና የመረጃ ቋት",
+          "የመረጃ ቋት"
+        ]
+      },
+      "parent": "industry:data-ai"
+    },
+    {
+      "id": "skill:data-entry",
+      "facet": "skill",
+      "labels": {
+        "en": "Data entry",
+        "fr": "Saisie de données",
+        "es": "Captura de datos",
+        "pt": "Entrada de dados",
+        "sw": "Uingizaji wa data",
+        "am": "የዳታ ማስገባት"
+      },
+      "aliases": {
+        "en": [
+          "data entry",
+          "mobile data collection",
+          "field data collector"
+        ],
+        "fr": [
+          "saisie de données",
+          "collecte de données"
+        ],
+        "es": [
+          "captura de datos",
+          "recolección de datos"
+        ],
+        "pt": [
+          "entrada de dados",
+          "coleta de dados"
+        ],
+        "sw": [
+          "uingizaji wa data",
+          "ukusanyaji wa data"
+        ],
+        "am": [
+          "የዳታ ማስገባት",
+          "የመረጃ አሰባሰብ"
+        ]
+      },
+      "parent": "industry:data-ai"
+    },
+    {
+      "id": "skill:data-science",
+      "facet": "skill",
+      "labels": {
+        "en": "Data science & ML",
+        "fr": "Science des données et ML",
+        "es": "Ciencia de datos y ML",
+        "pt": "Ciência de dados e ML",
+        "sw": "Sayansi ya data na ML",
+        "am": "የዳታ ሳይንስ እና ማሽን ለርኒንግ"
+      },
+      "aliases": {
+        "en": [
+          "data science",
+          "machine learning",
+          "data scientists"
+        ],
+        "fr": [
+          "science des données et ml",
+          "apprentissage automatique",
+          "data scientist"
+        ],
+        "es": [
+          "ciencia de datos y ml",
+          "aprendizaje automático"
+        ],
+        "pt": [
+          "ciência de dados e ml",
+          "aprendizado de máquina"
+        ],
+        "sw": [
+          "sayansi ya data na ml",
+          "ujifunzaji wa mashine"
+        ],
+        "am": [
+          "የዳታ ሳይንስ እና ማሽን ለርኒንግ"
+        ]
+      },
+      "parent": "industry:data-ai"
+    },
+    {
+      "id": "skill:ai-tools",
+      "facet": "skill",
+      "labels": {
+        "en": "AI tools & automation",
+        "fr": "Outils d'IA et automatisation",
+        "es": "Herramientas de IA y automatización",
+        "pt": "Ferramentas de IA e automação",
+        "sw": "Zana za AI na uendeshaji otomatiki",
+        "am": "የኤአይ መሣሪያዎች እና አውቶሜሽን"
+      },
+      "aliases": {
+        "en": [
+          "aicontentcreation",
+          "dataannotation",
+          "data annotation",
+          "ai tools",
+          "aitools",
+          "ai automation",
+          "agentic ai",
+          "chatgpt",
+          "claude",
+          "prompt engineering",
+          "ai & digital skills"
+        ],
+        "fr": [
+          "outils d'ia et automatisation",
+          "outils ia",
+          "automatisation",
+          "chatgpt"
+        ],
+        "es": [
+          "herramientas de ia y automatización",
+          "herramientas ia",
+          "automatización"
+        ],
+        "pt": [
+          "ferramentas de ia e automação",
+          "ferramentas de ia",
+          "automação"
+        ],
+        "sw": [
+          "zana za ai na uendeshaji otomatiki",
+          "zana za akili bandia"
+        ],
+        "am": [
+          "የኤአይ መሣሪያዎች እና አውቶሜሽን"
+        ]
+      },
+      "parent": "industry:data-ai",
+      "weakAliases": {
+        "en": [
+          "automation"
+        ]
+      }
+    },
+    {
+      "id": "skill:accounting",
+      "facet": "skill",
+      "labels": {
+        "en": "Accounting & bookkeeping",
+        "fr": "Comptabilité",
+        "es": "Contabilidad",
+        "pt": "Contabilidade",
+        "sw": "Uhasibu",
+        "am": "ሂሳብ አያያዝ"
+      },
+      "aliases": {
+        "en": [
+          "accounting",
+          "bookkeeping",
+          "accountant",
+          "accountants",
+          "accounting software",
+          "financial records",
+          "import accounting",
+          "cpa",
+          "accounting standards"
+        ],
+        "fr": [
+          "comptabilité",
+          "comptable",
+          "tenue de livres"
+        ],
+        "es": [
+          "contabilidad",
+          "contador",
+          "teneduría de libros"
+        ],
+        "pt": [
+          "contabilidade",
+          "contador",
+          "escrituração"
+        ],
+        "sw": [
+          "uhasibu",
+          "mhasibu",
+          "utunzaji wa hesabu"
+        ],
+        "am": [
+          "ሂሳብ አያያዝ",
+          "ሂሳብ ሠራተኛ",
+          "አካውንታንት"
+        ]
+      },
+      "parent": "industry:finance"
+    },
+    {
+      "id": "skill:audit",
+      "facet": "skill",
+      "labels": {
+        "en": "Audit & risk",
+        "fr": "Audit et risques",
+        "es": "Auditoría y riesgos",
+        "pt": "Auditoria e riscos",
+        "sw": "Ukaguzi na hatari",
+        "am": "ኦዲት እና ስጋት"
+      },
+      "aliases": {
+        "en": [
+          "audit",
+          "risk management",
+          "aml",
+          "kyc",
+          "internal control"
+        ],
+        "fr": [
+          "audit et risques",
+          "audit",
+          "gestion des risques",
+          "lbc/ft"
+        ],
+        "es": [
+          "auditoría y riesgos",
+          "auditoría",
+          "gestión de riesgos"
+        ],
+        "pt": [
+          "auditoria e riscos",
+          "auditoria",
+          "gestão de riscos"
+        ],
+        "sw": [
+          "ukaguzi na hatari",
+          "ukaguzi",
+          "usimamizi wa hatari"
+        ],
+        "am": [
+          "ኦዲት እና ስጋት",
+          "ኦዲት",
+          "የስጋት አስተዳደር"
+        ]
+      },
+      "parent": "industry:finance"
+    },
+    {
+      "id": "skill:financial-analysis",
+      "facet": "skill",
+      "labels": {
+        "en": "Financial analysis & planning",
+        "fr": "Analyse et planification financières",
+        "es": "Análisis y planificación financiera",
+        "pt": "Análise e planejamento financeiro",
+        "sw": "Uchambuzi na mipango ya fedha",
+        "am": "የፋይናንስ ትንተና እና እቅድ"
+      },
+      "aliases": {
+        "en": [
+          "financial analysis",
+          "financial analysts",
+          "financial management",
+          "budget management",
+          "sensitivity&scenerioanalysis",
+          "financial modelling"
+        ],
+        "fr": [
+          "analyse et planification financières",
+          "analyse financière",
+          "budget"
+        ],
+        "es": [
+          "análisis y planificación financiera",
+          "análisis financiero",
+          "presupuesto"
+        ],
+        "pt": [
+          "análise e planejamento financeiro",
+          "análise financeira",
+          "orçamento"
+        ],
+        "sw": [
+          "uchambuzi na mipango ya fedha",
+          "bajeti"
+        ],
+        "am": [
+          "የፋይናንስ ትንተና እና እቅድ",
+          "በጀት"
+        ]
+      },
+      "parent": "industry:finance"
+    },
+    {
+      "id": "skill:tax",
+      "facet": "skill",
+      "labels": {
+        "en": "Tax",
+        "fr": "Fiscalité",
+        "es": "Impuestos",
+        "pt": "Tributação",
+        "sw": "Kodi",
+        "am": "ግብር"
+      },
+      "aliases": {
+        "en": [
+          "tax",
+          "tax compliance",
+          "tax administration"
+        ],
+        "fr": [
+          "fiscalité",
+          "impôts",
+          "fiscal"
+        ],
+        "es": [
+          "impuestos",
+          "tributación",
+          "fiscal"
+        ],
+        "pt": [
+          "tributação",
+          "impostos",
+          "fiscal"
+        ],
+        "sw": [
+          "kodi",
+          "ushuru"
+        ],
+        "am": [
+          "ግብር",
+          "ታክስ"
+        ]
+      },
+      "parent": "industry:finance"
+    },
+    {
+      "id": "skill:project-management",
+      "facet": "skill",
+      "labels": {
+        "en": "Project management",
+        "fr": "Gestion de projet",
+        "es": "Gestión de proyectos",
+        "pt": "Gestão de projetos",
+        "sw": "Usimamizi wa miradi",
+        "am": "የፕሮጀክት አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "project management",
+          "project coordination",
+          "project and program management",
+          "program management",
+          "scrum",
+          "agile",
+          "project managers",
+          "project coordinators",
+          "program managers"
+        ],
+        "fr": [
+          "gestion de projet",
+          "chef de projet",
+          "coordination de projet"
+        ],
+        "es": [
+          "gestión de proyectos",
+          "jefe de proyecto"
+        ],
+        "pt": [
+          "gestão de projetos",
+          "gerente de projeto"
+        ],
+        "sw": [
+          "usimamizi wa miradi",
+          "meneja wa mradi"
+        ],
+        "am": [
+          "የፕሮጀክት አስተዳደር",
+          "የፕሮጀክት ሥራ አስኪያጅ"
+        ]
+      },
+      "parent": "industry:business"
+    },
+    {
+      "id": "skill:business-analysis",
+      "facet": "skill",
+      "labels": {
+        "en": "Business analysis & strategy",
+        "fr": "Analyse métier et stratégie",
+        "es": "Análisis de negocio y estrategia",
+        "pt": "Análise de negócios e estratégia",
+        "sw": "Uchambuzi wa biashara na mkakati",
+        "am": "የንግድ ትንተና እና ስትራቴጂ"
+      },
+      "aliases": {
+        "en": [
+          "business analysis",
+          "business analysts",
+          "strategic planning",
+          "strategic management",
+          "strategic thinking"
+        ],
+        "fr": [
+          "analyse métier et stratégie",
+          "stratégie",
+          "planification stratégique"
+        ],
+        "es": [
+          "análisis de negocio y estrategia",
+          "estrategia",
+          "planificación estratégica"
+        ],
+        "pt": [
+          "análise de negócios e estratégia",
+          "estratégia",
+          "planejamento estratégico"
+        ],
+        "sw": [
+          "uchambuzi wa biashara na mkakati",
+          "mkakati",
+          "mipango ya kimkakati"
+        ],
+        "am": [
+          "የንግድ ትንተና እና ስትራቴጂ",
+          "ስትራቴጂ"
+        ]
+      },
+      "parent": "industry:business",
+      "weakAliases": {
+        "en": [
+          "strategy"
+        ]
+      }
+    },
+    {
+      "id": "skill:operations-management",
+      "facet": "skill",
+      "labels": {
+        "en": "Operations management",
+        "fr": "Gestion des opérations",
+        "es": "Gestión de operaciones",
+        "pt": "Gestão de operações",
+        "sw": "Usimamizi wa shughuli",
+        "am": "የሥራ ክንውን አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "operations management",
+          "site management",
+          "site supervision",
+          "performance management"
+        ],
+        "fr": [
+          "gestion des opérations",
+          "opérations",
+          "supervision de site"
+        ],
+        "es": [
+          "gestión de operaciones",
+          "operaciones"
+        ],
+        "pt": [
+          "gestão de operações",
+          "operações"
+        ],
+        "sw": [
+          "usimamizi wa shughuli",
+          "uendeshaji"
+        ],
+        "am": [
+          "የሥራ ክንውን አስተዳደር"
+        ]
+      },
+      "parent": "industry:business",
+      "weakAliases": {
+        "en": [
+          "operations"
+        ]
+      }
+    },
+    {
+      "id": "skill:entrepreneurship",
+      "facet": "skill",
+      "labels": {
+        "en": "Entrepreneurship & pitching",
+        "fr": "Entrepreneuriat et pitch",
+        "es": "Emprendimiento y pitch",
+        "pt": "Empreendedorismo e pitch",
+        "sw": "Ujasiriamali na uwasilishaji",
+        "am": "ሥራ ፈጠራ እና አቀራረብ"
+      },
+      "aliases": {
+        "en": [
+          "entrepreneurship",
+          "pitching",
+          "artofpitching",
+          "theultimatepitchdeck",
+          "pitch deck",
+          "business plan"
+        ],
+        "fr": [
+          "entrepreneuriat et pitch",
+          "pitch",
+          "plan d'affaires",
+          "business plan"
+        ],
+        "es": [
+          "emprendimiento y pitch",
+          "plan de negocios"
+        ],
+        "pt": [
+          "empreendedorismo e pitch",
+          "plano de negócios"
+        ],
+        "sw": [
+          "ujasiriamali na uwasilishaji",
+          "mpango wa biashara"
+        ],
+        "am": [
+          "ሥራ ፈጠራ እና አቀራረብ",
+          "የንግድ እቅድ"
+        ]
+      },
+      "parent": "industry:business"
+    },
+    {
+      "id": "skill:sales",
+      "facet": "skill",
+      "labels": {
+        "en": "Sales & business development",
+        "fr": "Vente et développement commercial",
+        "es": "Ventas y desarrollo comercial",
+        "pt": "Vendas e desenvolvimento comercial",
+        "sw": "Mauzo na ukuzaji wa biashara",
+        "am": "ሽያጭ እና የንግድ ልማት"
+      },
+      "aliases": {
+        "en": [
+          "lead generation",
+          "negotiation",
+          "customer acquisition",
+          "sales",
+          "field sales",
+          "b2b sales",
+          "business development",
+          "sales management",
+          "account management",
+          "solar sales"
+        ],
+        "fr": [
+          "vente et développement commercial",
+          "prospection",
+          "négociation",
+          "force de vente"
+        ],
+        "es": [
+          "ventas y desarrollo comercial",
+          "prospección",
+          "negociación"
+        ],
+        "pt": [
+          "vendas e desenvolvimento comercial",
+          "prospecção",
+          "negociação"
+        ],
+        "sw": [
+          "mauzo na ukuzaji wa biashara",
+          "majadiliano",
+          "kutafuta wateja"
+        ],
+        "am": [
+          "ሽያጭ እና የንግድ ልማት",
+          "ድርድር"
+        ]
+      },
+      "parent": "industry:sales-marketing"
+    },
+    {
+      "id": "skill:digital-marketing",
+      "facet": "skill",
+      "labels": {
+        "en": "Digital marketing",
+        "fr": "Marketing digital",
+        "es": "Marketing digital",
+        "pt": "Marketing digital",
+        "sw": "Masoko ya kidijitali",
+        "am": "ዲጂታል ማርኬቲንግ"
+      },
+      "aliases": {
+        "en": [
+          "digital marketing",
+          "digitalmarketing",
+          "seo",
+          "google ads",
+          "meta ads",
+          "paid media",
+          "email marketing",
+          "content marketing"
+        ],
+        "fr": [
+          "marketing digital",
+          "marketing numérique",
+          "référencement",
+          "publicité en ligne"
+        ],
+        "es": [
+          "marketing digital",
+          "posicionamiento web",
+          "publicidad en línea"
+        ],
+        "pt": [
+          "marketing digital",
+          "seo",
+          "publicidade online"
+        ],
+        "sw": [
+          "masoko ya kidijitali",
+          "matangazo ya mtandaoni"
+        ],
+        "am": [
+          "ዲጂታል ማርኬቲንግ",
+          "የኦንላይን ማስታወቂያ"
+        ]
+      },
+      "parent": "industry:sales-marketing"
+    },
+    {
+      "id": "skill:social-media",
+      "facet": "skill",
+      "labels": {
+        "en": "Social media management",
+        "fr": "Gestion des réseaux sociaux",
+        "es": "Gestión de redes sociales",
+        "pt": "Gestão de redes sociais",
+        "sw": "Usimamizi wa mitandao ya kijamii",
+        "am": "የማህበራዊ ሚዲያ አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "social media",
+          "socialmedia",
+          "social media management",
+          "social media manager",
+          "socialmediamanager"
+        ],
+        "fr": [
+          "gestion des réseaux sociaux",
+          "réseaux sociaux",
+          "community manager"
+        ],
+        "es": [
+          "gestión de redes sociales",
+          "redes sociales",
+          "community manager"
+        ],
+        "pt": [
+          "gestão de redes sociais",
+          "redes sociais",
+          "social media"
+        ],
+        "sw": [
+          "usimamizi wa mitandao ya kijamii",
+          "mitandao ya kijamii"
+        ],
+        "am": [
+          "የማህበራዊ ሚዲያ አስተዳደር",
+          "ማህበራዊ ሚዲያ"
+        ]
+      },
+      "parent": "industry:sales-marketing"
+    },
+    {
+      "id": "skill:copywriting",
+      "facet": "skill",
+      "labels": {
+        "en": "Copywriting & content writing",
+        "fr": "Rédaction et contenu",
+        "es": "Redacción y contenidos",
+        "pt": "Redação e conteúdo",
+        "sw": "Uandishi wa maudhui",
+        "am": "የይዘት ጽሑፍ"
+      },
+      "aliases": {
+        "en": [
+          "copywriter",
+          "ghostwriting",
+          "copywriting",
+          "content writing",
+          "creative writing",
+          "story writing",
+          "storytelling",
+          "stroytelling",
+          "editorial",
+          "contentassistant"
+        ],
+        "fr": [
+          "rédaction et contenu",
+          "rédaction",
+          "rédacteur",
+          "écriture"
+        ],
+        "es": [
+          "redacción y contenidos",
+          "redacción",
+          "redactor",
+          "escritura"
+        ],
+        "pt": [
+          "redação e conteúdo",
+          "redação",
+          "redator",
+          "escrita"
+        ],
+        "sw": [
+          "uandishi wa maudhui",
+          "uandishi",
+          "mwandishi"
+        ],
+        "am": [
+          "የይዘት ጽሑፍ",
+          "ጽሑፍ",
+          "ጸሐፊ"
+        ]
+      },
+      "parent": "industry:sales-marketing",
+      "weakAliases": {
+        "en": [
+          "writing"
+        ]
+      }
+    },
+    {
+      "id": "skill:market-research",
+      "facet": "skill",
+      "labels": {
+        "en": "Market research",
+        "fr": "Étude de marché",
+        "es": "Investigación de mercado",
+        "pt": "Pesquisa de mercado",
+        "sw": "Utafiti wa soko",
+        "am": "የገበያ ጥናት"
+      },
+      "aliases": {
+        "en": [
+          "marketing research",
+          "market research",
+          "customer analysis",
+          "survey design"
+        ],
+        "fr": [
+          "étude de marché",
+          "enquête"
+        ],
+        "es": [
+          "investigación de mercado",
+          "encuesta"
+        ],
+        "pt": [
+          "pesquisa de mercado",
+          "pesquisa"
+        ],
+        "sw": [
+          "utafiti wa soko",
+          "utafiti"
+        ],
+        "am": [
+          "የገበያ ጥናት",
+          "ዳሰሳ"
+        ]
+      },
+      "parent": "industry:sales-marketing"
+    },
+    {
+      "id": "skill:graphic-design",
+      "facet": "skill",
+      "labels": {
+        "en": "Graphic design",
+        "fr": "Design graphique",
+        "es": "Diseño gráfico",
+        "pt": "Design gráfico",
+        "sw": "Usanifu wa michoro",
+        "am": "ግራፊክ ዲዛይን"
+      },
+      "aliases": {
+        "en": [
+          "graphic design",
+          "graphics design",
+          "graphicdesign",
+          "graphicsdesign",
+          "canva",
+          "photoshop",
+          "creativedirection"
+        ],
+        "fr": [
+          "design graphique",
+          "graphiste",
+          "infographie"
+        ],
+        "es": [
+          "diseño gráfico",
+          "diseñador gráfico"
+        ],
+        "pt": [
+          "design gráfico",
+          "designer gráfico"
+        ],
+        "sw": [
+          "usanifu wa michoro",
+          "mbunifu wa michoro"
+        ],
+        "am": [
+          "ግራፊክ ዲዛይን",
+          "ግራፊክ ዲዛይነር"
+        ]
+      },
+      "parent": "industry:media-creative"
+    },
+    {
+      "id": "skill:video",
+      "facet": "skill",
+      "labels": {
+        "en": "Video production & editing",
+        "fr": "Production et montage vidéo",
+        "es": "Producción y edición de video",
+        "pt": "Produção e edição de vídeo",
+        "sw": "Utengenezaji na uhariri wa video",
+        "am": "የቪዲዮ ምርት እና ኤዲቲንግ"
+      },
+      "aliases": {
+        "en": [
+          "videography",
+          "videographer",
+          "capcut",
+          "video editing",
+          "video production",
+          "tv production",
+          "media production"
+        ],
+        "fr": [
+          "production et montage vidéo",
+          "montage vidéo",
+          "vidéaste",
+          "vidéo"
+        ],
+        "es": [
+          "producción y edición de video",
+          "edición de video",
+          "videografía"
+        ],
+        "pt": [
+          "produção e edição de vídeo",
+          "edição de vídeo",
+          "videomaker"
+        ],
+        "sw": [
+          "utengenezaji na uhariri wa video",
+          "uhariri wa video",
+          "video"
+        ],
+        "am": [
+          "የቪዲዮ ምርት እና ኤዲቲንግ",
+          "ቪዲዮ ኤዲቲንግ",
+          "ቪዲዮ"
+        ]
+      },
+      "parent": "industry:media-creative",
+      "weakAliases": {
+        "en": [
+          "editing",
+          "video"
+        ]
+      }
+    },
+    {
+      "id": "skill:photography",
+      "facet": "skill",
+      "labels": {
+        "en": "Photography",
+        "fr": "Photographie",
+        "es": "Fotografía",
+        "pt": "Fotografia",
+        "sw": "Upigaji picha",
+        "am": "ፎቶግራፍ"
+      },
+      "aliases": {
+        "en": [
+          "photography",
+          "photo editing"
+        ],
+        "fr": [
+          "photographie",
+          "photographe",
+          "retouche photo"
+        ],
+        "es": [
+          "fotografía",
+          "fotógrafo",
+          "edición de fotos"
+        ],
+        "pt": [
+          "fotografia",
+          "fotógrafo",
+          "edição de fotos"
+        ],
+        "sw": [
+          "upigaji picha",
+          "mpiga picha"
+        ],
+        "am": [
+          "ፎቶግራፍ",
+          "ፎቶግራፈር"
+        ]
+      },
+      "parent": "industry:media-creative"
+    },
+    {
+      "id": "skill:content-creation",
+      "facet": "skill",
+      "labels": {
+        "en": "Content creation",
+        "fr": "Création de contenu",
+        "es": "Creación de contenido",
+        "pt": "Criação de conteúdo",
+        "sw": "Utengenezaji wa maudhui",
+        "am": "የይዘት ፈጠራ"
+      },
+      "aliases": {
+        "en": [
+          "content creation",
+          "content creator"
+        ],
+        "fr": [
+          "création de contenu",
+          "créateur de contenu"
+        ],
+        "es": [
+          "creación de contenido",
+          "creador de contenido"
+        ],
+        "pt": [
+          "criação de conteúdo",
+          "criador de conteúdo"
+        ],
+        "sw": [
+          "utengenezaji wa maudhui",
+          "mtengeneza maudhui"
+        ],
+        "am": [
+          "የይዘት ፈጠራ",
+          "ይዘት ፈጣሪ"
+        ]
+      },
+      "parent": "industry:media-creative",
+      "weakAliases": {
+        "en": [
+          "creator"
+        ]
+      }
+    },
+    {
+      "id": "skill:journalism",
+      "facet": "skill",
+      "labels": {
+        "en": "Journalism & broadcasting",
+        "fr": "Journalisme et radiodiffusion",
+        "es": "Periodismo y radiodifusión",
+        "pt": "Jornalismo e radiodifusão",
+        "sw": "Uandishi wa habari na utangazaji",
+        "am": "ጋዜጠኝነት እና ስርጭት"
+      },
+      "aliases": {
+        "en": [
+          "journalism",
+          "mobilejournalism",
+          "broadcasting",
+          "reporting"
+        ],
+        "fr": [
+          "journalisme et radiodiffusion",
+          "journaliste",
+          "reportage",
+          "radio",
+          "télévision"
+        ],
+        "es": [
+          "periodismo y radiodifusión",
+          "periodista",
+          "reportaje"
+        ],
+        "pt": [
+          "jornalismo e radiodifusão",
+          "jornalista",
+          "reportagem"
+        ],
+        "sw": [
+          "uandishi wa habari na utangazaji",
+          "mwandishi wa habari",
+          "mtangazaji"
+        ],
+        "am": [
+          "ጋዜጠኝነት እና ስርጭት",
+          "ጋዜጠኛ",
+          "ዘጋቢ"
+        ]
+      },
+      "parent": "industry:media-creative"
+    },
+    {
+      "id": "skill:teaching",
+      "facet": "skill",
+      "labels": {
+        "en": "Teaching & tutoring",
+        "fr": "Enseignement et tutorat",
+        "es": "Docencia y tutoría",
+        "pt": "Ensino e tutoria",
+        "sw": "Ufundishaji na ukufunzi",
+        "am": "ማስተማር እና ማጠናከሪያ"
+      },
+      "aliases": {
+        "en": [
+          "teaching",
+          "tutoring",
+          "lesson planning"
+        ],
+        "fr": [
+          "enseignement et tutorat",
+          "enseigner",
+          "tutorat",
+          "cours particuliers"
+        ],
+        "es": [
+          "docencia y tutoría",
+          "enseñar",
+          "tutoría"
+        ],
+        "pt": [
+          "ensino e tutoria",
+          "ensinar",
+          "tutoria"
+        ],
+        "sw": [
+          "ufundishaji na ukufunzi",
+          "kufundisha",
+          "ukufunzi"
+        ],
+        "am": [
+          "ማስተማር እና ማጠናከሪያ",
+          "ማስተማር",
+          "ማጠናከሪያ ትምህርት"
+        ]
+      },
+      "parent": "industry:education"
+    },
+    {
+      "id": "skill:curriculum",
+      "facet": "skill",
+      "labels": {
+        "en": "Curriculum development",
+        "fr": "Élaboration de programmes",
+        "es": "Diseño curricular",
+        "pt": "Desenvolvimento curricular",
+        "sw": "Uandaaji wa mtaala",
+        "am": "የሥርዓተ ትምህርት ዝግጅት"
+      },
+      "aliases": {
+        "en": [
+          "curriculum development",
+          "curriculum support",
+          "instructional design"
+        ],
+        "fr": [
+          "élaboration de programmes",
+          "programme scolaire",
+          "ingénierie pédagogique"
+        ],
+        "es": [
+          "diseño curricular",
+          "currículo",
+          "diseño instruccional"
+        ],
+        "pt": [
+          "desenvolvimento curricular",
+          "currículo",
+          "design instrucional"
+        ],
+        "sw": [
+          "uandaaji wa mtaala",
+          "mtaala"
+        ],
+        "am": [
+          "የሥርዓተ ትምህርት ዝግጅት",
+          "ሥርዓተ ትምህርት"
+        ]
+      },
+      "parent": "industry:education"
+    },
+    {
+      "id": "skill:recruitment",
+      "facet": "skill",
+      "labels": {
+        "en": "Recruitment & talent",
+        "fr": "Recrutement et talents",
+        "es": "Reclutamiento y talento",
+        "pt": "Recrutamento e talentos",
+        "sw": "Uajiri na vipaji",
+        "am": "ቅጥር እና ተሰጥኦ"
+      },
+      "aliases": {
+        "en": [
+          "talent acquisition",
+          "recruiters"
+        ],
+        "fr": [
+          "recrutement et talents",
+          "recruteur",
+          "acquisition de talents"
+        ],
+        "es": [
+          "reclutamiento y talento",
+          "reclutador",
+          "selección de personal"
+        ],
+        "pt": [
+          "recrutamento e talentos",
+          "recrutador",
+          "seleção"
+        ],
+        "sw": [
+          "uajiri na vipaji",
+          "mwajiri"
+        ],
+        "am": [
+          "ቅጥር እና ተሰጥኦ",
+          "መልማይ"
+        ]
+      },
+      "parent": "industry:hr-admin",
+      "weakAliases": {
+        "en": [
+          "recruitment",
+          "hiring"
+        ],
+        "fr": [
+          "recrutement"
+        ],
+        "es": [
+          "reclutamiento"
+        ],
+        "pt": [
+          "recrutamento"
+        ]
+      }
+    },
+    {
+      "id": "skill:office-admin",
+      "facet": "skill",
+      "labels": {
+        "en": "Office administration",
+        "fr": "Administration de bureau",
+        "es": "Administración de oficina",
+        "pt": "Administração de escritório",
+        "sw": "Utawala wa ofisi",
+        "am": "የቢሮ አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "office administration",
+          "administrative support",
+          "administrative tasks",
+          "administrativeassistant",
+          "administrative assistant",
+          "office management"
+        ],
+        "fr": [
+          "administration de bureau",
+          "secrétariat",
+          "assistant administratif",
+          "gestion de bureau"
+        ],
+        "es": [
+          "administración de oficina",
+          "asistente administrativo",
+          "secretariado"
+        ],
+        "pt": [
+          "administração de escritório",
+          "assistente administrativo",
+          "secretariado"
+        ],
+        "sw": [
+          "utawala wa ofisi",
+          "msaidizi wa utawala",
+          "katibu"
+        ],
+        "am": [
+          "የቢሮ አስተዳደር",
+          "የአስተዳደር ረዳት",
+          "ፀሐፊ"
+        ]
+      },
+      "parent": "industry:hr-admin"
+    },
+    {
+      "id": "skill:virtual-assistance",
+      "facet": "skill",
+      "labels": {
+        "en": "Virtual & executive assistance",
+        "fr": "Assistance virtuelle et de direction",
+        "es": "Asistencia virtual y ejecutiva",
+        "pt": "Assistência virtual e executiva",
+        "sw": "Usaidizi wa mtandaoni na wa mtendaji",
+        "am": "የርቀት እና የሥራ አስፈፃሚ ረዳትነት"
+      },
+      "aliases": {
+        "en": [
+          "virtual assistant",
+          "virtual assistance",
+          "executive assistant",
+          "executive assisting",
+          "calendar management",
+          "calendarmanagement",
+          "google workspace",
+          "microsoft 365",
+          "proficiency in microsoft",
+          "microsoft word",
+          "powerpoint",
+          "microsoft office",
+          "notion",
+          "trello",
+          "slack",
+          "record keeping"
+        ],
+        "fr": [
+          "assistance virtuelle et de direction",
+          "assistant virtuel",
+          "assistant de direction",
+          "gestion d'agenda",
+          "bureautique"
+        ],
+        "es": [
+          "asistencia virtual y ejecutiva",
+          "asistente virtual",
+          "asistente ejecutivo",
+          "ofimática"
+        ],
+        "pt": [
+          "assistência virtual e executiva",
+          "assistente virtual",
+          "assistente executivo"
+        ],
+        "sw": [
+          "usaidizi wa mtandaoni na wa mtendaji",
+          "msaidizi wa mtandaoni",
+          "msaidizi wa mtendaji"
+        ],
+        "am": [
+          "የርቀት እና የሥራ አስፈፃሚ ረዳትነት",
+          "የርቀት ረዳት"
+        ]
+      },
+      "parent": "industry:hr-admin",
+      "weakAliases": {
+        "en": [
+          "documentation",
+          "productivity"
+        ]
+      }
+    },
+    {
+      "id": "skill:hr-management",
+      "facet": "skill",
+      "labels": {
+        "en": "HR management",
+        "fr": "Gestion des RH",
+        "es": "Gestión de RR. HH.",
+        "pt": "Gestão de RH",
+        "sw": "Usimamizi wa rasilimali watu",
+        "am": "የሰው ኃይል አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "human resources management",
+          "human resource management",
+          "hr management",
+          "humanresourcesmanagement"
+        ],
+        "fr": [
+          "gestion des rh",
+          "gestion des ressources humaines",
+          "paie"
+        ],
+        "es": [
+          "gestión de rr. hh.",
+          "gestión de recursos humanos",
+          "nómina"
+        ],
+        "pt": [
+          "gestão de rh",
+          "gestão de recursos humanos",
+          "folha de pagamento"
+        ],
+        "sw": [
+          "usimamizi wa rasilimali watu",
+          "mishahara"
+        ],
+        "am": [
+          "የሰው ኃይል አስተዳደር",
+          "ደመወዝ"
+        ]
+      },
+      "parent": "industry:hr-admin"
+    },
+    {
+      "id": "skill:procurement",
+      "facet": "skill",
+      "labels": {
+        "en": "Procurement & sourcing",
+        "fr": "Achats et approvisionnement",
+        "es": "Compras y abastecimiento",
+        "pt": "Compras e suprimentos",
+        "sw": "Ununuzi na ugavi",
+        "am": "ግዥ እና አቅርቦት"
+      },
+      "aliases": {
+        "en": [
+          "procurement",
+          "sourcing",
+          "contract management",
+          "it procurement"
+        ],
+        "fr": [
+          "achats et approvisionnement",
+          "acheteur",
+          "passation de marchés"
+        ],
+        "es": [
+          "compras y abastecimiento",
+          "comprador",
+          "adquisiciones"
+        ],
+        "pt": [
+          "compras e suprimentos",
+          "comprador",
+          "aquisições"
+        ],
+        "sw": [
+          "ununuzi na ugavi",
+          "afisa ununuzi"
+        ],
+        "am": [
+          "ግዥ እና አቅርቦት",
+          "የግዥ ባለሙያ"
+        ]
+      },
+      "parent": "industry:logistics"
+    },
+    {
+      "id": "skill:inventory",
+      "facet": "skill",
+      "labels": {
+        "en": "Inventory & warehousing",
+        "fr": "Stocks et entreposage",
+        "es": "Inventario y almacenamiento",
+        "pt": "Estoque e armazenagem",
+        "sw": "Hesabu ya bidhaa na ghala",
+        "am": "የንብረት ክምችት እና መጋዘን"
+      },
+      "aliases": {
+        "en": [
+          "inventory management",
+          "inventory",
+          "warehousing",
+          "stock control",
+          "storekeeper"
+        ],
+        "fr": [
+          "stocks et entreposage",
+          "gestion des stocks",
+          "magasinier"
+        ],
+        "es": [
+          "inventario y almacenamiento",
+          "gestión de inventario",
+          "almacenista"
+        ],
+        "pt": [
+          "estoque e armazenagem",
+          "gestão de estoque",
+          "almoxarife"
+        ],
+        "sw": [
+          "hesabu ya bidhaa na ghala",
+          "mtunza ghala",
+          "stoo"
+        ],
+        "am": [
+          "የንብረት ክምችት እና መጋዘን",
+          "የመጋዘን ሠራተኛ"
+        ]
+      },
+      "parent": "industry:logistics"
+    },
+    {
+      "id": "skill:customer-service",
+      "facet": "skill",
+      "labels": {
+        "en": "Customer service",
+        "fr": "Service client",
+        "es": "Atención al cliente",
+        "pt": "Atendimento ao cliente",
+        "sw": "Huduma kwa wateja",
+        "am": "የደንበኞች አገልግሎት"
+      },
+      "aliases": {
+        "en": [
+          "customer service",
+          "customerservice",
+          "customer care",
+          "customer support",
+          "client relations",
+          "client management",
+          "customer relationship management",
+          "customerrelationshipmanagement",
+          "customer relations officer",
+          "customerservicerepresentative",
+          "customer representative",
+          "crm tools",
+          "crmtools"
+        ],
+        "fr": [
+          "service client",
+          "relation client",
+          "téléconseiller"
+        ],
+        "es": [
+          "atención al cliente",
+          "servicio al cliente"
+        ],
+        "pt": [
+          "atendimento ao cliente",
+          "relacionamento com o cliente"
+        ],
+        "sw": [
+          "huduma kwa wateja",
+          "mahusiano na wateja"
+        ],
+        "am": [
+          "የደንበኞች አገልግሎት",
+          "የደንበኛ ግንኙነት"
+        ]
+      },
+      "parent": "industry:customer-service"
+    },
+    {
+      "id": "skill:tailoring",
+      "facet": "skill",
+      "labels": {
+        "en": "Fashion design & tailoring",
+        "fr": "Stylisme et couture",
+        "es": "Diseño de moda y costura",
+        "pt": "Design de moda e costura",
+        "sw": "Ubunifu wa mitindo na ushonaji",
+        "am": "የፋሽን ዲዛይን እና ልብስ ስፌት"
+      },
+      "aliases": {
+        "en": [
+          "tailoring",
+          "sewing",
+          "fashion design",
+          "fashion sketching",
+          "crocheting",
+          "knitting",
+          "gele",
+          "textiles"
+        ],
+        "fr": [
+          "stylisme et couture",
+          "couture",
+          "couturier",
+          "tailleur",
+          "stylisme"
+        ],
+        "es": [
+          "diseño de moda y costura",
+          "costura",
+          "sastre",
+          "modista"
+        ],
+        "pt": [
+          "design de moda e costura",
+          "costura",
+          "alfaiate",
+          "costureira"
+        ],
+        "sw": [
+          "ubunifu wa mitindo na ushonaji",
+          "ushonaji",
+          "fundi cherehani",
+          "mshonaji"
+        ],
+        "am": [
+          "የፋሽን ዲዛይን እና ልብስ ስፌት",
+          "ልብስ ስፌት",
+          "ልብስ ሰፊ"
+        ]
+      },
+      "parent": "industry:trades"
+    },
+    {
+      "id": "skill:hair-beauty",
+      "facet": "skill",
+      "labels": {
+        "en": "Hair, makeup & beauty services",
+        "fr": "Coiffure, maquillage et soins de beauté",
+        "es": "Peluquería, maquillaje y belleza",
+        "pt": "Cabelo, maquiagem e beleza",
+        "sw": "Ususi, vipodozi na urembo",
+        "am": "የፀጉር ሥራ፣ ሜካፕ እና የውበት አገልግሎት"
+      },
+      "aliases": {
+        "en": [
+          "hairdressing",
+          "hair stylist",
+          "hair styling",
+          "wig making",
+          "makeup",
+          "make up",
+          "nail tech",
+          "barbing",
+          "skincare"
+        ],
+        "fr": [
+          "coiffure, maquillage et soins de beauté",
+          "coiffure",
+          "coiffeur",
+          "maquillage",
+          "esthétique"
+        ],
+        "es": [
+          "peluquería, maquillaje y belleza",
+          "peluquería",
+          "peluquero",
+          "maquillaje",
+          "estética"
+        ],
+        "pt": [
+          "cabelo, maquiagem e beleza",
+          "cabeleireiro",
+          "maquiagem",
+          "estética"
+        ],
+        "sw": [
+          "ususi, vipodozi na urembo",
+          "ususi",
+          "msusi",
+          "vipodozi",
+          "kinyozi"
+        ],
+        "am": [
+          "የፀጉር ሥራ፣ ሜካፕ እና የውበት አገልግሎት",
+          "ፀጉር ሠሪ",
+          "ሜካፕ"
+        ]
+      },
+      "parent": "industry:trades"
+    },
+    {
+      "id": "skill:baking-catering",
+      "facet": "skill",
+      "labels": {
+        "en": "Baking, cooking & catering",
+        "fr": "Pâtisserie, cuisine et traiteur",
+        "es": "Repostería, cocina y catering",
+        "pt": "Confeitaria, cozinha e buffet",
+        "sw": "Uokaji, upishi na huduma za chakula",
+        "am": "ዳቦ ጋገራ፣ ምግብ ዝግጅት እና ምግብ አቅርቦት"
+      },
+      "aliases": {
+        "en": [
+          "baking",
+          "cake",
+          "pastries",
+          "pastry",
+          "cooking",
+          "chef",
+          "catering",
+          "event catering"
+        ],
+        "fr": [
+          "pâtisserie, cuisine et traiteur",
+          "pâtisserie",
+          "boulangerie",
+          "cuisine",
+          "traiteur",
+          "chef"
+        ],
+        "es": [
+          "repostería, cocina y catering",
+          "repostería",
+          "panadería",
+          "cocina",
+          "catering",
+          "chef"
+        ],
+        "pt": [
+          "confeitaria, cozinha e buffet",
+          "confeitaria",
+          "panificação",
+          "cozinha",
+          "buffet",
+          "chef"
+        ],
+        "sw": [
+          "uokaji, upishi na huduma za chakula",
+          "uokaji",
+          "upishi",
+          "mpishi"
+        ],
+        "am": [
+          "ዳቦ ጋገራ፣ ምግብ ዝግጅት እና ምግብ አቅርቦት",
+          "ዳቦ ጋገራ",
+          "ምግብ ማብሰል",
+          "ሼፍ"
+        ]
+      },
+      "parent": "industry:trades"
+    },
+    {
+      "id": "skill:building-trades",
+      "facet": "skill",
+      "labels": {
+        "en": "Building trades",
+        "fr": "Métiers du bâtiment",
+        "es": "Oficios de la construcción",
+        "pt": "Ofícios da construção",
+        "sw": "Ufundi wa ujenzi",
+        "am": "የግንባታ ሙያዎች"
+      },
+      "aliases": {
+        "en": [
+          "carpentry",
+          "masonry",
+          "tiling",
+          "plumbing",
+          "welding",
+          "painting"
+        ],
+        "fr": [
+          "métiers du bâtiment",
+          "menuiserie",
+          "maçonnerie",
+          "carrelage",
+          "plomberie",
+          "soudure"
+        ],
+        "es": [
+          "oficios de la construcción",
+          "carpintería",
+          "albañilería",
+          "plomería",
+          "soldadura"
+        ],
+        "pt": [
+          "ofícios da construção",
+          "carpintaria",
+          "alvenaria",
+          "encanamento",
+          "solda"
+        ],
+        "sw": [
+          "ufundi wa ujenzi",
+          "useremala",
+          "uashi",
+          "ufundi bomba",
+          "uchomeleaji"
+        ],
+        "am": [
+          "የግንባታ ሙያዎች",
+          "አናጺነት",
+          "ግንበኝነት",
+          "የቧንቧ ሥራ",
+          "ብየዳ"
+        ]
+      },
+      "parent": "industry:trades"
+    },
+    {
+      "id": "skill:repairs",
+      "facet": "skill",
+      "labels": {
+        "en": "Electrical, phone & auto repair",
+        "fr": "Réparation électrique, téléphone et auto",
+        "es": "Reparación eléctrica, de teléfonos y autos",
+        "pt": "Reparação elétrica, de celulares e automóveis",
+        "sw": "Ufundi umeme, simu na magari",
+        "am": "የኤሌክትሪክ፣ የስልክ እና የመኪና ጥገና"
+      },
+      "aliases": {
+        "en": [
+          "phone and laptop repairs",
+          "phone repair",
+          "laptop repair",
+          "electrical installation",
+          "electrician",
+          "auto mechanic",
+          "mechanic"
+        ],
+        "fr": [
+          "réparation électrique, téléphone et auto",
+          "électricien",
+          "réparation de téléphones",
+          "mécanicien"
+        ],
+        "es": [
+          "reparación eléctrica, de teléfonos y autos",
+          "electricista",
+          "reparación de celulares",
+          "mecánico"
+        ],
+        "pt": [
+          "reparação elétrica, de celulares e automóveis",
+          "eletricista",
+          "conserto de celulares",
+          "mecânico"
+        ],
+        "sw": [
+          "ufundi umeme, simu na magari",
+          "fundi umeme",
+          "fundi simu",
+          "fundi magari"
+        ],
+        "am": [
+          "የኤሌክትሪክ፣ የስልክ እና የመኪና ጥገና",
+          "ኤሌክትሪሻን",
+          "የስልክ ጥገና",
+          "መካኒክ"
+        ]
+      },
+      "parent": "industry:trades",
+      "weakAliases": {
+        "en": [
+          "repair"
+        ]
+      }
+    },
+    {
+      "id": "skill:legal-drafting",
+      "facet": "skill",
+      "labels": {
+        "en": "Legal research & drafting",
+        "fr": "Recherche et rédaction juridiques",
+        "es": "Investigación y redacción jurídica",
+        "pt": "Pesquisa e redação jurídica",
+        "sw": "Utafiti na uandishi wa kisheria",
+        "am": "የሕግ ምርምር እና ረቂቅ ዝግጅት"
+      },
+      "aliases": {
+        "en": [
+          "legal drafting",
+          "legaldrafting",
+          "contract drafting",
+          "legal research"
+        ],
+        "fr": [
+          "recherche et rédaction juridiques",
+          "rédaction juridique",
+          "rédaction de contrats"
+        ],
+        "es": [
+          "investigación y redacción jurídica",
+          "redacción de contratos"
+        ],
+        "pt": [
+          "pesquisa e redação jurídica",
+          "redação de contratos"
+        ],
+        "sw": [
+          "utafiti na uandishi wa kisheria",
+          "uandishi wa mikataba"
+        ],
+        "am": [
+          "የሕግ ምርምር እና ረቂቅ ዝግጅት",
+          "የውል ረቂቅ"
+        ]
+      },
+      "parent": "industry:law"
+    },
+    {
+      "id": "skill:architectural-design",
+      "facet": "skill",
+      "labels": {
+        "en": "Architectural design & CAD",
+        "fr": "Conception architecturale et DAO",
+        "es": "Diseño arquitectónico y CAD",
+        "pt": "Projeto arquitetônico e CAD",
+        "sw": "Usanifu wa majengo na CAD",
+        "am": "የሥነ ሕንፃ ዲዛይን እና ካድ"
+      },
+      "aliases": {
+        "en": [
+          "autocad",
+          "revit",
+          "archicad",
+          "sketchup",
+          "architectural design",
+          "3d modelling"
+        ],
+        "fr": [
+          "conception architecturale et dao",
+          "dao",
+          "modélisation 3d"
+        ],
+        "es": [
+          "diseño arquitectónico y cad",
+          "modelado 3d"
+        ],
+        "pt": [
+          "projeto arquitetônico e cad",
+          "modelagem 3d"
+        ],
+        "sw": [
+          "usanifu wa majengo na cad",
+          "uundaji wa 3d"
+        ],
+        "am": [
+          "የሥነ ሕንፃ ዲዛይን እና ካድ",
+          "ባለ 3ዲ ሞዴሊንግ"
+        ]
+      },
+      "parent": "industry:architecture"
+    },
+    {
+      "id": "skill:translation",
+      "facet": "skill",
+      "labels": {
+        "en": "Languages & translation",
+        "fr": "Langues et traduction",
+        "es": "Idiomas y traducción",
+        "pt": "Idiomas e tradução",
+        "sw": "Lugha na tafsiri",
+        "am": "ቋንቋ እና ትርጉም"
+      },
+      "aliases": {
+        "en": [
+          "translation",
+          "translator",
+          "interpreters and translators",
+          "interpreter",
+          "transcription"
+        ],
+        "fr": [
+          "langues et traduction",
+          "traduction",
+          "traducteur",
+          "interprète"
+        ],
+        "es": [
+          "idiomas y traducción",
+          "traducción",
+          "traductor",
+          "intérprete"
+        ],
+        "pt": [
+          "idiomas e tradução",
+          "tradução",
+          "tradutor",
+          "intérprete"
+        ],
+        "sw": [
+          "lugha na tafsiri",
+          "tafsiri",
+          "mfasiri",
+          "mkalimani"
+        ],
+        "am": [
+          "ቋንቋ እና ትርጉም",
+          "ትርጉም",
+          "ተርጓሚ",
+          "አስተርጓሚ"
+        ]
+      }
+    },
+    {
+      "id": "skill:event-planning",
+      "facet": "skill",
+      "labels": {
+        "en": "Event planning & hosting",
+        "fr": "Organisation et animation d'événements",
+        "es": "Organización y presentación de eventos",
+        "pt": "Organização e apresentação de eventos",
+        "sw": "Upangaji na uendeshaji wa matukio",
+        "am": "የዝግጅት እቅድ እና አስተናጋጅነት"
+      },
+      "aliases": {
+        "en": [
+          "event planning",
+          "event management",
+          "event hostess",
+          "mc",
+          "compere",
+          "hosting"
+        ],
+        "fr": [
+          "organisation et animation d'événements",
+          "événementiel",
+          "maître de cérémonie"
+        ],
+        "es": [
+          "organización y presentación de eventos",
+          "organización de eventos",
+          "maestro de ceremonias"
+        ],
+        "pt": [
+          "organização e apresentação de eventos",
+          "produção de eventos",
+          "mestre de cerimônias"
+        ],
+        "sw": [
+          "upangaji na uendeshaji wa matukio",
+          "mshereheshaji",
+          "mc"
+        ],
+        "am": [
+          "የዝግጅት እቅድ እና አስተናጋጅነት",
+          "የመድረክ መሪ"
+        ]
+      },
+      "parent": "industry:hospitality"
+    },
+    {
+      "id": "skill:communication",
+      "facet": "skill",
+      "labels": {
+        "en": "Communication",
+        "fr": "Communication",
+        "es": "Comunicación",
+        "pt": "Comunicação",
+        "sw": "Mawasiliano",
+        "am": "ተግባቦት"
+      },
+      "aliases": {
+        "en": [
+          "communication",
+          "communications",
+          "public speaking",
+          "publicspeaking",
+          "publicspeaker"
+        ],
+        "fr": [
+          "communication",
+          "prise de parole en public",
+          "présentation"
+        ],
+        "es": [
+          "comunicación",
+          "oratoria",
+          "hablar en público"
+        ],
+        "pt": [
+          "comunicação",
+          "oratória",
+          "falar em público"
+        ],
+        "sw": [
+          "mawasiliano",
+          "kuzungumza hadharani",
+          "uwasilishaji"
+        ],
+        "am": [
+          "ተግባቦት",
+          "የአደባባይ ንግግር",
+          "አቀራረብ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "presentation"
+        ]
+      }
+    },
+    {
+      "id": "skill:leadership",
+      "facet": "skill",
+      "labels": {
+        "en": "Leadership & team management",
+        "fr": "Leadership et gestion d'équipe",
+        "es": "Liderazgo y gestión de equipos",
+        "pt": "Liderança e gestão de equipes",
+        "sw": "Uongozi na usimamizi wa timu",
+        "am": "አመራር እና የቡድን አስተዳደር"
+      },
+      "aliases": {
+        "en": [
+          "leadership",
+          "team leadership",
+          "team management",
+          "teammanagement",
+          "leadership&coordination",
+          "team leader",
+          "team leaders",
+          "people management"
+        ],
+        "fr": [
+          "leadership et gestion d'équipe",
+          "leadership",
+          "gestion d'équipe",
+          "chef d'équipe"
+        ],
+        "es": [
+          "liderazgo y gestión de equipos",
+          "liderazgo",
+          "gestión de equipos"
+        ],
+        "pt": [
+          "liderança e gestão de equipes",
+          "liderança",
+          "gestão de equipes"
+        ],
+        "sw": [
+          "uongozi na usimamizi wa timu",
+          "uongozi",
+          "kiongozi wa timu"
+        ],
+        "am": [
+          "አመራር እና የቡድን አስተዳደር",
+          "አመራር",
+          "የቡድን መሪ"
+        ]
+      }
+    },
+    {
+      "id": "skill:problem-solving",
+      "facet": "skill",
+      "labels": {
+        "en": "Problem solving & critical thinking",
+        "fr": "Résolution de problèmes et esprit critique",
+        "es": "Resolución de problemas y pensamiento crítico",
+        "pt": "Resolução de problemas e pensamento crítico",
+        "sw": "Utatuzi wa matatizo na fikra tunduizi",
+        "am": "ችግር ፈቺነት እና ሂሳዊ አስተሳሰብ"
+      },
+      "aliases": {
+        "en": [
+          "problem solving",
+          "problem solver",
+          "critical thinking",
+          "criticalthinkingandproblemsolving",
+          "analytical thinking",
+          "design thinking"
+        ],
+        "fr": [
+          "résolution de problèmes et esprit critique",
+          "résolution de problèmes",
+          "esprit critique",
+          "innovation"
+        ],
+        "es": [
+          "resolución de problemas y pensamiento crítico",
+          "resolución de problemas",
+          "pensamiento crítico",
+          "innovación"
+        ],
+        "pt": [
+          "resolução de problemas e pensamento crítico",
+          "resolução de problemas",
+          "pensamento crítico",
+          "inovação"
+        ],
+        "sw": [
+          "utatuzi wa matatizo na fikra tunduizi",
+          "kutatua matatizo",
+          "ubunifu"
+        ],
+        "am": [
+          "ችግር ፈቺነት እና ሂሳዊ አስተሳሰብ",
+          "ችግር መፍታት",
+          "ፈጠራ"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "innovation"
+        ]
+      }
+    },
+    {
+      "id": "skill:teamwork",
+      "facet": "skill",
+      "labels": {
+        "en": "Teamwork & collaboration",
+        "fr": "Travail d'équipe et collaboration",
+        "es": "Trabajo en equipo y colaboración",
+        "pt": "Trabalho em equipe e colaboração",
+        "sw": "Kazi ya pamoja na ushirikiano",
+        "am": "የቡድን ሥራ እና ትብብር"
+      },
+      "aliases": {
+        "en": [
+          "teamcollaboration",
+          "teamwork",
+          "partnership development"
+        ],
+        "fr": [
+          "travail d'équipe et collaboration",
+          "travail en équipe",
+          "collaboration",
+          "partenariat"
+        ],
+        "es": [
+          "trabajo en equipo y colaboración",
+          "trabajo en equipo",
+          "colaboración",
+          "alianzas"
+        ],
+        "pt": [
+          "trabalho em equipe e colaboração",
+          "trabalho em equipe",
+          "colaboração",
+          "parcerias"
+        ],
+        "sw": [
+          "kazi ya pamoja na ushirikiano",
+          "ushirikiano",
+          "ubia"
+        ],
+        "am": [
+          "የቡድን ሥራ እና ትብብር",
+          "ትብብር",
+          "አጋርነት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "collaboration",
+          "partnership"
+        ]
+      }
+    },
+    {
+      "id": "skill:time-management",
+      "facet": "skill",
+      "labels": {
+        "en": "Time management & organisation",
+        "fr": "Gestion du temps et organisation",
+        "es": "Gestión del tiempo y organización",
+        "pt": "Gestão do tempo e organização",
+        "sw": "Usimamizi wa muda na mpangilio",
+        "am": "የጊዜ አጠቃቀም እና አደረጃጀት"
+      },
+      "aliases": {
+        "en": [
+          "attention to detail",
+          "attention to details",
+          "attentiontodetail",
+          "fast learner",
+          "resourceful",
+          "empathy",
+          "time management",
+          "adaptability",
+          "multitasking"
+        ],
+        "fr": [
+          "gestion du temps et organisation",
+          "gestion du temps",
+          "organisation",
+          "rigueur"
+        ],
+        "es": [
+          "gestión del tiempo y organización",
+          "gestión del tiempo",
+          "organización"
+        ],
+        "pt": [
+          "gestão do tempo e organização",
+          "gestão do tempo",
+          "organização"
+        ],
+        "sw": [
+          "usimamizi wa muda na mpangilio",
+          "usimamizi wa muda",
+          "mpangilio"
+        ],
+        "am": [
+          "የጊዜ አጠቃቀም እና አደረጃጀት",
+          "የጊዜ አጠቃቀም"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "confidence",
+          "organisation",
+          "organization"
+        ]
+      }
+    },
+    {
+      "id": "skill:research",
+      "facet": "skill",
+      "labels": {
+        "en": "Research",
+        "fr": "Recherche",
+        "es": "Investigación",
+        "pt": "Pesquisa",
+        "sw": "Utafiti",
+        "am": "ምርምር"
+      },
+      "aliases": {
+        "en": [],
+        "fr": [
+          "recherche",
+          "recherche documentaire"
+        ],
+        "es": [
+          "investigación"
+        ],
+        "pt": [
+          "pesquisa"
+        ],
+        "sw": [
+          "utafiti"
+        ],
+        "am": [
+          "ምርምር"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "research"
+        ]
+      }
+    },
+    {
+      "id": "skill:career-development",
+      "facet": "skill",
+      "labels": {
+        "en": "Career development",
+        "fr": "Développement de carrière",
+        "es": "Desarrollo profesional",
+        "pt": "Desenvolvimento de carreira",
+        "sw": "Ukuzaji wa taaluma",
+        "am": "የሙያ ዕድገት"
+      },
+      "aliases": {
+        "en": [
+          "careergrowth",
+          "careerstrategy",
+          "career growth",
+          "professional development",
+          "career development",
+          "cv writing",
+          "career fair",
+          "future of work",
+          "personaldevelopment",
+          "personal development"
+        ],
+        "fr": [
+          "développement de carrière",
+          "carrière",
+          "développement professionnel",
+          "développement personnel"
+        ],
+        "es": [
+          "desarrollo profesional",
+          "carrera",
+          "desarrollo personal",
+          "hoja de vida",
+          "curriculum vitae"
+        ],
+        "pt": [
+          "desenvolvimento de carreira",
+          "carreira",
+          "desenvolvimento pessoal",
+          "currículo vitae"
+        ],
+        "sw": [
+          "ukuzaji wa taaluma",
+          "taaluma",
+          "wasifu",
+          "maendeleo binafsi"
+        ],
+        "am": [
+          "የሙያ ዕድገት",
+          "ሙያ",
+          "የሥራ ልምድ ማስረጃ",
+          "የግል ዕድገት"
+        ]
+      },
+      "weakAliases": {
+        "en": [
+          "career",
+          "talent"
+        ]
+      }
+    }
+  ],
+  "senses": [
+    {
+      "terms": [
+        "education",
+        "educational",
+        "éducation",
+        "educación",
+        "educação",
+        "elimu",
+        "ትምህርት"
+      ],
+      "window": 8,
+      "default": "industry:education",
+      "rules": [
+        {
+          "near": [
+            "learn",
+            "learning",
+            "course",
+            "courses",
+            "bootcamp",
+            "certificate",
+            "certification",
+            "upskill",
+            "training",
+            "formation",
+            "cours",
+            "curso",
+            "mafunzo"
+          ],
+          "tag": "type:training-programme"
+        },
+        {
+          "near": [
+            "tuition",
+            "fees",
+            "study",
+            "studies",
+            "admission",
+            "degree",
+            "masters",
+            "undergraduate",
+            "phd",
+            "fully funded",
+            "scolarité",
+            "matrícula",
+            "ada"
+          ],
+          "tag": "type:scholarship"
+        },
+        {
+          "near": [
+            "teacher",
+            "teachers",
+            "teaching",
+            "school",
+            "schools",
+            "curriculum",
+            "lecturer",
+            "classroom",
+            "pupils",
+            "enseignant",
+            "profesor",
+            "mwalimu"
+          ],
+          "tag": "industry:education"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "development",
+        "développement",
+        "desarrollo",
+        "desenvolvimento",
+        "maendeleo"
+      ],
+      "window": 3,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "software",
+            "web",
+            "app",
+            "apps",
+            "mobile",
+            "frontend",
+            "backend",
+            "full stack",
+            "logiciel"
+          ],
+          "tag": "skill:software-development"
+        },
+        {
+          "near": [
+            "international",
+            "humanitarian",
+            "ngo",
+            "undp",
+            "usaid",
+            "sustainable",
+            "rural",
+            "economic",
+            "humanitaire",
+            "durable"
+          ],
+          "tag": "industry:development"
+        },
+        {
+          "near": [
+            "personal",
+            "career",
+            "professional",
+            "self",
+            "personnel",
+            "professionnel"
+          ],
+          "tag": "skill:career-development"
+        },
+        {
+          "near": [
+            "business",
+            "commercial"
+          ],
+          "tag": "skill:sales"
+        },
+        {
+          "near": [
+            "curriculum"
+          ],
+          "tag": "skill:curriculum"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "design",
+        "designer",
+        "designers",
+        "conception",
+        "diseño"
+      ],
+      "window": 3,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "graphic",
+            "graphics",
+            "logo",
+            "brand",
+            "branding",
+            "canva",
+            "photoshop",
+            "flyer",
+            "graphique"
+          ],
+          "tag": "skill:graphic-design"
+        },
+        {
+          "near": [
+            "ui",
+            "ux",
+            "product",
+            "figma",
+            "interface",
+            "app"
+          ],
+          "tag": "skill:product-design"
+        },
+        {
+          "near": [
+            "interior",
+            "building",
+            "architectural",
+            "cad",
+            "house",
+            "intérieur"
+          ],
+          "tag": "industry:architecture"
+        },
+        {
+          "near": [
+            "fashion",
+            "clothing",
+            "garment",
+            "garments",
+            "mode"
+          ],
+          "tag": "skill:tailoring"
+        },
+        {
+          "near": [
+            "instructional",
+            "curriculum",
+            "learning"
+          ],
+          "tag": "skill:curriculum"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "security",
+        "sécurité",
+        "seguridad",
+        "segurança",
+        "usalama"
+      ],
+      "window": 3,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "cyber",
+            "network",
+            "information",
+            "data",
+            "it",
+            "software",
+            "cloud",
+            "informatique"
+          ],
+          "tag": "skill:cybersecurity"
+        },
+        {
+          "near": [
+            "guard",
+            "guards",
+            "cctv",
+            "patrol",
+            "officer",
+            "officers",
+            "access control",
+            "private",
+            "gardiennage",
+            "mlinzi"
+          ],
+          "tag": "industry:security"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "engineer",
+        "engineers",
+        "engineering",
+        "ingénieur",
+        "ingeniero",
+        "engenheiro",
+        "mhandisi"
+      ],
+      "window": 3,
+      "default": "industry:engineering",
+      "rules": [
+        {
+          "near": [
+            "software",
+            "data",
+            "devops",
+            "backend",
+            "frontend",
+            "web",
+            "full stack",
+            "machine learning",
+            "cloud",
+            "logiciel"
+          ],
+          "tag": "skill:software-development"
+        },
+        {
+          "near": [
+            "aerospace",
+            "aeronautical",
+            "satellite",
+            "aviation",
+            "aircraft"
+          ],
+          "tag": "industry:space",
+          "keepDefault": true
+        },
+        {
+          "near": [
+            "mining",
+            "petroleum",
+            "geology",
+            "metallurgical"
+          ],
+          "tag": "industry:mining",
+          "keepDefault": true
+        },
+        {
+          "near": [
+            "sales",
+            "solutions",
+            "presales"
+          ],
+          "tag": "skill:sales"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "program",
+        "programme",
+        "programs",
+        "programmes",
+        "programa",
+        "programu"
+      ],
+      "window": 4,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "training",
+            "leadership",
+            "accelerator",
+            "incubator",
+            "graduate",
+            "cohort",
+            "fellowship",
+            "trainee",
+            "formation",
+            "mafunzo"
+          ],
+          "tag": "type:training-programme"
+        },
+        {
+          "near": [
+            "exchange",
+            "study abroad"
+          ],
+          "tag": "type:scholarship"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "remote",
+        "remotely",
+        "distance"
+      ],
+      "window": 4,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "work",
+            "job",
+            "role",
+            "position",
+            "from home",
+            "anywhere",
+            "team",
+            "opportunity",
+            "hire",
+            "hiring"
+          ],
+          "tag": "work:remote"
+        },
+        {
+          "near": [
+            "area",
+            "areas",
+            "village",
+            "villages",
+            "rural",
+            "communities"
+          ],
+          "tag": "community:underserved"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "community",
+        "communities",
+        "communauté",
+        "comunidad",
+        "comunidade",
+        "jamii"
+      ],
+      "window": 3,
+      "default": null,
+      "rules": [
+        {
+          "near": [
+            "service",
+            "volunteer",
+            "ngo",
+            "impact",
+            "outreach",
+            "based",
+            "development",
+            "health workers"
+          ],
+          "tag": "community:changemakers"
+        },
+        {
+          "near": [
+            "manager",
+            "management",
+            "social media",
+            "online",
+            "discord"
+          ],
+          "tag": "skill:social-media"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "funding",
+        "funded",
+        "financement",
+        "financiación",
+        "financiamento",
+        "ufadhili"
+      ],
+      "window": 6,
+      "default": "type:grant",
+      "weakDefault": true,
+      "rules": [
+        {
+          "near": [
+            "startup",
+            "startups",
+            "founder",
+            "founders",
+            "seed",
+            "pitch",
+            "venture",
+            "business",
+            "entrepreneur",
+            "entrepreneurs"
+          ],
+          "tag": "community:founders",
+          "keepDefault": true
+        },
+        {
+          "near": [
+            "tuition",
+            "study",
+            "students",
+            "university",
+            "masters",
+            "phd",
+            "degree"
+          ],
+          "tag": "type:scholarship"
+        }
+      ]
+    },
+    {
+      "terms": [
+        "women",
+        "woman",
+        "female",
+        "females"
+      ],
+      "window": 6,
+      "default": "community:women",
+      "suppress": [
+        "encouraged to apply",
+        "equal opportunity",
+        "regardless of gender",
+        "men and women",
+        "both genders",
+        "women and men",
+        "all genders"
+      ]
+    },
+    {
+      "terms": [
+        "disability",
+        "disabilities",
+        "disabled"
+      ],
+      "window": 6,
+      "default": "community:disability",
+      "suppress": [
+        "encouraged to apply",
+        "equal opportunity",
+        "regardless of",
+        "without discrimination"
+      ]
+    }
+  ],
+  "drop": {
+    "values": [
+      "job",
+      "jobs",
+      "opportunity",
+      "opportunities",
+      "other",
+      "general",
+      "program",
+      "event",
+      "events",
+      "resources",
+      "fyp",
+      "trending",
+      "hot",
+      "youneedtobethere",
+      "candidates",
+      "professional",
+      "professionals",
+      "qualified professionals",
+      "recipients",
+      "applicants",
+      "visibility",
+      "dream big",
+      "moonshot",
+      "campaign",
+      "social",
+      "service",
+      "success and service",
+      "leaders",
+      "leader",
+      "oerb",
+      "m-pesa",
+      "nrc",
+      "biggiespacetech",
+      "shems",
+      "hcs affiliates group",
+      "givedirectly",
+      "eqms",
+      "oppourtunity",
+      "call for applications",
+      "opportunitydriven",
+      "therighttimeisnow",
+      "future",
+      "showcase",
+      "home",
+      "style",
+      "expedition",
+      "rave",
+      "empowerment",
+      "project",
+      "assistant",
+      "supervisor",
+      "operator",
+      "store",
+      "mid level",
+      "consumers",
+      "general public",
+      "businesses",
+      "global audiences",
+      "african audiences"
+    ],
+    "patterns": [
+      "^lang:",
+      "^candidates? (with|who)",
+      "\\b20\\d\\d\\b",
+      "^proficien",
+      "^willing to",
+      "^individuals with",
+      "environment$"
+    ]
+  },
+  "places": {
+    "contains": [
+      "nigeria",
+      "lagos",
+      "abuja",
+      "fct",
+      "ibadan",
+      "oyo",
+      "ogun",
+      "ogun state",
+      "akwa ibom",
+      "awka ibom",
+      "kenya",
+      "nairobi",
+      "marsabit",
+      "kaloleni",
+      "ethiopia",
+      "addis ababa",
+      "woreda",
+      "kaduna",
+      "kano",
+      "wuse",
+      "senegal",
+      "rwanda",
+      "destination rwanda",
+      "cameroon",
+      "ghana",
+      "canada",
+      "usa",
+      "jobsinabuja",
+      "abujaevents",
+      "nile",
+      "boma",
+      "futureofafrica",
+      "accessforafricans",
+      "cameroonian citizens"
+    ],
+    "exact": [
+      "africa",
+      "global",
+      "international",
+      "worldwide"
+    ]
+  },
+  "maxTagsPerListing": 10
+}

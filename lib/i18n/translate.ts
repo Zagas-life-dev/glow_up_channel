@@ -11,9 +11,11 @@ import { type Dictionary, en } from "@/lib/i18n/dictionaries/en"
 import { es } from "@/lib/i18n/dictionaries/es"
 import { fr } from "@/lib/i18n/dictionaries/fr"
 import { pt } from "@/lib/i18n/dictionaries/pt"
+import { sw } from "@/lib/i18n/dictionaries/sw"
+import { am } from "@/lib/i18n/dictionaries/am"
 import type { Locale } from "@/lib/i18n/config"
 
-export const DICTIONARIES: Record<Locale, Dictionary> = { en, fr, es, pt }
+export const DICTIONARIES: Record<Locale, Dictionary> = { en, fr, es, pt, sw, am }
 
 /** Dot-separated paths to every string in the dictionary. */
 export type TranslationKey = {

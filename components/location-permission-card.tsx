@@ -83,10 +83,20 @@ export function LocationPermissionCard({
   if (permission === "granted" || permission === "unsupported") return null
 
   if (permission === "denied") {
+    // The browser will not ask again, so a button cannot help — only the steps
+    // to undo the block in the browser itself can.
     return (
-      <p className={cn("text-xs text-muted-foreground", className)}>
-        {t("location.permissionDenied")}
-      </p>
+      <div className={cn("space-y-1 text-xs text-muted-foreground", className)}>
+        <p>{t("location.permissionDenied")}</p>
+        <details>
+          <summary className="cursor-pointer text-primary">{t("location.blockedStepsTitle")}</summary>
+          <ol className="mt-1 list-decimal space-y-0.5 pl-5">
+            <li>{t("location.blockedStep1")}</li>
+            <li>{t("location.blockedStep2")}</li>
+            <li>{t("location.blockedStep3")}</li>
+          </ol>
+        </details>
+      </div>
     )
   }
 
@@ -127,7 +137,7 @@ export function LocationPermissionCard({
               disabled={requesting}
               className="rounded-xl"
             >
-              {requesting ? t("common.loading") : t("location.permissionAllow")}
+              {requesting ? t("common.loading") : t("location.useMyLocation")}
             </Button>
             <Button
               type="button"

@@ -113,13 +113,13 @@ describe("coreTags", () => {
 describe("weak aliases", () => {
   it("treats a hint word as weaker evidence than a real alias", () => {
     const seed = matchTags("seed funding")
-    expect(seed.get("entrepreneurship-funding") ?? 0).toBeGreaterThan(
-      seed.get("scholarships-grants") ?? 0,
+    expect(seed.get("community:founders") ?? 0).toBeGreaterThan(
+      seed.get("type:scholarship") ?? 0,
     )
 
     const online = matchTags("online course")
-    expect(online.get("training-workshops") ?? 0).toBeGreaterThan(
-      online.get("remote-digital-skills") ?? 0,
+    expect(online.get("type:course") ?? 0).toBeGreaterThan(
+      online.get("work:remote") ?? 0,
     )
   })
 
@@ -127,19 +127,19 @@ describe("weak aliases", () => {
     // "Funding" twice in a title (weight 3) used to clear the clamp and read as
     // certainty, so a startup toolkit profiled as being exactly as much about
     // scholarships as about entrepreneurship.
-    const scholarships = ideal.coreTags.get("scholarships-grants") ?? 0
-    const entrepreneurship = ideal.coreTags.get("entrepreneurship-funding") ?? 0
+    const scholarships = ideal.coreTags.get("type:scholarship") ?? 0
+    const entrepreneurship = ideal.coreTags.get("community:founders") ?? 0
 
     expect(entrepreneurship).toBeGreaterThan(scholarships)
     expect(scholarships).toBeLessThan(0.5)
   })
 
   it("still lets an unambiguous alias reach full strength", () => {
-    expect(matchTags("scholarship").get("scholarships-grants") ?? 0).toBeGreaterThan(0.7)
+    expect(matchTags("scholarship").get("type:scholarship") ?? 0).toBeGreaterThan(0.7)
   })
 
   it("does not read a business degree as an interest in the public sector", () => {
     const study = profileUser({ fieldOfStudy: "Business Administration" }, "en")
-    expect(study.coreTags.get("government-public") ?? 0).toBeLessThan(0.5)
+    expect(study.coreTags.get("industry:government") ?? 0).toBeLessThan(0.5)
   })
 })

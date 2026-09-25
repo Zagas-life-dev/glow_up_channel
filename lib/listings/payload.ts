@@ -30,6 +30,7 @@
 import type { MoneyPayload } from "@/lib/currency/use-amount-entry"
 import type { PayPeriod } from "@/components/posting/AmountCurrencyField"
 import { BASE_CURRENCY } from "@/lib/currency/catalog"
+import { knownTagIds } from "@/lib/nlp/taxonomy"
 import {
   cleanIndustrySectors,
   cleanTags,
@@ -48,6 +49,8 @@ export type ListingLocation = {
   city?: string
   address?: string
   isRemote?: boolean
+  /** Remote only: ISO codes of the countries applicants may be in. Empty = anywhere. */
+  remoteCountries?: string[]
 }
 
 export type ListingDates = {
@@ -68,6 +71,12 @@ export type ListingDraft = {
   /** The per-kind type/category selection. */
   type?: string
   tags?: string[]
+  /**
+   * Official tag ids picked in the tag picker. Sent only when the form has a
+   * picker: omitting it leaves the listing's stored tags to the backend's
+   * tagger, where sending `[]` would say "no tags" on purpose.
+   */
+  canonicalTags?: string[]
   industrySectors?: string[]
   targetAudience?: string[]
   location?: ListingLocation
@@ -146,6 +155,11 @@ function buildLocation(location: ListingLocation | undefined) {
     city: text(location.city),
     address: text(location.address),
     isRemote: Boolean(location.isRemote),
+    ...(location.isRemote && Array.isArray(location.remoteCountries) && {
+      remoteCountries: location.remoteCountries
+        .map((code) => text(code)?.toUpperCase())
+        .filter((code): code is string => Boolean(code)),
+    }),
   }
   // A wholly empty location object is worse than none: it overwrites whatever a
   // previous edit set and gives the ranker an object that looks populated.
@@ -209,6 +223,7 @@ export function buildListingPayload(draft: ListingDraft): Record<string, unknown
     title: draft.title.trim(),
     description: draft.description.trim(),
     tags: cleanTags(draft.tags),
+    ...(draft.canonicalTags !== undefined && { canonicalTags: knownTagIds(draft.canonicalTags) }),
     industrySectors: cleanIndustrySectors(draft.industrySectors),
     targetAudience: cleanTargetAudience(draft.targetAudience),
     pricing,

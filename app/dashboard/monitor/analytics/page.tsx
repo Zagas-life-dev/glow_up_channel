@@ -32,6 +32,7 @@ import {
   statusToneClass,
 } from "@/components/provider/provider-ui"
 import { ListingAnalyticsSummary } from "@/components/analytics/listing-analytics"
+import { LocationAudiencePanel } from "@/components/analytics/location-audience-panel"
 import {
   EMPTY_TOTALS,
   formatCount,
@@ -174,6 +175,9 @@ function MonitorAnalyticsContent() {
           >
             <ListingAnalyticsSummary totals={totals} />
           </Panel>
+
+          {/* Only the assigned listings — the backend scopes this to the monitor. */}
+          <LocationAudiencePanel monitorId={selected === SELF ? undefined : selected} />
 
           <Panel
             icon={Zap}
