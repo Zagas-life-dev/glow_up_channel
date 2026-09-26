@@ -55,6 +55,42 @@ export async function fetchTaggingStats(): Promise<Partial<Record<TaggingStatus,
   return unwrap(await ApiClient.makeAuthenticatedRequest(`${BASE}/stats`))
 }
 
+export interface TaggingRunRecord {
+  id: string
+  mode: "gemini-first" | "local-only"
+  model: string
+  retryGaveUp: boolean
+  startedBy?: string
+  startedAt: string
+  finishedAt?: string | null
+  state: "running" | "done" | "stopped" | "failed"
+  total?: number
+  done?: number
+  ok?: number
+  failed?: number
+  complete?: number
+  byProvider?: Record<string, number>
+  avgSeconds?: number | null
+  error?: string | null
+  restarts?: number
+  modelsUsed?: string[]
+}
+
+export interface TaggingQuality {
+  total: number
+  /** Listings with a tag in every group their kind requires. */
+  withAllRequired: number
+  averageTags: number
+  byStatus: Partial<Record<TaggingStatus, number>>
+  /** Which AI last tagged a listing: gemini, gemini-backup, local. */
+  byProvider: Record<string, number>
+  recentRuns: TaggingRunRecord[]
+}
+
+export async function fetchTaggingQuality(): Promise<TaggingQuality> {
+  return unwrap(await ApiClient.makeAuthenticatedRequest(`${BASE}/quality`))
+}
+
 export async function fetchTaggingQueue(status: Exclude<TaggingStatus, "untagged">): Promise<QueueRow[]> {
   const data = await unwrap<{ listings: QueueRow[] }>(
     await ApiClient.makeAuthenticatedRequest(`${BASE}/queue?status=${status}&limit=100`),

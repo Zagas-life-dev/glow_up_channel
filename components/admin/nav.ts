@@ -17,6 +17,8 @@ import {
   RiSettings3Line,
   RiGiftLine,
   RiFlashlightLine,
+  RiPriceTag3Line,
+  RiComputerLine,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -51,6 +53,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Create content", href: "/dashboard/admin/create-content", icon: RiAddCircleLine },
       { label: "Gifts", href: "/dashboard/admin/gifts", icon: RiGiftLine },
       { label: "Past posts", href: "/dashboard/admin/past-posts", icon: RiArchiveLine },
+      { label: "Tagging", href: "/dashboard/admin/tagging", icon: RiPriceTag3Line },
+      { label: "Local tagger", href: "/dashboard/admin/tagging/local", icon: RiComputerLine },
       { label: "Work with us", href: "/dashboard/admin/work-with-us", icon: RiInboxUnarchiveLine },
     ],
   },

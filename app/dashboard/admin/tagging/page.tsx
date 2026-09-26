@@ -9,8 +9,9 @@
  * tag as admin-chosen, which the rules and the AI then never overwrite.
  */
 
+import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
-import { RiCheckLine, RiErrorWarningLine, RiMapPinLine, RiRobot2Line, RiTimeLine } from "react-icons/ri"
+import { RiCheckLine, RiComputerLine, RiErrorWarningLine, RiMapPinLine, RiRobot2Line, RiTimeLine } from "react-icons/ri"
 import { toast } from "sonner"
 
 import { AdminShell } from "@/components/admin/admin-shell"
@@ -301,6 +302,14 @@ export default function AdminTaggingPage() {
       onRefresh={load}
       refreshing={loading}
       width="wide"
+      actions={
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link href="/dashboard/admin/tagging/local">
+            <RiComputerLine className="mr-1.5 h-4 w-4" aria-hidden />
+            Local tagger
+          </Link>
+        </Button>
+      }
     >
       <div className="space-y-5">
         <AdminStatGrid>
@@ -310,7 +319,7 @@ export default function AdminTaggingPage() {
             label="AI failed"
             value={((stats.ai_failed ?? 0) + (stats.ai_gave_up ?? 0)).toLocaleString()}
             icon={RiErrorWarningLine}
-            hint="Retried nightly, up to 5 times"
+            hint="Retried by the weekly local run"
           />
           <AdminStat label="Location missing" value={tab === "location" ? missing.length.toLocaleString() : "—"} icon={RiMapPinLine} />
         </AdminStatGrid>

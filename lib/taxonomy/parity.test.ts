@@ -27,7 +27,9 @@ const require = createRequire(import.meta.url)
 const backend = require(join(root, "latest-glowup-channel/src/taxonomy/index.js"))
 const backendText = require(join(root, "latest-glowup-channel/src/taxonomy/text.js"))
 
-const read = (path: string) => readFileSync(join(root, path), "utf8")
+// Line endings aside: the two repos can be checked out with different
+// core.autocrlf settings, which rewrites one copy with CRLF on disk.
+const read = (path: string) => readFileSync(join(root, path), "utf8").replace(/\r\n/g, "\n")
 
 describe("shared data files", () => {
   it("keeps the taxonomy identical on both sides", () => {
