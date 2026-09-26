@@ -24,7 +24,7 @@
  *   everything else      not intercepted
  */
 
-const VERSION = "v3"
+const VERSION = "v4"
 const PRECACHE = `up-precache-${VERSION}`
 const DOCUMENTS = `up-documents-${VERSION}`
 const ASSETS = `up-assets-${VERSION}`
@@ -37,6 +37,8 @@ const PRECACHE_URLS = [
   OFFLINE_URL,
   "/icons/icon-192.png",
   "/icons/badge-96.png",
+  // The installed app's launch screen on Android draws the maskable icon.
+  "/icons/icon-maskable-192.png",
   // The start URL. The opening navigation of a first visit is not controlled by
   // this worker — it is what installs it — so without precaching, a user who
   // installs and immediately loses signal has nothing to open. Documents are
@@ -74,7 +76,11 @@ const STAMP = "x-up-cached-at"
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(PRECACHE).then((cache) => cache.addAll(PRECACHE_URLS)))
-  self.skipWaiting()
+  // A first install has nothing to replace, so it takes over at once. An update
+  // waits: activating deletes the previous version's caches, and a page still
+  // running the old build would then fail to lazy-load its own chunks. The page
+  // asks for the hand-over when the reader taps Refresh (components/register-sw.tsx).
+  if (!self.registration.active) self.skipWaiting()
 })
 
 self.addEventListener("activate", (event) => {
@@ -368,6 +374,10 @@ self.addEventListener("fetch", (event) => {
  * could be answered from caches that were still being deleted.
  */
 self.addEventListener("message", (event) => {
+  if (event.data === "up-skip-waiting") {
+    self.skipWaiting()
+    return
+  }
   if (event.data !== "up-clear-caches") return
   const reply = event.ports && event.ports[0]
   event.waitUntil(

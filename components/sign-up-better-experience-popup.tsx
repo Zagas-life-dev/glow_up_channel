@@ -2,9 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { X, Sparkles } from "lucide-react"
+import { Bookmark, Clock, Sparkles, X } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { UpLogo } from "@/components/up/up-logo"
+
+/** The reasons from the old one-line copy: save content, personal picks, deadlines. */
+const PERKS = [
+  { icon: Bookmark, text: "Save listings and build playlists" },
+  { icon: Sparkles, text: "A feed picked for your profile" },
+  { icon: Clock, text: "Deadline reminders so nothing slips" },
+]
 
 const STORAGE_KEY = "glowup-signup-better-experience-dismissed"
 const ENGAGEMENT_EVENT = "glowup-guest-engaged"
@@ -52,62 +61,66 @@ export default function SignUpBetterExperiencePopup() {
     setShow(false)
   }
 
-  if (!show || isAuthenticated) return null
+  if (isAuthenticated) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
-      role="dialog"
-      aria-labelledby="signup-better-title"
-      aria-describedby="signup-better-desc"
-    >
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        aria-hidden
-        onClick={handleDismiss}
-      />
-      <div className="relative w-full max-w-sm glass-surface p-6 animate-in zoom-in-95 duration-200">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute right-3 top-3 h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
-          onClick={handleDismiss}
-          aria-label="Dismiss"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
-            <Sparkles className="h-7 w-7 text-primary" aria-hidden />
-          </div>
-          <h2 id="signup-better-title" className="mt-4 text-xl font-bold text-foreground">
-            Sign up for a better experience
-          </h2>
-          <p id="signup-better-desc" className="mt-1 text-sm text-muted-foreground">
-            Create a free account to save content, get personalized recommendations, and never miss a deadline.
-          </p>
-
-          <Button
-            size="lg"
-            asChild
-            className="mt-6 w-full gap-2 rounded-xl bg-primary hover:bg-primary/90 font-semibold"
+    <Dialog open={show} onOpenChange={(open) => !open && handleDismiss()}>
+      <DialogContent className="max-w-[420px] gap-0 overflow-hidden p-0 sm:p-0 [&>button:last-child]:hidden">
+        {/* Navy hero with the tile stack, matching the sign-up page it leads to. */}
+        <div className="relative overflow-hidden bg-up-navy px-6 pb-6 pt-7 text-up-on-navy dark:bg-up-lead">
+          <span aria-hidden className="absolute -right-10 -top-12 h-[140px] w-[190px] -rotate-[8deg] rounded-[24px] bg-up-orange" />
+          <span aria-hidden className="absolute -top-6 right-14 h-[76px] w-[100px] rotate-[7deg] rounded-[18px] bg-up-lime" />
+          <button
+            type="button"
+            onClick={handleDismiss}
+            aria-label="Dismiss"
+            className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-[rgba(11,18,51,0.55)] text-up-on-navy transition-colors hover:bg-[rgba(11,18,51,0.75)]"
           >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="relative">
+            <span className="grid h-10 w-10 place-items-center rounded-up-sm bg-up-orange">
+              <UpLogo tone="navy" height={24} alt="" className="w-[74%]" />
+            </span>
+            <DialogTitle className="mt-7 max-w-[80%] pr-0 text-2xl leading-tight text-up-on-navy">
+              Sign up for a better <span className="text-up-orange">experience</span>
+            </DialogTitle>
+          </div>
+        </div>
+
+        {/* The three reasons, one row each. */}
+        <DialogDescription asChild>
+          <ul className="space-y-2.5 px-6 pt-5">
+            {PERKS.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-sm font-semibold text-foreground">
+                <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-up-sm bg-up-fill">
+                  <Icon className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                {text}
+              </li>
+            ))}
+          </ul>
+        </DialogDescription>
+
+        <div className="grid gap-2 px-6 pb-6 pt-5">
+          <Button asChild className="h-11 w-full">
             <Link href="/signup" onClick={handleDismiss}>
               Sign up free
             </Link>
           </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3 text-muted-foreground hover:text-foreground"
-            onClick={handleDismiss}
-          >
-            Maybe later
-          </Button>
+          <div className="flex items-center justify-between gap-3 text-[13px]">
+            <span className="text-muted-foreground">
+              Already on UP?{" "}
+              <Link href="/login" onClick={handleDismiss} className="font-bold text-foreground hover:underline">
+                Sign in
+              </Link>
+            </span>
+            <button type="button" onClick={handleDismiss} className="font-bold text-muted-foreground hover:text-foreground">
+              Maybe later
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

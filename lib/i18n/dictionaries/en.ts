@@ -49,8 +49,8 @@ export const en = {
     detected: "Detected {place}",
     useDetected: "Use this",
     permissionTitle: "Find opportunities near you",
-    permissionBody:
-      "UP uses your location to show jobs, events and scholarships in your country and city first, and to hide ones you can't apply for. We only save your approximate area, never your exact position, and you can turn this off any time in settings.",
+    permissionBody: "UP uses your location to show jobs, events and scholarships in your country and city first, and to hide ones you can't apply for.",
+    permissionPrivacy: "We only save your approximate area, never your exact position, and you can turn this off any time in settings.",
     permissionAllow: "Allow location",
     permissionDenied:
       "Location is blocked in your browser. We'll use your country from your connection instead.",
@@ -77,6 +77,7 @@ export const en = {
     permissionUnsupported: "Your browser does not support precise location.",
     usingProfile: "Using the location on your profile.",
     chooseCountry: "Show opportunities in",
+    searchCountries: "Search countries",
     yourCountry: "Your location",
     anywhere: "Anywhere",
     viewingFrom: "Showing {country}",

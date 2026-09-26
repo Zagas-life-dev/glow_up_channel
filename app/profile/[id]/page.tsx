@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
+import { useGoBack } from '@/lib/navigation/in-app-history'
 import { useAuth } from '@/lib/auth-context'
 import { usePlaylist, findSavedPlaylist, type Playlist as PlaylistWithItems } from '@/contexts/playlist-context'
 import { Button } from "@/components/ui/button"
@@ -340,6 +341,7 @@ function ChipList({
 export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
+  const goBack = useGoBack()
   const { isAuthenticated } = useAuth()
   const {
     savedPlaylists,
@@ -650,7 +652,7 @@ export default function ProfilePage() {
           </p>
           <Button
             type="button"
-            onClick={() => router.back()}
+            onClick={goBack}
             variant="outline"
             className="mt-8 h-11 rounded-2xl border-border/70 px-6"
           >
@@ -679,7 +681,7 @@ export default function ProfilePage() {
         <div className="sticky top-0 z-20 -mx-1 mb-1 flex items-center justify-between gap-2 border-b border-border bg-up-bar px-2 py-2.5 pt-[max(0.25rem,env(safe-area-inset-top))] backdrop-blur-xl sm:static sm:mx-0 sm:mb-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-3 sm:pt-0 sm:backdrop-blur-0">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={goBack}
             className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full text-muted-foreground transition-colors hover:bg-up-fill hover:text-foreground sm:min-w-0 sm:justify-start sm:px-3"
             aria-label="Go back"
           >

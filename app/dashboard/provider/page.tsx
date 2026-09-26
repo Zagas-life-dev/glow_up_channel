@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import { UP_KIND } from '@/components/up/kind'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
@@ -513,13 +514,12 @@ export default function ProviderDashboard() {
     }
   }
 
-  const handleDeleteContent = async (item: any) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${item.title}"? This action cannot be undone.`
-    )
+  const [confirmingDelete, setConfirmingDelete] = useState<any | null>(null)
+  const [deletingContent, setDeletingContent] = useState(false)
+  const handleDeleteContent = (item: any) => setConfirmingDelete(item)
 
-    if (!confirmed) return
-
+  const performDeleteContent = async (item: any) => {
+    setDeletingContent(true)
     try {
       switch (item.type) {
         case 'opportunity':
@@ -544,6 +544,9 @@ export default function ProviderDashboard() {
     } catch (error) {
       console.error('Error deleting content:', error)
       toast.error('Failed to delete content. Please try again.')
+    } finally {
+      setDeletingContent(false)
+      setConfirmingDelete(null)
     }
   }
 
@@ -843,6 +846,21 @@ export default function ProviderDashboard() {
           </Panel>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(confirmingDelete)}
+        onOpenChange={(open) => !open && setConfirmingDelete(null)}
+        title={`Delete this ${confirmingDelete?.type ?? "listing"}?`}
+        description={
+          confirmingDelete
+            ? `"${confirmingDelete.title}" will be removed along with its saves and tracker entries. This can't be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        busyLabel="Deleting…"
+        busy={deletingContent}
+        onConfirm={() => (confirmingDelete ? performDeleteContent(confirmingDelete) : undefined)}
+      />
 
       <EditContentModal
         open={editModalOpen}

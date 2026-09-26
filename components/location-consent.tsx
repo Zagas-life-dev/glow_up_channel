@@ -17,7 +17,7 @@
  */
 
 import * as React from "react"
-import { MapPin } from "lucide-react"
+import { MapPin, ShieldCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { useUserLocation } from "@/hooks/use-user-location"
 import { useLocale } from "@/lib/i18n/context"
+import { claimInterruption } from "@/lib/interruptions"
 
 const ASKED_KEY = "glowup-location-consent"
 
@@ -66,7 +67,10 @@ export function LocationConsent() {
     // Only a browser that would actually show a prompt, and only once.
     if (permission !== "prompt" || alreadyAsked()) return
     if (QUIET_PREFIXES.some((prefix) => window.location.pathname.startsWith(prefix))) return
-    const timer = window.setTimeout(() => setOpen(true), SHOW_AFTER_MS)
+    const timer = window.setTimeout(() => {
+      // One unrequested pop-up per visit; if another took it, ask next visit.
+      if (claimInterruption("location-consent")) setOpen(true)
+    }, SHOW_AFTER_MS)
     return () => window.clearTimeout(timer)
   }, [permission])
 
@@ -88,19 +92,25 @@ export function LocationConsent() {
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : decline())}>
-      <DialogContent className="max-w-md rounded-2xl">
+      <DialogContent className="max-w-[420px]">
         <DialogHeader>
-          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-            <MapPin className="h-5 w-5 text-primary" aria-hidden />
-          </div>
+          {/* Pin in a lime tile: location is good news, not a warning. */}
+          <span className="mb-2 grid h-11 w-11 place-items-center rounded-up-md bg-up-lime text-up-navy">
+            <MapPin className="h-5 w-5" aria-hidden />
+          </span>
           <DialogTitle>{t("location.permissionTitle")}</DialogTitle>
-          <DialogDescription className="leading-relaxed">{t("location.permissionBody")}</DialogDescription>
+          <DialogDescription>{t("location.permissionBody")}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button type="button" variant="ghost" onClick={decline} className="rounded-xl">
+        {/* The privacy promise gets its own row so it isn't buried in the paragraph. */}
+        <p className="flex items-start gap-2.5 rounded-up-md bg-up-lime-tint px-3.5 py-3 text-[13px] font-medium leading-relaxed text-foreground">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          {t("location.permissionPrivacy")}
+        </p>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={decline} className="h-11">
             {t("common.notNow")}
           </Button>
-          <Button type="button" onClick={allow} disabled={requesting} className="rounded-xl">
+          <Button type="button" onClick={allow} disabled={requesting} className="h-11 px-6">
             {requesting ? t("common.loading") : t("location.permissionAllow")}
           </Button>
         </DialogFooter>

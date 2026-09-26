@@ -1,91 +1,46 @@
 "use client"
 
+/**
+ * Mirrors the detail page: a navy block where the hero will be (so the page
+ * doesn't flash white-then-navy), then the body column and the side rail.
+ */
 export default function ContentDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-page pb-20 md:pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-page/95 backdrop-blur-xl border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="h-9 w-9 bg-muted rounded-xl animate-pulse" />
-            <div className="h-6 w-20 bg-muted rounded animate-pulse" />
-            <div className="w-9" />
+    <div className="min-h-screen bg-page pb-24 lg:pb-12" aria-busy="true" aria-label="Loading">
+      <div className="mx-auto w-full lg:max-w-6xl lg:px-8 lg:pt-8">
+        <div className="relative overflow-hidden bg-up-lead px-5 pb-10 pt-4 lg:rounded-[28px] lg:px-9 lg:pb-10 lg:pt-7">
+          <div className="h-10 w-10 rounded-full bg-white/[0.08]" />
+          <div className="mt-6 flex items-center gap-2">
+            <div className="h-7 w-7 rounded-[10px] bg-white/[0.12]" />
+            <div className="h-3 w-28 rounded-full bg-white/[0.12]" />
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        {/* Main Card */}
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          {/* Header */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded w-32 animate-pulse" />
-                <div className="h-3 bg-muted rounded w-20 animate-pulse" />
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <div className="h-8 bg-muted rounded w-full animate-pulse" />
-              <div className="h-8 bg-muted rounded w-3/4 animate-pulse" />
-            </div>
-
-            {/* Meta Info Row */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
-              <div className="h-4 bg-muted rounded w-32 animate-pulse" />
-              <div className="h-4 bg-muted rounded w-16 animate-pulse" />
-            </div>
-
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2">
-              <div className="h-6 bg-muted rounded-full w-20 animate-pulse" />
-              <div className="h-6 bg-muted rounded-full w-24 animate-pulse" />
-              <div className="h-6 bg-muted rounded-full w-16 animate-pulse" />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-4 bg-muted rounded w-full animate-pulse" />
-                <div className="h-4 bg-muted rounded w-full animate-pulse" />
-                <div className="h-4 bg-muted rounded w-5/6 animate-pulse" />
-              </div>
-            </div>
-
-            {/* Details Section */}
-            <div className="space-y-3">
-              <div className="h-4 bg-muted rounded w-32 animate-pulse" />
-              <div className="space-y-2 pl-6">
-                <div className="h-4 bg-muted rounded w-full animate-pulse" />
-                <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
-              </div>
-            </div>
-
-            {/* Image Skeleton */}
-            <div className="h-64 bg-muted rounded-xl animate-pulse" />
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-border">
-              <div className="h-10 bg-muted rounded-lg w-32 animate-pulse" />
-              <div className="h-10 bg-muted rounded-lg w-32 animate-pulse" />
-            </div>
+          <div className="mt-4 h-6 w-4/5 max-w-lg animate-pulse rounded-full bg-white/[0.12] motion-reduce:animate-none" />
+          <div className="mt-2.5 h-6 w-3/5 max-w-sm animate-pulse rounded-full bg-white/[0.12] motion-reduce:animate-none" />
+          <div className="mt-5 flex gap-2">
+            <div className="h-7 w-24 rounded-full bg-white/[0.08]" />
+            <div className="h-7 w-20 rounded-full bg-white/[0.08]" />
           </div>
         </div>
 
-        {/* Engagement Actions Skeleton */}
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <div className="flex items-center justify-center gap-6">
-            <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-            <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-            <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+        <div className="relative -mt-5 rounded-t-[1.75rem] bg-page px-4 pt-6 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8 lg:rounded-none lg:bg-transparent lg:px-0 lg:pt-0">
+          <div className="space-y-4">
+            {[0, 1].map((i) => (
+              <div key={i} className="animate-pulse rounded-up-xl border border-border bg-card p-5 motion-reduce:animate-none">
+                <div className="h-3 w-24 rounded-full bg-up-fill" />
+                <div className="mt-4 space-y-2.5">
+                  <div className="h-3 w-full rounded-full bg-up-hairline" />
+                  <div className="h-3 w-full rounded-full bg-up-hairline" />
+                  <div className="h-3 w-4/5 rounded-full bg-up-hairline" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 hidden animate-pulse rounded-up-xl border border-border bg-card p-5 motion-reduce:animate-none lg:mt-0 lg:block">
+            <div className="h-11 w-full rounded-full bg-up-fill" />
+            <div className="mt-4 space-y-2.5">
+              <div className="h-3 w-3/4 rounded-full bg-up-hairline" />
+              <div className="h-3 w-1/2 rounded-full bg-up-hairline" />
+            </div>
           </div>
         </div>
       </div>

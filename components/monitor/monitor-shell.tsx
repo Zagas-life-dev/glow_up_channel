@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { BarChart3, Eye, Home, RefreshCw } from "lucide-react"
+import { UpLogo } from "@/components/up/up-logo"
 
 /**
  * The monitor portal's frame.
@@ -92,9 +93,9 @@ export function MonitorShell({
           <Link
             href="/"
             aria-label="UP home"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-up-md bg-up-orange font-display text-xl font-extrabold text-up-navy"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-up-md bg-up-orange"
           >
-            UP
+            <UpLogo tone="navy" height={26} alt="" className="w-[74%]" />
           </Link>
           <div className="min-w-0">
             <p className="font-display text-lg font-bold leading-tight">Monitor</p>
@@ -145,9 +146,9 @@ export function MonitorShell({
             <Link
               href="/"
               aria-label="UP home"
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-up-sm bg-up-orange font-display text-sm font-extrabold text-up-navy lg:hidden"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-up-sm bg-up-orange lg:hidden"
             >
-              UP
+              <UpLogo tone="navy" height={22} alt="" className="w-[74%]" />
             </Link>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-up-orange-ink">Monitor</p>

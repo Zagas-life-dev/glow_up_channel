@@ -25,6 +25,7 @@ import {
   RefreshCw,
   MoreVertical,
 } from "lucide-react"
+import { UpLogo } from "@/components/up/up-logo"
 
 /** One source of truth for provider navigation — every provider page uses these. */
 export const PROVIDER_NAV_ITEMS: { id: ProviderTab; label: string; icon: any }[] = [
@@ -114,9 +115,9 @@ export function ProviderShell({
               <Link
                 href="/"
                 aria-label="UP home"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-up-sm bg-up-orange font-display text-sm font-extrabold text-up-navy lg:hidden"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-up-sm bg-up-orange lg:hidden"
               >
-                UP
+                <UpLogo tone="navy" height={22} alt="" className="w-[74%]" />
               </Link>
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-up-orange-ink">Provider hub</p>

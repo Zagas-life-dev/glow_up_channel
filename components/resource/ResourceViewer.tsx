@@ -350,8 +350,8 @@ export default function ResourceViewer({
 
   if (!activeSource) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
-        <RiErrorWarningLine className="h-8 w-8 text-red-500" />
+      <div className="flex flex-col items-center justify-center gap-3 rounded-up-xl border border-border bg-card py-16 text-center">
+        <RiErrorWarningLine className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">No document to display.</p>
       </div>
     )
@@ -359,8 +359,8 @@ export default function ResourceViewer({
 
   if (loadError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
-        <RiErrorWarningLine className="h-8 w-8 text-red-500" />
+      <div className="flex flex-col items-center justify-center gap-3 rounded-up-xl border border-border bg-card py-16 text-center">
+        <RiErrorWarningLine className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Couldn&apos;t load this document. Please try again.</p>
       </div>
     )
@@ -378,7 +378,7 @@ export default function ResourceViewer({
   const base = fitMode === 'page' ? fitPageBase : fitWidthBase
   const pageWidth = Math.max(120, base * zoom)
 
-  const iconBtn = 'h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40'
+  const iconBtn = 'h-9 w-9 rounded-full text-muted-foreground hover:bg-card hover:text-foreground disabled:opacity-40'
 
   return (
     <div
@@ -387,12 +387,12 @@ export default function ResourceViewer({
       className={
         (isFullscreen
           ? 'fixed inset-0 z-[70] flex flex-col bg-page select-none'
-          : 'rounded-2xl border border-border bg-muted/40 overflow-hidden select-none') + ' outline-none'
+          : 'overflow-hidden rounded-up-xl border border-border bg-up-fill select-none') + ' outline-none'
       }
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* Toolbar — wraps on small screens. Page nav (left) + view controls (right). */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-page/95 px-2 py-2 backdrop-blur sm:px-3">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-up-bar px-2 py-2 backdrop-blur-xl sm:px-3">
         <div className="flex items-center gap-1">
           {!isImage && (
             <>
@@ -408,7 +408,7 @@ export default function ResourceViewer({
                   onBlur={commitPageInput}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitPageInput(); (e.target as HTMLInputElement).blur() } }}
                   aria-label="Page number"
-                  className="h-9 w-10 rounded-lg border border-border bg-card text-center text-sm tabular-nums outline-none focus:border-violet-500"
+                  className="h-9 w-10 rounded-up-sm border-[1.5px] border-border bg-card text-center text-sm tabular-nums outline-none focus:border-up-orange"
                 />
                 <span className="text-muted-foreground">/ {numPages ?? '—'}</span>
               </div>
@@ -437,7 +437,7 @@ export default function ResourceViewer({
                 onClick={toggleFit}
                 aria-label={fitMode === 'width' ? 'Fit page' : 'Fit width'}
                 title={fitMode === 'width' ? 'Fit page' : 'Fit width'}
-                className={iconBtn + (fitMode === 'page' ? ' text-violet-500' : '')}
+                className={iconBtn + (fitMode === 'page' ? ' text-up-orange-ink' : '')}
               >
                 <RiAspectRatioLine className="h-5 w-5" />
               </Button>
@@ -475,10 +475,10 @@ export default function ResourceViewer({
           ...(isFullscreen ? {} : { maxHeight: '85vh' }),
         }}
       >
-        <div className="mx-auto w-fit p-2">
+        <div className="mx-auto w-fit p-2 sm:p-4 [&_canvas]:rounded-[4px] [&_canvas]:shadow-[0_2px_12px_rgba(11,18,51,0.12)]">
           {!objectUrl ? (
             <div className="flex items-center justify-center py-24">
-              <RiLoader4Line className="h-7 w-7 animate-spin text-violet-500" />
+              <RiLoader4Line className="h-7 w-7 animate-spin text-muted-foreground" />
             </div>
           ) : isImage ? (
             <img
@@ -495,7 +495,7 @@ export default function ResourceViewer({
               onLoadError={() => setLoadError(true)}
               loading={
                 <div className="flex items-center justify-center py-24">
-                  <RiLoader4Line className="h-7 w-7 animate-spin text-violet-500" />
+                  <RiLoader4Line className="h-7 w-7 animate-spin text-muted-foreground" />
                 </div>
               }
             >
@@ -508,7 +508,7 @@ export default function ResourceViewer({
                 renderAnnotationLayer={false}
                 loading={
                   <div className="flex items-center justify-center py-24">
-                    <RiLoader4Line className="h-7 w-7 animate-spin text-violet-500" />
+                    <RiLoader4Line className="h-7 w-7 animate-spin text-muted-foreground" />
                   </div>
                 }
               />

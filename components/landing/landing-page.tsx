@@ -42,6 +42,7 @@ import { usePage } from '@/contexts/page-context'
 import { cn } from '@/lib/utils'
 // Shared with the server-rendered FAQPage JSON-LD in `app/page.tsx`.
 import { FAQS } from '@/lib/seo/faq'
+import { UpLogo } from '@/components/up/up-logo'
 
 /* ─────────────────────────── §0 Brand foundation ─────────────────────────── */
 
@@ -586,11 +587,8 @@ export default function LandingPage() {
       {/* ── Nav ── */}
       <header className="w-full bg-[var(--ink)] text-[var(--paper)]">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6 px-6 py-5 lg:px-10 lg:py-[26px]">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-up-display text-[22px] font-extrabold text-[var(--paper)] lg:text-[26px]">
-              UP
-            </span>
-            <span className="h-[7px] w-[7px] rounded-full bg-[var(--accent)] lg:h-2 lg:w-2" />
+          <Link href="/" className="flex items-center">
+            <UpLogo tone="orange" height={30} className="h-[26px] w-auto lg:h-[30px]" />
           </Link>
 
           <nav className="hidden items-center gap-9 lg:flex">
@@ -646,11 +644,8 @@ export default function LandingPage() {
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-[var(--ink)] text-[var(--paper)] lg:hidden">
           <div className="flex items-center justify-between px-6 py-5">
-            <div className="flex items-center gap-2">
-              <span className="font-up-display text-[22px] font-extrabold text-[var(--paper)]">
-                UP
-              </span>
-              <span className="h-[7px] w-[7px] rounded-full bg-[var(--accent)]" />
+            <div className="flex items-center">
+              <UpLogo tone="orange" height={26} className="h-[26px] w-auto" />
             </div>
             <button
               type="button"
@@ -1194,9 +1189,7 @@ export default function LandingPage() {
       <footer className="w-full bg-[var(--ink)] text-[var(--paper)]">
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-8 px-6 pb-8 pt-12 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 lg:px-10 lg:pb-10 lg:pt-[72px]">
           <div>
-            <span className="font-up-display text-[22px] font-extrabold text-[var(--paper)] lg:text-[24px]">
-              UP
-            </span>
+            <UpLogo tone="orange" height={30} className="h-[26px] w-auto lg:h-[30px]" />
             <p className="mt-3 text-[14px] leading-[1.6] text-[var(--paper-55)] lg:mt-3.5 lg:max-w-[240px]">
               Your growth hub for opportunities, jobs, events and resources, made for ambitious
               young Africans.

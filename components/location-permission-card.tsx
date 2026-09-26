@@ -127,7 +127,7 @@ export function LocationPermissionCard({
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">{t("location.permissionTitle")}</h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {t("location.permissionBody")}
+            {t("location.permissionBody")} {t("location.permissionPrivacy")}
           </p>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button

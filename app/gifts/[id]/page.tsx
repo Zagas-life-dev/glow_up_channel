@@ -544,7 +544,14 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
         <DetailSection label="Read it here">
           <div ref={readerRef} className="scroll-mt-20">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+              {/* The download rule as a pill: lime when it can be kept, neutral when view-only. */}
+              <p
+                className={
+                  gift.allowDownload
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-up-lime px-2.5 py-[5px] text-xs font-bold text-up-navy"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-up-fill px-2.5 py-[5px] text-xs font-bold text-muted-foreground"
+                }
+              >
                 {gift.allowDownload ? (
                   <RiDownload2Line className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
                 ) : (
@@ -555,10 +562,10 @@ export default function GiftDetailPage({ params }: GiftPageProps) {
               {gift.allowDownload && (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="h-9 rounded-xl text-sm"
+                  className="h-9 text-sm"
                 >
                   {downloading ? (
                     <RiLoader4Line className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />

@@ -1,6 +1,11 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { NOREPLY_EMAIL } from '@/lib/contact'
+import { BRAND_LOGOS, brandLogoUrl } from '@/lib/seo/brand'
+
+// Absolute, because an email is read far from this site; PNG, because the mail
+// client fetching it is not the browser that negotiates formats.
+const EMAIL_LOGO_URL = brandLogoUrl(BRAND_LOGOS.navy, { height: 90, format: 'png' })
 
 // Initialize Resend lazily to avoid build-time errors when API key is missing
 function getResend() {
@@ -28,7 +33,7 @@ function createEmailTemplate(subject: string, content: string) {
               <!-- Header with Logo -->
               <tr>
                 <td style="padding: 30px 20px; text-align: center; background-color: #000000; border-bottom: 2px solid #FF8C00;">
-                  <img src="/images/Yellow and Black Modern Media Company Logo (14).png" alt="UP Logo" style="max-width: 180px; height: auto;">
+                  <img src="${EMAIL_LOGO_URL}" alt="UP" width="90" height="90" style="width: 90px; height: 90px; border-radius: 20px; display: inline-block;">
                 </td>
               </tr>
               

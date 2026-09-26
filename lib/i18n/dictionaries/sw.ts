@@ -42,8 +42,8 @@ export const sw: Dictionary = {
     detected: "Tumegundua {place}",
     useDetected: "Tumia hapa",
     permissionTitle: "Pata fursa karibu nawe",
-    permissionBody:
-      "UP inatumia mahali ulipo kukuonyesha kwanza kazi, matukio na ufadhili wa masomo katika nchi na mji wako, na kuficha zile usizoweza kuomba. Tunahifadhi eneo lako la takriban tu, kamwe si mahali halisi, na unaweza kuzima hili wakati wowote kwenye mipangilio.",
+    permissionBody: "UP inatumia mahali ulipo kukuonyesha kwanza kazi, matukio na ufadhili wa masomo katika nchi na mji wako, na kuficha zile usizoweza kuomba.",
+    permissionPrivacy: "Tunahifadhi eneo lako la takriban tu, kamwe si mahali halisi, na unaweza kuzima hili wakati wowote kwenye mipangilio.",
     permissionAllow: "Ruhusu mahali",
     permissionDenied:
       "Mahali pamezuiwa kwenye kivinjari chako. Tutatumia nchi ya muunganisho wako badala yake.",
@@ -70,6 +70,7 @@ export const sw: Dictionary = {
     permissionUnsupported: "Kivinjari chako hakiwezi kutoa mahali sahihi.",
     usingProfile: "Tunatumia mahali kwenye wasifu wako.",
     chooseCountry: "Onyesha fursa katika",
+    searchCountries: "Tafuta nchi",
     yourCountry: "Mahali nilipo",
     anywhere: "Popote",
     viewingFrom: "Inaonyesha {country}",

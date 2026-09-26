@@ -70,6 +70,9 @@
     --up-solid: #0B1233;
     --up-on-solid: #FBFAF7;
     --up-lead: #0B1233;
+    /* Overlays: navy scrim, lifted pop shadow (dark swaps to a hairline ring). */
+    --up-scrim: rgba(11, 18, 51, 0.55);
+    --up-shadow-pop: 0 24px 60px rgba(11, 18, 51, 0.28), 0 2px 6px rgba(11, 18, 51, 0.08);
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
     --chart-3: 222 47% 25%;
@@ -128,6 +131,8 @@
     --up-solid: #FBFAF7;
     --up-on-solid: #0B1233;
     --up-lead: #141D4A;
+    --up-scrim: rgba(3, 5, 15, 0.72);
+    --up-shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 70px rgba(0, 0, 0, 0.6);
     --chart-1: 24 100% 50%;
     --chart-2: 24 100% 55%;
     --chart-3: 222 25% 70%;
@@ -447,4 +452,28 @@ input[type="number"] {
   @apply bg-transparent hover:bg-muted;
   @apply text-muted-foreground hover:text-foreground;
   @apply rounded-xl transition-all duration-200;
+}
+
+/* Installed app (standalone PWA). Only applies once UP is on the home screen or
+   installed on desktop; in a browser tab the page behaves like a normal website.
+   - No rubber-band bounce or pull-to-refresh on the page itself: in an app a
+     stray pull that reloads everything reads as a crash. Scroll panels keep
+     their own overscroll-contain. Updates and reconnects reload deliberately
+     (components/register-sw.tsx, components/offline-banner.tsx).
+   - No grey flash on tap and no long-press callout on links and images,
+     which is web chrome that native apps do not show. Text stays selectable. */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  img {
+    -webkit-touch-callout: none;
+  }
 }

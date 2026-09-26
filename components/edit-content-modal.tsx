@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
+import { ConfirmDialog } from '@/components/up/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ import {
 import ApiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
-import { Loader2, Send, MapPin, DollarSign, Clock, Globe, X, FileText } from 'lucide-react'
+import { Loader2, MapPin, DollarSign, Clock, Globe, X, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const opportunityTypes = [
@@ -311,22 +311,44 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
 
   const typeLabel = item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : ''
 
+  // Unsaved-changes guard: a snapshot taken when the listing finishes loading,
+  // compared on close. Closing a changed form asks first.
+  const snapshot = JSON.stringify({ formData, tags, isRemote, isPaid, resourceSource, file: resourceFile?.name ?? null })
+  const baseline = useRef<string | null>(null)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  useEffect(() => {
+    if (!open) baseline.current = null
+    else if (!loading && baseline.current === null && Object.keys(formData).length) baseline.current = snapshot
+  }, [open, loading, formData, snapshot])
+  const dirty = baseline.current !== null && baseline.current !== snapshot
+
+  const requestClose = (next: boolean) => {
+    if (next) return onOpenChange(true)
+    if (saving) return
+    if (dirty) setConfirmDiscard(true)
+    else onOpenChange(false)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-card border-border">
-        <DialogHeader>
-          <DialogTitle>Edit {typeLabel}</DialogTitle>
-          <DialogDescription>Update the details below. Changes may require re-approval.</DialogDescription>
-        </DialogHeader>
+    <>
+    {/* A right-hand drawer on desktop, full screen on phones: the long form scrolls
+        naturally and the list stays visible behind it. */}
+    <Sheet open={open} onOpenChange={requestClose}>
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]">
+        <SheetHeader className="border-b border-up-hairline px-5 pb-4 pt-5 sm:px-6">
+          <SheetTitle>Edit {typeLabel.toLowerCase()}</SheetTitle>
+          <SheetDescription className="pr-10">Update the details below. Changes may require re-approval.</SheetDescription>
+        </SheetHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <div className="flex flex-1 items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto space-y-4 pr-2">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <p role="alert" className="rounded-up-md bg-destructive/10 px-3.5 py-2.5 text-sm font-semibold text-destructive">
                 {error}
               </p>
             )}
@@ -338,7 +360,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   value={formData.title ?? ''}
                   onChange={(e) => updateField('title', e.target.value)}
                   required
-                  className="bg-muted border-border"
+                 
                 />
               </div>
               {(item?.type === 'opportunity' || item?.type === 'job') && (
@@ -347,7 +369,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   <Input
                     value={formData.company ?? formData.provider ?? ''}
                     onChange={(e) => updateField('company', e.target.value)}
-                    className="bg-muted border-border"
+                   
                   />
                 </div>
               )}
@@ -357,7 +379,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   <Input
                     value={formData.organizer ?? ''}
                     onChange={(e) => updateField('organizer', e.target.value)}
-                    className="bg-muted border-border"
+                   
                   />
                 </div>
               )}
@@ -374,7 +396,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                     else updateField('type', v)
                   }}
                 >
-                  <SelectTrigger className="bg-muted border-border">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -399,7 +421,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   value={formData.category || formData.type || ''}
                   onValueChange={(v) => { updateField('category', v); updateField('type', v) }}
                 >
-                  <SelectTrigger className="bg-muted border-border">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,7 +440,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                 onChange={(e) => updateField('description', e.target.value)}
                 required
                 rows={4}
-                className="bg-muted border-border resize-none"
+                className="resize-none"
               />
             </div>
 
@@ -432,7 +454,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                     onChange={(e) => updateField('url', e.target.value)}
                     type="url"
                     required
-                    className="pl-10 bg-muted border-border"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -443,13 +465,13 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                 {/* Resource source: external link OR uploaded file (mutually exclusive) */}
                 <div className="space-y-3">
                   <Label>Resource Source *</Label>
-                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted">
+                  <div className="grid grid-cols-2 gap-1 rounded-full bg-up-fill p-1">
                     <button
                       type="button"
                       onClick={() => { setResourceSource('link'); setResourceFile(null) }}
                       className={cn(
-                        "flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors",
-                        resourceSource === 'link' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                        "flex h-[34px] items-center justify-center gap-2 rounded-full text-[13px] font-semibold transition-colors",
+                        resourceSource === 'link' ? "bg-up-solid text-up-on-solid" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Globe className="w-4 h-4" /> External Link
@@ -458,8 +480,8 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                       type="button"
                       onClick={() => setResourceSource('file')}
                       className={cn(
-                        "flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium transition-colors",
-                        resourceSource === 'file' ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+                        "flex h-[34px] items-center justify-center gap-2 rounded-full text-[13px] font-semibold transition-colors",
+                        resourceSource === 'file' ? "bg-up-solid text-up-on-solid" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <FileText className="w-4 h-4" /> File Upload
@@ -474,21 +496,21 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                         onChange={(e) => updateField('paymentLink', e.target.value)}
                         placeholder="https://..."
                         type="url"
-                        className="pl-10 bg-muted border-border"
+                        className="pl-10"
                       />
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {(formData.resourceType === 'file' || formData.hasFile) && !resourceFile && (
-                        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-                          <FileText className="w-4 h-4 text-violet-500" />
+                        <div className="flex items-center gap-2 rounded-up-md bg-up-fill px-3.5 py-2.5 text-sm text-muted-foreground">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
                           <span className="uppercase">{formData.fileType || 'file'}</span>
                           {formData.fileSize ? <span>· {(formData.fileSize / (1024 * 1024)).toFixed(2)} MB</span> : null}
                           <span className="ml-auto text-xs">Current file</span>
                         </div>
                       )}
-                      <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed border-border bg-muted/50 cursor-pointer hover:border-violet-500/60 transition-colors text-center">
-                        <FileText className="w-7 h-7 text-violet-500" />
+                      <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-up-lg border-[1.5px] border-dashed border-up-border-hover bg-up-fill cursor-pointer hover:border-up-orange transition-colors text-center">
+                        <FileText className="w-7 h-7 text-muted-foreground" />
                         {resourceFile ? (
                           <>
                             <span className="text-sm font-medium text-foreground break-all">{resourceFile.name}</span>
@@ -534,7 +556,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
             )}
 
             {item?.type !== 'resource' && (
-              <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
+              <div className="rounded-up-xl border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> Location
@@ -550,19 +572,19 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                       placeholder="Country"
                       value={formData.location?.country ?? ''}
                       onChange={(e) => updateNested('location', 'country', e.target.value)}
-                      className="bg-muted border-border text-sm"
+                      className="text-sm"
                     />
                     <Input
                       placeholder="State/Province"
                       value={formData.location?.province ?? ''}
                       onChange={(e) => updateNested('location', 'province', e.target.value)}
-                      className="bg-muted border-border text-sm"
+                      className="text-sm"
                     />
                     <Input
                       placeholder="City"
                       value={formData.location?.city ?? ''}
                       onChange={(e) => updateNested('location', 'city', e.target.value)}
-                      className="bg-muted border-border text-sm"
+                      className="text-sm"
                     />
                   </div>
                 )}
@@ -570,7 +592,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
             )}
 
             {(item?.type === 'opportunity' || item?.type === 'job' || item?.type === 'event') && (
-              <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
+              <div className="rounded-up-xl border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
@@ -591,14 +613,14 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                       else updateNested('pay', 'amount', e.target.value)
                     }
                     }
-                    className="bg-muted border-border"
+                   
                   />
                 )}
               </div>
             )}
 
             {item?.type !== 'resource' && (
-              <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
+              <div className="rounded-up-xl border border-border bg-card p-4 space-y-2">
                 <span className="text-sm font-medium flex items-center gap-2">
                   <Clock className="w-4 h-4" /> Dates
                 </span>
@@ -610,7 +632,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                         type="date"
                         value={formData.dates?.startDate?.slice?.(0, 10) ?? ''}
                         onChange={(e) => updateNested('dates', 'startDate', e.target.value)}
-                        className="bg-muted border-border text-sm"
+                        className="text-sm"
                       />
                     </div>
                     <div>
@@ -619,7 +641,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                         type="date"
                         value={formData.dates?.endDate?.slice?.(0, 10) ?? ''}
                         onChange={(e) => updateNested('dates', 'endDate', e.target.value)}
-                        className="bg-muted border-border text-sm"
+                        className="text-sm"
                       />
                     </div>
                   </div>
@@ -630,7 +652,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                       type="date"
                       value={formData.dates?.applicationDeadline?.slice?.(0, 10) ?? ''}
                       onChange={(e) => updateNested('dates', 'applicationDeadline', e.target.value)}
-                      className="bg-muted border-border text-sm"
+                      className="text-sm"
                     />
                   </div>
                 )}
@@ -645,7 +667,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   placeholder="Max attendees"
                   value={formData.capacity?.maxAttendees ?? formData.capacity ?? ''}
                   onChange={(e) => updateField('capacity', e.target.value)}
-                  className="bg-muted border-border"
+                 
                 />
               </div>
             )}
@@ -657,7 +679,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                   value={formData.requirements ?? ''}
                   onChange={(e) => updateField('requirements', e.target.value)}
                   rows={3}
-                  className="bg-muted border-border resize-none"
+                  className="resize-none"
                 />
               </div>
             )}
@@ -668,7 +690,7 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                 {tags.map((t) => (
                   <span
                     key={t}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-sm"
+                    className="inline-flex items-center gap-1 rounded-full bg-up-fill px-2.5 py-1 text-[13px] font-semibold"
                   >
                     {t}
                     <button type="button" onClick={() => removeTag(t)} className="hover:text-foreground">
@@ -682,31 +704,44 @@ export function EditContentModal({ open, onOpenChange, item, onSaved }: EditCont
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleAddTag}
                 placeholder="Type and Enter to add (max 10)"
-                className="bg-muted border-border"
+               
               />
             </div>
 
-            <DialogFooter className="gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          </div>
+
+            {/* Sticky footer: Cancel and one orange Save. */}
+            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-up-hairline bg-card px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
+              <Button type="button" variant="ghost" onClick={() => requestClose(false)} className="h-11">
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
+              <Button type="submit" disabled={saving} className="h-11 px-6">
                 {saving ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving…
                   </>
                 ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Save changes
-                  </>
+                  'Save changes'
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
+
+    <ConfirmDialog
+      open={confirmDiscard}
+      onOpenChange={setConfirmDiscard}
+      title="Discard your changes?"
+      description="You've edited this listing. Closing now loses those edits."
+      confirmLabel="Discard"
+      onConfirm={() => {
+        setConfirmDiscard(false)
+        onOpenChange(false)
+      }}
+    />
+    </>
   )
 }

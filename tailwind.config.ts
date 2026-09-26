@@ -105,6 +105,7 @@ const config: Config = {
           solid: "var(--up-solid)",
           "on-solid": "var(--up-on-solid)",
           lead: "var(--up-lead)",
+          scrim: "var(--up-scrim)",
         },
         "brand-orange": "#ff6700",
         "brand-blue": "#0b1222",
@@ -130,6 +131,10 @@ const config: Config = {
         "up-md": "14px",
         "up-lg": "18px",
         "up-xl": "20px",
+        "up-2xl": "24px",
+      },
+      boxShadow: {
+        "up-pop": "var(--up-shadow-pop)",
       },
       keyframes: {
         "accordion-down": {

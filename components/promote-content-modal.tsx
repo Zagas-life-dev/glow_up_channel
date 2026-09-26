@@ -36,6 +36,7 @@ import { Label } from '@/components/ui/label'
 import ApiClient from '@/lib/api-client'
 import { announcementCount } from '@/lib/promotions/announcement'
 import { cn } from '@/lib/utils'
+import { KindChip, toUpKind } from '@/components/up/kind'
 import { toast } from 'sonner'
 import {
   Bell,
@@ -45,7 +46,6 @@ import {
   Mail,
   Megaphone,
   Sparkles,
-  TrendingUp,
   X,
   Zap,
 } from 'lucide-react'
@@ -102,6 +102,10 @@ const EXTREME_PERKS: { icon: typeof Zap; text: string }[] = [
   { icon: Mail, text: 'A featured slot in our welcome and verification emails' },
 ]
 
+/**
+ * A reach option. Extreme is drawn as a small version of its own navy feed
+ * card (tile stack, lime pill) so providers see what they are getting.
+ */
 function TierCard({
   selected,
   onSelect,
@@ -110,6 +114,7 @@ function TierCard({
   tagline,
   meta,
   badge,
+  navy = false,
   children,
 }: {
   selected: boolean
@@ -119,6 +124,7 @@ function TierCard({
   tagline: string
   meta: string
   badge?: string
+  navy?: boolean
   children?: React.ReactNode
 }) {
   return (
@@ -128,39 +134,47 @@ function TierCard({
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        'w-full rounded-xl border p-3 text-left transition-colors',
+        'relative w-full overflow-hidden rounded-up-xl p-4 text-left transition-shadow',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        selected
-          ? 'border-primary bg-primary/5'
-          : 'border-border bg-card hover:border-primary/40',
+        navy
+          ? 'bg-up-navy text-up-on-navy dark:bg-up-lead'
+          : 'border-[1.5px] border-border bg-card text-foreground hover:border-up-border-hover',
+        selected && 'shadow-[0_0_0_3px_var(--up-orange)]',
+        selected && !navy && 'border-transparent',
         disabled && 'cursor-not-allowed opacity-60',
       )}
     >
-      <div className="flex items-start gap-2.5">
+      {navy ? (
+        <>
+          <span aria-hidden className="absolute -right-8 -top-9 h-[90px] w-[120px] -rotate-[8deg] rounded-[20px] bg-up-orange" />
+          <span aria-hidden className="absolute -top-[18px] right-10 h-12 w-16 rotate-[7deg] rounded-[14px] bg-up-lime" />
+        </>
+      ) : null}
+      <div className="relative flex items-center justify-between gap-2">
+        {badge ? (
+          <span className="rounded-full bg-up-lime px-2.5 py-[5px] text-xs font-bold text-up-navy">{badge}</span>
+        ) : (
+          <span className="text-xs font-semibold text-muted-foreground">{meta}</span>
+        )}
         <span
-          className={cn(
-            'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-            selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/40',
-          )}
           aria-hidden
+          className={cn(
+            'grid h-5 w-5 shrink-0 place-items-center rounded-full',
+            selected
+              ? 'bg-up-orange text-up-navy'
+              : navy
+                ? 'shadow-[inset_0_0_0_1.5px_var(--up-border-on-navy)]'
+                : 'shadow-[inset_0_0_0_1.5px_var(--up-border-hover)]',
+          )}
         >
-          {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
         </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-semibold text-foreground">{title}</span>
-            {badge && (
-              <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
-                {badge}
-              </span>
-            )}
-            <span className="ml-auto text-[11px] font-medium text-muted-foreground">{meta}</span>
-          </div>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{tagline}</p>
-          {children}
-        </div>
       </div>
+      <p className="relative mt-3 font-display text-lg font-bold">{title}</p>
+      <p className={cn('relative mt-1 text-[13px] leading-relaxed', navy ? 'text-up-orange' : 'text-muted-foreground')}>
+        {tagline}
+      </p>
+      {children ? <div className="relative">{children}</div> : null}
     </button>
   )
 }
@@ -264,29 +278,23 @@ export function PromoteContentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-w-[640px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Promote this content
-          </DialogTitle>
-          <DialogDescription>
-            Promotion is free — no fees, no budget, no per-click charge. Pick how
-            far you want it to reach.
+          <DialogTitle>Promote this content</DialogTitle>
+          <DialogDescription className="flex items-center gap-2 pr-10 pt-1">
+            <KindChip kind={toUpKind(item.type)} size="sm" />
+            <span className="line-clamp-1 font-semibold text-foreground">{item.title}</span>
+            <span className="shrink-0 text-xs">· {getTypeLabel(item.type)}</span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-1">
-          <div className="rounded-lg border border-border bg-muted/50 p-3">
-            <p className="line-clamp-2 text-sm font-medium text-foreground">{item.title}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{getTypeLabel(item.type)}</p>
-          </div>
-
           {/* Tier. First, because everything below depends on it. */}
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
               Reach
             </Label>
+            <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
 
             <TierCard
               selected={!isExtreme}
@@ -311,13 +319,14 @@ export function PromoteContentModal({
               tagline="Everything in Standard, plus we announce it to readers directly."
               meta="You choose the length"
               badge="Most reach"
+              navy
             >
               {isExtreme && (
-                <ul className="mt-2.5 space-y-1.5 border-t border-primary/15 pt-2.5">
+                <ul className="mt-3 space-y-1.5 border-t border-up-border-on-navy pt-3">
                   {EXTREME_PERKS.map((perk) => (
                     <li key={perk.text} className="flex items-start gap-2">
-                      <perk.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
-                      <span className="text-xs leading-relaxed text-muted-foreground">
+                      <perk.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-up-lime" aria-hidden />
+                      <span className="text-xs leading-relaxed text-up-on-navy-muted">
                         {perk.text}
                       </span>
                     </li>
@@ -325,6 +334,7 @@ export function PromoteContentModal({
                 </ul>
               )}
             </TierCard>
+            </div>
           </div>
 
           {/*
@@ -338,30 +348,44 @@ export function PromoteContentModal({
             is the line below the control saying what that choice buys.
           */}
           <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
-            <div className="flex flex-wrap gap-2">
-              {(isExtreme ? EXTREME_QUICK_DURATIONS : QUICK_DURATIONS).map((n) => (
-                <Button
-                  key={n}
-                  type="button"
-                  variant={effectiveDuration === n ? 'default' : 'outline'}
-                  size="sm"
+            <Label htmlFor="duration" className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Duration
+            </Label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {/* Segmented pill for the common lengths; the field takes anything else. */}
+              <div role="radiogroup" aria-label="Duration" className="flex flex-1 gap-1 overflow-x-auto rounded-full bg-up-fill p-1">
+                {(isExtreme ? EXTREME_QUICK_DURATIONS : QUICK_DURATIONS).map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={effectiveDuration === n}
+                    disabled={busy}
+                    onClick={() => setDurationDays(n)}
+                    className={cn(
+                      'h-[34px] min-w-[52px] flex-1 whitespace-nowrap rounded-full px-2 text-[13px] font-semibold transition-colors',
+                      effectiveDuration === n ? 'bg-up-solid text-up-on-solid' : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {n}d
+                  </button>
+                ))}
+              </div>
+              <div className="relative sm:w-[120px]">
+                <Input
+                  id="duration"
+                  type="number"
+                  min={minDuration}
+                  max={MAX_DURATION}
+                  value={durationDays}
                   disabled={busy}
-                  onClick={() => setDurationDays(n)}
-                >
-                  {n} days
-                </Button>
-              ))}
+                  aria-label="Custom duration in days"
+                  onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || minDuration)}
+                  className="h-[42px] pr-12"
+                />
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">days</span>
+              </div>
             </div>
-            <Input
-              id="duration"
-              type="number"
-              min={minDuration}
-              max={MAX_DURATION}
-              value={durationDays}
-              disabled={busy}
-              onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || minDuration)}
-            />
             {isExtreme ? (
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Between {minDuration} and {MAX_DURATION} days. A {effectiveDuration}-day
@@ -387,11 +411,11 @@ export function PromoteContentModal({
               posting forms because it is part of what the promotion buys: it
               goes on when the campaign starts and comes off when it ends. */}
           <div className="space-y-2">
-            <Label>
-              Hero image <span className="font-normal text-muted-foreground">(optional)</span>
+            <Label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Hero image <span className="normal-case tracking-normal">(optional)</span>
             </Label>
             {heroPreview ? (
-              <div className="relative overflow-hidden rounded-lg border border-border">
+              <div className="relative overflow-hidden rounded-up-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={heroPreview} alt="Hero preview" className="h-32 w-full object-cover" />
                 <button
@@ -399,23 +423,23 @@ export function PromoteContentModal({
                   onClick={() => setHeroFile(null)}
                   disabled={busy}
                   aria-label="Remove image"
-                  className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 text-foreground shadow-sm hover:bg-background"
+                  className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card text-foreground shadow-up-pop"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             ) : (
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border bg-muted/30 p-5 text-center transition-colors hover:border-primary/50">
-                {compressing ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                ) : (
-                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                )}
-                <span className="text-sm font-medium text-foreground">
-                  {compressing ? 'Compressing image…' : 'Add a hero image'}
+              <label className="flex cursor-pointer items-center gap-3.5 rounded-up-lg border-[1.5px] border-dashed border-up-border-hover bg-up-fill p-4 transition-colors hover:border-up-orange">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-up-md bg-card text-muted-foreground">
+                  {compressing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  JPEG, PNG, WebP or GIF · larger than 10MB is compressed for you
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-foreground">
+                    {compressing ? 'Compressing image…' : 'Add a hero image'}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    JPEG, PNG, WebP or GIF · larger than 10MB is compressed for you
+                  </span>
                 </span>
                 <input
                   type="file"
@@ -455,11 +479,17 @@ export function PromoteContentModal({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+        {/* No price, budget or wallet anywhere: the footer says so plainly. */}
+        <DialogFooter className="border-t border-up-hairline pt-4 sm:justify-between">
+          <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-muted-foreground sm:justify-start">
+            <Check className="h-3.5 w-3.5 text-up-lime-ink dark:text-up-lime" strokeWidth={3} />
+            No fees — promotions are granted, never billed
+          </p>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting} className="h-11">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={busy}>
+          <Button onClick={handleSubmit} disabled={busy} className="h-11 px-6">
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -471,6 +501,7 @@ export function PromoteContentModal({
               `Start promotion · ${effectiveDuration} days`
             )}
           </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

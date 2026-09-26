@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -790,27 +791,10 @@ export default function SettingsPage() {
     return saveProfile({ silent: false })
   }
 
-  const handleDeleteAccount = async () => {
-    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
-      '• Your profile and preferences\n' +
-      '• All saved opportunities, events, jobs, and resources\n' +
-      '• All liked content\n' +
-      '• All application history\n' +
-      '• All other account data\n\n' +
-      'This action cannot be undone!'
-    
-    if (!confirm(confirmMessage)) {
-      return
-    }
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
+  const handleDeleteAccount = () => setConfirmDeleteAccount(true)
 
-    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
-    const userInput = prompt(finalConfirm)
-    
-    if (userInput !== 'DELETE') {
-      toast.error('Account deletion cancelled')
-      return
-    }
-
+  const performDeleteAccount = async () => {
     setIsDeletingAccount(true)
     
     try {
@@ -1450,6 +1434,17 @@ export default function SettingsPage() {
                       {isDeletingAccount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                       Delete account
                     </Button>
+                    <ConfirmDialog
+                      open={confirmDeleteAccount}
+                      onOpenChange={setConfirmDeleteAccount}
+                      title="Delete your account?"
+                      description="Your profile, preferences, saved and liked listings, application history and all other account data go with it. This can't be undone."
+                      confirmLabel="Delete account"
+                      busyLabel="Deleting…"
+                      busy={isDeletingAccount}
+                      confirmPhrase="DELETE"
+                      onConfirm={performDeleteAccount}
+                    />
                   </div>
                 </section>
               </>

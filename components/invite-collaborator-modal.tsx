@@ -3,25 +3,17 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { usePlaylist, Playlist, Collaborator } from '@/contexts/playlist-context'
 import { cn } from '@/lib/utils'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { FlaticonIcon } from "@/components/ui/flaticon-icon"
-import { RiCloseLine, RiGroupLine, RiUserAddLine, RiPencilLine } from "react-icons/ri"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
+import { Loader2, Mail, Send, Trash2 } from "lucide-react"
 
 interface InviteCollaboratorModalProps {
   isOpen: boolean
@@ -37,6 +29,7 @@ export default function InviteCollaboratorModal({ isOpen, onClose, playlist }: I
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<Collaborator | null>(null)
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,255 +62,155 @@ export default function InviteCollaboratorModal({ isOpen, onClose, playlist }: I
   }
 
   const handleRemove = async (collaborator: Collaborator) => {
-    if (!confirm(`Remove ${collaborator.email} from this playlist?`)) return
-    
     setRemovingId(collaborator._id)
     try {
       await removeCollaborator(playlist._id, collaborator._id)
+      setConfirming(null)
     } catch (err: any) {
       setError(err.message || 'Failed to remove collaborator')
+      setConfirming(null)
     } finally {
       setRemovingId(null)
     }
   }
 
-  const getStatusBadge = (status: Collaborator['status']) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400 text-xs">
-            <FlaticonIcon name="clock" className="w-3 h-3" aria-hidden />
-            Pending
-          </span>
-        )
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-xs">
-            <FlaticonIcon name="check" className="w-3 h-3" aria-hidden />
-            Accepted
-          </span>
-        )
-      case 'declined':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 text-xs">
-            <RiCloseLine className="w-3 h-3" />
-            Declined
-          </span>
-        )
-    }
-  }
-
-  const getRoleBadge = (role: Collaborator['role']) => {
-    return role === 'editor' ? (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-orange-400 text-xs">
-        <FlaticonIcon name="pen" className="w-3 h-3" aria-hidden />
-        Editor
-      </span>
-    ) : (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs">
-        <FlaticonIcon name="eye" className="w-3 h-3" aria-hidden />
-        Viewer
-      </span>
-    )
-  }
-
   const activeCollaborators = playlist.collaborators?.filter(c => c.status !== 'declined') || []
+  const ownerName = playlist.createdBy.firstName || playlist.createdBy.email
+  const initial = (name?: string, email?: string) => (name?.charAt(0) || email?.charAt(0) || '?').toUpperCase()
+  // Initials rotate through the sidebar's avatar colours.
+  const AVATAR = ['bg-up-lime text-up-navy', 'bg-up-orange text-up-navy', 'bg-[#FBFAF7] text-up-navy shadow-[inset_0_0_0_1px_var(--up-border-hover)]']
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[80vh] bg-page border-border rounded-t-3xl p-0 overflow-hidden">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-page border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                <RiGroupLine className="w-5 h-5 text-violet-500" />
-              </div>
-              <div>
-                <SheetTitle className="text-foreground">Manage Collaborators</SheetTitle>
-                <SheetDescription className="text-muted-foreground text-xs">
-                  Invite people to contribute to "{playlist.name}"
-                </SheetDescription>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
-              <FlaticonIcon name="cross" className="w-5 h-5 text-muted-foreground" aria-hidden />
-            </button>
-          </div>
-        </div>
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-[520px] gap-0 p-0 sm:p-0">
+        <DialogHeader className="px-5 pb-4 pt-7 sm:px-6 sm:pt-6">
+          <DialogTitle>Manage collaborators</DialogTitle>
+          <DialogDescription className="pr-10">
+            Invite people to contribute to &ldquo;{playlist.name}&rdquo;
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="overflow-y-auto h-[calc(80vh-80px)] p-6">
-          <div className="max-w-lg mx-auto space-y-6">
-            {/* Owner Info */}
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-sm font-semibold text-foreground">
-                  {(playlist.createdBy.firstName?.charAt(0) || playlist.createdBy.email?.charAt(0) || '?').toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {playlist.createdBy.firstName || playlist.createdBy.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{playlist.createdBy.email}</p>
-                </div>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-orange-400 text-xs">
-                  <FlaticonIcon name="crown" className="w-3 h-3" aria-hidden />
-                  Owner
+        <div className="max-h-[min(64vh,560px)] space-y-5 overflow-y-auto px-5 pb-6 sm:px-6">
+          {/* Invite */}
+          <form onSubmit={handleInvite} className="space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="email"
+                  aria-label="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@email.com"
+                  className="h-[46px] pl-10"
+                />
+              </div>
+              <Button type="submit" disabled={isSubmitting || !email.trim()} className="h-[46px] shrink-0 px-5">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {isSubmitting ? 'Sending…' : 'Invite'}
+              </Button>
+            </div>
+
+            {/* Role: a segmented pill with its meaning underneath. */}
+            <div>
+              <div role="radiogroup" aria-label="Role" className="flex gap-1 rounded-full bg-up-fill p-1">
+                {(['editor', 'viewer'] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    role="radio"
+                    aria-checked={role === r}
+                    onClick={() => setRole(r)}
+                    className={cn(
+                      'h-[34px] flex-1 rounded-full text-[13px] font-semibold transition-colors',
+                      role === r ? 'bg-up-solid text-up-on-solid' : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {r === 'editor' ? 'Editor' : 'Viewer'}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 px-1 text-xs text-muted-foreground">
+                {role === 'editor' ? 'Can add and remove items' : 'Can only view the playlist'}
+              </p>
+            </div>
+
+            {error && (
+              <p role="alert" className="rounded-up-md bg-destructive/10 px-3.5 py-2.5 text-sm font-semibold text-destructive">{error}</p>
+            )}
+            {success && (
+              <p role="status" className="rounded-up-md bg-up-lime-tint px-3.5 py-2.5 text-sm font-semibold text-foreground">{success}</p>
+            )}
+          </form>
+
+          {/* People: the owner is always first. */}
+          <section>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              People with access
+            </p>
+            <ul className="divide-y divide-up-hairline overflow-hidden rounded-up-xl border border-border bg-card">
+              <li className="flex items-center gap-3 px-3.5 py-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-up-lime font-display text-xs font-bold text-up-navy">
+                  {initial(playlist.createdBy.firstName, playlist.createdBy.email)}
                 </span>
-              </div>
-            </div>
-
-            {/* Invite Form */}
-            <div className="p-5 rounded-xl bg-card border border-border">
-              <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
-                <RiUserAddLine className="w-4 h-4 text-violet-500" />
-                Invite Collaborator
-              </h3>
-              
-              <form onSubmit={handleInvite} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Email Address</Label>
-                  <div className="relative">
-                    <FlaticonIcon name="envelope" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="collaborator@email.com"
-                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-11 rounded-xl pl-10"
-                    />
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-foreground">{ownerName}</p>
+                  <p className="truncate text-xs text-muted-foreground">{playlist.createdBy.email}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Role</Label>
-                  <Select value={role} onValueChange={(v) => setRole(v as 'editor' | 'viewer')}>
-                    <SelectTrigger className="bg-muted border-border text-foreground h-11 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-surface border-border">
-                      <SelectItem value="editor" className="text-foreground hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <RiPencilLine className="w-4 h-4 text-orange-500" />
-                          <div>
-                            <p>Editor</p>
-                            <p className="text-xs text-muted-foreground">Can add and remove items</p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="viewer" className="text-foreground hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <FlaticonIcon name="eye" className="w-4 h-4 text-primary" aria-hidden />
-                          <div>
-                            <p>Viewer</p>
-                            <p className="text-xs text-muted-foreground">Can only view the playlist</p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                    <FlaticonIcon name="exclamation" className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" aria-hidden />
-                    <p className="text-sm text-red-400">{error}</p>
-                  </div>
-                )}
-
-                {/* Success */}
-                {success && (
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-2">
-                    <FlaticonIcon name="check" className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" aria-hidden />
-                    <p className="text-sm text-emerald-400">{success}</p>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !email.trim()}
-                  className="w-full h-11 bg-violet-500 hover:bg-violet-600 text-foreground font-semibold rounded-xl disabled:opacity-50"
+                <span className="rounded-full bg-up-solid px-2.5 py-[5px] text-xs font-bold text-up-on-solid">Owner</span>
+              </li>
+              {activeCollaborators.map((collaborator, i) => (
+                <li
+                  key={collaborator._id}
+                  className={cn('flex items-center gap-3 px-3.5 py-3', removingId === collaborator._id && 'opacity-50')}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <FlaticonIcon name="spinner" className="w-4 h-4 mr-2 animate-spin" aria-hidden />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <FlaticonIcon name="paper-plane" className="w-4 h-4 mr-2" aria-hidden />
-                      Send Invitation
-                    </>
-                  )}
-                </Button>
-              </form>
-            </div>
-
-            {/* Current Collaborators */}
-            {activeCollaborators.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  Collaborators ({activeCollaborators.length})
-                </h3>
-                
-                <div className="space-y-2">
-                  {activeCollaborators.map((collaborator) => (
-                    <div
-                      key={collaborator._id}
-                      className={cn(
-                        "p-4 rounded-xl border transition-all",
-                        "bg-card border-border",
-                        removingId === collaborator._id && "opacity-50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-foreground">
-                          {(collaborator.firstName?.charAt(0) || collaborator.email?.charAt(0) || '?').toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {collaborator.firstName || collaborator.email.split('@')[0]}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{collaborator.email}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getRoleBadge(collaborator.role)}
-                          {getStatusBadge(collaborator.status)}
-                          <button
-                            onClick={() => handleRemove(collaborator)}
-                            disabled={removingId === collaborator._id}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
-                          >
-                            <FlaticonIcon name="trash" className="w-4 h-4" aria-hidden />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Invited {new Date(collaborator.invitedAt).toLocaleDateString()}
-                        {collaborator.acceptedAt && ` • Accepted ${new Date(collaborator.acceptedAt).toLocaleDateString()}`}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty state */}
+                  <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full font-display text-xs font-bold', AVATAR[(i + 1) % AVATAR.length])}>
+                    {initial(collaborator.firstName, collaborator.email)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">
+                      {collaborator.firstName || collaborator.email.split('@')[0]}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {collaborator.role === 'editor' ? 'Editor' : 'Viewer'} · {collaborator.email}
+                    </p>
+                  </div>
+                  {collaborator.status === 'pending' ? (
+                    <span className="shrink-0 rounded-full bg-up-orange-tint px-2.5 py-[5px] text-xs font-bold text-up-orange-ink">Invited</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setConfirming(collaborator)}
+                    disabled={removingId === collaborator._id}
+                    aria-label={`Remove ${collaborator.email}`}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-up-fill hover:text-foreground"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
             {activeCollaborators.length === 0 && (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                  <FlaticonIcon name="users" className="w-7 h-7 text-muted-foreground" aria-hidden />
-                </div>
-                <h3 className="font-medium text-foreground mb-1">No Collaborators Yet</h3>
-                <p className="text-sm text-muted-foreground">Invite people to help curate this playlist</p>
-              </div>
+              <p className="mt-3 px-1 text-sm text-muted-foreground">
+                No collaborators yet — invite people to help curate this playlist.
+              </p>
             )}
-          </div>
+          </section>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
+
+    <ConfirmDialog
+      open={Boolean(confirming)}
+      onOpenChange={(open) => !open && setConfirming(null)}
+      title={`Remove ${confirming?.firstName || confirming?.email || 'this person'}?`}
+      description={`They'll lose access to "${playlist.name}". Anything they added stays.`}
+      confirmLabel="Remove"
+      busyLabel="Removing…"
+      busy={Boolean(confirming && removingId === confirming._id)}
+      onConfirm={() => (confirming ? handleRemove(confirming) : undefined)}
+    />
+    </>
   )
 }
-

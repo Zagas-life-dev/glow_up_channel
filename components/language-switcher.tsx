@@ -38,7 +38,7 @@ export function LanguageSwitcher({
         <Button
           variant={variant}
           size="sm"
-          className={cn("rounded-xl gap-2", className)}
+          className={cn("gap-2 rounded-full", className)}
           aria-label={t("language.switch")}
         >
           <Globe className="h-4 w-4" aria-hidden />
@@ -46,7 +46,7 @@ export function LanguageSwitcher({
           <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[10rem]">
+      <DropdownMenuContent align="end" className="min-w-[11rem]">
         {available.map((option) => (
           <DropdownMenuItem
             key={option}
@@ -58,7 +58,7 @@ export function LanguageSwitcher({
           >
             <span>{labels[option]}</span>
             {option === locale && (
-              <Check className="h-4 w-4 text-primary" aria-hidden />
+              <Check className="h-4 w-4 text-up-orange-ink" aria-hidden />
             )}
           </DropdownMenuItem>
         ))}

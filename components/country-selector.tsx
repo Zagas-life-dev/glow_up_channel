@@ -16,7 +16,7 @@
  */
 
 import * as React from "react"
-import { Check, ChevronDown, Globe2, MapPin } from "lucide-react"
+import { Check, ChevronDown, Globe2, MapPin, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -52,6 +52,8 @@ export function CountrySelector({
   const { t } = useLocale()
   const { selection, setSelection } = useViewingCountry()
   const { location, loading } = useUserLocation()
+  const [query, setQuery] = React.useState("")
+  const q = query.trim().toLowerCase()
 
   const detected = countryByCode(location.countryCode)
   // Someone browsing from outside the covered region still gets a working feed,
@@ -88,7 +90,7 @@ export function CountrySelector({
         : `(${detected.name} — ${t("location.notCovered")})`
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => !open && setQuery("")}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -106,62 +108,81 @@ export function CountrySelector({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align={align} className="max-h-[60vh] w-64 overflow-y-auto">
-        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          {t("location.chooseCountry")}
-        </DropdownMenuLabel>
+      <DropdownMenuContent align={align} className="max-h-[60vh] w-[280px] overflow-y-auto">
+        {/* Search: typing here must not trigger the menu's own typeahead. */}
+        <div className="relative mx-0.5 mb-1.5 mt-0.5">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder={t("location.searchCountries")}
+            aria-label={t("location.searchCountries")}
+            className="h-10 w-full rounded-up-sm border-[1.5px] border-border bg-card pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-up-orange focus:shadow-[0_0_0_4px_var(--up-orange-tint)]"
+          />
+        </div>
 
-        <DropdownMenuItem
-          onSelect={() => setSelection({ mode: "auto" })}
-          className="flex items-center justify-between gap-2"
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-            <span className="truncate">
-              {t("location.yourCountry")}
-              <span className="ml-1 text-muted-foreground">{detectedNote}</span>
-            </span>
-          </span>
-          {isActive({ mode: "auto" }) && (
-            <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-          )}
-        </DropdownMenuItem>
+        <DropdownMenuLabel>{t("location.chooseCountry")}</DropdownMenuLabel>
 
-        <DropdownMenuItem
-          onSelect={() => setSelection({ mode: "anywhere" })}
-          className="flex items-center justify-between gap-2"
-        >
-          <span className="flex items-center gap-2">
-            <Globe2 className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-            {t("location.anywhere")}
-          </span>
-          {isActive({ mode: "anywhere" }) && (
-            <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-          )}
-        </DropdownMenuItem>
+        {/* The chosen country is pinned first, with a tick. */}
+        {selection.mode === "country" && !q ? (
+          <DropdownMenuItem onSelect={() => setSelection(selection)} className="flex items-center justify-between gap-2 bg-up-fill">
+            <span className="truncate">{countryByCode(selection.countryCode)?.name ?? selection.countryCode}</span>
+            <Check className="h-4 w-4 shrink-0 text-up-orange-ink" aria-hidden />
+          </DropdownMenuItem>
+        ) : null}
 
-        {SUPPORTED_GROUPS.map((group) => (
-          <React.Fragment key={group.region}>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {t(REGION_LABEL_KEY[group.region])}
-            </DropdownMenuLabel>
-            {group.countries.map((country) => (
-              <DropdownMenuItem
-                key={country.code}
-                onSelect={() =>
-                  setSelection({ mode: "country", countryCode: country.code })
-                }
-                className="flex items-center justify-between gap-2"
-              >
-                <span className="truncate">{country.name}</span>
-                {isActive({ mode: "country", countryCode: country.code }) && (
-                  <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-                )}
-              </DropdownMenuItem>
-            ))}
-          </React.Fragment>
-        ))}
+        {!q && (
+          <>
+            <DropdownMenuItem
+              onSelect={() => setSelection({ mode: "auto" })}
+              className="flex items-center justify-between gap-2"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                <span className="truncate">
+                  {t("location.yourCountry")}
+                  <span className="ml-1 font-medium text-muted-foreground">{detectedNote}</span>
+                </span>
+              </span>
+              {isActive({ mode: "auto" }) && <Check className="h-4 w-4 shrink-0 text-up-orange-ink" aria-hidden />}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onSelect={() => setSelection({ mode: "anywhere" })}
+              className="flex items-center justify-between gap-2"
+            >
+              <span className="flex items-center gap-2">
+                <Globe2 className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                {t("location.anywhere")}
+              </span>
+              {isActive({ mode: "anywhere" }) && <Check className="h-4 w-4 shrink-0 text-up-orange-ink" aria-hidden />}
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {SUPPORTED_GROUPS.map((group) => {
+          const countries = group.countries.filter(
+            (country) => !q || country.name.toLowerCase().includes(q) || country.code.toLowerCase() === q,
+          )
+          if (!countries.length) return null
+          return (
+            <React.Fragment key={group.region}>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>{t(REGION_LABEL_KEY[group.region])}</DropdownMenuLabel>
+              {countries.map((country) => (
+                <DropdownMenuItem
+                  key={country.code}
+                  onSelect={() => setSelection({ mode: "country", countryCode: country.code })}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <span className="truncate">{country.name}</span>
+                  {isActive({ mode: "country", countryCode: country.code }) && <Check className="h-4 w-4 shrink-0 text-up-orange-ink" aria-hidden />}
+                </DropdownMenuItem>
+              ))}
+            </React.Fragment>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -20,9 +20,14 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
-    background_color: "#0B1222",
-    theme_color: "#ff6700",
-    orientation: "portrait-primary",
+    // Navy splash with the orange tile — the same launch screen iOS gets from
+    // public/splash/. The status-bar colour after that follows the reader's theme
+    // (see themeColor in app/layout.tsx); this is only what shows before the
+    // page has said anything, so it is the light bar colour, the default theme.
+    background_color: "#0B1233",
+    theme_color: "#FBFAF7",
+    // No orientation lock: portrait-primary pinned installed tablets and
+    // foldables sideways-unusable, and phones already open portrait.
     scope: "/",
     lang: "en",
     dir: "ltr",
@@ -41,5 +46,8 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     categories: ["social", "lifestyle", "education"],
     prefer_related_applications: false,
-  }
+    // A link or notification tapped while the app is open lands in that window
+    // instead of stacking a second copy of the app.
+    launch_handler: { client_mode: ["navigate-existing", "auto"] },
+  } as MetadataRoute.Manifest
 }

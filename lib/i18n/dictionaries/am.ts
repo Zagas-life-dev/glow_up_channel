@@ -42,8 +42,8 @@ export const am: Dictionary = {
     detected: "{place} ተገኝቷል",
     useDetected: "ይህን ተጠቀም",
     permissionTitle: "በአቅራቢያዎ ያሉ ዕድሎችን ያግኙ",
-    permissionBody:
-      "UP አካባቢዎን በመጠቀም በአገርዎና በከተማዎ ያሉ ሥራዎችን፣ ዝግጅቶችንና የትምህርት ዕድሎችን አስቀድሞ ያሳያል፣ ማመልከት የማይችሉባቸውንም ይደብቃል። የምናስቀምጠው ግምታዊ አካባቢዎን ብቻ ነው፣ ትክክለኛ ቦታዎን በፍጹም አይደለም፤ ይህን በማንኛውም ጊዜ በቅንብሮች ውስጥ ማጥፋት ይችላሉ።",
+    permissionBody: "UP አካባቢዎን በመጠቀም በአገርዎና በከተማዎ ያሉ ሥራዎችን፣ ዝግጅቶችንና የትምህርት ዕድሎችን አስቀድሞ ያሳያል፣ ማመልከት የማይችሉባቸውንም ይደብቃል።",
+    permissionPrivacy: "የምናስቀምጠው ግምታዊ አካባቢዎን ብቻ ነው፣ ትክክለኛ ቦታዎን በፍጹም አይደለም፤ ይህን በማንኛውም ጊዜ በቅንብሮች ውስጥ ማጥፋት ይችላሉ።",
     permissionAllow: "አካባቢን ፍቀድ",
     permissionDenied: "አካባቢ በአሳሽዎ ውስጥ ታግዷል። በምትኩ የግንኙነትዎን አገር እንጠቀማለን።",
     blockedStepsTitle: "አካባቢን እንደገና ለማብራት፦",
@@ -69,6 +69,7 @@ export const am: Dictionary = {
     permissionUnsupported: "አሳሽዎ ትክክለኛ አካባቢን አይደግፍም።",
     usingProfile: "በመገለጫዎ ላይ ያለውን አካባቢ እየተጠቀምን ነው።",
     chooseCountry: "ዕድሎችን አሳይ በ",
+    searchCountries: "አገሮችን ፈልግ",
     yourCountry: "የእኔ አካባቢ",
     anywhere: "የትም",
     viewingFrom: "{country} እየታየ ነው",

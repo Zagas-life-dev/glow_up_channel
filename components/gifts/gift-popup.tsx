@@ -16,14 +16,15 @@
 import { useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import confetti from "canvas-confetti"
-import { RiCloseLine, RiGiftFill, RiArrowRightLine, RiListCheck2 } from "react-icons/ri"
+import { RiCloseLine, RiGiftFill, RiArrowRightLine } from "react-icons/ri"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { useOptionalGifts } from "@/contexts/gift-context"
 import { useLocale } from "@/lib/i18n/context"
 import { giftsHref } from "@/lib/gifts/routes"
 import { GIFT_LISTING_LABELS } from "@/lib/gifts/types"
-import { GIFT_LISTING_ICONS } from "@/components/gifts/listing-icons"
+import { KindChip, toUpKind } from "@/components/up/kind"
+import { useInterruption } from "@/lib/interruptions"
 
 /** Brand-ish confetti; falls back silently if the canvas is unavailable. */
 function celebrate() {
@@ -34,7 +35,7 @@ function celebrate() {
       origin: { y: 0.32 },
       startVelocity: 42,
       ticks: 220,
-      colors: ["#ff6700", "#ffd166", "#8b5cf6", "#22d3ee", "#ffffff"],
+      colors: ["#FF6A00", "#D6FF3F", "#FBFAF7"],
       disableForReducedMotion: true,
     })
   } catch {
@@ -50,7 +51,10 @@ export default function GiftPopup() {
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const celebratedFor = useRef<string | null>(null)
 
-  const announced = gifts?.announced ?? null
+  const waiting = gifts?.announced ?? null
+  // One unrequested pop-up per visit; an unseen gift stays announced for the next.
+  const allowed = useInterruption("gift", Boolean(waiting))
+  const announced = allowed ? waiting : null
   const newCount = gifts?.newCount ?? 0
   const dismiss = gifts?.dismiss
 
@@ -102,104 +106,94 @@ export default function GiftPopup() {
 
   const extraCount = Math.max(0, newCount - 1)
   const listing = announced.listing
-  // A listing gift says what kind of thing it is rather than a gift category it
-  // never had — "Opportunity" tells a member more than "guide" would.
-  const ListingIcon = listing ? GIFT_LISTING_ICONS[listing.type] : null
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[120] flex items-end justify-center bg-up-scrim duration-200 animate-in fade-in-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="gift-popup-title"
       onClick={dismiss}
     >
+      {/* The one pop-up that is purely good news: navy hero, lime Gift badge. */}
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl duration-300 animate-in slide-in-from-bottom sm:rounded-3xl sm:zoom-in-95 sm:slide-in-from-bottom-0 sm:fade-in"
+        className="relative w-full max-w-[440px] overflow-hidden rounded-t-[28px] bg-up-navy pb-[env(safe-area-inset-bottom)] text-up-on-navy shadow-up-pop duration-300 animate-in slide-in-from-bottom dark:bg-up-lead sm:rounded-up-2xl sm:pb-0 sm:zoom-in-95 sm:slide-in-from-bottom-0 sm:fade-in"
         onClick={(e) => e.stopPropagation()}
       >
+        <span aria-hidden className="absolute -right-10 -top-12 h-[140px] w-[190px] -rotate-[8deg] rounded-[24px] bg-up-orange" />
+        <span aria-hidden className="absolute -top-6 right-14 h-[76px] w-[100px] rotate-[7deg] rounded-[18px] bg-up-lime" />
+
         <button
           ref={closeRef}
           type="button"
           onClick={dismiss}
           aria-label={t("gifts.close")}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur transition hover:bg-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="absolute right-3.5 top-3.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-[rgba(11,18,51,0.55)] text-up-on-navy transition-colors hover:bg-[rgba(11,18,51,0.75)] focus:outline-none focus-visible:ring-2 focus-visible:ring-up-on-navy"
         >
           <RiCloseLine className="h-5 w-5" />
         </button>
 
-        {/* Cover art, or a gradient placeholder carrying the gift mark. */}
-        <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-primary/25 via-brand-orange/20 to-violet-500/25 sm:h-48">
-          {announced.image ? (
-            <img
-              src={announced.image}
-              alt=""
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <RiGiftFill className="h-16 w-16 text-primary drop-shadow" aria-hidden />
-            </div>
-          )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
-        </div>
+        {/* The gift's image fades into the navy; without one, the gift mark on the tiles. */}
+        {announced.image ? (
+          <div className="relative h-44 w-full overflow-hidden sm:h-48">
+            <img src={announced.image} alt="" className="h-full w-full object-cover" draggable={false} />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-up-navy to-transparent to-70% dark:from-up-lead" />
+          </div>
+        ) : (
+          <div className="relative h-24 sm:h-28">
+            <span className="absolute bottom-0 left-5 grid h-14 w-14 place-items-center rounded-[18px] bg-up-orange text-up-navy sm:left-6">
+              <RiGiftFill className="h-7 w-7" aria-hidden />
+            </span>
+          </div>
+        )}
 
-        <div className="px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/12 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
+        <div className="relative px-5 pb-6 pt-4 sm:px-6">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-up-lime px-2.5 py-[5px] text-xs font-bold text-up-navy">
               <RiGiftFill className="h-3.5 w-3.5" aria-hidden />
               {t("gifts.badge")}
             </span>
-            {listing && ListingIcon ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                <ListingIcon className="h-3.5 w-3.5" aria-hidden />
+            {listing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-up-navy-subtle py-0.5 pl-0.5 pr-2.5 text-xs font-semibold text-up-on-navy-muted shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]">
+                <KindChip kind={toUpKind(listing.type)} size="sm" className="h-6 w-6 rounded-full" />
                 {GIFT_LISTING_LABELS[listing.type]}
               </span>
             ) : announced.category ? (
-              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground">
+              <span className="rounded-full bg-up-navy-subtle px-2.5 py-[5px] text-xs font-semibold capitalize text-up-on-navy-muted shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]">
                 {announced.category}
               </span>
             ) : null}
           </div>
 
-          <h2 id="gift-popup-title" className="text-xl font-bold leading-tight text-foreground sm:text-2xl">
+          <h2 id="gift-popup-title" className="font-display text-xl font-bold leading-tight sm:text-2xl">
             {t("gifts.popupTitle")}
           </h2>
-          <p className="mt-1 text-base font-semibold text-foreground">{announced.title}</p>
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-1.5 text-base font-bold">{announced.title}</p>
+          <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-up-orange">
             {announced.description}
           </p>
-
           {listing?.provider && (
-            <p className="mt-2 text-xs font-medium text-muted-foreground">{listing.provider}</p>
+            <p className="mt-2 text-xs font-semibold text-up-on-navy-muted">{listing.provider}</p>
           )}
 
-          {extraCount > 0 && (
-            <p className="mt-3 text-xs font-medium text-primary">
-              {extraCount === 1 ? t("gifts.oneMore") : t("gifts.moreWaiting", { count: extraCount })}
-            </p>
-          )}
-
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <Button
-              type="button"
-              onClick={handleView}
-              className="h-11 flex-1 rounded-xl text-sm font-semibold"
-            >
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button type="button" onClick={handleView} className="h-11 flex-1 text-sm">
               {t("gifts.view")}
-              <RiArrowRightLine className="ml-1.5 h-4 w-4" aria-hidden />
+              <RiArrowRightLine className="h-4 w-4" aria-hidden />
             </Button>
             {listHref && (
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 onClick={handleViewOthers}
-                className="h-11 flex-1 rounded-xl text-sm font-semibold"
+                className="inline-flex min-h-11 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full py-2 text-sm font-bold text-up-on-navy transition-colors hover:bg-up-navy-subtle"
               >
-                <RiListCheck2 className="mr-1.5 h-4 w-4" aria-hidden />
                 {t("gifts.viewOthers")}
-              </Button>
+                {extraCount > 0 && (
+                  <span className="rounded-full bg-up-lime-tint px-2 py-0.5 text-[11px] font-bold text-up-lime">
+                    {extraCount === 1 ? t("gifts.oneMore") : t("gifts.moreWaiting", { count: extraCount })}
+                  </span>
+                )}
+              </button>
             )}
           </div>
         </div>

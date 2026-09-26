@@ -10,7 +10,7 @@
  */
 
 import { RiArrowLeftLine } from "react-icons/ri"
-import { useRouter } from "next/navigation"
+import { useGoBack } from "@/lib/navigation/in-app-history"
 import { cn } from "@/lib/utils"
 import type { StatTile } from "@/lib/content-detail/format"
 
@@ -50,7 +50,7 @@ export function DetailHero({
   accent = "orange",
   onShare,
 }: DetailHeroProps) {
-  const router = useRouter()
+  const goBack = useGoBack()
 
   return (
     <header className="relative overflow-hidden bg-up-lead text-up-on-navy lg:rounded-[28px] dark:lg:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
@@ -63,7 +63,7 @@ export function DetailHero({
       <div className="relative z-[2] mx-auto max-w-[680px] px-5 pb-8 pt-3 lg:max-w-none lg:px-9 lg:pb-[34px] lg:pt-7">
         <div className="flex items-center justify-between gap-3 pr-[150px] lg:pr-[260px]">
           <button
-            onClick={() => router.back()}
+            onClick={goBack}
             className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.08] text-up-on-navy transition-colors hover:bg-white/[0.14]"
             aria-label="Go back"
           >

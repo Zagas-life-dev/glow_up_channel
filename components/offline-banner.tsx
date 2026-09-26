@@ -144,19 +144,20 @@ export default function OfflineBanner() {
     offline: {
       icon: <CloudOff className="h-4 w-4 shrink-0" aria-hidden />,
       text: "You're offline — you can read saved listings, but not save, apply or post.",
-      tone: "bg-foreground text-background",
+      tone: "bg-up-solid text-up-on-solid",
     },
     stale: {
       icon: <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />,
       text: staleAge
         ? `Slow connection — showing listings saved ${staleAge}.`
         : "Slow connection — showing saved listings.",
-      tone: "bg-amber-500 text-black",
+      // Tint over the card colour, so the strip stays opaque above the page.
+      tone: "bg-card bg-[linear-gradient(var(--up-orange-tint),var(--up-orange-tint))] text-foreground shadow-[inset_0_-1px_0_var(--up-hairline)]",
     },
     restored: {
       icon: <RefreshCw className="h-4 w-4 shrink-0 animate-spin" aria-hidden />,
       text: "Back online — refreshing.",
-      tone: "bg-emerald-600 text-white",
+      tone: "bg-up-lime text-up-navy",
     },
   }[mode]
 
@@ -167,7 +168,7 @@ export default function OfflineBanner() {
       aria-live="polite"
       className={cn(
         "fixed inset-x-0 top-0 z-[60] flex items-center justify-center gap-2 px-4 py-2",
-        "text-center text-[13px] font-medium",
+        "text-center text-[13px] font-semibold",
         // Sits under the notch on an installed iOS app, where the status bar is
         // translucent and the banner would otherwise be half-hidden.
         "pt-[calc(0.5rem+env(safe-area-inset-top))]",

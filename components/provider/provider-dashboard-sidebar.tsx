@@ -5,6 +5,7 @@ import Image from "next/image"
 import type { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { UpLogo } from "@/components/up/up-logo"
 
 type ProviderTab = "overview" | "content" | "promotions" | "analytics"
 
@@ -57,9 +58,9 @@ export default function ProviderDashboardSidebar({
         <Link
           href="/"
           aria-label="UP home"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-up-md bg-up-orange font-display text-xl font-extrabold text-up-navy transition-transform duration-300 hover:scale-[1.04]"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-up-md bg-up-orange transition-transform duration-300 hover:scale-[1.04]"
         >
-          UP
+          <UpLogo tone="navy" height={26} alt="" className="w-[74%]" />
         </Link>
         <div className="min-w-0">
           <p className="truncate font-display text-lg font-bold leading-tight">Provider hub</p>

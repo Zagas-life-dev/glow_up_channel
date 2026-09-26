@@ -151,7 +151,7 @@ export function buildSiteJsonLd(): JsonLdObject {
         description: BRAND.description,
         logo: compact({
           "@type": "ImageObject",
-          url: absoluteUrl(BRAND.logo),
+          url: imageUrl(BRAND.logo),
         }),
       }),
       compact({

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -207,9 +208,13 @@ export default function PlaylistDetailPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!playlist || !confirm(`Delete "${playlist.name}"? This action cannot be undone.`)) return
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const handleDelete = () => setConfirmDelete(true)
 
+  const performDelete = async () => {
+    if (!playlist) return
+    setDeleting(true)
     try {
       await deletePlaylist(playlist._id)
       toast.success("Playlist deleted")
@@ -217,6 +222,9 @@ export default function PlaylistDetailPage() {
     } catch (err) {
       console.error("Error deleting playlist:", err)
       toast.error("Failed to delete playlist")
+    } finally {
+      setDeleting(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -789,6 +797,19 @@ export default function PlaylistDetailPage() {
       </Sheet>
 
       {/* Edit Modal */}
+      {playlist ? (
+        <ConfirmDialog
+          open={confirmDelete}
+          onOpenChange={setConfirmDelete}
+          title="Delete this playlist?"
+          description={`"${playlist.name}" and its ${playlist.itemCount || 0} ${playlist.itemCount === 1 ? "item" : "items"} will be removed${playlist.collaborators?.length ? ` for you and ${playlist.collaborators.length} ${playlist.collaborators.length === 1 ? "collaborator" : "collaborators"}` : ""}. This can't be undone.`}
+          confirmLabel="Delete playlist"
+          busyLabel="Deleting…"
+          busy={deleting}
+          onConfirm={performDelete}
+        />
+      ) : null}
+
       <PlaylistModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}

@@ -25,11 +25,11 @@
 
 import { useEffect, useState } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { RiArrowLeftLine, RiCloseLine } from "react-icons/ri"
+import { RiCheckLine, RiCloseLine, RiLockLine } from "react-icons/ri"
 import { useTracker, type TrackerAnswerOptions } from "@/contexts/tracker-context"
 import { cn } from "@/lib/utils"
 import { scheduleBodyLockRelease } from "@/lib/dom/body-lock-guard"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { KindChip, toUpKind } from "@/components/up/kind"
 import { Textarea } from "@/components/ui/textarea"
 import {
   ISSUE_FREE_TEXT,
@@ -103,6 +103,81 @@ interface SheetBodyProps {
   onDismiss: () => void
 }
 
+/** An answer row in the onboarding option style; `chosen` fills navy with an orange tick. */
+function Option({
+  children,
+  onClick,
+  chosen = false,
+  hint,
+}: {
+  children: React.ReactNode
+  onClick: () => void
+  chosen?: boolean
+  hint?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={chosen}
+      className={cn(
+        "flex min-h-[54px] w-full items-center gap-3 rounded-up-lg border-[1.5px] px-4 py-3 text-left text-[15px] font-semibold transition-colors",
+        chosen
+          ? "border-transparent bg-up-solid text-up-on-solid"
+          : "border-border bg-card text-foreground hover:border-up-border-hover",
+      )}
+    >
+      <span className="min-w-0 flex-1">
+        {children}
+        {hint ? <span className="mt-0.5 block text-xs font-medium opacity-70">{hint}</span> : null}
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "grid h-6 w-6 shrink-0 place-items-center rounded-full",
+          chosen ? "bg-up-orange text-up-navy" : "shadow-[inset_0_0_0_1.5px_var(--up-border-hover)]",
+        )}
+      >
+        {chosen ? <RiCheckLine className="h-4 w-4" /> : null}
+      </span>
+    </button>
+  )
+}
+
+function Chip({ children, onClick, on = false }: { children: React.ReactNode; onClick: () => void; on?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={cn(
+        "rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors",
+        on
+          ? "border-transparent bg-up-solid text-up-on-solid"
+          : "border-border bg-card text-muted-foreground hover:border-up-border-hover hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function FollowUpHeading({ children }: { children: React.ReactNode }) {
+  return <h3 className="mt-5 font-display text-base font-bold leading-snug text-foreground">{children}</h3>
+}
+
+function Quiet({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-2 w-full rounded-full px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {children}
+    </button>
+  )
+}
+
 function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
   const [step, setStep] = useState<Step>("answer")
   const [issue, setIssue] = useState<TrackerIssue | null>(null)
@@ -116,254 +191,184 @@ function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
       ? "Welcome back. Did you register?"
       : "Welcome back. Did you get it in?"
 
-  if (step === "reason") {
-    return (
-      <div className="px-5 pb-6 pt-2">
-        <button
-          type="button"
-          onClick={() => setStep("answer")}
-          className="-ml-2 mb-3 flex items-center gap-1.5 rounded-full px-2 py-1 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <RiArrowLeftLine className="h-4 w-4" aria-hidden />
-          Back
-        </button>
-
-        <h2 className="text-[22px] font-bold leading-tight tracking-[-0.01em]">
-          What put you off?
-        </h2>
-        <p className="mt-2 text-body-sm text-muted-foreground">
-          This is the part that actually changes what you get shown.
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {REASON_OPTIONS.map((reason) => (
-            <button
-              key={reason}
-              type="button"
-              onClick={() => onAnswer(negative, { reason })}
-              className="rounded-full border border-border bg-card px-3.5 py-2 text-body-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-            >
-              {REASON_LABELS[reason]}
-            </button>
-          ))}
-        </div>
-
-        {/* Skipping is a real answer. The rejection still counts without a reason. */}
-        <button
-          type="button"
-          onClick={() => onAnswer(negative)}
-          className="mt-4 w-full rounded-full px-4 py-2.5 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Rather not say
-        </button>
-      </div>
-    )
+  const labels = {
+    remind: "Started, not finished — remind me",
+    reason: isResource ? "Wasn't useful — less like this" : "Not for me — stop suggesting these",
+    issue: `Couldn't ${attemptVerb(entry)} — something was wrong`,
   }
 
-  if (step === "issue") {
-    const wantsNote = issue === ISSUE_FREE_TEXT
-    const note = issueNote.trim()
-
-    return (
-      <div className="px-5 pb-6 pt-2">
-        <button
-          type="button"
-          onClick={() => setStep("answer")}
-          className="-ml-2 mb-3 flex items-center gap-1.5 rounded-full px-2 py-1 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <RiArrowLeftLine className="h-4 w-4" aria-hidden />
-          Back
-        </button>
-
-        <h2 className="text-[22px] font-bold leading-tight tracking-[-0.01em]">
-          What happened?
-        </h2>
-        {/*
-          Says who reads it, because that is the whole reason to answer. This one
-          does not shape the feed — it goes to the people who can pull a dead
-          listing down, and saying so is what makes the question worth a tap.
-        */}
-        <p className="mt-2 text-body-sm text-muted-foreground">
-          This goes to whoever posted it, and to us. Listings that stop working
-          get taken down.
+  const header = (
+    <div className="flex items-start gap-3 pr-10">
+      <KindChip kind={toUpKind(entry.contentType)} size="lg" />
+      <div className="min-w-0">
+        <h2 className="font-display text-[19px] font-bold leading-tight text-foreground sm:text-xl">{heading}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {entry.contentTitle || "This listing"}
+          {subtitleFor(entry) ? ` · ${subtitleFor(entry)}` : ""}
         </p>
+      </div>
+    </div>
+  )
 
-        <fieldset className="mt-4">
-          <legend className="sr-only">What stopped you</legend>
-          <RadioGroup
-            value={issue ?? ""}
-            onValueChange={(value) => setIssue(value as TrackerIssue)}
-            className="gap-0"
-          >
-            {ISSUE_OPTIONS.map((option) => (
-              <label
-                key={option}
-                htmlFor={`issue-${option}`}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[15px] transition-colors",
-                  issue === option ? "bg-accent" : "hover:bg-accent/60",
-                )}
+  const privacy = (
+    <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs leading-relaxed text-muted-foreground">
+      <RiLockLine className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      We can&apos;t see other sites. Your answer is the only thing that teaches the feed.
+    </p>
+  )
+
+  // Follow-ups slide in under the chosen answer; tapping it again goes back.
+  if (step !== "answer") {
+    const chosenLabel = step === "remind" ? labels.remind : step === "reason" ? labels.reason : labels.issue
+    return (
+      <div className="px-5 pb-6 sm:px-6">
+        {header}
+        <div className="mt-5">
+          <Option chosen onClick={() => setStep("answer")} hint="Tap to change">
+            {chosenLabel}
+          </Option>
+        </div>
+
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          {step === "reason" && (
+            <>
+              <FollowUpHeading>What put you off?</FollowUpHeading>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This is the part that actually changes what you get shown.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {REASON_OPTIONS.map((reason) => (
+                  <Chip key={reason} onClick={() => onAnswer(negative, { reason })}>
+                    {REASON_LABELS[reason]}
+                  </Chip>
+                ))}
+              </div>
+              {/* Skipping is a real answer. The rejection still counts without a reason. */}
+              <Quiet onClick={() => onAnswer(negative)}>Rather not say</Quiet>
+            </>
+          )}
+
+          {step === "issue" && (
+            <>
+              <FollowUpHeading>What happened?</FollowUpHeading>
+              {/*
+                Says who reads it, because that is the whole reason to answer. This one
+                does not shape the feed — it goes to the people who can pull a dead
+                listing down, and saying so is what makes the question worth a tap.
+              */}
+              <p className="mt-1 text-sm text-muted-foreground">
+                This goes to whoever posted it, and to us. Listings that stop working
+                get taken down.
+              </p>
+              <fieldset className="mt-3">
+                <legend className="sr-only">What stopped you</legend>
+                <div className="flex flex-wrap gap-2">
+                  {ISSUE_OPTIONS.map((option) => (
+                    <Chip key={option} on={issue === option} onClick={() => setIssue(option)}>
+                      {ISSUE_LABELS[option]}
+                    </Chip>
+                  ))}
+                </div>
+              </fieldset>
+
+              {issue === ISSUE_FREE_TEXT && (
+                <div className="mt-3">
+                  <label htmlFor="issue-note" className="sr-only">
+                    Tell us what happened
+                  </label>
+                  <Textarea
+                    id="issue-note"
+                    autoFocus
+                    rows={3}
+                    maxLength={ISSUE_NOTE_MAX_LENGTH}
+                    value={issueNote}
+                    onChange={(event) => setIssueNote(event.target.value)}
+                    placeholder="What went wrong?"
+                    className="min-h-[76px] resize-none text-[15px]"
+                  />
+                  <p className="mt-1 text-right text-xs text-muted-foreground">
+                    {issueNote.length}/{ISSUE_NOTE_MAX_LENGTH}
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={!issue}
+                onClick={() => {
+                  const note = issueNote.trim()
+                  onAnswer("other", {
+                    issue: issue ?? undefined,
+                    // Sent only for the one option that offered a box. The server
+                    // drops it otherwise, and this keeps the two ends agreeing.
+                    issueNote: issue === ISSUE_FREE_TEXT && note ? note : undefined,
+                  })
+                }}
+                className="mt-4 h-11 w-full rounded-full bg-primary px-5 text-[15px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                <RadioGroupItem value={option} id={`issue-${option}`} className="shrink-0" />
-                <span className="min-w-0">{ISSUE_LABELS[option]}</span>
-              </label>
-            ))}
-          </RadioGroup>
-        </fieldset>
+                Send
+              </button>
+              {/* Same escape as the reason panel: the answer still counts without a detail. */}
+              <Quiet onClick={() => onAnswer("other")}>Rather not say</Quiet>
+            </>
+          )}
 
-        {wantsNote && (
-          <div className="mt-2 px-3">
-            <label htmlFor="issue-note" className="sr-only">
-              Tell us what happened
-            </label>
-            <Textarea
-              id="issue-note"
-              autoFocus
-              rows={3}
-              maxLength={ISSUE_NOTE_MAX_LENGTH}
-              value={issueNote}
-              onChange={(event) => setIssueNote(event.target.value)}
-              placeholder="What went wrong?"
-              className="min-h-[76px] resize-none rounded-xl bg-card text-[15px]"
-            />
-            <p className="mt-1 text-right text-caption text-muted-foreground">
-              {issueNote.length}/{ISSUE_NOTE_MAX_LENGTH}
-            </p>
-          </div>
-        )}
-
-        <button
-          type="button"
-          disabled={!issue}
-          onClick={() =>
-            onAnswer("other", {
-              issue: issue ?? undefined,
-              // Sent only for the one option that offered a box. The server
-              // drops it otherwise, and this keeps the two ends agreeing.
-              issueNote: wantsNote && note ? note : undefined,
-            })
-          }
-          className="mt-4 w-full rounded-full bg-primary px-5 py-3 text-[15px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-        >
-          Send
-        </button>
-
-        {/* Same escape as the reason panel: the answer still counts without a detail. */}
-        <button
-          type="button"
-          onClick={() => onAnswer("other")}
-          className="mt-2 w-full rounded-full px-4 py-2.5 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Rather not say
-        </button>
-      </div>
-    )
-  }
-
-  if (step === "remind") {
-    return (
-      <div className="px-5 pb-6 pt-2">
-        <button
-          type="button"
-          onClick={() => setStep("answer")}
-          className="-ml-2 mb-3 flex items-center gap-1.5 rounded-full px-2 py-1 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <RiArrowLeftLine className="h-4 w-4" aria-hidden />
-          Back
-        </button>
-
-        <h2 className="text-[22px] font-bold leading-tight tracking-[-0.01em]">
-          When should we nudge you?
-        </h2>
-        {entry.deadline && (
-          <p className="mt-2 text-body-sm text-muted-foreground">
-            We&apos;ll move it earlier if the deadline lands first.
-          </p>
-        )}
-
-        <div className="mt-4 grid grid-cols-4 gap-2">
-          {WEEKDAYS.map((day) => (
-            <button
-              key={day.value}
-              type="button"
-              onClick={() => onAnswer(middle ?? "started", { remindWeekday: day.value })}
-              className="rounded-xl border border-border bg-card px-2 py-3 text-body-sm font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-            >
-              {day.short}
-            </button>
-          ))}
+          {step === "remind" && (
+            <>
+              <FollowUpHeading>When should we nudge you?</FollowUpHeading>
+              {entry.deadline && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  We&apos;ll move it earlier if the deadline lands first.
+                </p>
+              )}
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {WEEKDAYS.map((day) => (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => onAnswer(middle ?? "started", { remindWeekday: day.value })}
+                    className="h-11 rounded-up-md border-[1.5px] border-border bg-card text-sm font-semibold transition-colors hover:border-up-orange"
+                  >
+                    {day.short}
+                  </button>
+                ))}
+              </div>
+              <Quiet onClick={() => onAnswer(middle ?? "started")}>Don&apos;t remind me</Quiet>
+            </>
+          )}
         </div>
-
-        <button
-          type="button"
-          onClick={() => onAnswer(middle ?? "started")}
-          className="mt-4 w-full rounded-full px-4 py-2.5 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Don&apos;t remind me
-        </button>
       </div>
     )
   }
 
   return (
-    <div className="px-5 pb-6 pt-2">
-      <h2 className="text-[22px] font-bold leading-tight tracking-[-0.01em]">{heading}</h2>
+    <div className="px-5 pb-6 sm:px-6">
+      {header}
 
-      <p className="mt-2 text-body-sm text-muted-foreground">
-        {entry.contentTitle || "This listing"}
-        {subtitleFor(entry) ? ` · ${subtitleFor(entry)}` : ""}
-      </p>
-
-      <div className="mt-5 space-y-2.5">
-        <button
-          type="button"
-          onClick={() => onAnswer(positive)}
-          className="w-full rounded-2xl bg-primary px-5 py-4 text-left text-[15px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-        >
+      <div className="mt-5 space-y-2">
+        <Option onClick={() => onAnswer(positive)}>
           {isResource ? "Got what I needed" : "Submitted it — track this one"}
-        </button>
+        </Option>
 
-        {middle && (
-          <button
-            type="button"
-            onClick={() => setStep("remind")}
-            className="w-full rounded-2xl border border-border bg-card px-5 py-4 text-left text-[15px] font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-          >
-            Started, not finished — remind me
-          </button>
-        )}
+        {middle && <Option onClick={() => setStep("remind")}>{labels.remind}</Option>}
 
-        <button
-          type="button"
-          onClick={() => setStep("reason")}
-          className="w-full rounded-2xl border border-border bg-card px-5 py-4 text-left text-[15px] font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-        >
-          {isResource ? "Wasn't useful — less like this" : "Not for me — stop suggesting these"}
-        </button>
+        <Option onClick={() => setStep("reason")}>{labels.reason}</Option>
 
         {/*
-          Last, but styled exactly like the two above it. Someone who could not
+          Last, but styled exactly like the others. Someone who could not
           get the form to load is not going to hunt for this under a "more"
           link, and the answer they would give instead — "not for me" — is the
           single most damaging thing they could tell the feed.
         */}
-        <button
-          type="button"
-          onClick={() => setStep("issue")}
-          className="w-full rounded-2xl border border-border bg-card px-5 py-4 text-left text-[15px] font-medium transition-colors hover:border-primary/40 hover:bg-accent"
-        >
-          Couldn&apos;t {attemptVerb(entry)} — something was wrong
-        </button>
+        <Option onClick={() => setStep("issue")}>{labels.issue}</Option>
       </div>
 
-      <p className="mt-4 text-center text-caption leading-relaxed text-muted-foreground">
-        We can&apos;t see other sites. Your answer is the only thing that teaches the feed.
-      </p>
+      {privacy}
 
       <button
         type="button"
         onClick={onDismiss}
-        className="mt-2 w-full rounded-full px-4 py-2 text-body-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="mt-1 w-full rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         Ask me later
       </button>
@@ -450,16 +455,16 @@ export function TrackerReturnSheet() {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-50 bg-black/60",
+            "fixed inset-0 z-50 bg-up-scrim",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           )}
         />
         <DialogPrimitive.Content
           className={cn(
-            "fixed z-50 border border-border bg-card text-card-foreground shadow-2xl focus:outline-none",
+            "fixed z-50 bg-card text-card-foreground shadow-up-pop focus:outline-none",
             // Phone: a bottom sheet, clear of the home indicator.
-            "inset-x-0 bottom-0 rounded-t-3xl pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+            "inset-x-0 bottom-0 rounded-t-[28px] pb-[max(0.5rem,env(safe-area-inset-bottom))]",
             // Tall panels scroll inside the sheet rather than off the top of it.
             // dvh over vh because mobile browser chrome is what makes the
             // difference here, and overscroll-contain stops a flick at the end
@@ -471,8 +476,8 @@ export function TrackerReturnSheet() {
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=closed]:slide-out-to-bottom",
             // Desktop: a centred dialog.
-            "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-[440px]",
-            "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:pb-0",
+            "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-[520px]",
+            "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-up-2xl sm:pb-0",
             "sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95",
             "sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:fade-out-0",
           )}
@@ -486,11 +491,11 @@ export function TrackerReturnSheet() {
 
           {/* Grab handle. Decorative on desktop, so it goes away there. */}
           <div className="flex justify-center pt-2.5 sm:hidden" aria-hidden>
-            <div className="h-1 w-9 rounded-full bg-muted-foreground/25" />
+            <div className="h-[5px] w-10 rounded-full bg-up-sep" />
           </div>
 
           <DialogPrimitive.Close
-            className="absolute right-4 top-4 hidden rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:block"
+            className="absolute right-5 top-5 hidden h-9 w-9 place-items-center rounded-full bg-up-fill text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid"
             aria-label="Ask me later"
           >
             <RiCloseLine className="h-4 w-4" aria-hidden />

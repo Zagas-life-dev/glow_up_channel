@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { IconType } from "react-icons"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { UpLogo } from "@/components/up/up-logo"
 
 /**
  * The frame every account page sits in (UP Design v1): a full-height navy
@@ -33,11 +34,11 @@ function Mark({ className }: { className?: string }) {
       href="/"
       aria-label="UP home"
       className={cn(
-        "relative grid h-11 w-11 place-items-center rounded-up-md bg-up-orange font-display text-xl font-extrabold text-up-navy",
+        "relative grid h-11 w-11 place-items-center rounded-up-md bg-up-orange",
         className,
       )}
     >
-      UP
+      <UpLogo tone="navy" height={26} alt="" className="w-[74%]" />
     </Link>
   )
 }

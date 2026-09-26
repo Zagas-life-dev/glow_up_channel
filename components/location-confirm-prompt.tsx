@@ -13,6 +13,8 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
+import { MapPin } from "lucide-react"
+import { claimInterruption } from "@/lib/interruptions"
 
 import { CountryField, type CountryValue } from "@/components/posting/CountryField"
 import { Button } from "@/components/ui/button"
@@ -89,7 +91,7 @@ export function LocationConfirmPrompt() {
 
     const timer = window.setTimeout(() => {
       // Never on top of another dialog (the location question, a gift).
-      if (!document.querySelector('[role="dialog"]')) setOpen(true)
+      if (!document.querySelector('[role="dialog"]') && claimInterruption("location-confirm")) setOpen(true)
     }, SHOW_AFTER_MS)
     return () => window.clearTimeout(timer)
   }, [isAuthenticated, saved, profile, pathname])
@@ -127,8 +129,12 @@ export function LocationConfirmPrompt() {
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : later())}>
-      <DialogContent className="max-w-md rounded-2xl">
+      <DialogContent className="max-w-[440px]">
         <DialogHeader>
+          {/* Neutral pin tile: this is housekeeping, not news. */}
+          <span className="mb-2 grid h-11 w-11 place-items-center rounded-up-md bg-up-fill text-foreground">
+            <MapPin className="h-5 w-5" aria-hidden />
+          </span>
           <DialogTitle>{t("onboarding.locationConfirmTitle")}</DialogTitle>
           <DialogDescription>{t("onboarding.locationConfirmBody")}</DialogDescription>
         </DialogHeader>
@@ -145,7 +151,7 @@ export function LocationConfirmPrompt() {
           />
           {structured ? (
             <Select value={state || undefined} onValueChange={(value) => { setState(value); setCity("") }}>
-              <SelectTrigger className="h-10 text-sm">
+              <SelectTrigger className="h-[46px] text-[15px]">
                 <SelectValue placeholder={t("location.selectRegion", { label })} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -155,11 +161,11 @@ export function LocationConfirmPrompt() {
               </SelectContent>
             </Select>
           ) : (
-            <Input value={state} onChange={(e) => setState(e.target.value)} placeholder={label} className="h-10 text-sm" />
+            <Input value={state} onChange={(e) => setState(e.target.value)} placeholder={label} className="h-[46px] text-[15px]" />
           )}
           {structured && citiesOf(country?.code, state).length > 0 ? (
             <Select value={city || undefined} onValueChange={setCity}>
-              <SelectTrigger className="h-10 text-sm">
+              <SelectTrigger className="h-[46px] text-[15px]">
                 <SelectValue placeholder={t("location.selectCity")} />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -169,15 +175,15 @@ export function LocationConfirmPrompt() {
               </SelectContent>
             </Select>
           ) : (
-            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("location.city")} className="h-10 text-sm" />
+            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("location.city")} className="h-[46px] text-[15px]" />
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button type="button" variant="ghost" onClick={later} className="rounded-xl">
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={later} className="h-11">
             {t("common.notNow")}
           </Button>
-          <Button type="button" onClick={confirm} disabled={saving || !country || !state.trim()} className="rounded-xl">
+          <Button type="button" onClick={confirm} disabled={saving || !country || !state.trim()} className="h-11 px-6">
             {t("onboarding.locationConfirm")}
           </Button>
         </DialogFooter>

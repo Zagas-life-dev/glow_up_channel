@@ -21,6 +21,8 @@ import { useRouter } from "next/navigation"
 import { RiCloseLine, RiArrowRightLine, RiMegaphoneFill } from "react-icons/ri"
 
 import { Button } from "@/components/ui/button"
+import { KindChip, SponsoredLabel, toUpKind } from "@/components/up/kind"
+import { useInterruption } from "@/lib/interruptions"
 import { useOptionalGifts } from "@/contexts/gift-context"
 import { useOptionalPromotionAnnouncement } from "@/contexts/promotion-announcement-context"
 import { ApiClient } from "@/lib/api-client"
@@ -42,7 +44,9 @@ export default function PromotionAnnouncementPopup() {
   const announced = promo?.announced ?? null
   const dismiss = promo?.dismiss
   const giftWaiting = Boolean(gifts?.announced)
-  const showing = Boolean(announced) && !giftWaiting
+  // One unrequested pop-up per visit. Deferred, not dismissed: an announcement
+  // that loses the slot comes back on the reader's next eligible visit.
+  const showing = useInterruption("extreme", Boolean(announced) && !giftWaiting)
 
   /** The campaign an impression has already been counted for. */
   const countedFor = useRef<string | null>(null)
@@ -132,87 +136,69 @@ export default function PromotionAnnouncementPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[110] flex items-end justify-center bg-up-scrim duration-200 animate-in fade-in-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="promo-announcement-title"
       onClick={handleDismiss}
     >
+      {/* Keeps its own look: the same navy and tile stack as the extreme feed
+          card, so the pop-up and the card read as one campaign. */}
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl duration-300 animate-in slide-in-from-bottom sm:rounded-3xl sm:zoom-in-95 sm:slide-in-from-bottom-0 sm:fade-in"
+        className="relative w-full max-w-[440px] overflow-hidden rounded-t-[28px] bg-up-navy pb-[env(safe-area-inset-bottom)] text-up-on-navy shadow-up-pop duration-300 animate-in slide-in-from-bottom dark:bg-up-lead sm:rounded-up-2xl sm:pb-0 sm:zoom-in-95 sm:slide-in-from-bottom-0 sm:fade-in"
         onClick={(e) => e.stopPropagation()}
       >
+        <span aria-hidden className="absolute -right-10 -top-12 h-[140px] w-[190px] -rotate-[8deg] rounded-[24px] bg-up-orange" />
+        <span aria-hidden className="absolute -top-6 right-14 h-[76px] w-[100px] rotate-[7deg] rounded-[18px] bg-up-lime" />
+
+        {/* Close is a quiet ✕ on the navy; no second button competes. */}
         <button
           ref={closeRef}
           type="button"
           onClick={handleDismiss}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur transition hover:bg-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="absolute right-3.5 top-3.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-[rgba(11,18,51,0.55)] text-up-on-navy transition-colors hover:bg-[rgba(11,18,51,0.75)] focus:outline-none focus-visible:ring-2 focus-visible:ring-up-on-navy"
         >
           <RiCloseLine className="h-5 w-5" />
         </button>
 
-        {/* Cover art, or a gradient placeholder. */}
-        <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-brand-orange/25 via-primary/20 to-violet-500/25 sm:h-48">
-          {campaign.image ? (
-            <img
-              src={campaign.image}
-              alt=""
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <RiMegaphoneFill className="h-16 w-16 text-up-orange-ink drop-shadow" aria-hidden />
-            </div>
-          )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-up-fill" />
-        </div>
-
-        <div className="px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
-          <div className="mb-3 flex items-center gap-2">
-            {/* The disclosure. Above the title, not beneath it: this is a paid
-                placement and the reader should know that before they read the
-                pitch, not after. */}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              <RiMegaphoneFill className="h-3.5 w-3.5" aria-hidden />
-              Sponsored
+        {/* The campaign image fades into the navy instead of sitting in a box. */}
+        {campaign.image ? (
+          <div className="relative h-44 w-full overflow-hidden sm:h-48">
+            <img src={campaign.image} alt="" className="h-full w-full object-cover" draggable={false} />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-up-navy to-transparent to-70% dark:from-up-lead" />
+          </div>
+        ) : (
+          <div className="relative h-24 sm:h-28">
+            <span className="absolute bottom-0 left-5 grid h-14 w-14 place-items-center rounded-[18px] bg-up-orange text-up-navy sm:left-6">
+              <RiMegaphoneFill className="h-7 w-7" aria-hidden />
             </span>
-            <span className="rounded-full bg-up-orange-tint px-2.5 py-1 text-xs font-medium capitalize text-up-orange-ink">
+          </div>
+        )}
+
+        <div className="relative px-5 pb-6 pt-4 sm:px-6">
+          {/* The disclosure. Above the title, not beneath it: this is a paid
+              placement and the reader should know that before they read the
+              pitch, not after. */}
+          <div className="mb-3 flex items-center gap-2">
+            <SponsoredLabel className="mb-0 pl-0 text-up-on-navy-muted" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-up-navy-subtle py-0.5 pl-0.5 pr-2.5 text-xs font-semibold capitalize text-up-on-navy-muted shadow-[inset_0_0_0_1px_var(--up-border-on-navy)]">
+              <KindChip kind={toUpKind(campaign.contentType)} size="sm" className="h-6 w-6 rounded-full" />
               {campaign.contentType}
             </span>
           </div>
 
-          <h2
-            id="promo-announcement-title"
-            className="text-xl font-bold leading-tight text-foreground sm:text-2xl"
-          >
+          <h2 id="promo-announcement-title" className="font-display text-xl font-bold leading-tight sm:text-2xl">
             {campaign.title}
           </h2>
           {campaign.description && (
-            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-              {campaign.description}
-            </p>
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-up-orange">{campaign.description}</p>
           )}
 
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <Button
-              type="button"
-              onClick={handleView}
-              className="h-11 flex-1 text-sm font-semibold"
-            >
-              Take a look
-              <RiArrowRightLine className="ml-1.5 h-4 w-4" aria-hidden />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleDismiss}
-              className="h-11 flex-1 text-sm font-semibold"
-            >
-              Not now
-            </Button>
-          </div>
+          <Button type="button" onClick={handleView} className="mt-5 h-11 w-full text-sm sm:w-auto sm:px-6">
+            Take a look
+            <RiArrowRightLine className="h-4 w-4" aria-hidden />
+          </Button>
         </div>
       </div>
     </div>

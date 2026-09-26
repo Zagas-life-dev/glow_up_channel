@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, Suspense } from "react"
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
+import { toast } from "sonner"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -173,16 +175,20 @@ function PlaylistsPageInner() {
     if (activeTab === "public") trackPlaylistDiscover()
   }, [activeTab])
 
-  const handleDelete = async (playlist: Playlist) => {
-    if (!confirm(`Delete "${playlist.name}"? This action cannot be undone.`)) return
+  const [confirmingDelete, setConfirmingDelete] = useState<Playlist | null>(null)
+  const handleDelete = (playlist: Playlist) => setConfirmingDelete(playlist)
 
+  const performDelete = async (playlist: Playlist) => {
     setDeletingId(playlist._id)
     try {
       await deletePlaylist(playlist._id)
+      toast.success("Playlist deleted")
     } catch (err) {
       console.error("Error deleting playlist:", err)
+      toast.error("Failed to delete playlist")
     } finally {
       setDeletingId(null)
+      setConfirmingDelete(null)
     }
   }
 
@@ -506,6 +512,21 @@ function PlaylistsPageInner() {
           )}
         </main>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(confirmingDelete)}
+        onOpenChange={(open) => !open && setConfirmingDelete(null)}
+        title="Delete this playlist?"
+        description={
+          confirmingDelete
+            ? `"${confirmingDelete.name}" and its ${confirmingDelete.itemCount || 0} ${confirmingDelete.itemCount === 1 ? "item" : "items"} will be removed${confirmingDelete.collaborators?.length ? ` for you and ${confirmingDelete.collaborators.length} ${confirmingDelete.collaborators.length === 1 ? "collaborator" : "collaborators"}` : ""}. This can't be undone.`
+            : undefined
+        }
+        confirmLabel="Delete playlist"
+        busyLabel="Deleting…"
+        busy={Boolean(confirmingDelete && deletingId === confirmingDelete._id)}
+        onConfirm={() => (confirmingDelete ? performDelete(confirmingDelete) : undefined)}
+      />
 
       <PlaylistModal
         isOpen={showCreateModal || editingPlaylist !== null}

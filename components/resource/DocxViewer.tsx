@@ -213,7 +213,7 @@ export default function DocxViewer({ source, label = "Word document" }: DocxView
     [zoomIn, zoomOut, toggleFullscreen],
   )
 
-  const iconBtn = "h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40"
+  const iconBtn = "h-9 w-9 rounded-full text-muted-foreground hover:bg-card hover:text-foreground disabled:opacity-40"
 
   return (
     <div
@@ -222,11 +222,11 @@ export default function DocxViewer({ source, label = "Word document" }: DocxView
       className={
         (isFullscreen
           ? "fixed inset-0 z-[70] flex flex-col bg-page select-none"
-          : "rounded-2xl border border-border bg-muted/40 overflow-hidden select-none") + " outline-none"
+          : "overflow-hidden rounded-up-xl border border-border bg-up-fill select-none") + " outline-none"
       }
       onContextMenu={(e) => e.preventDefault()}
     >
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-page/95 px-2 py-2 backdrop-blur sm:px-3">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-up-bar px-2 py-2 backdrop-blur-xl sm:px-3">
         <div className="flex items-center gap-2 px-1 text-sm text-foreground">
           <span className="font-medium">{label}</span>
           {sectionCount != null && (
@@ -296,7 +296,7 @@ export default function DocxViewer({ source, label = "Word document" }: DocxView
 
         {loadError && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <RiErrorWarningLine className="h-8 w-8 text-red-500" aria-hidden />
+            <RiErrorWarningLine className="h-8 w-8 text-muted-foreground" aria-hidden />
             <p className="text-sm text-muted-foreground">{loadError}</p>
           </div>
         )}
@@ -310,7 +310,7 @@ export default function DocxViewer({ source, label = "Word document" }: DocxView
           <div
             ref={renderRef}
             style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}
-            className="[&_.docx-wrapper]:bg-transparent [&_.docx-wrapper]:p-0 [&_section.docx]:mx-auto [&_section.docx]:mb-4 [&_section.docx]:shadow-sm"
+            className="[&_.docx-wrapper]:bg-transparent [&_.docx-wrapper]:p-0 [&_section.docx]:mx-auto [&_section.docx]:mb-4 [&_section.docx]:shadow-[0_2px_12px_rgba(11,18,51,0.12)]"
           />
         </div>
       </div>

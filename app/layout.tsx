@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next/types"
+import type { Metadata, Viewport } from "next/types"
 import { cookies, headers } from "next/headers"
 import { Unbounded, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
@@ -32,10 +32,13 @@ import VisitTracker from "@/components/visit-tracker"
 import BackgroundPrefetcher from "@/components/background-prefetcher"
 import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
+import { InAppHistoryTracker } from "@/lib/navigation/in-app-history"
 import OfflineBanner from "@/components/offline-banner"
 import { getMetadataBase } from "@/lib/site-url"
 import { JsonLd } from "@/components/seo/json-ld"
 import { buildSiteJsonLd } from "@/lib/seo/structured-data"
+import { APPLE_SPLASH_SCREENS } from "@/lib/pwa/apple-splash.generated"
+import ThemeColorSync from "@/components/theme-color-sync"
 
 /**
  * The two brand typefaces of the landing redesign (docs/main-html) — Unbounded
@@ -106,6 +109,18 @@ export const metadata: Metadata = {
     shortcut: "/icons/icon-192.png",
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  // Installed-app behaviour on iOS. `default` rather than `black-translucent`:
+  // translucent always draws white status-bar text, which disappears against
+  // the cream top bar in light mode. With `default`, iOS paints the bar in the
+  // theme colour below and picks a legible text colour itself.
+  appleWebApp: {
+    capable: true,
+    title: "UP",
+    statusBarStyle: "default",
+    // Without an exact-size image per device, iOS shows a white screen while
+    // the app boots. Generated with the icons — see scripts/generate-pwa-icons.mjs.
+    startupImage: APPLE_SPLASH_SCREENS,
+  },
   openGraph: {
     type: "website",
     siteName: "UP",
@@ -119,6 +134,23 @@ export const metadata: Metadata = {
     description:
       "Connect to opportunities, events, jobs, and free resources tailored for ambitious young people.",
   },
+}
+
+/**
+ * Browser chrome colour — the Android status bar, the installed app's title bar
+ * on desktop, the iOS status bar. The same as the app's own top bar in each
+ * theme, so the chrome reads as part of the app. These media queries cover the
+ * first paint for "system" readers; ThemeColorSync corrects it for anyone who
+ * picked a theme by hand.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBFAF7" },
+    { media: "(prefers-color-scheme: dark)", color: "#070A1C" },
+  ],
 }
 
 /**
@@ -161,11 +193,6 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="theme-color" content="#ff6700" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="UP" />
         <meta name="google" content="notranslate" />
         {/* Publisher identity every listing's JSON-LD points back to. */}
         <JsonLd data={buildSiteJsonLd()} />
@@ -175,6 +202,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeColorSync />
           <LocaleProvider initialLocale={locale} countryCode={countryCode}>
             <ViewingCountryProvider>
               <AuthProvider>
@@ -198,6 +226,7 @@ export default async function RootLayout({
                             {/* Renders nothing. Warms every feed while the browser is idle. */}
                             <BackgroundPrefetcher />
                             <RegisterSw />
+                            <InAppHistoryTracker />
                             <OfflineBanner />
                             <PwaInstallBanner />
                             {children}

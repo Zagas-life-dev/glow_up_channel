@@ -1,7 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { FlaticonIcon } from "@/components/ui/flaticon-icon"
+import { BRAND_LOGOS, brandLogoUrl } from "@/lib/seo/brand"
 
 export default function UnderConstructionPage() {
   return (
@@ -10,12 +10,14 @@ export default function UnderConstructionPage() {
         {/* Logo */}
         <div className="mb-8 flex justify-center">
           <div className="relative w-32 h-32 sm:w-40 sm:h-40">
-            <Image
-              src="/images/Yellow and Black Modern Media Company Logo (14).png"
+            {/* The navy logo tile, from Cloudinary so it is the same file everywhere. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={brandLogoUrl(BRAND_LOGOS.navy, { height: 160 })}
               alt="UP"
-              fill
-              className="object-contain"
-              priority
+              width={160}
+              height={160}
+              className="h-full w-full rounded-[22%] object-contain"
             />
           </div>
         </div>

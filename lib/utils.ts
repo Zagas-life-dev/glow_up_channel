@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function glassSurfaceClass(...inputs: ClassValue[]) {
   return cn(
-    "rounded-xl border border-border/60 bg-popover/80 backdrop-blur-md shadow-lg",
+    "rounded-up-lg border-0 bg-popover text-popover-foreground shadow-up-pop",
     ...inputs
   )
 }

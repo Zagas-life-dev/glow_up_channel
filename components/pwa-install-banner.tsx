@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth-context"
+import { claimInterruption } from "@/lib/interruptions"
 
-const AUTH_DELAY_MS = 5 * 60 * 1000 // 5 minutes
 export const PWA_DISMISSED_EVENT = "glowup-pwa-dismissed"
 
 const BROWSER_LABELS: Record<PwaBrowserKind, string> = {
@@ -33,7 +32,7 @@ function ShareArrowPointer({
   const isBottom = position === "bottom"
   return (
     <div className="relative flex flex-col items-center">
-      <p className="text-sm font-medium text-foreground mb-1 text-center">
+      <p className="mb-1 text-center text-[13px] font-semibold text-foreground">
         {isBottom
           ? `In ${label}, the Share icon is at the bottom of the screen`
           : `In ${label}, the Share icon is in the top right of the screen`}
@@ -44,7 +43,7 @@ function ShareArrowPointer({
           height="56"
           viewBox="0 0 48 56"
           fill="none"
-          className="text-primary shrink-0"
+          className="shrink-0 text-up-orange"
           aria-hidden
         >
           <path
@@ -61,7 +60,7 @@ function ShareArrowPointer({
           height="48"
           viewBox="0 0 56 48"
           fill="none"
-          className="text-primary shrink-0"
+          className="shrink-0 text-up-orange"
           aria-hidden
         >
           <path
@@ -73,8 +72,8 @@ function ShareArrowPointer({
           />
         </svg>
       )}
-      <div className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-muted/80 px-4 py-3 border border-border/60">
-        <Share className="h-8 w-8 text-foreground shrink-0" aria-hidden />
+      <div className="mt-2 flex items-center justify-center gap-2 rounded-up-md bg-up-fill px-4 py-2.5">
+        <Share className="h-6 w-6 shrink-0 text-foreground" aria-hidden />
         <span className="text-sm font-medium text-foreground">Share icon</span>
       </div>
     </div>
@@ -172,12 +171,10 @@ function getBrowserKind(): PwaBrowserKind {
 }
 
 /** Returns browser-specific install steps (for manual Add to Home Screen). */
-function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: string[] } {
-  const label = BROWSER_LABELS[browserKind]
+function getInstallSteps(browserKind: PwaBrowserKind): { steps: string[] } {
   switch (browserKind) {
     case "safari_ios":
       return {
-        intro: "In Safari, the Share icon is at the bottom of the screen. Follow the arrow:",
         steps: [
           "Tap the Share icon at the bottom of Safari",
           'Scroll down and tap "Add to Home Screen"',
@@ -186,7 +183,6 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
       }
     case "chrome_ios":
       return {
-        intro: "In Chrome, the Share icon is in the top right of the screen. Follow the arrow:",
         steps: [
           "Tap the Share icon in the top right of Chrome",
           'Tap "Add to Home Screen" (or "Add to Home screen")',
@@ -197,7 +193,6 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
     case "edge_ios":
     case "samsung_ios":
       return {
-        intro: `In ${label}, look for the Share button:`,
         steps: [
           "Look for the Share button (often at the bottom or in the menu bar)",
           'Tap it, then find and tap "Add to Home Screen" or "Add page to"',
@@ -206,7 +201,6 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
       }
     case "other_ios":
       return {
-        intro: `In ${label}, look for the Share button:`,
         steps: [
           "Look for the Share or menu button (often at the bottom or top of the screen)",
           'Tap it, then find "Add to Home Screen" or "Add to Home screen"',
@@ -217,7 +211,6 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
     case "samsung_android":
     case "other_android":
       return {
-        intro: `In ${label}:`,
         steps: [
           "Tap the menu (⋮) in the top right",
           'Tap "Add to Home screen" or "Install app"',
@@ -226,7 +219,6 @@ function getInstallSteps(browserKind: PwaBrowserKind): { intro: string; steps: s
       }
     default:
       return {
-        intro: "To install this app:",
         steps: [
           "Use your browser's menu (e.g. ⋮ or File) and look for the Share or Install option",
           'Find "Install UP", "Add to Home screen", or "Create shortcut"',
@@ -243,191 +235,184 @@ function getSharePointerPosition(kind: PwaBrowserKind): "bottom" | "topRight" | 
   return null
 }
 
+/**
+ * Counts visits — one per browser session — so the prompt can wait for a
+ * second one. Someone who came back chose to; someone on their first look has
+ * not decided anything yet, and asking them to install is asking too early.
+ */
+const VISITS_KEY = "up-visit-count"
+const VISIT_COUNTED_KEY = "up-visit-counted"
+const MIN_VISITS = 2
+
+function countVisit(): number {
+  try {
+    const seen = parseInt(localStorage.getItem(VISITS_KEY) ?? "0", 10) || 0
+    if (sessionStorage.getItem(VISIT_COUNTED_KEY)) return seen
+    sessionStorage.setItem(VISIT_COUNTED_KEY, "1")
+    localStorage.setItem(VISITS_KEY, String(seen + 1))
+    return seen + 1
+  } catch {
+    // Storage blocked: never auto-prompt. The sidebar's "Install app" still works.
+    return 0
+  }
+}
+
+/** Lets the gift and the extreme announcement, fetched on load, claim the
+ *  visit's one interruption first (lib/interruptions.ts). */
+const SETTLE_MS = 8000
+
 export default function PwaInstallBanner() {
-  const { isAuthenticated } = useAuth()
-  const [allowShowAfterDelay, setAllowShowAfterDelay] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [showCenterPrompt, setShowCenterPrompt] = useState(false)
-  const [showIosSteps, setShowIosSteps] = useState(false)
+  const [open, setOpen] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [browserKind, setBrowserKind] = useState<PwaBrowserKind>("desktop")
-
-  const canShow = useCallback(() => {
-    if (!isAuthenticated || !allowShowAfterDelay) return false
-    if (isStandalone() || isInstalled) return false
-    const until = getDismissedUntil()
-    if (until != null && Date.now() < until) return false
-    return true
-  }, [isInstalled, isAuthenticated, allowShowAfterDelay])
-
-  // Only allow PWA prompt 5 min after user is authenticated
-  useEffect(() => {
-    if (!isAuthenticated) return
-    const t = setTimeout(() => setAllowShowAfterDelay(true), AUTH_DELAY_MS)
-    return () => clearTimeout(t)
-  }, [isAuthenticated])
+  const [ios, setIos] = useState(false)
+  /** Visit count and settle delay both satisfied, so the prompt may open by itself. */
+  const [eligible, setEligible] = useState(false)
 
   useEffect(() => {
+    setBrowserKind(getBrowserKind())
+    setIos(isIos())
     if (isStandalone()) {
       setIsInstalled(true)
       return
     }
+    if (countVisit() < MIN_VISITS) return
+    const t = setTimeout(() => setEligible(true), SETTLE_MS)
+    return () => clearTimeout(t)
+  }, [])
 
+  // The browser's own install offer, and the reader's explicit request from the
+  // sidebar. The request skips every gate: they asked.
+  useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       const ev = e as BeforeInstallPromptEvent
       ev.preventDefault()
       setDeferredPrompt(ev)
-      if (canShow()) setShowCenterPrompt(true)
     }
-
+    const handleInstalled = () => {
+      setIsInstalled(true)
+      setOpen(false)
+      setDeferredPrompt(null)
+    }
     const handleShowPrompt = () => {
-      if (canShow()) setShowCenterPrompt(true)
+      if (!isStandalone()) setOpen(true)
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
+    window.addEventListener("appinstalled", handleInstalled)
     window.addEventListener(PWA_PROMPT_EVENT, handleShowPrompt)
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
+      window.removeEventListener("appinstalled", handleInstalled)
       window.removeEventListener(PWA_PROMPT_EVENT, handleShowPrompt)
     }
-  }, [canShow])
-
-  // Detect browser once on client (avoids hydration mismatch)
-  useEffect(() => {
-    setBrowserKind(getBrowserKind())
   }, [])
 
-  // On iOS (no beforeinstallprompt), show centered prompt after delay when authenticated
+  // Opening by itself: only from the second visit, only where installing is
+  // actually possible (a native prompt, or iOS's Add to Home Screen), not while
+  // dismissed, and only if no other prompt already has this visit.
   useEffect(() => {
-    if (!isIos() || isStandalone() || !canShow()) return
-    setShowCenterPrompt(true)
-  }, [canShow])
+    if (!eligible || isInstalled || open) return
+    if (!deferredPrompt && !ios) return
+    const until = getDismissedUntil()
+    if (until != null && Date.now() < until) return
+    if (claimInterruption("install")) setOpen(true)
+  }, [eligible, isInstalled, open, deferredPrompt, ios])
 
   const handleInstall = async () => {
-    if (isIos()) {
-      // Pseudo-install: show tooltip with arrow pointing to Share icon (no beforeinstallprompt on iOS)
-      setShowIosSteps(true)
-      return
-    }
-    if (!deferredPrompt) {
-      // No native prompt (e.g. desktop Safari): show browser-specific manual steps
-      setShowIosSteps(true)
-      return
-    }
+    if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    if (outcome === "accepted") {
-      setIsInstalled(true)
-      setShowCenterPrompt(false)
-      const startUrl = typeof window !== "undefined" ? `${window.location.origin}/` : "/"
-      window.location.href = startUrl
-    }
+    // The prompt is single-use either way. On accept the browser opens the
+    // installed app itself; this tab just gets out of the way.
     setDeferredPrompt(null)
+    setOpen(false)
+    if (outcome === "accepted") setIsInstalled(true)
   }
 
   const handleDismiss = () => {
-    setShowCenterPrompt(false)
-    setShowIosSteps(false)
+    setOpen(false)
     setDismissedUntil()
   }
 
-  if (!isAuthenticated || !showCenterPrompt || !canShow()) return null
+  if (!open || isInstalled) return null
 
-  // Centered popup: one main "Download app" button, user-initiated install
+  // One orange "Install" when the browser can do it for them; otherwise the
+  // steps are the whole card.
+  const native = deferredPrompt !== null
+  const steps = getInstallSteps(browserKind)
+  const sharePosition = getSharePointerPosition(browserKind)
+
+  // Installing is never urgent: a corner card on desktop (no scrim), a sheet on phones.
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-end justify-center duration-200 animate-in fade-in-0 sm:pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6">
+      <div className="absolute inset-0 bg-up-scrim sm:hidden" aria-hidden onClick={handleDismiss} />
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        aria-hidden
-        onClick={handleDismiss}
-      />
-      {/* Card at center */}
-      <div
-        className="relative w-full max-w-sm glass-surface p-6 animate-in zoom-in-95 duration-200"
+        className="pointer-events-auto relative w-full overflow-hidden rounded-t-[28px] bg-card pb-[max(1.5rem,env(safe-area-inset-bottom))] text-card-foreground shadow-up-pop duration-300 animate-in slide-in-from-bottom sm:w-[360px] sm:rounded-up-xl sm:pb-0 sm:slide-in-from-bottom-4"
         role="dialog"
         aria-labelledby="pwa-install-title"
         aria-describedby="pwa-install-desc"
       >
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute right-3 top-3 h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
+        <div aria-hidden className="mx-auto mb-1 mt-2.5 h-[5px] w-10 rounded-full bg-up-sep sm:hidden" />
+        <button
+          type="button"
+          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-up-fill text-muted-foreground transition-colors hover:text-foreground"
           onClick={handleDismiss}
           aria-label="Dismiss"
         >
           <X className="h-4 w-4" />
-        </Button>
+        </button>
 
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/20">
+        <div className="px-5 pb-1 pt-4 sm:p-5">
+          <div className="flex items-center gap-3 pr-10">
             {/* The manifest icon rather than the in-app logo, so the preview here
                 is literally what lands on the home screen. */}
-            <img
-              src="/icons/icon-192.png"
-              alt=""
-              className="h-10 w-10 rounded-xl"
-            />
-          </div>
-          <h2 id="pwa-install-title" className="mt-4 text-xl font-bold text-foreground">
-            Get the UP app
-          </h2>
-          <p id="pwa-install-desc" className="mt-1 text-sm text-muted-foreground">
-            {isIos()
-              ? "Add to your home screen for quick access."
-              : "Download to your device and use it like an app."}
-          </p>
-
-          {showIosSteps ? (() => {
-              const steps = getInstallSteps(browserKind)
-              const sharePosition = getSharePointerPosition(browserKind)
-              return (
-            <>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {steps.intro}
+            <img src="/icons/icon-192.png" alt="" className="h-11 w-11 shrink-0 rounded-up-md" />
+            <div className="min-w-0">
+              <h2 id="pwa-install-title" className="font-display text-lg font-bold leading-tight text-foreground">
+                {native ? "Install UP" : "Add UP to your home screen"}
+              </h2>
+              <p id="pwa-install-desc" className="mt-0.5 text-[13px] text-muted-foreground">
+                {native ? "Download to your device and use it like an app." : "Add to your home screen for quick access."}
               </p>
+            </div>
+          </div>
+
+          {native ? (
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="ghost" className="h-11 sm:h-10" onClick={handleDismiss}>
+                Not now
+              </Button>
+              <Button onClick={handleInstall} className="h-11 px-5 sm:h-10">
+                <Download className="h-4 w-4" />
+                Install
+              </Button>
+            </div>
+          ) : (
+            <>
               {sharePosition !== null && (
-                <div className="mt-4 w-full flex justify-center">
-                  <ShareArrowPointer
-                    browserKind={browserKind}
-                    position={sharePosition}
-                  />
+                <div className="mt-4 flex w-full justify-center">
+                  <ShareArrowPointer browserKind={browserKind} position={sharePosition} />
                 </div>
               )}
-              <ol className="mt-4 w-full list-decimal list-inside space-y-1 rounded-xl border border-border/60 bg-muted/50 p-4 text-left text-sm text-muted-foreground">
+              <ol className="mt-4 space-y-2.5">
                 {steps.steps.map((step, i) => (
-                  <li key={i}>{step}</li>
+                  <li key={i} className="flex items-center gap-3 text-sm font-semibold text-foreground">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-up-solid font-display text-xs font-bold text-up-on-solid">
+                      {i + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
                 ))}
               </ol>
-              <Button
-                size="lg"
-                variant="outline"
-                className="mt-4 w-full rounded-xl"
-                onClick={handleDismiss}
-              >
-                Got it
-              </Button>
+              <div className="mt-4 flex justify-center sm:justify-end">
+                <Button variant="ghost" className="h-10" onClick={handleDismiss}>
+                  Not now
+                </Button>
+              </div>
             </>
-              );
-            })() : (
-            <Button
-              size="lg"
-              onClick={handleInstall}
-              className="mt-6 w-full gap-2 rounded-xl bg-primary hover:bg-primary/90 font-semibold"
-            >
-              <Download className="h-5 w-5" />
-              {isIos() ? "Add to Home Screen" : "Download app"}
-            </Button>
           )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3 text-muted-foreground hover:text-foreground"
-            onClick={handleDismiss}
-          >
-            Not now
-          </Button>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { usePlaylist, Playlist } from "@/contexts/playlist-context"
 import { cn } from "@/lib/utils"
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -220,27 +220,27 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
         : editPlaylist ? "Save changes" : "Create playlist"
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
-      <SheetContent
-        side="bottom"
-        className="flex max-h-[92vh] flex-col gap-0 overflow-hidden rounded-t-3xl border-border/70 bg-card p-0 [&>button]:hidden"
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
+      <DialogContent
+        className="flex max-w-[560px] flex-col gap-0 overflow-hidden p-0 sm:p-0 [&>button:last-child]:hidden"
+        onInteractOutside={(e) => isSubmitting && e.preventDefault()}
       >
         {/* Header */}
-        <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 pb-3 pt-4 sm:px-6">
+        <div className="flex w-full items-start justify-between gap-3 px-5 pb-3 pt-7 sm:px-6 sm:pt-6">
           <div className="min-w-0">
-            <SheetTitle className="text-lg font-semibold tracking-tight text-foreground">
+            <DialogTitle className="pr-0">
               {editPlaylist ? "Edit playlist" : "New playlist"}
-            </SheetTitle>
-            <SheetDescription className="text-[13px] text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription className="mt-1">
               {editPlaylist ? "Update the details people see." : "Group listings you want to keep together."}
-            </SheetDescription>
+            </DialogDescription>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
             aria-label="Close"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-up-fill text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
           >
             <RiCloseLine className="h-5 w-5" />
           </button>
@@ -248,7 +248,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-lg space-y-6 px-5 pb-6 pt-2 sm:px-6">
+            <div className="w-full space-y-6 px-5 pb-6 pt-2 sm:px-6">
               {/* Cover */}
               <section className="flex items-center gap-4">
                 <button
@@ -267,14 +267,14 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                   disabled={isSubmitting || coverBusy}
                   aria-label={shownCover ? "Change cover image" : "Upload cover image"}
                   className={cn(
-                    "group relative h-28 w-28 shrink-0 rounded-2xl outline-none ring-offset-2 ring-offset-card transition focus-visible:ring-2 focus-visible:ring-primary sm:h-32 sm:w-32",
+                    "group relative h-28 w-28 shrink-0 rounded-up-lg outline-none ring-offset-2 ring-offset-card transition focus-visible:ring-2 focus-visible:ring-primary sm:h-32 sm:w-32",
                     isDragging && "ring-2 ring-primary",
                   )}
                 >
-                  <PlaylistCover seed={previewSeed} imageUrl={shownCover} className="h-full w-full shadow-md shadow-black/10" />
+                  <PlaylistCover seed={previewSeed} imageUrl={shownCover} className="h-full w-full" />
                   <span
                     className={cn(
-                      "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/45 text-xs font-medium text-white transition-opacity",
+                      "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-up-lg bg-[rgba(11,18,51,0.55)] text-xs font-medium text-white transition-opacity",
                       coverBusy || isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
                     )}
                   >
@@ -290,7 +290,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                 </button>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">Cover image</p>
+                  <p className="text-sm font-bold text-foreground">Cover image</p>
                   <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
                     {shownCover
                       ? "Shown in Discover and when people share it."
@@ -303,7 +303,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isSubmitting || coverBusy}
-                      className="h-9 rounded-xl"
+                      className="h-9"
                     >
                       <RiImageAddLine className="mr-1.5 h-4 w-4" />
                       {shownCover ? "Change" : "Upload"}
@@ -315,7 +315,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                         size="sm"
                         onClick={clearCover}
                         disabled={isSubmitting || coverBusy}
-                        className="h-9 rounded-xl text-muted-foreground hover:text-destructive"
+                        className="h-9 text-muted-foreground hover:text-destructive"
                       >
                         <RiDeleteBinLine className="mr-1.5 h-4 w-4" />
                         Remove
@@ -336,7 +336,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               {/* Name */}
               <div>
                 <div className="mb-1.5 flex items-baseline justify-between">
-                  <Label htmlFor="playlist-name" className="text-sm font-medium text-foreground">
+                  <Label htmlFor="playlist-name" className="text-sm font-bold text-foreground">
                     Name
                   </Label>
                   <span className="text-xs tabular-nums text-muted-foreground">
@@ -351,14 +351,14 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                   maxLength={NAME_MAX}
                   autoFocus={!editPlaylist}
                   required
-                  className="h-11 rounded-xl"
+                  className="h-[46px]"
                 />
               </div>
 
               {/* Description */}
               <div>
                 <div className="mb-1.5 flex items-baseline justify-between">
-                  <Label htmlFor="playlist-description" className="text-sm font-medium text-foreground">
+                  <Label htmlFor="playlist-description" className="text-sm font-bold text-foreground">
                     Description <span className="font-normal text-muted-foreground">(optional)</span>
                   </Label>
                   <span className="text-xs tabular-nums text-muted-foreground">
@@ -372,14 +372,14 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                   placeholder="What's this playlist for?"
                   maxLength={DESCRIPTION_MAX}
                   rows={3}
-                  className="resize-none rounded-xl"
+                  className="resize-none"
                 />
               </div>
 
               {/* Hashtags — chips live inside the field, like a tag input people already know. */}
               <div>
                 <div className="mb-1.5 flex items-baseline justify-between">
-                  <Label htmlFor="playlist-tags" className="text-sm font-medium text-foreground">
+                  <Label htmlFor="playlist-tags" className="text-sm font-bold text-foreground">
                     Hashtags <span className="font-normal text-muted-foreground">(optional)</span>
                   </Label>
                   <span className="text-xs tabular-nums text-muted-foreground">
@@ -387,20 +387,20 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                   </span>
                 </div>
                 <div
-                  className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-xl border border-input bg-background px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
+                  className="flex min-h-[46px] flex-wrap items-center gap-1.5 rounded-up-md border-[1.5px] border-border bg-card px-2.5 py-1.5 transition-shadow focus-within:border-up-orange focus-within:shadow-[0_0_0_4px_var(--up-orange-tint)]"
                   onClick={() => document.getElementById("playlist-tags")?.focus()}
                 >
                   {hashtags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-[13px] font-medium text-foreground"
+                      className="inline-flex items-center gap-0.5 rounded-full bg-up-fill py-0.5 pl-2.5 pr-1 text-[13px] font-semibold text-foreground"
                     >
                       #{tag}
                       <button
                         type="button"
                         onClick={() => setHashtags((prev) => prev.filter((t) => t !== tag))}
                         aria-label={`Remove #${tag}`}
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/15 hover:text-foreground"
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-up-hairline hover:text-foreground"
                       >
                         <RiCloseLine className="h-3.5 w-3.5" />
                       </button>
@@ -425,7 +425,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
 
               {/* Visibility — two real choices, so two options rather than a switch. */}
               <fieldset>
-                <legend className="mb-1.5 text-sm font-medium text-foreground">Who can see it</legend>
+                <legend className="mb-1.5 text-sm font-bold text-foreground">Who can see it</legend>
                 <div className="grid grid-cols-2 gap-2">
                   {([
                     { value: true, icon: RiGlobalLine, title: "Public", body: "Anyone, and it can appear in Discover" },
@@ -441,17 +441,17 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                         aria-checked={selected}
                         onClick={() => setIsPublic(option.value)}
                         className={cn(
-                          "rounded-2xl border p-3 text-left transition-colors",
+                          "rounded-up-lg border-[1.5px] p-3 text-left transition-colors",
                           selected
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:bg-muted/60",
+                            ? "border-transparent bg-up-solid text-up-on-solid"
+                            : "border-border bg-card text-foreground hover:border-up-border-hover",
                         )}
                       >
-                        <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                          <Icon className={cn("h-4 w-4", selected ? "text-primary" : "text-muted-foreground")} />
+                        <span className="flex items-center gap-1.5 text-sm font-bold">
+                          <Icon className={cn("h-4 w-4", selected ? "text-up-orange" : "text-muted-foreground")} />
                           {option.title}
                         </span>
-                        <span className="mt-1 block text-xs leading-snug text-muted-foreground">{option.body}</span>
+                        <span className={cn("mt-1 block text-xs leading-snug", selected ? "opacity-70" : "text-muted-foreground")}>{option.body}</span>
                       </button>
                     )
                   })}
@@ -459,7 +459,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               </fieldset>
 
               {error ? (
-                <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                <p role="alert" className="rounded-up-md bg-destructive/10 px-3.5 py-2.5 text-sm font-semibold text-destructive">
                   {error}
                 </p>
               ) : null}
@@ -467,21 +467,21 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
           </div>
 
           {/* Actions stay reachable above the keyboard however long the form gets. */}
-          <div className="border-t border-border/60 bg-card pb-safe">
-            <div className="mx-auto flex w-full max-w-lg gap-2 px-5 py-3 sm:px-6">
+          <div className="border-t border-up-hairline bg-card pb-safe">
+            <div className="flex w-full gap-2 px-5 py-3.5 sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="h-11 flex-1 rounded-2xl sm:flex-none sm:px-6"
+                className="h-11 flex-1 sm:flex-none sm:px-5"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || coverBusy || !name.trim()}
-                className="h-11 flex-[2] rounded-2xl bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:flex-1"
+                className="h-11 flex-[2] font-bold sm:flex-none sm:px-6"
               >
                 {isSubmitting ? <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {submitLabel}
@@ -489,7 +489,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
             </div>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

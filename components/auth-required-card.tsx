@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Lock, UserPlus, LogIn } from "lucide-react";
+import { Lock } from "lucide-react";
 
 /** Icon component that accepts className (Lucide or react-icons). */
- 
+
 type IconComponent = React.ComponentType<any>;
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,14 +24,13 @@ export interface AuthRequiredCardProps {
   children?: React.ReactNode;
 }
 
-const DEFAULT_TITLE = "Authentication required";
+const DEFAULT_TITLE = "Sign in to continue";
 
-const primaryButtonClass =
-  "w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md shadow-orange-500/20 transition-all duration-200";
-
-const formCardClass =
-  "w-full border border-border/70 bg-card/90 backdrop-blur-md shadow-2xl rounded-2xl";
-
+/**
+ * The sign-in wall: a navy card with the tile stack, not a full grey page. It
+ * says what the page is for (the caller's title/description), then one orange
+ * action.
+ */
 export function AuthRequiredCard({
   title = DEFAULT_TITLE,
   description,
@@ -45,69 +44,51 @@ export function AuthRequiredCard({
   children,
 }: AuthRequiredCardProps) {
   return (
-    <div
-      className={cn(
-        "min-h-screen bg-page flex items-center justify-center px-4 py-10 relative overflow-hidden",
-        className
-      )}
-    >
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-rose-500/6 rounded-full blur-3xl pointer-events-none" />
-      <div className={cn("relative w-full max-w-md", formCardClass, cardClassName)}>
-        <div className="p-6 sm:p-8 text-center">
-          <div
+    <div className={cn("flex min-h-screen items-center justify-center bg-page px-4 py-10", className)}>
+      <div
+        className={cn(
+          "relative w-full max-w-md overflow-hidden rounded-up-xl bg-up-navy px-6 pb-7 pt-7 text-up-on-navy shadow-up-pop dark:bg-up-lead sm:px-8",
+          cardClassName,
+        )}
+      >
+        <span aria-hidden className="absolute -right-10 -top-12 h-[140px] w-[190px] -rotate-[8deg] rounded-[24px] bg-up-orange" />
+        <span aria-hidden className="absolute -top-6 right-14 h-[76px] w-[100px] rotate-[7deg] rounded-[18px] bg-up-lime" />
+
+        <div className="relative">
+          <span
             className={cn(
-              "inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 border",
-              iconVariant === "accent"
-                ? "bg-card/60 border-border/70 text-orange-400"
-                : "bg-muted/80 border-border/60 text-muted-foreground"
+              "grid h-11 w-11 place-items-center rounded-up-md bg-up-navy-subtle",
+              iconVariant === "accent" ? "text-up-orange" : "text-up-on-navy-muted",
             )}
           >
-            <Icon className="w-7 h-7" aria-hidden />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-4">
-            {title}
-          </h1>
-          {description ? (
-            <p className="text-sm text-muted-foreground mb-6">{description}</p>
-          ) : null}
+            <Icon className="h-[22px] w-[22px]" aria-hidden />
+          </span>
+          <h1 className="mt-4 max-w-[62%] font-display text-xl font-bold leading-tight sm:text-2xl">{title}</h1>
+          {description ? <p className="mt-2 text-sm leading-relaxed text-up-orange">{description}</p> : null}
           {children}
-          <div className="space-y-3">
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
             {showSignUp ? (
               <>
-                <Button asChild size="lg" className={primaryButtonClass}>
-                  <Link href="/signup">
-                    <UserPlus className="w-4 h-4 mr-2" aria-hidden />
-                    Create account
-                  </Link>
+                <Button asChild className="h-11 px-6">
+                  <Link href="/signup">Create account</Link>
                 </Button>
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
-                  >
+                <p className="text-[13px] text-up-on-navy-muted">
+                  Have one?{" "}
+                  <Link href="/login" className="font-bold text-up-on-navy hover:underline">
                     {signInLabel}
                   </Link>
                 </p>
               </>
             ) : (
               <>
-                <Button asChild size="lg" className={primaryButtonClass}>
-                  <Link href="/login">
-                    <LogIn className="w-4 h-4 mr-2" aria-hidden />
-                    {signInLabel}
-                  </Link>
+                <Button asChild className="h-11 px-6">
+                  <Link href="/login">{signInLabel}</Link>
                 </Button>
                 {secondaryAction && (
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="w-full rounded-full border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/50 h-11"
-                  >
-                    <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
-                  </Button>
+                  <Link href={secondaryAction.href} className="text-[13px] font-bold text-up-on-navy-muted hover:text-up-on-navy">
+                    {secondaryAction.label}
+                  </Link>
                 )}
               </>
             )}

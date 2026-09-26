@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
+import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
@@ -315,28 +316,10 @@ export default function ProviderSettings() {
     }
   }
 
-  const handleDeleteAccount = async () => {
-    const confirmMessage = 'Are you sure you want to delete your account? This will permanently delete:\n\n' +
-      '• Your profile and preferences\n' +
-      '• All saved opportunities, events, jobs, and resources\n' +
-      '• All liked content\n' +
-      '• All application history\n' +
-      '• All promotions and provider data\n' +
-      '• All other account data\n\n' +
-      'This action cannot be undone!'
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
+  const handleDeleteAccount = () => setConfirmDeleteAccount(true)
 
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
-    const finalConfirm = 'This is your final warning. Type "DELETE" to confirm account deletion:'
-    const userInput = prompt(finalConfirm)
-
-    if (userInput !== 'DELETE') {
-      toast.error('Account deletion cancelled')
-      return
-    }
-
+  const performDeleteAccount = async () => {
     setIsDeletingAccount(true)
 
     try {
@@ -886,6 +869,17 @@ export default function ProviderSettings() {
                   </>
                 )}
               </Button>
+              <ConfirmDialog
+                open={confirmDeleteAccount}
+                onOpenChange={setConfirmDeleteAccount}
+                title="Delete your account?"
+                description="Your profile, preferences, saved listings, application history, promotions and provider data all go with it. This can't be undone."
+                confirmLabel="Delete account"
+                busyLabel="Deleting…"
+                busy={isDeletingAccount}
+                confirmPhrase="DELETE"
+                onConfirm={performDeleteAccount}
+              />
             </div>
           </Panel>
         </div>

@@ -31,6 +31,7 @@ import { useTheme } from "next-themes"
 import { canAccessMonitorPortal, canPublishContent } from '@/lib/roles'
 import { useGoBack } from "@/hooks/use-go-back"
 import { useNavAudience } from "@/hooks/use-nav-audience"
+import { UpLogo } from "@/components/up/up-logo"
 
 /** Signed-in navigation — the app's primary routes. */
 const mainNavItems = [
@@ -123,8 +124,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
     <div className="relative flex h-full flex-col bg-up-navy font-sans text-up-on-navy dark:shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)]">
       <div className={cn("relative z-[1] flex-shrink-0 border-b border-up-border-on-navy pb-5 pt-6", isCollapsed ? "px-2" : "px-6")}>
         <Link href="/" className={cn("group flex items-center rounded-up-md outline-none focus-visible:ring-2 focus-visible:ring-up-orange", isCollapsed ? "justify-center" : "gap-3")}>
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-up-md bg-up-orange font-display text-xl font-extrabold text-up-navy transition-transform duration-300 group-hover:scale-[1.04]">
-            UP
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-up-md bg-up-orange transition-transform duration-300 group-hover:scale-[1.04]">
+            <UpLogo tone="navy" height={26} alt={isCollapsed ? "UP" : ""} className="w-[74%]" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
