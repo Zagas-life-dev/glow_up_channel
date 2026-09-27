@@ -16,6 +16,7 @@
 
 import * as React from "react"
 
+import { countryByCode } from "@/lib/geo/countries"
 import { clearOfflineCaches } from "@/lib/offline/cache-control"
 import { clearPageStateCache } from "@/lib/page-state-session"
 
@@ -62,51 +63,100 @@ function serialize(selection: ViewingSelection): string | null {
  * drop them and reload so every page fetches fresh for the new country.
  *
  * The worker clear is awaited before reloading — otherwise the new page could
- * be answered from the very API cache we just asked it to discard. Only called
- * online (see setSelection), so the worker caches are never dropped while they
- * are the only content left to read.
+ * be answered from the very API cache we just asked it to discard. Offline, the
+ * worker caches are kept: they are the only content left to read.
  */
 async function reloadForCountry(): Promise<void> {
   if (typeof window === "undefined") return
   clearPageStateCache()
-  await clearOfflineCaches()
+  if (navigator.onLine) await clearOfflineCaches()
   window.location.reload()
+}
+
+/**
+ * The stores the choice is kept in, most durable first. sessionStorage is the
+ * fallback for browsers that block localStorage: the switch reloads the page,
+ * and a choice that lived only in memory would be gone when it came back.
+ */
+function stores(): Storage[] {
+  if (typeof window === "undefined") return []
+  const found: Storage[] = []
+  for (const pick of [() => window.localStorage, () => window.sessionStorage]) {
+    try {
+      const store = pick()
+      if (store) found.push(store)
+    } catch {
+      // Access itself throws when storage is blocked.
+    }
+  }
+  return found
+}
+
+function readStored(): string | null {
+  for (const store of stores()) {
+    try {
+      const value = store.getItem(STORAGE_KEY)
+      if (value !== null) return value
+    } catch {
+      // Try the next store.
+    }
+  }
+  return null
+}
+
+/** Writes to the first store that accepts it and clears the others. */
+function writeStored(value: string | null): void {
+  let written = false
+  for (const store of stores()) {
+    try {
+      if (value === null || written) store.removeItem(STORAGE_KEY)
+      else {
+        store.setItem(STORAGE_KEY, value)
+        written = true
+      }
+    } catch {
+      // Try the next store.
+    }
+  }
+}
+
+/**
+ * The saved choice, readable outside React. The feed fetchers use this so every
+ * caller — the page and the background prefetcher alike — asks the API for the
+ * same country; the switch reloads the page, so it cannot go stale mid-session.
+ */
+export function readViewingSelection(): ViewingSelection {
+  return parse(readStored())
+}
+
+/**
+ * The country name the feeds filter on, or null for auto / anywhere. Listings
+ * store the country as a name ("Nigeria"), not an ISO code.
+ */
+export function viewingCountryName(selection: ViewingSelection = readViewingSelection()): string | null {
+  if (selection.mode !== "country") return null
+  return countryByCode(selection.countryCode)?.name ?? null
 }
 
 export function ViewingCountryProvider({ children }: { children: React.ReactNode }) {
   const [selection, setSelectionState] = React.useState<ViewingSelection>(AUTO)
 
-  // Read in an effect, not during render — localStorage on the first render
-  // would make the server and client markup disagree.
+  // Read in an effect, not during render — storage on the first render would
+  // make the server and client markup disagree.
   React.useEffect(() => {
-    try {
-      setSelectionState(parse(localStorage.getItem(STORAGE_KEY)))
-    } catch {
-      // Private browsing; auto is a fine default.
-    }
+    setSelectionState(readViewingSelection())
   }, [])
 
   const setSelection = React.useCallback((next: ViewingSelection) => {
     const value = serialize(next)
-    let previous: string | null = null
-    let persisted = false
-    try {
-      previous = localStorage.getItem(STORAGE_KEY)
-      if (value === null) localStorage.removeItem(STORAGE_KEY)
-      else localStorage.setItem(STORAGE_KEY, value)
-      persisted = true
-    } catch {
-      // Choice still applies for this session.
-    }
+    const previous = readStored()
+    writeStored(value)
     setSelectionState(next)
 
     // Re-picking the current country is a no-op, not a reload.
     if (previous === value) return
-    // A reload re-reads the choice from storage, so when it couldn't be saved
-    // (blocked storage) reloading would throw the new country away. Offline, the
-    // reload can't fetch anything for the new country either. Both keep the old
-    // in-place behaviour instead.
-    if (!persisted || !navigator.onLine) return
+    // Every feed on the page was filled for the old country: clear the caches
+    // and reload so each one fetches fresh for the new one.
     void reloadForCountry()
   }, [])
 

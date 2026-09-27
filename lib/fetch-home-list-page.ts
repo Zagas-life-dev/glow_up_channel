@@ -145,6 +145,12 @@ export async function fetchHomeListPage(params: {
    * retry rather than claim there is nothing listed.
    */
   throwOnError?: boolean
+  /**
+   * The home feed's picked country (a name, as listings store it). Limits the
+   * page to that country's listings plus ones marked Global. Kept apart from
+   * `query.filters.country`, which is search's plain country filter.
+   */
+  viewingCountry?: string | null
 }): Promise<HomeListPageResult> {
   const {
     type,
@@ -154,13 +160,16 @@ export async function fetchHomeListPage(params: {
     query,
     cache = true,
     throwOnError = false,
+    viewingCountry = null,
   } = params
   const isFirstPage = !cursorLastId
   const searchTerm = query?.search?.trim() ?? ""
   const filterParams = filterQueryParams(query?.filters)
   // A filtered page is a different result set from the cached unfiltered one,
   // so any active filter has to bypass the cache the same way a search does.
-  const hasListQuery = Boolean(searchTerm) || filterParams.length > 0
+  // A country-limited page is its own result set too. The shared cache is also
+  // filled by the hub, search and detail pages, none of which filter by it.
+  const hasListQuery = Boolean(searchTerm) || filterParams.length > 0 || Boolean(viewingCountry)
   const useCache = cache && !hasListQuery
 
   if (isFirstPage && useCache) {
@@ -191,6 +200,9 @@ export async function fetchHomeListPage(params: {
   }
   for (const [key, value] of filterParams) {
     searchParams.set(key, value)
+  }
+  if (viewingCountry) {
+    searchParams.set("viewingCountry", viewingCountry)
   }
 
   try {

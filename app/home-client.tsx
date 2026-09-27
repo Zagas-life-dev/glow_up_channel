@@ -49,6 +49,7 @@ import {
 import { PageShell } from "@/components/layout/page-shell"
 import { TabStrip } from "@/components/layout/tab-strip"
 import CountrySelector from "@/components/country-selector"
+import { useViewingCountry, viewingCountryName } from "@/lib/geo/viewing-country"
 import LandingPage from "@/components/landing/landing-page"
 
 type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
@@ -96,7 +97,9 @@ export default function Home() {
     if (s?.feed && s.feed.storageKey === `home_${tab}`) {
       return { items: (s.feed.items || []) as any[], lastId: s.feed.lastId ?? null }
     }
-    if (tab !== 'all' && (tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources')) {
+    // The shared per-type cache is also filled by the hub and detail pages, which
+    // don't filter by the picked country — so it can't seed a country feed.
+    if (tab !== 'all' && !viewingCountryName() && (tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources')) {
       const cached = getContentCache(tab)
       if (cached?.items?.length) return { items: cached.items as any[], lastId: cached.lastId }
     }
@@ -107,6 +110,11 @@ export default function Home() {
   const { user, normalizedUser, isAuthenticated, isLoading: authLoading } = useAuth()
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+
+  // The picked country, as a name, or null for auto / anywhere — for display.
+  // Picking one reloads the page, so it is settled for the life of the page.
+  const { selection: viewingSelection } = useViewingCountry()
+  const countryName = useMemo(() => viewingCountryName(viewingSelection), [viewingSelection])
 
   // Storage key based on active tab
   const storageKey = useMemo(() => `home_${activeTab}`, [activeTab])
@@ -141,6 +149,9 @@ export default function Home() {
         cursorLastId,
         backendUrl,
         headers,
+        // Read from storage at call time, not from context: the provider only
+        // loads the saved choice in an effect, after the first fetch can fire.
+        viewingCountry: viewingCountryName(),
       })
     },
     [backendUrl, isAuthenticated, user],
@@ -541,9 +552,12 @@ export default function Home() {
               activeTab === "all" ? "Loading your feed…" : `Loading ${activeTab}…`
             }
             emptyMessage={
-              activeTab === "all"
-                ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
-                : `No ${activeTab} found. Try another category!`
+              // Resources have no location, so the country never empties that tab.
+              countryName && isAuthenticated && activeTab !== "resources"
+                ? `No listings available for ${countryName} for now.`
+                : activeTab === "all"
+                  ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
+                  : `No ${activeTab} found. Try another category!`
             }
           />
         )}

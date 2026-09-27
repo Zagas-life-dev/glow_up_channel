@@ -23,6 +23,7 @@ import {
 } from "@/lib/promotion-placement"
 import { getOrCreateAnonId } from "@/lib/anon-id"
 import type { NormalizedUser } from "@/lib/user"
+import { viewingCountryName } from "@/lib/geo/viewing-country"
 
 export type ForYouPage = {
   items: any[]
@@ -151,6 +152,12 @@ async function loadForYouPage({
   // cursor keeps pointing into the same ordering. See `feed-session-seed`.
   const feedSeed = getFeedSessionSeed()
 
+  // A picked country limits the feed to that country's listings (plus ones
+  // marked Global). Resources carry no location, so they sit out rather than
+  // fill a country's feed with material that isn't from there.
+  const country = viewingCountryName()
+  const includeResources = !country
+
   try {
     let response: Response
     if (normalizedUser) {
@@ -171,8 +178,9 @@ async function loadForYouPage({
         includeOpportunities: true,
         includeEvents: true,
         includeJobs: true,
-        includeResources: true,
+        includeResources,
         minScore: 0,
+        ...(country && { country }),
         limit: lastId ? 20 : 15,
         ...(lastId && { lastId }),
         ...(feedSeed !== null && { feedSeed }),
@@ -187,7 +195,8 @@ async function loadForYouPage({
       url.searchParams.set("includeOpportunities", "true")
       url.searchParams.set("includeEvents", "true")
       url.searchParams.set("includeJobs", "true")
-      url.searchParams.set("includeResources", "true")
+      url.searchParams.set("includeResources", String(includeResources))
+      if (country) url.searchParams.set("country", country)
       url.searchParams.set("minScore", "0")
       url.searchParams.set("limit", lastId ? "20" : "15")
       if (lastId) {
