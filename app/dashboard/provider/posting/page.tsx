@@ -22,6 +22,7 @@ import {
   ListingLocationFields,
   EMPTY_LISTING_LOCATION,
   isListingLocationComplete,
+  extraPlacesPayload,
   type ListingLocationValue,
 } from "@/components/posting/ListingLocationFields"
 import { TagPicker } from "@/components/tags/tag-picker"
@@ -343,6 +344,7 @@ function PostingContent() {
               city: place.city.trim() || undefined,
               isRemote: place.isRemote,
               remoteCountries: place.remoteCountries,
+              places: extraPlacesPayload(place.places),
             },
         money: isPaid ? amount.payload : null,
         isPaid,

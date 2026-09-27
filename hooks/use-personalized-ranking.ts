@@ -198,6 +198,8 @@ export function usePersonalizedRanking(
         ...ranked.item,
         score: ranked.score,
         reasons: formatReasons(ranked.reasons, t, locale),
+        // A listing offered in several places shows the one nearest the reader.
+        ...(ranked.nearestPlace && { nearestLocation: ranked.nearestPlace }),
       })),
     [context, t, locale],
   )

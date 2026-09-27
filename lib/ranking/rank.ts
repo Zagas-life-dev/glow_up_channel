@@ -23,6 +23,7 @@ import {
   historySignal,
   isExpired,
   languageSignal,
+  contentPlaces,
   locationSignal,
   semanticSignal,
   urgencySignal,
@@ -173,10 +174,14 @@ export function scoreItem<T extends Record<string, unknown>>(
   const trackedId = typeof item._id === "string" ? item._id : String(item._id ?? "")
   const trackedStatus = trackedId ? context.history?.byContentId.get(trackedId) : undefined
 
+  // The place the location reason names: the listing's nearest one to the
+  // reader. It used to read flat `item.city`, which the listings store under
+  // `location`, so the city reason almost never had a name to show.
   const place = {
-    city: typeof item.city === "string" ? item.city : undefined,
-    country: typeof item.country === "string" ? item.country : undefined,
+    city: location.place.city ?? (typeof item.city === "string" ? item.city : undefined),
+    country: location.place.country ?? (typeof item.country === "string" ? item.country : undefined),
   }
+  const multiPlace = contentPlaces(item).length > 1
 
   return {
     item,
@@ -194,6 +199,14 @@ export function scoreItem<T extends Record<string, unknown>>(
     breakdown,
     proximityTier: location.proximity.tier,
     contentLanguage: itemLanguage,
+    ...(multiPlace && {
+      nearestPlace: {
+        country: location.place.country,
+        province: location.place.region,
+        city: location.place.city,
+        isRemote: location.place.isRemote,
+      },
+    }),
   }
 }
 
@@ -271,5 +284,7 @@ export function rankAndAnnotate<T extends Record<string, unknown>>(
     ...ranked.item,
     score: ranked.score,
     reasons: ranked.reasons,
+    // What the card shows for a listing offered in several places.
+    ...(ranked.nearestPlace && { nearestLocation: ranked.nearestPlace }),
   }))
 }

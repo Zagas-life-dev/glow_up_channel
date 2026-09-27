@@ -37,6 +37,11 @@ import TagInputWithSuggestions from "@/components/posting/TagInputWithSuggestion
 import { AmountCurrencyField, type PayPeriod } from "@/components/posting/AmountCurrencyField"
 import { ChipMultiSelect } from "@/components/posting/ChipMultiSelect"
 import { CountryField, type CountryValue } from "@/components/posting/CountryField"
+import {
+  ExtraPlacesField,
+  extraPlacesPayload,
+  type ExtraPlaceValue,
+} from "@/components/posting/ListingLocationFields"
 import { useRates } from "@/lib/currency/use-rates"
 import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
@@ -91,6 +96,7 @@ export default function AdminCreateContentPage() {
   const [industrySectors, setIndustrySectors] = useState<string[]>([])
   const [targetAudience, setTargetAudience] = useState<string[]>([])
   const [country, setCountry] = useState<CountryValue>(null)
+  const [extraPlaces, setExtraPlaces] = useState<ExtraPlaceValue[]>([])
   const [period, setPeriod] = useState<PayPeriod>('monthly')
 
   const { rates, stale: ratesStale } = useRates()
@@ -171,6 +177,7 @@ export default function AdminCreateContentPage() {
     setIndustrySectors([])
     setTargetAudience([])
     setCountry(null)
+    setExtraPlaces([])
     setPeriod('monthly')
     amount.reset(null, currencyForCountry(null))
     setSuccess(false)
@@ -240,6 +247,7 @@ export default function AdminCreateContentPage() {
             contentType === "event" ? eventRemote
               : contentType === "job" ? jobRemote
                 : oppRemote,
+          places: extraPlacesPayload(extraPlaces),
         },
         money: isPaid ? amount.payload : null,
         isPaid,
@@ -580,6 +588,12 @@ export default function AdminCreateContentPage() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Same listing, more places: another country is posted as its own
+                  copy; more states of the country above stay one listing. */}
+              {contentType !== "resource" && (
+                <ExtraPlacesField places={extraPlaces} defaultCountry={country} onChange={setExtraPlaces} />
               )}
 
               {contentType === "resource" && (

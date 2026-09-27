@@ -61,11 +61,45 @@ export function deadlineTile(value?: string, urgentWithin = 7): StatTile | null 
   return { label: "Left", value: `${left}d`, urgent: left <= urgentWithin }
 }
 
-/** "Remote", "Lagos, Nigeria", or null — never the string "undefined". */
+/** The other places a listing is offered in, by their most precise name. */
+function extraPlaceNames(location: any): string[] {
+  if (!location || !Array.isArray(location.places)) return []
+  return location.places
+    .map((place: any) => place?.city || place?.province)
+    .filter((name: unknown): name is string => typeof name === "string" && name.trim() !== "")
+}
+
+/**
+ * "Remote", "Lagos, Nigeria", or null — never the string "undefined".
+ *
+ * A listing offered in several states of one country adds them:
+ * "Lagos, Nigeria · also Port Harcourt, Abuja +2".
+ */
 export function locationLine(location: any): string | null {
   if (!location) return null
   if (typeof location === "string") return location || null
   if (location.isRemote) return "Remote"
-  const parts = [location.city, location.country].filter(Boolean)
-  return parts.length > 0 ? parts.join(", ") : null
+  const parts = [location.city || location.province, location.country].filter(Boolean)
+  if (parts.length === 0) return null
+  const others = extraPlaceNames(location)
+  if (others.length === 0) return parts.join(", ")
+  const shown = others.slice(0, 2).join(", ")
+  const rest = others.length > 2 ? ` +${others.length - 2}` : ""
+  return `${parts.join(", ")} · also ${shown}${rest}`
+}
+
+/**
+ * A feed card's location: the place nearest the reader when the ranker picked
+ * one (`nearestLocation`), else the main place, with a count of the others —
+ * "Port Harcourt, Nigeria +2 more". A card has no room for the full list.
+ */
+export function cardLocationLine(item: any): string | null {
+  const location = item?.location
+  if (!location || typeof location === "string") return locationLine(location)
+  if (location.isRemote) return "Remote"
+  const shown = item.nearestLocation ?? location
+  const parts = [shown.city || shown.province, shown.country ?? location.country].filter(Boolean)
+  if (parts.length === 0) return null
+  const others = extraPlaceNames(location).length
+  return others > 0 ? `${parts.join(", ")} +${others} more` : parts.join(", ")
 }

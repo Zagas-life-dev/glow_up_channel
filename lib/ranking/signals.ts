@@ -52,8 +52,14 @@ export function contentPlace(
       ? (item.location as Record<string, unknown>)
       : {}
 
-  const lat = Number(nested.lat ?? nested.latitude ?? item.lat)
-  const lng = Number(nested.lng ?? nested.longitude ?? item.lng)
+  // The backend stores the map point as `location.coordinates`; the flat
+  // spellings are what scraped feeds used before that.
+  const point =
+    nested.coordinates && typeof nested.coordinates === "object"
+      ? (nested.coordinates as Record<string, unknown>)
+      : {}
+  const lat = Number(point.lat ?? nested.lat ?? nested.latitude ?? item.lat)
+  const lng = Number(point.lng ?? nested.lng ?? nested.longitude ?? item.lng)
 
   const remoteFlag = nested.isRemote ?? item.isRemote ?? item.remote
   const country = firstString(nested.country, item.country)
@@ -75,25 +81,76 @@ export function contentPlace(
   }
 }
 
-/** Where the listing is versus where the user is. */
+export type ContentPlace = ReturnType<typeof contentPlace>
+
+/**
+ * Every place a listing is offered in: its main place, then each entry of
+ * `location.places` — the other states of the same country. Those share the
+ * main place's country and remote flag and carry their own map point.
+ */
+export function contentPlaces(item: Record<string, unknown>): ContentPlace[] {
+  const primary = contentPlace(item)
+  const nested =
+    item.location && typeof item.location === "object"
+      ? (item.location as Record<string, unknown>)
+      : {}
+  if (!Array.isArray(nested.places) || nested.places.length === 0) return [primary]
+
+  const extras = (nested.places as unknown[]).flatMap((raw) => {
+    if (!raw || typeof raw !== "object") return []
+    const place = raw as Record<string, unknown>
+    const point =
+      place.coordinates && typeof place.coordinates === "object"
+        ? (place.coordinates as Record<string, unknown>)
+        : {}
+    const lat = Number(point.lat)
+    const lng = Number(point.lng)
+    return [
+      {
+        ...primary,
+        region: firstString(place.province, place.state),
+        city: firstString(place.city),
+        coordinates: Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined,
+      },
+    ]
+  })
+  return [primary, ...extras]
+}
+
+/**
+ * Where the listing is versus where the user is.
+ *
+ * A listing offered in several places is as close as its nearest one, and that
+ * place is returned so the card can show it rather than the first one listed.
+ */
 export function locationSignal(
   user: ResolvedLocation,
   item: Record<string, unknown>,
-): { value: SignalValue; proximity: ProximityResult } {
-  const place = contentPlace(item)
-  const result = proximity(
-    { ...user, coordinates: user.coordinates },
-    { ...place },
-  )
+): { value: SignalValue; proximity: ProximityResult; place: ContentPlace } {
+  const reader = { ...user, coordinates: user.coordinates }
+  let place = contentPlace(item)
+  let result = proximity(reader, { ...place })
+  for (const candidate of contentPlaces(item).slice(1)) {
+    const candidateResult = proximity(reader, { ...candidate })
+    const closer =
+      candidateResult.score > result.score ||
+      (candidateResult.score === result.score &&
+        candidateResult.km !== undefined &&
+        (result.km === undefined || candidateResult.km < result.km))
+    if (closer) {
+      place = candidate
+      result = candidateResult
+    }
+  }
 
   // Nothing known about the user's location and the listing is not remote:
   // there is no comparison to make, so abstain rather than guess.
   const userKnown = Boolean(user.countryCode || user.coordinates)
   if (!userKnown && result.tier !== "remote") {
-    return { value: null, proximity: result }
+    return { value: null, proximity: result, place }
   }
 
-  return { value: result.score, proximity: result }
+  return { value: result.score, proximity: result, place }
 }
 
 /**

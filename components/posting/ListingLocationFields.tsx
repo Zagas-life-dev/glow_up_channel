@@ -13,7 +13,7 @@
  */
 
 import * as React from "react"
-import { X } from "lucide-react"
+import { Plus, X } from "lucide-react"
 
 import { CountryField, type CountryValue } from "@/components/posting/CountryField"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,13 @@ import { citiesOf, hasRegions, regionLabel, regionsOf } from "@/lib/geo/places"
 import { useLocale } from "@/lib/i18n/context"
 import { cn } from "@/lib/utils"
 
+/** One more place the listing is offered in. */
+export type ExtraPlaceValue = {
+  country: CountryValue
+  province: string
+  city: string
+}
+
 export type ListingLocationValue = {
   country: CountryValue
   province: string
@@ -32,6 +39,12 @@ export type ListingLocationValue = {
   isRemote: boolean
   /** ISO codes. Empty = open to anyone, anywhere. */
   remoteCountries: string[]
+  /**
+   * Other places the listing is offered in. The backend posts another country
+   * as its own copy of the listing; more states of the same country stay one
+   * listing, shown at whichever place is nearest the reader.
+   */
+  places: ExtraPlaceValue[]
 }
 
 export const EMPTY_LISTING_LOCATION: ListingLocationValue = {
@@ -40,6 +53,22 @@ export const EMPTY_LISTING_LOCATION: ListingLocationValue = {
   city: "",
   isRemote: false,
   remoteCountries: [],
+  places: [],
+}
+
+/** An extra place is usable once it has a country and a state/region. */
+function isPlaceComplete(place: ExtraPlaceValue): boolean {
+  return Boolean(place.country?.code && place.province.trim())
+}
+
+/** The extra places as the listing payload wants them; incomplete rows are left out. */
+export function extraPlacesPayload(places: ExtraPlaceValue[]) {
+  return places.filter(isPlaceComplete).map((place) => ({
+    country: place.country?.name,
+    countryCode: place.country?.code,
+    province: place.province.trim(),
+    city: place.city.trim() || undefined,
+  }))
 }
 
 /** The i18n key for a country's first-level division. */
@@ -52,11 +81,160 @@ function regionKey(countryCode: string | undefined) {
 
 /** True when the form has what the backend requires. */
 export function isListingLocationComplete(value: ListingLocationValue): boolean {
+  // A half-filled extra row would be silently dropped — make them finish or remove it.
+  if (!(value.places ?? []).every(isPlaceComplete)) return false
   if (value.isRemote) return true
   return Boolean(value.country?.code && value.province.trim())
 }
 
 const OTHER = "__other__"
+
+/**
+ * State/region and city for one country: a picker for the focus countries,
+ * free text elsewhere. Shared by the listing's main place and each extra one.
+ */
+function RegionCityFields({
+  countryCode,
+  province,
+  city,
+  onChange,
+}: {
+  countryCode: string | undefined
+  province: string
+  city: string
+  onChange: (patch: { province?: string; city?: string }) => void
+}) {
+  const { t } = useLocale()
+  const structured = hasRegions(countryCode)
+  const regionName = t(regionKey(countryCode))
+  const cities = citiesOf(countryCode, province)
+  const [cityIsFree, setCityIsFree] = React.useState(false)
+
+  // A new country starts the city picker over.
+  React.useEffect(() => setCityIsFree(false), [countryCode])
+
+  return (
+    <>
+      {structured ? (
+        <Select value={province || undefined} onValueChange={(next) => onChange({ province: next, city: "" })}>
+          <SelectTrigger className="h-10 text-sm">
+            <SelectValue placeholder={t("location.selectRegion", { label: regionName })} />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {regionsOf(countryCode).map((name) => (
+              <SelectItem key={name} value={name}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          value={province}
+          onChange={(event) => onChange({ province: event.target.value })}
+          placeholder={regionName}
+          className="h-10 text-sm"
+        />
+      )}
+
+      {structured && cities.length > 0 && !cityIsFree ? (
+        <Select
+          value={city || undefined}
+          onValueChange={(next) => {
+            if (next === OTHER) {
+              setCityIsFree(true)
+              onChange({ city: "" })
+            } else {
+              onChange({ city: next })
+            }
+          }}
+        >
+          <SelectTrigger className="h-10 text-sm">
+            <SelectValue placeholder={`${t("location.selectCity")} (${t("common.optional").toLowerCase()})`} />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {cities.map((name) => (
+              <SelectItem key={name} value={name}>
+                {name}
+              </SelectItem>
+            ))}
+            <SelectItem value={OTHER}>{t("location.cityNotListed")}</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          value={city}
+          onChange={(event) => onChange({ city: event.target.value })}
+          placeholder={`${t("location.city")} (${t("common.optional").toLowerCase()})`}
+          className="h-10 text-sm"
+        />
+      )}
+    </>
+  )
+}
+
+/**
+ * The listing's other places. New rows start in the main place's country,
+ * since "same listing, more states" is the common case.
+ */
+export function ExtraPlacesField({
+  places,
+  defaultCountry,
+  onChange,
+}: {
+  places: ExtraPlaceValue[]
+  defaultCountry: CountryValue
+  onChange: (next: ExtraPlaceValue[]) => void
+}) {
+  const { t } = useLocale()
+  const update = (index: number, patch: Partial<ExtraPlaceValue>) =>
+    onChange(places.map((place, i) => (i === index ? { ...place, ...patch } : place)))
+
+  return (
+    <div className="space-y-2">
+      {places.length > 0 ? (
+        <div className="space-y-2 rounded-up-xl border border-border bg-card p-3">
+          <p className="text-[13px] font-bold text-foreground">{t("location.otherPlaces")}</p>
+          <p className="text-xs text-muted-foreground">{t("location.otherPlacesHint")}</p>
+          {places.map((place, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+                <CountryField
+                  value={place.country}
+                  placeholder={t("location.selectCountry")}
+                  onChange={(country) => update(index, { country, province: "", city: "" })}
+                />
+                <RegionCityFields
+                  countryCode={place.country?.code}
+                  province={place.province}
+                  city={place.city}
+                  onChange={(patch) => update(index, patch)}
+                />
+              </div>
+              <button
+                type="button"
+                aria-label={t("location.removePlace")}
+                title={t("location.removePlace")}
+                onClick={() => onChange(places.filter((_, i) => i !== index))}
+                className="mt-2.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-up-fill hover:text-foreground"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => onChange([...places, { country: defaultCountry, province: "", city: "" }])}
+        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-foreground"
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden />
+        {t("location.addPlace")}
+      </button>
+    </div>
+  )
+}
 
 export function ListingLocationFields({
   value,
@@ -69,10 +247,7 @@ export function ListingLocationFields({
 }) {
   const { t } = useLocale()
   const code = value.country?.code
-  const structured = hasRegions(code)
   const regionName = t(regionKey(code))
-  const cities = citiesOf(code, value.province)
-  const [cityIsFree, setCityIsFree] = React.useState(false)
   const [remoteMode, setRemoteMode] = React.useState<"anywhere" | "countries">(
     value.remoteCountries.length ? "countries" : "anywhere",
   )
@@ -150,67 +325,21 @@ export function ListingLocationFields({
         <CountryField
           value={value.country}
           placeholder={t("location.selectCountry")}
-          onChange={(country) => {
-            setCityIsFree(false)
-            set({ country, province: "", city: "" })
-          }}
+          onChange={(country) => set({ country, province: "", city: "" })}
         />
-
-        {structured ? (
-          <Select value={value.province || undefined} onValueChange={(province) => set({ province, city: "" })}>
-            <SelectTrigger className="h-10 text-sm">
-              <SelectValue placeholder={t("location.selectRegion", { label: regionName })} />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {regionsOf(code).map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Input
-            value={value.province}
-            onChange={(event) => set({ province: event.target.value })}
-            placeholder={regionName}
-            className="h-10 text-sm"
-          />
-        )}
-
-        {structured && cities.length > 0 && !cityIsFree ? (
-          <Select
-            value={value.city || undefined}
-            onValueChange={(city) => {
-              if (city === OTHER) {
-                setCityIsFree(true)
-                set({ city: "" })
-              } else {
-                set({ city })
-              }
-            }}
-          >
-            <SelectTrigger className="h-10 text-sm">
-              <SelectValue placeholder={`${t("location.selectCity")} (${t("common.optional").toLowerCase()})`} />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {cities.map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-              <SelectItem value={OTHER}>{t("location.cityNotListed")}</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <Input
-            value={value.city}
-            onChange={(event) => set({ city: event.target.value })}
-            placeholder={`${t("location.city")} (${t("common.optional").toLowerCase()})`}
-            className="h-10 text-sm"
-          />
-        )}
+        <RegionCityFields
+          countryCode={code}
+          province={value.province}
+          city={value.city}
+          onChange={(patch) => set(patch)}
+        />
       </div>
+
+      <ExtraPlacesField
+        places={value.places ?? []}
+        defaultCountry={value.country}
+        onChange={(places) => set({ places })}
+      />
 
       {!isListingLocationComplete(value) ? (
         <p className="text-xs text-muted-foreground">{t("location.required", { label: regionName.toLowerCase() })}</p>

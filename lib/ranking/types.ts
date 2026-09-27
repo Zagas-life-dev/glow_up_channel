@@ -67,4 +67,9 @@ export type RankedItem<T> = {
   breakdown: SignalBreakdown
   proximityTier: ProximityTier
   contentLanguage: SupportedLanguage | null
+  /**
+   * For a listing offered in several places, the one nearest the reader — what
+   * its card should show. Undefined for single-place listings.
+   */
+  nearestPlace?: { country?: string; province?: string; city?: string; isRemote?: boolean }
 }

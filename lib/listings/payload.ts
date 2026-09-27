@@ -51,6 +51,18 @@ export type ListingLocation = {
   isRemote?: boolean
   /** Remote only: ISO codes of the countries applicants may be in. Empty = anywhere. */
   remoteCountries?: string[]
+  /**
+   * Other places the listing is offered in. On create, another country becomes
+   * its own copy of the listing; more states of the same country stay here.
+   */
+  places?: ListingPlace[]
+}
+
+export type ListingPlace = {
+  country?: string
+  countryCode?: string
+  province?: string
+  city?: string
 }
 
 export type ListingDates = {
@@ -159,6 +171,16 @@ function buildLocation(location: ListingLocation | undefined) {
       remoteCountries: location.remoteCountries
         .map((code) => text(code)?.toUpperCase())
         .filter((code): code is string => Boolean(code)),
+    }),
+    ...(Array.isArray(location.places) && location.places.length > 0 && {
+      places: location.places
+        .map((place) => ({
+          country: text(place.country),
+          countryCode: text(place.countryCode)?.toUpperCase(),
+          province: text(place.province),
+          city: text(place.city),
+        }))
+        .filter((place) => place.province || place.city),
     }),
   }
   // A wholly empty location object is worse than none: it overwrites whatever a

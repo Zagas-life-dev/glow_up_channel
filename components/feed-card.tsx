@@ -35,6 +35,7 @@ import { toast } from 'sonner'
 import { useListingPrice } from '@/lib/currency/use-listing-price'
 import { KindChip, DeadlinePill, SponsoredLabel, UP_KIND } from '@/components/up/kind'
 import { isExtremePromotion } from '@/lib/promotion-boost'
+import { cardLocationLine } from '@/lib/content-detail/format'
 
 interface FeedCardProps {
   item: {
@@ -51,7 +52,11 @@ interface FeedCardProps {
       city?: string
       isRemote?: boolean
       address?: string
+      /** Other states of the same country the listing is offered in. */
+      places?: { province?: string; city?: string }[]
     }
+    /** Set by the ranker: the listing's place nearest the reader. */
+    nearestLocation?: { country?: string; province?: string; city?: string }
     tags?: string[]
     /** Canonical money object. Legacy containers below are still read for
         documents written before it existed. */
@@ -511,11 +516,8 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     void recordFeedView('feed_show_more')
   }
 
-  const getLocationString = () => {
-    if (item.location?.isRemote) return 'Remote'
-    const parts = [item.location?.city, item.location?.country].filter(Boolean)
-    return parts.join(', ') || null
-  }
+  // Nearest place to the reader for a listing offered in several.
+  const getLocationString = () => cardLocationLine(item)
 
   const getDateString = () => {
     if (item.dates?.applicationDeadline) {
