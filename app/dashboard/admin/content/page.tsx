@@ -98,8 +98,9 @@ interface ContentItem {
   title: string
   description: string
   type: "opportunity" | "event" | "job" | "resource"
-  status: "active" | "inactive" | "draft"
-  isApproved: boolean
+  /** Ingested listings can arrive with neither `status` nor `isApproved` set. */
+  status?: "active" | "inactive" | "draft"
+  isApproved?: boolean
   approvedBy?: string
   approvedAt?: string
   createdAt: string
@@ -171,21 +172,24 @@ interface ContentItem {
   [key: string]: unknown
 }
 
-type StatusFilter =
-  | "all"
-  | "live"
-  | "pending"
-  | "true_draft"
-  | "hidden"
-  | "inactive_not_approved"
-  | "inactive_approved"
+// Pending absorbs what used to be separate Draft / Inactive / Inactive (OK) tabs:
+// anything a visitor can't see yet is waiting on a moderator. Hidden stays as its
+// own view of the subset that sits in an *-inactive collection.
+type StatusFilter = "all" | "live" | "pending" | "hidden"
 type TypeFilter = "all" | "opportunity" | "event" | "job" | "resource"
-type PaymentFilter =
-  | "all"
-  | "not_required"
-  | "awaiting_payment"
-  | "payment_uploaded"
-  | "verified"
+
+/** Visible on the public feeds — the same predicate the backend uses. */
+function isLive(item: ContentItem): boolean {
+  return !item._fromInactive && item.status === "active" && item.isApproved === true
+}
+
+/**
+ * The status the edit form starts from. Ingested listings often store none;
+ * defaulting a hidden one to "active" would publish it on the next save.
+ */
+function effectiveStatus(item: ContentItem): "active" | "inactive" | "draft" {
+  return item.status ?? (item._fromInactive ? "inactive" : "active")
+}
 
 // Basic requirement option sets for opportunities
 const EDUCATION_LEVEL_OPTIONS = [
@@ -219,18 +223,7 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "live", label: "Live" },
   { value: "pending", label: "Pending" },
-  { value: "true_draft", label: "Draft" },
   { value: "hidden", label: "Hidden" },
-  { value: "inactive_not_approved", label: "Inactive" },
-  { value: "inactive_approved", label: "Inactive (OK)" },
-]
-
-const PAYMENT_OPTIONS: { value: PaymentFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "not_required", label: "None" },
-  { value: "awaiting_payment", label: "Awaiting" },
-  { value: "payment_uploaded", label: "Uploaded" },
-  { value: "verified", label: "Verified" },
 ]
 
 const JOB_TYPE_OPTIONS = ["Full-time", "Part-time", "Contract", "Freelance", "Internship", "Remote", "Other"]
@@ -301,15 +294,12 @@ export default function AdminContent() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [counts, setCounts] = useState({ live: 0, pending: 0, drafts: 0, inactive: 0 })
+  const [counts, setCounts] = useState({ live: 0, pending: 0, hidden: 0 })
   const [cleanupLoading, setCleanupLoading] = useState(false)
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
-  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
   const [showReviewDialog, setShowReviewDialog] = useState(false)
@@ -319,7 +309,6 @@ export default function AdminContent() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
   const [rejectionReason, setRejectionReason] = useState("")
-  const [bypassPayment, setBypassPayment] = useState(true)
   const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
   const [paymentVerification, setPaymentVerification] = useState<"verify" | "reject">("verify")
   const [paymentNotes, setPaymentNotes] = useState("")
@@ -379,21 +368,30 @@ export default function AdminContent() {
     () => ({
       type: typeFilter !== "all" ? typeFilter : undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
-      payment: paymentFilter !== "all" ? paymentFilter : undefined,
       search: searchQuery || undefined,
     }),
-    [typeFilter, statusFilter, paymentFilter, searchQuery]
+    [typeFilter, statusFilter, searchQuery]
   )
 
   const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || paymentFilter !== "all" || !!searchQuery.trim()
+    typeFilter !== "all" || statusFilter !== "all" || !!searchQuery.trim()
 
   const clearAllFilters = () => {
     setTypeFilter("all")
     setStatusFilter("all")
-    setPaymentFilter("all")
     setSearchQuery("")
   }
+
+  /** Whether an item still belongs in the list under the current status tab. */
+  const matchesStatusFilter = useCallback(
+    (item: ContentItem) => {
+      if (statusFilter === "live") return isLive(item)
+      if (statusFilter === "pending") return !isLive(item)
+      if (statusFilter === "hidden") return !!item._fromInactive
+      return true
+    },
+    [statusFilter]
+  )
 
   const fetchPosters = useCallback(async (items: ContentItem[]) => {
     return Promise.all(
@@ -413,7 +411,7 @@ export default function AdminContent() {
   const fetchFirstPage = useCallback(async () => {
     if (!isAuthenticated || !user) return
     setContent([])
-    setCounts({ live: 0, pending: 0, drafts: 0, inactive: 0 })
+    setCounts({ live: 0, pending: 0, hidden: 0 })
     setLoading(true)
     setError(null)
     try {
@@ -425,8 +423,6 @@ export default function AdminContent() {
       const contentWithPosters = await fetchPosters(result.content)
       setContent(contentWithPosters)
       setTotalCount(result.pagination.totalCount)
-      setTotalPages(result.pagination.totalPages)
-      setCurrentPage(1)
       if (result.counts) {
         setCounts(result.counts)
       }
@@ -440,19 +436,21 @@ export default function AdminContent() {
   }, [isAuthenticated, user, filters, fetchPosters])
 
   const loadMore = useCallback(async () => {
-    if (currentPage >= totalPages || loadingMore || loading) return
+    if (content.length >= totalCount || loadingMore || loading) return
     try {
       setLoadingMore(true)
-      const nextPage = currentPage + 1
+      // Page from what's on screen, not a page number: approving or rejecting
+      // removes rows from the server's result, and page N+1 would then skip them.
       const result = await ApiClient.getContentForModeration(
-        nextPage,
+        1,
         ITEMS_PER_PAGE,
-        filters
+        { ...filters, offset: content.length }
       )
       const contentWithPosters = await fetchPosters(result.content)
-      setContent((prev) => [...prev, ...contentWithPosters])
-      setCurrentPage(nextPage)
-      setTotalPages(result.pagination.totalPages)
+      setContent((prev) => {
+        const seen = new Set(prev.map((c) => c._id))
+        return [...prev, ...contentWithPosters.filter((c) => !seen.has(c._id))]
+      })
       setTotalCount(result.pagination.totalCount)
       if (result.counts) {
         setCounts(result.counts)
@@ -462,7 +460,7 @@ export default function AdminContent() {
     } finally {
       setLoadingMore(false)
     }
-  }, [currentPage, totalPages, loadingMore, loading, filters, fetchPosters])
+  }, [content.length, totalCount, loadingMore, loading, filters, fetchPosters])
 
   const runCleanup = useCallback(async () => {
     setCleanupLoading(true)
@@ -490,7 +488,7 @@ export default function AdminContent() {
     }
   }, [fetchFirstPage])
 
-  const hasMore = currentPage < totalPages
+  const hasMore = content.length < totalCount
   const { sentinelRef, threshold } = useInfiniteScroll({
     hasMore,
     isLoading: loadingMore,
@@ -513,7 +511,7 @@ export default function AdminContent() {
     if (showDetailsDialog && selectedContent) {
       setEditTitle(selectedContent.title)
       setEditDescription(selectedContent.description)
-      setEditStatus(selectedContent.status)
+      setEditStatus(effectiveStatus(selectedContent))
       setEditApplicationLink(selectedContent.applicationLink ?? "")
       setEditExternalLink(selectedContent.externalLink ?? "")
       setEditEventLink(selectedContent.eventLink ?? "")
@@ -567,84 +565,74 @@ export default function AdminContent() {
     }
   }, [showDetailsDialog, selectedContent])
 
+  /**
+   * Swap one row for its new state (or drop it, when `next` is null), keeping the
+   * stat cards and the "N of M" footer in step. Returns an undo for the optimistic path.
+   */
+  const applyRowChange = (item: ContentItem, next: ContentItem | null) => {
+    const snapshot = { content, counts, totalCount }
+    const bucket = (c: ContentItem) => ({
+      live: isLive(c) ? 1 : 0,
+      pending: isLive(c) ? 0 : 1,
+      hidden: c._fromInactive ? 1 : 0,
+    })
+    const before = bucket(item)
+    const after = next ? bucket(next) : { live: 0, pending: 0, hidden: 0 }
+    setCounts((prev) => ({
+      live: Math.max(0, prev.live - before.live + after.live),
+      pending: Math.max(0, prev.pending - before.pending + after.pending),
+      hidden: Math.max(0, prev.hidden - before.hidden + after.hidden),
+    }))
+    // A row that no longer fits the selected tab leaves the list — an approved
+    // listing sitting under "Pending" with a Live badge reads as a failed approve.
+    const keep = next !== null && matchesStatusFilter(next)
+    setContent((prev) =>
+      keep ? prev.map((c) => (c._id === item._id ? next : c)) : prev.filter((c) => c._id !== item._id)
+    )
+    if (!keep) setTotalCount((prev) => Math.max(0, prev - 1))
+    return () => {
+      setContent(snapshot.content)
+      setCounts(snapshot.counts)
+      setTotalCount(snapshot.totalCount)
+    }
+  }
+
+  const closeReviewDialog = () => {
+    setShowReviewDialog(false)
+    setRejectionReason("")
+    setSelectedContent(null)
+  }
+
   const handleReview = async () => {
     if (!selectedContent) return
-    const id = selectedContent._id
-    const previousItem = content.find((c) => c._id === id)
-    if (reviewAction === "reject" && !rejectionReason.trim()) {
+    const item = content.find((c) => c._id === selectedContent._id) ?? selectedContent
+    const action = reviewAction
+    const reason = rejectionReason.trim()
+    if (action === "reject" && !reason) {
       toast.error("Please provide a rejection reason")
       return
     }
-    setActionLoading(id)
-    if (reviewAction === "approve") {
-      setContent((prev) =>
-        prev.map((c) =>
-          c._id === id ? { ...c, isApproved: true, status: "active" as const } : c
-        )
-      )
-      setCounts((prev) => ({
-        ...prev,
-        live: prev.live + 1,
-        pending: Math.max(0, prev.pending - 1),
-      }))
-      setShowReviewDialog(false)
-      setRejectionReason("")
-      setBypassPayment(true)
-      setSelectedContent(null)
-    } else {
-      const wasPending = previousItem?.status === "active" && !previousItem?.isApproved
-      const wasDraft = previousItem?.status === "draft"
-      setContent((prev) => prev.filter((c) => c._id !== id))
-      setCounts((prev) => ({
-        ...prev,
-        pending: wasPending ? Math.max(0, prev.pending - 1) : prev.pending,
-        drafts: wasDraft ? Math.max(0, prev.drafts - 1) : prev.drafts,
-      }))
-      setShowReviewDialog(false)
-      setRejectionReason("")
-      setSelectedContent(null)
-    }
+    setActionLoading(item._id)
+    // Mirrors what the approve endpoint writes: the listing is moved into the live
+    // collection if it was hidden, so it must stop showing as `*-inactive` too.
+    const undo = applyRowChange(
+      item,
+      action === "approve"
+        ? { ...item, isApproved: true, status: "active", _fromInactive: false, paymentStatus: "not_required", approvedAt: new Date().toISOString() }
+        : null
+    )
+    closeReviewDialog()
     try {
-      if (reviewAction === "approve") {
-        await ApiClient.approveContent(selectedContent._id, selectedContent.type, {
-          bypassPayment,
-        })
-        toast.success(
-          bypassPayment
-            ? "Content approved without payment."
-            : "Content approved. Request payment from Approved tab."
-        )
+      if (action === "approve") {
+        await ApiClient.approveContent(item._id, item.type)
+        toast.success(`"${item.title}" is live.`)
       } else {
-        await ApiClient.rejectContent(
-          selectedContent._id,
-          selectedContent.type,
-          rejectionReason
-        )
+        await ApiClient.rejectContent(item._id, item.type, reason)
         toast.success("Content rejected")
       }
     } catch (err: unknown) {
+      undo()
       toast.error(err instanceof Error ? err.message : "Failed to review")
-      if (previousItem) {
-        setContent((prev) => {
-          const next = reviewAction === "approve"
-            ? prev.map((c) => (c._id === id ? previousItem : c))
-            : [...prev, previousItem].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-              )
-          return next
-        })
-        if (reviewAction === "approve") {
-          setCounts((prev) => ({ ...prev, live: Math.max(0, prev.live - 1), pending: prev.pending + 1 }))
-        } else {
-          const wasPending = previousItem.status === "active" && !previousItem.isApproved
-          const wasDraft = previousItem.status === "draft"
-          setCounts((prev) => ({
-            ...prev,
-            pending: wasPending ? prev.pending + 1 : prev.pending,
-            drafts: wasDraft ? prev.drafts + 1 : prev.drafts,
-          }))
-        }
-      }
     } finally {
       setActionLoading(null)
     }
@@ -692,37 +680,23 @@ export default function AdminContent() {
     if (!selectedContent) return
     const id = selectedContent._id
     const verified = paymentVerification === "verify"
-    const previousItem = content.find((c) => c._id === id)
-    const wasAlreadyLive = previousItem?.status === "active" && previousItem?.isApproved
+    const item = content.find((c) => c._id === id) ?? selectedContent
+    const notes = paymentNotes
     setActionLoading(id)
-    setContent((prev) =>
-      prev.map((c) =>
-        c._id === id
-          ? {
-              ...c,
-              paymentStatus: verified ? ("verified" as const) : ("failed" as const),
-              isApproved: verified ? true : c.isApproved,
-            }
-          : c
-      )
-    )
-    if (verified && !wasAlreadyLive) {
-      setCounts((prev) => ({ ...prev, live: prev.live + 1, pending: Math.max(0, prev.pending - 1) }))
-    }
+    const undo = applyRowChange(item, {
+      ...item,
+      paymentStatus: verified ? "verified" : "failed",
+      isApproved: verified ? true : item.isApproved,
+    })
     setShowPaymentDialog(false)
     setPaymentNotes("")
     setSelectedContent(null)
     try {
-      await ApiClient.verifyPayment(id, selectedContent.type, verified, paymentNotes)
+      await ApiClient.verifyPayment(id, item.type, verified, notes)
       toast.success(verified ? "Payment verified" : "Payment rejected")
     } catch (err: unknown) {
+      undo()
       toast.error(err instanceof Error ? err.message : "Failed to verify")
-      if (previousItem) {
-        setContent((prev) => prev.map((c) => (c._id === id ? previousItem : c)))
-        if (verified && !wasAlreadyLive) {
-          setCounts((prev) => ({ ...prev, live: Math.max(0, prev.live - 1), pending: prev.pending + 1 }))
-        }
-      }
     } finally {
       setActionLoading(null)
     }
@@ -738,15 +712,13 @@ export default function AdminContent() {
     if (!confirmed) return
 
     setActionLoading(id)
-    const previousContent = content
+    // Optimistically remove from UI; undo restores the row and the counts.
+    const undo = applyRowChange(item, null)
     try {
-      // Optimistically remove from UI
-      setContent((prev) => prev.filter((c) => c._id !== id))
       await ApiClient.deleteContentByAdmin(id, type)
       toast.success(`Moved to past ${type}s`)
     } catch (err: unknown) {
-      // Restore on failure
-      setContent(previousContent)
+      undo()
       toast.error(err instanceof Error ? err.message : 'Failed to delete content')
     } finally {
       setActionLoading(null)
@@ -780,6 +752,9 @@ export default function AdminContent() {
       }
     }
     const previousItem = content.find((c) => c._id === id)
+    const movesBetweenCollections = selectedContent.type !== "resource"
+    const movesToLive = movesBetweenCollections && !!selectedContent._fromInactive && editStatus === "active"
+    const movesToHidden = movesBetweenCollections && !selectedContent._fromInactive && editStatus === "inactive"
     const updated: ContentItem = {
       ...selectedContent,
       title,
@@ -831,24 +806,30 @@ export default function AdminContent() {
         registrationDeadline: editRegistrationDeadline ? new Date(editRegistrationDeadline).toISOString() : undefined,
         duration: editDuration.trim() || undefined,
       },
-      // Once an item is made active, treat it as no longer coming from an *-inactive bucket
-      _fromInactive: editStatus === "active" ? false : selectedContent._fromInactive,
+      // What the update endpoints now do with a status change (resources excepted,
+      // they don't move): an admin setting a hidden listing active publishes it,
+      // and setting a live one inactive hides it.
+      _fromInactive: movesToLive ? false : movesToHidden ? true : selectedContent._fromInactive,
+      isApproved: movesToLive ? true : selectedContent.isApproved,
     }
-    setContent((prev) => prev.map((c) => (c._id === id ? updated : c)))
+    // Checked before the optimistic write: returning after it left the list showing
+    // an edit that was never saved.
+    if (selectedContent.type === "event") {
+      const eventDescription = description.trim() || (selectedContent.description ?? "")
+      if (eventDescription.length > 0 && eventDescription.length < 20) {
+        toast.error("Event description must be at least 20 characters.")
+        return
+      }
+    }
+    const undoRow = applyRowChange(previousItem ?? selectedContent, updated)
     setSelectedContent(updated)
     setDetailsEditMode(false)
     setDetailsSaveLoading(true)
     try {
       const descriptionChanged = description !== selectedContent.description
-      // Event API requires description min 20 chars and does not accept undefined in nested objects (would overwrite existing data)
+      // Event API requires description min 20 chars (checked above) and does not accept undefined in nested objects (would overwrite existing data)
       if (selectedContent.type === "event") {
         const eventDescription = description.trim() || (selectedContent.description ?? "")
-        if (eventDescription.length > 0 && eventDescription.length < 20) {
-          toast.error("Event description must be at least 20 characters.")
-          setDetailsSaveLoading(false)
-          setDetailsEditMode(true)
-          return
-        }
         const omitUndefined = <T extends Record<string, unknown>>(o: T): Partial<T> =>
           Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>
         const eventLocation = omitUndefined({
@@ -931,12 +912,12 @@ export default function AdminContent() {
       toast.success("Content updated")
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to update content")
+      undoRow()
       if (previousItem) {
-        setContent((prev) => prev.map((c) => (c._id === id ? previousItem : c)))
         setSelectedContent(previousItem)
         setEditTitle(previousItem.title)
         setEditDescription(previousItem.description)
-        setEditStatus(previousItem.status)
+        setEditStatus(effectiveStatus(previousItem))
         setEditApplicationLink(previousItem.applicationLink ?? "")
         setEditExternalLink(previousItem.externalLink ?? "")
         setEditEventLink(previousItem.eventLink ?? "")
@@ -1004,15 +985,15 @@ export default function AdminContent() {
   }
 
   const getStatusBadge = (item: ContentItem) => {
-    const isLive = item.status === "active" && item.isApproved
-    const isPending = item.status === "active" && !item.isApproved
-    const isDraft = item.status === "draft"
-    const isInactive = item.status === "inactive"
-    if (isLive) return <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-0">Live</Badge>
-    if (isPending) return <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-0">Pending</Badge>
-    if (isDraft) return <Badge className="bg-gray-500/20 text-muted-foreground dark:text-muted-foreground border-0">Draft</Badge>
-    if (isInactive) return <Badge className="bg-red-500/20 text-red-600 dark:text-red-400 border-0">Inactive</Badge>
-    return null
+    if (isLive(item)) return <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-0">Live</Badge>
+    // One Pending state; the stored status rides along so a moderator still knows
+    // whether they're looking at a draft or something that was switched off.
+    const detail = item.status === "draft" ? "draft" : item.status === "inactive" ? "inactive" : null
+    return (
+      <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-0">
+        Pending{detail ? ` · ${detail}` : ""}
+      </Badge>
+    )
   }
 
   const getPaymentBadge = (item: ContentItem) => {
@@ -1028,16 +1009,6 @@ export default function AdminContent() {
       return <Badge className="bg-red-500/20 text-red-600 dark:text-red-400 border-0 text-xs">Failed</Badge>
     return null
   }
-
-  const stats = useMemo(
-    () => ({
-      live: counts.live,
-      pending: counts.pending,
-      drafts: counts.drafts,
-      inactive: counts.inactive,
-    }),
-    [counts]
-  )
 
   if (authLoading) {
     return (
@@ -1096,16 +1067,16 @@ export default function AdminContent() {
             )}
 
             <AdminStatGrid className="mb-5">
-              <AdminStat label="Live" value={stats.live.toLocaleString()} hint="Active & approved" icon={RiCheckboxCircleLine} emphasis="positive" />
+              <AdminStat label="Live" value={counts.live.toLocaleString()} hint="Visible on the platform" icon={RiCheckboxCircleLine} emphasis="positive" />
               <AdminStat
                 label="Pending"
-                value={stats.pending.toLocaleString()}
-                hint="Awaiting review"
+                value={counts.pending.toLocaleString()}
+                hint="Not live yet — awaiting review"
                 icon={RiTimeLine}
-                emphasis={stats.pending > 0 ? "attention" : "none"}
+                emphasis={counts.pending > 0 ? "attention" : "none"}
               />
-              <AdminStat label="Drafts" value={stats.drafts.toLocaleString()} hint="Unpublished" icon={RiFileLine} />
-              <AdminStat label="Total" value={totalCount.toLocaleString()} hint="All content" icon={RiBarChartBoxLine} />
+              <AdminStat label="Hidden" value={counts.hidden.toLocaleString()} hint="Pending, in the inactive store" icon={RiFileLine} />
+              <AdminStat label="Total" value={(counts.live + counts.pending).toLocaleString()} hint="All content" icon={RiBarChartBoxLine} />
             </AdminStatGrid>
 
             {/* One toolbar row, then the three filter dimensions as labelled chip rows */}
@@ -1130,10 +1101,6 @@ export default function AdminContent() {
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Status</span>
                   <AdminTabs value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
-                </div>
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Payment</span>
-                  <AdminTabs value={paymentFilter} onChange={setPaymentFilter} options={PAYMENT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
                 </div>
               </div>
             </div>
@@ -1262,7 +1229,9 @@ export default function AdminContent() {
                               {item.providerId || item.organizerId ? "Reassign" : "Attach"}
                             </span>
                           </Button>
-                          {!item.isApproved && (
+                          {/* Anything not live can be approved — including approved-but-inactive
+                              listings, which previously had no way to go live from here. */}
+                          {!isLive(item) && (
                             <>
                               <Button
                                 variant="default"
@@ -1338,7 +1307,7 @@ export default function AdminContent() {
     </AdminShell>
 
       {/* Review dialog */}
-      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+      <Dialog open={showReviewDialog} onOpenChange={(open) => { if (!open) closeReviewDialog() }}>
         <DialogContent className="rounded-3xl border-border bg-card dark:bg-card shadow-2xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">
@@ -1346,24 +1315,10 @@ export default function AdminContent() {
             </DialogTitle>
             <DialogDescription>
               {reviewAction === "approve"
-                ? "This will be published on the platform."
-                : "Provide a reason for rejection."}
+                ? `"${selectedContent?.title ?? "This listing"}" will go live on the platform.`
+                : "Rejecting moves it to past listings. Provide a reason."}
             </DialogDescription>
           </DialogHeader>
-          {reviewAction === "approve" && (
-            <div className="flex items-center gap-3 py-2">
-              <input
-                type="checkbox"
-                id="bypassPayment"
-                checked={bypassPayment}
-                onChange={(e) => setBypassPayment(e.target.checked)}
-                className="w-4 h-4 rounded border-border text-orange-500"
-              />
-              <label htmlFor="bypassPayment" className="text-sm text-muted-foreground">
-                Approve without requiring payment
-              </label>
-            </div>
-          )}
           {reviewAction === "reject" && (
             <Textarea
               placeholder="Rejection reason..."
@@ -1373,7 +1328,7 @@ export default function AdminContent() {
             />
           )}
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => { setShowReviewDialog(false); setRejectionReason(""); setBypassPayment(true); setSelectedContent(null) }} className="rounded-2xl">
+            <Button variant="outline" onClick={closeReviewDialog} className="rounded-2xl">
               Cancel
             </Button>
             <Button
@@ -2144,7 +2099,7 @@ export default function AdminContent() {
                       setDetailsEditMode(false)
                       setEditTitle(selectedContent.title)
                       setEditDescription(selectedContent.description)
-                      setEditStatus(selectedContent.status)
+                      setEditStatus(effectiveStatus(selectedContent))
                       setEditApplicationLink(selectedContent.applicationLink ?? "")
                       setEditExternalLink(selectedContent.externalLink ?? "")
                       setEditEventLink(selectedContent.eventLink ?? "")

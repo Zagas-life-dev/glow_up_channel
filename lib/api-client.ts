@@ -1826,8 +1826,9 @@ export class ApiClient {
   static async getContentForModeration(page = 1, limit = 10, filters?: {
     type?: string;
     status?: string;
-    payment?: string;
     search?: string;
+    /** Rows the caller already holds; takes precedence over `page` server-side. */
+    offset?: number;
   }): Promise<{
     content: any[];
     pagination: {
@@ -1837,7 +1838,7 @@ export class ApiClient {
       hasNext: boolean;
       hasPrev: boolean;
     };
-    counts?: { live: number; pending: number; drafts: number; inactive: number };
+    counts?: { live: number; pending: number; hidden: number };
   }> {
     try {
       // Use the proper admin endpoint that returns ALL content regardless of approval status
@@ -1846,8 +1847,8 @@ export class ApiClient {
         limit: limit.toString(),
         ...(filters?.type && { type: filters.type }),
         ...(filters?.status && { status: filters.status }),
-        ...(filters?.payment && { payment: filters.payment }),
-        ...(filters?.search && { search: filters.search })
+        ...(filters?.search && { search: filters.search }),
+        ...(filters?.offset !== undefined && { offset: filters.offset.toString() })
       });
 
       const response = await this.makeAuthenticatedRequest(
@@ -1858,7 +1859,8 @@ export class ApiClient {
 
     } catch (error) {
       console.error('Error fetching content for moderation:', error);
-      throw new Error('Failed to fetch content for moderation');
+      // Keep the server's reason (expired session, access denied) instead of a generic line.
+      throw error instanceof Error ? error : new Error('Failed to fetch content for moderation');
     }
   }
 
