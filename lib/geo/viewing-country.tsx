@@ -16,6 +16,9 @@
 
 import * as React from "react"
 
+import { clearOfflineCaches } from "@/lib/offline/cache-control"
+import { clearPageStateCache } from "@/lib/page-state-session"
+
 /** Sentinel stored for "anywhere" — not a real ISO code, so it cannot collide. */
 const ANYWHERE = "*"
 const STORAGE_KEY = "glowup-viewing-country"
@@ -52,6 +55,24 @@ function serialize(selection: ViewingSelection): string | null {
   return selection.countryCode
 }
 
+/**
+ * A country switch changes what every feed on the page should contain, and the
+ * session feed caches, the feed seed and the service worker's API cache were
+ * all filled for the old country. Rather than invalidate each one in place,
+ * drop them and reload so every page fetches fresh for the new country.
+ *
+ * The worker clear is awaited before reloading — otherwise the new page could
+ * be answered from the very API cache we just asked it to discard. Only called
+ * online (see setSelection), so the worker caches are never dropped while they
+ * are the only content left to read.
+ */
+async function reloadForCountry(): Promise<void> {
+  if (typeof window === "undefined") return
+  clearPageStateCache()
+  await clearOfflineCaches()
+  window.location.reload()
+}
+
 export function ViewingCountryProvider({ children }: { children: React.ReactNode }) {
   const [selection, setSelectionState] = React.useState<ViewingSelection>(AUTO)
 
@@ -66,14 +87,27 @@ export function ViewingCountryProvider({ children }: { children: React.ReactNode
   }, [])
 
   const setSelection = React.useCallback((next: ViewingSelection) => {
-    setSelectionState(next)
+    const value = serialize(next)
+    let previous: string | null = null
+    let persisted = false
     try {
-      const value = serialize(next)
+      previous = localStorage.getItem(STORAGE_KEY)
       if (value === null) localStorage.removeItem(STORAGE_KEY)
       else localStorage.setItem(STORAGE_KEY, value)
+      persisted = true
     } catch {
       // Choice still applies for this session.
     }
+    setSelectionState(next)
+
+    // Re-picking the current country is a no-op, not a reload.
+    if (previous === value) return
+    // A reload re-reads the choice from storage, so when it couldn't be saved
+    // (blocked storage) reloading would throw the new country away. Offline, the
+    // reload can't fetch anything for the new country either. Both keep the old
+    // in-place behaviour instead.
+    if (!persisted || !navigator.onLine) return
+    void reloadForCountry()
   }, [])
 
   const value = React.useMemo<ViewingCountryValue>(
