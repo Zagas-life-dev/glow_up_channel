@@ -105,7 +105,7 @@
 <tr><td>Translation scope</td><td>The whole app for users, providers and monitors, including tag names. The admin side stays in English for now.</td></tr>
 <tr><td>Who sees location analytics</td><td>Admins see everything. Providers see their own listings. Monitors see only the listings assigned to them.</td></tr>
 <tr><td>User location</td><td>Country matters most. The user's position comes from the device (GPS, falling back to IP location). We ask on first load, with our own explanation first.</td></tr>
-<tr><td>Listing location</td><td>Country is required, state is required unless the listing is remote, city is optional, all picked from lists. Remote listings say which countries can apply.</td></tr>
+<tr><td>Listing location</td><td>Country is required unless the listing is remote; state and city are optional (changed 2026-09-28: many ads name only the country), all picked from lists. Remote listings say which countries can apply.</td></tr>
 <tr><td>Visitors not logged in</td><td>Their location stays in their browser until they sign up. Analytics counts them only as anonymous totals. Coordinates are rounded to about 1&nbsp;km.</td></tr>
 </tbody></table></div>
 
@@ -248,7 +248,7 @@
 <h2 id="listing-location">9 · Listing location</h2>
 <p>User location comes from the device, so listings need to be <em>precise</em> to be matched against it.</p>
 <ul>
-  <li><strong>Providers pick from lists:</strong> country (required), state (required unless remote), city (optional).</li>
+  <li><strong>Providers pick from lists:</strong> country (required unless remote), state (optional), city (optional).</li>
   <li><strong>Coordinates</strong> come from a built-in list of cities and states, so every listing gets a map point without any paid map service.</li>
   <li><strong>Remote listings</strong> pick which countries can apply, e.g. "Remote · Nigeria only" or "Remote · anywhere in Africa". Users outside those countries don't see them.</li>
   <li><strong>Existing listings</strong> are filled from their current location fields and old place tags (<code>lagos</code>, <code>nairobi</code>…). Where those are empty, the listing goes on an admin "location missing" list to be filled in by hand. The AI never writes location.</li>

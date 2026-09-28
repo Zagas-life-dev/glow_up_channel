@@ -198,6 +198,22 @@ describe("location", () => {
     expect(payload.location).toBeUndefined()
   })
 
+  it("keeps a country-only extra place, which becomes that country's copy", () => {
+    const payload = buildListingPayload(
+      draft({
+        location: {
+          country: "Nigeria",
+          countryCode: "NG",
+          isRemote: false,
+          places: [{ country: "Ghana", countryCode: "gh" }, { province: "", city: "" }],
+        },
+      }),
+    ) as any
+    expect(payload.location.places).toEqual([
+      { country: "Ghana", countryCode: "GH", province: undefined, city: undefined },
+    ])
+  })
+
   it("keeps a remote-only location", () => {
     const payload = buildListingPayload(draft({ location: { isRemote: true } })) as any
     expect(payload.location).toMatchObject({ isRemote: true })

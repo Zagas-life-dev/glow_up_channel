@@ -58,8 +58,12 @@ export function contentPlace(
     nested.coordinates && typeof nested.coordinates === "object"
       ? (nested.coordinates as Record<string, unknown>)
       : {}
-  const lat = Number(point.lat ?? nested.lat ?? nested.latitude ?? item.lat)
-  const lng = Number(point.lng ?? nested.lng ?? nested.longitude ?? item.lng)
+  // A country-level point is the country's centre, not where the listing is —
+  // measuring from it would call a nationwide job "same city" near the centre
+  // and "far" everywhere else. Such listings match on the country label instead.
+  const countryOnly = nested.precision === "country"
+  const lat = countryOnly ? NaN : Number(point.lat ?? nested.lat ?? nested.latitude ?? item.lat)
+  const lng = countryOnly ? NaN : Number(point.lng ?? nested.lng ?? nested.longitude ?? item.lng)
 
   const remoteFlag = nested.isRemote ?? item.isRemote ?? item.remote
   const country = firstString(nested.country, item.country)
@@ -103,8 +107,9 @@ export function contentPlaces(item: Record<string, unknown>): ContentPlace[] {
       place.coordinates && typeof place.coordinates === "object"
         ? (place.coordinates as Record<string, unknown>)
         : {}
-    const lat = Number(point.lat)
-    const lng = Number(point.lng)
+    const countryOnly = place.precision === "country"
+    const lat = countryOnly ? NaN : Number(point.lat)
+    const lng = countryOnly ? NaN : Number(point.lng)
     return [
       {
         ...primary,

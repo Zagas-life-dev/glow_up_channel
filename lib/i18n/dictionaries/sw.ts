@@ -71,7 +71,7 @@ export const sw: Dictionary = {
     otherPlacesHint: "Nchi nyingine huchapishwa kama nakala ya tangazo hili huko. Majimbo zaidi ya nchi ileile hubaki tangazo moja, likionyeshwa kwenye eneo lililo karibu zaidi na kila msomaji.",
     removePlace: "Ondoa eneo",
     morePlaces: "+{count} zaidi",
-    required: "Chagua nchi, na {label} isipokuwa ni kazi ya mbali.",
+    required: "Chagua nchi, au weka alama kuwa ni kazi ya mbali. Eneo na mji si lazima.",
     permissionUnsupported: "Kivinjari chako hakiwezi kutoa mahali sahihi.",
     usingProfile: "Tunatumia mahali kwenye wasifu wako.",
     chooseCountry: "Onyesha fursa katika",

@@ -3,9 +3,10 @@
 /**
  * Where a listing is — picked, not typed.
  *
- * A reader's position comes from their device, so a listing needs a precise
- * place to be matched against it: country always, the state/region/county
- * unless the listing is remote, and optionally the city. For the four focus
+ * A reader's position comes from their device, so a listing is matched as
+ * precisely as it allows: the country is required (unless remote), while the
+ * state/region/county and city are optional — many ads name only the country
+ * and never say whether they are remote, and they still go up. For the four focus
  * countries (NG, GH, KE, ET) states and cities come from the shared places
  * table, so "Ikeja" and "Lagos" can never be two places again; elsewhere they
  * are free text. A remote listing says who may apply — anyone, or only people
@@ -56,9 +57,9 @@ export const EMPTY_LISTING_LOCATION: ListingLocationValue = {
   places: [],
 }
 
-/** An extra place is usable once it has a country and a state/region. */
+/** An extra place is usable once it has a country; state and city are optional. */
 function isPlaceComplete(place: ExtraPlaceValue): boolean {
-  return Boolean(place.country?.code && place.province.trim())
+  return Boolean(place.country?.code)
 }
 
 /** The extra places as the listing payload wants them; incomplete rows are left out. */
@@ -66,7 +67,7 @@ export function extraPlacesPayload(places: ExtraPlaceValue[]) {
   return places.filter(isPlaceComplete).map((place) => ({
     country: place.country?.name,
     countryCode: place.country?.code,
-    province: place.province.trim(),
+    province: place.province.trim() || undefined,
     city: place.city.trim() || undefined,
   }))
 }
@@ -84,7 +85,7 @@ export function isListingLocationComplete(value: ListingLocationValue): boolean 
   // A half-filled extra row would be silently dropped — make them finish or remove it.
   if (!(value.places ?? []).every(isPlaceComplete)) return false
   if (value.isRemote) return true
-  return Boolean(value.country?.code && value.province.trim())
+  return Boolean(value.country?.code)
 }
 
 const OTHER = "__other__"
@@ -106,6 +107,7 @@ function RegionCityFields({
 }) {
   const { t } = useLocale()
   const structured = hasRegions(countryCode)
+  const optional = ` (${t("common.optional").toLowerCase()})`
   const regionName = t(regionKey(countryCode))
   const cities = citiesOf(countryCode, province)
   const [cityIsFree, setCityIsFree] = React.useState(false)
@@ -118,7 +120,7 @@ function RegionCityFields({
       {structured ? (
         <Select value={province || undefined} onValueChange={(next) => onChange({ province: next, city: "" })}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder={t("location.selectRegion", { label: regionName })} />
+            <SelectValue placeholder={t("location.selectRegion", { label: regionName }) + optional} />
           </SelectTrigger>
           <SelectContent className="max-h-72">
             {regionsOf(countryCode).map((name) => (
@@ -132,7 +134,7 @@ function RegionCityFields({
         <Input
           value={province}
           onChange={(event) => onChange({ province: event.target.value })}
-          placeholder={regionName}
+          placeholder={regionName + optional}
           className="h-10 text-sm"
         />
       )}
@@ -150,7 +152,7 @@ function RegionCityFields({
           }}
         >
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder={`${t("location.selectCity")} (${t("common.optional").toLowerCase()})`} />
+            <SelectValue placeholder={t("location.selectCity") + optional} />
           </SelectTrigger>
           <SelectContent className="max-h-72">
             {cities.map((name) => (
@@ -165,7 +167,7 @@ function RegionCityFields({
         <Input
           value={city}
           onChange={(event) => onChange({ city: event.target.value })}
-          placeholder={`${t("location.city")} (${t("common.optional").toLowerCase()})`}
+          placeholder={t("location.city") + optional}
           className="h-10 text-sm"
         />
       )}
@@ -247,7 +249,6 @@ export function ListingLocationFields({
 }) {
   const { t } = useLocale()
   const code = value.country?.code
-  const regionName = t(regionKey(code))
   const [remoteMode, setRemoteMode] = React.useState<"anywhere" | "countries">(
     value.remoteCountries.length ? "countries" : "anywhere",
   )
@@ -342,7 +343,7 @@ export function ListingLocationFields({
       />
 
       {!isListingLocationComplete(value) ? (
-        <p className="text-xs text-muted-foreground">{t("location.required", { label: regionName.toLowerCase() })}</p>
+        <p className="text-xs text-muted-foreground">{t("location.required")}</p>
       ) : null}
     </div>
   )

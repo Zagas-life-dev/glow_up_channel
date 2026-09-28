@@ -66,7 +66,7 @@ export const pt: Dictionary = {
     otherPlacesHint: "Outro país é publicado como uma cópia deste anúncio lá. Mais estados do mesmo país continuam um único anúncio, mostrado no local mais próximo de cada leitor.",
     removePlace: "Remover local",
     morePlaces: "+{count} mais",
-    required: "Escolha o país, e {label} a menos que seja remoto.",
+    required: "Escolha o país, ou marque como remoto. A região e a cidade são opcionais.",
     permissionUnsupported: "O seu navegador não suporta localização precisa.",
     usingProfile: "A usar a localização do seu perfil.",
     chooseCountry: "Mostrar oportunidades em",

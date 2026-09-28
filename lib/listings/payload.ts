@@ -180,7 +180,8 @@ function buildLocation(location: ListingLocation | undefined) {
           province: text(place.province),
           city: text(place.city),
         }))
-        .filter((place) => place.province || place.city),
+        // A country alone is a place too: another country becomes its own copy.
+        .filter((place) => place.country || place.countryCode || place.province || place.city),
     }),
   }
   // A wholly empty location object is worse than none: it overwrites whatever a

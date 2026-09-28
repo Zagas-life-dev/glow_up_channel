@@ -44,6 +44,16 @@ describe("contentPlace", () => {
   it("reads the map point the backend stores under location.coordinates", () => {
     expect(contentPlace(listing).coordinates).toEqual(LAGOS)
   })
+
+  it("ignores a country-centre point, so a country-only listing matches by country", () => {
+    const nationwide = {
+      location: { country: "Nigeria", countryCode: "NG", coordinates: { lat: 9.08, lng: 8.68 }, precision: "country" },
+    }
+    expect(contentPlace(nationwide).coordinates).toBeUndefined()
+    // Abuja sits beside Nigeria's centre; it must not read as "same city".
+    const result = locationSignal(readerIn(ABUJA, "Abuja"), nationwide)
+    expect(result.proximity.tier).toBe("same-country")
+  })
 })
 
 describe("contentPlaces", () => {

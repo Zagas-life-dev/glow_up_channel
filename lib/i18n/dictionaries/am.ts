@@ -70,7 +70,7 @@ export const am: Dictionary = {
     otherPlacesHint: "ሌላ አገር የዚህ ማስታወቂያ ቅጂ ሆኖ እዚያ ይለጠፋል። በአንድ አገር ውስጥ ያሉ ተጨማሪ ክልሎች አንድ ማስታወቂያ ሆነው ይቀራሉ፣ ለእያንዳንዱ አንባቢ በቅርብ ባለው ቦታ ይታያሉ።",
     removePlace: "ቦታውን ያስወግዱ",
     morePlaces: "+{count} ተጨማሪ",
-    required: "አገሩን ይምረጡ፣ የርቀት ካልሆነም {label}።",
+    required: "አገሩን ይምረጡ፣ ወይም የርቀት መሆኑን ያመልክቱ። ክልልና ከተማ አማራጭ ናቸው።",
     permissionUnsupported: "አሳሽዎ ትክክለኛ አካባቢን አይደግፍም።",
     usingProfile: "በመገለጫዎ ላይ ያለውን አካባቢ እየተጠቀምን ነው።",
     chooseCountry: "ዕድሎችን አሳይ በ",

@@ -78,7 +78,7 @@ export const en = {
     otherPlacesHint: "Another country is posted as its own copy of this listing there. More states in the same country stay one listing, shown at the place nearest each reader.",
     removePlace: "Remove location",
     morePlaces: "+{count} more",
-    required: "Choose the country, and the {label} unless it is remote.",
+    required: "Choose the country, or mark it as remote. State and city are optional.",
     permissionUnsupported: "Your browser does not support precise location.",
     usingProfile: "Using the location on your profile.",
     chooseCountry: "Show opportunities in",

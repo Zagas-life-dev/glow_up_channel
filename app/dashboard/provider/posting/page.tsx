@@ -304,7 +304,7 @@ function PostingContent() {
     // everything the provider typed, instead of a round trip to a 400.
     if (selectedType !== 'resource' && !isListingLocationComplete(place)) {
       setSubmitStatus('error')
-      setErrorMessage('Choose the country and state or region this listing is in, or mark it as remote.')
+      setErrorMessage('Choose the country this listing is in, or mark it as remote.')
       return
     }
     const missingGroups = missingRequired(canonicalTags, selectedType)
