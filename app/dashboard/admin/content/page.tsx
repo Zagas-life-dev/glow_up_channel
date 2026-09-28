@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
-import ApiClient from "@/lib/api-client"
+import ApiClient, { DuplicateListingError } from "@/lib/api-client"
+import { DuplicateApprovalDialog, type PendingDuplicateApproval } from "@/components/admin/duplicate-approval-dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -308,6 +309,7 @@ export default function AdminContent() {
   const [attachTarget, setAttachTarget] = useState<AttachTargetListing | null>(null)
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
+  const [duplicateApproval, setDuplicateApproval] = useState<(PendingDuplicateApproval & { item: ContentItem }) | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
   const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
   const [paymentVerification, setPaymentVerification] = useState<"verify" | "reject">("verify")
@@ -603,6 +605,33 @@ export default function AdminContent() {
     setSelectedContent(null)
   }
 
+  const approveItem = async (item: ContentItem, allowDuplicate = false) => {
+    setActionLoading(item._id)
+    // Mirrors what the approve endpoint writes: the listing is moved into the live
+    // collection if it was hidden, so it must stop showing as `*-inactive` too.
+    const undo = applyRowChange(item, {
+      ...item,
+      isApproved: true,
+      status: "active",
+      _fromInactive: false,
+      paymentStatus: "not_required",
+      approvedAt: new Date().toISOString(),
+    })
+    try {
+      await ApiClient.approveContent(item._id, item.type, allowDuplicate ? { allowDuplicate: true } : undefined)
+      toast.success(`"${item.title}" is live.`)
+    } catch (err: unknown) {
+      undo()
+      if (err instanceof DuplicateListingError) {
+        setDuplicateApproval({ item, duplicates: err.duplicates })
+      } else {
+        toast.error(err instanceof Error ? err.message : "Failed to approve")
+      }
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const handleReview = async () => {
     if (!selectedContent) return
     const item = content.find((c) => c._id === selectedContent._id) ?? selectedContent
@@ -612,24 +641,16 @@ export default function AdminContent() {
       toast.error("Please provide a rejection reason")
       return
     }
-    setActionLoading(item._id)
-    // Mirrors what the approve endpoint writes: the listing is moved into the live
-    // collection if it was hidden, so it must stop showing as `*-inactive` too.
-    const undo = applyRowChange(
-      item,
-      action === "approve"
-        ? { ...item, isApproved: true, status: "active", _fromInactive: false, paymentStatus: "not_required", approvedAt: new Date().toISOString() }
-        : null
-    )
     closeReviewDialog()
+    if (action === "approve") {
+      await approveItem(item)
+      return
+    }
+    setActionLoading(item._id)
+    const undo = applyRowChange(item, null)
     try {
-      if (action === "approve") {
-        await ApiClient.approveContent(item._id, item.type)
-        toast.success(`"${item.title}" is live.`)
-      } else {
-        await ApiClient.rejectContent(item._id, item.type, reason)
-        toast.success("Content rejected")
-      }
+      await ApiClient.rejectContent(item._id, item.type, reason)
+      toast.success("Content rejected")
     } catch (err: unknown) {
       undo()
       toast.error(err instanceof Error ? err.message : "Failed to review")
@@ -702,14 +723,16 @@ export default function AdminContent() {
     }
   }
 
-  const handleDeleteContent = async (item: ContentItem) => {
+  const handleDeleteContent = async (item: ContentItem, { skipConfirm = false } = {}) => {
     if (!item) return
     const id = item._id
     const type = item.type as 'opportunity' | 'event' | 'job' | 'resource'
-    const confirmed = window.confirm(
-      `This will move the ${type} "${item.title}" to past ${type}s. Continue?`
-    )
-    if (!confirmed) return
+    if (!skipConfirm) {
+      const confirmed = window.confirm(
+        `This will move the ${type} "${item.title}" to past ${type}s. Continue?`
+      )
+      if (!confirmed) return
+    }
 
     setActionLoading(id)
     // Optimistically remove from UI; undo restores the row and the counts.
@@ -1341,6 +1364,22 @@ export default function AdminContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DuplicateApprovalDialog
+        pending={duplicateApproval}
+        busy={actionLoading === duplicateApproval?.item._id}
+        onClose={() => setDuplicateApproval(null)}
+        onApproveAnyway={() => {
+          const item = duplicateApproval?.item
+          setDuplicateApproval(null)
+          if (item) void approveItem(item, true)
+        }}
+        onDeleteThis={() => {
+          const item = duplicateApproval?.item
+          setDuplicateApproval(null)
+          if (item) void handleDeleteContent(item, { skipConfirm: true })
+        }}
+      />
 
       {/* Payment dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>

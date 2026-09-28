@@ -187,6 +187,43 @@ export interface PastContentCleanupResult {
   runAt?: string;
 }
 
+export type ListingKind = 'opportunity' | 'event' | 'job' | 'resource';
+
+/** One listing as the duplicate check describes it. */
+export interface ListingDuplicate {
+  _id: string;
+  type: ListingKind;
+  title: string;
+  state: 'live' | 'pending' | 'hidden';
+  country: string | null;
+  city: string | null;
+  organization: string | null;
+  link: string | null;
+  locationGroupId: string | null;
+  createdAt: string | null;
+}
+
+/** Listings of one type sharing a normalised title and a country, oldest first. */
+export interface DuplicateGroup {
+  id: string;
+  type: ListingKind;
+  key: string;
+  normalizedTitle: string;
+  countryKey: string;
+  title: string;
+  country: string | null;
+  liveCount: number;
+  items: ListingDuplicate[];
+}
+
+/** Approving would put a second listing with this title live in this country. */
+export class DuplicateListingError extends Error {
+  constructor(message: string, readonly duplicates: ListingDuplicate[]) {
+    super(message);
+    this.name = 'DuplicateListingError';
+  }
+}
+
 // API Client Class
 export class ApiClient {
   private static getAuthHeaders(): HeadersInit {
@@ -1891,13 +1928,66 @@ export class ApiClient {
     };
   }
 
-  static async approveContent(contentId: string, contentType: string, options?: { bypassPayment?: boolean }): Promise<void> {
+  /**
+   * Throws `DuplicateListingError` when a live listing already has this title in
+   * this country; resend with `allowDuplicate: true` once the admin confirms.
+   */
+  static async approveContent(
+    contentId: string,
+    contentType: string,
+    options?: { bypassPayment?: boolean; allowDuplicate?: boolean },
+  ): Promise<void> {
     const endpoint = this.getContentEndpoint(contentType, contentId, 'approve');
-    console.log('Approving content:', { contentId, contentType, endpoint });
     const response = await this.makeAuthenticatedRequest(endpoint, {
       method: 'POST',
       body: options ? JSON.stringify(options) : undefined,
     });
+    if (response.status === 409) {
+      const body = await response.clone().json().catch(() => null);
+      if (body?.error === 'DUPLICATE_LISTING') {
+        throw new DuplicateListingError(body.message, body.data?.duplicates ?? []);
+      }
+    }
+    return this.handleResponse(response);
+  }
+
+  /** Admin: every group of same-type, same-title, same-country listings. */
+  static async getDuplicateGroups(type?: ListingKind): Promise<{
+    groups: DuplicateGroup[];
+    counts: Record<'all' | ListingKind, number>;
+  }> {
+    const qs = type ? `?type=${type}` : '';
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates${qs}`);
+    return this.handleResponse(response);
+  }
+
+  /** Admin: mark a group as not duplicates. It re-opens if another listing joins it. */
+  static async dismissDuplicateGroup(group: Pick<DuplicateGroup, 'type' | 'key'> & { ids: string[] }): Promise<void> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates/dismiss`, {
+      method: 'POST',
+      body: JSON.stringify(group),
+    });
+    return this.handleResponse(response);
+  }
+
+  /**
+   * Listings already using this title in this country. Posters get live ones
+   * only; admins also get pending and hidden ones.
+   */
+  static async checkDuplicateTitle(params: {
+    type: ListingKind;
+    title: string;
+    country?: string;
+    countryCode?: string;
+    isRemote?: boolean;
+    excludeId?: string;
+  }, signal?: AbortSignal): Promise<{ matches: ListingDuplicate[]; total: number }> {
+    const qs = new URLSearchParams({ type: params.type, title: params.title });
+    if (params.country) qs.set('country', params.country);
+    if (params.countryCode) qs.set('countryCode', params.countryCode);
+    if (params.isRemote) qs.set('isRemote', 'true');
+    if (params.excludeId) qs.set('excludeId', params.excludeId);
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates/check?${qs}`, { signal });
     return this.handleResponse(response);
   }
 

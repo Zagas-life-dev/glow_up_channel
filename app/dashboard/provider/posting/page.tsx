@@ -32,6 +32,7 @@ import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 import { useUserLocation } from "@/hooks/use-user-location"
+import { DuplicateTitleWarning, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
 import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
 import { Panel, QuotaMeter, OnboardingBanner } from '@/components/provider/provider-ui'
 import {
@@ -162,6 +163,17 @@ function PostingContent() {
   const [period, setPeriod] = useState<PayPeriod>('monthly')
   const country = place.country
 
+  // Same title, same type, same country. A warning, not a block: the second
+  // submit after seeing it posts anyway, and admins sort it on the Duplicates page.
+  const duplicates = useDuplicateTitleCheck({
+    type: selectedType,
+    title: draftText.title,
+    country: country?.name,
+    countryCode: country?.code,
+    isRemote: place.isRemote,
+  })
+  const [duplicateConfirmedFor, setDuplicateConfirmedFor] = useState<string | null>(null)
+
   // Rates load once per page and are shared with every other money field.
   const { rates, stale: ratesStale } = useRates()
   const { location } = useUserLocation()
@@ -260,6 +272,7 @@ function PostingContent() {
     setIsPaid(false)
     setPlace(EMPTY_LISTING_LOCATION)
     setDraftText({ title: '', description: '' })
+    setDuplicateConfirmedFor(null)
     setPeriod('monthly')
     amount.reset(null, defaultCurrency)
     setResourceSource('link')
@@ -303,6 +316,15 @@ function PostingContent() {
           : missingGroups.includes('level')
             ? 'Pick the career level this is for in Tags.'
             : 'Pick the event format in Tags.',
+      )
+      return
+    }
+
+    if (duplicates.total > 0 && duplicateConfirmedFor !== draftText.title) {
+      setDuplicateConfirmedFor(draftText.title)
+      setSubmitStatus('error')
+      setErrorMessage(
+        'A listing with this title already exists in this country (see under Title). If yours is a different one, press Submit again to post it anyway.',
       )
       return
     }
@@ -586,6 +608,11 @@ function PostingContent() {
                             className={FIELD_CLASS}
                           />
                         </div>
+                        <DuplicateTitleWarning
+                          matches={duplicates.matches}
+                          total={duplicates.total}
+                          className="sm:col-span-2 sm:order-last"
+                        />
                         <div className="space-y-1.5">
                           <FieldLabel>
                             {selectedType === 'event' ? 'Organizer' : selectedType === 'resource' ? 'Creator' : 'Company'}

@@ -47,6 +47,7 @@ import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 import { INDUSTRY_SECTORS, TARGET_AUDIENCE_GROUPS } from "@/lib/listings/taxonomy"
+import { DuplicateTitleWarning, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
 
 type ContentType = "event" | "job" | "opportunity" | "resource"
 
@@ -146,6 +147,19 @@ export default function AdminCreateContentPage() {
   // Benefits (optional) – event, job, opportunity only; one per line
   const [benefitsText, setBenefitsText] = useState("")
 
+  // Admins see pending and hidden matches too, not just live ones.
+  const duplicates = useDuplicateTitleCheck({
+    type: contentType,
+    title,
+    country: country?.name,
+    countryCode: country?.code,
+    isRemote:
+      contentType === "event" ? eventRemote
+        : contentType === "job" ? jobRemote
+          : contentType === "opportunity" ? oppRemote
+            : undefined,
+  })
+
   useEffect(() => {
     setHideNavbar(true)
     setHideFooter(true)
@@ -201,6 +215,16 @@ export default function AdminCreateContentPage() {
     const err = validate()
     if (err) {
       toast.error(err)
+      return
+    }
+    if (
+      duplicates.total > 0 &&
+      !window.confirm(
+        duplicates.total === 1
+          ? "A listing with this title already exists in this country. Post anyway?"
+          : `${duplicates.total} listings with this title already exist in this country. Post anyway?`,
+      )
+    ) {
       return
     }
     setSubmitting(true)
@@ -340,6 +364,7 @@ export default function AdminCreateContentPage() {
                   className="rounded-xl"
                   required
                 />
+                <DuplicateTitleWarning matches={duplicates.matches} total={duplicates.total} />
               </div>
 
               {/* Description */}

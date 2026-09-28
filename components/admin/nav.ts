@@ -21,6 +21,7 @@ import {
   RiComputerLine,
   RiMapPin2Line,
   RiPieChartLine,
+  RiFileCopy2Line,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -52,6 +53,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Content",
     items: [
       { label: "Moderation", href: "/dashboard/admin/content", icon: RiFileTextLine },
+      { label: "Duplicates", href: "/dashboard/admin/duplicates", icon: RiFileCopy2Line },
       { label: "Create content", href: "/dashboard/admin/create-content", icon: RiAddCircleLine },
       { label: "Gifts", href: "/dashboard/admin/gifts", icon: RiGiftLine },
       { label: "Past posts", href: "/dashboard/admin/past-posts", icon: RiArchiveLine },
