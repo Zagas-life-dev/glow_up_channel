@@ -19,6 +19,7 @@ import { RiGlobalLine, RiMapPinLine, RiUserLocationLine, RiWifiLine } from "reac
 import { toast } from "sonner"
 
 import { AdminShell } from "@/components/admin/admin-shell"
+import { AnalyticsTabs } from "@/components/admin/analytics-tabs"
 import { AdminEmpty, AdminSection, AdminSkeletonRows, AdminStat, AdminStatGrid } from "@/components/admin/ui"
 import { PlaceTable } from "@/components/analytics/location-audience-panel"
 import { SegmentedTabs } from "@/components/provider/provider-ui"
@@ -75,6 +76,7 @@ export default function AdminLocationAnalytics() {
       width="wide"
     >
       <div className="space-y-5">
+        <AnalyticsTabs />
         <SegmentedTabs items={RANGES.map((r) => ({ id: r.id, label: r.label }))} value={range} onChange={setRange} />
 
         <AdminStatGrid>

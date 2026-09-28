@@ -22,6 +22,17 @@
         "3100"
       ],
       "port": 3100
+    },
+    {
+      "name": "web-3001",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "next",
+        "dev",
+        "-p",
+        "3001"
+      ],
+      "port": 3001
     }
   ]
 }

@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { AdminShell } from "@/components/admin/admin-shell"
+import { AnalyticsTabs } from "@/components/admin/analytics-tabs"
 import { AdminSection, AdminStat, AdminStatGrid, AdminEmpty, AdminSkeletonRows } from "@/components/admin/ui"
 import { AttachListingDialog, type AttachTargetListing } from "@/components/admin/attach-listing-dialog"
 import { ListingAnalyticsCard, ListingAnalyticsSummary } from "@/components/analytics/listing-analytics"
@@ -118,6 +119,7 @@ export default function AdminListingAnalytics() {
       width="wide"
     >
       <div className="space-y-5">
+        <AnalyticsTabs />
         <AdminStatGrid>
           <AdminStat label="Views" value={formatCount(totals.engagement.views)} icon={RiEyeLine} hint={`${formatCount(totals.engagement.uniqueViewers)} distinct people`} />
           <AdminStat label="Saves" value={formatCount(totals.engagement.saves)} icon={RiBookmarkLine} hint={`${formatRate(totals.rates.saveRate)} of views`} />

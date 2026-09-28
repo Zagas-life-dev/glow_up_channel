@@ -34,6 +34,7 @@ import PwaInstallBanner from "@/components/pwa-install-banner"
 import RegisterSw from "@/components/register-sw"
 import { InAppHistoryTracker } from "@/lib/navigation/in-app-history"
 import OfflineBanner from "@/components/offline-banner"
+import PullToRefresh from "@/components/pull-to-refresh"
 import { getMetadataBase } from "@/lib/site-url"
 import { JsonLd } from "@/components/seo/json-ld"
 import { buildSiteJsonLd } from "@/lib/seo/structured-data"
@@ -228,6 +229,8 @@ export default async function RootLayout({
                             <RegisterSw />
                             <InAppHistoryTracker />
                             <OfflineBanner />
+                            {/* Installed app only; a browser tab keeps its own. */}
+                            <PullToRefresh />
                             <PwaInstallBanner />
                             {children}
                             <TrackerReturnSheet />

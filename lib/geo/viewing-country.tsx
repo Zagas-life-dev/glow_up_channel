@@ -17,8 +17,7 @@
 import * as React from "react"
 
 import { countryByCode } from "@/lib/geo/countries"
-import { clearOfflineCaches } from "@/lib/offline/cache-control"
-import { clearPageStateCache } from "@/lib/page-state-session"
+import { reloadWithFreshData } from "@/lib/offline/fresh-reload"
 
 /** Sentinel stored for "anywhere" — not a real ISO code, so it cannot collide. */
 const ANYWHERE = "*"
@@ -61,16 +60,9 @@ function serialize(selection: ViewingSelection): string | null {
  * session feed caches, the feed seed and the service worker's API cache were
  * all filled for the old country. Rather than invalidate each one in place,
  * drop them and reload so every page fetches fresh for the new country.
- *
- * The worker clear is awaited before reloading — otherwise the new page could
- * be answered from the very API cache we just asked it to discard. Offline, the
- * worker caches are kept: they are the only content left to read.
  */
-async function reloadForCountry(): Promise<void> {
-  if (typeof window === "undefined") return
-  clearPageStateCache()
-  if (navigator.onLine) await clearOfflineCaches()
-  window.location.reload()
+function reloadForCountry(): Promise<void> {
+  return reloadWithFreshData()
 }
 
 /**

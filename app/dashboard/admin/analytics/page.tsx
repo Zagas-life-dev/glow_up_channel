@@ -1,8 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
+import Link from "next/link"
 import ApiClient from "@/lib/api-client"
 import { AdminShell } from "@/components/admin/admin-shell"
+import { AnalyticsTabs } from "@/components/admin/analytics-tabs"
+import { fetchPlatformLocations, type PlatformLocationOverview } from "@/lib/analytics/location-analytics"
+import { fetchPlatformDemographics, type DemographicsOverview } from "@/lib/analytics/demographics"
 import {
   AdminStat,
   AdminStatGrid,
@@ -66,6 +70,15 @@ const RANGE_DAYS: Record<TimeRange, number> = { "7d": 7, "30d": 30, "90d": 90, "
  * A labelled proportion bar. Nominal categories get one colour for every bar — shading each
  * one darker-where-bigger would double-encode length as hue and burn the only free channel.
  */
+/** "View all" link for a preview section. */
+function MoreLink({ href }: { href: string }) {
+  return (
+    <Link href={href} className="text-xs font-medium text-primary hover:underline">
+      View all
+    </Link>
+  )
+}
+
 function BreakdownBar({
   label,
   value,
@@ -96,6 +109,8 @@ export default function AdminAnalytics() {
   const [daily, setDaily] = useState<DailyStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [places, setPlaces] = useState<PlatformLocationOverview | null>(null)
+  const [people, setPeople] = useState<DemographicsOverview | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>("30d")
 
   const fetchAnalytics = useCallback(async () => {
@@ -108,6 +123,16 @@ export default function AdminAnalytics() {
       ])
       setStats(statsData)
       setDaily(dailyData as DailyStats)
+
+      // Previews of the Locations and Demographics pages. Either failing should
+      // not blank the headline numbers above, so they settle on their own.
+      const days = Math.min(RANGE_DAYS[timeRange], 365)
+      const [placeResult, peopleResult] = await Promise.allSettled([
+        fetchPlatformLocations(days),
+        fetchPlatformDemographics({ days }),
+      ])
+      setPlaces(placeResult.status === "fulfilled" ? placeResult.value : null)
+      setPeople(peopleResult.status === "fulfilled" ? peopleResult.value : null)
     } catch (err: any) {
       console.error("Error fetching analytics:", err)
       setError(err.message || "Failed to load analytics")
@@ -162,6 +187,16 @@ export default function AdminAnalytics() {
     [stats]
   )
 
+  const topCountries = useMemo(
+    () =>
+      (places?.people.countries ?? [])
+        .filter((row) => row.key !== "other")
+        .slice(0, 5)
+        .map((row) => ({ label: row.name, value: Number(row.users ?? 0) })),
+    [places]
+  )
+  const totalLocatedUsers = (places?.people.countries ?? []).reduce((sum, row) => sum + Number(row.users ?? 0), 0)
+
   const totalContent = contentByType.reduce((sum, c) => sum + c.value, 0)
   const totalRoleUsers = usersByRole.reduce((sum, r) => sum + r.value, 0)
   const totalStatusUsers = usersByStatus.reduce((sum, s) => sum + s.value, 0)
@@ -208,6 +243,8 @@ export default function AdminAnalytics() {
           <p className="min-w-0 break-words text-sm text-red-700 dark:text-red-400">{error}</p>
         </div>
       ) : null}
+
+      <AnalyticsTabs className="mb-5" />
 
       <div className="space-y-6">
         {/* Headline: the real activity series, persisted daily */}
@@ -273,6 +310,44 @@ export default function AdminAnalytics() {
               <div className="space-y-4">
                 {contentByType.map((row) => (
                   <BreakdownBar key={row.label} label={row.label} value={row.value} total={totalContent} />
+                ))}
+              </div>
+            )}
+          </AdminSection>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <AdminSection
+            title="Where users are"
+            description="Top countries by registered users."
+            actions={<MoreLink href="/dashboard/admin/analytics/locations" />}
+          >
+            {topCountries.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No location data yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {topCountries.map((row) => (
+                  <BreakdownBar key={row.label} label={row.label} value={row.value} total={totalLocatedUsers} />
+                ))}
+              </div>
+            )}
+          </AdminSection>
+
+          <AdminSection
+            title="Age mix"
+            description={
+              people?.totals.medianAge != null
+                ? `Median age ${people.totals.medianAge} · ${(people.age.answered).toLocaleString()} gave a date of birth`
+                : "From date of birth."
+            }
+            actions={<MoreLink href="/dashboard/admin/analytics/demographics" />}
+          >
+            {!people || people.age.rows.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Not enough answers yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {people.age.rows.map((row) => (
+                  <BreakdownBar key={row.key} label={row.name} value={row.users} total={people.age.answered} />
                 ))}
               </div>
             )}

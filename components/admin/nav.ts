@@ -19,6 +19,8 @@ import {
   RiFlashlightLine,
   RiPriceTag3Line,
   RiComputerLine,
+  RiMapPin2Line,
+  RiPieChartLine,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -82,6 +84,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Analytics", href: "/dashboard/admin/analytics", icon: RiBarChartBoxLine },
       { label: "Listing analytics", href: "/dashboard/admin/analytics/listings", icon: RiLineChartLine },
+      { label: "Locations", href: "/dashboard/admin/analytics/locations", icon: RiMapPin2Line },
+      { label: "Demographics", href: "/dashboard/admin/analytics/demographics", icon: RiPieChartLine },
       { label: "Marketing email", href: "/dashboard/admin/marketing/email", icon: RiMailSendLine, superAdminOnly: true },
     ],
   },

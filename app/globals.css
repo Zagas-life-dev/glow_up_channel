@@ -456,10 +456,11 @@ input[type="number"] {
 
 /* Installed app (standalone PWA). Only applies once UP is on the home screen or
    installed on desktop; in a browser tab the page behaves like a normal website.
-   - No rubber-band bounce or pull-to-refresh on the page itself: in an app a
-     stray pull that reloads everything reads as a crash. Scroll panels keep
-     their own overscroll-contain. Updates and reconnects reload deliberately
-     (components/register-sw.tsx, components/offline-banner.tsx).
+   - No rubber-band bounce or native pull-to-refresh on the page itself: its
+     bare reload reads as a crash. components/pull-to-refresh.tsx replaces it
+     with one that shows what it will do and reloads onto fresh data. Scroll
+     panels keep their own overscroll-contain. Updates and reconnects reload
+     deliberately (components/register-sw.tsx, components/offline-banner.tsx).
    - No grey flash on tap and no long-press callout on links and images,
      which is web chrome that native apps do not show. Text stays selectable. */
 @media (display-mode: standalone) {
