@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 
 import { promotionRunDays } from "../../../../config"
-import { getItem, reviewItem } from "../../../../server/api"
+import { getItem, getOrder, reviewItem } from "../../../../server/api"
+import { verifyPayment } from "../../../../server/paystack"
 import { publishListing, startPromotion } from "../../../../server/publish"
 
 type Action = "approve" | "reject" | "clarify" | "deliver"
@@ -23,6 +24,41 @@ const ACTIONS: Action[] = ["approve", "reject", "clarify", "deliver"]
  * what needs fixing, is a message a person writes — the queue opens Gmail with
  * the right template so it goes from a real inbox and replies come back to one.
  */
+/**
+ * Whether the order behind an item was really paid for. Free orders pass; a paid
+ * one passes only if Paystack says its reference succeeded for at least the
+ * order's amount. The order's ref is the Paystack reference — a retried payment
+ * is saved as a new order under a new ref, so the two always match.
+ */
+async function confirmPaid(
+  orderRef: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const found = await getOrder(orderRef)
+  if (!found.ok) return { ok: false, status: found.status, error: found.error }
+  const { amountNg } = found.data.order
+  if (amountNg <= 0) return { ok: true }
+
+  const checked = await verifyPayment(orderRef)
+  // "refused" is Paystack answering — e.g. it has never heard of the reference.
+  // That is a no, not an outage, so it falls through to the not-paid answer.
+  if (!checked.ok && checked.reason !== "refused") {
+    return {
+      ok: false,
+      status: 503,
+      error: `Could not check with Paystack that ${orderRef} was paid (${checked.error}). Try again in a moment.`,
+    }
+  }
+  if (!checked.ok || !checked.data.successful || checked.data.amountNg < amountNg) {
+    console.error(`work-with-us ${orderRef}: marked paid but Paystack says otherwise`)
+    return {
+      ok: false,
+      status: 400,
+      error: `Paystack has no successful payment of ${amountNg} naira for ${orderRef}. Do not publish this until it is paid.`,
+    }
+  }
+  return { ok: true }
+}
+
 export async function POST(request: Request) {
   const header = request.headers.get("authorization") ?? ""
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : ""
@@ -68,6 +104,11 @@ export async function POST(request: Request) {
       ? NextResponse.json({ ref, status: approval.status, alreadyDone: true })
       : NextResponse.json({ error: approval.reason ?? "That did not work" }, { status: 400 })
   }
+
+  // The backend's /paid route is open, so "paid" on the order is a claim, not a
+  // proof. Approving is the step with an effect, so it asks Paystack itself.
+  const paid = await confirmPaid(item.orderRef)
+  if (!paid.ok) return NextResponse.json({ error: paid.error }, { status: paid.status })
 
   // --- Approving a listing: publish it --------------------------------------
   if (item.itemType === "listing") {

@@ -86,7 +86,19 @@ Links are accepted however they are typed: `mysite.com` becomes
 **Not here.** The two collections belong to the backend, at
 `latest-glowup-channel/src/routes/workWithUs.js` and the service under it. This
 app holds no database credentials and opens no database connection; it calls
-`/api/work-with-us` and proves it is us with `WORK_WITH_US_SERVICE_KEY`.
+`/api/work-with-us` like any other API — no shared secret.
+
+There used to be one, `WORK_WITH_US_SERVICE_KEY`, set on both hosts. The live
+backend never had it, so it refused every order and customers saw "We could not
+save that". It was dropped on 2026-09-28. With the routes open:
+
+- Anyone can file an order, but nothing publishes without an admin.
+- Anyone can call `/paid`, which only moves items into the review queue. So
+  **approving a paid order asks Paystack first** (`confirmPaid` in
+  `api/admin/items/action/route.ts`, using this app's `PAYSTACK_SECRET_KEY`) and
+  refuses if Paystack has no successful payment for the full amount.
+- The open reads (`GET /orders/:ref`, a repeated `/paid`) never return contact
+  details.
 
 It did not start that way. The sales page and the review queue used to open
 their own MongoDB client against the same cluster, which meant this host needed
@@ -230,26 +242,12 @@ Needs these in `.env`:
 
 ```
 NEXT_PUBLIC_BACKEND_URL=      # the order book, and where the queue publishes
-WORK_WITH_US_SERVICE_KEY=     # shared secret; must match the backend's exactly
-PAYSTACK_SECRET_KEY=
+PAYSTACK_SECRET_KEY=          # taking payments, and checking them before approval
 SES_SENDER_EMAIL=             # already set — used for the notification emails
 SES_CONTACT_RECIPIENT_EMAIL=
 ```
 
-And in `latest-glowup-channel/.env`, the same secret:
-
-```
-WORK_WITH_US_SERVICE_KEY=     # byte-identical to the one above
-```
-
-Generate it once with
-`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and
-put the same string in both. `/api/work-with-us` fails closed — with the
-variable missing on the backend, every call to it is refused with a 503 that
-says which variable is missing, rather than the route standing open.
-
-No `MONGODB_URI`. If you find yourself wanting one, the thing you want is an
-endpoint on the backend.
+Nothing Work-with-us-specific is needed on the backend.
 
 ### What happens when one of them is missing
 
@@ -259,7 +257,7 @@ deploy loses the feature, not the site.
 
 | Missing | What stops | What the reader is told |
 | --- | --- | --- |
-| `NEXT_PUBLIC_BACKEND_URL` or `WORK_WITH_US_SERVICE_KEY` | Every read and write of an order. | A 503 naming **both** variables if both are unset. The menu still loads. |
+| `NEXT_PUBLIC_BACKEND_URL` | Every read and write of an order. | A 503 naming the variable. The questions still load. |
 | `PAYSTACK_SECRET_KEY` | Taking money, and confirming it. | Free submissions are unaffected. A paid one is **saved first**, then the customer gets its reference and a note that we will send a payment link. Coming back from Paystack holds the reference open rather than reporting a failed payment. |
 | `AWS_*` / `SES_SENDER_EMAIL` | Both automatic emails. | Nothing, to the customer — the order is saved, confirmed and queued either way. The miss is logged against the order's ref. |
 | `SES_CONTACT_RECIPIENT_EMAIL` | The team notification only. | Nothing. The customer's copy still sends. |

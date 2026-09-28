@@ -38,7 +38,7 @@ const STATIC_PATHS = [
   "/resources",
   "/playlists",
   "/privacy-policy",
-  "/submit",
+  "/work-with-us",
   "/post",
   "/locked-in",
 ] as const

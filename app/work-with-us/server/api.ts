@@ -14,6 +14,12 @@ import type { Contact, ContentType, Duration, Kind, Order, Track } from "../conf
  * What stayed here is what belongs to the storefront: the price list, the form
  * fields, the order maths, the Paystack conversation and the two automatic
  * emails. What moved is every read and write of an order or an item.
+ *
+ * The calls are ordinary API calls with no shared secret. There used to be one
+ * (WORK_WITH_US_SERVICE_KEY), and a backend deployed without it refused every
+ * order with "We could not save that". The backend's routes are open now; see
+ * its routes/workWithUs.js for what guards them instead — chiefly that Paystack
+ * is asked again, from here, before a paid order's approval goes through.
  */
 
 // ---------------------------------------------------------------------------
@@ -126,19 +132,12 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; 
 
 /**
  * The settings this storefront needs to reach the order book, by name, or an
- * empty list when it has them all.
- *
- * Reported together rather than one at a time: a host that is missing both
- * should be told both, or fixing the first only earns you the second. This is
- * also the whole of what `/work-with-us` requires to read and write orders —
- * there is no database URI in it, and there is not meant to be.
+ * empty list when it has them all. Just the backend's address — there is no
+ * database URI and no shared key, and there are not meant to be.
  */
 export function missingSettings(): string[] {
-  const missing: string[] = []
   const url = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL
-  if (!url?.trim()) missing.push("NEXT_PUBLIC_BACKEND_URL")
-  if (!process.env.WORK_WITH_US_SERVICE_KEY?.trim()) missing.push("WORK_WITH_US_SERVICE_KEY")
-  return missing
+  return url?.trim() ? [] : ["NEXT_PUBLIC_BACKEND_URL"]
 }
 
 export function backendUrl(): string {
@@ -174,7 +173,6 @@ async function call<T>(
   }
 
   const base = backendUrl()
-  const key = process.env.WORK_WITH_US_SERVICE_KEY as string
 
   let response: Response
   try {
@@ -183,7 +181,6 @@ async function call<T>(
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
-        "X-Service-Key": key,
         ...(token && { Authorization: `Bearer ${token}` }),
         ...rest.headers,
       },

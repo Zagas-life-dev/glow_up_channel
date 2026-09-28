@@ -22,6 +22,9 @@ const nextConfig = {
     return [
       { source: '/dashboard/posting', destination: '/dashboard/provider/posting', permanent: false },
       { source: '/dashboard/posting/', destination: '/dashboard/provider/posting', permanent: false },
+      // The old public submit page. Work with us replaced it; old links land there.
+      { source: '/submit', destination: '/work-with-us', permanent: true },
+      { source: '/submit/:path*', destination: '/work-with-us', permanent: true },
     ]
   },
 }

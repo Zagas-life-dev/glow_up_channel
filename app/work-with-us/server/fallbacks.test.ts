@@ -3,8 +3,8 @@
  * depends on is down.
  *
  * The rule these pin down is that neither of those may look like a failure of
- * the thing the customer was doing. A host with no `WORK_WITH_US_SERVICE_KEY`
- * once answered readers with a message about a database they had no access to;
+ * the thing the customer was doing. A host missing a setting once answered
+ * readers with a message about a database they had no access to;
  * a Paystack call that could not be made was reported as a payment that did not
  * go through, to people whose cards had already been charged. Both are the same
  * mistake — collapsing "we could not ask" into "the answer is no" — and both
@@ -36,27 +36,34 @@ afterEach(() => {
 function unconfigureBackend() {
   vi.stubEnv("NEXT_PUBLIC_BACKEND_URL", "")
   vi.stubEnv("BACKEND_URL", "")
-  vi.stubEnv("WORK_WITH_US_SERVICE_KEY", "")
 }
 
 describe("a missing setting is named, not guessed at", () => {
-  it("reports every unset variable at once, not just the first", () => {
+  it("names the backend address when it is unset", () => {
     unconfigureBackend()
-    // Reporting one at a time means fixing it one deploy at a time.
-    expect(missingSettings()).toEqual(["NEXT_PUBLIC_BACKEND_URL", "WORK_WITH_US_SERVICE_KEY"])
+    expect(missingSettings()).toEqual(["NEXT_PUBLIC_BACKEND_URL"])
   })
 
   it("counts a blank variable as unset", () => {
     vi.stubEnv("NEXT_PUBLIC_BACKEND_URL", "   ")
     vi.stubEnv("BACKEND_URL", "")
-    vi.stubEnv("WORK_WITH_US_SERVICE_KEY", "key")
     expect(missingSettings()).toEqual(["NEXT_PUBLIC_BACKEND_URL"])
   })
 
-  it("says nothing is missing once both are set", () => {
+  it("needs nothing else — no shared key", () => {
     vi.stubEnv("NEXT_PUBLIC_BACKEND_URL", "http://backend.test")
-    vi.stubEnv("WORK_WITH_US_SERVICE_KEY", "key")
+    vi.stubEnv("WORK_WITH_US_SERVICE_KEY", "")
     expect(missingSettings()).toEqual([])
+  })
+
+  it("sends no service key header", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BACKEND_URL", "http://backend.test")
+    const fetched = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ data: { users: 5 } })))
+    await readAudience()
+    const headers = (fetched.mock.calls[0][1]?.headers ?? {}) as Record<string, string>
+    expect(Object.keys(headers).map((name) => name.toLowerCase())).not.toContain("x-service-key")
   })
 
   it("answers a read with the variable to set, and does not call out", async () => {
@@ -69,7 +76,6 @@ describe("a missing setting is named, not guessed at", () => {
     if (result.ok) return
     expect(result.status).toBe(503)
     expect(result.error).toContain("NEXT_PUBLIC_BACKEND_URL")
-    expect(result.error).toContain("WORK_WITH_US_SERVICE_KEY")
     // No request is attempted, so this cannot read as an outage either.
     expect(fetched).not.toHaveBeenCalled()
   })
@@ -85,7 +91,6 @@ describe("the sales page survives its dependencies", () => {
 
   it("drops it the same way when the backend is unreachable", async () => {
     vi.stubEnv("NEXT_PUBLIC_BACKEND_URL", "http://backend.test")
-    vi.stubEnv("WORK_WITH_US_SERVICE_KEY", "key")
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("ECONNREFUSED"))
 
     await expect(audienceSize()).resolves.toBeNull()

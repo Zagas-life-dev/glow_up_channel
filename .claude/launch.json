@@ -34,6 +34,15 @@
       "port": 3002
     },
     {
+      "name": "backend-scratch",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "process.env.DB_NAME='work_with_us_smoketest';process.env.WORK_WITH_US_SERVICE_KEY='';process.chdir('latest-glowup-channel');require(require('path').resolve('server.js'))"
+      ],
+      "port": 3002
+    },
+    {
       "name": "web-3001",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

@@ -255,7 +255,7 @@ export default function AboutPage() {
               </div>
               <div className="mt-8">
                 <Button asChild className="bg-primary hover:bg-primary/90 text-foreground px-6 py-3 rounded-full">
-                  <Link href="/submit">List an Opportunity</Link>
+                  <Link href="/work-with-us">List an Opportunity</Link>
                 </Button>
               </div>
             </div>
