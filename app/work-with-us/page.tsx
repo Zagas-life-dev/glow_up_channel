@@ -10,51 +10,37 @@ import { Button } from "@/components/ui/button"
 import { whatsappHref } from "@/lib/contact"
 import { PARTNER_PROGRAMME_ENABLED } from "@/lib/feature-flags"
 
+import { CONTACT, buildOrder, naira, type SubmissionPayload } from "./config"
+import { FLOW, SUCCESS, UNPAID } from "./copy"
 import {
-  CONTACT,
-  LISTING_TIERS,
-  PROMOTION_ITEMS,
-  buildOrder,
-  naira,
-  type Kind,
-  type SubmissionPayload,
-} from "./config"
-import { SELECTOR, SUCCESS, UNPAID } from "./copy"
-import { clearPending, loadPending, saveContact, savePending, type PendingOrder } from "./draft"
+  clearPending,
+  loadContact,
+  loadPending,
+  saveContact,
+  savePending,
+  type PendingOrder,
+} from "./draft"
+import QuestionFlow from "./flow"
 import PartnerTrack from "./partner-track"
-import PromoteTrack from "./promote-track"
-import SubmitTrack from "./submit-track"
-import { Choice, Step, TalkToUs } from "./ui"
+import { Step } from "./ui"
 
-type Screen = "choose" | "submit" | "promote" | "partner" | "unpaid" | "notice" | "done"
+type Screen = "flow" | "partner" | "unpaid" | "notice" | "done"
 
 type Result = { ref: string; amountNg: number; paid: boolean; track: string }
-
-/** The one menu, in the order people most often want it. */
-const MENU: { kind: Kind; price: string }[] = [
-  { kind: "job", price: naira(LISTING_TIERS.standard.price) },
-  { kind: "paid-event", price: naira(LISTING_TIERS.standard.price) },
-  { kind: "free-opportunity", price: "Free" },
-  { kind: "free-event", price: "Free" },
-  { kind: "resource", price: "No upfront cost" },
-  {
-    kind: "promotion",
-    price: `From ${naira(Math.min(...PROMOTION_ITEMS.map((item) => item.price)))}`,
-  },
-]
 
 /** A short name for an order, for "You didn't finish paying for …". */
 function describe(payload: SubmissionPayload): string {
   const title = payload.entries[0]?.title?.trim()
   const count = payload.entries.length
   if (title && count > 1) return `"${title}" and ${count - 1} more`
-  return title ? `"${title}"` : SELECTOR.options[payload.kind].label.toLowerCase()
+  return title ? `"${title}"` : (FLOW.kindName[payload.kind] ?? "your order")
 }
 
 function Flow() {
   const searchParams = useSearchParams()
-  const [stack, setStack] = useState<Screen[]>(["choose"])
-  const [kind, setKind] = useState<Kind | null>(null)
+  const [stack, setStack] = useState<Screen[]>(["flow"])
+  // Bumped to start the question flow over, or to reopen it on a saved order.
+  const [flowKey, setFlowKey] = useState(0)
   const [draft, setDraft] = useState<SubmissionPayload | null>(null)
   const [pending, setPending] = useState<PendingOrder | null>(null)
   const [result, setResult] = useState<Result | null>(null)
@@ -75,22 +61,13 @@ function Flow() {
     setStack((current) => (current.length > 1 ? current.slice(0, -1) : current))
   }, [])
 
-  const choose = (next: Kind) => {
-    if (next === "promotion") return go("promote")
-    setKind(next)
-    go("submit")
-  }
-
-  /** Reopen the form for a saved order, answers filled in. */
+  /** Reopen the questions on a saved order, on its check page. */
   const edit = (payload: SubmissionPayload) => {
     setDraft(payload)
+    setPending(null)
     setError(null)
-    if (payload.kind === "promotion") {
-      setStack(["choose", "promote"])
-    } else {
-      setKind(payload.kind)
-      setStack(["choose", "submit"])
-    }
+    setFlowKey((key) => key + 1)
+    setStack(["flow"])
     window.scrollTo(0, 0)
   }
 
@@ -203,7 +180,8 @@ function Flow() {
     setDraft(null)
     setResult(null)
     setError(null)
-    setStack(["choose"])
+    setFlowKey((key) => key + 1)
+    setStack(["flow"])
   }
 
   const discardPending = () => {
@@ -222,89 +200,63 @@ function Flow() {
     )
   }
 
-  // --- One flat menu --------------------------------------------------------
-  if (screen === "choose") {
+  // --- A half-paid order from last time: offer it back first ----------------
+  if (screen === "flow" && pending && !draft) {
     return (
-      <Step title={SELECTOR.title} description={SELECTOR.microcopy}>
-        {pending && (
-          <div className="rounded-2xl border border-primary/40 bg-primary/5 p-5">
-            <p className="font-medium">
-              {UNPAID.resume} {describe(pending.payload)}.
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{UNPAID.body}</p>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Button
-                size="lg"
-                className="h-12 flex-1"
-                disabled={busy}
-                onClick={() => send(pending.payload)}
-              >
-                {busy
-                  ? "Opening secure payment…"
-                  : `${UNPAID.resumeCta} · ${naira(buildOrder(pending.payload).total)}`}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 flex-1"
-                onClick={() => edit(pending.payload)}
-              >
-                {UNPAID.edit}
-              </Button>
-            </div>
-            {error && (
-              <p role="alert" className="mt-3 text-sm font-medium text-destructive">
-                {error}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={discardPending}
-              className="mt-3 text-sm text-muted-foreground underline-offset-4 hover:underline"
-            >
-              {UNPAID.discard}
-            </button>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {MENU.map((item) => (
-            <Choice
-              key={item.kind}
-              label={SELECTOR.options[item.kind].label}
-              blurb={SELECTOR.options[item.kind].blurb}
-              price={item.price}
-              onClick={() => choose(item.kind)}
-            />
-          ))}
-          {PARTNER_PROGRAMME_ENABLED && (
-            <Choice
-              label={SELECTOR.partner.label}
-              blurb={SELECTOR.partner.blurb}
-              onClick={() => go("partner")}
-            />
-          )}
+      <Step title={UNPAID.title} description={UNPAID.body}>
+        <div className="rounded-up-xl border border-border bg-card p-5">
+          <p className="text-sm text-muted-foreground">{UNPAID.resume}</p>
+          <p className="mt-1 text-lg font-semibold">{describe(pending.payload)}</p>
         </div>
-        <TalkToUs>{SELECTOR.help}</TalkToUs>
+        {error && (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="h-14 w-full rounded-up-lg text-lg font-bold"
+            disabled={busy}
+            onClick={() => send(pending.payload)}
+          >
+            {busy
+              ? "Opening secure payment…"
+              : `${UNPAID.resumeCta} · ${naira(buildOrder(pending.payload).total)}`}
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-12 w-full rounded-up-lg"
+            onClick={() => edit(pending.payload)}
+          >
+            {UNPAID.edit}
+          </Button>
+        </div>
+        <button
+          type="button"
+          onClick={discardPending}
+          className="w-full py-2 text-base font-semibold underline underline-offset-4"
+        >
+          {UNPAID.discard}
+        </button>
       </Step>
     )
   }
 
-  if (screen === "submit" && kind) {
+  // --- The questions, one per screen ---------------------------------------
+  if (screen === "flow") {
     return (
-      <SubmitTrack
-        kind={kind}
+      <QuestionFlow
+        key={flowKey}
         initial={draft}
+        contact={loadContact()}
         busy={busy}
         error={error}
         onSubmit={send}
-        onExit={back}
+        onPartner={() => go("partner")}
       />
     )
-  }
-
-  if (screen === "promote") {
-    return <PromoteTrack initial={draft} busy={busy} error={error} onSubmit={send} onExit={back} />
   }
 
   // Nothing can reach this while the programme is off — the choice that pushes
@@ -444,7 +396,7 @@ function Flow() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button variant="outline" className="flex-1" onClick={startOver}>
-            Submit something else
+            Post something else
           </Button>
           <Button asChild className="flex-1">
             <Link href="/">Back to UP</Link>
@@ -469,7 +421,7 @@ function Flow() {
   // Nothing sensible to show (a stale link, say) — start again.
   return (
     <Step title="Let's start again" onBack={undefined}>
-      <Button size="lg" className="w-full" onClick={() => setStack(["choose"])}>
+      <Button size="lg" className="w-full" onClick={startOver}>
         Start over
       </Button>
     </Step>

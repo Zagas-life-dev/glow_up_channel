@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work with us — Simple Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#FBFAF7; --card:#FFFFFF; --ink:#0B1233; --muted:#5B5847; --faint:#8C8878;
+  --navy:#0B1233; --on-navy:#FBFAF7; --orange:#FF6A00; --orange-ink:#B8551E;
+  --orange-tint:rgba(255,106,0,.12); --lime:#D6FF3F; --lime-tint:rgba(214,255,63,.35);
+  --fill:#F2EFE8; --line:#E7E3D8; --line-strong:#D8D3C6; --bad:#C4321C;
+  --shadow:0 24px 60px rgba(11,18,51,.18),0 2px 6px rgba(11,18,51,.06);
+  --display:"Unbounded",ui-sans-serif,system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--page:#070A1C;--card:#10173A;--ink:#FBFAF7;--muted:rgba(251,250,247,.7);--faint:rgba(251,250,247,.45);
+    --orange-ink:#FF8A3D;--orange-tint:rgba(255,106,0,.16);--lime-tint:rgba(214,255,63,.14);
+    --fill:rgba(255,255,255,.07);--line:rgba(255,255,255,.09);--line-strong:rgba(255,255,255,.2);--bad:#FF7A66;
+    --shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 70px rgba(0,0,0,.6)}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.01em;margin:0}
+a{color:inherit}
+
+/* ---------- page layout ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:32px 16px 80px;display:grid;grid-template-columns:420px 1fr;gap:48px;align-items:start}
+@media (max-width:960px){.wrap{grid-template-columns:1fr;gap:32px}}
+.stage{position:sticky;top:24px}
+@media (max-width:960px){.stage{position:static}}
+.stage-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.stage-top button{font:600 13px var(--body);background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+
+/* ---------- the phone ---------- */
+.phone{background:var(--card);border-radius:36px;box-shadow:var(--shadow);height:780px;max-height:calc(100vh - 90px);min-height:620px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line)}
+@media (max-width:960px){.phone{height:720px;max-height:none}}
+.bar{display:flex;align-items:center;gap:10px;padding:18px 18px 10px}
+.back{width:44px;height:44px;border-radius:50%;border:none;background:var(--fill);color:var(--ink);font-size:20px;cursor:pointer;display:grid;place-items:center}
+.back[hidden]{visibility:hidden;display:grid}
+.logo{font:700 18px var(--display);flex:1}
+.logo span{color:var(--orange)}
+.help{font:600 13px var(--body);background:var(--fill);color:var(--ink);border:none;border-radius:999px;padding:10px 14px;cursor:pointer}
+.progress{margin:4px 18px 0;height:8px;border-radius:99px;background:var(--fill);overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--orange);border-radius:99px;transition:width .35s ease}
+.steptext{margin:8px 18px 0;font-size:13px;color:var(--muted);font-weight:600}
+.screen{flex:1;overflow:auto;padding:20px 18px 12px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.q{font-size:26px;line-height:1.2;margin:4px 0 8px}
+.hint{color:var(--muted);margin:0 0 20px;font-size:16px}
+.foot{padding:12px 18px 20px;border-top:1px solid var(--line);background:var(--card)}
+.saved{font-size:12px;color:var(--faint);text-align:center;margin-top:8px}
+
+/* big buttons */
+.btn{width:100%;height:60px;border-radius:18px;border:none;font:700 18px var(--body);cursor:pointer;background:var(--orange);color:var(--navy);transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--fill);color:var(--ink)}
+.btn.small{height:48px;font-size:16px;border-radius:14px}
+
+/* picture tiles */
+.tiles{display:grid;gap:12px}
+.tile{display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:18px;border-radius:22px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;transition:border-color .15s,background .15s}
+.tile:hover{border-color:var(--line-strong)}
+.tile.on{border-color:var(--orange);background:var(--orange-tint)}
+.tile .ic{flex:none;width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:var(--fill)}
+.tile.lime .ic{background:var(--lime-tint)}
+.tile b{display:block;font-size:18px;line-height:1.25}
+.tile small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.tile .price{margin-left:auto;font-weight:700;white-space:nowrap;color:var(--orange-ink)}
+.tile .go{margin-left:auto;font-size:22px;color:var(--faint)}
+.tile ul{margin:8px 0 0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.tile ul li::before{content:"✓ ";color:var(--orange-ink);font-weight:700}
+
+/* inputs */
+label.l{display:block;font-weight:700;margin:0 0 8px}
+label.l em{font-style:normal;font-weight:500;color:var(--faint)}
+.in{width:100%;height:60px;border-radius:16px;border:2px solid var(--line-strong);background:var(--card);color:var(--ink);font:500 18px var(--body);padding:0 16px;outline:none}
+textarea.in{height:140px;padding:14px 16px;resize:none;line-height:1.45}
+.in:focus{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-tint)}
+.in.err{border-color:var(--bad)}
+.field+.field{margin-top:18px}
+.error{color:var(--bad);font-weight:600;font-size:15px;margin:8px 0 0;display:flex;gap:6px}
+.example{margin-top:10px;font-size:14px;color:var(--muted);background:var(--fill);border-radius:14px;padding:10px 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:2px solid var(--line-strong);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;font:600 16px var(--body);cursor:pointer}
+.chip.on{border-color:var(--orange);background:var(--orange-tint)}
+.skip{display:block;width:100%;margin-top:14px;background:none;border:none;color:var(--ink);font:600 16px var(--body);text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:10px}
+.magic{display:flex;gap:10px;align-items:center;margin-top:12px;padding:12px;border-radius:14px;background:var(--lime-tint);font-size:14px}
+
+/* check screen */
+.rows{border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:none}
+.row .k{font-size:13px;color:var(--muted);font-weight:600}
+.row .v{font-weight:600;word-break:break-word}
+.row .grow{flex:1;min-width:0}
+.row button{background:none;border:none;color:var(--orange-ink);font:700 15px var(--body);cursor:pointer;padding:4px 0}
+.total{display:flex;justify-content:space-between;align-items:center;margin:16px 0 4px;padding:16px;border-radius:18px;background:var(--navy);color:var(--on-navy)}
+.total b{font:700 22px var(--display)}
+.terms{font-size:13px;color:var(--muted);margin:10px 2px 0}
+
+/* done */
+.done{text-align:center;padding-top:12px}
+.tick{width:92px;height:92px;border-radius:50%;background:var(--lime);color:#0B1233;display:grid;place-items:center;font-size:46px;margin:6px auto 18px;animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.4)}to{transform:none}}
+.ref{display:inline-block;font:700 18px var(--display);background:var(--fill);border-radius:12px;padding:8px 14px;margin:10px 0 20px;letter-spacing:.04em}
+.next{text-align:left;display:grid;gap:10px;margin:0 0 20px}
+.next div{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--fill);font-weight:600}
+.next span{flex:none;width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+
+/* paystack stand-in */
+.paystack{display:grid;place-items:center;text-align:center;height:100%;gap:10px;color:var(--muted)}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--fill);border-top-color:var(--orange);animation:sp 1s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+
+/* ---------- notes column ---------- */
+.notes h1{font-size:34px;line-height:1.1;margin-bottom:12px}
+.notes h1 span{color:var(--orange)}
+.lede{font-size:18px;color:var(--muted);max-width:60ch;margin:0 0 28px}
+.notes h2{font-size:18px;margin:40px 0 14px}
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.rule b{display:block;margin-bottom:4px}
+.rule p{margin:0;color:var(--muted);font-size:14px}
+.rule .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange-tint);color:var(--orange-ink);font:700 13px var(--display);margin-bottom:10px}
+.src{font-size:12px;color:var(--faint);margin-top:8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+th{background:var(--fill);font-weight:700;border-top:none}
+td:first-child{font-weight:600;white-space:nowrap}
+.tablewrap{overflow-x:auto}
+.map{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;font-size:14px;overflow-x:auto}
+.map .lane{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0}
+.map .lane b{min-width:88px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pill{padding:6px 10px;border-radius:999px;background:var(--fill);font-weight:600;white-space:nowrap}
+.pill.o{background:var(--orange-tint);color:var(--orange-ink)}
+.pill.n{background:var(--navy);color:var(--on-navy)}
+.arrow{color:var(--faint)}
+.qs{display:grid;gap:10px}
+.qs div{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:14px;padding:12px 14px;font-size:15px}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.jump button{font:600 13px var(--body);background:var(--fill);color:var(--ink);border:none;border-radius:999px;padding:8px 12px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= THE PROTOTYPE ================= -->
+  <div class="stage">
+    <div class="stage-top">
+      <span>Clickable prototype · try every path</span>
+      <span style="display:flex;gap:6px"><a href="option-2.html" style="font:600 13px var(--body);border:1px solid var(--line-strong);border-radius:999px;padding:6px 12px;text-decoration:none">Option 2 →</a><button id="restart" type="button">Start over</button></span>
+    </div>
+    <div class="phone" role="application" aria-label="Work with us prototype">
+      <div class="bar">
+        <button class="back" id="back" type="button" aria-label="Go back">←</button>
+        <div class="logo">UP<span>.</span></div>
+        <button class="help" type="button" onclick="toast('Opens WhatsApp — a real person answers')">💬 Ask a person</button>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+      <div class="steptext" id="steptext"></div>
+      <div class="screen" id="screen"></div>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+
+  <!-- ================= THE RESEARCH ================= -->
+  <div class="notes">
+    <h1>Work with us, <span>so simple a child could fill it.</span></h1>
+    <p class="lede">Today it is one menu of six options and then one long form (up to 11 boxes on a single screen). This proposal asks <b>one easy question per screen</b>, with big picture buttons, plain words and a check page before paying. Same data, same prices, same backend — only the way we ask changes.</p>
+
+    <h2>What the research says</h2>
+    <div class="rules">
+      <div class="rule"><span class="n">1</span><b>One question per screen</b><p>GOV.UK found that asking one thing per page is easier for low-confidence users, works better on phones, and makes errors and saving progress simpler.</p><div class="src">GOV.UK Design System — Question pages</div></div>
+      <div class="rule"><span class="n">2</span><b>Fewer boxes, fewer drop-outs</b><p>Baymard: "too long / complicated" is a top reason people abandon, and most flows can show 20–60% fewer fields by default. We hide organisation, make deadline skippable and never ask twice.</p><div class="src">Baymard Institute — checkout usability</div></div>
+      <div class="rule"><span class="n">3</span><b>Choose, don't type</b><p>Picture tiles and chips ("Online", "Remote", "No deadline") beat empty boxes. Tapping is easier than spelling, especially on a phone.</p><div class="src">NN/g — Children's UX; GOV.UK radios pattern</div></div>
+      <div class="rule"><span class="n">4</span><b>The question is the heading</b><p>Big, plain question at the top ("What is the job called?") instead of a small label like "Title". Screen readers read it once.</p><div class="src">GOV.UK — Question pages</div></div>
+      <div class="rule"><span class="n">5</span><b>Show an example</b><p>Every typing box shows what a good answer looks like, so nobody freezes at a blank box.</p><div class="src">NN/g — form design guidance</div></div>
+      <div class="rule"><span class="n">6</span><b>Check before you pay</b><p>A "Check your answers" page with a Change link on every line. Tapping Change returns straight to the check page, not the start.</p><div class="src">GOV.UK — Check answers pattern</div></div>
+      <div class="rule"><span class="n">7</span><b>Kind error messages</b><p>Say what to do, not what went wrong: "Type the name so people know what it is", not "Title is required".</p><div class="src">GOV.UK — Error message component</div></div>
+      <div class="rule"><span class="n">8</span><b>A human is one tap away</b><p>"Ask a person" (WhatsApp) sits on every screen. Answers save as you go, so leaving never loses work.</p><div class="src">Existing draft.ts behaviour, surfaced</div></div>
+    </div>
+
+    <h2>The new flow</h2>
+    <div class="map">
+      <div class="lane"><b>Start</b><span class="pill n">What do you want to do?</span><span class="arrow">→</span><span class="pill">📣 Post</span><span class="pill">🚀 Promote</span><span class="pill">📚 Sell</span></div>
+      <div class="lane"><b>Post</b><span class="pill">Job / Event / Opportunity</span><span class="arrow">→</span><span class="pill">Event: free or paid?</span><span class="arrow">→</span><span class="pill">Name</span><span class="arrow">→</span><span class="pill">Link</span><span class="arrow">→</span><span class="pill">When / Deadline</span><span class="arrow">→</span><span class="pill">Where</span><span class="arrow">→</span><span class="pill">About</span><span class="arrow">→</span><span class="pill o">7 or 30 days (paid)</span></div>
+      <div class="lane"><b>Promote</b><span class="pill o">Small / Medium / Big</span><span class="arrow">→</span><span class="pill">What is it?</span><span class="arrow">→</span><span class="pill">Link</span><span class="arrow">→</span><span class="pill">What should we say?</span></div>
+      <div class="lane"><b>Sell</b><span class="pill o">Who promotes it? 20% / 30%</span><span class="arrow">→</span><span class="pill">Name</span><span class="arrow">→</span><span class="pill">Kind</span><span class="arrow">→</span><span class="pill">Price</span><span class="arrow">→</span><span class="pill">About</span></div>
+      <div class="lane"><b>Everyone</b><span class="pill">Your name</span><span class="arrow">→</span><span class="pill">How we reach you</span><span class="arrow">→</span><span class="pill n">Check &amp; pay / send</span><span class="arrow">→</span><span class="pill">Paystack</span><span class="arrow">→</span><span class="pill">✓ Done</span></div>
+      <div class="jump" id="jump"></div>
+    </div>
+
+    <h2>Today vs this proposal</h2>
+    <div class="tablewrap"><table>
+      <tr><th></th><th>Today</th><th>Proposal</th></tr>
+      <tr><td>First screen</td><td>6 text options (+ partner when on)</td><td>3 picture tiles, then 2–3 at a time</td></tr>
+      <tr><td>Questions per screen</td><td>Up to 11 on one long page</td><td>1 (name + contact are the only pairs)</td></tr>
+      <tr><td>Words used</td><td>"Listing", "Standard / Extended", "Revenue share"</td><td>"Post", "7 days / 30 days", "Who promotes it?"</td></tr>
+      <tr><td>Promotion</td><td>3 bundles + 9 à-la-carte items on one screen</td><td>Small / Medium / Big; the 9 items hide behind "Pick my own"</td></tr>
+      <tr><td>Before paying</td><td>Total sits under the form</td><td>Check page with Change links, then one big Pay button</td></tr>
+      <tr><td>Optional boxes</td><td>Shown as boxes you must decide to skip</td><td>A "Skip" / "No deadline" button</td></tr>
+      <tr><td>Help</td><td>"Not sure which one? Ask us" at the bottom</td><td>"Ask a person" on every screen</td></tr>
+      <tr><td>Backend, prices, payload</td><td colspan="2">Unchanged — the same <code>SubmissionPayload</code> is built at the end</td></tr>
+    </table></div>
+
+    <h2>Decisions I need from you</h2>
+    <div class="qs">
+      <div><b>Posting several jobs at once.</b> One-question screens fit one item best. Proposal: on the check page, "Add another job" loops back to the name question and the pack rate (5+ = ₦4,000 each) still applies. OK, or keep the current multi-form page for bulk posters?</div>
+      <div><b>Bundle names.</b> Show "Small / Medium / Big" as the big words with BOOST / DISTRIBUTE / CAMPAIGN underneath (as here), or keep the brand names on top?</div>
+      <div><b>Organisation box.</b> I made it optional and on the same screen as the name. Drop it entirely?</div>
+      <div><b>Icons.</b> The mock uses emoji for speed; the build would use the flaticon set already in the app, in navy on tinted circles. Fine?</div>
+    </div>
+
+    <h2>Sources</h2>
+    <p style="font-size:14px;color:var(--muted)">
+      <a href="https://design-system.service.gov.uk/patterns/question-pages">GOV.UK — Question pages</a> ·
+      <a href="https://designnotes.blog.gov.uk/2015/07/03/one-thing-per-page/">GOV.UK — One thing per page</a> ·
+      <a href="https://baymard.com/blog/checkout-flow-ux-optimization">Baymard — Checkout flow UX</a> ·
+      <a href="https://baymard.com/lists/cart-abandonment-rate">Baymard — Abandonment statistics</a> ·
+      <a href="https://www.nngroup.com/articles/childrens-websites-usability-issues/">NN/g — Children's UX</a>
+    </p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Prices mirror app/work-with-us/config.ts */
+const naira = n => "₦" + n.toLocaleString("en-NG");
+const TIERS = { 7: 5000, 30: 15000 };
+const BUNDLES = [
+  { id:"bundle-boost", size:"Small", name:"BOOST", price:40000, icon:"🌱", blurb:"Get one thing seen", list:["Posted on UP","7-day boost","1 community push"] },
+  { id:"bundle-distribute", size:"Medium", name:"DISTRIBUTE", price:100000, icon:"🌿", blurb:"Reach people everywhere", list:["Posted on UP","14-day feature","2 community pushes","Story push"] },
+  { id:"bundle-campaign", size:"Big", name:"CAMPAIGN", price:250000, icon:"🌳", blurb:"Drive sign-ups or sales", list:["Posted on UP","30-day feature","4 community pushes","Carousel + 2 stories"] },
+];
+const ITEMS = [
+  ["boost-7","7-day boost",10000],["boost-14","14-day boost",17500],["feature-30","30-day feature",30000],
+  ["community-push","Community push",10000],["community-monthly","Monthly community package",30000],
+  ["social-story","Story push",7500],["social-feed-story","Feed feature + story",17500],
+  ["social-carousel","Dedicated carousel",30000],["social-video","Dedicated video",75000],
+];
+
+let A = {};          // answers
+let hist = [];       // screen history
+let returnToCheck = false;
+let errors = {};
+
+const NOUN = { job:"job", event:"event", opp:"opportunity", promote:"thing", sell:"course or guide" };
+const noun = () => A.goal==="post" ? NOUN[A.kind] || "thing" : NOUN[A.goal] || "thing";
+const paid = () => A.goal==="post" && (A.kind==="job" || (A.kind==="event" && A.free==="no"));
+
+function path(){
+  const p = ["goal"];
+  if (A.goal==="post"){
+    p.push("kind");
+    if (A.kind==="event") p.push("free");
+    p.push("title","link");
+    if (A.kind==="event") p.push("date"); else p.push("deadline");
+    if (A.kind!=="opp") p.push("where");
+    p.push("about");
+    if (paid()) p.push("length");
+  } else if (A.goal==="promote"){
+    p.push("size", A.size==="custom" ? "pieces" : null, "title","link","about");
+  } else if (A.goal==="sell"){
+    p.push("split");
+    if (A.split!==50) p.push("title","rtype","price","link","about");
+  }
+  if (A.goal && !(A.goal==="sell" && A.split===50)) p.push("name","reach","check");
+  return p.filter(Boolean);
+}
+
+/* ---------- each screen: {q, hint, body(), valid(), next label} ---------- */
+const S = {
+  goal:{ q:()=>"What do you want to do?", hint:"Tap one. You can go back any time.",
+    tiles:()=>[
+      {v:"post",icon:"📣",b:"Post something",s:"A job, an event or an opportunity"},
+      {v:"promote",icon:"🚀",b:"Get more people to see it",s:"Promote something you already have"},
+      {v:"sell",icon:"📚",b:"Sell a course or guide",s:"We only take a share when it sells"},
+    ], key:"goal" },
+  kind:{ q:()=>"What are you posting?", hint:"Pick the one that fits best.",
+    tiles:()=>[
+      {v:"job",icon:"💼",b:"A job",s:"Someone gets paid to work for you",price:"from "+naira(4000)},
+      {v:"event",icon:"🎟️",b:"An event",s:"People come along, in person or online",lime:true},
+      {v:"opp",icon:"🎓",b:"An opportunity",s:"Scholarship, grant, fellowship, competition",price:"Free"},
+    ], key:"kind" },
+  free:{ q:()=>"Do people pay to come?", hint:"Free events are posted for free.",
+    tiles:()=>[
+      {v:"yes",icon:"🙌",b:"No, it's free",price:"Free"},
+      {v:"no",icon:"🎫",b:"Yes, people buy tickets",price:"from "+naira(5000)},
+    ], key:"free" },
+  title:{ q:()=>({job:"What is the job called?",event:"What is the event called?",opp:"What is it called?"}[A.kind] || (A.goal==="promote"?"What are we promoting?":"What is it called?")),
+    hint:()=>"Just the name. Keep it short.",
+    input:{key:"title",ph:()=>({job:"e.g. Product Designer",event:"e.g. Lagos Tech Meetup",opp:"e.g. Mastercard Scholarship 2027"}[A.kind] || (A.goal==="promote"?"e.g. My bakery's new menu":"e.g. Excel for Beginners"))},
+    err:()=>"Type the name so people know what it is." },
+  link:{ q:()=>A.goal==="post" ? ({job:"Where do people apply?",event:A.free==="no"?"Where do people buy tickets?":"Where do people sign up?",opp:"Where do people apply?"}[A.kind]) : "Is there a link?",
+    hint:()=>"Paste the link. “mysite.com” is fine — we add the rest.",
+    input:{key:"link",ph:()=>"mysite.com/apply",type:"url",mode:"url"},
+    optional:()=>A.goal!=="post", skipLabel:"I don't have a link",
+    err:()=>"Paste the link so people can apply." },
+  date:{ q:()=>"When is it?", hint:"The day it happens.",
+    input:{key:"date",type:"date"}, err:()=>"Pick the day of the event." },
+  deadline:{ q:()=>"What's the last day to apply?", hint:"If there isn't one, tap “No deadline”.",
+    input:{key:"deadline",type:"date"}, optional:()=>true, skipLabel:"No deadline" },
+  where:{ q:()=>A.kind==="job"?"Where is the job?":"Where is it happening?", hint:"Tap one, or type a city.",
+    chips:()=>A.kind==="job"?["Remote","Lagos","Abuja","Port Harcourt"]:["Online","Lagos","Abuja","Port Harcourt"],
+    input:{key:"where",ph:()=>"Or type a place"}, err:()=>"Tap one, or type where it is." },
+  about:{ q:()=>A.goal==="promote"?"What should we tell people?":`Tell people about the ${noun()}`,
+    hint:()=>"Two or three sentences is plenty. It doesn't need to be perfect.",
+    input:{key:"about",area:true,ph:()=>"Write it like you'd say it to a friend…"},
+    example:()=>({job:"We need a designer to make our app easy to use. You'll work with 3 people. 2 years' experience is good.",event:"A free evening of talks for young people starting in tech. Food and drinks included.",opp:"Full scholarship for African students to study in the UK. Open to anyone under 30."}[A.kind] || "Our new menu has 5 new cakes. 10% off for the first week."),
+    err:()=>"Write a sentence or two so people know what it is." },
+  length:{ q:()=>"How long should it stay up?", hint:"You can boost it later if you want more.",
+    tiles:()=>[
+      {v:7,icon:"📅",b:"7 days",s:"Its own page and apply link",price:naira(TIERS[7])},
+      {v:30,icon:"🗓️",b:"30 days",s:"Stays up longer, shown higher",price:naira(TIERS[30])},
+    ], key:"length" },
+  size:{ q:()=>"How big a push?", hint:"Bigger means more places and for longer.",
+    tiles:()=>BUNDLES.map(b=>({v:b.id,icon:b.icon,b:`${b.size} · ${b.name}`,s:b.blurb,price:naira(b.price),list:b.list})),
+    key:"size", extra:"Pick my own pieces instead" },
+  pieces:{ q:()=>"Pick what you want", hint:"Tap as many as you like.", pieces:true,
+    err:()=>"Tap at least one thing." },
+  split:{ q:()=>"Who will tell people about it?", hint:"It's free to list. We take a share only when it sells.",
+    tiles:()=>[
+      {v:20,icon:"🙋",b:"I will",s:"We list it — you bring the buyers",price:"We take 20%"},
+      {v:30,icon:"📣",b:"UP will",s:"We push it on UP, the community and socials",price:"We take 30%"},
+      {v:50,icon:"🤝",b:"Let's make it together",s:"We help build it. Needs a chat first",price:"50 / 50"},
+    ], key:"split" },
+  rtype:{ q:()=>"What kind is it?", hint:"Tap one.", chips:()=>["Course","Guide","Template","Toolkit","Other"], chipOnly:true, input:{key:"rtype"}, err:()=>"Tap one." },
+  price:{ q:()=>"How much does it cost?", hint:"What a buyer pays you.", input:{key:"price",ph:()=>"e.g. 10000",mode:"numeric",prefix:"₦"}, err:()=>"Type the price in naira." },
+  name:{ q:()=>"What's your name?", hint:"So we know who to talk to.", name:true, err:()=>"Type your name." },
+  reach:{ q:()=>"How can we reach you?", hint:"We'll send your receipt here and tell you when it's live.", reach:true },
+  check:{ q:()=>"Check it looks right", hint:"Tap Change to fix anything." },
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function current(){ return hist[hist.length-1]; }
+
+function render(){
+  const id = current(), p = path(), idx = p.indexOf(id);
+  const screen = $("screen"), foot = $("foot");
+  $("back").hidden = hist.length<=1 || id==="done" || id==="paying";
+  const total = p.length;
+  const pct = id==="done" ? 100 : id==="paying" ? 98 : Math.round(((idx<0?0:idx)) / total * 100);
+  $("prog").style.width = pct + "%";
+  $("steptext").textContent = id==="done"||id==="paying"||id==="talk" ? "" : (A.goal ? `Step ${idx+1} of ${total}` : "Takes about 2 minutes");
+
+  if (id==="paying"){ screen.innerHTML = `<div class="paystack"><div><div class="spin"></div><p style="margin-top:16px"><b>Taking you to Paystack…</b><br>Pay there, then you come straight back.</p></div></div>`; foot.innerHTML=""; return; }
+  if (id==="done") return renderDone();
+  if (id==="talk") return renderTalk();
+  if (id==="check") return renderCheck();
+
+  const s = S[id];
+  let h = `<h1 class="q" id="qh">${esc(s.q())}</h1><p class="hint">${esc(typeof s.hint==="function"?s.hint():s.hint)}</p>`;
+
+  if (s.tiles){
+    h += `<div class="tiles" role="radiogroup" aria-labelledby="qh">` + s.tiles().map(t=>`
+      <button type="button" role="radio" aria-checked="${A[s.key]===t.v}" class="tile ${A[s.key]===t.v?"on":""} ${t.lime?"lime":""}" data-v="${esc(t.v)}">
+        <span class="ic" aria-hidden="true">${t.icon}</span>
+        <span style="min-width:0"><b>${esc(t.b)}</b>${t.s?`<small>${esc(t.s)}</small>`:""}${t.list?`<ul>${t.list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</span>
+        ${t.price?`<span class="price">${esc(t.price)}</span>`:`<span class="go" aria-hidden="true">›</span>`}
+      </button>`).join("") + `</div>`;
+    if (s.extra) h += `<button class="skip" type="button" id="extra">${s.extra}</button>`;
+    screen.innerHTML = h; foot.innerHTML = `<div class="saved">✓ Your answers are saved as you go</div>`;
+    screen.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
+      const raw=b.dataset.v; A[s.key]= isNaN(+raw)?raw:+raw;
+      if (s.key==="size") A.pieces={};
+      if (s.key==="split" && A.split===50){ go("talk"); return; }
+      setTimeout(()=>advance(),160); b.classList.add("on");
+    });
+    if (s.extra) $("extra").onclick=()=>{ A.size="custom"; A.pieces=A.pieces||{}; advance(); };
+    return;
+  }
+
+  if (s.pieces){
+    A.pieces = A.pieces || {};
+    h += `<div class="tiles">` + ITEMS.map(([k,l,pr])=>`<button type="button" class="tile ${A.pieces[k]?"on":""}" data-k="${k}" style="padding:14px"><span style="min-width:0"><b style="font-size:16px">${A.pieces[k]?"✓ ":""}${l}</b></span><span class="price">${naira(pr)}</span></button>`).join("") + `</div>`;
+    if (errors.pieces) h += `<p class="error">⚠ ${errors.pieces}</p>`;
+    screen.innerHTML = h;
+    screen.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{ const k=b.dataset.k; A.pieces[k]=!A.pieces[k]; errors={}; render(); });
+    const sum = ITEMS.reduce((t,[k,,pr])=>t+(A.pieces[k]?pr:0),0);
+    foot.innerHTML = `<button class="btn" id="nx">${sum?`Next · ${naira(sum)}`:"Next"}</button>`;
+    $("nx").onclick=()=>{ if(!Object.values(A.pieces).some(Boolean)){errors.pieces=s.err();render();return;} advance(); };
+    return;
+  }
+
+  if (s.name){
+    h += field("name","Your name","e.g. Ada Okafor") + field("org","Company or group <em>(if you have one)</em>","e.g. Ada's Bakery");
+  } else if (s.reach){
+    h += field("email","Email","you@example.com","email","email") + field("phone","WhatsApp number","0803 123 4567","tel","tel");
+  } else {
+    if (s.chips){
+      h += `<div class="chips">` + s.chips().map(c=>`<button type="button" class="chip ${A[s.input.key]===c?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("") + `</div>`;
+    }
+    if (!s.chipOnly){
+      const i=s.input, v=esc(A[i.key]||"");
+      const ph = i.ph?esc(i.ph()):"";
+      const cls = `in ${errors[i.key]?"err":""}`;
+      const el = i.area ? `<textarea id="f_${i.key}" class="${cls}" placeholder="${ph}">${v}</textarea>`
+        : `<input id="f_${i.key}" class="${cls}" type="${i.type||"text"}" ${i.mode?`inputmode="${i.mode}"`:""} placeholder="${ph}" value="${v}" autocomplete="off">`;
+      h += i.prefix ? `<div style="position:relative"><span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font:600 18px var(--body);color:var(--muted)">${i.prefix}</span>${el.replace('class="','style="padding-left:40px" class="')}</div>` : el;
+      if (s.example) h += `<div class="example"><b>Example:</b> ${esc(s.example())}</div>`;
+    }
+    if (errors[s.input.key]) h += `<p class="error" role="alert">⚠ ${esc(errors[s.input.key])}</p>`;
+    if (id==="link" && A.link) h += `<div class="magic">✨ We'll check this link works before it goes live.</div>`;
+    if (s.optional && s.optional()) h += `<button class="skip" type="button" id="skip">${s.skipLabel||"Skip this"}</button>`;
+  }
+  screen.innerHTML = h;
+  foot.innerHTML = `<button class="btn" id="nx">${returnToCheck?"Save and go back":"Next"}</button><div class="saved">✓ Your answers are saved as you go</div>`;
+
+  screen.querySelectorAll("input,textarea").forEach(el=>{
+    el.oninput=()=>{ A[el.id.slice(2)]=el.value; if(errors[el.id.slice(2)]){ delete errors[el.id.slice(2)]; el.classList.remove("err"); screen.querySelector(".error")?.remove(); } };
+    el.onkeydown=e=>{ if(e.key==="Enter" && el.tagName!=="TEXTAREA"){ e.preventDefault(); $("nx").click(); } };
+  });
+  screen.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ A[s.input.key]=c.dataset.c; errors={}; if(s.chipOnly){ render(); setTimeout(advance,160); } else render(); });
+  if ($("skip")) $("skip").onclick=()=>{ A[s.input.key]=""; errors={}; advance(); };
+  $("nx").onclick=()=>{ if(validate(id)) advance(); else render(); };
+  const first = screen.querySelector("input:not([value]),input[value=''],textarea");
+  if (first && window.innerWidth>960) first.focus({preventScroll:true});
+}
+
+function field(key,label,ph,type="text",mode){
+  return `<div class="field"><label class="l" for="f_${key}">${label}</label><input id="f_${key}" class="in ${errors[key]?"err":""}" type="${type}" ${mode?`inputmode="${mode}"`:""} placeholder="${esc(ph)}" value="${esc(A[key]||"")}" autocomplete="off">${errors[key]?`<p class="error" role="alert">⚠ ${esc(errors[key])}</p>`:""}</div>`;
+}
+
+function validate(id){
+  errors={}; const s=S[id];
+  const blank = k => !String(A[k]||"").trim();
+  if (id==="name"){ if(blank("name")) errors.name=s.err(); }
+  else if (id==="reach"){
+    if (blank("email")) errors.email="Type your email so we can send your receipt.";
+    else if (!/^\S+@\S+\.\S+$/.test(A.email)) errors.email="That email looks unfinished — check for the @ and the dot.";
+    if (blank("phone")) errors.phone="Type a number we can WhatsApp.";
+  }
+  else if (id==="price"){ if(blank("price")||isNaN(+String(A.price).replace(/[,₦\s]/g,""))) errors.price=s.err(); }
+  else if (s.input && !(s.optional && s.optional()) && blank(s.input.key)) errors[s.input.key]=s.err();
+  return !Object.keys(errors).length;
+}
+
+function advance(){
+  const p = path(), id = current();
+  if (returnToCheck){ returnToCheck=false; go("check"); return; }
+  const nx = p[p.indexOf(id)+1];
+  if (nx) go(nx);
+}
+function go(id){ hist.push(id); errors={}; render(); $("screen").scrollTop=0; }
+
+function order(){
+  if (paid()) return { label:`${A.length||7}-day ${A.kind==="job"?"job":"paid event"}`, total:TIERS[A.length||7] };
+  if (A.goal==="promote"){
+    if (A.size!=="custom"){ const b=BUNDLES.find(x=>x.id===A.size); return { label:`${b.size} push · ${b.name}`, total:b.price }; }
+    const picked=ITEMS.filter(([k])=>A.pieces[k]);
+    return { label:picked.map(x=>x[1]).join(", "), total:picked.reduce((t,x)=>t+x[2],0) };
+  }
+  return { label: A.goal==="sell" ? `Listed free · we take ${A.split}% of sales` : "Posted free", total:0 };
+}
+
+function renderCheck(){
+  const p = path(), o = order();
+  const lab = {
+    goal:["What",()=>({post:"Post something",promote:"Promote something",sell:"Sell a course or guide"}[A.goal])],
+    kind:["Type",()=>({job:"Job",event:"Event",opp:"Opportunity"}[A.kind])],
+    free:["Tickets",()=>A.free==="yes"?"Free to attend":"Paid tickets"],
+    title:["Name",()=>A.title], link:["Link",()=>A.link||"No link"],
+    date:["Date",()=>A.date], deadline:["Deadline",()=>A.deadline||"No deadline"],
+    where:["Where",()=>A.where], about:["About",()=>A.about],
+    length:["Stays up",()=>`${A.length} days`],
+    size:["Push",()=>A.size==="custom"?"My own pieces":BUNDLES.find(b=>b.id===A.size)?.size], pieces:["Pieces",()=>o.label],
+    split:["Share",()=>`We take ${A.split}%`], rtype:["Kind",()=>A.rtype], price:["Price",()=>"₦"+Number(String(A.price).replace(/[,₦\s]/g,"")).toLocaleString("en-NG")],
+    name:["You",()=>A.name+(A.org?` · ${A.org}`:"")], reach:["Contact",()=>`${A.email}<br>${esc(A.phone)}`],
+  };
+  const rows = p.filter(k=>k!=="check"&&lab[k]).map(k=>{
+    const [l,f]=lab[k]; let v=f(); v = k==="reach"? `${esc(A.email)}<br>${esc(A.phone)}` : esc(v);
+    if (k==="about" && v.length>90) v=v.slice(0,90)+"…";
+    return `<div class="row"><div class="grow"><div class="k">${l}</div><div class="v">${v}</div></div>${k==="goal"?"":`<button type="button" data-k="${k}">Change</button>`}</div>`;
+  }).join("");
+  $("screen").innerHTML = `<h1 class="q">${S.check.q()}</h1><p class="hint">${S.check.hint}</p>
+    <div class="rows">${rows}</div>
+    <div class="total"><span>${o.total?"To pay":"Cost"}</span><b>${o.total?naira(o.total):"Free"}</b></div>
+    <p class="terms">${o.total?"We check everything before it goes live, so paying doesn't guarantee it's posted. If we can't post it, we'll talk to you.":"We check everything before it goes live."}</p>
+    ${A.goal==="post"?`<button class="skip" type="button" onclick="toast('Loops back to the name question — 5 or more paid jobs drop to ₦4,000 each')">＋ Add another ${noun()}</button>`:""}`;
+  $("screen").querySelectorAll(".row button").forEach(b=>b.onclick=()=>{ returnToCheck=true; go(b.dataset.k); });
+  $("foot").innerHTML = `<button class="btn" id="pay">${o.total?`Pay ${naira(o.total)}`:"Send it in"}</button><div class="saved">${o.total?"🔒 You'll pay on Paystack, then come straight back":"✓ Nothing to pay"}</div>`;
+  $("pay").onclick=()=>{ if(o.total){ go("paying"); setTimeout(()=>go("done"),1600);} else go("done"); };
+}
+
+function renderDone(){
+  const o=order(); const ref="GU-"+Math.random().toString(36).slice(2,8).toUpperCase();
+  $("screen").innerHTML = `<div class="done"><div class="tick">✓</div>
+    <h1 class="q">${o.total?"Paid. It's with us now!":"Done! It's with us now."}</h1>
+    <p class="hint" style="margin-bottom:0">We sent a copy to <b>${esc(A.email)}</b>.</p>
+    <div class="ref">${ref}</div>
+    <div class="next">
+      <div><span>👀</span>We check it</div>
+      <div><span>💬</span>If we need anything, we message you</div>
+      <div><span>🚀</span>It goes live and we tell you</div>
+    </div></div>`;
+  $("foot").innerHTML = `<button class="btn" id="again">Post something else</button><button class="btn ghost small" style="margin-top:10px" onclick="toast('Opens WhatsApp with the order ID filled in')">💬 Message us about this</button><div class="saved">We'll remember your name and contact</div>`;
+  $("again").onclick=()=>{ const keep={name:A.name,org:A.org,email:A.email,phone:A.phone}; A=keep; hist=[]; go("goal"); };
+}
+
+function renderTalk(){
+  $("screen").innerHTML = `<div class="done"><div class="tick" style="background:var(--orange-tint);color:var(--orange-ink)">🤝</div>
+    <h1 class="q">Let's have a chat first</h1>
+    <p class="hint">Making something together means agreeing the work and costs in writing. A real person will reply.</p></div>`;
+  $("foot").innerHTML = `<button class="btn" onclick="toast('Opens WhatsApp')">💬 Chat on WhatsApp</button><button class="btn ghost small" style="margin-top:10px" onclick="back()">Go back</button>`;
+}
+
+function back(){ if(hist.length>1){ hist.pop(); returnToCheck=false; errors={}; render(); } }
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),2600); }
+
+$("back").onclick = back;
+$("restart").onclick = ()=>{ A={}; hist=[]; returnToCheck=false; go("goal"); };
+
+/* quick jumps for reviewing */
+const presets = {
+  "Paid job":{goal:"post",kind:"job",title:"Product Designer",link:"acme.ng/careers",deadline:"",where:"Remote",about:"We need a designer to make our app easy to use.",length:7,name:"Ada Okafor",email:"ada@acme.ng",phone:"0803 123 4567"},
+  "Free event":{goal:"post",kind:"event",free:"yes",title:"Lagos Tech Meetup",link:"lu.ma/lagos",date:"2026-10-24",where:"Lagos",about:"A free evening of talks.",name:"Ada Okafor",email:"ada@acme.ng",phone:"0803 123 4567"},
+  "Promote (Medium)":{goal:"promote",size:"bundle-distribute",title:"Ada's Bakery new menu",link:"",about:"Five new cakes.",name:"Ada Okafor",email:"ada@acme.ng",phone:"0803 123 4567"},
+  "Sell a course":{goal:"sell",split:30,title:"Excel for Beginners",rtype:"Course",price:"10000",link:"",about:"Learn Excel in a weekend.",name:"Ada Okafor",email:"ada@acme.ng",phone:"0803 123 4567"},
+};
+$("jump").innerHTML = "<span style='font-size:13px;color:var(--muted);align-self:center'>Jump to a filled check page:</span>" + Object.keys(presets).map(k=>`<button type="button" data-p="${k}">${k}</button>`).join("");
+$("jump").querySelectorAll("button").forEach(b=>b.onclick=()=>{ A=structuredClone(presets[b.dataset.p]); hist=["goal"]; go("check"); window.scrollTo({top:0,behavior:"smooth"}); });
+
+go("goal");
+</script>
+</body>
+</html>

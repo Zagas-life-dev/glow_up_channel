@@ -24,6 +24,16 @@
       "port": 3100
     },
     {
+      "name": "backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "latest-glowup-channel",
+        "start"
+      ],
+      "port": 3002
+    },
+    {
       "name": "web-3001",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

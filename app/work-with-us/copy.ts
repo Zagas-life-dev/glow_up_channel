@@ -13,49 +13,193 @@
  */
 
 // ---------------------------------------------------------------------------
-// The selector — pipeline §4. Start with the outcome, not the line item.
+// The question flow — one question per screen
 // ---------------------------------------------------------------------------
 
-export const SELECTOR = {
-  title: "What would you like to do?",
-  microcopy: "Put it in front of young Africans on UP. Tap one to start.",
-  /**
-   * One flat menu instead of "submit or promote?" followed by "which kind?" —
-   * every extra screen before the form is a place to give up. Plain verbs,
-   * no product names, so nobody has to know what a "listing" is.
-   */
-  options: {
-    job: { label: "Post a job", blurb: "Advertise a role to young Africans looking for work." },
-    "paid-event": { label: "Post a paid event", blurb: "Sell tickets to your event." },
-    "free-opportunity": {
-      label: "Share a free opportunity",
-      blurb: "Scholarships, grants, fellowships, competitions.",
-    },
-    "free-event": { label: "Post a free event", blurb: "Anything people can attend for free." },
-    resource: {
-      label: "Sell a course, guide or template",
-      blurb: "We list it and take a share only when it sells.",
-    },
-    promotion: {
-      label: "Promote something",
-      blurb: "Get more people to see it — on UP, in our community and on social media.",
-    },
+/**
+ * Written so a child could answer it. Three rules on top of the ones above:
+ *   1. The question is the heading, in the words someone would say out loud.
+ *   2. Every error says what to do next, never what went wrong.
+ *   3. No product words — "post", not "listing"; "1 week", not "Standard".
+ */
+export const FLOW = {
+  start: "Takes about 2 minutes",
+  step: (n: number, total: number) => `Step ${n} of ${total}`,
+  askPerson: "Ask a person",
+  next: "Next",
+  saveAndBack: "Save and go back",
+  back: "Back",
+
+  goal: {
+    title: "What do you want to do?",
+    hint: "Tap one. You can go back any time.",
+    post: { label: "Post something", sub: "A job, an event or an opportunity" },
+    promote: { label: "Get more people to see it", sub: "Promote something you already have" },
+    sell: { label: "Sell a course or guide", sub: "We only take a share when it sells" },
+    partner: "Posting a lot? Talk about partnership",
   },
-  partner: {
-    label: "Distribute with us regularly",
-    blurb: "A longer arrangement instead of paying per listing.",
-    cta: "Talk about partnership",
+  kind: {
+    title: "What are you posting?",
+    hint: "Pick the one that fits best.",
+    job: { label: "A job", sub: "Someone gets paid to work for you" },
+    event: { label: "An event", sub: "People come along, in person or online" },
+    opp: { label: "An opportunity", sub: "Scholarship, grant, fellowship, competition" },
   },
-  help: "Not sure which one? Ask us",
-}
-
-// ---------------------------------------------------------------------------
-// Intake and review — comms §04
-// ---------------------------------------------------------------------------
-
-export const INTAKE = {
-  reassurance:
-    "You don't need to write a perfect brief. Accurate details and a working link are plenty.",
+  free: {
+    title: "Do people pay to come?",
+    hint: "Free events are posted for free.",
+    no: "No, it's free",
+    yes: "Yes, people buy tickets",
+  },
+  size: {
+    title: "How big a push?",
+    hint: "Bigger means more places, for longer.",
+    names: {
+      "bundle-boost": "Small",
+      "bundle-distribute": "Medium",
+      "bundle-campaign": "Big",
+    } as Record<string, string>,
+    custom: "Pick my own pieces instead",
+  },
+  pieces: {
+    title: "Pick what you want",
+    hint: "Tap as many as you like.",
+    error: "Tap at least one thing.",
+  },
+  split: {
+    title: "Who will tell people about it?",
+    hint: "It's free to put it on UP. We take a share only when someone buys it.",
+    me: { label: "I will", sub: "We list it — you bring the buyers", price: "We take 20%" },
+    up: { label: "UP will", sub: "We push it on UP, the community and socials", price: "We take 30%" },
+    together: { label: "Let's make it together", sub: "We help build it. Needs a chat first", price: "50 / 50" },
+  },
+  together: {
+    title: "Let's have a chat first",
+    body: "Making something together means agreeing the work and the costs in writing. A real person will reply.",
+    cta: "Chat on WhatsApp",
+    message: "Hi UP, I'd like to make a course or guide together with you.",
+  },
+  title: {
+    question: {
+      job: "What is the job called?",
+      event: "What is the event called?",
+      opp: "What is it called?",
+      sell: "What is it called?",
+      promote: "What are we promoting?",
+    },
+    hint: "Just the name. Keep it short.",
+    placeholder: {
+      job: "e.g. Product Designer",
+      event: "e.g. Lagos Tech Meetup",
+      opp: "e.g. Tech4Her Scholarship",
+      sell: "e.g. Excel for Beginners",
+      promote: "e.g. My bakery's new menu",
+    },
+    error: "Type the name so people know what it is.",
+  },
+  link: {
+    question: {
+      job: "Where do people apply?",
+      opp: "Where do people apply?",
+      freeEvent: "Where do people sign up?",
+      paidEvent: "Where do people buy tickets?",
+      other: "Is there a link?",
+    },
+    hint: "Paste the link. “mysite.com” is fine — we add the rest.",
+    placeholder: "mysite.com/apply",
+    skip: "I don't have a link",
+    error: "Paste the link so people can get to it.",
+    bad: "That doesn't look like a link yet. It should look like mysite.com.",
+  },
+  date: {
+    title: "When is it?",
+    hint: "The day it happens.",
+    error: "Pick the day of the event.",
+  },
+  deadline: {
+    title: "What's the last day to apply?",
+    hint: "If there isn't one, tap “No deadline”.",
+    skip: "No deadline",
+  },
+  where: {
+    job: "Where is the job?",
+    event: "Where is it happening?",
+    hint: "Tap one, or type a place.",
+    placeholder: "Or type a place",
+    jobChips: ["Remote", "Lagos", "Abuja", "Port Harcourt"],
+    eventChips: ["Online", "Lagos", "Abuja", "Port Harcourt"],
+    error: "Tap one, or type where it is.",
+  },
+  rtype: {
+    title: "What kind is it?",
+    hint: "Tap one.",
+    chips: ["Course", "Guide", "Template", "Toolkit", "Other"],
+  },
+  price: {
+    title: "How much does it cost?",
+    hint: "What a buyer pays, in naira.",
+    placeholder: "e.g. 10000",
+    error: "Type the price in naira, like 10000.",
+  },
+  about: {
+    question: (thing: string) => `Tell people about the ${thing}`,
+    promote: "What should we tell people?",
+    hint: "Two or three sentences is plenty. It doesn't need to be perfect.",
+    placeholder: "Write it like you'd tell a friend…",
+    example: {
+      job: "We need a designer to make our app easy to use. You'll work with 3 people. 2 years' experience is good.",
+      event: "A free evening of talks for young people starting in tech. Food and drinks included.",
+      opp: "Full scholarship for African students to study in the UK. Open to anyone under 30.",
+      sell: "Learn Excel from zero in one weekend. 12 short videos and practice sheets.",
+      promote: "Our new menu has 5 new cakes. 10% off for the first week.",
+    },
+    error: "Write a sentence or two so people know what it is.",
+  },
+  length: {
+    title: "How long should it stay up?",
+    hint: "You can boost it later if you want more.",
+    week: { label: "1 week", sub: "Its own page and a link to apply" },
+    month: { label: "1 month", sub: "Stays up longer, shown higher" },
+  },
+  name: {
+    title: "What's your name?",
+    hint: "So we know who to talk to.",
+    name: "Your name",
+    namePlaceholder: "e.g. Ada Okafor",
+    org: "Company or group",
+    orgHint: "(if you have one)",
+    error: "Type your name.",
+  },
+  reach: {
+    title: "How can we reach you?",
+    hint: "We'll send your receipt here and tell you when it's live.",
+    email: "Email",
+    phone: "WhatsApp number",
+    emailEmpty: "Type your email so we can send your receipt.",
+    emailBad: "That email looks unfinished — check for the @ and the dot.",
+    phoneBad: "Type a number we can WhatsApp.",
+  },
+  check: {
+    title: "Check it looks right",
+    hint: "Tap Change to fix anything.",
+    change: "Change",
+    toPay: "To pay",
+    cost: "Cost",
+    free: "Free",
+    addAnother: (thing: string) => `Add another ${thing}`,
+    also: "Also in this order",
+    remove: "Remove",
+    pack: (count: number, each: string) => `${count} or more and each one drops to ${each}.`,
+  },
+  /** What each kind is called in a sentence — "You didn't finish paying for a job". */
+  kindName: {
+    job: "a job",
+    "paid-event": "an event",
+    "free-event": "an event",
+    "free-opportunity": "an opportunity",
+    resource: "a course or guide",
+    promotion: "a promotion",
+  } as Record<string, string>,
 }
 
 /**

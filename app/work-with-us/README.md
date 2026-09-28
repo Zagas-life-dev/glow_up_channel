@@ -19,25 +19,34 @@ Two documents govern this folder:
 
 ## The flow
 
-Built so someone who has never bought anything online can get through it: one
-menu, one form, one button that goes to Paystack.
+Built so a child could fill it in: **one question per screen**, big tap
+answers, plain words, and a check page before paying. The design and the
+research behind it are in `design_workwithus_simple/index.html` (Option 1).
 
 ```
-What would you like to do?   — the page opens straight on this menu, no cover page
-     ├─ Post a job / paid event   →  form (7 or 30 days picked on the form)  ─┐
-     ├─ Share an opportunity / free event  →  form                            │
-     ├─ Sell a course or guide  →  pick terms  →  form                        │
-     ├─ Promote something  →  tap a bundle (or build your own)  →  form       │
-     └─ Partner  →  pitch  →  /founder-batch  [hidden by flag]                │
-                                                                              ▼
-                        Form ends in the total, the terms and "Pay ₦X" — no separate review screen
-                                                                              │
-                                      free ─────────┬──────── paid ───────────┘
-                                                    ▼                  ▼
-                                                  Done          Paystack → back here → Done
-                                                                       │
-                                                               not paid ─→ "Try paying again"
+What do you want to do?
+  ├─ Post something → Job / Event / Opportunity → (event) free or paid?
+  │     → name → link → date or deadline → where → about → (paid) 1 week or 1 month
+  ├─ Get more people to see it → Small / Medium / Big (or pick my own pieces)
+  │     → what is it → link → what should we say
+  └─ Sell a course or guide → who promotes it (20% / 30%; 50/50 → WhatsApp)
+        → name → kind → price → link → about
+  → your name → how we reach you → Check it looks right → Pay ₦X / Send it in
+                                                  │
+                                    free ─────────┴──────── paid
+                                      ▼                       ▼
+                                    Done         Paystack → back here → Done
+                                                              │
+                                                      not paid ─→ "Try paying again"
 ```
+
+`flow.tsx` holds every screen. Its answers are turned into the same
+`SubmissionPayload` the old forms sent, so the server did not change for it.
+Every screen's words are in `FLOW` in `copy.ts`. Each "Change" on the check page
+asks only that question again — plus anything the change now needs (switching
+an event to paid asks how long it stays up) — then returns to the check page.
+"Add another job" loops back through the listing questions and keeps the pack
+rate.
 
 Nobody types anything twice. `draft.ts` keeps two things in browser storage:
 the contact details, which prefill the next form, and an order sent to
@@ -58,9 +67,10 @@ Links are accepted however they are typed: `mysite.com` becomes
 | `config.ts` | **Prices, items, bundles, contact details, form fields.** Change things here, nowhere else. |
 | `copy.ts` | **Every customer-facing line** — hero, selector, review terms, success page, status wording. |
 | `admin/mail.ts` | The email templates the review queue opens in Gmail. |
-| `page.tsx` | The menu, sending the order, and the trip back from Paystack — paid, unpaid, or unknown. |
-| `submit-track.tsx` / `promote-track.tsx` / `partner-track.tsx` | The three branches. |
-| `ui.tsx` | The shared bits — step wrapper, choice card, form fields, and the pay footer every form ends in. |
+| `page.tsx` | Sending the order, and the trip back from Paystack — paid, unpaid, or unknown. |
+| `flow.tsx` | Every question screen and the check page. |
+| `partner-track.tsx` | The partner pitch, hidden by flag. |
+| `ui.tsx` | The step wrapper and the "need more?" contact box used by the screens around the flow. |
 | `draft.ts` | Remembers contact details and an unpaid order in the browser, so a cancelled payment is one tap to retry. |
 | `admin/review-queue.tsx` | The review screen, mounted at `/dashboard/admin/work-with-us`. |
 | `lookup.ts` | Searches the four public list APIs, for pointing a promotion at something live. **Not wired up yet** — nothing imports it, so a promotion never records what it runs against. See "Promotion targets" below. |
@@ -293,7 +303,7 @@ The reviewer is told so and can start it by hand, but the queue cannot do it.
 
 Closing this needs a decision on where the target comes from:
 
-- **At purchase.** Wire `lookup.ts` into `promote-track.tsx`, carry the chosen
+- **At purchase.** Wire `lookup.ts` into the promote questions in `flow.tsx`, carry the chosen
   `contentId` and `contentType` through `parsePayload` into `buildItems`. The
   customer says what they are promoting; matches how the flow reads today.
 - **At review.** Let the reviewer search and attach a target from the queue

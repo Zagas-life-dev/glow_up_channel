@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work with us — Option 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#FBFAF7; --card:#FFFFFF; --ink:#0B1233; --muted:#5B5847; --faint:#8C8878;
+  --navy:#0B1233; --on-navy:#FBFAF7; --orange:#FF6A00; --orange-ink:#B8551E;
+  --orange-tint:rgba(255,106,0,.12); --lime:#D6FF3F;
+  --fill:#F2EFE8; --line:#E7E3D8; --line-strong:#D8D3C6; --bad:#C4321C;
+  --chat-bg:#EFEBE3; --me:#FFE3CC;
+  --shadow:0 24px 60px rgba(11,18,51,.18),0 2px 6px rgba(11,18,51,.06);
+  --display:"Unbounded",ui-sans-serif,system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--page:#070A1C;--card:#10173A;--ink:#FBFAF7;--muted:rgba(251,250,247,.7);--faint:rgba(251,250,247,.45);
+    --orange-ink:#FF8A3D;--orange-tint:rgba(255,106,0,.16);--fill:rgba(255,255,255,.07);--line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.2);--bad:#FF7A66;--chat-bg:#0A0F28;--me:#5A2E12;
+    --shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 70px rgba(0,0,0,.6)}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2{font-family:var(--display);letter-spacing:-.01em;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding:32px 16px 80px;display:grid;grid-template-columns:420px 1fr;gap:48px;align-items:start}
+@media (max-width:960px){.wrap{grid-template-columns:1fr;gap:32px}}
+.stage{position:sticky;top:24px}
+@media (max-width:960px){.stage{position:static}}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.stage-top a,.stage-top button{font:600 13px var(--body);background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
+
+/* phone */
+.phone{border-radius:36px;box-shadow:var(--shadow);height:780px;max-height:calc(100vh - 90px);min-height:620px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);background:var(--chat-bg)}
+@media (max-width:960px){.phone{height:720px;max-height:none}}
+.head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;background:var(--navy);color:var(--on-navy)}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--orange);color:#0B1233;display:grid;place-items:center;font:700 15px var(--display);flex:none}
+.head b{display:block;font-size:17px}
+.head small{color:rgba(251,250,247,.65);font-size:13px}
+.head .p{margin-left:auto;font-size:13px;font-weight:600;background:rgba(255,255,255,.1);border:none;color:inherit;border-radius:999px;padding:8px 12px;cursor:pointer}
+
+/* messages */
+.chat{flex:1;overflow:auto;padding:16px 12px 8px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth}
+.msg{max-width:85%;padding:10px 14px;border-radius:18px;font-size:17px;line-height:1.4;animation:pop .22s ease;word-break:break-word;box-shadow:0 1px 0 rgba(11,18,51,.06)}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.bot{align-self:flex-start;background:var(--card);border-top-left-radius:6px}
+.me{align-self:flex-end;background:var(--me);border-top-right-radius:6px;font-weight:600}
+.gap{height:8px}
+.typing{align-self:flex-start;background:var(--card);border-radius:18px;border-top-left-radius:6px;padding:14px 16px;display:flex;gap:5px}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--faint);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.summary{list-style:none;margin:6px 0 0;padding:0;font-size:15px}
+.summary li{padding:6px 0;border-top:1px solid var(--line)}
+.summary li:first-child{border-top:none}
+.summary span{display:block;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.price{display:flex;justify-content:space-between;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--navy);color:var(--on-navy);font-weight:700}
+.big-tick{font-size:44px;line-height:1}
+
+/* answer area */
+.answers{padding:8px 12px 14px;display:grid;gap:8px;max-height:52%;overflow:auto}
+.answers:empty{display:none}
+.reply{width:100%;min-height:56px;border-radius:16px;border:2px solid var(--orange);background:var(--card);color:var(--ink);font:700 17px var(--body);cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 16px;text-align:left;animation:pop .22s ease}
+.reply:hover{background:var(--orange-tint)}
+.reply .e{font-size:24px}
+.reply small{margin-left:auto;font-weight:700;color:var(--orange-ink);white-space:nowrap}
+.reply.main{background:var(--orange);color:#0B1233;justify-content:center}
+.reply.main small{color:#0B1233}
+.reply.soft{border-color:var(--line-strong);font-weight:600}
+.bar{display:flex;gap:8px;padding:8px 10px 14px;align-items:center}
+.bar input{flex:1;min-width:0;height:54px;border-radius:999px;border:none;background:var(--card);color:var(--ink);font:500 17px var(--body);padding:0 18px;outline:none;box-shadow:0 1px 0 rgba(11,18,51,.06)}
+.bar input:disabled{opacity:.55}
+.bar input:focus{box-shadow:0 0 0 3px var(--orange-tint)}
+.send{width:54px;height:54px;border-radius:50%;border:none;background:var(--orange);color:#0B1233;font-size:22px;cursor:pointer;flex:none}
+.send:disabled{background:var(--line-strong);cursor:default}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+
+/* notes */
+.notes h1{font-size:34px;line-height:1.1;margin-bottom:12px}
+.notes h1 span{color:var(--orange)}
+.lede{font-size:18px;color:var(--muted);max-width:62ch;margin:0 0 8px}
+.notes h2{font-size:18px;margin:36px 0 14px}
+.list{display:grid;gap:10px}
+.list div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:15px}
+.list div b{display:block;margin-bottom:2px}
+.list .m{color:var(--muted)}
+.list.q div{border-left:4px solid var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="stage-top">
+      <span>Option 3 · chat · clickable</span>
+      <span style="display:flex;gap:6px"><a href="index.html">Option 1</a><a href="option-2.html">Option 2</a><button id="restart" type="button">Start over</button></span>
+    </div>
+    <div class="phone">
+      <div class="head">
+        <div class="avatar">UP</div>
+        <div><b>UP</b><small id="status">online</small></div>
+        <button class="p" type="button" onclick="toast('Opens WhatsApp — a real person takes over')">🙋 Real person</button>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="answers" id="answers"></div>
+      <form class="bar" id="bar">
+        <input id="text" autocomplete="off" disabled placeholder="Tap an answer above">
+        <button class="send" id="send" disabled aria-label="Send">➤</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h1>Option 3: <span>it's just a chat.</span></h1>
+    <p class="lede">Almost everyone already knows how to use WhatsApp. So Work with us becomes a chat with UP: it asks one plain question at a time, and the person taps a big answer button or types a short reply. There's nothing new to learn: no menus, no form, no steps to count.</p>
+
+    <h2>The rules it follows</h2>
+    <div class="list">
+      <div><b>One question per message</b><span class="m">Short, everyday words. "What's it called?" not "Title".</span></div>
+      <div><b>Tap first, type only when we must</b><span class="m">Answers are big buttons. The typing bar only switches on for things only they know: name, link, number.</span></div>
+      <div><b>Never a dead end</b><span class="m">No link? "I don't have one". No deadline? "No". Stuck? "🙋 Real person" is always at the top.</span></div>
+      <div><b>Mistakes are just another message</b><span class="m">"Hmm, that number looks short. Can you check it?" No red boxes.</span></div>
+      <div><b>Check before paying</b><span class="m">UP repeats everything back in one bubble. "✅ Yes" or "✏️ Change something", which asks only that one question again.</span></div>
+      <div><b>Price said out loud</b><span class="m">Prices show on the answer buttons, and the pay button says the exact amount.</span></div>
+    </div>
+
+    <h2>How it's built</h2>
+    <div class="list">
+      <div><b>No AI, no WhatsApp API</b><span class="m">It's a scripted chat running in the page. Same questions and prices as today (<code>config.ts</code>). At the end it builds the same <code>SubmissionPayload</code> and uses the same Paystack path and review queue. Front end only.</span></div>
+    </div>
+
+    <h2>Decisions I need from you</h2>
+    <div class="list q">
+      <div><b>Several jobs at once:</b> after "Done", UP asks "Post another job?" and remembers the name and number. Keep the 5-for-₦4,000 rate across those?</div>
+      <div><b>Email:</b> asked only when they're paying (Paystack needs it). OK?</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const naira=n=>"₦"+n.toLocaleString("en-NG");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+const BUNDLES={small:["Small push","BOOST",40000],medium:["Medium push","DISTRIBUTE",100000],big:["Big push","CAMPAIGN",250000]};
+let A={}, changing=false, run=0;
+
+const THING={job:"job",event:"event",opp:"opportunity",sell:"course",promote:"thing"};
+const paidPost=()=>A.what==="job"||(A.what==="event"&&A.free===false);
+function total(){
+  if(paidPost()) return A.len===30?15000:5000;
+  if(A.what==="promote"&&A.size) return BUNDLES[A.size][2];
+  return 0;
+}
+
+/* The whole conversation, in order. Each step: say, then replies (buttons) and/or input (typing). */
+const STEPS=[
+  {id:"what", say:()=>A.name?[`What do you want to post this time?`]:["Hi 👋 I'm UP.","I'll help you put something on UP. It takes about 2 minutes.","What do you want to post?"],
+    replies:()=>[["💼","A job","job"],["🎟️","An event","event"],["🎓","A scholarship or opportunity","opp"],["📚","A course or guide to sell","sell"],["🚀","Get more people to see something","promote"]],
+    set:v=>{A.what=v}},
+  {id:"free", when:()=>A.what==="event", say:()=>["Nice! Is it free to go?"],
+    replies:()=>[["🙌","Yes, it's free",true,"Free"],["🎫","No, people pay",false,"from "+naira(5000)]], set:v=>{A.free=v}},
+  {id:"size", when:()=>A.what==="promote", say:()=>["How big a push do you want?","Bigger means more places, for longer."],
+    replies:()=>Object.entries(BUNDLES).map(([k,b])=>[{small:"🌱",medium:"🌿",big:"🌳"}[k],b[0],k,naira(b[2])]), set:v=>{A.size=v}},
+  {id:"share", when:()=>A.what==="sell", say:()=>["It's free to put it on UP. We only take a share when someone buys it.","Who will tell people about it?"],
+    replies:()=>[["🙋","I will","20","UP takes 20%"],["📣","UP will","30","UP takes 30%"],["🤝","Let's make it together","50","50/50"]], set:v=>{A.share=+v}},
+  {id:"title", say:()=>[A.what==="promote"?"What are we promoting?":`What's the ${THING[A.what]} called?`],
+    input:()=>({ph:{job:"e.g. Sales Assistant",event:"e.g. Lagos Tech Meetup",opp:"e.g. Tech4Her Scholarship",sell:"e.g. Excel for Beginners",promote:"e.g. My bakery's new menu"}[A.what]}),
+    set:v=>{A.title=v}, check:v=>v.length<2&&"Can you type the name? Just a few words is fine."},
+  {id:"link", say:()=>[A.what==="job"||A.what==="opp"?"Where do people apply? Send me the link.":A.what==="event"?(A.free===false?"Where do people buy tickets? Send me the link.":"Where do people sign up? Send me the link."):"Is there a link? Send it here."],
+    input:()=>({ph:"Paste the link",mode:"url"}),
+    replies:()=>[["🚫","I don't have a link",""]],
+    set:v=>{A.link=v}, check:v=>v&&!/\w\.\w/.test(v)&&"Hmm, that doesn't look like a link. It should look like mysite.com. Try again?"},
+  {id:"date", when:()=>A.what==="event", say:()=>["What day is it?"], input:()=>({type:"date"}),
+    set:v=>{A.date=v}, check:v=>!v&&"Pick the day on the calendar 📅", show:v=>new Date(v).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})},
+  {id:"deadline", when:()=>A.what==="job"||A.what==="opp", say:()=>["Is there a last day to apply?"],
+    replies:()=>[["🙅","No",""],["📅","Yes, let me pick it","pick"]],
+    set:v=>{A.deadline=v==="pick"?"?":""}},
+  {id:"deadlineDate", key:"deadline", when:()=>A.deadline==="?", say:()=>["What's the last day?"], input:()=>({type:"date"}),
+    set:v=>{A.deadline=v}, check:v=>!v&&"Pick the day on the calendar 📅", show:v=>new Date(v).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})},
+  {id:"where", when:()=>A.what==="job"||A.what==="event", say:()=>[A.what==="job"?"Where's the job?":"Where is it happening?"],
+    replies:()=>[[A.what==="job"?"🏠":"💻",A.what==="job"?"Remote (from home)":"Online",A.what==="job"?"Remote":"Online"],["📍","Lagos","Lagos"],["📍","Abuja","Abuja"]],
+    input:()=>({ph:"Or type the place"}), set:v=>{A.where=v}, check:v=>!v&&"Tap one, or type where it is."},
+  {id:"price", when:()=>A.what==="sell", say:()=>["How much does it cost to buy?"], input:()=>({ph:"e.g. 10000",mode:"numeric"}),
+    set:v=>{A.price=v.replace(/[^\d]/g,"")}, check:v=>!/\d/.test(v)&&"Just the number in naira, like 10000.", show:v=>naira(+v.replace(/[^\d]/g,""))},
+  {id:"about", say:()=>[A.what==="promote"?"What should we tell people about it?":"Tell me a bit about it, like you'd tell a friend. 2 or 3 sentences is perfect."],
+    input:()=>({ph:"Type here…"}), set:v=>{A.about=v}, check:v=>v.length<10&&"A little more please, just a sentence or two 🙂"},
+  {id:"len", when:()=>paidPost(), say:()=>["How long should it stay up on UP?"],
+    replies:()=>[["📅","1 week",7,naira(5000)],["🗓️","1 month",30,naira(15000)]], set:v=>{A.len=+v}},
+  {id:"name", when:()=>!A.nameKnown||changing, say:()=>["Almost done! What's your name?"], input:()=>({ph:"Your name"}),
+    set:v=>{A.name=v}, check:v=>v.length<2&&"What should we call you?"},
+  {id:"phone", when:()=>!A.nameKnown||changing, say:()=>[`Thanks ${A.name?.split(" ")[0]||""}! What's your WhatsApp number?`,"We'll message you when it's live."],
+    input:()=>({ph:"0803 123 4567",mode:"tel"}), set:v=>{A.phone=v}, check:v=>v.replace(/\D/g,"").length<10&&"Hmm, that number looks short. Can you check it? It should have 11 digits."},
+  {id:"email", when:()=>total()>0&&(!A.email||changing), say:()=>["And your email? Paystack sends your receipt there."], input:()=>({ph:"you@email.com",mode:"email"}),
+    set:v=>{A.email=v}, check:v=>!/^\S+@\S+\.\S+$/.test(v)&&"That email looks unfinished. Check it has an @ and a dot."},
+  {id:"check"},
+];
+
+const LABELS={what:"Posting",free:"Free to go?",size:"Push",share:"UP's share",title:"Name",link:"Link",date:"Date",deadline:"Last day to apply",where:"Where",price:"Price",about:"About",len:"Stays up",name:"Your name",phone:"WhatsApp",email:"Email"};
+function shown(k){
+  const v=A[k];
+  return ({what:{job:"A job",event:"An event",opp:"An opportunity",sell:"A course or guide",promote:"A promotion"}[v],
+    free:v?"Yes":"No, people pay",size:A.size&&`${BUNDLES[A.size][0]} (${BUNDLES[A.size][1]})`,share:`${v}%`,
+    link:v||"No link",date:v&&new Date(v).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}),
+    deadline:v?new Date(v).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"None",
+    price:v&&naira(+v),len:v===30?"1 month":"1 week"})[k] ?? v;
+}
+
+/* ---------- engine ---------- */
+// A step still counts only if its question applies now, e.g. no "Stays up" once an event is switched to free.
+const applies=k=>{const t=STEPS.find(t=>(t.key||t.id)===k&&t.id!=="deadlineDate")||STEPS.find(t=>t.id===k);return !t||!t.when||["name","phone","email"].includes(k)||t.when()};
+const missing=t=>{const k=t.key||t.id;return A[k]===undefined||A[k]==="?"};
+async function bot(lines,r){
+  for(const l of lines){
+    if(r!==run) return;
+    const t=document.createElement("div");t.className="typing";t.innerHTML="<i></i><i></i><i></i>";$("chat").append(t);scroll();$("status").textContent="typing…";
+    await wait(Math.min(350+l.length*12,900));
+    if(r!==run) return;
+    t.remove();add(l,"bot");$("status").textContent="online";
+  }
+}
+function add(html,who){const m=document.createElement("div");m.className="msg "+who;m.innerHTML=html;$("chat").append(m);scroll();return m}
+function scroll(){const c=$("chat");c.scrollTop=c.scrollHeight}
+function clearAnswers(){$("answers").innerHTML="";$("text").disabled=true;$("send").disabled=true;$("text").value="";$("text").type="text";$("text").placeholder="Tap an answer above";$("bar").onsubmit=e=>e.preventDefault()}
+
+async function ask(i){
+  const r=run, s=STEPS[i];
+  if(s.id==="check") return summary();
+  if(s.when&&!s.when()) return ask(i+1);
+  await bot(s.say(),r); if(r!==run) return;
+  clearAnswers();
+  const done=async(val,label)=>{
+    if(s.check){const bad=s.check(val);if(bad){add(esc(label),"me");await bot([bad],r);return}}
+    clearAnswers();add(esc(label),"me");s.set(val);
+    if(s.id==="share"&&A.share===50) return together();
+    if(changing){
+      // Only ask what this change made necessary (e.g. "No, people pay" now needs a length), then back to the summary.
+      const j=STEPS.findIndex((t,n)=>n>i&&t.id!=="check"&&(!t.when||t.when())&&missing(t));
+      if(j<0){changing=false;return summary()}
+      return ask(j);
+    }
+    ask(i+1);
+  };
+  if(s.replies) for(const [e,l,v,p] of s.replies()){
+    const b=document.createElement("button");b.type="button";b.className="reply";
+    b.innerHTML=`<span class="e">${e}</span>${esc(l)}${p?`<small>${esc(p)}</small>`:""}`;
+    b.onclick=()=>done(v,`${e} ${l}`);$("answers").append(b);
+  }
+  if(s.input){
+    const cfg=s.input(),t=$("text");
+    t.disabled=false;$("send").disabled=false;t.type=cfg.type||"text";t.placeholder=cfg.ph||"";if(cfg.mode)t.inputMode=cfg.mode;else t.removeAttribute("inputmode");
+    if(window.innerWidth>960)t.focus();
+    $("bar").onsubmit=e=>{e.preventDefault();const v=t.value.trim();done(v,s.show&&v?s.show(v):(v||"…"))};
+  }
+}
+
+async function summary(){
+  const r=run;
+  await bot(["Here's everything. Is it all right?"],r); if(r!==run) return;
+  const keys=["what","free","size","share","title","link","date","deadline","where","price","about","len","name","phone","email"].filter(k=>A[k]!==undefined&&!(k==="email"&&!total())&&applies(k));
+  const tot=total();
+  add(`<ul class="summary">${keys.map(k=>`<li><span>${LABELS[k]}</span>${esc(shown(k))}</li>`).join("")}</ul>
+    <div class="price"><span>${tot?"To pay":A.what==="sell"?"To list":"Cost"}</span><span>${tot?naira(tot):"Free"}</span></div>`,"bot");
+  clearAnswers();
+  const yes=document.createElement("button");yes.className="reply main";yes.type="button";
+  yes.innerHTML=tot?`✅ Yes, pay ${naira(tot)}`:"✅ Yes, send it";
+  yes.onclick=()=>finish(tot);
+  const no=document.createElement("button");no.className="reply soft";no.type="button";no.innerHTML='<span class="e">✏️</span>Change something';
+  no.onclick=()=>changeWhat(keys);
+  $("answers").append(yes,no);
+}
+
+async function changeWhat(keys){
+  const r=++run; clearAnswers(); add("✏️ Change something","me");
+  await bot(["No problem. What do you want to change?"],r);
+  for(const k of keys.filter(k=>k!=="what")){
+    const b=document.createElement("button");b.type="button";b.className="reply soft";b.textContent=LABELS[k];
+    b.onclick=()=>{clearAnswers();add(esc(LABELS[k]),"me");changing=true;ask(STEPS.findIndex(s=>s.id===k))};
+    $("answers").append(b);
+  }
+  const back=document.createElement("button");back.type="button";back.className="reply soft";back.textContent="↩ Nothing, it's fine";
+  back.onclick=()=>{clearAnswers();add("Nothing, it's fine","me");summary()};$("answers").append(back);
+}
+
+async function finish(tot){
+  const r=++run; clearAnswers(); add(tot?`✅ Yes, pay ${naira(tot)}`:"✅ Yes, send it","me");
+  if(tot){await bot(["Opening Paystack for you… 🔒"],r);await wait(1200);if(r!==run)return;add("💳 Paid "+naira(tot),"me");}
+  const ref="GU-"+Math.random().toString(36).slice(2,8).toUpperCase();
+  await bot([`<div class="big-tick">✅</div><b>Done! We've got it.</b>`,`Your order number is <b>${ref}</b>.`,"We'll check it and WhatsApp you when it's live. 🚀"],r);
+  if(r!==run) return;
+  const again=document.createElement("button");again.type="button";again.className="reply main";again.textContent="➕ Post something else";
+  again.onclick=()=>{const keep={name:A.name,phone:A.phone,email:A.email,nameKnown:true};A=keep;run++;clearAnswers();add("➕ Post something else","me");ask(0)};
+  $("answers").append(again);
+}
+
+async function together(){
+  const r=run;
+  await bot(["Love that! 🤝 Making it together needs a quick chat about the work and costs.","Tap below and a real person will reply on WhatsApp."],r);
+  if(r!==run) return; clearAnswers();
+  const b=document.createElement("button");b.type="button";b.className="reply main";b.textContent="💬 Chat with a person";b.onclick=()=>toast("Opens WhatsApp");
+  $("answers").append(b);
+}
+
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),2600)}
+function start(){run++;A={};changing=false;$("chat").innerHTML="";clearAnswers();ask(0)}
+$("restart").onclick=start;
+start();
+</script>
+</body>
+</html>

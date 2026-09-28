@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work with us — Option 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#FBFAF7; --card:#FFFFFF; --ink:#0B1233; --muted:#5B5847; --faint:#8C8878;
+  --navy:#0B1233; --on-navy:#FBFAF7; --orange:#FF6A00; --orange-ink:#B8551E;
+  --orange-tint:rgba(255,106,0,.12); --lime:#D6FF3F; --lime-tint:rgba(214,255,63,.35);
+  --fill:#F2EFE8; --line:#E7E3D8; --line-strong:#D8D3C6; --bad:#C4321C;
+  --shadow:0 24px 60px rgba(11,18,51,.18),0 2px 6px rgba(11,18,51,.06);
+  --display:"Unbounded",ui-sans-serif,system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--page:#070A1C;--card:#10173A;--ink:#FBFAF7;--muted:rgba(251,250,247,.7);--faint:rgba(251,250,247,.45);
+    --orange-ink:#FF8A3D;--orange-tint:rgba(255,106,0,.16);--lime-tint:rgba(214,255,63,.14);
+    --fill:rgba(255,255,255,.07);--line:rgba(255,255,255,.09);--line-strong:rgba(255,255,255,.2);--bad:#FF7A66;
+    --shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 70px rgba(0,0,0,.6)}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2{font-family:var(--display);letter-spacing:-.01em;margin:0}
+a{color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:32px 16px 80px;display:grid;grid-template-columns:420px 1fr;gap:48px;align-items:start}
+@media (max-width:960px){.wrap{grid-template-columns:1fr;gap:32px}}
+.stage{position:sticky;top:24px}
+@media (max-width:960px){.stage{position:static}}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.stage-top button,.stage-top a{font:600 13px var(--body);background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
+
+.phone{background:var(--card);border-radius:36px;box-shadow:var(--shadow);height:780px;max-height:calc(100vh - 90px);min-height:620px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line)}
+@media (max-width:960px){.phone{height:720px;max-height:none}}
+.bar{display:flex;align-items:center;gap:10px;padding:18px 18px 10px}
+.back{width:44px;height:44px;border-radius:50%;border:none;background:var(--fill);color:var(--ink);font-size:20px;cursor:pointer}
+.back.hide{visibility:hidden}
+.logo{font:700 18px var(--display);flex:1}
+.logo span{color:var(--orange)}
+.help{font:600 13px var(--body);background:var(--fill);color:var(--ink);border:none;border-radius:999px;padding:10px 14px;cursor:pointer}
+.dots{display:flex;gap:8px;justify-content:center;padding:6px 0 0}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--fill);transition:all .3s}
+.dots i.on{background:var(--orange);width:28px;border-radius:99px}
+.screen{flex:1;overflow:auto;padding:22px 18px 12px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.q{font-size:28px;line-height:1.18;margin:0 0 8px}
+.hint{color:var(--muted);margin:0 0 22px;font-size:17px}
+.foot{padding:12px 18px 20px}
+.btn{width:100%;min-height:64px;border-radius:20px;border:none;font:700 19px var(--body);cursor:pointer;background:var(--orange);color:#0B1233;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 16px}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--fill);color:var(--ink)}
+.btn.wa{background:#25D366;color:#0B1233}
+.btn+.btn{margin-top:10px}
+.note{font-size:13px;color:var(--faint);text-align:center;margin-top:10px}
+
+/* the four giant ways in */
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.way{aspect-ratio:1/1;border-radius:26px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font:700 17px var(--body);text-align:center;padding:10px}
+.way span{font-size:46px;line-height:1}
+.way:hover{border-color:var(--orange);background:var(--orange-tint)}
+.or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:13px;font-weight:600;margin:20px 0 14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* inputs */
+.in{width:100%;min-height:64px;border-radius:18px;border:2px solid var(--line-strong);background:var(--card);color:var(--ink);font:500 19px var(--body);padding:0 16px;outline:none}
+textarea.in{min-height:180px;padding:16px;resize:none;line-height:1.45}
+.in:focus{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-tint)}
+.error{color:var(--bad);font-weight:600;margin:10px 0 0}
+.samples{display:grid;gap:10px}
+.sample{display:flex;gap:14px;align-items:center;padding:12px;border-radius:18px;border:2px dashed var(--line-strong);background:none;color:var(--ink);cursor:pointer;font:600 15px var(--body);text-align:left}
+.sample .thumb{width:64px;height:80px;border-radius:10px;flex:none;display:grid;place-items:center;font:700 10px/1.2 var(--display);color:#FBFAF7;padding:6px;text-align:center}
+.drop{border:3px dashed var(--line-strong);border-radius:24px;padding:28px 16px;text-align:center;margin-bottom:16px;color:var(--muted)}
+.drop span{font-size:48px;display:block}
+
+/* mic */
+.mic{width:150px;height:150px;border-radius:50%;border:none;background:var(--orange);color:#0B1233;font-size:60px;cursor:pointer;display:block;margin:10px auto 16px;position:relative}
+.mic.rec{animation:pulse 1s ease infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,106,0,.5)}100%{box-shadow:0 0 0 30px rgba(255,106,0,0)}}
+.center{text-align:center}
+
+/* reading */
+.reading{display:grid;gap:12px;margin-top:10px}
+.reading div{display:flex;gap:12px;align-items:center;padding:14px;border-radius:16px;background:var(--fill);font-weight:600;opacity:.35;transition:opacity .3s}
+.reading div.ok{opacity:1}
+.reading b{margin-left:auto;color:var(--orange-ink)}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line-strong);border-top-color:var(--orange);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* listing preview = how it will look on UP */
+.card{border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--card);box-shadow:0 1px 0 var(--line)}
+.card .top{padding:16px}
+.kchip{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.k-job{background:var(--navy);color:var(--on-navy)}
+.k-event{background:var(--lime-tint)}
+.k-opportunity{background:var(--orange-tint);color:var(--orange-ink)}
+.k-resource{border:1px solid var(--line-strong)}
+.card h3{font:700 20px/1.25 var(--display);margin:0 0 4px}
+.card .org{color:var(--muted);font-size:14px}
+.line{display:flex;gap:12px;align-items:center;padding:13px 16px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;font:inherit;color:inherit}
+.line .ic{width:24px;text-align:center;flex:none}
+.line .v{flex:1;min-width:0;font-weight:600;word-break:break-word}
+.line .v.miss{color:var(--bad)}
+.line .pen{color:var(--faint);font-size:14px}
+.line input{width:100%;border:2px solid var(--orange);border-radius:12px;padding:10px;font:600 16px var(--body);background:var(--card);color:var(--ink);outline:none}
+.found{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin:12px 2px 0}
+
+/* yes/no giant */
+.yn{display:grid;gap:12px}
+.yn button{min-height:84px;border-radius:22px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 20px var(--body);cursor:pointer;display:flex;align-items:center;gap:16px;padding:0 20px;text-align:left}
+.yn button span{font-size:34px}
+.yn button small{display:block;font-weight:600;font-size:15px;color:var(--orange-ink)}
+.yn button:hover{border-color:var(--orange);background:var(--orange-tint)}
+
+.done{text-align:center;padding-top:14px}
+.tick{width:110px;height:110px;border-radius:50%;background:var(--lime);color:#0B1233;display:grid;place-items:center;font-size:56px;margin:0 auto 20px;animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.4)}to{transform:none}}
+.ref{display:inline-block;font:700 16px var(--display);background:var(--fill);border-radius:12px;padding:8px 14px;margin-top:6px;letter-spacing:.04em}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+
+/* notes */
+.notes h1{font-size:34px;line-height:1.1;margin-bottom:12px}
+.notes h1 span{color:var(--orange)}
+.lede{font-size:18px;color:var(--muted);max-width:62ch;margin:0 0 8px}
+.notes h2{font-size:18px;margin:40px 0 14px}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+@media (max-width:640px){.big3{grid-template-columns:1fr}}
+.big3 div{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
+.big3 b{display:block;font:700 30px var(--display);color:var(--orange-ink)}
+.big3 span{color:var(--muted);font-size:14px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+th{background:var(--fill);border-top:none}
+td:first-child{font-weight:600}
+.list{display:grid;gap:10px}
+.list div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:15px}
+.list div b{display:block;margin-bottom:2px}
+.list.q div{border-left:4px solid var(--orange)}
+.list .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="stage-top">
+      <span>Option 2 · clickable</span>
+      <span style="display:flex;gap:6px"><a href="index.html">← Option 1</a><button id="restart" type="button">Start over</button></span>
+    </div>
+    <div class="phone">
+      <div class="bar">
+        <button class="back" id="back" type="button" aria-label="Go back">←</button>
+        <div class="logo">UP<span>.</span></div>
+        <button class="help" type="button" onclick="toast('Opens WhatsApp — a real person answers')">💬 Help</button>
+      </div>
+      <div class="dots" id="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="screen" id="screen"></div>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h1>Option 2: <span>just show us.</span></h1>
+    <p class="lede">Most people already have the thing: a flyer on their phone, a link, or they can just say it. So we <b>don't ask any questions up front</b>. They show it to us, the AI fills in the form, and they only answer <b>"Is this right?"</b> and give <b>one phone number</b>.</p>
+    <p class="lede">Nobody needs to know what a "listing", "opportunity" or "revenue share" is. The AI works out whether it's a job, an event, an opportunity or a course, and our team checks every one before it goes live anyway.</p>
+
+    <div class="big3">
+      <div><b>1</b><span>box to type in (WhatsApp number), if they send a picture</span></div>
+      <div><b>4</b><span>taps from the first screen to "Send", for a free post</span></div>
+      <div><b>0</b><span>words they must understand: no "listing", "tier" or "share"</span></div>
+    </div>
+
+    <h2>How it works</h2>
+    <div class="list">
+      <div><b>1 · Show us</b><span class="muted">Four giant buttons: 📷 Photo, 🔗 Link, 🎤 Talk, ✍️ Type. Or skip the site completely and send it on WhatsApp.</span></div>
+      <div><b>2 · We read it</b><span class="muted">The AI pulls out the name, organiser, date, place, link and type. The person watches it fill in line by line, so they know something is happening.</span></div>
+      <div><b>3 · "Is this right?"</b><span class="muted">They see it exactly as it will look on UP. One big "Yes". Any line can be tapped and fixed. Anything the AI couldn't find shows in red and gets asked as its own question.</span></div>
+      <div><b>4 · Only the missing bits</b><span class="muted">At most one or two big yes/no questions, e.g. "Do people pay to come?" or "7 days or 30 days?" (only if it costs money).</span></div>
+      <div><b>5 · Your WhatsApp number</b><span class="muted">The only box they have to type in. Receipt and "it's live" updates go there.</span></div>
+      <div><b>6 · Send / Pay</b><span class="muted">One button showing the price. Paystack if it's paid. Done screen says "We'll WhatsApp you".</span></div>
+    </div>
+
+    <h2>Option 1 vs Option 2</h2>
+    <div class="tablewrap"><table>
+      <tr><th></th><th>Option 1 · one question per screen</th><th>Option 2 · just show us</th></tr>
+      <tr><td>Paid job, start to pay</td><td>11 screens, ~8 things typed</td><td>~5 screens, 1–2 things typed</td></tr>
+      <tr><td>Person must know</td><td>Job vs event vs opportunity</td><td>Nothing, the AI works it out</td></tr>
+      <tr><td>Works for someone who can't spell well</td><td>Partly (chips help)</td><td>Yes: photo or voice</td></tr>
+      <tr><td>Contact</td><td>Name + email + phone</td><td>WhatsApp number only (name read from WhatsApp / the flyer)</td></tr>
+      <tr><td>Promotion &amp; selling courses</td><td>Full paths</td><td>Course: detected, then one question about the share. Promotion: offered on the done screen</td></tr>
+      <tr><td>Build effort</td><td>Front end only</td><td>Front end + AI read step + WhatsApp messages</td></tr>
+      <tr><td>Risk</td><td>Low</td><td>AI gets something wrong, which the "Is this right?" screen and admin review catch</td></tr>
+    </table></div>
+
+    <h2>What it needs to build</h2>
+    <div class="list">
+      <div><b>An AI "read this" endpoint</b><span class="muted">The backend already calls Gemini (free tier) for tagging (<code>lib/admin/tagging.ts</code>). Reading a flyer photo, a link or a transcript into our fields is the same model with a different prompt, returning the existing <code>DETAIL_FIELDS</code> shape.</span></div>
+      <div><b>Voice</b><span class="muted">Record in the browser, send the audio to the same Gemini call (it takes audio). No separate speech service.</span></div>
+      <div><b>WhatsApp instead of email</b><span class="muted">Today the receipt goes out by email (SES). Sending it on WhatsApp needs the WhatsApp Business API, or for v1: keep email optional and have the team message by hand from the review queue.</span></div>
+      <div><b>Unchanged</b><span class="muted">Prices, Paystack, the order book, the admin review queue. The last screen still sends the same <code>SubmissionPayload</code>.</span></div>
+    </div>
+
+    <h2>Decisions I need from you</h2>
+    <div class="list q">
+      <div><b>Email: drop it or keep it optional?</b> Paystack wants an email for card payments. Proposal: free posts need only WhatsApp; paid ones ask for email on the pay screen.</div>
+      <div><b>Option 2 alone, or both?</b> I'd lead with "Show us" and keep Option 1's step-by-step questions as the "Fix something" and "Type it" path. You'd get both in one build.</div>
+      <div><b>WhatsApp fallback button:</b> should "Send it on WhatsApp instead" skip the site completely (the team types it in)? Easiest for the user, but it costs the team time.</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const naira=n=>"₦"+n.toLocaleString("en-NG");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* What the AI "finds" for each demo input */
+const SAMPLES={
+  flyer:{kind:"event",title:"Lagos Youth Career Fair",org:"Future Africa Hub",date:"Sat 24 Oct 2026",place:"Landmark Centre, Lagos",link:"bit.ly/lycf26",paid:null},
+  job:{kind:"job",title:"Product Designer",org:"Acme Payments",date:"Apply by 31 Oct 2026",place:"Remote",link:"acme.ng/careers/designer",paid:true},
+  voice:{kind:"opportunity",title:"Women in Tech Scholarship",org:"Tech4Her",date:"Apply by 15 Nov 2026",place:"Online",link:"",paid:false},
+  course:{kind:"resource",title:"Excel for Beginners",org:"Chidi Learns",date:"",place:"Online",link:"selar.co/excel",paid:null,price:"₦10,000"},
+};
+function guess(text){
+  const t=text.toLowerCase();
+  if(/course|guide|template|class|ebook/.test(t)) return {...SAMPLES.course,title:text.split(/[.\n]/)[0].slice(0,60)};
+  if(/job|hiring|role|vacancy|position|careers/.test(t)) return {...SAMPLES.job,title:/careers|http|\.\w+\//.test(t)?SAMPLES.job.title:text.split(/[.\n]/)[0].slice(0,60)};
+  if(/scholarship|grant|fellowship|competition/.test(t)) return {...SAMPLES.voice,title:text.split(/[.\n]/)[0].slice(0,60)};
+  return {...SAMPLES.flyer,title:text.split(/[.\n]/)[0].slice(0,60)||SAMPLES.flyer.title};
+}
+
+let D={}, hist=[], editing=null;
+const KIND_LABEL={job:"Job",event:"Event",opportunity:"Opportunity",resource:"Course / guide"};
+const needsPaid=()=>D.kind==="event"&&D.paid===null;
+const needsLength=()=>D.paid===true;
+const needsShare=()=>D.kind==="resource";
+const price=()=>D.paid===true?(D.length===30?15000:5000):0;
+
+function flow(){
+  const f=["start","input","reading","confirm"];
+  if(needsPaid()||D.askedPaid) f.push("paid");
+  if(needsShare()) f.push("share");
+  if(D.paid===true) f.push("length");
+  f.push("phone","send");
+  return f;
+}
+function dots(id){
+  const map={start:0,input:0,reading:1,confirm:1,paid:2,share:2,length:2,phone:3,send:3,paying:3,done:4};
+  const n=map[id]??0; [...$("dots").children].forEach((d,i)=>d.classList.toggle("on",i===Math.min(n,3)));
+  $("dots").style.visibility=id==="done"?"hidden":"visible";
+}
+function go(id){hist.push(id);render();$("screen").scrollTop=0}
+function next(){const f=flow();go(f[f.indexOf(cur())+1])}
+const cur=()=>hist[hist.length-1];
+function back(){if(hist.length>1){hist.pop();if(cur()==="reading")hist.pop();render()}}
+
+function render(){
+  const id=cur(); dots(id);
+  $("back").classList.toggle("hide",hist.length<=1||["reading","paying","done"].includes(id));
+  ({start,input,reading,confirm,paid,share,length,phone,send,paying,done})[id]();
+}
+const S=(h,f="")=>{$("screen").innerHTML=h;$("foot").innerHTML=f};
+
+function start(){
+  S(`<h1 class="q">Show us what you want to post</h1>
+     <p class="hint">A picture, a link, or just say it. We'll do the rest.</p>
+     <div class="ways">
+       <button class="way" data-w="photo"><span>📷</span>Send a photo</button>
+       <button class="way" data-w="link"><span>🔗</span>Paste a link</button>
+       <button class="way" data-w="voice"><span>🎤</span>Say it</button>
+       <button class="way" data-w="type"><span>✍️</span>Type it</button>
+     </div>
+     <div class="or">or</div>`,
+   `<button class="btn wa" onclick="toast('Opens WhatsApp: send the flyer, we post it for you')">💬 Send it on WhatsApp instead</button>
+    <p class="note">Free to post. You only pay if it's a job or paid event.</p>`);
+  document.querySelectorAll(".way").forEach(b=>b.onclick=()=>{D={way:b.dataset.w};go("input")});
+}
+
+function input(){
+  const w=D.way;
+  if(w==="photo"){
+    S(`<h1 class="q">Pick the picture</h1><p class="hint">A flyer, poster or screenshot is perfect.</p>
+      <div class="drop"><span>🖼️</span>Tap to open your photos</div>
+      <p style="font-weight:700;margin:0 0 10px">Or try a sample:</p>
+      <div class="samples">
+        <button class="sample" data-s="flyer"><span class="thumb" style="background:linear-gradient(160deg,#0B1233,#FF6A00)">LAGOS YOUTH CAREER FAIR<br>24·10</span>Event flyer</button>
+        <button class="sample" data-s="job"><span class="thumb" style="background:linear-gradient(160deg,#0B1233,#3a4a8a)">WE'RE HIRING<br>Product Designer</span>Job post screenshot</button>
+      </div>`);
+    document.querySelectorAll(".sample").forEach(b=>b.onclick=()=>{Object.assign(D,SAMPLES[b.dataset.s]);go("reading")});
+    document.querySelector(".drop").onclick=()=>{Object.assign(D,SAMPLES.flyer);go("reading")};
+  }
+  if(w==="link"){
+    S(`<h1 class="q">Paste the link</h1><p class="hint">The page where people apply, sign up or buy.</p>
+      <input class="in" id="lk" inputmode="url" placeholder="Paste here" value="acme.ng/careers/designer"><div id="er"></div>
+      <p class="note" style="text-align:left">Long-press the box and tap <b>Paste</b>.</p>`,
+      `<button class="btn" id="go">Next</button>`);
+    $("go").onclick=()=>{const v=$("lk").value.trim(); if(!v){$("er").innerHTML='<p class="error">⚠ Paste a link first.</p>';return}
+      Object.assign(D,/career|job|hir/i.test(v)?SAMPLES.job:{...SAMPLES.flyer,link:v}); D.link=v; go("reading")};
+  }
+  if(w==="voice"){
+    S(`<h1 class="q">Tap and tell us about it</h1><p class="hint">Like a voice note. Say what it is, when, where and how to join.</p>
+      <button class="mic" id="mic" aria-label="Record">🎤</button>
+      <p class="center" id="mt" style="font-weight:700">Tap to start</p>
+      <p class="note" id="tr" style="font-style:italic"></p>`);
+    let rec=false;$("mic").onclick=()=>{
+      if(!rec){rec=true;$("mic").classList.add("rec");$("mic").textContent="⏹";$("mt").textContent="Listening… tap when done";
+        setTimeout(()=>{$("tr").textContent="“It's the Women in Tech scholarship by Tech4Her, it's online, you apply by 15 November…”"},900);}
+      else{Object.assign(D,SAMPLES.voice);go("reading")}
+    };
+  }
+  if(w==="type"){
+    S(`<h1 class="q">Tell us about it</h1><p class="hint">Write it any way you like. Spelling doesn't matter.</p>
+      <textarea class="in" id="tx" placeholder="e.g. we r hiring a sales girl in ikeja, 80k a month, send cv to 0803…"></textarea><div id="er"></div>`,
+      `<button class="btn" id="go">Next</button>`);
+    $("go").onclick=()=>{const v=$("tx").value.trim(); if(v.length<5){$("er").innerHTML='<p class="error">⚠ Write a few words about it.</p>';return}
+      Object.assign(D,guess(v)); go("reading")};
+  }
+}
+
+function reading(){
+  const rows=[["🏷️","Name",D.title],["🏢","Who's behind it",D.org],["📅","Date",D.date||"—"],["📍","Where",D.place],["🔗","Link",D.link||"—"],["🧩","Type",KIND_LABEL[D.kind]]];
+  S(`<h1 class="q">Reading it…</h1><p class="hint">This takes a few seconds.</p>
+     <div class="reading">${rows.map(r=>`<div><span class="spin"></span>${r[1]}<b></b></div>`).join("")}</div>`);
+  const els=[...document.querySelectorAll(".reading div")];
+  els.forEach((el,i)=>setTimeout(()=>{if(cur()!=="reading")return;el.classList.add("ok");el.querySelector(".spin").outerHTML=`<span>${rows[i][0]}</span>`;el.querySelector("b").textContent=rows[i][2]==="—"?"not found":"✓"},350+i*300));
+  setTimeout(()=>{if(cur()==="reading")next()},350+rows.length*300+400);
+}
+
+function confirm(){
+  D.askedPaid = D.askedPaid || D.paid===null && D.kind==="event";
+  const L=[["title","🏷️",D.title],["org","🏢",D.org],["date","📅",D.date],["place","📍",D.place],["link","🔗",D.link]];
+  if(D.kind==="resource") L.push(["price","💰",D.price]);
+  const miss=L.filter(l=>!l[2]).length;
+  S(`<h1 class="q">Is this right?</h1><p class="hint">This is how people will see it. Tap any line to fix it.</p>
+     <div class="card"><div class="top"><span class="kchip k-${D.kind}" id="kc">${KIND_LABEL[D.kind]} ▾</span></div>
+     ${L.map(([k,ic,v])=>`<button class="line" data-k="${k}"><span class="ic">${ic}</span>${editing===k?`<input id="ed" value="${esc(v)}">`:`<span class="v ${v?"":"miss"}">${v?esc(v):"Missing: tap to add"}</span><span class="pen">✏️</span>`}</button>`).join("")}
+     </div>
+     ${miss?`<p class="found">⚠ We couldn't find ${miss===1?"one thing":miss+" things"}. That's OK, you can add it or leave it.</p>`:`<p class="found">✓ We found everything.</p>`}`,
+   `<button class="btn" id="yes">✅ Yes, that's right</button>`);
+  document.querySelectorAll(".line").forEach(b=>b.onclick=e=>{if(e.target.id==="ed")return;editing=b.dataset.k;confirm();const ed=$("ed");ed.focus();ed.select();
+    const save=()=>{D[editing]=ed.value.trim();editing=null;confirm()};ed.onblur=save;ed.onkeydown=e=>{if(e.key==="Enter")save()}});
+  $("kc").onclick=()=>{const ks=Object.keys(KIND_LABEL);D.kind=ks[(ks.indexOf(D.kind)+1)%ks.length];
+    D.paid=D.kind==="job"?true:D.kind==="event"?null:false;confirm();toast("Tap again to change the type")};
+  $("yes").onclick=()=>{editing=null;next()};
+}
+
+function yn(q,hint,opts){
+  S(`<h1 class="q">${q}</h1><p class="hint">${hint}</p><div class="yn">${opts.map((o,i)=>`<button data-i="${i}"><span>${o[0]}</span><div>${o[1]}${o[2]?`<small>${o[2]}</small>`:""}</div></button>`).join("")}</div>`);
+  document.querySelectorAll(".yn button").forEach(b=>b.onclick=()=>{opts[b.dataset.i][3]();next()});
+}
+function paid(){yn("Do people pay to come?","",[["🙌","No, it's free","Free to post",()=>D.paid=false],["🎫","Yes, they buy tickets","From "+naira(5000),()=>D.paid=true]])}
+function share(){yn("Who will tell people about it?","It's free to put it up. We take a share only when someone buys.",[["🙋","I will","We take 20%",()=>D.share=20],["📣","UP will","We take 30%",()=>D.share=30]])}
+function length(){yn("How long should it stay up?","",[["📅","1 week",naira(5000),()=>D.length=7],["🗓️","1 month",naira(15000),()=>D.length=30]])}
+
+function phone(){
+  S(`<h1 class="q">Your WhatsApp number</h1><p class="hint">We'll message you when it's live. That's all we need.</p>
+     <input class="in" id="ph" type="tel" inputmode="tel" placeholder="0803 123 4567" value="${esc(D.phone||"")}"><div id="er"></div>
+     ${D.paid?`<input class="in" id="em" type="email" inputmode="email" placeholder="Email (for your receipt)" style="margin-top:12px" value="${esc(D.email||"")}">`:""}`,
+   `<button class="btn" id="go">Next</button><p class="note">🔒 We never share your number.</p>`);
+  $("ph").focus();
+  $("go").onclick=()=>{D.phone=$("ph").value.trim();if($("em"))D.email=$("em").value.trim();
+    if(D.phone.replace(/\D/g,"").length<10){$("er").innerHTML='<p class="error">⚠ That number looks too short. Check it has 11 digits.</p>';return}
+    if($("em")&&!/^\S+@\S+\.\S+$/.test(D.email)){$("er").innerHTML='<p class="error">⚠ Add your email so Paystack can send your receipt.</p>';return}
+    next()};
+}
+
+function send(){
+  const p=price();
+  S(`<h1 class="q">${p?"Last step: pay":"All set!"}</h1><p class="hint">${p?"We check it before it goes live. If we can't post it, we'll talk to you.":"We check it before it goes live, usually quickly."}</p>
+     <div class="card"><div class="top"><span class="kchip k-${D.kind}">${KIND_LABEL[D.kind]}</span><h3>${esc(D.title)}</h3><div class="org">${esc(D.org||"")}${D.place?" · "+esc(D.place):""}</div></div>
+     <div class="line" style="cursor:default"><span class="ic">💰</span><span class="v">${p?`${D.length===30?"1 month":"1 week"} on UP`:D.kind==="resource"?`Free to list · we take ${D.share}% of sales`:"Free"}</span><b>${p?naira(p):"₦0"}</b></div></div>`,
+   `<button class="btn" id="go">${p?"Pay "+naira(p):"🚀 Send it"}</button>${p?'<p class="note">You pay on Paystack, then come straight back.</p>':""}`);
+  $("go").onclick=()=>go(p?"paying":"done");
+}
+function paying(){S(`<div class="center" style="padding-top:120px"><span class="spin" style="width:48px;height:48px;display:inline-block"></span><p><b>Opening Paystack…</b></p></div>`);setTimeout(()=>{if(cur()==="paying")go("done")},1500)}
+function done(){
+  S(`<div class="done"><div class="tick">✓</div><h1 class="q">We've got it!</h1>
+     <p class="hint">We'll WhatsApp you on <b>${esc(D.phone)}</b> when it's live.</p>
+     <div class="ref">GU-${Math.random().toString(36).slice(2,8).toUpperCase()}</div></div>`,
+   `<button class="btn" id="again">➕ Post another</button><button class="btn ghost" onclick="toast('Opens the promotion sizes: Small / Medium / Big')">🚀 Want more people to see it?</button>`);
+  $("again").onclick=()=>{const ph=D.phone,em=D.email;D={phone:ph,email:em};hist=[];go("start")};
+}
+
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),2600)}
+$("back").onclick=back;
+$("restart").onclick=()=>{D={};hist=[];editing=null;go("start")};
+go("start");
+</script>
+</body>
+</html>
