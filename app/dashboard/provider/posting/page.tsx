@@ -32,7 +32,7 @@ import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 import { useUserLocation } from "@/hooks/use-user-location"
-import { DuplicateTitleWarning, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
+import { DuplicateTitleWarning, splitDuplicates, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
 import { ProviderShell, providerTabForPath, PROVIDER_NAV_ROUTES } from '@/components/provider/provider-shell'
 import { Panel, QuotaMeter, OnboardingBanner } from '@/components/provider/provider-ui'
 import {
@@ -158,20 +158,24 @@ function PostingContent() {
   // and audience fields, whose values never lined up with anything.
   const [canonicalTags, setCanonicalTags] = useState<string[]>([])
   const [place, setPlace] = useState<ListingLocationValue>(EMPTY_LISTING_LOCATION)
-  // Title and description as typed, only so the tag picker can suggest from them.
+  // Title and description as typed, for the tag picker's suggestions and the duplicate check.
   const [draftText, setDraftText] = useState<{ title: string; description: string }>({ title: '', description: '' })
   const [period, setPeriod] = useState<PayPeriod>('monthly')
   const country = place.country
 
-  // Same title, same type, same country. A warning, not a block: the second
-  // submit after seeing it posts anyway, and admins sort it on the Duplicates page.
+  // Same type and country, similar title, description or tags — checked from the
+  // first words of the title on. A warning, not a block: the second submit after
+  // seeing it posts anyway, and admins sort it on the Duplicates page.
   const duplicates = useDuplicateTitleCheck({
     type: selectedType,
     title: draftText.title,
+    description: draftText.description,
+    canonicalTags,
     country: country?.name,
     countryCode: country?.code,
     isRemote: place.isRemote,
   })
+  const { byTitle: titleDuplicates, byContent: contentDuplicates } = splitDuplicates(duplicates)
   const [duplicateConfirmedFor, setDuplicateConfirmedFor] = useState<string | null>(null)
 
   // Rates load once per page and are shared with every other money field.
@@ -324,7 +328,7 @@ function PostingContent() {
       setDuplicateConfirmedFor(draftText.title)
       setSubmitStatus('error')
       setErrorMessage(
-        'A listing with this title already exists in this country (see under Title). If yours is a different one, press Submit again to post it anyway.',
+        `A similar listing already exists in this country (see under ${titleDuplicates.total > 0 ? 'Title' : 'Description'}). If yours is a different one, press Submit again to post it anyway.`,
       )
       return
     }
@@ -378,6 +382,10 @@ function PostingContent() {
           registrationDeadline: str(data.registrationDeadline),
         },
         requirements: str(data.requirements),
+        benefits: String(data.benefits ?? '')
+          .split(/\r?\n/)
+          .map((line) => line.replace(/^\s*(?:[-*•·]|\d+[.)])\s*/, '').trim())
+          .filter(Boolean),
         capacity: data.capacity ? parseInt(String(data.capacity), 10) : null,
         // A resource with a price is a premium one; the flag and the figure were
         // previously unrelated, so a paid resource could publish with no price.
@@ -609,8 +617,8 @@ function PostingContent() {
                           />
                         </div>
                         <DuplicateTitleWarning
-                          matches={duplicates.matches}
-                          total={duplicates.total}
+                          matches={titleDuplicates.matches}
+                          total={titleDuplicates.total}
                           className="sm:col-span-2 sm:order-last"
                         />
                         <div className="space-y-1.5">
@@ -653,6 +661,11 @@ function PostingContent() {
                             setDraftText((current) => ({ ...current, description }))
                           }}
                           className="resize-none text-foreground placeholder:text-muted-foreground"
+                        />
+                        <DuplicateTitleWarning
+                          matches={contentDuplicates.matches}
+                          total={contentDuplicates.total}
+                          field="content"
                         />
                       </div>
 
@@ -830,16 +843,45 @@ function PostingContent() {
                         className="rounded-up-xl border border-border bg-card px-4 py-4 sm:px-5"
                       />
 
-                      {/* Requirements (opportunity only) */}
-                      {selectedType === 'opportunity' && (
+                      {/* Requirements / eligibility. Resources have nowhere to keep them. */}
+                      {selectedType !== 'resource' && (
                         <div className="space-y-1.5">
-                          <FieldLabel>Requirements</FieldLabel>
+                          <FieldLabel>
+                            {selectedType === 'opportunity' ? 'Eligibility / requirements' : 'Requirements'}
+                          </FieldLabel>
                           <Textarea
                             name="requirements"
-                            placeholder="List the requirements..."
+                            placeholder={
+                              selectedType === 'opportunity'
+                                ? 'Who can apply, e.g.\nFinal-year students or recent graduates\nAged 18–30\nNigerian citizens'
+                                : selectedType === 'job'
+                                  ? 'One per line, e.g.\nBSc in Accounting or related field\n2+ years of experience\nExcel and QuickBooks'
+                                  : 'One per line, e.g.\nBring a laptop\nBasic knowledge of Python'
+                            }
+                            rows={4}
+                            className="resize-none text-foreground placeholder:text-muted-foreground"
+                          />
+                          {selectedType !== 'opportunity' ? (
+                            <p className="text-xs text-muted-foreground">Each line shows as its own point.</p>
+                          ) : null}
+                        </div>
+                      )}
+
+                      {/* Benefits / rewards. Only opportunities and jobs keep them. */}
+                      {(selectedType === 'opportunity' || selectedType === 'job') && (
+                        <div className="space-y-1.5">
+                          <FieldLabel>{selectedType === 'job' ? 'Benefits' : 'Benefits / rewards'}</FieldLabel>
+                          <Textarea
+                            name="benefits"
+                            placeholder={
+                              selectedType === 'job'
+                                ? 'One per line, e.g.\nHealth insurance\nHybrid work\nTraining budget'
+                                : 'One per line, e.g.\nFully funded tuition\nMonthly stipend\nCertificate and mentorship'
+                            }
                             rows={3}
                             className="resize-none text-foreground placeholder:text-muted-foreground"
                           />
+                          <p className="text-xs text-muted-foreground">Each line shows as its own point.</p>
                         </div>
                       )}
 

@@ -97,7 +97,10 @@ export type ListingDraft = {
   isPaid?: boolean
   period?: PayPeriod | ""
   dates?: ListingDates
-  /** Free-text eligibility, opportunities only. Lands in `requirements.other`. */
+  /**
+   * Free-text requirements / eligibility. Opportunities keep it whole in
+   * `requirements.other`; jobs and events get one item per line.
+   */
   requirements?: string
   benefits?: string[]
   capacity?: number | null
@@ -215,6 +218,15 @@ function buildRequirements(draft: ListingDraft) {
   }
 }
 
+/** One requirement per line, bullets and blank lines dropped. */
+function requirementLines(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*•·]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 30)
+}
+
 function buildDates(dates: ListingDates | undefined) {
   if (!dates) return undefined
   const out = {
@@ -290,6 +302,8 @@ export function buildListingPayload(draft: ListingDraft): Record<string, unknown
         ...(text(draft.type) && { jobType: text(draft.type) }),
         ...(location && { location }),
         ...(dates && { dates }),
+        // The model keeps a job's requirements as a list; the page shows them as bullets.
+        ...(requirementLines(draft.requirements).length > 0 && { requirements: requirementLines(draft.requirements) }),
         ...(pricing.benefits.length > 0 && { benefits: pricing.benefits }),
         pay: {
           isPaid: pricing.isPaid,
@@ -311,6 +325,10 @@ export function buildListingPayload(draft: ListingDraft): Record<string, unknown
         ...(text(draft.type) && { eventType: text(draft.type) }),
         ...(location && { location }),
         ...(dates && { dates }),
+        // An event's requirements are structured; free text is its prerequisites.
+        ...(requirementLines(draft.requirements).length > 0 && {
+          requirements: { prerequisites: requirementLines(draft.requirements) },
+        }),
         isPaid: pricing.isPaid,
         price: pricing.amount,
         currency: pricing.currency,

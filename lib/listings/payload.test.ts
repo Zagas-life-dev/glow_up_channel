@@ -139,6 +139,27 @@ describe("requirements", () => {
     ) as any
     expect(payload.requirements).toBeUndefined()
   })
+
+  it("gives a job one requirement per line, bullets dropped", () => {
+    const payload = buildListingPayload(
+      draft({ kind: "job", requirements: "- BSc in Accounting, or HND\n\n• 2 years' experience\n3. ICAN a plus" }),
+    ) as any
+    expect(payload.requirements).toEqual(["BSc in Accounting, or HND", "2 years' experience", "ICAN a plus"])
+  })
+
+  it("puts an event's requirements in its prerequisites", () => {
+    const payload = buildListingPayload(draft({ kind: "event", requirements: "Laptop\nBasic Python" })) as any
+    expect(payload.requirements).toEqual({ prerequisites: ["Laptop", "Basic Python"] })
+    expect((buildListingPayload(draft({ kind: "event", requirements: "" })) as any).requirements).toBeUndefined()
+  })
+})
+
+describe("benefits", () => {
+  it("reach the job and the opportunity where their pages read them", () => {
+    const benefits = ["Health insurance", "Hybrid work"]
+    expect((buildListingPayload(draft({ kind: "job", benefits })) as any).benefits).toEqual(benefits)
+    expect((buildListingPayload(draft({ kind: "opportunity", benefits })) as any).financial.benefits).toEqual(benefits)
+  })
 })
 
 describe("taxonomy and tags", () => {

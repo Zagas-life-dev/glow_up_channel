@@ -60,57 +60,89 @@ export function DuplicateMatchList({ matches, className }: { matches: ListingDup
 }
 
 /** Anything shorter is not worth a request. */
-function significant(title: string): boolean {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "").length >= 4
+function significant(text: string, min: number): boolean {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "").length >= min
 }
 
+type DuplicateCheck = { matches: ListingDuplicate[]; total: number }
+
 /**
- * Listings with a title like `title` in this country (over half the words
- * shared, fillers ignored), checked as the poster types.
+ * Listings in this country that look like the draft, checked as the poster
+ * types: over half the title or description words shared (fillers ignored),
+ * or tags settling a borderline pair. Starts from the title's first word or
+ * so, and re-checks as the description and tags fill in.
  * A failed check is silent: the warning is advice, never a reason to block a post.
  */
 export function useDuplicateTitleCheck(params: {
   type: ListingKind | null
   title: string
+  description?: string
+  canonicalTags?: string[]
   country?: string
   countryCode?: string
   isRemote?: boolean
-}) {
-  const { type, title, country, countryCode, isRemote } = params
-  const query = type && significant(title) ? JSON.stringify([type, title, country, countryCode, isRemote]) : null
-  // Tagged with the query it answers, so a result never outlives the title it was for.
-  const [result, setResult] = useState<{ query: string; matches: ListingDuplicate[]; total: number } | null>(null)
+}): DuplicateCheck {
+  const { type, title, description, canonicalTags, country, countryCode, isRemote } = params
+  const query =
+    type && (significant(title, 4) || significant(description ?? "", 30))
+      ? JSON.stringify([type, title, description ?? "", canonicalTags ?? [], country, countryCode, isRemote])
+      : null
+  // Tagged with the query it answers, so a result never outlives the draft it was for.
+  const [result, setResult] = useState<({ query: string } & DuplicateCheck) | null>(null)
 
   useEffect(() => {
     if (!query || !type) return
     const controller = new AbortController()
     const timer = setTimeout(() => {
-      ApiClient.checkDuplicateTitle({ type, title, country, countryCode, isRemote }, controller.signal)
+      ApiClient.checkDuplicateTitle(
+        { type, title, description, canonicalTags, country, countryCode, isRemote },
+        controller.signal,
+      )
         .then((r) => setResult({ query, matches: r.matches, total: r.total }))
         .catch(() => {
           if (!controller.signal.aborted) setResult({ query, matches: [], total: 0 })
         })
-    }, 450)
+    }, 300)
     return () => {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [query, type, title, country, countryCode, isRemote])
+    // `query` already covers every input; the rest are read from the same render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query])
 
   return result && result.query === query ? { matches: result.matches, total: result.total } : { matches: [], total: 0 }
 }
 
-/** Inline warning under the title field. Renders nothing when there are no matches. */
+/**
+ * Split a check for the form: title matches warn under Title, the rest (found
+ * through the description or tags) under Description, where the poster is typing.
+ */
+export function splitDuplicates({ matches, total }: DuplicateCheck): { byTitle: DuplicateCheck; byContent: DuplicateCheck } {
+  const byTitle = matches.filter((m) => !m.reasons || m.reasons.includes("title"))
+  const byContent = matches.filter((m) => m.reasons && !m.reasons.includes("title"))
+  // The server lists five; any beyond that are counted with the title ones.
+  return {
+    byTitle: { matches: byTitle, total: byTitle.length + (total - matches.length) },
+    byContent: { matches: byContent, total: byContent.length },
+  }
+}
+
+/** Inline warning under a form field. Renders nothing when there are no matches. */
 export function DuplicateTitleWarning({
   matches,
   total,
+  field = "title",
   className,
 }: {
   matches: ListingDuplicate[]
   total: number
+  /** Which field the matches came through, for the wording. */
+  field?: "title" | "content"
   className?: string
 }) {
   if (matches.length === 0) return null
+  const what = field === "title" ? "a similar title" : "a similar description or the same tags"
   return (
     <div
       role="status"
@@ -122,7 +154,7 @@ export function DuplicateTitleWarning({
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-sm text-amber-900 dark:text-amber-200">
-          {total === 1 ? "A listing" : `${total} listings`} with a similar title already{" "}
+          {total === 1 ? "A listing" : `${total} listings`} with {what} already{" "}
           {total === 1 ? "exists" : "exist"} in this country. Check it isn&apos;t the same one before posting.
         </p>
       </div>

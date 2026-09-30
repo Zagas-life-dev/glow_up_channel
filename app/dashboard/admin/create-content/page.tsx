@@ -47,7 +47,7 @@ import { useAmountEntry } from "@/lib/currency/use-amount-entry"
 import { currencyForCountry } from "@/lib/currency/catalog"
 import { buildListingPayload, type ListingDraft } from "@/lib/listings/payload"
 import { INDUSTRY_SECTORS, TARGET_AUDIENCE_GROUPS } from "@/lib/listings/taxonomy"
-import { DuplicateTitleWarning, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
+import { DuplicateTitleWarning, splitDuplicates, useDuplicateTitleCheck } from "@/components/posting/DuplicateTitleWarning"
 
 type ContentType = "event" | "job" | "opportunity" | "resource"
 
@@ -151,6 +151,7 @@ export default function AdminCreateContentPage() {
   const duplicates = useDuplicateTitleCheck({
     type: contentType,
     title,
+    description,
     country: country?.name,
     countryCode: country?.code,
     isRemote:
@@ -159,6 +160,8 @@ export default function AdminCreateContentPage() {
           : contentType === "opportunity" ? oppRemote
             : undefined,
   })
+
+  const { byTitle: titleDuplicates, byContent: contentDuplicates } = splitDuplicates(duplicates)
 
   useEffect(() => {
     setHideNavbar(true)
@@ -284,7 +287,7 @@ export default function AdminCreateContentPage() {
               : contentType === "opportunity" ? (oppDeadline || undefined)
                 : undefined,
         },
-        requirements: contentType === "opportunity" ? eligibility.trim() : undefined,
+        requirements: contentType === "resource" ? undefined : eligibility.trim(),
         benefits: benefitsList,
         isPremium: contentType === "resource" && isPaid,
         // Admin posts publish directly rather than queueing for review.
@@ -364,7 +367,7 @@ export default function AdminCreateContentPage() {
                   className="rounded-xl"
                   required
                 />
-                <DuplicateTitleWarning matches={duplicates.matches} total={duplicates.total} />
+                <DuplicateTitleWarning matches={titleDuplicates.matches} total={titleDuplicates.total} />
               </div>
 
               {/* Description */}
@@ -378,6 +381,11 @@ export default function AdminCreateContentPage() {
                   rows={4}
                   className="rounded-xl resize-none"
                   required
+                />
+                <DuplicateTitleWarning
+                  matches={contentDuplicates.matches}
+                  total={contentDuplicates.total}
+                  field="content"
                 />
               </div>
 
@@ -452,6 +460,10 @@ export default function AdminCreateContentPage() {
                       <input type="checkbox" id="eventRemote" checked={eventRemote} onChange={(e) => setEventRemote(e.target.checked)} className="rounded" />
                       <Label htmlFor="eventRemote">Remote / online</Label>
                     </div>
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label>Requirements (one per line)</Label>
+                      <Textarea value={eligibility} onChange={(e) => setEligibility(e.target.value)} placeholder={"Bring a laptop\nBasic knowledge of Python"} rows={3} className="rounded-xl resize-none" />
+                    </div>
                     <div className="flex items-center gap-2 pt-8">
                       <input type="checkbox" id="isPaid" checked={isPaid} onChange={(e) => setIsPaid(e.target.checked)} className="rounded" />
                       <Label htmlFor="isPaid">Paid event</Label>
@@ -515,6 +527,10 @@ export default function AdminCreateContentPage() {
                     <div className="flex items-center gap-2 pt-8">
                       <input type="checkbox" id="jobRemote" checked={jobRemote} onChange={(e) => setJobRemote(e.target.checked)} className="rounded" />
                       <Label htmlFor="jobRemote">Remote</Label>
+                    </div>
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label>Requirements (one per line)</Label>
+                      <Textarea value={eligibility} onChange={(e) => setEligibility(e.target.value)} placeholder={"BSc in Accounting or related field\n2+ years of experience"} rows={3} className="rounded-xl resize-none" />
                     </div>
                     <div className="sm:col-span-2 space-y-2">
                       <div className="flex items-center gap-2">

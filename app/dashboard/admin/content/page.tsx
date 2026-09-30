@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { usePage } from "@/contexts/page-context"
-import ApiClient, { DuplicateListingError } from "@/lib/api-client"
+import ApiClient, { DuplicateListingError, type ListingDuplicate, type ListingKind } from "@/lib/api-client"
 import { DuplicateApprovalDialog, type PendingDuplicateApproval } from "@/components/admin/duplicate-approval-dialog"
+import { DuplicateMatchList } from "@/components/posting/DuplicateTitleWarning"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -180,6 +181,8 @@ type StatusFilter = "all" | "live" | "pending" | "hidden"
 type TypeFilter = "all" | "opportunity" | "event" | "job" | "resource"
 
 /** Visible on the public feeds — the same predicate the backend uses. */
+const LISTING_KINDS: ListingKind[] = ["opportunity", "event", "job", "resource"]
+
 function isLive(item: ContentItem): boolean {
   return !item._fromInactive && item.status === "active" && item.isApproved === true
 }
@@ -309,6 +312,9 @@ export default function AdminContent() {
   const [attachTarget, setAttachTarget] = useState<AttachTargetListing | null>(null)
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve")
+  // Pending listings that look like others, so the admin knows before pressing Approve.
+  const [lookalikes, setLookalikes] = useState<Record<string, ListingDuplicate[]>>({})
+  const lookalikesAsked = useRef(new Set<string>())
   const [duplicateApproval, setDuplicateApproval] = useState<(PendingDuplicateApproval & { item: ContentItem }) | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
   const [paymentAmountInput, setPaymentAmountInput] = useState(5000)
@@ -508,6 +514,18 @@ export default function AdminContent() {
     }
     fetchFirstPage()
   }, [authLoading, isAuthenticated, user, fetchFirstPage])
+
+  // Check each newly shown pending listing once; a failed check just shows nothing.
+  useEffect(() => {
+    const items = content
+      .filter((item) => !isLive(item) && LISTING_KINDS.includes(item.type as ListingKind) && !lookalikesAsked.current.has(item._id))
+      .map((item) => ({ id: item._id, type: item.type as ListingKind }))
+    if (items.length === 0) return
+    for (const { id } of items) lookalikesAsked.current.add(id)
+    ApiClient.getDuplicatesForListings(items)
+      .then((r) => setLookalikes((prev) => ({ ...prev, ...r.matches })))
+      .catch(() => {})
+  }, [content])
 
   useEffect(() => {
     if (showDetailsDialog && selectedContent) {
@@ -1196,6 +1214,14 @@ export default function AdminContent() {
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                             {item.description}
                           </p>
+                          {!isLive(item) && lookalikes[item._id]?.length ? (
+                            <details className="mb-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950/40">
+                              <summary className="cursor-pointer text-sm font-medium text-amber-900 dark:text-amber-200">
+                                Possible duplicate: looks like {lookalikes[item._id].length === 1 ? "1 listing" : `${lookalikes[item._id].length} listings`} in this country
+                              </summary>
+                              <DuplicateMatchList matches={lookalikes[item._id].slice(0, 5)} className="mt-2" />
+                            </details>
+                          ) : null}
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             {item.poster && (
                               <span className="flex items-center gap-1.5">

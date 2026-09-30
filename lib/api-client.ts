@@ -1977,23 +1977,37 @@ export class ApiClient {
   }
 
   /**
-   * Listings with a similar title in this country. Posters get live ones
-   * only; admins also get pending and hidden ones.
+   * Listings in this country that look like the draft: similar title,
+   * description, or tags on a borderline pair. Posters get live ones only;
+   * admins also get pending and hidden ones.
    */
   static async checkDuplicateTitle(params: {
     type: ListingKind;
     title: string;
+    description?: string;
+    canonicalTags?: string[];
     country?: string;
     countryCode?: string;
     isRemote?: boolean;
     excludeId?: string;
   }, signal?: AbortSignal): Promise<{ matches: ListingDuplicate[]; total: number }> {
-    const qs = new URLSearchParams({ type: params.type, title: params.title });
-    if (params.country) qs.set('country', params.country);
-    if (params.countryCode) qs.set('countryCode', params.countryCode);
-    if (params.isRemote) qs.set('isRemote', 'true');
-    if (params.excludeId) qs.set('excludeId', params.excludeId);
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates/check?${qs}`, { signal });
+    // POST: the description is too long for a query string.
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates/check`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+      signal,
+    });
+    return this.handleResponse(response);
+  }
+
+  /** Admin: which of these listings look like others, keyed by listing id. Listings with none are absent. */
+  static async getDuplicatesForListings(
+    items: { id: string; type: ListingKind }[],
+  ): Promise<{ matches: Record<string, ListingDuplicate[]> }> {
+    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/duplicates/for-listings`, {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
     return this.handleResponse(response);
   }
 
