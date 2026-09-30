@@ -189,6 +189,9 @@ export interface PastContentCleanupResult {
 
 export type ListingKind = 'opportunity' | 'event' | 'job' | 'resource';
 
+/** Why two listings look alike: >50% shared title or description words, or shared tags on a borderline pair. */
+export type DuplicateReason = 'title' | 'description' | 'tags';
+
 /** One listing as the duplicate check describes it. */
 export interface ListingDuplicate {
   _id: string;
@@ -201,9 +204,11 @@ export interface ListingDuplicate {
   link: string | null;
   locationGroupId: string | null;
   createdAt: string | null;
+  /** What it shares with the listing it was compared to. Absent on a group's first (oldest) listing. */
+  reasons?: DuplicateReason[];
 }
 
-/** Listings of one type sharing a normalised title and a country, oldest first. */
+/** A listing and the newer ones of its type and country that look like it, oldest first. */
 export interface DuplicateGroup {
   id: string;
   type: ListingKind;
@@ -212,11 +217,12 @@ export interface DuplicateGroup {
   countryKey: string;
   title: string;
   country: string | null;
+  reasons: DuplicateReason[];
   liveCount: number;
   items: ListingDuplicate[];
 }
 
-/** Approving would put a second listing with this title live in this country. */
+/** Approving would put a second, similar listing live in this country. */
 export class DuplicateListingError extends Error {
   constructor(message: string, readonly duplicates: ListingDuplicate[]) {
     super(message);
@@ -1929,7 +1935,7 @@ export class ApiClient {
   }
 
   /**
-   * Throws `DuplicateListingError` when a live listing already has this title in
+   * Throws `DuplicateListingError` when a similar live listing already exists in
    * this country; resend with `allowDuplicate: true` once the admin confirms.
    */
   static async approveContent(
@@ -1951,7 +1957,7 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  /** Admin: every group of same-type, same-title, same-country listings. */
+  /** Admin: every group of similar same-type, same-country listings. */
   static async getDuplicateGroups(type?: ListingKind): Promise<{
     groups: DuplicateGroup[];
     counts: Record<'all' | ListingKind, number>;
@@ -1971,7 +1977,7 @@ export class ApiClient {
   }
 
   /**
-   * Listings already using this title in this country. Posters get live ones
+   * Listings with a similar title in this country. Posters get live ones
    * only; admins also get pending and hidden ones.
    */
   static async checkDuplicateTitle(params: {

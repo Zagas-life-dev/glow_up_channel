@@ -3,13 +3,15 @@
 /**
  * Admin — duplicates.
  *
- * Listings of the same type that share a title (ignoring case, accents,
- * punctuation and spacing) in the same country. Separate from Moderation: that
+ * Listings of the same type in the same country that look alike: over half
+ * their title or description words shared (fillers ignored), or shared tags on
+ * a borderline pair. Each group is one listing and the newer ones that match it,
+ * so a listing can appear in two groups. Separate from Moderation: that
  * page reviews one listing at a time, this one reviews them against each other.
  *
  * Deleting here is the moderation page's delete — the listing moves to Past
  * posts, so a wrong call can be undone there. "Not duplicates" hides a group
- * until another listing with the same title joins it.
+ * until another listing joins it.
  *
  * Country copies (one listing posted to several countries) never appear: each
  * copy sits in its own country.
@@ -32,6 +34,7 @@ import {
   StatusPill,
 } from "@/components/admin/ui"
 import { Button } from "@/components/ui/button"
+import { reasonText } from "@/components/posting/DuplicateTitleWarning"
 import ApiClient, { type DuplicateGroup, type ListingDuplicate, type ListingKind } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 
@@ -110,12 +113,15 @@ export default function AdminDuplicatesPage() {
   const extraListings = groups.reduce((sum, g) => sum + g.items.length - 1, 0)
   const liveClashes = groups.filter((g) => g.liveCount >= 2).length
 
-  /** Drop deleted listings; a group left with one listing is resolved and goes too. */
-  const removeItems = (groupId: string, ids: Set<string>) => {
+  /**
+   * Drop deleted listings from every group they sit in; a group that lost its
+   * first listing, or is left with one, is resolved and goes too.
+   */
+  const removeItems = (ids: Set<string>) => {
     setGroups((prev) =>
       prev
         .map((g) => {
-          if (g.id !== groupId) return g
+          if (ids.has(g.items[0]._id)) return { ...g, items: [] }
           const items = g.items.filter((item) => !ids.has(item._id))
           return { ...g, items, liveCount: items.filter((item) => item.state === "live").length }
         })
@@ -142,7 +148,7 @@ export default function AdminDuplicatesPage() {
         failed.push(err instanceof Error ? err.message : item.title)
       }
     }
-    removeItems(group.id, done)
+    removeItems(done)
     setBusy(null)
     if (done.size > 0) toast.success(done.size === 1 ? "Duplicate deleted" : `${done.size} duplicates deleted`)
     if (failed.length > 0) toast.error(`Couldn't delete ${failed.length}: ${failed[0]}`)
@@ -163,7 +169,7 @@ export default function AdminDuplicatesPage() {
 
   return (
     <AdminShell
-      description="Listings of the same type with the same title in the same country."
+      description="Listings of the same type in the same country with similar titles, descriptions or tags."
       onRefresh={load}
       refreshing={loading}
       width="wide"
@@ -191,7 +197,7 @@ export default function AdminDuplicatesPage() {
             description={
               search.trim() || typeFilter !== "all"
                 ? "Try another type or search."
-                : "Every listing has its own title in its country."
+                : "No two listings in a country look alike."
             }
           />
         ) : (
@@ -208,6 +214,7 @@ export default function AdminDuplicatesPage() {
                         {TYPE_LABEL[group.type]} · {group.country ?? (group.type === "resource" ? "No location" : "No country")} ·{" "}
                         {group.items.length} listings
                         {group.liveCount >= 2 ? ` · ${group.liveCount} live` : ""}
+                        {reasonText(group.reasons) ? ` · ${reasonText(group.reasons)}` : ""}
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
@@ -238,7 +245,7 @@ export default function AdminDuplicatesPage() {
                             ) : null}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {[item.organization, [item.city, item.country].filter(Boolean).join(", "), `posted ${ago(item.createdAt)}`]
+                            {[reasonText(item.reasons), item.organization, [item.city, item.country].filter(Boolean).join(", "), `posted ${ago(item.createdAt)}`]
                               .filter(Boolean)
                               .join(" · ")}
                           </p>

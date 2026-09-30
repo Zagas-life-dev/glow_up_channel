@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { AlertTriangle } from "lucide-react"
-import ApiClient, { type ListingDuplicate, type ListingKind } from "@/lib/api-client"
+import ApiClient, { type DuplicateReason, type ListingDuplicate, type ListingKind } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 
 const STATE_LABEL: Record<ListingDuplicate["state"], string> = {
@@ -18,13 +18,23 @@ const STATE_CLASS: Record<ListingDuplicate["state"], string> = {
   hidden: "bg-muted text-muted-foreground",
 }
 
+const REASON_LABEL: Record<DuplicateReason, string> = {
+  title: "similar title",
+  description: "similar description",
+  tags: "same tags",
+}
+
+export function reasonText(reasons: DuplicateReason[] | undefined): string | null {
+  return reasons && reasons.length ? reasons.map((r) => REASON_LABEL[r]).join(", ") : null
+}
+
 function ago(date: string | null): string | null {
   if (!date) return null
   const d = new Date(date)
   return Number.isNaN(d.getTime()) ? null : formatDistanceToNow(d, { addSuffix: true })
 }
 
-/** The listings a title collides with, one compact row each. */
+/** The listings a listing looks like, one compact row each. */
 export function DuplicateMatchList({ matches, className }: { matches: ListingDuplicate[]; className?: string }) {
   return (
     <ul className={cn("space-y-1.5", className)}>
@@ -40,7 +50,7 @@ export function DuplicateMatchList({ matches, className }: { matches: ListingDup
               <span className="min-w-0 break-words text-sm font-medium text-foreground">{m.title}</span>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {[m.organization, where, when && `posted ${when}`].filter(Boolean).join(" · ")}
+              {[reasonText(m.reasons), m.organization, where, when && `posted ${when}`].filter(Boolean).join(" · ")}
             </p>
           </li>
         )
@@ -49,13 +59,14 @@ export function DuplicateMatchList({ matches, className }: { matches: ListingDup
   )
 }
 
-/** Same rule the backend normalises with; anything shorter is not worth a request. */
+/** Anything shorter is not worth a request. */
 function significant(title: string): boolean {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "").length >= 4
 }
 
 /**
- * Listings already using `title` in this country, checked as the poster types.
+ * Listings with a title like `title` in this country (over half the words
+ * shared, fillers ignored), checked as the poster types.
  * A failed check is silent: the warning is advice, never a reason to block a post.
  */
 export function useDuplicateTitleCheck(params: {
@@ -111,7 +122,7 @@ export function DuplicateTitleWarning({
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-sm text-amber-900 dark:text-amber-200">
-          {total === 1 ? "A listing" : `${total} listings`} with this title already{" "}
+          {total === 1 ? "A listing" : `${total} listings`} with a similar title already{" "}
           {total === 1 ? "exists" : "exist"} in this country. Check it isn&apos;t the same one before posting.
         </p>
       </div>

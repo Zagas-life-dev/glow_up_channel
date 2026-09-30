@@ -19,8 +19,8 @@ export interface PendingDuplicateApproval {
 }
 
 /**
- * Shown when an approve came back DUPLICATE_LISTING: the listing would be a
- * second live one with this title in this country. The admin decides.
+ * Shown when an approve came back DUPLICATE_LISTING: a live listing in this
+ * country looks like this one (title, description or tags). The admin decides.
  */
 export function DuplicateApprovalDialog({
   pending,
@@ -42,8 +42,8 @@ export function DuplicateApprovalDialog({
         <DialogHeader>
           <DialogTitle className="text-xl">This looks like a duplicate</DialogTitle>
           <DialogDescription>
-            {count === 1 ? "A live listing" : `${count} live listings`} in this country already{" "}
-            {count === 1 ? "uses" : "use"} the title &ldquo;{pending?.item.title}&rdquo;.
+            {count === 1 ? "A live listing" : `${count} live listings`} in this country{" "}
+            {count === 1 ? "looks" : "look"} like &ldquo;{pending?.item.title}&rdquo;.
           </DialogDescription>
         </DialogHeader>
         {pending && <DuplicateMatchList matches={pending.duplicates} />}
