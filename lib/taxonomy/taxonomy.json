@@ -18,11 +18,11 @@
     "skill"
   ],
   "limits": {
-    "type": 2,
+    "type": 5,
     "format": 2,
     "work": 2,
     "level": 2,
-    "industry": 2,
+    "industry": 5,
     "skill": 5,
     "community": 3
   },

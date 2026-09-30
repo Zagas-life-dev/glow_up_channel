@@ -8,11 +8,73 @@
 
 import { cleanUrl } from "@/lib/url-utils"
 
-export const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+/**
+ * The zone listing dates are shown in when the listing names none.
+ *
+ * Detail pages render on the server first, so dates must not depend on the
+ * machine's zone: a UTC server and a Lagos browser would print different days
+ * for anything stored at local midnight. Lagos is the platform's home market.
+ */
+export const LISTING_TIME_ZONE = "Africa/Lagos"
 
-export const formatShortDate = (value: string) =>
-  new Date(value).toLocaleDateString("en-US", { day: "numeric", month: "short" })
+/** A valid IANA zone, or the listing default. */
+export function listingZone(timeZone?: string | null): string {
+  if (!timeZone) return LISTING_TIME_ZONE
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone })
+    return timeZone
+  } catch {
+    return LISTING_TIME_ZONE
+  }
+}
+
+export const formatDate = (value: string, timeZone?: string | null) =>
+  new Date(value).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: listingZone(timeZone),
+  })
+
+export const formatShortDate = (value: string, timeZone?: string | null) =>
+  new Date(value).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: listingZone(timeZone),
+  })
+
+/**
+ * Whether a stored date carries a real clock time.
+ *
+ * Date-only values arrive as midnight, either UTC or in the listing's zone;
+ * printing "1:00 AM" for those would invent a start time nobody published.
+ */
+export function hasClockTime(value: string, timeZone?: string | null): boolean {
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return false
+  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0) return false
+  const local = d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: listingZone(timeZone),
+  })
+  return local !== "00:00"
+}
+
+/** "Oct 3, 2026, 8:30 AM GMT+1", or just the date when no time was published. */
+export function formatDateTime(value: string, timeZone?: string | null): string {
+  if (!hasClockTime(value, timeZone)) return formatDate(value, timeZone)
+  return new Date(value).toLocaleString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: listingZone(timeZone),
+    timeZoneName: "short",
+  })
+}
 
 /** Whole days until `value`. `null` when there is no date, or it has passed. */
 export function daysUntil(value?: string): number | null {

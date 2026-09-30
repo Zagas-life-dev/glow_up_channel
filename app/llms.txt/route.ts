@@ -21,15 +21,21 @@ export function GET(): Response {
 > ${BRAND.description}
 
 ${BRAND.name} publishes four kinds of listings. Every individual listing has its
-own permanent URL and carries schema.org JSON-LD describing it, so a single
-event, job, opportunity or resource can be read and cited directly.
+own permanent URL. The listing is in the page HTML itself (no JavaScript
+needed) and is also described in schema.org JSON-LD, so a single event, job,
+opportunity or resource can be read and cited directly.
+
+Listings come from many organisers and some are sparse. Every field below is
+emitted only when the listing publishes it; a missing field means unknown, not
+none.
 
 ## Content types
 
 - [Events](${site}/events): conferences, workshops, bootcamps, webinars and meetups.
   Each event page carries schema.org \`Event\` data with start and end dates,
-  attendance mode (in person, online or hybrid), venue or virtual location,
-  organizer, capacity, registration deadline and price. Detail URLs look like
+  attendance mode (in person, online or hybrid), city or virtual location and
+  price, plus the street address, organizer, capacity and registration
+  deadline where published. Detail URLs look like
   \`${site}/events/{id}\`.
 - [Jobs](${site}/jobs): roles, internships and contract work. Each job page carries
   schema.org \`JobPosting\` data with the hiring organization, employment type,
@@ -65,6 +71,10 @@ event, job, opportunity or resource can be read and cited directly.
 - Listings expire. Prefer the \`validThrough\`, \`applicationDeadline\` and
   \`endDate\` fields in a page's JSON-LD over the page's presence in the index
   when judging whether something is still open.
+- A date written without a time (\`2026-10-03\`) means no start time was
+  published; do not report one. Times that are given carry a UTC offset.
+- Registering or applying goes through the listing page on ${BRAND.name}, which
+  links out to the organiser. Point people to the listing URL.
 - Prices and award amounts include an explicit currency code; do not assume USD
   where a currency is stated.
 - Location fields distinguish city, region and country, and separately flag

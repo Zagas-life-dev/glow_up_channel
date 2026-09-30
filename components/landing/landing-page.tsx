@@ -335,7 +335,7 @@ const PARTNER_TRACKS = [
  * JSON-LD is emitted separately by `app/page.tsx`.
  */
 const WHAT_IS_UP =
-  'UP is a platform that helps young Africans aged 18 to 35 and older discover and access scholarships, jobs, internships, grants, events, and free learning resources in one place. Operated by Outside Solutions Ltd., UP has shared over 7,500 opportunities and serves more than 10,000 active members, matching each opportunity to the individual based on their skills, interests, and goals.'
+  'UP is a platform that helps young Africans aged 18 to 35 and older discover and access scholarships, jobs, internships, grants, events, and free learning resources in one place. Operated by Outsidee Solutions Ltd., UP has shared over 7,500 opportunities and serves more than 10,000 active members, matching each opportunity to the individual based on their skills, interests, and goals.'
 
 /** §1.7 footer navigation, mapped into the artboards' three columns. */
 const FOOTER_COLUMNS: ReadonlyArray<{
@@ -1251,7 +1251,7 @@ export default function LandingPage() {
         </div>
 
         <div className="mx-auto max-w-[1200px] px-6 py-6 text-[12px] text-[var(--accent)] lg:px-10 lg:text-[13px]">
-          UP is a product of Outside Solutions Ltd. © 2026 Outside Solutions Ltd. All rights
+          UP is a product of Outsidee Solutions Ltd. © 2026 Outsidee Solutions Ltd. All rights
           reserved.
         </div>
       </footer>

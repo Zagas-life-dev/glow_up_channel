@@ -116,7 +116,9 @@ export function DetailHero({
                 >
                   {tile.label}
                 </p>
-                <p className={cn(
+                {/* The countdown is computed against "now", which moves between the
+                    server render and hydration; a one-day drift is expected. */}
+                <p suppressHydrationWarning className={cn(
                   "mt-1.5 truncate font-display text-lg font-bold leading-none lg:text-[22px]",
                   tile.urgent ? "text-up-navy" : "text-up-on-navy",
                 )}>

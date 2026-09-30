@@ -33,7 +33,11 @@ export interface SeoEvent {
     registrationDeadline?: string | null
     timezone?: string | null
   }
-  capacity?: { maxAttendees?: number | null }
+  capacity?: {
+    maxAttendees?: number | null
+    currentAttendees?: number | null
+    isFull?: boolean
+  }
   requirements?: {
     ageRange?: string | null
     skillLevel?: string | null

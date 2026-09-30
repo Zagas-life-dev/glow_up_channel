@@ -1,3 +1,4 @@
+import { lookupCountry } from "@/lib/geo/countries"
 import { getSiteUrl } from "@/lib/site-url"
 import { BRAND } from "./brand"
 import type {
@@ -41,11 +42,19 @@ function compact<T extends JsonLdObject>(obj: T): T {
   return out as T
 }
 
-/** schema.org date fields must be ISO 8601; anything unparseable is omitted. */
+/**
+ * schema.org date fields must be ISO 8601; anything unparseable is omitted.
+ *
+ * A value at exactly midnight UTC is how a date with no time is stored, so it
+ * is emitted as a plain date. Emitting "T00:00:00Z" would tell readers the
+ * event starts at 1 AM in Lagos, a time nobody published.
+ */
 function isoDate(value?: string | null): string | undefined {
   if (!value) return undefined
   const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
+  if (Number.isNaN(d.getTime())) return undefined
+  const iso = d.toISOString()
+  return iso.endsWith("T00:00:00.000Z") ? iso.slice(0, 10) : iso
 }
 
 /** Strip markup and collapse whitespace; JSON-LD descriptions must be plain text. */
@@ -96,6 +105,7 @@ function buildOffer(opts: {
   price?: number | null
   currency?: string | null
   validThrough?: string
+  soldOut?: boolean
 }): JsonLdObject {
   const priced = !opts.isFree && typeof opts.price === "number"
   return compact({
@@ -103,7 +113,7 @@ function buildOffer(opts: {
     url: opts.url,
     price: opts.isFree ? 0 : priced ? opts.price : undefined,
     priceCurrency: opts.isFree ? undefined : priced ? (opts.currency ?? "USD") : undefined,
-    availability: "https://schema.org/InStock",
+    availability: opts.soldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
     validThrough: opts.validThrough,
     category: opts.isFree ? "Free" : "Paid",
   })
@@ -116,14 +126,23 @@ function postalAddress(loc?: SeoLocation): JsonLdObject | undefined {
     streetAddress: loc.address ?? undefined,
     addressLocality: loc.city ?? undefined,
     addressRegion: loc.province ?? undefined,
-    addressCountry: loc.country ?? undefined,
+    // schema.org wants the ISO 3166-1 alpha-2 code; keep the raw text when
+    // the country cannot be resolved rather than dropping it.
+    addressCountry: loc.country
+      ? (lookupCountry(loc.country)?.code ?? loc.country)
+      : undefined,
   })
   // "@type" alone means we learned no actual address parts.
   return Object.keys(address).length > 1 ? address : undefined
 }
 
+/** "Ikeja, Lagos, Nigeria" — each part once, so a city named after its state is not "Lagos, Lagos". */
 function placeName(loc?: SeoLocation): string | undefined {
-  const parts = [loc?.city, loc?.province, loc?.country].filter(Boolean)
+  const parts: string[] = []
+  for (const part of [loc?.city, loc?.province, loc?.country]) {
+    const text = part?.trim()
+    if (text && !parts.some((p) => p.toLowerCase() === text.toLowerCase())) parts.push(text)
+  }
   return parts.length ? parts.join(", ") : undefined
 }
 
@@ -245,16 +264,14 @@ export function buildEventJsonLd(event: SeoEvent, id: string): JsonLdObject {
     name: plainText(event.title, 200),
     description: plainText(event.description),
     url,
-    image: imageUrl(event.image),
+    // Google wants an image on every event; the logo beats having none.
+    image: imageUrl(event.image) ?? imageUrl(BRAND.logo),
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: attendanceMode(event.location),
     startDate: start,
     endDate: isoDate(event.dates?.endDate),
     location: eventLocation(event),
     organizer: event.organizer
-      ? compact({ "@type": "Organization", name: plainText(event.organizer, 200) })
-      : undefined,
-    performer: event.organizer
       ? compact({ "@type": "Organization", name: plainText(event.organizer, 200) })
       : undefined,
     maximumAttendeeCapacity: event.capacity?.maxAttendees ?? undefined,
@@ -273,6 +290,7 @@ export function buildEventJsonLd(event: SeoEvent, id: string): JsonLdObject {
       price: event.price,
       currency: event.currency,
       validThrough: isoDate(event.dates?.registrationDeadline),
+      soldOut: event.capacity?.isFull === true,
     }),
     isAccessibleForFree: isFree,
     publisher: publisher(),

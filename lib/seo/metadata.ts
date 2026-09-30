@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/site-url"
+import { BRAND } from "./brand"
 import { plainText } from "./structured-data"
 import {
   getEvent,
@@ -58,7 +59,8 @@ interface PageMetaInput {
 
 function buildPageMetadata(input: PageMetaInput): Metadata {
   const url = `${getSiteUrl()}${input.path}`
-  const images = input.image ? [{ url: input.image }] : undefined
+  // Listings without their own picture still get a card: the logo, shown small.
+  const images = [{ url: input.image || BRAND.logo }]
   const keywords = Array.from(
     new Set(
       (input.keywords ?? [])
@@ -84,10 +86,10 @@ function buildPageMetadata(input: PageMetaInput): Metadata {
       ...(input.modifiedTime ? { modifiedTime: input.modifiedTime } : {}),
     },
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: input.image ? "summary_large_image" : "summary",
       title: input.title,
       description: input.description,
-      images: input.image ? [input.image] : undefined,
+      images: [input.image || BRAND.logo],
     },
   }
 }
