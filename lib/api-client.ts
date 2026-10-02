@@ -1769,23 +1769,32 @@ export class ApiClient {
   }
 
   static async getPastPosts(
-    collection: 'opportunities' | 'events' | 'jobs',
+    collection: 'all' | 'opportunities' | 'events' | 'jobs',
     options?: {
       limit?: number;
       skip?: number;
       reason?: string;
       pastStatus?: 'expired' | 'moved';
+      /** Server-side search over title, description, reason and organisation. */
+      q?: string;
+      /** The previous page's `nextCursor`, for infinite scroll. */
+      before?: string;
     }
   ): Promise<{
+    /** Each post carries `collection`, the archive it came from. */
     posts: any[];
-    total: number;
+    /** Counted on the first page only; null when `before` is set. */
+    total: number | null;
     hasMore: boolean;
+    nextCursor: string | null;
   }> {
     const searchParams = new URLSearchParams();
     if (options?.limit) searchParams.append('limit', options.limit.toString());
     if (options?.skip) searchParams.append('skip', options.skip.toString());
     if (options?.reason) searchParams.append('reason', options.reason);
     if (options?.pastStatus) searchParams.append('pastStatus', options.pastStatus);
+    if (options?.q) searchParams.append('q', options.q);
+    if (options?.before) searchParams.append('before', options.before);
 
     const response = await this.makeAuthenticatedRequest(
       `${API_BASE_URL}/api/admin/past-posts/${collection}?${searchParams.toString()}`

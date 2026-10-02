@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <title>A4 2026 — Education turns a life</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/data/africa.js"></script>
+    <script src="assets/data/vo.js"></script>
+    <style>
+      @font-face {
+        font-family: "Fraunces";
+        src: url("assets/fonts/fraunces.ttf") format("truetype");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Fraunces";
+        src: url("assets/fonts/fraunces-italic.ttf") format("truetype");
+        font-weight: 100 900;
+        font-style: italic;
+        font-display: block;
+      }
+
+      @font-face {
+        font-family: "Unbounded";
+        src: url("assets/fonts/unbounded.woff2") format("woff2");
+        font-weight: 200 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Plus Jakarta Sans";
+        src: url("assets/fonts/plus-jakarta-sans.woff2") format("woff2");
+        font-weight: 200 800;
+        font-display: block;
+      }
+
+      /* Palette from the official A4 2026 poster */
+      :root {
+        --g900: #062417;
+        --g800: #0b3a24;
+        --g700: #0f4a2f;
+        --g600: #13623d;
+        --gold: #d4a437;
+        --gold-lt: #f1d27a;
+        --gold-dk: #a87a1e;
+        --cream: #fbf3dc;
+        --cream-dim: #d9d2b8;
+        --ink: #062417;
+        --serif: "Fraunces", Georgia, serif;
+        --cond: "Oswald", "Arial Narrow", sans-serif;
+        --sans: "Montserrat", Arial, sans-serif;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--g900); }
+      #root {
+        position: relative; width: 100%; height: 100%; overflow: hidden;
+        background: var(--g900); color: var(--cream); font-family: var(--sans);
+      }
+
+      /* ---------- persistent background ---------- */
+      #bg { position: absolute; inset: 0; background: radial-gradient(ellipse 90% 62% at 50% 44%, #12502f 0%, var(--g800) 48%, var(--g900) 100%); }
+      #glow {
+        position: absolute; left: -160px; top: 260px; width: 1400px; height: 1400px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(212, 164, 55, 0.2) 0%, rgba(212, 164, 55, 0.07) 38%, rgba(212, 164, 55, 0) 66%);
+      }
+      #grain {
+        position: absolute; inset: 0; opacity: 0.09; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      }
+      #dust { position: absolute; inset: 0; }
+      .mote { position: absolute; border-radius: 50%; background: var(--gold-lt); }
+      #toplabel {
+        position: absolute; left: 0; right: 0; top: 132px; text-align: center; opacity: 0; visibility: hidden;
+        font-family: var(--cond); font-weight: 700; font-size: 28px; letter-spacing: 0.34em; color: var(--gold);
+      }
+
+      .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+      .abs { position: absolute; }
+      .serif { font-family: var(--serif); }
+      .cond { font-family: var(--cond); }
+
+      /* framed photo print */
+      .print { position: absolute; background: var(--cream); padding: 14px; box-shadow: 0 34px 70px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(212, 164, 55, 0.55); }
+      .print .ph { position: relative; overflow: hidden; background: var(--g700); }
+      .print .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .tab {
+        position: absolute; background: var(--gold); color: var(--ink); white-space: nowrap;
+        font-family: var(--cond); font-weight: 700; font-size: 38px; letter-spacing: 0.06em; padding: 6px 22px 8px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+      }
+
+      /* ---------- S1 / S10: the lit continent ---------- */
+      #africa { position: absolute; left: 153px; top: 250px; width: 774px; height: 846px; opacity: 0; visibility: hidden; }
+      #africa svg { width: 100%; height: 100%; overflow: visible; }
+      #af-fill { fill: rgba(212, 164, 55, 0.07); stroke: none; }
+      #af-line { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linejoin: round; }
+      #af-dots { filter: drop-shadow(0 0 5px rgba(241, 210, 122, 0.85)); }
+      #af-dots circle { fill: var(--gold-lt); transform-box: fill-box; transform-origin: center; }
+      #af-ping { fill: none; stroke: var(--gold-lt); stroke-width: 3; transform-box: fill-box; transform-origin: center; opacity: 0; }
+      #af-pin { fill: #fff6d6; transform-box: fill-box; transform-origin: center; opacity: 0; }
+
+      .hook { position: absolute; left: 60px; right: 60px; text-align: center; }
+      #h1a, #h1b { top: 1150px; font-family: var(--serif); font-weight: 900; font-size: 96px; line-height: 1.02; letter-spacing: -0.02em; color: var(--cream); }
+      #h1c { top: 1268px; font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 84px; color: var(--gold-lt); }
+
+      /* ---------- S2: one classroom / scholarship / chance ---------- */
+      #s2-head { left: 86px; top: 236px; width: 900px; font-family: var(--serif); font-weight: 900; font-size: 80px; line-height: 1.02; letter-spacing: -0.02em; }
+      #s2-head em { font-style: italic; color: var(--gold-lt); font-weight: 800; }
+      #p1 { left: 64px; top: 478px; }
+      #p1 .ph { width: 600px; height: 450px; }
+      #p1 .tab { right: 22px; top: -30px; }
+      #p2 { left: 482px; top: 722px; }
+      #p2 .ph { width: 460px; height: 460px; }
+      #p2 .tab { right: 22px; top: -30px; }
+      #p3 { left: 104px; top: 944px; }
+      #p3 .ph { width: 420px; height: 440px; }
+      #p3 .tab { left: 22px; top: -30px; }
+
+      /* ---------- S3: the ripple ---------- */
+      .ring { position: absolute; border-radius: 50%; border: 3px solid var(--gold); }
+      #r1 { left: 280px; top: 600px; width: 520px; height: 520px; }
+      #r2 { left: 140px; top: 460px; width: 800px; height: 800px; border-color: rgba(212, 164, 55, 0.8); }
+      #r3 { left: 10px; top: 330px; width: 1060px; height: 1060px; border-color: rgba(212, 164, 55, 0.6); }
+      .wave { position: absolute; left: 390px; top: 710px; width: 300px; height: 300px; border-radius: 50%; border: 2px solid rgba(241, 210, 122, 0.55); opacity: 0; }
+      .rlabel {
+        position: absolute; left: 0; width: 1080px; text-align: center; opacity: 0;
+      }
+      .rlabel span {
+        display: inline-block; background: var(--g800); padding: 4px 26px; border-radius: 40px; border: 2px solid var(--gold);
+        font-family: var(--cond); font-weight: 700; font-size: 44px; letter-spacing: 0.12em; color: var(--gold-lt);
+      }
+      #lab1 { top: 568px; }
+      #lab2 { top: 428px; }
+      #lab3 { top: 298px; }
+      #core { position: absolute; left: 390px; top: 710px; width: 300px; height: 300px; overflow: hidden; border: 6px solid var(--cream); box-shadow: 0 0 0 3px var(--gold), 0 30px 60px rgba(0, 0, 0, 0.5); background: var(--g700); }
+      #core img { width: 100%; height: 100%; object-fit: cover; }
+      .face { position: absolute; border-radius: 50%; overflow: hidden; border: 4px solid var(--cream); box-shadow: 0 0 0 2px var(--gold), 0 14px 30px rgba(0, 0, 0, 0.45); opacity: 0; background: var(--g700); }
+      .face img { width: 100%; height: 100%; object-fit: cover; }
+      #flood { position: absolute; left: 390px; top: 710px; width: 300px; height: 300px; border-radius: 50%; background: var(--gold); opacity: 0; }
+
+      /* ---------- S4: curtain reveal ---------- */
+      #stage-light { position: absolute; left: -60px; top: 180px; width: 1200px; height: 1300px; background: radial-gradient(ellipse 50% 46% at 50% 50%, rgba(241, 210, 122, 0.28) 0%, rgba(212, 164, 55, 0.08) 45%, rgba(212, 164, 55, 0) 72%); opacity: 0; }
+      .curtain {
+        position: absolute; top: 0; width: 580px; height: 1920px;
+        background:
+          linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 62%, rgba(40, 22, 0, 0.45) 100%),
+          repeating-linear-gradient(90deg, #9c6d1a 0px, #c7942f 22px, #efcd6c 44px, #d4a437 62px, #a8781f 84px, #8a5d12 100px);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.55);
+      }
+      #cl { left: 0; }
+      #cr { left: 500px; }
+      #valance {
+        position: absolute; left: 0; top: 0; width: 1080px; height: 150px;
+        background: linear-gradient(180deg, #8a5d12 0%, #d4a437 55%, #b88a2a 100%);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        -webkit-mask: radial-gradient(circle 45px at 45px 150px, transparent 44px, #000 46px) 0 0 / 90px 150px repeat-x;
+        mask: radial-gradient(circle 45px at 45px 150px, transparent 44px, #000 46px) 0 0 / 90px 150px repeat-x;
+      }
+      #lockup { position: absolute; left: 150px; width: 780px; top: 300px; text-align: center; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 16px; margin: 0 0 18px; padding: 12px 28px;
+        border: 3px solid var(--gold); border-radius: 60px; background: rgba(6, 36, 23, 0.72);
+        font-family: var(--cond); font-weight: 700; font-size: 38px; letter-spacing: 0.06em; color: var(--cream); white-space: nowrap;
+      }
+      .chip svg { width: 36px; height: 36px; flex: none; }
+      #conf { margin-top: 26px; font-family: var(--cond); font-weight: 700; font-size: 44px; letter-spacing: 0.05em; color: var(--cream); }
+      #amp { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 90px; line-height: 1.1; color: var(--gold-lt); }
+      #ed3 { font-family: var(--cond); font-weight: 700; font-size: 36px; letter-spacing: 0.28em; color: var(--gold); }
+      #awards { margin-top: 6px; font-family: var(--serif); font-weight: 900; font-size: 66px; line-height: 1.04; letter-spacing: -0.015em; color: var(--cream); }
+      #a4row { margin-top: 26px; display: flex; align-items: center; justify-content: center; gap: 28px; }
+      #a4 { position: relative; font-family: var(--serif); font-weight: 900; font-size: 300px; line-height: 0.9; letter-spacing: -0.04em; color: var(--gold); }
+      #a4-shine {
+        position: absolute; left: 0; top: 0; color: transparent; pointer-events: none;
+        background: linear-gradient(100deg, rgba(255, 246, 210, 0) 42%, rgba(255, 246, 210, 0.95) 50%, rgba(255, 246, 210, 0) 58%);
+        background-size: 300% 100%; background-position: 100% 0%; -webkit-background-clip: text; background-clip: text;
+      }
+      #yr { font-family: var(--cond); font-weight: 700; font-size: 128px; line-height: 1; letter-spacing: 0.02em; color: var(--cream); }
+
+      /* ---------- S5: theme ---------- */
+      #s5-photo { position: absolute; left: -80px; top: -80px; width: 1240px; height: 2080px; object-fit: cover; filter: blur(18px) saturate(0.8); opacity: 0.55; }
+      #s5-veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 36, 23, 0.72) 0%, rgba(6, 36, 23, 0.86) 55%, rgba(6, 36, 23, 0.95) 100%); }
+      #tag {
+        position: absolute; left: 86px; top: 330px; padding: 8px 34px 10px; background: var(--gold); color: var(--ink);
+        font-family: var(--cond); font-weight: 700; font-size: 50px; letter-spacing: 0.16em; clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+      }
+      #theme { position: absolute; left: 86px; top: 470px; width: 910px; font-family: var(--serif); font-weight: 800; font-size: 88px; line-height: 1.14; letter-spacing: -0.015em; }
+      #theme .tw { display: inline-block; position: relative; isolation: isolate; padding: 0 6px; margin: 0 -2px; border-radius: 12px; }
+      #theme .hl-bg { position: absolute; inset: 6px 0 2px; border-radius: 12px; background: var(--gold); opacity: 0; z-index: 0; }
+      #theme .tw span { position: relative; z-index: 1; }
+      #theme-foot { position: absolute; left: 86px; right: 86px; top: 1300px; padding-top: 22px; border-top: 3px solid var(--gold); font-family: var(--cond); font-weight: 700; font-size: 32px; letter-spacing: 0.14em; color: var(--gold-lt); }
+
+      /* ---------- S6: programme ---------- */
+      .label-top { position: absolute; left: 0; right: 0; top: 262px; text-align: center; font-family: var(--cond); font-weight: 700; font-size: 44px; letter-spacing: 0.3em; color: var(--gold); }
+      .card {
+        position: absolute; left: 70px; width: 940px; height: 300px; display: flex; align-items: stretch;
+        background: linear-gradient(135deg, #125634 0%, var(--g700) 100%); border: 3px solid var(--gold); border-radius: 26px; overflow: hidden;
+        box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45);
+      }
+      .card .cph { width: 300px; flex: none; position: relative; border-right: 3px solid var(--gold); }
+      .card .cph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .card .ctx { flex: 1; padding: 34px 40px; display: flex; flex-direction: column; justify-content: center; }
+      .card h3 { font-family: var(--serif); font-weight: 800; font-size: 54px; line-height: 1.02; letter-spacing: -0.015em; color: var(--cream); }
+      .card p { margin-top: 14px; font-family: var(--sans); font-weight: 500; font-size: 29px; line-height: 1.3; color: var(--cream-dim); }
+      #c1 { top: 350px; }
+      #c2 { top: 690px; }
+      #c3 { top: 1030px; }
+      #c2 .num { width: 300px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--g900); border-right: 3px solid var(--gold); }
+      #c2 .num b { font-family: var(--serif); font-weight: 900; font-size: 230px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; display: inline-block; }
+      #c2 h3 { font-family: var(--cond); font-weight: 700; font-size: 50px; letter-spacing: 0.06em; color: var(--gold-lt); }
+      .splits { margin-top: 18px; display: flex; gap: 14px; }
+      .splits span { padding: 6px 18px; border: 2px solid var(--gold); border-radius: 40px; font-family: var(--cond); font-weight: 700; font-size: 30px; letter-spacing: 0.06em; color: var(--cream); white-space: nowrap; }
+
+      /* ---------- S7: beyond the hall ---------- */
+      #badge { position: absolute; left: 0; right: 0; top: 262px; text-align: center; }
+      #badge span { display: inline-block; padding: 8px 30px; border: 3px solid var(--gold); border-radius: 50px; font-family: var(--cond); font-weight: 700; font-size: 34px; letter-spacing: 0.18em; color: var(--gold-lt); }
+      #s7-head { position: absolute; left: 0; right: 0; top: 342px; text-align: center; font-family: var(--serif); font-weight: 900; font-size: 104px; letter-spacing: -0.025em; }
+      #pole { position: absolute; left: 529px; top: 560px; width: 22px; height: 500px; border-radius: 6px; background: linear-gradient(90deg, #8a5d12, #efcd6c 45%, #a8781f); }
+      #plate { position: absolute; left: 355px; top: 540px; width: 370px; height: 92px; border-radius: 12px; background: var(--cream); border: 5px solid var(--g600); display: flex; align-items: center; justify-content: center; font-family: var(--cond); font-weight: 700; font-size: 50px; letter-spacing: 0.14em; color: var(--g600); }
+      .blade { position: absolute; width: 470px; height: 124px; }
+      .blade svg { width: 100%; height: 100%; overflow: visible; }
+      #b1 { left: 540px; top: 666px; }
+      #b2 { left: 70px; top: 818px; }
+      #s7-cap { position: absolute; left: 60px; right: 60px; top: 1082px; text-align: center; font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 52px; line-height: 1.1; color: var(--gold-lt); }
+      #rea {
+        position: absolute; left: 70px; top: 1190px; width: 940px; height: 210px; display: flex; align-items: center; gap: 30px; padding: 0 40px;
+        background: linear-gradient(135deg, #125634 0%, var(--g700) 100%); border: 3px solid var(--gold); border-radius: 26px; box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45);
+      }
+      #rea svg { width: 120px; height: 120px; flex: none; }
+      #rea h3 { font-family: var(--serif); font-weight: 800; font-size: 50px; line-height: 1.02; color: var(--cream); }
+      #rea p { margin-top: 10px; font-family: var(--sans); font-weight: 600; font-size: 28px; color: var(--cream-dim); }
+
+      /* ---------- S8: proof ---------- */
+      #q1 { left: 56px; top: 350px; }
+      #q1 .ph { width: 600px; height: 360px; }
+      #q1 .ph img { object-position: 50% 0%; }
+      #q2 { left: 424px; top: 572px; }
+      #q2 .ph { width: 600px; height: 360px; }
+      #q2 .ph img { object-position: 50% 0%; }
+      .stat { position: absolute; left: 70px; width: 940px; height: 124px; display: flex; align-items: center; gap: 36px; border-bottom: 2px solid rgba(212, 164, 55, 0.45); }
+      .stat b { width: 360px; text-align: right; font-family: var(--serif); font-weight: 900; font-size: 116px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+      .stat span { font-family: var(--cond); font-weight: 700; font-size: 52px; letter-spacing: 0.08em; color: var(--cream); }
+      #st1 { top: 1010px; }
+      #st2 { top: 1140px; }
+      #st3 { top: 1270px; }
+
+      /* ---------- S9: call to action ---------- */
+      #s9-top { position: absolute; left: 0; right: 0; top: 236px; line-height: 1.1; text-align: center; font-family: var(--cond); font-weight: 700; font-size: 58px; letter-spacing: 0.16em; color: var(--cream); }
+      #s9-date { position: absolute; left: 0; right: 0; top: 352px; text-align: center; font-family: var(--serif); font-weight: 900; font-size: 250px; line-height: 1; letter-spacing: -0.03em; color: var(--gold); }
+      #s9-yr { position: absolute; left: 0; right: 0; top: 652px; text-align: center; font-family: var(--sans); font-weight: 600; font-size: 30px; letter-spacing: 0.04em; color: var(--cream-dim); }
+      #reg {
+        position: absolute; left: 70px; top: 726px; width: 940px; height: 150px; border-radius: 80px; background: var(--gold); color: var(--ink);
+        display: flex; align-items: center; justify-content: center; gap: 26px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
+      #reg .k { font-family: var(--cond); font-weight: 700; font-size: 48px; letter-spacing: 0.12em; }
+      #reg .v { font-family: var(--sans); font-weight: 800; font-size: 60px; letter-spacing: -0.01em; }
+      #reg svg { width: 44px; height: 44px; }
+      #partner { position: absolute; left: 70px; width: 940px; top: 936px; padding-top: 34px; border-top: 3px solid var(--gold); }
+      #partner h4 { font-family: var(--cond); font-weight: 700; font-size: 52px; letter-spacing: 0.16em; color: var(--gold-lt); }
+      #partner .sub { margin-top: 6px; font-family: var(--sans); font-weight: 500; font-size: 30px; color: var(--cream-dim); }
+      .crow { margin-top: 26px; display: flex; align-items: center; gap: 22px; font-family: var(--sans); font-weight: 700; font-size: 42px; color: var(--cream); white-space: nowrap; }
+      .crow svg { width: 46px; height: 46px; flex: none; }
+      .crow.sm { font-size: 36px; font-weight: 600; }
+
+      /* ---------- S10: sign-off ---------- */
+      #plate10 {
+        position: absolute; left: 100px; top: 850px; width: 880px; height: 380px; border-radius: 30px; opacity: 0;
+        background: var(--cream); display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 0 3px var(--gold), 0 34px 80px rgba(0, 0, 0, 0.5);
+      }
+      #logo { width: 786px; height: 324px; mix-blend-mode: multiply; }
+      #tagline { position: absolute; left: 60px; right: 60px; top: 1262px; text-align: center; font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 48px; line-height: 1.12; color: var(--gold-lt); opacity: 0; }
+      #s10-when { position: absolute; left: 0; right: 0; top: 1392px; text-align: center; font-family: var(--cond); font-weight: 700; font-size: 34px; letter-spacing: 0.22em; color: var(--cream); opacity: 0; }
+
+      /* ---------- S11: UP end card (UP's own navy + orange) ---------- */
+      #s11 { background: #0b1222; }
+      #up-glow { position: absolute; left: -110px; top: 250px; width: 1300px; height: 1300px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 106, 0, 0.22) 0%, rgba(255, 106, 0, 0.06) 40%, rgba(255, 106, 0, 0) 68%); }
+      #up-arrow { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+      #up-logo { position: absolute; inset: 0; }
+      .uph { position: absolute; left: 210px; top: 560px; width: 660px; height: 385.9px; opacity: 0; background: url("assets/brand/up-mark-orange.png") 0 0 / 100% 100% no-repeat; }
+      #upL { clip-path: inset(0 48.87% 0 0); }
+      #upR { clip-path: inset(0 0 0 51.13%); }
+      #up-line { position: absolute; left: 60px; right: 60px; top: 1040px; text-align: center; font-family: "Unbounded", sans-serif; font-weight: 700; font-size: 58px; line-height: 1.16; letter-spacing: -0.01em; color: #fbfaf7; }
+      #up-line .w { display: inline-block; opacity: 0; margin: 0 0.04em; }
+      #up-line .o { color: #ff6a00; }
+      #up-credit { position: absolute; left: 0; right: 0; top: 1262px; text-align: center; font-family: "Plus Jakarta Sans", sans-serif; font-weight: 600; font-size: 32px; color: rgba(251, 250, 247, 0.72); opacity: 0; }
+
+      /* ---------- subtitles ---------- */
+      #subs { position: absolute; left: 60px; right: 60px; top: 1470px; height: 190px; display: flex; align-items: center; justify-content: center; text-align: center; }
+      #subline { font-family: var(--sans); font-weight: 800; font-size: 50px; line-height: 1.2; color: var(--cream); text-shadow: 0 3px 14px rgba(0, 0, 0, 0.75); }
+      #subline .w { opacity: 0.55; }
+      #subline .w.on { opacity: 1; }
+      #subline .w.now { color: var(--gold-lt); }
+
+      /* ---------- transition ribbon ---------- */
+      #ribbon { position: absolute; left: -560px; top: 0; width: 2200px; height: 420px; pointer-events: none; mix-blend-mode: screen; opacity: 0.95;
+        background: linear-gradient(180deg, rgba(212, 164, 55, 0) 0%, rgba(212, 164, 55, 0.45) 30%, rgba(255, 236, 170, 0.92) 50%, rgba(212, 164, 55, 0.45) 70%, rgba(212, 164, 55, 0) 100%); }
+      #ribbon i { position: absolute; left: 0; right: 0; top: 206px; height: 8px; background: #fff3c4; box-shadow: 0 0 30px 8px rgba(255, 230, 150, 0.9); }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-1d2b" id="root" data-composition-id="main" data-start="0" data-duration="75.438" data-width="1080" data-height="1920">
+      <div data-hf-id="hf-2xc0" id="bg"></div>
+      <div data-hf-id="hf-27c6" id="glow"></div>
+      <div data-hf-id="hf-r1g1" id="dust"></div>
+      <div data-hf-id="hf-f6d6" id="grain"></div>
+
+      <!-- S1 + S10: the continent -->
+      <div data-hf-id="hf-ur07" id="africa">
+        <svg data-hf-id="hf-tzqu" viewBox="0 0 860 940" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-ruoh" id="af-fill" d="" />
+          <g data-hf-id="hf-54kf" id="af-dots" />
+          <path data-hf-id="hf-oo58" id="af-line" d="" />
+          <circle data-hf-id="hf-em9r" id="af-ping" cx="0" cy="0" r="16" />
+          <circle data-hf-id="hf-yqy4" id="af-pin" cx="0" cy="0" r="9" />
+        </svg>
+      </div>
+
+      <section data-hf-id="hf-mcnq" id="s1" class="scene">
+        <div data-hf-id="hf-97z3" id="h1a" class="hook">Talent is everywhere.</div>
+        <div data-hf-id="hf-s9vq" id="h1b" class="hook">Opportunity isn't.</div>
+        <div data-hf-id="hf-dd8q" id="h1c" class="hook">Not yet.</div>
+      </section>
+
+      <section data-hf-id="hf-iejp" id="s2" class="scene">
+        <div data-hf-id="hf-k0fc" id="s2-head" class="abs">Education is how <em data-hf-id="hf-zpib">that changes.</em></div>
+        <div data-hf-id="hf-s9bq" id="p1" class="print"><div data-hf-id="hf-i8mw" class="ph"><img data-hf-id="hf-4bir" src="assets/photos/2026-ai-training-class.jpg" alt="Students at AESDI's AI Tech Scholarship Training"></div><div data-hf-id="hf-lrtc" class="tab">ONE CLASSROOM</div></div>
+        <div data-hf-id="hf-ob7p" id="p2" class="print"><div data-hf-id="hf-3axc" class="ph"><img data-hf-id="hf-n63t" src="assets/photos/2025-scholarship-cheque.jpg" alt="A student receives an Award of Academic Excellence scholarship"></div><div data-hf-id="hf-k66b" class="tab">ONE SCHOLARSHIP</div></div>
+        <div data-hf-id="hf-njjw" id="p3" class="print"><div data-hf-id="hf-2409" class="ph"><img data-hf-id="hf-3ky1" src="assets/photos/2025-trophy-handover.jpg" alt="An awardee receives a trophy at A4 2025"></div><div data-hf-id="hf-h642" class="tab">ONE CHANCE TO BE SEEN</div></div>
+      </section>
+
+      <section data-hf-id="hf-hmvw" id="s3" class="scene">
+        <div data-hf-id="hf-o0w3" class="wave" id="wv1"></div>
+        <div data-hf-id="hf-d5eg" class="wave" id="wv2"></div>
+        <div data-hf-id="hf-g4o1" class="wave" id="wv3"></div>
+        <div data-hf-id="hf-9lp5" class="ring" id="r3"></div>
+        <div data-hf-id="hf-8u1c" class="ring" id="r2"></div>
+        <div data-hf-id="hf-jpiz" class="ring" id="r1"></div>
+        <div data-hf-id="hf-hmmu" class="face" id="f1" style="left: 876px; top: 876px; width: 128px; height: 128px"><img data-hf-id="hf-jpiu" src="assets/photos/2025-three-scholars.jpg" alt="" style="object-position: 40% 35%"></div>
+        <div data-hf-id="hf-k1cv" class="face" id="f2" style="left: 76px; top: 876px; width: 128px; height: 128px"><img data-hf-id="hf-dwem" src="assets/photos/2026-ai-training-certificates.jpg" alt="" style="object-position: 50% 40%"></div>
+        <div data-hf-id="hf-11ov" class="face" id="f3" style="left: 944px; top: 545px; width: 108px; height: 108px"><img data-hf-id="hf-ldeb" src="assets/photos/2025-awardees.jpg" alt="" style="object-position: 55% 30%"></div>
+        <div data-hf-id="hf-ujtz" class="face" id="f4" style="left: 28px; top: 545px; width: 108px; height: 108px"><img data-hf-id="hf-b9ho" src="assets/photos/2025-dignitaries.jpg" alt="" style="object-position: 50% 35%"></div>
+        <div data-hf-id="hf-vl9j" class="face" id="f5" style="left: 751px; top: 1265px; width: 108px; height: 108px"><img data-hf-id="hf-tj64" src="assets/photos/2026-ai-training-team.jpg" alt="" style="object-position: 50% 30%"></div>
+        <div data-hf-id="hf-jvsc" class="face" id="f6" style="left: 221px; top: 1265px; width: 108px; height: 108px"><img data-hf-id="hf-ke3e" src="assets/photos/2025-student-honoured.jpg" alt="" style="object-position: 50% 45%"></div>
+        <div data-hf-id="hf-mco4" class="rlabel" id="lab1"><span data-hf-id="hf-ijea">A LIFE</span></div>
+        <div data-hf-id="hf-v0jz" class="rlabel" id="lab2"><span data-hf-id="hf-iwcw">A FAMILY</span></div>
+        <div data-hf-id="hf-r2fy" class="rlabel" id="lab3"><span data-hf-id="hf-kb6t">A COMMUNITY</span></div>
+        <div data-hf-id="hf-zba4" id="core"><img data-hf-id="hf-ysqq" data-layout-allow-overflow="" src="assets/photos/2025-scholarship-cheque-portrait.jpg" alt="A scholarship recipient"></div>
+        <div data-hf-id="hf-2uzj" id="flood"></div>
+      </section>
+
+      <section data-hf-id="hf-54df" id="s4" class="scene">
+        <div data-hf-id="hf-03k2" id="stage-light"></div>
+        <div data-hf-id="hf-mlav" id="lockup">
+          <div data-hf-id="hf-skbh" class="chip" id="chip1">
+            <svg data-hf-id="hf-0xs6" viewBox="0 0 24 24" fill="none" stroke="#d4a437" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect data-hf-id="hf-8t75" x="3" y="5" width="18" height="16" rx="2" /><path data-hf-id="hf-iemf" d="M3 10h18M8 3v4M16 3v4" /></svg>
+            THU · 5 NOV 2026 · 10AM
+          </div>
+          <div data-hf-id="hf-ez95" class="chip" id="chip2">
+            <svg data-hf-id="hf-nuh6" viewBox="0 0 24 24" fill="none" stroke="#d4a437" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path data-hf-id="hf-yzad" d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle data-hf-id="hf-hamn" cx="12" cy="9.5" r="2.6" /></svg>
+            NICON LUXURY HOTEL, ABUJA
+          </div>
+          <div data-hf-id="hf-jql6" id="conf">2ND AFRICAN ACADEMIC CONFERENCE</div>
+          <div data-hf-id="hf-geo1" id="amp">&amp;</div>
+          <div data-hf-id="hf-6rla" id="ed3">3RD EDITION</div>
+          <div data-hf-id="hf-0dtx" id="awards">African Academic Achievers' Awards</div>
+          <div data-hf-id="hf-td2a" id="a4row"><div data-hf-id="hf-4s9n" id="a4">A4<span data-hf-id="hf-e8wz" id="a4-shine" aria-hidden="true">A4</span></div><div data-hf-id="hf-jlne" id="yr">2026</div></div>
+        </div>
+        <div data-hf-id="hf-6gqx" class="curtain" id="cl"></div>
+        <div data-hf-id="hf-abdj" class="curtain" id="cr"></div>
+        <div data-hf-id="hf-fh0r" id="valance"></div>
+      </section>
+
+      <section data-hf-id="hf-yynm" id="s5" class="scene">
+        <img data-hf-id="hf-dyio" id="s5-photo" src="assets/photos/2024-honorary-doctorate-backdrop.jpg" alt="">
+        <div data-hf-id="hf-p8o2" id="s5-veil"></div>
+        <div data-hf-id="hf-l4wm" id="tag">THEME:</div>
+        <div data-hf-id="hf-nebk" id="theme"></div>
+        <div data-hf-id="hf-m6fx" id="theme-foot">2ND AFRICAN ACADEMIC CONFERENCE · 5 NOV 2026</div>
+      </section>
+
+      <section data-hf-id="hf-v0jl" id="s6" class="scene">
+        <div data-hf-id="hf-qq14" class="label-top">ON THE DAY</div>
+        <div data-hf-id="hf-jus0" class="card" id="c1">
+          <div data-hf-id="hf-qtgj" class="cph"><img data-hf-id="hf-m0sn" src="assets/photos/2025-dignitaries-card.jpg" alt="Dignitaries at A4 2025"></div>
+          <div data-hf-id="hf-8aq7" class="ctx"><h3 data-hf-id="hf-7hlg">Keynotes &amp; expert dialogue</h3><p data-hf-id="hf-t3in">Education leaders, policymakers and academics</p></div>
+        </div>
+        <div data-hf-id="hf-uq9n" class="card" id="c2">
+          <div data-hf-id="hf-km5s" class="num"><b data-hf-id="hf-jmar" id="c2n">0</b></div>
+          <div data-hf-id="hf-9jlb" class="ctx"><h3 data-hf-id="hf-cm7k">SCHOLARSHIPS AT STAKE</h3><p data-hf-id="hf-2p41">Live grand finals: A4 Debate + Spelling Bee</p>
+            <div data-hf-id="hf-sggr" class="splits"><span data-hf-id="hf-evpw">SPELLING BEE · 2</span><span data-hf-id="hf-494o">DEBATE · 3</span></div></div>
+        </div>
+        <div data-hf-id="hf-okju" class="card" id="c3">
+          <div data-hf-id="hf-mzdv" class="cph"><img data-hf-id="hf-uw3r" src="assets/photos/2025-awardees-card.jpg" alt="Awardees at A4 2025"></div>
+          <div data-hf-id="hf-95aa" class="ctx"><h3 data-hf-id="hf-33e3">Awards for Africa's achievers</h3><p data-hf-id="hf-4azf">Honouring academic and educational excellence</p></div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-u8vs" id="s7" class="scene">
+        <div data-hf-id="hf-wwdm" id="badge"><span data-hf-id="hf-zhdr">LAUNCHING · 5 NOV 2026</span></div>
+        <div data-hf-id="hf-do1d" id="s7-head">Beyond the hall</div>
+        <div data-hf-id="hf-i5tv" id="pole"></div>
+        <div data-hf-id="hf-qv15" class="blade" id="b1" data-layout-allow-overlap="">
+          <svg data-hf-id="hf-qe3z" viewBox="0 0 470 124"><polygon data-hf-id="hf-5aao" points="4,4 404,4 466,62 404,120 4,120" fill="#13623d" stroke="#fbf3dc" stroke-width="6" stroke-linejoin="round" /><text data-hf-id="hf-9qvy" x="200" y="84" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="64" letter-spacing="5" fill="#fbf3dc">SCHOOL</text></svg>
+        </div>
+        <div data-hf-id="hf-7bxs" class="blade" id="b2">
+          <svg data-hf-id="hf-ahhr" viewBox="0 0 470 124"><polygon data-hf-id="hf-yu5c" points="466,4 66,4 4,62 66,120 466,120" fill="#13623d" stroke="#fbf3dc" stroke-width="6" stroke-linejoin="round" /><text data-hf-id="hf-2oza" x="270" y="84" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="64" letter-spacing="5" fill="#fbf3dc">SKILL</text></svg>
+        </div>
+        <div data-hf-id="hf-unbd" id="plate" data-layout-allow-overlap="">STREET TO</div>
+        <div data-hf-id="hf-5p71" id="s7-cap">for children kept out of class by cost</div>
+        <div data-hf-id="hf-usy7" id="rea">
+          <svg data-hf-id="hf-1wf3" viewBox="0 0 64 64" fill="none" stroke="#d4a437" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><path data-hf-id="hf-luym" d="M6 10h32a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H20l-9 8v-8H6a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z" /><path data-hf-id="hf-vqej" d="M46 22h12a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-4v7l-8-7H32a4 4 0 0 1-4-4v-2" /></svg>
+          <div data-hf-id="hf-yeow"><h3 data-hf-id="hf-ehjq">Repositioning Education Africa</h3><p data-hf-id="hf-pts5">REA · an education conversation series</p></div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-yv67" id="s8" class="scene">
+        <div data-hf-id="hf-wxsb" class="label-top">FIRST EDITION · 2024</div>
+        <div data-hf-id="hf-vjn9" id="q1" class="print"><div data-hf-id="hf-2iba" class="ph"><img data-hf-id="hf-l0ke" src="assets/photos/2024-scholarship-beneficiaries.jpg" alt="Scholarship beneficiaries, A4 2024"></div></div>
+        <div data-hf-id="hf-zhra" id="q2" class="print"><div data-hf-id="hf-1be7" class="ph"><img data-hf-id="hf-wzan" src="assets/photos/2024-honorary-doctorate.jpg" alt="Awardees and dignitaries, A4 2024"></div></div>
+        <div data-hf-id="hf-1uv6" class="stat" id="st1"><b data-hf-id="hf-iapn" id="n1">0</b><span data-hf-id="hf-wmrv">PARTICIPANTS</span></div>
+        <div data-hf-id="hf-xwr5" class="stat" id="st2"><b data-hf-id="hf-tldq" id="n2">0</b><span data-hf-id="hf-vk1b">HONOUREES</span></div>
+        <div data-hf-id="hf-x53c" class="stat" id="st3"><b data-hf-id="hf-lyv5" id="n3">0</b><span data-hf-id="hf-fa5g">SCHOLARSHIPS</span></div>
+      </section>
+
+      <section data-hf-id="hf-ux26" id="s9" class="scene">
+        <div data-hf-id="hf-acme" id="s9-top">NOMINATIONS CLOSE</div>
+        <div data-hf-id="hf-szj9" id="s9-date">25 OCT</div>
+        <div data-hf-id="hf-y07b" id="s9-yr">2026 · The event: Thu 5 Nov, 10AM · NICON Luxury Hotel, Abuja</div>
+        <div data-hf-id="hf-1qbt" id="reg">
+          <span data-hf-id="hf-wd0d" class="k">REGISTER</span>
+          <svg data-hf-id="hf-xrhj" viewBox="0 0 24 24" fill="none" stroke="#062417" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path data-hf-id="hf-7qws" d="M4 12h15M13 6l6 6-6 6" /></svg>
+          <span data-hf-id="hf-cjqa" class="v">a4.aesdi.org</span>
+        </div>
+        <div data-hf-id="hf-7gtd" id="partner">
+          <h4 data-hf-id="hf-a9s1">PARTNER WITH US</h4>
+          <div data-hf-id="hf-a2fj" class="sub">Sponsorship · partnership · participation</div>
+          <div data-hf-id="hf-zab0" class="crow" id="cr1"><svg data-hf-id="hf-ybho" viewBox="0 0 24 24" fill="none" stroke="#d4a437" stroke-width="2" stroke-linejoin="round"><rect data-hf-id="hf-uwav" x="3" y="5" width="18" height="14" rx="2" /><path data-hf-id="hf-t2z2" d="M3.5 6.5 12 13l8.5-6.5" /></svg>info@a4.aesdi.org</div>
+          <div data-hf-id="hf-gqy0" class="crow sm" id="cr2"><svg data-hf-id="hf-uibo" viewBox="0 0 24 24" fill="none" stroke="#d4a437" stroke-width="2" stroke-linejoin="round"><path data-hf-id="hf-25zz" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z" /></svg>+234 812 349 0994 · +234 901 274 1781</div>
+          <div data-hf-id="hf-u9m5" class="crow" id="cr3"><svg data-hf-id="hf-euxc" viewBox="0 0 24 24" fill="none" stroke="#d4a437" stroke-width="2"><rect data-hf-id="hf-e7mg" x="3" y="3" width="18" height="18" rx="5" /><circle data-hf-id="hf-kysq" cx="12" cy="12" r="4" /><circle data-hf-id="hf-7xdp" cx="17.3" cy="6.7" r="0.9" fill="#d4a437" /></svg>@aesdi_official</div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-g5gy" id="s10" class="scene">
+        <div id="plate10"><img id="logo" src="assets/brand/aesdi-logo.png" alt="African Education &amp; Social Development Initiative (AESDI)" /></div>
+        <div data-hf-id="hf-20rw" id="tagline">Reforming Education, Transforming Africa.</div>
+        <div data-hf-id="hf-jefg" id="s10-when">5 NOV 2026 · ABUJA</div>
+      </section>
+
+      <section id="s11" class="scene">
+        <div id="up-glow"></div>
+        <div id="up-logo">
+          <div class="uph" id="upL"></div>
+          <div class="uph" id="upR"></div>
+          <div class="uph" id="upFull"></div>
+        </div>
+        <svg id="up-arrow" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"><path id="up-arrow-p" fill="#FF6A00" d="M547.4,560 L643.2,710.3 L580.5,710.3 L580.5,945.9 L516.6,945.9 L516.6,710.3 L452.2,710.3 Z" /></svg>
+        <div id="up-line"><span class="w">Find</span> <span class="w">more</span> <span class="w">opportunities</span> <span class="w">like</span> <span class="w">this,</span> <span class="w o">only</span> <span class="w o">on</span> <span class="w o">UP.</span></div>
+        <div id="up-credit">UP is a product by Outsidee Solutions</div>
+      </section>
+
+      <div data-hf-id="hf-2vc4" id="toplabel">AESDI · A4 2026</div>
+      <div data-hf-id="hf-zdog" id="subs"><div data-hf-id="hf-76p7" id="subline"></div></div>
+      <div data-hf-id="hf-wbnp" id="ribbon"><i data-hf-id="hf-wt6k"></i></div>
+
+      <!-- VO:BEGIN -->
+
+      <!-- VO:END -->
+      <!-- SFX:BEGIN -->
+      <audio id="sfx-00-sparkle" src="assets/sfx/sparkle.mp3" data-start="0.35" data-duration="1.8" data-track-index="30" data-volume="0.22"></audio>
+      <audio id="sfx-01-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="6.97" data-duration="0.57" data-track-index="31" data-volume="0.2"></audio>
+      <audio id="sfx-02-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="8.024" data-duration="0.57" data-track-index="32" data-volume="0.2"></audio>
+      <audio id="sfx-03-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="9.162" data-duration="0.57" data-track-index="30" data-volume="0.2"></audio>
+      <audio id="sfx-04-riser" src="assets/sfx/riser.mp3" data-start="13.556" data-duration="1.7" data-media-start="8.3" data-track-index="31" data-volume="0.3"></audio>
+      <audio id="sfx-05-whoosh-cinematic" src="assets/sfx/whoosh-cinematic.mp3" data-start="15.306" data-duration="2.6" data-track-index="32" data-volume="0.42"></audio>
+      <audio id="sfx-06-impact-bass-1" src="assets/sfx/impact-bass-1.mp3" data-start="21.84" data-duration="2.1" data-track-index="30" data-volume="0.45"></audio>
+      <audio id="sfx-07-sparkle" src="assets/sfx/sparkle.mp3" data-start="22.47" data-duration="1.8" data-track-index="31" data-volume="0.35"></audio>
+      <audio id="sfx-08-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="23.228" data-duration="0.57" data-track-index="32" data-volume="0.3"></audio>
+      <audio id="sfx-09-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="31.654" data-duration="0.57" data-track-index="30" data-volume="0.3"></audio>
+      <audio id="sfx-10-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="40.762" data-duration="0.57" data-track-index="31" data-volume="0.3"></audio>
+      <audio id="sfx-11-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="48.686" data-duration="0.57" data-track-index="32" data-volume="0.3"></audio>
+      <audio id="sfx-12-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="56.298" data-duration="0.57" data-track-index="30" data-volume="0.3"></audio>
+      <audio id="sfx-13-chime" src="assets/sfx/chime.mp3" data-start="37.63" data-duration="2.5" data-track-index="31" data-volume="0.22"></audio>
+      <audio id="sfx-14-pop" src="assets/sfx/pop.mp3" data-start="50.842" data-duration="0.72" data-track-index="32" data-volume="0.3"></audio>
+      <audio id="sfx-15-pop" src="assets/sfx/pop.mp3" data-start="53.056" data-duration="0.72" data-track-index="30" data-volume="0.3"></audio>
+      <audio id="sfx-16-pop" src="assets/sfx/pop.mp3" data-start="54.568" data-duration="0.72" data-track-index="31" data-volume="0.3"></audio>
+      <audio id="sfx-17-sparkle" src="assets/sfx/sparkle.mp3" data-start="65.306" data-duration="1.8" data-track-index="32" data-volume="0.4"></audio>
+      <audio id="sfx-18-whoosh-short" src="assets/sfx/whoosh-short.mp3" data-start="70.938" data-duration="0.57" data-track-index="30" data-volume="0.3"></audio>
+      <audio id="sfx-19-pop" src="assets/sfx/pop.mp3" data-start="71.318" data-duration="0.72" data-track-index="31" data-volume="0.45"></audio>
+      <audio id="sfx-20-whoosh" src="assets/sfx/whoosh.mp3" data-start="71.758" data-duration="0.57" data-track-index="32" data-volume="0.3"></audio>
+      <audio id="sfx-21-impact-bass-1" src="assets/sfx/impact-bass-1.mp3" data-start="72.298" data-duration="2.1" data-track-index="30" data-volume="0.4"></audio>
+      <!-- SFX:END -->
+    </div>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const VO = window.VO, AF = window.AFRICA, L = VO.lines, END = VO.duration;
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => Array.from(document.querySelectorAll(s));
+        const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const eo3 = (p) => 1 - Math.pow(1 - p, 3);
+
+        // Build-time only: stroke length for the outline draw.
+        function measurePath(sel) { return document.querySelector(sel).getTotalLength() * 1.02; }
+        // cue(line, word, nth): start time of the nth word in a line that begins with `word`.
+        function cue(li, word, nth) {
+          const q = norm(word);
+          let k = 0;
+          for (const w of L[li].words) {
+            if (norm(w.w).startsWith(q)) { if (k === (nth || 0)) return w.s; k++; }
+          }
+          return L[li].start;
+        }
+        // Scene k starts a beat before its line; scene 0 at 0.
+        const SC = L.map((l, i) => (i === 0 ? 0 : +(l.start - 0.42).toFixed(3)));
+        const SE = SC.map((s, i) => (i < SC.length - 1 ? SC[i + 1] : END));
+
+        // Seeded PRNG for decoration.
+        let seed = 51105;
+        const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+        /* ---------- build the continent ---------- */
+        $("#af-fill").setAttribute("d", AF.d);
+        $("#af-line").setAttribute("d", AF.d);
+        const NS = "http://www.w3.org/2000/svg";
+        const dotsG = $("#af-dots");
+        const [ax, ay] = AF.abuja;
+        const dots = AF.pts.map(([x, y, r]) => {
+          const c = document.createElementNS(NS, "circle");
+          c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 5.5);
+          c._r = r; c._d = Math.hypot(x - ax, y - ay);
+          dotsG.appendChild(c);
+          return c;
+        });
+        ["#af-ping", "#af-pin"].forEach((s) => { $(s).setAttribute("cx", ax); $(s).setAttribute("cy", ay); });
+        const lineLen = measurePath("#af-line");
+        $("#af-line").style.strokeDasharray = lineLen;
+        const byR = dots.slice().sort((a, b) => a._r - b._r);
+        const keepLit = byR.filter((d) => d._r < 0.09);
+        const goDark = byR.filter((d) => d._r >= 0.09);
+        const byDist = dots.slice().sort((a, b) => a._d - b._d);
+
+        /* ---------- theme words ---------- */
+        const THEME = "Building Resilient African Education System for Inclusive Growth, Continental Sovereignty and Global Competitiveness".split(" ");
+        const HL = new Set([6, 7, 8, 9, 11, 12]);
+        $("#theme").innerHTML = THEME.map((w, i) => `<span class="tw" id="tw${i}">${HL.has(i) ? '<i class="hl-bg"></i>' : ""}<span>${w}</span></span>`).join(" ");
+
+        /* ---------- dust ---------- */
+        const dust = $("#dust");
+        const motes = [];
+        for (let i = 0; i < 30; i++) {
+          const m = document.createElement("div");
+          const s = 3 + rnd() * 5;
+          m.className = "mote";
+          Object.assign(m.style, { left: rnd() * 1060 + "px", top: 200 + rnd() * 1700 + "px", width: s + "px", height: s + "px", opacity: (0.18 + rnd() * 0.4).toFixed(2) });
+          dust.appendChild(m);
+          motes.push(m);
+        }
+
+        /* ---------- helpers ---------- */
+        function scene(sel, tIn, tOut, fin, fout) {
+          tl.fromTo(sel, { autoAlpha: 0 }, { autoAlpha: 1, duration: fin == null ? 0.35 : fin, ease: "power1.out" }, tIn);
+          if (tOut != null) tl.to(sel, { autoAlpha: 0, duration: fout == null ? 0.35 : fout, ease: "power1.in" }, tOut);
+        }
+        function sweep(t) {
+          tl.fromTo("#ribbon", { y: 2250, rotation: -13 }, { y: -900, rotation: -13, duration: 0.95, ease: "power2.inOut" }, t - 0.48);
+        }
+        const rise = (sel, t, o) => tl.fromTo(sel, Object.assign({ y: 60, opacity: 0 }, o && o.from), Object.assign({ y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, o && o.to), t);
+
+        /* ---------- ambient ---------- */
+        tl.set("#ribbon", { y: 2250, rotation: -13 }, 0);
+        tl.fromTo("#glow", { scale: 1 }, { scale: 1.12, duration: 3.2, ease: "sine.inOut", yoyo: true, repeat: Math.max(0, Math.floor(END / 3.2) - 1) }, 0);
+        motes.forEach((m, i) => tl.fromTo(m, { y: 0 }, { y: -(160 + ((i * 37) % 200)), duration: END, ease: "none" }, 0));
+        tl.fromTo("#toplabel", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, SC[1] + 0.2);
+        tl.to("#toplabel", { autoAlpha: 0, duration: 0.3 }, SC[3] - 0.2);
+        tl.to("#toplabel", { autoAlpha: 1, duration: 0.4 }, SC[4] + 0.3);
+        tl.to("#toplabel", { autoAlpha: 0, duration: 0.3 }, SC[9] - 0.3);
+
+        /* ================= S1 — Talent is everywhere ================= */
+        const tIsnt = cue(0, "opportunity"), tNot = cue(0, "not");
+        scene("#s1", 0, SE[0] - 0.3, 0.01, 0.4);
+        tl.fromTo("#africa", { autoAlpha: 0, scale: 0.94 }, { autoAlpha: 1, scale: 1, duration: 0.8, ease: "power2.out" }, 0);
+        tl.fromTo("#af-line", { strokeDashoffset: lineLen }, { strokeDashoffset: 0, duration: 1.7, ease: "power2.inOut" }, 0.05);
+        tl.fromTo("#af-fill", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power1.out" }, 0.9);
+        tl.fromTo(byR, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)", stagger: { amount: Math.max(0.6, tIsnt - 0.8) } }, 0.35);
+        rise("#h1a", 0.25, { from: { y: 40 } });
+        tl.to("#h1a", { y: -40, opacity: 0, duration: 0.35, ease: "power2.in" }, tIsnt - 0.2);
+        rise("#h1b", tIsnt, { from: { y: 50 } });
+        tl.to(goDark, { opacity: 0.14, scale: 0.7, duration: 0.45, ease: "power2.out", stagger: { amount: 0.5 } }, tIsnt + 0.15);
+        tl.to(keepLit, { scale: 1.45, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, tIsnt + 0.7);
+        tl.fromTo("#h1c", { opacity: 0, y: 24, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power2.out" }, tNot);
+        tl.to("#africa", { scale: 1.035, duration: SE[0], ease: "none" }, 0.8);
+        tl.to("#africa", { autoAlpha: 0, duration: 0.4, ease: "power1.in" }, SE[0] - 0.3);
+
+        /* ================= S2 — One classroom ================= */
+        sweep(SC[1]);
+        scene("#s2", SC[1] - 0.1, null, 0.3);
+        rise("#s2-head", SC[1] + 0.05, { from: { y: 50 } });
+        const prints = [["#p1", cue(1, "classroom") - 0.25, -4, 9], ["#p2", cue(1, "scholarship") - 0.25, 3.5, -8], ["#p3", cue(1, "chance") - 0.2, -2.5, 7]];
+        prints.forEach(([sel, t, rot, from]) => {
+          tl.fromTo(sel, { y: -120, rotation: rot + from, opacity: 0, scale: 1.06 }, { y: 0, rotation: rot, opacity: 1, scale: 1, duration: 0.75, ease: "power3.out" }, t);
+          tl.fromTo(sel + " img", { scale: 1.12 }, { scale: 1.0, duration: SE[1] - t + 0.5, ease: "none" }, t);
+          tl.fromTo(sel + " .tab", { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, t + 0.3);
+        });
+        // hand-off into the ripple: everything but the scholarship print leaves
+        tl.to(["#s2-head", "#p1", "#p3"], { opacity: 0, y: -30, duration: 0.4, ease: "power2.in", stagger: 0.05 }, SE[1] - 0.45);
+        tl.to("#p2 .tab", { opacity: 0, duration: 0.25 }, SE[1] - 0.4);
+        tl.set("#s2", { autoAlpha: 0 }, SE[1]);
+
+        /* ================= S3 — The ripple ================= */
+        scene("#s3", SE[1], SE[2] + 0.35, 0.01, 0.01);
+        const tLife = cue(2, "life"), tFam = cue(2, "family"), tCom = cue(2, "community");
+        // #core starts where the scholarship print was (FLIP), then settles into the centre circle.
+        tl.fromTo("#core", { x: 186, y: 106, scale: 1.533, rotation: 3.5, borderRadius: "0%", borderWidth: 0 },
+          { x: 0, y: 0, scale: 1, rotation: 0, borderRadius: "50%", borderWidth: 6, duration: 0.9, ease: "power3.inOut" }, SE[1]);
+        tl.fromTo("#core img", { scale: 1 }, { scale: 1.75, duration: 0.9, ease: "power3.inOut", transformOrigin: "47% 22%" }, SE[1]);
+        tl.to("#core img", { scale: 1.9, duration: Math.max(0.5, SE[2] - SE[1] - 0.9), ease: "none" }, SE[1] + 0.9);
+        [["#r1", "#lab1", tLife], ["#r2", "#lab2", tFam], ["#r3", "#lab3", tCom]].forEach(([r, lab, t]) => {
+          tl.fromTo(r, { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, ease: "power3.out" }, t - 0.15);
+          tl.fromTo(lab, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(1.8)" }, t + 0.1);
+        });
+        ["#wv1", "#wv2", "#wv3"].forEach((w, i) => {
+          tl.fromTo(w, { scale: 1, opacity: 0.8 }, { scale: 3.8, opacity: 0, duration: 1.6, ease: "power1.out", repeat: 1 }, tLife + i * 0.55);
+        });
+        [["#f1", tFam + 0.2], ["#f2", tFam + 0.32], ["#f3", tCom + 0.2], ["#f4", tCom + 0.3], ["#f5", tCom + 0.4], ["#f6", tCom + 0.5]].forEach(([f, t]) => {
+          tl.fromTo(f, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, t);
+        });
+        // gold flood from the centre becomes the curtain
+        tl.fromTo("#flood", { scale: 0, opacity: 1 }, { scale: 8.2, opacity: 1, duration: 0.75, ease: "power2.in", immediateRender: false }, SE[2] - 0.6);
+
+        /* ================= S4 — The reveal ================= */
+        scene("#s4", SE[2] + 0.1, SE[3] - 0.3, 0.05, 0.4);
+        const tNov = cue(3, "november"), tAbu = cue(3, "abuja"), tConf = cue(3, "conference"), tAw = cue(3, "achievers"), tA4 = cue(3, "four");
+        const open = SE[2] + 0.35;
+        tl.fromTo("#cl", { scaleX: 1, x: 0 }, { scaleX: 0.22, duration: 1.5, ease: "power3.inOut", transformOrigin: "0% 50%" }, open);
+        tl.fromTo("#cr", { scaleX: 1, x: 0 }, { scaleX: 0.22, duration: 1.5, ease: "power3.inOut", transformOrigin: "100% 50%" }, open);
+        tl.fromTo("#stage-light", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 1.6, ease: "power2.out" }, open + 0.3);
+        rise("#chip1", Math.max(open + 0.5, tNov - 0.1), { from: { y: 30 } });
+        rise("#chip2", Math.max(open + 0.75, tAbu - 0.1), { from: { y: 30 } });
+        rise("#conf", tConf - 0.35, { from: { y: 36 } });
+        tl.fromTo("#amp", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, tConf + 0.35);
+        rise("#ed3", tAw - 0.45, { from: { y: 30 } });
+        rise("#awards", tAw - 0.3, { from: { y: 40 } });
+        tl.fromTo("#a4", { opacity: 0, scale: 1.5, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: "power4.out" }, tA4 - 0.2);
+        tl.fromTo("#yr", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, tA4 + 0.25);
+        tl.fromTo("#a4-shine", { backgroundPosition: "100% 0%" }, { backgroundPosition: "0% 0%", duration: 0.9, ease: "power2.inOut" }, tA4 + 0.45);
+        tl.to("#lockup", { scale: 1.03, duration: SE[3] - open, ease: "none" }, open);
+
+        /* ================= S5 — Theme ================= */
+        sweep(SC[4]);
+        scene("#s5", SC[4] - 0.1, SE[4] - 0.3);
+        tl.fromTo("#s5-photo", { scale: 1.12 }, { scale: 1.0, duration: SE[4] - SC[4] + 0.4, ease: "none" }, SC[4]);
+        tl.fromTo("#tag", { x: -80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, SC[4] + 0.1);
+        const tb = cue(4, "building");
+        const themeWords = L[4].words.slice(L[4].words.findIndex((w) => norm(w.w).startsWith("building")));
+        THEME.forEach((w, i) => {
+          const t = themeWords[i] ? themeWords[i].s : tb + i * 0.3;
+          tl.fromTo("#tw" + i, { opacity: 0.12, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, t - 0.08);
+          if (HL.has(i)) {
+            tl.fromTo(`#tw${i} .hl-bg`, { opacity: 0, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 0.3, ease: "power2.out", transformOrigin: "0% 50%" }, t + 0.12);
+            tl.to(`#tw${i} > span`, { color: "#062417", duration: 0.2 }, t + 0.18);
+          }
+        });
+        rise("#theme-foot", tb + 0.6, { from: { y: 20 } });
+
+        /* ================= S6 — Programme ================= */
+        sweep(SC[5]);
+        scene("#s6", SC[5] - 0.1, SE[5] - 0.3);
+        const tLive = cue(5, "live"), tFive = cue(5, "five"), tAwd = cue(5, "awards");
+        rise("#s6 .label-top", SC[5] + 0.05, { from: { y: 20 } });
+        [["#c1", SC[5] + 0.3], ["#c2", tLive - 0.2], ["#c3", tAwd - 0.2]].forEach(([c, t]) =>
+          tl.fromTo(c, { y: 140, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, t));
+        tl.fromTo("#c2n", { scale: 0.55 }, { scale: 1, duration: 0.9, ease: "power3.out" }, tFive - 0.6);
+        tl.fromTo("#c2 .splits span", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, tFive + 0.25);
+        [["#c1", SC[5] + 0.3], ["#c3", tAwd - 0.2]].forEach(([c, t]) => tl.fromTo(c + " img", { scale: 1.15 }, { scale: 1, duration: SE[5] - t, ease: "none" }, t));
+
+        /* ================= S7 — Beyond the hall ================= */
+        sweep(SC[6]);
+        scene("#s7", SC[6] - 0.1, SE[6] - 0.3);
+        const tSt = cue(6, "street"), tSch = cue(6, "school"), tChi = cue(6, "children"), tRea = cue(6, "repositioning");
+        rise("#badge", SC[6] + 0.05, { from: { y: 20 } });
+        rise("#s7-head", SC[6] + 0.15, { from: { y: 50 } });
+        tl.fromTo("#pole", { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease: "power3.out", transformOrigin: "50% 100%" }, tSt - 0.55);
+        tl.fromTo("#plate", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.8)" }, tSt - 0.15);
+        tl.fromTo("#b1", { rotation: -85, opacity: 0 }, { rotation: 0, opacity: 1, duration: 0.8, ease: "back.out(1.4)", transformOrigin: "0% 50%" }, tSch - 0.2);
+        tl.fromTo("#b2", { rotation: 85, opacity: 0 }, { rotation: 0, opacity: 1, duration: 0.8, ease: "back.out(1.4)", transformOrigin: "100% 50%" }, tSch + 0.35);
+        rise("#s7-cap", tChi - 0.1, { from: { y: 26 } });
+        tl.fromTo("#rea", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, tRea - 0.25);
+
+        /* ================= S8 — Proof ================= */
+        sweep(SC[7]);
+        scene("#s8", SC[7] - 0.1, SE[7] - 0.3);
+        const tTwo = cue(7, "two"), tTw = cue(7, "twelve"), tFv = cue(7, "five");
+        rise("#s8 .label-top", SC[7] + 0.05, { from: { y: 20 } });
+        tl.fromTo("#q1", { x: -140, rotation: -9, opacity: 0 }, { x: 0, rotation: -3, opacity: 1, duration: 0.8, ease: "power3.out" }, SC[7] + 0.15);
+        tl.fromTo("#q2", { x: 140, rotation: 8, opacity: 0 }, { x: 0, rotation: 2.5, opacity: 1, duration: 0.8, ease: "power3.out" }, SC[7] + 0.35);
+        ["#q1", "#q2"].forEach((q) => tl.fromTo(q + " img", { scale: 1.1 }, { scale: 1, duration: SE[7] - SC[7], ease: "none" }, SC[7]));
+        [["#st1", tTwo - 0.3], ["#st2", tTw - 0.3], ["#st3", tFv - 0.3]].forEach(([s, t]) =>
+          tl.fromTo(s, { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, t));
+
+        /* ================= S9 — Call to action ================= */
+        sweep(SC[8]);
+        scene("#s9", SC[8] - 0.1, SE[8] - 0.35, 0.35, 0.45);
+        const tReg = cue(8, "register"), tPar = cue(8, "partner");
+        rise("#s9-top", SC[8] + 0.05, { from: { y: 24 } });
+        tl.fromTo("#s9-date", { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power4.out" }, cue(8, "october") - 0.2);
+        rise("#s9-yr", cue(8, "october") + 0.4, { from: { y: 16 } });
+        tl.fromTo("#reg", { y: 80, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.5)" }, tReg - 0.15);
+        rise("#partner", tPar - 0.25, { from: { y: 50 } });
+        tl.fromTo(["#cr1", "#cr2", "#cr3"], { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out", stagger: 0.14 }, tPar);
+
+        /* ================= S10 — Sign-off (callback to S1) ================= */
+        const s10 = SC[9];
+        scene("#s10", s10 - 0.1, null, 0.4);
+        tl.set(dots, { opacity: 0, scale: 0 }, s10 - 0.2);
+        tl.set("#af-line", { strokeDashoffset: 0 }, s10 - 0.2);
+        tl.fromTo("#africa", { autoAlpha: 0, scale: 0.6, y: 0 }, { autoAlpha: 1, scale: 0.62, y: -150, duration: 0.6, ease: "power2.out", immediateRender: false }, s10 - 0.2);
+        tl.fromTo("#af-pin", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1.6, duration: 0.4, ease: "back.out(2.5)", immediateRender: false }, s10 + 0.05);
+        tl.fromTo("#af-ping", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 7, duration: 1.2, ease: "power1.out", repeat: 1, immediateRender: false }, s10 + 0.1);
+        tl.to(byDist, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)", stagger: { amount: 1.3 } }, s10 + 0.2);
+        tl.fromTo("#plate10", { opacity: 0, y: 50, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.75, ease: "power3.out", immediateRender: false }, s10 + 0.35);
+        tl.fromTo("#tagline", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, cue(9, "reforming") - 0.1);
+        tl.fromTo("#s10-when", { opacity: 0 }, { opacity: 1, duration: 0.5, immediateRender: false }, cue(9, "transforming") + 0.3);
+        tl.to("#africa", { scale: 0.645, duration: END - s10, ease: "none" }, s10 + 0.4);
+
+        /* ================= S11 — UP end card: the arrow pops, U and P lock around it ================= */
+        const OUT = VO.outroStart || END - 4.4;
+        tl.fromTo("#s11", { autoAlpha: 1, yPercent: 100 }, { autoAlpha: 1, yPercent: 0, duration: 0.55, ease: "power3.inOut", immediateRender: false }, OUT - 0.1);
+        tl.fromTo("#up-glow", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, ease: "power2.out" }, OUT + 0.2);
+        tl.fromTo("#up-arrow", { scale: 0, y: 140 }, { scale: 1, y: 0, duration: 0.5, ease: "back.out(2.4)", transformOrigin: "547px 800px" }, OUT + 0.3);
+        tl.set(["#s10", "#africa"], { autoAlpha: 0 }, OUT + 0.5); // fully covered by the navy panel by now
+        const LOCK = OUT + 1.28;
+        tl.fromTo("#upL", { opacity: 1, x: -760 }, { opacity: 1, x: 0, duration: 0.56, ease: "power2.in", immediateRender: false }, LOCK - 0.56);
+        tl.fromTo("#upR", { opacity: 1, x: 760 }, { opacity: 1, x: 0, duration: 0.56, ease: "power2.in", immediateRender: false }, LOCK - 0.56);
+        // on the lock frame the arrow leaves and the gap becomes the logo's own negative space
+        tl.set("#up-arrow-p", { opacity: 0 }, LOCK);
+        tl.set(["#upL", "#upR"], { opacity: 0 }, LOCK);
+        tl.set("#upFull", { opacity: 1 }, LOCK);
+        tl.fromTo("#up-logo", { scale: 1.06 }, { scale: 1, duration: 0.4, ease: "power2.out", transformOrigin: "540px 753px", immediateRender: false }, LOCK);
+        tl.fromTo("#up-line .w", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.07 }, LOCK + 0.25);
+        tl.fromTo("#up-credit", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, LOCK + 1.05);
+
+        /* ---------- per-frame text: counters + subtitles ---------- */
+        const n1 = $("#n1"), n2 = $("#n2"), n3 = $("#n3"), c2n = $("#c2n"), subline = $("#subline");
+        const count = (t, t0, d, v) => Math.round(v * eo3(clamp((t - t0) / d, 0, 1)));
+        const chunks = [];
+        VO.subs.forEach((line, li) => line.forEach((c, ci) => chunks.push({ li, s: c.s, e: c.e, words: c.words, last: ci === line.length - 1 })));
+        chunks.forEach((c, i) => {
+          const next = chunks[i + 1];
+          c.until = c.last ? c.e + 0.35 : next ? next.s : c.e + 0.35;
+          c.html = c.words.map((w, k) => `<span class="w" data-k="${k}">${w.t}</span>`).join(" ");
+        });
+        let shown = -1;
+        function render(t) {
+          c2n.textContent = count(t, tFive - 0.6, 0.9, 5);
+          n1.textContent = count(t, tTwo - 0.2, 1.2, 250) + (t > tTwo + 0.9 ? "+" : "");
+          n2.textContent = count(t, tTw - 0.2, 0.8, 12);
+          n3.textContent = count(t, tFv - 0.2, 0.6, 5);
+          let idx = -1;
+          for (let i = 0; i < chunks.length; i++) {
+            const c = chunks[i];
+            if (c.li === 0 || c.li === 9) continue; // on-screen type already carries the hook and sign-off
+            if (t >= c.s - 0.06 && t < c.until) { idx = i; break; }
+          }
+          if (idx !== shown) { subline.innerHTML = idx < 0 ? "" : chunks[idx].html; shown = idx; }
+          if (idx >= 0) {
+            const ws = chunks[idx].words, spans = subline.children;
+            for (let k = 0; k < ws.length; k++) {
+              spans[k].className = "w" + (t >= ws[k].s - 0.04 ? " on" : "") + (t >= ws[k].s - 0.04 && t < ws[k].e + 0.08 ? " now" : "");
+            }
+          }
+        }
+        const clock = { t: 0 };
+        tl.to(clock, { t: END, duration: END, ease: "none", onUpdate: () => render(clock.t) }, 0);
+        render(0);
+
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

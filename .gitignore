@@ -43,3 +43,7 @@ latest-glowup-channel/
 # behind if anyone runs `npm install`, and the two disagreeing is what breaks
 # installs (pnpm refuses to reuse a tree it thinks npm owns).
 package-lock.json
+
+# Brag render tooling: per-project node_modules and ffmpeg binaries, not output
+brag-output-*/node_modules/
+brag-output-*/.hfbin/

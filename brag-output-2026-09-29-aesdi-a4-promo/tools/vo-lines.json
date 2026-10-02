@@ -1,0 +1,86 @@
+{
+  "lead": 0.55,
+  "gap": 0.6,
+  "tail": 1.9,
+  "lines": [
+    {
+      "id": "L01",
+      "spoken": "Talent is everywhere in Africa. Opportunity isn't. Not yet."
+    },
+    {
+      "id": "L02",
+      "spoken": "Education is how that changes. One classroom. One scholarship. One chance to be seen."
+    },
+    {
+      "id": "L03",
+      "spoken": "And a life turns. Then a family. Then a community."
+    },
+    {
+      "id": "L04",
+      "spoken": "On November fifth, in Abuja: the African Academic Conference, and the African Academic Achievers' Awards. A four, twenty twenty-six."
+    },
+    {
+      "id": "L05",
+      "spoken": "This year's theme: building resilient African education systems, for inclusive growth, continental sovereignty, and global competitiveness."
+    },
+    {
+      "id": "L06",
+      "spoken": "Keynotes and dialogue. Live finals of the A four Debate and Spelling Bee, with five scholarships at stake. And awards for Africa's achievers."
+    },
+    {
+      "id": "L07",
+      "spoken": "Beyond the hall, we're launching Street to School, for children kept out of class by cost, and Repositioning Education Africa."
+    },
+    {
+      "id": "L08",
+      "spoken": "Our first edition drew over two hundred and fifty people, honoured twelve achievers, and put five students on scholarship."
+    },
+    {
+      "id": "L09",
+      "spoken": "Nominations close October twenty-fifth. Register at A four dot A E S D I dot org. And partner with us, to open more doors."
+    },
+    {
+      "id": "L10",
+      "spoken": "A E S D I. Reforming education. Transforming Africa."
+    }
+  ],
+  "display": [
+    [
+      "a four dot a e s d i dot org",
+      "a4.aesdi.org"
+    ],
+    [
+      "a four twenty twentysix",
+      "A4 2026"
+    ],
+    [
+      "a four",
+      "A4"
+    ],
+    [
+      "a e s d i",
+      "AESDI"
+    ],
+    [
+      "november fifth",
+      "5 November"
+    ],
+    [
+      "october twentyfifth",
+      "25 October"
+    ],
+    [
+      "two hundred and fifty",
+      "250"
+    ],
+    [
+      "twelve",
+      "12"
+    ],
+    [
+      "five",
+      "5"
+    ]
+  ],
+  "outro": 4.4
+}

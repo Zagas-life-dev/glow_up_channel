@@ -1,0 +1,2682 @@
+<!DOCTYPE html>
+<html lang="en" data-resolution="landscape">
+  <head><script data-hf-gsap-fallback>
+(function(){
+  var cdnBase="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/";
+  var loaded={};
+  function loadFallback(file){
+    if(loaded[file])return loaded[file];
+    return loaded[file]=new Promise(function(ok,fail){
+      var s=document.createElement("script");
+      s.src=cdnBase+file;s.onload=ok;s.onerror=fail;
+      document.head.appendChild(s);
+    });
+  }
+  document.addEventListener("error",function(e){
+    var t=e.target;
+    if(!t||t.tagName!=="SCRIPT"||!t.src)return;
+    var m=t.src.match(/gsap[^/]*\/dist\/(.+\.js)/);
+    if(m)loadFallback(m[1]);
+  },true);
+})();
+</script>
+<meta name="hyperframes-studio-preview"><base href="/api/projects/composition/preview/"><style data-hyperframes-text-rendering="true">html,body,*{text-rendering:geometricPrecision}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>UP — from sign-up to submitted (16:9)</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/MorphSVGPlugin.min.js"></script>
+    <script>// Pre-extracted from assets/music/happy-beats-business-moves-vol-11 (30fps, first 42s, 5-frame smoothed).
+window.AUDIO_RB = {"fps":30,"rms":[0.67,0.61,0.56,0.48,0.39,0.37,0.38,0.39,0.41,0.43,0.45,0.43,0.41,0.38,0.5,0.53,0.54,0.54,0.54,0.4,0.34,0.31,0.31,0.31,0.31,0.3,0.3,0.29,0.28,0.3,0.42,0.48,0.51,0.53,0.51,0.39,0.34,0.31,0.29,0.28,0.27,0.27,0.29,0.29,0.29,0.37,0.47,0.51,0.53,0.54,0.46,0.35,0.28,0.27,0.31,0.35,0.38,0.42,0.41,0.36,0.3,0.37,0.43,0.48,0.52,0.55,0.47,0.4,0.35,0.36,0.37,0.37,0.37,0.36,0.32,0.3,0.27,0.37,0.45,0.48,0.5,0.51,0.41,0.33,0.31,0.29,0.29,0.27,0.26,0.25,0.25,0.25,0.26,0.37,0.45,0.49,0.52,0.52,0.41,0.34,0.29,0.27,0.26,0.24,0.23,0.24,0.23,0.22,0.28,0.42,0.47,0.5,0.52,0.46,0.33,0.25,0.22,0.24,0.28,0.31,0.34,0.35,0.31,0.26,0.33,0.4,0.45,0.5,0.54,0.48,0.42,0.38,0.38,0.4,0.41,0.42,0.43,0.42,0.39,0.37,0.44,0.47,0.48,0.5,0.5,0.43,0.38,0.38,0.39,0.39,0.37,0.35,0.33,0.3,0.29,0.28,0.39,0.46,0.49,0.53,0.54,0.44,0.37,0.33,0.3,0.3,0.29,0.27,0.28,0.27,0.26,0.28,0.42,0.49,0.51,0.54,0.51,0.37,0.28,0.26,0.26,0.3,0.33,0.35,0.36,0.33,0.28,0.32,0.41,0.45,0.5,0.54,0.5,0.41,0.37,0.35,0.38,0.4,0.42,0.44,0.42,0.39,0.35,0.41,0.48,0.49,0.49,0.51,0.41,0.33,0.3,0.3,0.29,0.3,0.3,0.31,0.32,0.32,0.32,0.4,0.49,0.49,0.51,0.51,0.41,0.3,0.26,0.24,0.24,0.25,0.26,0.28,0.31,0.31,0.32,0.44,0.51,0.53,0.53,0.54,0.4,0.33,0.28,0.29,0.28,0.3,0.31,0.3,0.27,0.24,0.26,0.36,0.45,0.5,0.54,0.53,0.44,0.38,0.37,0.39,0.4,0.41,0.42,0.42,0.39,0.36,0.4,0.5,0.5,0.51,0.52,0.47,0.35,0.33,0.31,0.32,0.32,0.32,0.32,0.32,0.31,0.29,0.37,0.45,0.5,0.53,0.55,0.47,0.39,0.33,0.3,0.29,0.28,0.27,0.28,0.3,0.31,0.33,0.44,0.51,0.53,0.55,0.53,0.42,0.34,0.29,0.28,0.32,0.35,0.38,0.4,0.37,0.32,0.28,0.38,0.43,0.48,0.52,0.56,0.45,0.4,0.39,0.4,0.41,0.41,0.41,0.39,0.35,0.32,0.32,0.43,0.46,0.48,0.48,0.47,0.36,0.32,0.3,0.3,0.29,0.28,0.27,0.27,0.26,0.27,0.33,0.45,0.5,0.54,0.55,0.49,0.38,0.33,0.28,0.27,0.26,0.25,0.24,0.25,0.23,0.23,0.34,0.44,0.47,0.5,0.51,0.41,0.3,0.25,0.24,0.27,0.3,0.33,0.36,0.34,0.29,0.25,0.35,0.41,0.47,0.52,0.56,0.47,0.42,0.38,0.4,0.41,0.43,0.44,0.44,0.41,0.38,0.37,0.44,0.47,0.48,0.48,0.49,0.4,0.36,0.35,0.35,0.32,0.31,0.29,0.28,0.27,0.27,0.32,0.43,0.48,0.53,0.55,0.52,0.42,0.37,0.34,0.32,0.3,0.29,0.27,0.28,0.28,0.27,0.36,0.47,0.5,0.51,0.53,0.44,0.32,0.27,0.26,0.29,0.31,0.35,0.4,0.39,0.34,0.29,0.26,0.24,0.25,0.28,0.32,0.34,0.35,0.37,0.41,0.44,0.47,0.48,0.46,0.44,0.41,0.38,0.36,0.35,0.34,0.32,0.32,0.32,0.31,0.32,0.32,0.31,0.3,0.29,0.28,0.29,0.29,0.3,0.33,0.35,0.34,0.34,0.31,0.28,0.23,0.19,0.16,0.13,0.11,0.1,0.13,0.14,0.16,0.17,0.2,0.18,0.17,0.16,0.16,0.15,0.15,0.15,0.16,0.17,0.18,0.19,0.19,0.19,0.19,0.31,0.39,0.44,0.49,0.55,0.47,0.43,0.42,0.42,0.45,0.47,0.48,0.49,0.47,0.43,0.4,0.48,0.5,0.5,0.51,0.53,0.46,0.44,0.43,0.43,0.42,0.4,0.38,0.38,0.39,0.39,0.4,0.5,0.54,0.56,0.56,0.53,0.44,0.39,0.35,0.34,0.34,0.34,0.34,0.39,0.42,0.43,0.48,0.56,0.55,0.53,0.51,0.45,0.37,0.34,0.33,0.38,0.43,0.47,0.51,0.55,0.52,0.49,0.55,0.56,0.55,0.53,0.52,0.43,0.39,0.37,0.39,0.43,0.45,0.44,0.43,0.41,0.37,0.34,0.43,0.48,0.49,0.49,0.51,0.45,0.42,0.42,0.44,0.44,0.41,0.39,0.37,0.36,0.34,0.33,0.43,0.49,0.51,0.53,0.54,0.45,0.41,0.39,0.37,0.37,0.36,0.35,0.37,0.41,0.41,0.43,0.53,0.55,0.53,0.53,0.5,0.41,0.36,0.35,0.38,0.41,0.43,0.44,0.46,0.45,0.43,0.48,0.53,0.52,0.51,0.5,0.43,0.37,0.36,0.37,0.41,0.45,0.48,0.51,0.51,0.48,0.45,0.51,0.52,0.49,0.48,0.48,0.43,0.41,0.43,0.45,0.45,0.43,0.41,0.4,0.4,0.39,0.38,0.46,0.51,0.52,0.54,0.54,0.46,0.41,0.39,0.38,0.38,0.39,0.4,0.42,0.44,0.44,0.43,0.53,0.54,0.53,0.52,0.51,0.4,0.36,0.34,0.38,0.43,0.46,0.51,0.55,0.52,0.48,0.49,0.53,0.52,0.51,0.51,0.49,0.42,0.42,0.41,0.42,0.44,0.46,0.46,0.47,0.44,0.41,0.47,0.51,0.51,0.52,0.5,0.46,0.41,0.41,0.39,0.42,0.39,0.39,0.38,0.39,0.39,0.38,0.45,0.51,0.52,0.53,0.54,0.45,0.39,0.36,0.32,0.33,0.34,0.34,0.36,0.4,0.42,0.43,0.52,0.56,0.55,0.54,0.54,0.46,0.42,0.41,0.41,0.43,0.43,0.44,0.45,0.48,0.49,0.49,0.56,0.59,0.56,0.55,0.54,0.47,0.44,0.43,0.45,0.47,0.47,0.47,0.47,0.44,0.4,0.43,0.49,0.51,0.51,0.51,0.48,0.42,0.4,0.39,0.39,0.38,0.36,0.36,0.36,0.37,0.36,0.44,0.49,0.53,0.54,0.53,0.45,0.38,0.35,0.32,0.33,0.35,0.36,0.37,0.43,0.44,0.44,0.52,0.55,0.52,0.51,0.51,0.42,0.37,0.35,0.36,0.39,0.42,0.45,0.47,0.47,0.43,0.4,0.47,0.51,0.51,0.51,0.51,0.42,0.37,0.37,0.4,0.42,0.43,0.43,0.43,0.41,0.38,0.39,0.47,0.51,0.5,0.5,0.51,0.45,0.41,0.43,0.44,0.42,0.39,0.38,0.36,0.35,0.33,0.38,0.46,0.51,0.54,0.55,0.5,0.42,0.37,0.34,0.35,0.35,0.35,0.36,0.39,0.39,0.39,0.47,0.53,0.54,0.54,0.54,0.45,0.39,0.35,0.35,0.37,0.4,0.43,0.45,0.45,0.44,0.42,0.48,0.5,0.5,0.49,0.48,0.4,0.36,0.35,0.38,0.42,0.45,0.47,0.48,0.46,0.44,0.43,0.5,0.52,0.5,0.5,0.51,0.45,0.46,0.49,0.5,0.48,0.45,0.42,0.4,0.39,0.38,0.4,0.48,0.52,0.55,0.57,0.55,0.47,0.43,0.4,0.39,0.39,0.4,0.4,0.43,0.44,0.44,0.49,0.54,0.53,0.51,0.49,0.42,0.37,0.35,0.35,0.4,0.43,0.47,0.51,0.53,0.51,0.47,0.51,0.52,0.5,0.5,0.5,0.42,0.38,0.38,0.38,0.41,0.43,0.44,0.46,0.44,0.41,0.39,0.45,0.48,0.48,0.48,0.5,0.44,0.4,0.4,0.39,0.39,0.37,0.37,0.38,0.39,0.37,0.36,0.45,0.49,0.48,0.47,0.44,0.31,0.21,0.19,0.21,0.22,0.24,0.26,0.26,0.21,0.18,0.18,0.24,0.27,0.32,0.37,0.4,0.39,0.37,0.35,0.33,0.31,0.29,0.3,0.33,0.35,0.38,0.43,0.49,0.5,0.49,0.47,0.44,0.37,0.34,0.33,0.35,0.36,0.38,0.39,0.38,0.36,0.35,0.4,0.46,0.49,0.48,0.49,0.43,0.36,0.34,0.35,0.34,0.32,0.3,0.29,0.28,0.28,0.27,0.36,0.44,0.47,0.49,0.5,0.4,0.31,0.26,0.24,0.22,0.21,0.22,0.25,0.28,0.3,0.32,0.44,0.48,0.48,0.46,0.44,0.32,0.24,0.2,0.26,0.33,0.39,0.43,0.45,0.38,0.3,0.27,0.37,0.43,0.48,0.51,0.5,0.39,0.33,0.31,0.32,0.33,0.35,0.36,0.37,0.34,0.33,0.36,0.45,0.47,0.48,0.5,0.47,0.39,0.36,0.36,0.35,0.32,0.3,0.29,0.27,0.26,0.25,0.33,0.42,0.46,0.49,0.51,0.43,0.32,0.28,0.25,0.22,0.22,0.22,0.24,0.27,0.29,0.3,0.41,0.48,0.49,0.51,0.52,0.42,0.33,0.29,0.29,0.3,0.31,0.32,0.32,0.29,0.25,0.23,0.34,0.4,0.45,0.46,0.49,0.38,0.33,0.3,0.34,0.35,0.37,0.38,0.38,0.35,0.32,0.32,0.4,0.42,0.44,0.44,0.44,0.36,0.34,0.32,0.33,0.3,0.27,0.26,0.25,0.25,0.24,0.3,0.4,0.44,0.47,0.49,0.42,0.32,0.27,0.23,0.21,0.2,0.2,0.22,0.25,0.28,0.31,0.4,0.47,0.47,0.46,0.44,0.34,0.25,0.21,0.23,0.28,0.33,0.36,0.38,0.35,0.29,0.24,0.32,0.39,0.42,0.46,0.48,0.39,0.33,0.31,0.33,0.36,0.39,0.41,0.42,0.39,0.35,0.33,0.41,0.45,0.47,0.49,0.52,0.44,0.42,0.4,0.39,0.34,0.31,0.27,0.25,0.23,0.23,0.27,0.39,0.45,0.48,0.5,0.47,0.34,0.27,0.23,0.21,0.2,0.2,0.21,0.26,0.29,0.3,0.37,0.47,0.48,0.49,0.5,0.46,0.37,0.32,0.3,0.32,0.33,0.33,0.35,0.37,0.36,0.36],"bass":[0.58,0.52,0.46,0.41,0.3,0.26,0.24,0.24,0.25,0.25,0.25,0.25,0.25,0.26,0.38,0.47,0.49,0.49,0.48,0.35,0.25,0.22,0.21,0.21,0.22,0.23,0.24,0.24,0.23,0.25,0.35,0.39,0.42,0.43,0.41,0.3,0.24,0.2,0.19,0.19,0.19,0.19,0.19,0.19,0.19,0.23,0.34,0.39,0.41,0.42,0.38,0.26,0.2,0.17,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.21,0.32,0.38,0.42,0.45,0.4,0.31,0.26,0.23,0.22,0.22,0.21,0.21,0.2,0.2,0.2,0.28,0.39,0.43,0.45,0.44,0.36,0.25,0.2,0.18,0.17,0.17,0.16,0.16,0.16,0.16,0.17,0.27,0.35,0.39,0.4,0.39,0.29,0.21,0.16,0.14,0.13,0.12,0.12,0.12,0.11,0.11,0.14,0.28,0.34,0.37,0.38,0.36,0.22,0.15,0.12,0.1,0.09,0.09,0.08,0.08,0.08,0.08,0.13,0.26,0.34,0.4,0.45,0.44,0.36,0.32,0.31,0.31,0.31,0.31,0.31,0.3,0.3,0.29,0.31,0.38,0.41,0.42,0.42,0.39,0.31,0.29,0.28,0.29,0.29,0.29,0.29,0.28,0.27,0.26,0.32,0.39,0.4,0.41,0.4,0.33,0.23,0.2,0.18,0.18,0.18,0.18,0.18,0.18,0.17,0.19,0.31,0.39,0.42,0.43,0.4,0.27,0.17,0.14,0.12,0.12,0.12,0.12,0.13,0.13,0.13,0.17,0.3,0.38,0.44,0.48,0.47,0.36,0.32,0.28,0.27,0.27,0.26,0.25,0.25,0.25,0.24,0.3,0.4,0.43,0.45,0.46,0.39,0.28,0.24,0.21,0.19,0.19,0.19,0.19,0.19,0.18,0.18,0.24,0.35,0.39,0.4,0.42,0.35,0.24,0.2,0.18,0.16,0.15,0.15,0.15,0.14,0.14,0.15,0.24,0.34,0.38,0.39,0.38,0.28,0.18,0.13,0.11,0.1,0.1,0.1,0.1,0.1,0.1,0.12,0.25,0.35,0.41,0.44,0.45,0.35,0.28,0.25,0.24,0.25,0.25,0.25,0.26,0.26,0.25,0.28,0.42,0.45,0.47,0.47,0.43,0.28,0.24,0.21,0.21,0.22,0.23,0.23,0.23,0.24,0.23,0.28,0.37,0.41,0.43,0.43,0.37,0.26,0.22,0.19,0.18,0.19,0.19,0.2,0.2,0.21,0.22,0.29,0.38,0.41,0.42,0.41,0.34,0.24,0.19,0.17,0.16,0.16,0.16,0.16,0.16,0.16,0.16,0.25,0.33,0.39,0.43,0.44,0.36,0.3,0.26,0.24,0.23,0.23,0.22,0.22,0.21,0.21,0.23,0.34,0.39,0.42,0.43,0.4,0.29,0.23,0.19,0.18,0.17,0.17,0.17,0.17,0.16,0.16,0.19,0.32,0.38,0.41,0.42,0.38,0.25,0.19,0.15,0.14,0.13,0.12,0.12,0.12,0.12,0.11,0.18,0.31,0.36,0.38,0.39,0.32,0.19,0.14,0.11,0.1,0.09,0.08,0.08,0.08,0.08,0.09,0.18,0.28,0.36,0.4,0.44,0.39,0.35,0.31,0.31,0.31,0.32,0.31,0.31,0.31,0.3,0.3,0.35,0.37,0.39,0.39,0.38,0.32,0.28,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.24,0.25,0.35,0.38,0.4,0.39,0.37,0.26,0.22,0.19,0.18,0.18,0.18,0.18,0.18,0.18,0.17,0.22,0.35,0.39,0.4,0.4,0.35,0.2,0.16,0.13,0.12,0.12,0.12,0.13,0.13,0.13,0.12,0.11,0.13,0.16,0.19,0.22,0.26,0.28,0.29,0.3,0.3,0.3,0.3,0.29,0.28,0.28,0.28,0.28,0.28,0.27,0.25,0.23,0.22,0.22,0.22,0.21,0.21,0.21,0.21,0.2,0.19,0.19,0.18,0.16,0.12,0.09,0.06,0.03,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.01,0.01,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.01,0.09,0.19,0.27,0.33,0.37,0.33,0.28,0.25,0.24,0.25,0.26,0.27,0.28,0.3,0.3,0.29,0.34,0.37,0.38,0.38,0.37,0.31,0.27,0.25,0.24,0.25,0.26,0.27,0.28,0.29,0.29,0.3,0.35,0.37,0.37,0.36,0.35,0.28,0.25,0.23,0.23,0.24,0.26,0.27,0.29,0.3,0.29,0.31,0.35,0.37,0.38,0.37,0.34,0.28,0.26,0.23,0.23,0.24,0.25,0.26,0.28,0.29,0.29,0.32,0.37,0.4,0.39,0.38,0.33,0.27,0.24,0.23,0.23,0.24,0.24,0.24,0.25,0.25,0.26,0.3,0.35,0.36,0.37,0.35,0.3,0.26,0.23,0.23,0.24,0.25,0.26,0.27,0.28,0.27,0.28,0.33,0.37,0.38,0.37,0.35,0.3,0.27,0.26,0.25,0.26,0.26,0.26,0.26,0.27,0.26,0.27,0.32,0.36,0.37,0.36,0.34,0.29,0.25,0.24,0.23,0.24,0.24,0.24,0.26,0.27,0.27,0.29,0.36,0.37,0.38,0.38,0.36,0.3,0.3,0.29,0.29,0.3,0.31,0.32,0.33,0.34,0.34,0.35,0.39,0.38,0.37,0.36,0.33,0.28,0.28,0.27,0.28,0.3,0.32,0.33,0.35,0.36,0.35,0.37,0.38,0.37,0.36,0.34,0.31,0.29,0.28,0.28,0.3,0.31,0.33,0.34,0.35,0.35,0.36,0.39,0.4,0.39,0.38,0.36,0.31,0.29,0.28,0.27,0.28,0.29,0.29,0.31,0.32,0.32,0.33,0.37,0.39,0.39,0.39,0.36,0.31,0.28,0.26,0.25,0.25,0.26,0.26,0.28,0.29,0.29,0.3,0.34,0.36,0.37,0.37,0.35,0.3,0.28,0.25,0.24,0.26,0.26,0.26,0.28,0.29,0.27,0.29,0.33,0.34,0.35,0.35,0.32,0.29,0.27,0.25,0.25,0.26,0.27,0.28,0.29,0.29,0.28,0.31,0.35,0.36,0.37,0.36,0.32,0.28,0.26,0.23,0.24,0.25,0.26,0.28,0.31,0.32,0.33,0.36,0.38,0.37,0.36,0.34,0.29,0.26,0.24,0.23,0.24,0.26,0.26,0.28,0.29,0.28,0.3,0.35,0.37,0.38,0.38,0.35,0.28,0.25,0.23,0.23,0.25,0.27,0.28,0.3,0.3,0.29,0.32,0.37,0.37,0.37,0.36,0.32,0.26,0.24,0.23,0.23,0.25,0.27,0.28,0.29,0.29,0.28,0.32,0.36,0.37,0.38,0.37,0.32,0.28,0.26,0.23,0.24,0.25,0.26,0.27,0.29,0.29,0.29,0.34,0.38,0.38,0.37,0.36,0.3,0.25,0.24,0.23,0.24,0.24,0.24,0.24,0.25,0.26,0.27,0.32,0.36,0.37,0.37,0.35,0.29,0.25,0.23,0.23,0.25,0.26,0.26,0.27,0.28,0.27,0.29,0.34,0.37,0.37,0.36,0.33,0.27,0.24,0.22,0.22,0.24,0.24,0.25,0.26,0.26,0.26,0.28,0.33,0.36,0.37,0.36,0.32,0.28,0.25,0.23,0.24,0.25,0.25,0.25,0.26,0.27,0.27,0.31,0.35,0.36,0.36,0.36,0.32,0.29,0.29,0.28,0.29,0.31,0.33,0.34,0.36,0.37,0.37,0.39,0.4,0.39,0.38,0.37,0.34,0.34,0.34,0.34,0.35,0.36,0.35,0.35,0.36,0.35,0.35,0.38,0.38,0.38,0.37,0.36,0.32,0.31,0.3,0.29,0.3,0.32,0.33,0.34,0.35,0.34,0.35,0.38,0.38,0.38,0.37,0.35,0.3,0.29,0.28,0.27,0.26,0.26,0.26,0.28,0.29,0.29,0.32,0.35,0.37,0.37,0.36,0.33,0.29,0.27,0.24,0.24,0.25,0.25,0.26,0.28,0.29,0.29,0.32,0.35,0.37,0.38,0.37,0.35,0.31,0.29,0.26,0.27,0.27,0.26,0.26,0.28,0.28,0.28,0.33,0.35,0.35,0.33,0.29,0.19,0.12,0.07,0.04,0.02,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.02,0.03,0.07,0.19,0.26,0.31,0.34,0.34,0.26,0.23,0.22,0.22,0.23,0.23,0.24,0.24,0.25,0.25,0.29,0.38,0.41,0.43,0.43,0.39,0.28,0.25,0.23,0.22,0.22,0.23,0.23,0.23,0.23,0.22,0.27,0.37,0.4,0.4,0.4,0.35,0.24,0.21,0.2,0.2,0.2,0.2,0.2,0.19,0.19,0.19,0.29,0.37,0.4,0.41,0.41,0.3,0.2,0.17,0.16,0.16,0.17,0.17,0.17,0.17,0.16,0.18,0.3,0.36,0.41,0.44,0.45,0.34,0.29,0.25,0.23,0.22,0.22,0.22,0.23,0.23,0.23,0.26,0.36,0.39,0.41,0.43,0.4,0.29,0.25,0.22,0.2,0.2,0.2,0.2,0.2,0.21,0.21,0.24,0.35,0.38,0.4,0.41,0.37,0.26,0.22,0.19,0.17,0.17,0.18,0.17,0.17,0.17,0.16,0.22,0.32,0.36,0.38,0.4,0.33,0.23,0.18,0.16,0.14,0.13,0.14,0.14,0.14,0.14,0.15,0.25,0.33,0.38,0.4,0.42,0.34,0.29,0.26,0.26,0.26,0.26,0.25,0.25,0.24,0.24,0.25,0.33,0.36,0.38,0.37,0.36,0.26,0.23,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.19,0.21,0.31,0.35,0.36,0.36,0.34,0.23,0.19,0.17,0.16,0.16,0.16,0.16,0.16,0.16,0.16,0.2,0.3,0.34,0.36,0.36,0.31,0.2,0.16,0.14,0.13,0.13,0.13,0.13,0.13,0.13,0.14,0.22,0.31,0.37,0.41,0.42,0.37,0.3,0.27,0.24,0.24,0.24,0.24,0.24,0.24,0.24,0.25,0.32,0.38,0.41,0.44,0.43,0.34,0.28,0.24,0.21,0.19,0.19,0.19,0.18,0.18,0.18,0.2,0.31,0.35,0.37,0.38,0.36,0.25,0.19,0.17,0.16,0.15,0.15,0.15,0.14,0.14,0.14,0.17,0.28,0.33,0.35,0.35,0.33,0.21,0.16,0.13,0.12,0.1,0.1,0.1,0.1,0.1,0.11]};</script>
+    <style>
+      @font-face {
+        font-family: "Unbounded";
+        src: url("assets/fonts/unbounded.woff2") format("woff2");
+        font-weight: 200 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Plus Jakarta Sans";
+        src: url("assets/fonts/plus-jakarta-sans.woff2") format("woff2");
+        font-weight: 200 800;
+        font-display: block;
+      }
+
+      /* UP Design v1 tokens (app/globals.css, light) */
+      :root {
+        --navy: #0b1233;
+        --tile: #1c2554;
+        --orange: #ff6a00;
+        --oink: #b8551e;
+        --otint: rgba(255, 106, 0, 0.12);
+        --lime: #d6ff3f;
+        --ltint: rgba(214, 255, 63, 0.35);
+        --page: #fbfaf7;
+        --card: #ffffff;
+        --fill: #f2efe8;
+        --hair: #f0ede6;
+        --border: #e6e3da;
+        --bhover: #d8d3c6;
+        --muted: #5b5848;
+        --ph: #7a7668;
+        --fg: #0b1233;
+        --cream: #fbfaf7;
+        --cream-m: rgba(251, 250, 247, 0.65);
+        --pop: 0 24px 60px rgba(11, 18, 51, 0.28), 0 2px 6px rgba(11, 18, 51, 0.08);
+        --ZOOM: 1.78;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--navy);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        color: var(--fg);
+      }
+      .d {
+        font-family: "Unbounded", system-ui, sans-serif;
+      }
+      em {
+        font-style: normal;
+        color: var(--orange);
+      }
+      .ic {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        display: block;
+        flex-shrink: 0;
+      }
+
+      /* ── stage ─────────────────────────────────────────── */
+      #stage {
+        position: absolute;
+        inset: 0;
+        background: var(--navy);
+        overflow: hidden;
+      }
+      .tile-w {
+        position: absolute;
+      }
+      .tile {
+        width: 100%;
+        height: 100%;
+        border-radius: 44px;
+      }
+      #tileA {
+        left: 800px;
+        top: 700px;
+        width: 520px;
+        height: 360px;
+      }
+      #tileA .tile {
+        background: var(--tile);
+      }
+      #tileB {
+        left: 1420px;
+        top: 40px;
+        width: 500px;
+        height: 320px;
+      }
+      #tileB .tile {
+        background: var(--orange);
+      }
+      #tileC {
+        left: 1560px;
+        top: 820px;
+        width: 300px;
+        height: 210px;
+      }
+      #tileC .tile {
+        background: var(--lime);
+      }
+
+      /* phone window: content fades as it slides under the caption rail */
+      #window {
+        position: absolute;
+        inset: 0;
+        --mx: 900px;
+        -webkit-mask-image: linear-gradient(to right, transparent 0, transparent var(--mx), #000 calc(var(--mx) + 90px));
+        mask-image: linear-gradient(to right, transparent 0, transparent var(--mx), #000 calc(var(--mx) + 90px));
+      }
+      #rig {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: 0 0;
+      }
+      #glow {
+        position: absolute;
+        left: 750px;
+        top: -10px;
+        width: 1100px;
+        height: 1100px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(255, 106, 0, 0.42), rgba(255, 106, 0, 0.12) 55%, rgba(255, 106, 0, 0) 100%);
+        opacity: 0;
+      }
+      #phone {
+        position: absolute;
+        left: 1055px;
+        top: 49px;
+        width: 490px;
+        height: 982px;
+        padding: 11px;
+        border-radius: 42px;
+        background: #050a22;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12), 0 40px 100px rgba(0, 0, 0, 0.5);
+      }
+      #screen {
+        position: relative;
+        width: 390px;
+        height: 800px;
+        zoom: 1.2;
+        border-radius: 26px;
+        overflow: hidden;
+        background: var(--page);
+        isolation: isolate;
+      }
+
+      /* ── caption rail ──────────────────────────────────── */
+      #rail {
+        position: absolute;
+        left: 150px;
+        top: 0;
+        width: 760px;
+        height: 1080px;
+        padding-top: 330px;
+      }
+      #railBar {
+        display: flex;
+        gap: 10px;
+        max-width: 700px;
+        opacity: 0;
+      }
+      .rseg {
+        flex: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(251, 250, 247, 0.14);
+        overflow: hidden;
+      }
+      .rseg i {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--orange);
+        transform-origin: 0 50%;
+      }
+      .eyebrows {
+        position: relative;
+        height: 32px;
+        margin-top: 38px;
+      }
+      .eb {
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--orange);
+        opacity: 0;
+        white-space: nowrap;
+      }
+      .caps {
+        position: relative;
+        margin-top: 18px;
+        height: 420px;
+      }
+      .cap {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 740px;
+        font-family: "Unbounded", system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 64px;
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+        color: var(--cream);
+      }
+      .cap .w {
+        display: inline-block;
+        opacity: 0;
+        margin-right: 0.26em;
+      }
+
+      /* ── phone chrome ──────────────────────────────────── */
+      #status {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 390px;
+        height: 44px;
+        z-index: 60;
+        background: rgba(251, 250, 247, 0.96);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 26px 0 30px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      #notch {
+        position: absolute;
+        left: 147px;
+        top: 10px;
+        width: 96px;
+        height: 28px;
+        border-radius: 999px;
+        background: #050a22;
+      }
+      .sb-r {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sb-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 11px;
+      }
+      .sb-bars i {
+        width: 3px;
+        background: var(--fg);
+        border-radius: 1px;
+      }
+      .sb-bat {
+        width: 25px;
+        height: 12px;
+        border-radius: 4px;
+        border: 1.5px solid rgba(11, 18, 51, 0.45);
+        padding: 1.5px;
+      }
+      .sb-bat i {
+        display: block;
+        width: 72%;
+        height: 100%;
+        border-radius: 2px;
+        background: var(--fg);
+      }
+
+      .scr {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 390px;
+        height: 800px;
+        background: var(--page);
+        overflow: hidden;
+      }
+      .vp {
+        position: absolute;
+        left: 0;
+        top: 44px;
+        width: 390px;
+        bottom: 0;
+        overflow: hidden;
+      }
+      .scroll {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 390px;
+      }
+      .dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(11, 18, 51, 0.28);
+        opacity: 0;
+        z-index: 40;
+      }
+
+      /* tap indicator (touch, not a mouse cursor) */
+      .tapper {
+        position: relative;
+      }
+      .touch {
+        position: absolute;
+        width: 38px;
+        height: 38px;
+        margin: -19px 0 0 -19px;
+        z-index: 30;
+        opacity: 0;
+      }
+      .touch .dot {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: rgba(11, 18, 51, 0.22);
+        border: 2px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 10px rgba(11, 18, 51, 0.25);
+      }
+      .touch .ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 2px solid var(--orange);
+        opacity: 0;
+      }
+
+      /* ── shared UP pieces ──────────────────────────────── */
+      .btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 52px;
+        width: 100%;
+        border-radius: 999px;
+        background: var(--orange);
+        color: var(--navy);
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .kchip {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+      .kchip .ic {
+        width: 18px;
+        height: 18px;
+      }
+      .kchip.sm {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+      }
+      .kchip.sm .ic {
+        width: 14px;
+        height: 14px;
+      }
+      .kchip.lg {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+      }
+      .kchip.lg .ic {
+        width: 22px;
+        height: 22px;
+      }
+      .k-opp {
+        background: var(--otint);
+        color: var(--oink);
+      }
+      .k-job {
+        background: var(--navy);
+        color: var(--cream);
+      }
+      .k-evt {
+        background: var(--ltint);
+        color: var(--navy);
+      }
+      .dl {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .dl .ic {
+        width: 14px;
+        height: 14px;
+      }
+      .dl-urgent {
+        background: var(--orange);
+        color: var(--navy);
+      }
+      .dl-soon {
+        background: var(--otint);
+        color: var(--oink);
+      }
+      .dl-up {
+        background: var(--fill);
+        color: var(--muted);
+      }
+
+      /* ── A · sign up (components/up/auth-shell.tsx, app/signup/page.tsx) ── */
+      .auth-head {
+        position: relative;
+        overflow: hidden;
+        background: var(--navy);
+        border-radius: 0 0 28px 28px;
+        padding: 20px 20px 28px;
+        color: var(--cream);
+        height: 182px;
+      }
+      .stack {
+        position: absolute;
+        width: 360px;
+        height: 260px;
+        right: -40px;
+        top: -14px;
+        transform-origin: 100% 0;
+        scale: 0.45;
+      }
+      .stack i {
+        position: absolute;
+        border-radius: 22px;
+      }
+      .stack .s1 {
+        left: 40px;
+        top: 20px;
+        width: 220px;
+        height: 150px;
+        rotate: -8deg;
+        background: var(--tile);
+      }
+      .stack .s2 {
+        left: 120px;
+        top: 70px;
+        width: 200px;
+        height: 140px;
+        rotate: 5deg;
+        background: var(--orange);
+      }
+      .stack .s3 {
+        left: 70px;
+        top: 150px;
+        width: 120px;
+        height: 86px;
+        rotate: -4deg;
+        background: var(--lime);
+      }
+      .mark {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: var(--orange);
+        display: grid;
+        place-items: center;
+      }
+      .mark img {
+        width: 74%;
+        display: block;
+      }
+      .auth-h {
+        position: relative;
+        margin-top: 36px;
+        max-width: 64%;
+        font-family: "Unbounded", sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.15;
+      }
+      .auth-main {
+        padding: 32px 20px;
+      }
+      .auth-t {
+        font-family: "Unbounded", sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .auth-s {
+        margin-top: 6px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .field > label {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .input {
+        position: relative;
+        height: 48px;
+        border-radius: 14px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .input .ph {
+        position: absolute;
+        left: 14px;
+        color: var(--ph);
+        white-space: nowrap;
+      }
+      .input .val {
+        white-space: nowrap;
+      }
+      .input .val.pw {
+        letter-spacing: 0.12em;
+      }
+      .caret {
+        display: inline-block;
+        width: 1.5px;
+        height: 20px;
+        margin-left: 1px;
+        background: var(--orange);
+        opacity: 0;
+      }
+      .fring {
+        position: absolute;
+        inset: -1.5px;
+        border-radius: 14px;
+        border: 1.5px solid var(--orange);
+        box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.18);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .input .eye {
+        position: absolute;
+        right: 14px;
+        color: var(--muted);
+      }
+      .input .eye .ic {
+        width: 16px;
+        height: 16px;
+      }
+      .rules {
+        list-style: none;
+        display: grid;
+        gap: 6px;
+        padding-top: 6px;
+        font-size: 13px;
+      }
+      .rules li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+      }
+      .rules li[data-ok="1"] {
+        color: var(--fg);
+      }
+      .rules li[data-ok="1"] .no {
+        opacity: 0;
+      }
+      .rstack {
+        position: relative;
+        width: 16px;
+        height: 16px;
+      }
+      .rstack .ic {
+        position: absolute;
+        inset: 0;
+        width: 16px;
+        height: 16px;
+      }
+      .rstack .ok {
+        color: var(--oink);
+        opacity: 0;
+        stroke-width: 2.6;
+      }
+      .su-alt {
+        text-align: center;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .su-alt b {
+        color: var(--fg);
+      }
+
+      /* ── B · onboarding (app/onboarding/page.tsx, step-shell.tsx) ── */
+      #obScroll {
+        padding: 24px 20px 0;
+      }
+      .segbar {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 20px;
+      }
+      .segbar span {
+        flex: 1;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--fill);
+      }
+      .ob-eb {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+        height: 34px;
+      }
+      .backb {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        display: grid;
+        place-items: center;
+      }
+      .backb .ic {
+        width: 16px;
+        height: 16px;
+      }
+      .ob-eb p {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--oink);
+      }
+      #obQ {
+        margin-bottom: 28px;
+        min-height: 124px;
+      }
+      #obTitle {
+        font-family: "Unbounded", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      #obDesc {
+        margin-top: 10px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .opts-wrap {
+        position: relative;
+      }
+      .opts {
+        display: grid;
+        gap: 10px;
+      }
+      #optsB {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        opacity: 0;
+      }
+      .opt {
+        position: relative;
+        min-height: 56px;
+        border-radius: 18px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .opt .lbl {
+        flex: 1;
+      }
+      .ck {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        box-shadow: inset 0 0 0 1.5px var(--bhover);
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+      }
+      .ck .ic {
+        width: 13px;
+        height: 13px;
+        stroke-width: 3;
+      }
+      .opt .on {
+        position: absolute;
+        inset: -1.5px;
+        border-radius: 18px;
+        background: var(--navy);
+        color: var(--cream);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 17.5px;
+        opacity: 0;
+      }
+      .on .ck {
+        background: var(--orange);
+        color: var(--navy);
+        box-shadow: none;
+      }
+      .payoff {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-radius: 18px;
+        background: var(--ltint);
+        padding: 14px 16px;
+        min-height: 56px;
+      }
+      .payoff .pv {
+        font-family: "Unbounded", sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .payoff p {
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      #payB {
+        position: absolute;
+        left: 0;
+        right: 0;
+        opacity: 0;
+      }
+      .ob-bottom {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 390px;
+        background: var(--page);
+        padding: 16px 20px 20px;
+      }
+      .ob-bottom .btn .ic {
+        width: 20px;
+        height: 20px;
+      }
+      .ob-bottom p {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* ── C · feed (app/home-client.tsx, components/feed-card.tsx) ── */
+      .tabs {
+        position: absolute;
+        left: 12px;
+        top: 52px;
+        display: flex;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .tab {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        height: 38px;
+        padding: 0 15px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .tab .ic {
+        width: 16px;
+        height: 16px;
+      }
+      .tab.on {
+        background: var(--navy);
+        color: var(--cream);
+      }
+      .tab.on .ic {
+        color: var(--orange);
+      }
+      .feed {
+        position: absolute;
+        left: 16px;
+        top: 102px;
+        width: 358px;
+      }
+      .greet h1 {
+        font-family: "Unbounded", sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .greet p {
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .cards {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 16px 16px 8px;
+        box-shadow: 0 1px 2px rgba(11, 18, 51, 0.04);
+      }
+      .c-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .c-kind {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .c-title {
+        margin-top: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+      .c-desc {
+        margin-top: 6px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .c-meta {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .c-meta > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .c-meta .ic {
+        width: 14px;
+        height: 14px;
+      }
+      .c-meta .b {
+        font-weight: 700;
+        color: var(--fg);
+      }
+      .score {
+        position: relative;
+        isolation: isolate;
+        font-weight: 700;
+        color: var(--oink);
+      }
+      .score b {
+        font-family: "Unbounded", sans-serif;
+        font-size: 13px;
+        margin-right: 1px;
+      }
+      .score .hl {
+        position: absolute;
+        left: -7px;
+        right: -7px;
+        top: -4px;
+        bottom: -4px;
+        border-radius: 999px;
+        background: rgba(255, 106, 0, 0.05);
+        box-shadow: inset 0 0 0 1.5px rgba(255, 106, 0, 0.35);
+        transform-origin: 0 50%;
+        z-index: -1;
+      }
+      .score .sc {
+        position: relative;
+        display: inline-flex;
+        align-items: baseline;
+      }
+      .c-actions {
+        margin-top: 12px;
+        border-top: 1px solid var(--hair);
+        padding-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .act {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .icost {
+        position: relative;
+        width: 18px;
+        height: 18px;
+      }
+      .icost .ic {
+        position: absolute;
+        inset: 0;
+      }
+      .icost .f {
+        opacity: 0;
+      }
+      #likeFill {
+        color: var(--orange);
+      }
+      .c-go {
+        margin-left: auto;
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        color: var(--fg);
+      }
+      .bnav {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 390px;
+        height: 84px;
+        background: rgba(251, 250, 247, 0.96);
+        border-top: 1px solid var(--hair);
+        display: flex;
+        padding: 8px 6px 0;
+        z-index: 20;
+      }
+      .ni {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .ni .pill {
+        width: 56px;
+        height: 32px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+      }
+      .ni .ic {
+        width: 22px;
+        height: 22px;
+      }
+      .ni.on {
+        color: var(--fg);
+        font-weight: 700;
+      }
+      .ni.on .pill {
+        background: var(--navy);
+        color: var(--orange);
+      }
+
+      /* sheets (components/ui/dialog.tsx — bottom sheet under sm) */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(11, 18, 51, 0.55);
+        opacity: 0;
+        z-index: 45;
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 390px;
+        background: var(--card);
+        border-radius: 24px 24px 0 0;
+        box-shadow: var(--pop);
+        z-index: 46;
+      }
+      .grab {
+        width: 40px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--bhover);
+        margin: 10px auto 0;
+      }
+      .sh-x {
+        position: absolute;
+        right: 16px;
+        top: 20px;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+      }
+      .sh-head {
+        padding: 18px 20px 16px;
+      }
+      .sh-title {
+        font-family: "Unbounded", sans-serif;
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .sh-desc {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        padding-right: 40px;
+        white-space: nowrap;
+      }
+      .sh-body {
+        padding: 0 20px 30px;
+      }
+      .create {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1.5px dashed var(--bhover);
+        background: var(--fill);
+        border-radius: 18px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+      }
+      .create .pt {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--orange);
+        color: var(--navy);
+        display: grid;
+        place-items: center;
+      }
+      .create .pt .ic {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2.5;
+      }
+      .create b {
+        display: block;
+        font-size: 15px;
+      }
+      .create small {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .sec-l {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+      }
+      .prow {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+      .prow + .prow {
+        border-top: 1px solid var(--hair);
+      }
+      .cover {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--navy);
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .cover i {
+        position: absolute;
+        border-radius: 5px;
+      }
+      .cover .c1 {
+        left: 6px;
+        top: 7px;
+        width: 30px;
+        height: 20px;
+        rotate: -8deg;
+        background: var(--tile);
+      }
+      .cover .c2 {
+        left: 17px;
+        top: 17px;
+        width: 26px;
+        height: 18px;
+        rotate: 6deg;
+      }
+      .cover .c3 {
+        left: 8px;
+        top: 29px;
+        width: 18px;
+        height: 13px;
+        rotate: -4deg;
+      }
+      .pinfo {
+        flex: 1;
+        min-width: 0;
+      }
+      .pname {
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .pmeta {
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .pmeta .ic {
+        width: 12px;
+        height: 12px;
+      }
+      .padd {
+        position: relative;
+        width: 78px;
+        height: 28px;
+      }
+      .padd > span {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 999px;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .padd .ic {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.6;
+      }
+      .p-add {
+        box-shadow: inset 0 0 0 1.5px var(--bhover);
+        color: var(--fg);
+      }
+      .p-spin {
+        opacity: 0;
+        color: var(--muted);
+      }
+      .p-spin .ic {
+        width: 20px;
+        height: 20px;
+      }
+      .p-added {
+        background: var(--lime);
+        color: var(--navy);
+        opacity: 0;
+      }
+      .toast {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 100px;
+        z-index: 50;
+        background: var(--card);
+        border-radius: 16px;
+        box-shadow: var(--pop);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 12px 12px 14px;
+        opacity: 0;
+      }
+      .toast .tk {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--lime);
+        color: var(--navy);
+        display: grid;
+        place-items: center;
+      }
+      .toast .tk .ic {
+        width: 14px;
+        height: 14px;
+        stroke-width: 3;
+      }
+      .toast b {
+        flex: 1;
+        font-size: 14px;
+      }
+      .toast .undo {
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: var(--navy);
+        color: var(--cream);
+        font-size: 12px;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+      }
+
+      /* ── D · listing detail (detail-hero.tsx) ── */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        background: var(--navy);
+        color: var(--cream);
+        padding: 12px 20px 30px;
+      }
+      .hero .t1 {
+        position: absolute;
+        right: -48px;
+        top: -48px;
+        width: 180px;
+        height: 130px;
+        rotate: -8deg;
+        border-radius: 20px;
+        background: var(--orange);
+      }
+      .hero .t2 {
+        position: absolute;
+        right: 40px;
+        top: -32px;
+        width: 90px;
+        height: 70px;
+        rotate: 7deg;
+        border-radius: 18px;
+        background: var(--lime);
+        z-index: 1;
+      }
+      .hero-top {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hbtn {
+        height: 40px;
+        min-width: 40px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        display: grid;
+        place-items: center;
+      }
+      .hero-body {
+        position: relative;
+        z-index: 2;
+        margin-top: 24px;
+      }
+      .hero .eyeb {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--cream-m);
+      }
+      .hero h1 {
+        margin-top: 10px;
+        font-family: "Unbounded", sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.15;
+      }
+      .hero .sub {
+        margin-top: 10px;
+        font-size: 15px;
+        color: var(--orange);
+      }
+      .stiles {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .st {
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        padding: 11px 12px;
+      }
+      .st p {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--orange);
+      }
+      .st b {
+        display: block;
+        margin-top: 3px;
+        font-size: 15px;
+      }
+      .st.urg {
+        background: var(--orange);
+        box-shadow: none;
+      }
+      .st.urg p,
+      .st.urg b {
+        color: var(--navy);
+      }
+      .dbody {
+        padding: 22px 20px;
+      }
+      .dbody h2 {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .dbody p {
+        margin-top: 6px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .dbody h2 + p + h2 {
+        margin-top: 18px;
+      }
+      .applybar {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 390px;
+        padding: 12px 20px 26px;
+        background: rgba(251, 250, 247, 0.96);
+        border-top: 1px solid var(--hair);
+        display: flex;
+        gap: 10px;
+      }
+      .applybar .btn {
+        height: 56px;
+        flex: 1;
+      }
+      .applybar .btn .ic {
+        width: 16px;
+        height: 16px;
+      }
+      .roundb {
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+      .roundb .ic {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* ── E · away (someone else's site — deliberately unbranded) ── */
+      #scrAway {
+        background: #ffffff;
+      }
+      .bbar {
+        position: absolute;
+        left: 0;
+        top: 44px;
+        width: 390px;
+        height: 52px;
+        background: #efede8;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        gap: 10px;
+      }
+      .bbar .addr {
+        flex: 1;
+        height: 34px;
+        border-radius: 999px;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        color: #8c887a;
+      }
+      .bbar .addr .ic {
+        width: 13px;
+        height: 13px;
+      }
+      .sk {
+        background: #e9e6df;
+        border-radius: 8px;
+      }
+      .away-body {
+        position: absolute;
+        left: 20px;
+        top: 116px;
+        width: 350px;
+      }
+      .skf {
+        margin-top: 14px;
+        height: 46px;
+        border-radius: 12px;
+        border: 1.5px solid #e2dfd6;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+      }
+      .skf i {
+        display: block;
+        height: 10px;
+        border-radius: 999px;
+        background: #bdb8aa;
+        transform-origin: 0 50%;
+      }
+      .laterchip {
+        position: absolute;
+        left: 50%;
+        top: 360px;
+        width: 210px;
+        margin-left: -105px;
+        height: 46px;
+        border-radius: 999px;
+        background: var(--navy);
+        color: var(--cream);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        box-shadow: var(--pop);
+        opacity: 0;
+        z-index: 5;
+      }
+      .laterchip .ic {
+        width: 18px;
+        height: 18px;
+        color: var(--orange);
+      }
+
+      /* ── return sheet (components/tracker/return-sheet.tsx) ── */
+      .ret-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px 60px 0 20px;
+      }
+      .ret-head h2 {
+        font-family: "Unbounded", sans-serif;
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .ret-head p {
+        margin-top: 4px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .ret-opts {
+        padding: 20px 20px 0;
+        display: grid;
+        gap: 8px;
+      }
+      .ropt {
+        position: relative;
+        min-height: 54px;
+        border-radius: 18px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .ropt .lbl {
+        flex: 1;
+      }
+      .ropt .on {
+        position: absolute;
+        inset: -1.5px;
+        border-radius: 18px;
+        background: var(--navy);
+        color: var(--cream);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 17.5px;
+        opacity: 0;
+      }
+      .ret-priv {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 16px 20px 30px;
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+      }
+      .ret-priv .ic {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ── F · tracker (app/tracker/page.tsx) ── */
+      .trk {
+        position: absolute;
+        left: 20px;
+        top: 68px;
+        width: 350px;
+      }
+      .trk h1 {
+        font-family: "Unbounded", sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .trk > p {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .bucket {
+        margin-top: 26px;
+      }
+      .bk-h {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .bk-h h2 {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .bk-h span {
+        font-family: "Unbounded", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .bk-hint {
+        margin: 4px 0 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .tpanel {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+      }
+      .trow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 14px;
+      }
+      .trow + .trow {
+        border-top: 1px solid var(--hair);
+      }
+      .trow .tt {
+        flex: 1;
+        min-width: 0;
+      }
+      .trow .tt b {
+        display: block;
+        font-size: 15px;
+        line-height: 1.3;
+      }
+      .trow .tm {
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .trow .dl {
+        padding: 2px 8px;
+        font-size: 11px;
+      }
+      .trow .dl .ic {
+        width: 12px;
+        height: 12px;
+      }
+      .stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 34px;
+        padding: 0 10px 0 12px;
+        border-radius: 999px;
+        background: var(--card);
+        box-shadow: inset 0 0 0 1.5px var(--border);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .stat .ic {
+        width: 15px;
+        height: 15px;
+      }
+
+      /* ── outro ─────────────────────────────────────────── */
+      #outro {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      #oglow {
+        position: absolute;
+        left: 510px;
+        top: -10px;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(255, 106, 0, 0.3), rgba(255, 106, 0, 0) 100%);
+        opacity: 0;
+      }
+      #logoGroup {
+        position: absolute;
+        inset: 0;
+        transform-origin: 960px 440px;
+      }
+      #osvg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      .lp {
+        position: absolute;
+        left: 650px;
+        top: 258.8px;
+        width: 620px;
+        height: 362.5px;
+        opacity: 0;
+      }
+      .lp {
+        background: url("assets/brand/up-mark-orange.png") 0 0 / 100% 100% no-repeat;
+      }
+      #logoL {
+        clip-path: inset(0 48.87% 0 0);
+      }
+      #logoR {
+        clip-path: inset(0 0 0 51.13%);
+      }
+      #ctaLine {
+        position: absolute;
+        left: 0;
+        top: 690px;
+        width: 1920px;
+        text-align: center;
+        font-family: "Unbounded", sans-serif;
+        font-size: 76px;
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--cream);
+      }
+      #ctaLine .w {
+        display: inline-block;
+        opacity: 0;
+        margin: 0 0.13em;
+      }
+      #fine {
+        position: absolute;
+        left: 0;
+        top: 884px;
+        width: 1920px;
+        text-align: center;
+        opacity: 0;
+      }
+      #fine .url {
+        font-size: 38px;
+        font-weight: 800;
+        color: var(--orange);
+        letter-spacing: 0.01em;
+      }
+      #fine .cr {
+        margin-top: 12px;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--cream-m);
+      }
+    </style>
+  <script data-hyperframes-preview-runtime="1" src="/api/runtime.js"></script>
+<meta name="hyperframes-project-signature" content="1e1ad53d6f2e57ebdbe56719">
+</head>
+  <body>
+    <svg data-hf-id="hf-p3r6" width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs data-hf-id="hf-mh0t">
+        <symbol data-hf-id="hf-fh4p" id="i-heart" viewBox="0 0 24 24"><path data-hf-id="hf-wf1t" d="M12 20.3C6.8 16.7 3.5 13.4 3.5 9.5 3.5 7 5.4 5 7.9 5c1.7 0 3.1.9 4.1 2.2C13 5.9 14.4 5 16.1 5c2.5 0 4.4 2 4.4 4.5 0 3.9-3.3 7.2-8.5 10.8z" /></symbol>
+        <symbol data-hf-id="hf-6dv0" id="i-heart-f" viewBox="0 0 24 24"><path data-hf-id="hf-hlxn" d="M12 20.3C6.8 16.7 3.5 13.4 3.5 9.5 3.5 7 5.4 5 7.9 5c1.7 0 3.1.9 4.1 2.2C13 5.9 14.4 5 16.1 5c2.5 0 4.4 2 4.4 4.5 0 3.9-3.3 7.2-8.5 10.8z" fill="currentColor" /></symbol>
+        <symbol data-hf-id="hf-d096" id="i-bm" viewBox="0 0 24 24"><path data-hf-id="hf-j731" d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1z" /></symbol>
+        <symbol data-hf-id="hf-5qbb" id="i-bm-f" viewBox="0 0 24 24"><path data-hf-id="hf-hlif" d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1z" fill="currentColor" /></symbol>
+        <symbol data-hf-id="hf-ylo5" id="i-list" viewBox="0 0 24 24"><path data-hf-id="hf-uixu" d="M9 6h11M9 12h11M9 18h11" /><circle data-hf-id="hf-la2p" cx="4.5" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle data-hf-id="hf-dle6" cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none" /><circle data-hf-id="hf-l864" cx="4.5" cy="18" r="1.2" fill="currentColor" stroke="none" /></symbol>
+        <symbol data-hf-id="hf-1lu0" id="i-share" viewBox="0 0 24 24"><circle data-hf-id="hf-j8u2" cx="17.5" cy="5.5" r="2.5" /><circle data-hf-id="hf-v41v" cx="6.5" cy="12" r="2.5" /><circle data-hf-id="hf-1i68" cx="17.5" cy="18.5" r="2.5" /><path data-hf-id="hf-73zc" d="M8.7 10.8l6.6-3.9M8.7 13.2l6.6 3.9" /></symbol>
+        <symbol data-hf-id="hf-h700" id="i-arr" viewBox="0 0 24 24"><path data-hf-id="hf-m7n8" d="M5 12h14M13 6l6 6-6 6" /></symbol>
+        <symbol data-hf-id="hf-dsom" id="i-arl" viewBox="0 0 24 24"><path data-hf-id="hf-2953" d="M19 12H5M11 6l-6 6 6 6" /></symbol>
+        <symbol data-hf-id="hf-9udw" id="i-home" viewBox="0 0 24 24"><path data-hf-id="hf-92pv" d="M3.5 10.2 12 3.5l8.5 6.7V20a1 1 0 0 1-1 1H15v-6.5H9V21H4.5a1 1 0 0 1-1-1z" /></symbol>
+        <symbol data-hf-id="hf-d8sl" id="i-home-f" viewBox="0 0 24 24"><path data-hf-id="hf-xw95" d="M3.5 10.2 12 3.5l8.5 6.7V20a1 1 0 0 1-1 1H15v-6.5H9V21H4.5a1 1 0 0 1-1-1z" fill="currentColor" /></symbol>
+        <symbol data-hf-id="hf-v5ld" id="i-pl" viewBox="0 0 24 24"><path data-hf-id="hf-o8yj" d="M3.5 6h12M3.5 11h12M3.5 16h7" /><path data-hf-id="hf-7n9g" d="M15.5 14v6.5l5-3.25z" fill="currentColor" /></symbol>
+        <symbol data-hf-id="hf-2tqh" id="i-search" viewBox="0 0 24 24"><circle data-hf-id="hf-mu0v" cx="11" cy="11" r="6.5" /><path data-hf-id="hf-rizb" d="m16 16 4.5 4.5" /></symbol>
+        <symbol data-hf-id="hf-lq9r" id="i-cc" viewBox="0 0 24 24"><circle data-hf-id="hf-1iwn" cx="12" cy="12" r="9" /><path data-hf-id="hf-mjs9" d="m8 12.2 2.8 2.8 5.4-5.4" /></symbol>
+        <symbol data-hf-id="hf-mzdy" id="i-cc-f" viewBox="0 0 24 24"><circle data-hf-id="hf-qxlu" cx="12" cy="12" r="10" fill="currentColor" stroke="none" /><path data-hf-id="hf-x0j4" d="M7.4 12.1 11 15.8l6.9-7" stroke="#0B1233" stroke-width="2.2" fill="none" /></symbol>
+        <symbol data-hf-id="hf-tvw0" id="i-user" viewBox="0 0 24 24"><circle data-hf-id="hf-jnj3" cx="12" cy="8" r="4" /><path data-hf-id="hf-nt2d" d="M4.5 20.5a7.5 7.5 0 0 1 15 0" /></symbol>
+        <symbol data-hf-id="hf-uv5o" id="i-pin" viewBox="0 0 24 24"><path data-hf-id="hf-h615" d="M12 21s-6.5-5.7-6.5-11a6.5 6.5 0 0 1 13 0c0 5.3-6.5 11-6.5 11z" /><circle data-hf-id="hf-3ok3" cx="12" cy="10" r="2.3" /></symbol>
+        <symbol data-hf-id="hf-p4k7" id="i-clock" viewBox="0 0 24 24"><circle data-hf-id="hf-o1fd" cx="12" cy="12" r="8.5" /><path data-hf-id="hf-ge4w" d="M12 7.5V12l3 2" /></symbol>
+        <symbol data-hf-id="hf-1ow5" id="i-focus" viewBox="0 0 24 24"><circle data-hf-id="hf-uvve" cx="12" cy="12" r="7.5" /><circle data-hf-id="hf-ingr" cx="12" cy="12" r="2" fill="currentColor" stroke="none" /><path data-hf-id="hf-9x9s" d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" /></symbol>
+        <symbol data-hf-id="hf-49hx" id="i-brief" viewBox="0 0 24 24"><rect data-hf-id="hf-ijsy" x="3.5" y="7" width="17" height="13" rx="2" /><path data-hf-id="hf-i0c4" d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7M3.5 12.5h17" /></symbol>
+        <symbol data-hf-id="hf-3821" id="i-cal" viewBox="0 0 24 24"><rect data-hf-id="hf-f12p" x="3.5" y="5" width="17" height="15.5" rx="2" /><path data-hf-id="hf-707r" d="M3.5 10h17M8 3v4M16 3v4" /></symbol>
+        <symbol data-hf-id="hf-059q" id="i-book" viewBox="0 0 24 24"><path data-hf-id="hf-w12a" d="M5 19.5V5.5A2 2 0 0 1 7 3.5h12v14H7a2 2 0 0 0-2 2 2 2 0 0 0 2 2h12" /></symbol>
+        <symbol data-hf-id="hf-r7tp" id="i-star" viewBox="0 0 24 24"><path data-hf-id="hf-ojbb" d="m12 3.8 2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7.9-5.6-4-3.9 5.6-.8z" /></symbol>
+        <symbol data-hf-id="hf-d6w4" id="i-lock" viewBox="0 0 24 24"><rect data-hf-id="hf-ekjk" x="5" y="10.5" width="14" height="10" rx="2" /><path data-hf-id="hf-ppfu" d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></symbol>
+        <symbol data-hf-id="hf-4kdy" id="i-globe" viewBox="0 0 24 24"><circle data-hf-id="hf-18gd" cx="12" cy="12" r="8.5" /><path data-hf-id="hf-fvuq" d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5S9.5 6.1 12 3.5z" /></symbol>
+        <symbol data-hf-id="hf-8n9p" id="i-plus" viewBox="0 0 24 24"><path data-hf-id="hf-1zsu" d="M12 5v14M5 12h14" /></symbol>
+        <symbol data-hf-id="hf-cv5h" id="i-check" viewBox="0 0 24 24"><path data-hf-id="hf-lvfk" d="m5 12.5 4.5 4.5L19 7.5" /></symbol>
+        <symbol data-hf-id="hf-kir9" id="i-x" viewBox="0 0 24 24"><path data-hf-id="hf-4ga7" d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></symbol>
+        <symbol data-hf-id="hf-o9ke" id="i-eye" viewBox="0 0 24 24"><path data-hf-id="hf-jjuh" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle data-hf-id="hf-2731" cx="12" cy="12" r="3" /></symbol>
+        <symbol data-hf-id="hf-pr1s" id="i-ext" viewBox="0 0 24 24"><path data-hf-id="hf-2roz" d="M14 4h6v6M20 4l-8.5 8.5M18 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5.5" /></symbol>
+        <symbol data-hf-id="hf-pr89" id="i-chev" viewBox="0 0 24 24"><path data-hf-id="hf-3net" d="m6.5 9.5 5.5 5.5 5.5-5.5" /></symbol>
+        <symbol data-hf-id="hf-wse1" id="i-load" viewBox="0 0 24 24"><path data-hf-id="hf-ul10" d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5" /></symbol>
+        <symbol data-hf-id="hf-uwvq" id="i-wifi" viewBox="0 0 24 24"><path data-hf-id="hf-bqm1" d="M2.5 9a14 14 0 0 1 19 0M5.8 12.6a9 9 0 0 1 12.4 0M9.2 16.2a4 4 0 0 1 5.6 0" /><circle data-hf-id="hf-nyir" cx="12" cy="19.2" r="1.2" fill="currentColor" stroke="none" /></symbol>
+      </defs>
+    </svg>
+
+    <div data-hf-id="hf-c3m1" id="root" data-composition-id="main" data-start="0" data-duration="41.6" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-otpl" id="stage" class="clip" data-start="0" data-duration="41.6" data-track-index="0">
+        <!-- the card-stack motif, at stage scale -->
+        <div data-hf-id="hf-ljxk" class="tile-w" id="tileA" data-layout-allow-overflow=""><div data-hf-id="hf-ruzs" class="tile" id="tileAi"></div></div>
+        <div data-hf-id="hf-u7tf" class="tile-w" id="tileB" data-layout-allow-overflow=""><div data-hf-id="hf-ksah" class="tile" id="tileBi"></div></div>
+        <div data-hf-id="hf-q9pe" class="tile-w" id="tileC" data-layout-allow-overflow=""><div data-hf-id="hf-3tlm" class="tile" id="tileCi"></div></div>
+
+        <div data-hf-id="hf-sqh1" id="window">
+          <div data-hf-id="hf-jy91" id="rig">
+            <div data-hf-id="hf-27c6" id="glow"></div>
+            <div data-hf-id="hf-5iuv" id="phone">
+              <div data-hf-id="hf-ccvt" id="screen">
+                <!-- A · SIGN UP -->
+                <div data-hf-id="hf-zp72" class="scr" id="scrSignup">
+                  <div data-hf-id="hf-ytn6" class="vp"><div data-hf-id="hf-w9w6" class="scroll" id="suScroll">
+                    <header data-hf-id="hf-kaud" class="auth-head">
+                      <div data-hf-id="hf-d1zs" class="stack"><i data-hf-id="hf-xph8" class="s1"></i><i data-hf-id="hf-6dd3" class="s2"></i><i data-hf-id="hf-2f92" class="s3"></i></div>
+                      <div data-hf-id="hf-9gvv" class="mark"><img data-hf-id="hf-z35d" src="assets/brand/up-mark-navy.png" alt=""></div>
+                      <p data-hf-id="hf-tfl4" class="auth-h">Get access. Get <em data-hf-id="hf-cnuq">UP</em>.</p>
+                    </header>
+                    <main data-hf-id="hf-ypjg" class="auth-main">
+                      <h2 data-hf-id="hf-8es2" class="auth-t">Create your account</h2>
+                      <p data-hf-id="hf-7n6e" class="auth-s">Free for seekers. Takes about a minute.</p>
+                      <div data-hf-id="hf-c7xe" class="form">
+                        <div data-hf-id="hf-6ldu" class="grid2">
+                          <div data-hf-id="hf-0ztw" class="field">
+                            <label data-hf-id="hf-qi8w">First name</label>
+                            <div data-hf-id="hf-icgm" class="input tapper" id="fFirst"><span data-hf-id="hf-6kfq" class="ph" id="phFirst">First name</span><span data-hf-id="hf-n9og" class="val" id="vFirst"></span><span data-hf-id="hf-sv2n" class="caret" id="cFirst"></span><span data-hf-id="hf-6igd" class="fring" id="rFirst"></span></div>
+                          </div>
+                          <div data-hf-id="hf-bxgc" class="field">
+                            <label data-hf-id="hf-nqfs">Last name</label>
+                            <div data-hf-id="hf-k9lw" class="input tapper" id="fLast"><span data-hf-id="hf-tvvm" class="ph" id="phLast">Last name</span><span data-hf-id="hf-9s16" class="val" id="vLast"></span><span data-hf-id="hf-xe5z" class="caret" id="cLast"></span><span data-hf-id="hf-szrl" class="fring" id="rLast"></span></div>
+                          </div>
+                        </div>
+                        <div data-hf-id="hf-aqj9" class="field">
+                          <label data-hf-id="hf-cmin">Email</label>
+                          <div data-hf-id="hf-tnvg" class="input tapper" id="fEmail"><span data-hf-id="hf-lkvl" class="ph" id="phEmail">you@example.com</span><span data-hf-id="hf-k0w2" class="val" id="vEmail"></span><span data-hf-id="hf-6rqh" class="caret" id="cEmail"></span><span data-hf-id="hf-m5xn" class="fring" id="rEmail"></span></div>
+                        </div>
+                        <div data-hf-id="hf-b4ua" class="field">
+                          <label data-hf-id="hf-h927">Date of birth</label>
+                          <div data-hf-id="hf-45fr" class="input tapper" id="fDob"><span data-hf-id="hf-qs5e" class="ph" id="phDob">dd/mm/yyyy</span><span data-hf-id="hf-lcct" class="val" id="vDob"></span><span data-hf-id="hf-20te" class="caret" id="cDob"></span><span data-hf-id="hf-s2s4" class="fring" id="rDob"></span></div>
+                        </div>
+                        <div data-hf-id="hf-d4df" class="field">
+                          <label data-hf-id="hf-pnmo">Password</label>
+                          <div data-hf-id="hf-rkfx" class="input tapper" id="fPwd"><span data-hf-id="hf-ljl0" class="ph" id="phPwd">Create a password</span><span data-hf-id="hf-pnnw" class="val pw" id="vPwd"></span><span data-hf-id="hf-4shs" class="caret" id="cPwd"></span><span data-hf-id="hf-92w8" class="eye"><svg data-hf-id="hf-ypo9" class="ic"><use data-hf-id="hf-lwl5" href="#i-eye" /></svg></span><span data-hf-id="hf-tzta" class="fring" id="rPwd"></span></div>
+                          <ul data-hf-id="hf-f7tt" class="rules">
+                            <li data-hf-id="hf-6epp" id="rule0"><span data-hf-id="hf-sug3" class="rstack"><svg data-hf-id="hf-n0d6" class="ic no"><use data-hf-id="hf-r08i" href="#i-x" /></svg><svg data-hf-id="hf-4pd7" class="ic ok" id="rok0"><use data-hf-id="hf-yk3y" href="#i-check" /></svg></span>At least 8 characters</li>
+                            <li data-hf-id="hf-yk8l" id="rule1"><span data-hf-id="hf-ho2r" class="rstack"><svg data-hf-id="hf-ubwe" class="ic no"><use data-hf-id="hf-31di" href="#i-x" /></svg><svg data-hf-id="hf-0r96" class="ic ok" id="rok1"><use data-hf-id="hf-8nki" href="#i-check" /></svg></span>One uppercase letter (A-Z)</li>
+                            <li data-hf-id="hf-bikh" id="rule2"><span data-hf-id="hf-h9rq" class="rstack"><svg data-hf-id="hf-uq7f" class="ic no"><use data-hf-id="hf-3foj" href="#i-x" /></svg><svg data-hf-id="hf-wt55" class="ic ok" id="rok2"><use data-hf-id="hf-91vj" href="#i-check" /></svg></span>One lowercase letter (a-z)</li>
+                            <li data-hf-id="hf-xbws" id="rule3"><span data-hf-id="hf-gvgp" class="rstack"><svg data-hf-id="hf-v4ig" class="ic no"><use data-hf-id="hf-3tzk" href="#i-x" /></svg><svg data-hf-id="hf-ttvk" class="ic ok" id="rok3"><use data-hf-id="hf-9g6k" href="#i-check" /></svg></span>One number (0-9)</li>
+                          </ul>
+                        </div>
+                        <div data-hf-id="hf-y4ca" class="btn tapper" id="btnCreate"><span data-hf-id="hf-vo1n" id="lblCreate">Create account</span></div>
+                        <p data-hf-id="hf-14my" class="su-alt">Already on UP? <b data-hf-id="hf-qdc3">Sign in</b></p>
+                      </div>
+                    </main>
+                  </div></div>
+                  <div data-hf-id="hf-70d2" class="dim" id="dimSignup" data-layout-allow-occlusion=""></div>
+                </div>
+
+                <!-- B · ONBOARDING -->
+                <div data-hf-id="hf-xtpd" class="scr" id="scrOnb">
+                  <div data-hf-id="hf-8xx7" class="vp" style="bottom: 116px"><div data-hf-id="hf-mq1x" class="scroll" id="obScroll">
+                    <div data-hf-id="hf-owjm" class="segbar" id="segbar"><span data-hf-id="hf-uckh"></span><span data-hf-id="hf-l73p"></span><span data-hf-id="hf-me0s"></span><span data-hf-id="hf-lzpr"></span><span data-hf-id="hf-n6mu"></span><span data-hf-id="hf-msbt"></span><span data-hf-id="hf-nz8w"></span><span data-hf-id="hf-nkxv"></span></div>
+                    <div data-hf-id="hf-xufh" class="ob-eb">
+                      <span data-hf-id="hf-0s7e" class="backb"><svg data-hf-id="hf-r971" class="ic"><use data-hf-id="hf-g9ol" href="#i-arl" /></svg></span>
+                      <p data-hf-id="hf-5bb9" id="obStep">Step 1 of 8</p>
+                    </div>
+                    <div data-hf-id="hf-hg7z" id="obQ">
+                      <h1 data-hf-id="hf-rf7o" id="obTitle">Where are you based?</h1>
+                      <p data-hf-id="hf-aee0" id="obDesc"></p>
+                    </div>
+                    <div data-hf-id="hf-i9gr" class="opts-wrap">
+                      <div data-hf-id="hf-h6nr" class="opts" id="optsA">
+                        <div data-hf-id="hf-a4q9" class="opt tapper" id="oa0"><span data-hf-id="hf-moh6" class="lbl" data-layout-allow-overlap="">Jobs &amp; Career Opportunities</span><span data-hf-id="hf-ga0f" class="ck"></span><div data-hf-id="hf-pcln" class="on"><span data-hf-id="hf-giem" class="lbl" data-layout-allow-overlap="">Jobs &amp; Career Opportunities</span><span data-hf-id="hf-h7m7" class="ck"><svg data-hf-id="hf-sg44" class="ic"><use data-hf-id="hf-9uhl" href="#i-check" /></svg></span></div></div>
+                        <div data-hf-id="hf-9d2g" class="opt tapper" id="oa1"><span data-hf-id="hf-exmt" class="lbl" data-layout-allow-overlap="">Scholarships &amp; Grants</span><span data-hf-id="hf-gtb6" class="ck"></span><div data-hf-id="hf-p4yz" class="on"><span data-hf-id="hf-t0rd" class="lbl" data-layout-allow-overlap="">Scholarships &amp; Grants</span><span data-hf-id="hf-gf05" class="ck"><svg data-hf-id="hf-s1t3" class="ic"><use data-hf-id="hf-a8sm" href="#i-check" /></svg></span></div></div>
+                        <div data-hf-id="hf-qxx5" class="opt" id="oa2"><span data-hf-id="hf-3udf" class="lbl" data-layout-allow-overlap="">Training &amp; Workshops</span><span data-hf-id="hf-j75c" class="ck"></span></div>
+                        <div data-hf-id="hf-q69c" class="opt" id="oa3"><span data-hf-id="hf-ggts" class="lbl" data-layout-allow-overlap="">Networking Events</span><span data-hf-id="hf-isub" class="ck"></span></div>
+                        <div data-hf-id="hf-m85b" class="opt" id="oa4"><span data-hf-id="hf-uijr" class="lbl" data-layout-allow-overlap="">Volunteering &amp; Community Service</span><span data-hf-id="hf-ieja" class="ck"></span></div>
+                        <div data-hf-id="hf-ia1a" class="opt" id="oa5"><span data-hf-id="hf-0z9r" class="lbl" data-layout-allow-overlap="">Entrepreneurship &amp; Funding</span><span data-hf-id="hf-i089" class="ck"></span></div>
+                        <div data-hf-id="hf-37cn" class="opt tapper" id="oa6"><span data-hf-id="hf-ma50" class="lbl" data-layout-allow-overlap="">Remote Work &amp; Digital Skills</span><span data-hf-id="hf-efh0" class="ck"></span><div data-hf-id="hf-oqny" class="on"><span data-hf-id="hf-6xgs" class="lbl" data-layout-allow-overlap="">Remote Work &amp; Digital Skills</span><span data-hf-id="hf-e15z" class="ck"><svg data-hf-id="hf-t8q6" class="ic"><use data-hf-id="hf-an3n" href="#i-check" /></svg></span></div></div>
+                        <div data-hf-id="hf-pakc" class="payoff" id="payA"><span data-hf-id="hf-j7jo" class="pv" id="payAv"></span><p data-hf-id="hf-du78" id="payAt">Pick at least one to continue.</p></div>
+                      </div>
+                      <div data-hf-id="hf-8irw" class="opts" id="optsB">
+                        <div data-hf-id="hf-ytj4" class="opt tapper" id="ob0"><span data-hf-id="hf-qa7j" class="lbl" data-layout-allow-overlap="">Access to career opportunities</span><span data-hf-id="hf-scx9" class="ck"></span><div data-hf-id="hf-occx" class="on"><span data-hf-id="hf-6slr" class="lbl" data-layout-allow-overlap="">Access to career opportunities</span><span data-hf-id="hf-sr8a" class="ck"><svg data-hf-id="hf-suf5" class="ic"><use data-hf-id="hf-b1eo" href="#i-check" /></svg></span></div></div>
+                        <div data-hf-id="hf-sux3" class="opt" id="ob1"><span data-hf-id="hf-8myi" class="lbl" data-layout-allow-overlap="">Mentorship &amp; guidance</span><span data-hf-id="hf-t5jb" class="ck"></span></div>
+                        <div data-hf-id="hf-k718" class="opt" id="ob2"><span data-hf-id="hf-403l" class="lbl" data-layout-allow-overlap="">Networking &amp; professional connections</span><span data-hf-id="hf-tjuc" class="ck"></span></div>
+                        <div data-hf-id="hf-kyp1" class="opt" id="ob3"><span data-hf-id="hf-jvbf" class="lbl" data-layout-allow-overlap="">Skill development</span><span data-hf-id="hf-ty5d" class="ck"></span></div>
+                        <div data-hf-id="hf-1isy" class="opt" id="ob4"><span data-hf-id="hf-dirf" class="lbl" data-layout-allow-overlap="">Entrepreneurship support</span><span data-hf-id="hf-ucge" class="ck"></span></div>
+                        <div data-hf-id="hf-zomd" class="payoff" id="payBx"><span data-hf-id="hf-nnm1" class="pv" id="payBv"></span><p data-hf-id="hf-6zpx" id="payBt">Pick at least one to continue.</p></div>
+                      </div>
+                    </div>
+                  </div></div>
+                  <div data-hf-id="hf-fk4p" class="ob-bottom">
+                    <div data-hf-id="hf-di8l" class="btn tapper" id="btnOb"><svg data-hf-id="hf-69se" class="ic" id="obSpin" style="display: none"><use data-hf-id="hf-20y6" href="#i-load" /></svg><span data-hf-id="hf-ksfe" id="lblOb">Continue</span></div>
+                    <p data-hf-id="hf-9wji" id="obHint">Answer this to continue.</p>
+                  </div>
+                </div>
+
+                <!-- C · FEED -->
+                <div data-hf-id="hf-eckm" class="scr" id="scrFeed">
+                  <div data-hf-id="hf-kqal" class="vp" style="bottom: 84px; top: 0">
+                  <div data-hf-id="hf-v5t9" class="tabs" data-layout-allow-overflow="">
+                    <span data-hf-id="hf-wng7" class="tab on"><svg data-hf-id="hf-u1c8" class="ic"><use data-hf-id="hf-weda" href="#i-star" /></svg>For You</span>
+                    <span data-hf-id="hf-2103" class="tab"><svg data-hf-id="hf-tn17" class="ic"><use data-hf-id="hf-rm3m" href="#i-focus" /></svg>Opportunities</span>
+                    <span data-hf-id="hf-3zne" class="tab"><svg data-hf-id="hf-utya" class="ic"><use data-hf-id="hf-jatq" href="#i-brief" /></svg>Jobs</span>
+                    <span data-hf-id="hf-w00f" class="tab"><svg data-hf-id="hf-ufn9" class="ic"><use data-hf-id="hf-gbfe" href="#i-cal" /></svg>Events</span>
+                    <span data-hf-id="hf-0zpf" class="tab"><svg data-hf-id="hf-4n9j" class="ic"><use data-hf-id="hf-4d91" href="#i-book" /></svg>Resources</span>
+                  </div>
+                  <div data-hf-id="hf-v4i4" class="feed">
+                    <div data-hf-id="hf-ytmw" class="greet" id="greet">
+                      <h1 data-hf-id="hf-82jk">Hey, Ada</h1>
+                      <p data-hf-id="hf-b454">Picks to help you glow up.</p>
+                    </div>
+                    <div data-hf-id="hf-5cwd" class="cards">
+                      <article data-hf-id="hf-nlyy" class="card tapper" id="card1">
+                        <div data-hf-id="hf-axp1" class="c-top">
+                          <div data-hf-id="hf-pkib" class="c-kind"><span data-hf-id="hf-mitp" class="kchip k-opp"><svg data-hf-id="hf-51kk" class="ic"><use data-hf-id="hf-vurq" href="#i-focus" /></svg></span>Opportunity</div>
+                          <span data-hf-id="hf-iknk" class="dl dl-urgent"><svg data-hf-id="hf-3unh" class="ic"><use data-hf-id="hf-8qr0" href="#i-clock" /></svg>3 days left</span>
+                        </div>
+                        <h3 data-hf-id="hf-tjy4" class="c-title">Future Leaders Scholarship 2027</h3>
+                        <p data-hf-id="hf-87kb" class="c-desc">Tuition, housing and a monthly stipend.</p>
+                        <div data-hf-id="hf-j0km" class="c-meta" id="c1meta">
+                          <span data-hf-id="hf-vvtw"><svg data-hf-id="hf-48yi" class="ic"><use data-hf-id="hf-m1dv" href="#i-pin" /></svg>Lagos, Nigeria</span>
+                          <span data-hf-id="hf-oil3" class="b">Fully funded</span>
+                          <span data-hf-id="hf-cjfl" class="score"><span data-hf-id="hf-c02f" class="hl" id="scoreHl"></span><span data-hf-id="hf-vgeb" class="sc"><b data-hf-id="hf-4h0g">94</b>% match</span></span>
+                        </div>
+                        <div data-hf-id="hf-keww" class="c-actions" id="c1actions">
+                          <span data-hf-id="hf-puoo" class="act tapper" id="actLike"><span data-hf-id="hf-2po1" class="icost"><svg data-hf-id="hf-68hn" class="ic"><use data-hf-id="hf-v1uy" href="#i-heart" /></svg><svg data-hf-id="hf-yehf" class="ic f" id="likeFill"><use data-hf-id="hf-uc2f" href="#i-heart-f" /></svg></span><span data-hf-id="hf-y93s" id="likeN">128</span></span>
+                          <span data-hf-id="hf-64y2" class="act tapper" id="actSave"><span data-hf-id="hf-n8md" class="icost"><svg data-hf-id="hf-6mso" class="ic"><use data-hf-id="hf-bh7h" href="#i-bm" /></svg><svg data-hf-id="hf-ww8p" class="ic f" id="saveFill"><use data-hf-id="hf-rsoo" href="#i-bm-f" /></svg></span><span data-hf-id="hf-0caq" id="saveN">41</span></span>
+                          <span data-hf-id="hf-6fgp" class="act tapper" id="actList"><svg data-hf-id="hf-5fvl" class="ic"><use data-hf-id="hf-4bey" href="#i-list" /></svg><span data-hf-id="hf-7pub" id="listN">12</span></span>
+                          <span data-hf-id="hf-cttu" class="act"><svg data-hf-id="hf-5u6m" class="ic"><use data-hf-id="hf-98oz" href="#i-share" /></svg>9</span>
+                          <span data-hf-id="hf-mpaj" class="c-go"><svg data-hf-id="hf-7tpr" class="ic"><use data-hf-id="hf-sopn" href="#i-arr" /></svg></span>
+                        </div>
+                      </article>
+                      <article data-hf-id="hf-1rsb" class="card" id="card2">
+                        <div data-hf-id="hf-skll" class="c-top">
+                          <div data-hf-id="hf-mx59" class="c-kind"><span data-hf-id="hf-i9f3" class="kchip k-job"><svg data-hf-id="hf-880s" class="ic"><use data-hf-id="hf-8viq" href="#i-brief" /></svg></span>Job</div>
+                          <span data-hf-id="hf-objt" class="dl dl-up">Closes 18 Oct</span>
+                        </div>
+                        <h3 data-hf-id="hf-r1js" class="c-title">Junior Data Analyst (Remote)</h3>
+                        <p data-hf-id="hf-q3wa" class="c-desc">SQL, dashboards and a mentor from week one.</p>
+                        <div data-hf-id="hf-9y6j" class="c-meta">
+                          <span data-hf-id="hf-5qqf"><svg data-hf-id="hf-h7ho" class="ic"><use data-hf-id="hf-krpx" href="#i-globe" /></svg>Remote</span>
+                          <span data-hf-id="hf-5m2y" class="b">Full-time</span>
+                          <span data-hf-id="hf-6ws5" class="score"><span data-hf-id="hf-ksoz" class="sc"><b data-hf-id="hf-0gzx">88</b>% match</span></span>
+                        </div>
+                        <div data-hf-id="hf-2ith" class="c-actions">
+                          <span data-hf-id="hf-ihwd" class="act"><svg data-hf-id="hf-gt6n" class="ic"><use data-hf-id="hf-xr72" href="#i-heart" /></svg>64</span>
+                          <span data-hf-id="hf-3a3g" class="act"><svg data-hf-id="hf-gevm" class="ic"><use data-hf-id="hf-s0s1" href="#i-bm" /></svg>23</span>
+                          <span data-hf-id="hf-c17s" class="act"><svg data-hf-id="hf-g0kl" class="ic"><use data-hf-id="hf-2aa6" href="#i-list" /></svg>7</span>
+                          <span data-hf-id="hf-b8lq" class="act"><svg data-hf-id="hf-isps" class="ic"><use data-hf-id="hf-xadf" href="#i-share" /></svg>5</span>
+                          <span data-hf-id="hf-17mz" class="c-go"><svg data-hf-id="hf-ieer" class="ic"><use data-hf-id="hf-kz8b" href="#i-arr" /></svg></span>
+                        </div>
+                      </article>
+                      <article data-hf-id="hf-xtoa" class="card" id="card3">
+                        <div data-hf-id="hf-trio" class="c-top">
+                          <div data-hf-id="hf-us06" class="c-kind"><span data-hf-id="hf-pcph" class="kchip k-evt"><svg data-hf-id="hf-i03q" class="ic"><use data-hf-id="hf-5uda" href="#i-cal" /></svg></span>Event</div>
+                          <span data-hf-id="hf-z6ii" class="dl dl-soon"><svg data-hf-id="hf-hlsp" class="ic"><use data-hf-id="hf-tp8k" href="#i-clock" /></svg>Sat, 12 Oct</span>
+                        </div>
+                        <h3 data-hf-id="hf-jm61" class="c-title">Tech Careers Meetup</h3>
+                        <div data-hf-id="hf-d9d7" class="c-meta">
+                          <span data-hf-id="hf-4oqh"><svg data-hf-id="hf-e11g" class="ic"><use data-hf-id="hf-snib" href="#i-pin" /></svg>Lagos</span>
+                          <span data-hf-id="hf-q6iz" class="b">Free</span>
+                          <span data-hf-id="hf-83p8" class="score"><span data-hf-id="hf-kedy" class="sc"><b data-hf-id="hf-41r6">81</b>% match</span></span>
+                        </div>
+                      </article>
+                    </div>
+                  </div>
+                  </div>
+                  <nav data-hf-id="hf-h093" class="bnav">
+                    <span data-hf-id="hf-su8a" class="ni on"><span data-hf-id="hf-7vxg" class="pill"><svg data-hf-id="hf-dmqf" class="ic"><use data-hf-id="hf-d9nq" href="#i-home-f" /></svg></span>Home</span>
+                    <span data-hf-id="hf-2frh" class="ni"><span data-hf-id="hf-hzq4" class="pill"><svg data-hf-id="hf-hz5h" class="ic"><use data-hf-id="hf-bzr6" href="#i-pl" /></svg></span>Playlists</span>
+                    <span data-hf-id="hf-vble" class="ni"><span data-hf-id="hf-gst1" class="pill"><svg data-hf-id="hf-idgi" class="ic"><use data-hf-id="hf-hyr2" href="#i-search" /></svg></span>Search</span>
+                    <span data-hf-id="hf-nqpu" class="ni"><span data-hf-id="hf-h742" class="pill"><svg data-hf-id="hf-irrj" class="ic"><use data-hf-id="hf-xwbc" href="#i-cc" /></svg></span>Tracker</span>
+                    <span data-hf-id="hf-x0wn" class="ni"><span data-hf-id="hf-j6n7" class="pill"><svg data-hf-id="hf-j62k" class="ic"><use data-hf-id="hf-z1kv" href="#i-user" /></svg></span>Profile</span>
+                  </nav>
+                  <div data-hf-id="hf-t0fi" class="toast" id="toast" data-layout-allow-occlusion="">
+                    <span data-hf-id="hf-pune" class="tk"><svg data-hf-id="hf-jkdl" class="ic"><use data-hf-id="hf-52t9" href="#i-check" /></svg></span>
+                    <b data-hf-id="hf-4b8s">Added to Scholarships 2027</b>
+                    <span data-hf-id="hf-mped" class="undo">Undo</span>
+                  </div>
+                  <div data-hf-id="hf-ckxu" class="scrim" id="plScrim" data-layout-allow-occlusion=""></div>
+                  <div data-hf-id="hf-8n1m" class="sheet" id="plSheet" data-layout-allow-occlusion="">
+                    <div data-hf-id="hf-3lc6" class="grab"></div>
+                    <span data-hf-id="hf-hkkz" class="sh-x"><svg data-hf-id="hf-jyom" class="ic"><use data-hf-id="hf-11ud" href="#i-x" /></svg></span>
+                    <div data-hf-id="hf-03o4" class="sh-head">
+                      <p data-hf-id="hf-ftin" class="sh-title">Add to playlist</p>
+                      <div data-hf-id="hf-ji69" class="sh-desc"><span data-hf-id="hf-vdgh" class="kchip sm k-opp"><svg data-hf-id="hf-kczn" class="ic"><use data-hf-id="hf-w92r" href="#i-focus" /></svg></span>Future Leaders Scholarship 2027</div>
+                    </div>
+                    <div data-hf-id="hf-sgoy" class="sh-body">
+                      <div data-hf-id="hf-iuj0" class="create">
+                        <span data-hf-id="hf-si7d" class="pt"><svg data-hf-id="hf-krao" class="ic"><use data-hf-id="hf-r1rm" href="#i-plus" /></svg></span>
+                        <span data-hf-id="hf-ieyi"><b data-hf-id="hf-qf6z">Create new playlist</b><small data-hf-id="hf-cgtz">Start a new collection</small></span>
+                      </div>
+                      <p data-hf-id="hf-m9gl" class="sec-l">Your playlists</p>
+                      <div data-hf-id="hf-gxly" class="panel">
+                        <div data-hf-id="hf-ut87" class="prow" id="plRow1">
+                          <span data-hf-id="hf-jfii" class="cover"><i data-hf-id="hf-35e4" class="c1"></i><i data-hf-id="hf-eut7" class="c2" style="background: var(--orange)"></i><i data-hf-id="hf-c8ld" class="c3" style="background: var(--lime)"></i></span>
+                          <div data-hf-id="hf-eacc" class="pinfo">
+                            <p data-hf-id="hf-caj6" class="pname">Scholarships 2027</p>
+                            <p data-hf-id="hf-03ji" class="pmeta"><svg data-hf-id="hf-esp9" class="ic"><use data-hf-id="hf-i53r" href="#i-lock" /></svg><span data-hf-id="hf-2xit" id="plCount">4 items</span></p>
+                          </div>
+                          <div data-hf-id="hf-uo7y" class="padd tapper" id="plAdd">
+                            <span data-hf-id="hf-dbyh" class="p-add" id="pAdd"><svg data-hf-id="hf-f70a" class="ic"><use data-hf-id="hf-q8ae" href="#i-plus" /></svg>Add</span>
+                            <span data-hf-id="hf-cf8y" class="p-spin" id="pSpin"><svg data-hf-id="hf-u4a9" class="ic" id="pSpinIc"><use data-hf-id="hf-i3iq" href="#i-load" /></svg></span>
+                            <span data-hf-id="hf-tmlc" class="p-added" id="pAdded"><svg data-hf-id="hf-lvju" class="ic"><use data-hf-id="hf-5h4a" href="#i-check" /></svg>Added</span>
+                          </div>
+                        </div>
+                        <div data-hf-id="hf-jm1w" class="prow">
+                          <span data-hf-id="hf-tc7i" class="cover"><i data-hf-id="hf-sjdw" class="c1"></i><i data-hf-id="hf-5gun" class="c2" style="background: var(--cream)"></i><i data-hf-id="hf-atiu" class="c3" style="background: var(--orange)"></i></span>
+                          <div data-hf-id="hf-by6s" class="pinfo">
+                            <p data-hf-id="hf-9a2m" class="pname">Remote jobs</p>
+                            <p data-hf-id="hf-hup7" class="pmeta"><svg data-hf-id="hf-lh8t" class="ic"><use data-hf-id="hf-p4ll" href="#i-globe" /></svg>7 items</p>
+                          </div>
+                          <div data-hf-id="hf-2v0p" class="padd"><span data-hf-id="hf-dqdc" class="p-add"><svg data-hf-id="hf-mo5w" class="ic"><use data-hf-id="hf-qmlf" href="#i-plus" /></svg>Add</span></div>
+                        </div>
+                        <div data-hf-id="hf-i7fg" class="prow">
+                          <span data-hf-id="hf-tqij" class="cover"><i data-hf-id="hf-rcgt" class="c1"></i><i data-hf-id="hf-cjio" class="c2" style="background: var(--lime)"></i><i data-hf-id="hf-i922" class="c3" style="background: var(--orange)"></i></span>
+                          <div data-hf-id="hf-ar9p" class="pinfo">
+                            <p data-hf-id="hf-yl1j" class="pname">Lagos events</p>
+                            <p data-hf-id="hf-48wf" class="pmeta"><svg data-hf-id="hf-m9uv" class="ic"><use data-hf-id="hf-qbio" href="#i-globe" /></svg>3 items</p>
+                          </div>
+                          <div data-hf-id="hf-berh" class="padd"><span data-hf-id="hf-olh4" class="p-add"><svg data-hf-id="hf-ngry" class="ic"><use data-hf-id="hf-r0wg" href="#i-plus" /></svg>Add</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div data-hf-id="hf-yujy" class="dim" id="dimFeed" data-layout-allow-occlusion=""></div>
+                </div>
+
+                <!-- D · LISTING DETAIL -->
+                <div data-hf-id="hf-iroh" class="scr" id="scrDetail">
+                  <div data-hf-id="hf-27km" class="vp"><div data-hf-id="hf-2d5n" class="scroll">
+                    <header data-hf-id="hf-3h0o" class="hero">
+                      <span data-hf-id="hf-3bo8" class="t1"></span><span data-hf-id="hf-bzk3" class="t2"></span>
+                      <div data-hf-id="hf-4z5e" class="hero-top">
+                        <span data-hf-id="hf-0dz1" class="hbtn"><svg data-hf-id="hf-n2gx" class="ic"><use data-hf-id="hf-w76h" href="#i-arl" /></svg></span>
+                      </div>
+                      <div data-hf-id="hf-zq0l" class="hero-body">
+                        <p data-hf-id="hf-x8fz" class="eyeb">Scholarship · Deadline 2 Oct</p>
+                        <h1 data-hf-id="hf-5hd0">Future Leaders Scholarship 2027</h1>
+                        <p data-hf-id="hf-y876" class="sub">Lagos, Nigeria</p>
+                        <div data-hf-id="hf-sfpq" class="stiles">
+                          <div data-hf-id="hf-fs85" class="st"><p data-hf-id="hf-dpfw">Award</p><b data-hf-id="hf-oaku">Full ride</b></div>
+                          <div data-hf-id="hf-v6k9" class="st"><p data-hf-id="hf-ls8f">Level</p><b data-hf-id="hf-cio1">Undergrad</b></div>
+                          <div data-hf-id="hf-9be9" class="st urg"><p data-hf-id="hf-11zm">Closes</p><b data-hf-id="hf-p2md">3 days</b></div>
+                        </div>
+                      </div>
+                    </header>
+                    <div data-hf-id="hf-0i7c" class="dbody">
+                      <h2 data-hf-id="hf-nde4">About</h2>
+                      <p data-hf-id="hf-maj1">Covers tuition, housing and a monthly stipend for students starting an undergraduate degree in 2027.</p>
+                      <h2 data-hf-id="hf-0z6f">Who can apply</h2>
+                      <p data-hf-id="hf-41ld">Final-year secondary students and school leavers across Africa.</p>
+                    </div>
+                  </div></div>
+                  <div data-hf-id="hf-6ymj" class="applybar">
+                    <div data-hf-id="hf-eoe2" class="btn tapper" id="btnApply">Apply now<svg data-hf-id="hf-o9e0" class="ic"><use data-hf-id="hf-u2sb" href="#i-ext" /></svg></div>
+                    <span data-hf-id="hf-eenz" class="roundb"><svg data-hf-id="hf-nv2z" class="ic"><use data-hf-id="hf-o8r9" href="#i-plus" /></svg></span>
+                  </div>
+                  <div data-hf-id="hf-k3xx" class="scrim" id="retScrim" data-layout-allow-occlusion=""></div>
+                  <div data-hf-id="hf-tnkj" class="sheet" id="retSheet" data-layout-allow-occlusion="">
+                    <div data-hf-id="hf-ew22" class="grab"></div>
+                    <span data-hf-id="hf-4d77" class="sh-x"><svg data-hf-id="hf-p202" class="ic"><use data-hf-id="hf-1g5e" href="#i-x" /></svg></span>
+                    <div data-hf-id="hf-kmeo" class="ret-head">
+                      <span data-hf-id="hf-0rn6" class="kchip lg k-opp"><svg data-hf-id="hf-onp1" class="ic"><use data-hf-id="hf-wnds" href="#i-focus" /></svg></span>
+                      <div data-hf-id="hf-yeow">
+                        <h2 data-hf-id="hf-hmk5">Welcome back. Did you get it in?</h2>
+                        <p data-hf-id="hf-ggxk">Future Leaders Scholarship 2027 · you were away 14 minutes</p>
+                      </div>
+                    </div>
+                    <div data-hf-id="hf-3m9w" class="ret-opts">
+                      <div data-hf-id="hf-0bva" class="ropt tapper" id="retOpt1"><span data-hf-id="hf-jiuc" class="lbl" data-layout-allow-overlap="">Submitted it — track this one</span><span data-hf-id="hf-uqrf" class="ck"></span><div data-hf-id="hf-ny1w" class="on"><span data-hf-id="hf-ng7w" class="lbl" data-layout-allow-overlap="">Submitted it — track this one</span><span data-hf-id="hf-v52g" class="ck"><svg data-hf-id="hf-gftv" class="ic"><use data-hf-id="hf-4yfa" href="#i-check" /></svg></span></div></div>
+                      <div data-hf-id="hf-vekl" class="ropt"><span data-hf-id="hf-1spa" class="lbl" data-layout-allow-overlap="">Started, not finished — remind me</span><span data-hf-id="hf-vjdh" class="ck"></span></div>
+                      <div data-hf-id="hf-r2s9" class="ropt"><span data-hf-id="hf-eglg" class="lbl" data-layout-allow-overlap="">Not for me — stop suggesting these</span><span data-hf-id="hf-vxoi" class="ck"></span></div>
+                      <div data-hf-id="hf-s9pc" class="ropt"><span data-hf-id="hf-hsaj" class="lbl" data-layout-allow-overlap="">Couldn't apply — something was wrong</span><span data-hf-id="hf-9wd2" class="ck"></span></div>
+                    </div>
+                    <p data-hf-id="hf-rgsl" class="ret-priv"><svg data-hf-id="hf-gu4w" class="ic"><use data-hf-id="hf-j0pj" href="#i-lock" /></svg>We can't see other sites. Your answer is the only thing that teaches the feed.</p>
+                  </div>
+                  <div data-hf-id="hf-9sg9" class="dim" id="dimDetail" data-layout-allow-occlusion=""></div>
+                </div>
+
+                <!-- E · AWAY (someone else's site) -->
+                <div data-hf-id="hf-5o08" class="scr" id="scrAway">
+                  <div data-hf-id="hf-i2gl" class="bbar">
+                    <span data-hf-id="hf-hky0" class="addr"><svg data-hf-id="hf-fn7t" class="ic"><use data-hf-id="hf-imei" href="#i-lock" /></svg><span data-hf-id="hf-a33v" class="sk" style="display: block; width: 150px; height: 9px; background: #d9d5cb"></span></span>
+                  </div>
+                  <div data-hf-id="hf-csyn" class="away-body">
+                    <div data-hf-id="hf-n6z3" class="sk" style="height: 120px; border-radius: 14px"></div>
+                    <div data-hf-id="hf-vwy3" class="sk" style="margin-top: 20px; height: 16px; width: 80%"></div>
+                    <div data-hf-id="hf-gktg" class="sk" style="margin-top: 10px; height: 16px; width: 55%"></div>
+                    <div data-hf-id="hf-2u68" class="skf"><i data-hf-id="hf-6ey0" id="sf1" style="width: 55%"></i></div>
+                    <div data-hf-id="hf-u720" class="skf"><i data-hf-id="hf-vc36" id="sf2" style="width: 72%"></i></div>
+                    <div data-hf-id="hf-t04x" class="skf"><i data-hf-id="hf-sgco" id="sf3" style="width: 40%"></i></div>
+                    <div data-hf-id="hf-h5vk" class="skf" style="height: 92px; align-items: flex-start; padding-top: 14px"><i data-hf-id="hf-qawv" id="sf4" style="width: 86%"></i></div>
+                    <div data-hf-id="hf-xk69" class="sk" style="margin-top: 18px; height: 50px; border-radius: 999px; background: #3a3d4a"></div>
+                  </div>
+                  <div data-hf-id="hf-bz5a" class="laterchip" id="later" data-layout-allow-occlusion=""><svg data-hf-id="hf-g1iu" class="ic"><use data-hf-id="hf-sibh" href="#i-clock" /></svg>14 minutes later</div>
+                </div>
+
+                <!-- F · TRACKER -->
+                <div data-hf-id="hf-u5q3" class="scr" id="scrTrk">
+                  <div data-hf-id="hf-l3rt" class="trk">
+                    <h1 data-hf-id="hf-truy">Tracker</h1>
+                    <p data-hf-id="hf-d8av">Everything you left UP to apply for.</p>
+                    <section data-hf-id="hf-gg3p" class="bucket" id="bkSub">
+                      <div data-hf-id="hf-gta6" class="bk-h"><h2 data-hf-id="hf-tphc">Submitted</h2><span data-hf-id="hf-ikog">1</span></div>
+                      <p data-hf-id="hf-n7s4" class="bk-hint">In, and still open.</p>
+                      <div data-hf-id="hf-hqzy" class="tpanel">
+                        <div data-hf-id="hf-9a7h" class="trow" id="trkRow">
+                          <span data-hf-id="hf-c35t" class="kchip k-opp"><svg data-hf-id="hf-eulr" class="ic"><use data-hf-id="hf-tv8l" href="#i-focus" /></svg></span>
+                          <div data-hf-id="hf-3ri0" class="tt">
+                            <b data-hf-id="hf-sv7x">Future Leaders Scholarship 2027</b>
+                            <div data-hf-id="hf-u8d5" class="tm"><span data-hf-id="hf-rtcx" class="dl dl-soon"><svg data-hf-id="hf-f8ws" class="ic"><use data-hf-id="hf-swmi" href="#i-clock" /></svg>Closes in 3 days</span></div>
+                          </div>
+                          <span data-hf-id="hf-t0s8" class="stat">Submitted<svg data-hf-id="hf-e1zp" class="ic"><use data-hf-id="hf-pjmy" href="#i-chev" /></svg></span>
+                        </div>
+                      </div>
+                    </section>
+                    <section data-hf-id="hf-51iu" class="bucket" id="bkWait">
+                      <div data-hf-id="hf-vllu" class="bk-h"><h2 data-hf-id="hf-9ei5">Awaiting answer</h2><span data-hf-id="hf-hdrd">2</span></div>
+                      <p data-hf-id="hf-0045" class="bk-hint">Closed on their end. Waiting to hear back.</p>
+                      <div data-hf-id="hf-h8mq" class="tpanel">
+                        <div data-hf-id="hf-m4c0" class="trow">
+                          <span data-hf-id="hf-jpe7" class="kchip k-job"><svg data-hf-id="hf-egaq" class="ic"><use data-hf-id="hf-99tr" href="#i-brief" /></svg></span>
+                          <div data-hf-id="hf-h39s" class="tt">
+                            <b data-hf-id="hf-o4d2">Graduate Trainee Programme</b>
+                            <div data-hf-id="hf-ich9" class="tm"><span data-hf-id="hf-vxws" class="dl dl-up">Closed 4d ago</span></div>
+                          </div>
+                          <span data-hf-id="hf-jor4" class="stat">Submitted<svg data-hf-id="hf-d9dn" class="ic"><use data-hf-id="hf-loxa" href="#i-chev" /></svg></span>
+                        </div>
+                        <div data-hf-id="hf-y53c" class="trow">
+                          <span data-hf-id="hf-da2w" class="kchip k-opp"><svg data-hf-id="hf-dnoo" class="ic"><use data-hf-id="hf-u9jm" href="#i-focus" /></svg></span>
+                          <div data-hf-id="hf-fwcp" class="tt">
+                            <b data-hf-id="hf-2b4m">Women in Tech Grant</b>
+                            <div data-hf-id="hf-jjec" class="tm"><span data-hf-id="hf-wf72" class="dl dl-up">Closed 6d ago</span></div>
+                          </div>
+                          <span data-hf-id="hf-ihu1" class="stat">Submitted<svg data-hf-id="hf-kc88" class="ic"><use data-hf-id="hf-m38b" href="#i-chev" /></svg></span>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                  <nav data-hf-id="hf-bfzb" class="bnav">
+                    <span data-hf-id="hf-q96t" class="ni"><span data-hf-id="hf-jky8" class="pill"><svg data-hf-id="hf-jxx7" class="ic"><use data-hf-id="hf-8ka7" href="#i-home" /></svg></span>Home</span>
+                    <span data-hf-id="hf-5hmp" class="ni"><span data-hf-id="hf-ie15" class="pill"><svg data-hf-id="hf-jjm6" class="ic"><use data-hf-id="hf-m9eu" href="#i-pl" /></svg></span>Playlists</span>
+                    <span data-hf-id="hf-e1py" class="ni"><span data-hf-id="hf-isc6" class="pill"><svg data-hf-id="hf-j5b5" class="ic"><use data-hf-id="hf-agj6" href="#i-search" /></svg></span>Search</span>
+                    <span data-hf-id="hf-7fpd" class="ni on" id="navTrk"><span data-hf-id="hf-eeyv" class="pill"><svg data-hf-id="hf-0rk7" class="ic" id="navTrkIc"><use data-hf-id="hf-jw9t" href="#i-cc-f" /></svg></span>Tracker</span>
+                    <span data-hf-id="hf-2uhj" class="ni"><span data-hf-id="hf-et9w" class="pill"><svg data-hf-id="hf-ir04" class="ic"><use data-hf-id="hf-9pz3" href="#i-user" /></svg></span>Profile</span>
+                  </nav>
+                </div>
+
+                <!-- screen-change wipe: the auth header's navy panel with its card stack -->
+                <div data-hf-id="hf-evlf" id="wipe" data-layout-allow-occlusion="" style="position: absolute; left: -20px; top: 0; width: 430px; height: 1100px; z-index: 55">
+                  <div data-hf-id="hf-b0mf" style="position: absolute; inset: 0; background: var(--navy); border-radius: 32px"></div>
+                  <i data-hf-id="hf-zmcx" style="position: absolute; left: 160px; top: -60px; width: 220px; height: 140px; rotate: 5deg; border-radius: 22px; background: var(--orange)"></i>
+                  <i data-hf-id="hf-yebs" style="position: absolute; left: 60px; top: -30px; width: 130px; height: 90px; rotate: -4deg; border-radius: 22px; background: var(--lime)"></i>
+                  <i data-hf-id="hf-jf6u" style="position: absolute; left: 150px; top: 520px; width: 160px; height: 60px; border-radius: 20px; background: var(--tile); rotate: -6deg"></i>
+                </div>
+
+                <!-- status bar sits over every screen -->
+                <div data-hf-id="hf-odm3" id="status">
+                  <span data-hf-id="hf-zwmt">9:41</span>
+                  <span data-hf-id="hf-32tw" id="notch"></span>
+                  <span data-hf-id="hf-qdnr" class="sb-r">
+                    <span data-hf-id="hf-zq6h" class="sb-bars"><i data-hf-id="hf-232q" style="height: 4px"></i><i data-hf-id="hf-k0o8" style="height: 6px"></i><i data-hf-id="hf-9ov2" style="height: 8px"></i><i data-hf-id="hf-ylxw" style="height: 11px"></i></span>
+                    <svg data-hf-id="hf-gwg1" class="ic" style="width: 16px; height: 16px"><use data-hf-id="hf-i48t" href="#i-wifi" /></svg>
+                    <span data-hf-id="hf-yq6o" class="sb-bat"><i data-hf-id="hf-wt6k"></i></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- caption rail -->
+        <div data-hf-id="hf-gvf1" id="rail">
+          <div data-hf-id="hf-pt0w" id="railBar">
+            <span data-hf-id="hf-t71w" class="rseg"><i data-hf-id="hf-a2g8" id="rs0"></i></span><span data-hf-id="hf-pt70" class="rseg"><i data-hf-id="hf-au41" id="rs1"></i></span><span data-hf-id="hf-om9x" class="rseg"><i data-hf-id="hf-es82" id="rs2"></i></span><span data-hf-id="hf-p0ky" class="rseg"><i data-hf-id="hf-iqc3" id="rs3"></i></span><span data-hf-id="hf-r043" class="rseg"><i data-hf-id="hf-v8uk" id="rs4"></i></span><span data-hf-id="hf-ref4" class="rseg"><i data-hf-id="hf-w0id" id="rs5"></i></span>
+          </div>
+          <div data-hf-id="hf-4mns" class="eyebrows">
+            <span data-hf-id="hf-td8e" class="eb" id="eb0" data-layout-allow-overlap="">How UP works</span>
+            <span data-hf-id="hf-f2uy" class="eb" id="eb1" data-layout-allow-overlap="">01 · Sign up</span>
+            <span data-hf-id="hf-6747" class="eb" id="eb2" data-layout-allow-overlap="">02 · Onboarding</span>
+            <span data-hf-id="hf-728x" class="eb" id="eb3" data-layout-allow-overlap="">03 · Your feed</span>
+            <span data-hf-id="hf-7i3k" class="eb" id="eb4" data-layout-allow-overlap="">04 · Like &amp; save</span>
+            <span data-hf-id="hf-i4yz" class="eb" id="eb5" data-layout-allow-overlap="">05 · Playlists</span>
+            <span data-hf-id="hf-e04f" class="eb" id="eb6" data-layout-allow-overlap="">06 · Apply &amp; track</span>
+          </div>
+          <div data-hf-id="hf-br8j" class="caps">
+            <p data-hf-id="hf-52rx" class="cap" id="cap0" data-layout-allow-overlap="">From sign-up to <em data-hf-id="hf-n0o8">submitted</em>.</p>
+            <p data-hf-id="hf-dh57" class="cap" id="cap1" data-layout-allow-overlap="">Free for seekers. Takes about a <em data-hf-id="hf-bcev">minute</em>.</p>
+            <p data-hf-id="hf-dy76" class="cap" id="cap2" data-layout-allow-overlap="">Every answer moves listings <em data-hf-id="hf-tbnm">up</em> or down.</p>
+            <p data-hf-id="hf-5zbc" class="cap" id="cap3" data-layout-allow-overlap="">Ranked for <em data-hf-id="hf-shi6">you</em>, not just listed.</p>
+            <p data-hf-id="hf-y6tq" class="cap" id="cap4" data-layout-allow-overlap="">Like it. <em data-hf-id="hf-49lu">Save</em> it.</p>
+            <p data-hf-id="hf-a6ty" class="cap" id="cap5" data-layout-allow-overlap="">Keep it in a <em data-hf-id="hf-qthd">playlist</em>.</p>
+            <p data-hf-id="hf-csvx" class="cap" id="cap6" data-layout-allow-overlap="">Tap Apply. We'll ask how it <em data-hf-id="hf-920l">went</em>.</p>
+          </div>
+        </div>
+
+        <!-- outro: the Tracker's tick becomes the arrow in the logo -->
+        <div data-hf-id="hf-nj2e" id="outro">
+          <div data-hf-id="hf-awp7" id="oglow"></div>
+          <div data-hf-id="hf-rrg1" id="logoGroup">
+            <svg data-hf-id="hf-uui9" id="osvg" viewBox="0 0 1920 1080" width="1920" height="1080">
+              <g data-hf-id="hf-6ttr" id="liftG" opacity="0">
+                <path data-hf-id="hf-u52d" id="disc" fill="#FF6A00" d="M967.2,346 C1019.12,346 1061.2,388.08 1061.2,440 C1061.2,491.92 1019.12,534 967.2,534 C915.28,534 873.2,491.92 873.2,440 C873.2,388.08 915.28,346 967.2,346 Z" />
+                <path data-hf-id="hf-8zz3" id="tick" d="M924,440.9 L957.8,475.7 L1022.7,409.9" fill="none" stroke="#0B1233" stroke-width="20.7" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+            </svg>
+            <div data-hf-id="hf-sq19" class="lp" id="logoL"></div>
+            <div data-hf-id="hf-o09f" class="lp" id="logoR"></div>
+            <div data-hf-id="hf-chtk" class="lp" id="logoFull"></div>
+          </div>
+          <p data-hf-id="hf-rm7k" id="ctaLine"><span data-hf-id="hf-rypw" class="w">Get</span><span data-hf-id="hf-ylkc" class="w">access.</span><span data-hf-id="hf-gszg" class="w">Get</span><span data-hf-id="hf-1tsy" class="w"><em data-hf-id="hf-tkiu">UP</em>.</span></p>
+          <div data-hf-id="hf-lg8t" id="fine">
+            <p data-hf-id="hf-puai" class="url">glowupchannel.com</p>
+            <p data-hf-id="hf-dyvv" class="cr">UP is a product by Outsidee Solutions</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ audio ═══ -->
+      <audio data-hf-id="hf-sz7h" id="music" src="assets/music/happy-beats-business-moves-vol-11-by-ende-dot-app.mp3" data-start="0" data-duration="41.6" data-track-index="10" data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:0},{&quot;t&quot;:1.2,&quot;v&quot;:0.3},{&quot;t&quot;:3.0,&quot;v&quot;:0.3},{&quot;t&quot;:3.4,&quot;v&quot;:0.24},{&quot;t&quot;:14.0,&quot;v&quot;:0.24},{&quot;t&quot;:14.4,&quot;v&quot;:0.3},{&quot;t&quot;:39.49,&quot;v&quot;:0.3},{&quot;t&quot;:40.4,&quot;v&quot;:0.12},{&quot;t&quot;:41.6,&quot;v&quot;:0}]}]}" data-end="41.6"></audio>
+      <audio data-hf-id="hf-zxv7" id="sfx-00-card" src="assets/sfx/casino/card-slide-1.ogg" data-start="0.2" data-duration="0.6" data-track-index="11" data-volume="0.4" data-end="0.8"></audio>
+      <audio data-hf-id="hf-60wv" id="sfx-01-land" src="assets/sfx/impact/impactSoft_medium_001.ogg" data-start="1.5" data-duration="0.18" data-track-index="11" data-volume="0.6" data-end="1.68"></audio>
+      <audio data-hf-id="hf-8ji9" id="sfx-02-tap" src="assets/sfx/ui/click2.ogg" data-start="3.25" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="3.3"></audio>
+      <audio data-hf-id="hf-pxqo" id="sfx-03-key1" src="assets/sfx/keyboard/keypress-003.wav" data-start="3.38" data-duration="0.25" data-track-index="11" data-volume="0.28" data-end="3.63"></audio>
+      <audio data-hf-id="hf-q2n6" id="sfx-04-key2" src="assets/sfx/keyboard/keypress-007.wav" data-start="3.46" data-duration="0.25" data-track-index="12" data-volume="0.28" data-end="3.71"></audio>
+      <audio data-hf-id="hf-nhq2" id="sfx-05-key3" src="assets/sfx/keyboard/keypress-012.wav" data-start="3.54" data-duration="0.25" data-track-index="13" data-volume="0.28" data-end="3.79"></audio>
+      <audio data-hf-id="hf-3b2x" id="sfx-06-tap" src="assets/sfx/ui/click2.ogg" data-start="3.72" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="3.77"></audio>
+      <audio data-hf-id="hf-emsm" id="sfx-07-key4" src="assets/sfx/keyboard/keypress-018.wav" data-start="3.82" data-duration="0.25" data-track-index="11" data-volume="0.28" data-end="4.07"></audio>
+      <audio data-hf-id="hf-4kfn" id="sfx-08-key5" src="assets/sfx/keyboard/keypress-024.wav" data-start="3.9" data-duration="0.25" data-track-index="12" data-volume="0.28" data-end="4.15"></audio>
+      <audio data-hf-id="hf-njij" id="sfx-09-key1" src="assets/sfx/keyboard/keypress-003.wav" data-start="3.97" data-duration="0.25" data-track-index="13" data-volume="0.28" data-end="4.220000000000001"></audio>
+      <audio data-hf-id="hf-g7ib" id="sfx-10-key3" src="assets/sfx/keyboard/keypress-012.wav" data-start="4.04" data-duration="0.25" data-track-index="14" data-volume="0.28" data-end="4.29"></audio>
+      <audio data-hf-id="hf-p27r" id="sfx-11-key2" src="assets/sfx/keyboard/keypress-007.wav" data-start="4.12" data-duration="0.25" data-track-index="11" data-volume="0.28" data-end="4.37"></audio>
+      <audio data-hf-id="hf-l8ic" id="sfx-12-key4" src="assets/sfx/keyboard/keypress-018.wav" data-start="4.2" data-duration="0.25" data-track-index="12" data-volume="0.28" data-end="4.45"></audio>
+      <audio data-hf-id="hf-qd9z" id="sfx-13-tap" src="assets/sfx/ui/click2.ogg" data-start="4.8" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="4.85"></audio>
+      <audio data-hf-id="hf-ex8n" id="sfx-14-tap" src="assets/sfx/ui/click2.ogg" data-start="5.55" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="5.6"></audio>
+      <audio data-hf-id="hf-rtxt" id="sfx-15-tap" src="assets/sfx/ui/click2.ogg" data-start="6.2" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="6.25"></audio>
+      <audio data-hf-id="hf-j6jp" id="sfx-16-tick" src="assets/sfx/ui/rollover2.ogg" data-start="6.3" data-duration="0.05" data-track-index="11" data-volume="0.42" data-end="6.35"></audio>
+      <audio data-hf-id="hf-tpaj" id="sfx-17-tick" src="assets/sfx/ui/rollover2.ogg" data-start="6.39" data-duration="0.05" data-track-index="11" data-volume="0.42" data-end="6.4399999999999995"></audio>
+      <audio data-hf-id="hf-vrp4" id="sfx-18-tick" src="assets/sfx/ui/rollover2.ogg" data-start="6.8" data-duration="0.05" data-track-index="11" data-volume="0.42" data-end="6.85"></audio>
+      <audio data-hf-id="hf-tv9d" id="sfx-19-tick" src="assets/sfx/ui/rollover2.ogg" data-start="6.88" data-duration="0.05" data-track-index="11" data-volume="0.42" data-end="6.93"></audio>
+      <audio data-hf-id="hf-w7gb" id="sfx-20-tap" src="assets/sfx/ui/click2.ogg" data-start="7.38" data-duration="0.05" data-track-index="11" data-volume="0.65" data-end="7.43"></audio>
+      <audio data-hf-id="hf-zc17" id="sfx-21-select" src="assets/sfx/interface/select_008.ogg" data-start="10.01" data-duration="0.04" data-track-index="11" data-volume="0.55" data-end="10.049999999999999"></audio>
+      <audio data-hf-id="hf-zri8" id="sfx-22-select" src="assets/sfx/interface/select_008.ogg" data-start="10.54" data-duration="0.04" data-track-index="11" data-volume="0.55" data-end="10.579999999999998"></audio>
+      <audio data-hf-id="hf-o57l" id="sfx-23-select" src="assets/sfx/interface/select_008.ogg" data-start="11.6" data-duration="0.04" data-track-index="11" data-volume="0.55" data-end="11.639999999999999"></audio>
+      <audio data-hf-id="hf-fpno" id="sfx-24-tap" src="assets/sfx/ui/click2.ogg" data-start="12.12" data-duration="0.05" data-track-index="11" data-volume="0.55" data-end="12.17"></audio>
+      <audio data-hf-id="hf-8o4w" id="sfx-25-select" src="assets/sfx/interface/select_008.ogg" data-start="13.18" data-duration="0.04" data-track-index="11" data-volume="0.55" data-end="13.219999999999999"></audio>
+      <audio data-hf-id="hf-63nd" id="sfx-26-tap" src="assets/sfx/ui/click2.ogg" data-start="13.7" data-duration="0.05" data-track-index="11" data-volume="0.6" data-end="13.75"></audio>
+      <audio data-hf-id="hf-x43s" id="sfx-27-card" src="assets/sfx/casino/card-slide-1.ogg" data-start="14.24" data-duration="0.6" data-track-index="11" data-volume="0.38" data-end="14.84"></audio>
+      <audio data-hf-id="hf-s9rl" id="sfx-28-card" src="assets/sfx/casino/card-slide-1.ogg" data-start="14.76" data-duration="0.6" data-track-index="12" data-volume="0.45" data-end="15.36"></audio>
+      <audio data-hf-id="hf-d2fh" id="sfx-29-card" src="assets/sfx/casino/card-slide-1.ogg" data-start="15.81" data-duration="0.6" data-track-index="11" data-volume="0.4" data-end="16.41"></audio>
+      <audio data-hf-id="hf-2dox" id="sfx-30-soft" src="assets/sfx/impact/impactSoft_medium_002.ogg" data-start="16.86" data-duration="0.13" data-track-index="11" data-volume="0.42" data-end="16.99"></audio>
+      <audio data-hf-id="hf-jauo" id="sfx-31-drop2" src="assets/sfx/interface/drop_002.ogg" data-start="20.02" data-duration="0.19" data-track-index="11" data-volume="0.6" data-end="20.21"></audio>
+      <audio data-hf-id="hf-lrtz" id="sfx-32-tap" src="assets/sfx/ui/click2.ogg" data-start="21.07" data-duration="0.05" data-track-index="11" data-volume="0.55" data-end="21.12"></audio>
+      <audio data-hf-id="hf-0g4h" id="sfx-33-tap" src="assets/sfx/ui/click2.ogg" data-start="22.65" data-duration="0.05" data-track-index="11" data-volume="0.55" data-end="22.7"></audio>
+      <audio data-hf-id="hf-tmno" id="sfx-34-card" src="assets/sfx/casino/card-slide-1.ogg" data-start="22.98" data-duration="0.6" data-track-index="11" data-volume="0.45" data-end="23.580000000000002"></audio>
+      <audio data-hf-id="hf-zcr2" id="sfx-35-tap" src="assets/sfx/ui/click2.ogg" data-start="25.29" data-duration="0.05" data-track-index="11" data-volume="0.55" data-end="25.34"></audio>
+      <audio data-hf-id="hf-x9m1" id="sfx-36-added" src="assets/sfx/impact/impactGlass_light_002.ogg" data-start="25.81" data-duration="0.2" data-track-index="11" data-volume="0.6" data-end="26.009999999999998"></audio>
+      <audio data-hf-id="hf-irwl" id="sfx-37-drop1" src="assets/sfx/interface/drop_001.ogg" data-start="26.85" data-duration="0.1" data-track-index="11" data-volume="0.5" data-end="26.950000000000003"></audio>
+      <audio data-hf-id="hf-53am" id="sfx-38-tap" src="assets/sfx/ui/click2.ogg" data-start="28.43" data-duration="0.05" data-track-index="11" data-volume="0.55" data-end="28.48"></audio>
+      <audio data-hf-id="hf-ln6j" id="sfx-39-tap" src="assets/sfx/ui/click2.ogg" data-start="29.49" data-duration="0.05" data-track-index="11" data-volume="0.65" data-end="29.54"></audio>
+      <audio data-hf-id="hf-ok4o" id="sfx-40-away" src="assets/sfx/casino/card-shove-2.ogg" data-start="29.74" data-duration="0.76" data-track-index="11" data-volume="0.5" data-end="30.5"></audio>
+      <audio data-hf-id="hf-cyc4" id="sfx-41-drop2" src="assets/sfx/interface/drop_002.ogg" data-start="31.15" data-duration="0.19" data-track-index="11" data-volume="0.5" data-end="31.34"></audio>
+      <audio data-hf-id="hf-ebmm" id="sfx-42-select" src="assets/sfx/interface/select_008.ogg" data-start="32.65" data-duration="0.04" data-track-index="11" data-volume="0.6" data-end="32.69"></audio>
+      <audio data-hf-id="hf-590v" id="sfx-43-plate" src="assets/sfx/impact/impactPlate_light_002.ogg" data-start="34.23" data-duration="0.48" data-track-index="11" data-volume="0.55" data-end="34.709999999999994"></audio>
+      <audio data-hf-id="hf-w9fv" id="sfx-44-tick" src="assets/sfx/ui/rollover2.ogg" data-start="35.74" data-duration="0.05" data-track-index="11" data-volume="0.5" data-end="35.79"></audio>
+      <audio data-hf-id="hf-nwu9" id="sfx-45-bell" src="assets/sfx/impact/impactBell_heavy_000.ogg" data-start="37.92" data-duration="1.48" data-track-index="11" data-volume="0.7" data-end="39.4"></audio>
+    </div>
+
+    
+  <script>gsap.registerPlugin(MorphSVGPlugin);
+const DUR = 41.6;
+const Z = 1.2;
+const VIEW_CX = 1420;
+const VIEW_CY = 540;
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const typed = [
+  { el: "#vFirst", ph: "#phFirst", text: "Ada", at: [3.38, 3.46, 3.54] },
+  { el: "#vLast", ph: "#phLast", text: "Okafor", at: [3.82, 3.9, 3.97, 4.04, 4.12, 4.2] },
+  { el: "#vEmail", ph: "#phEmail", text: "ada@example.com", at: Array.from({ length: 15 }, (_, i) => 4.88 + i * 0.035) },
+  { el: "#vDob", ph: "#phDob", text: "14/03/2001", bulk: 5.7 },
+  { el: "#vPwd", ph: "#phPwd", text: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", at: [6.3, 6.39, 6.47, 6.55, 6.63, 6.71, 6.8, 6.88, 6.96, 7.04] }
+].map((f) => ({ ...f, node: $(f.el), phNode: $(f.ph) }));
+const focus = [
+  { f: "First", from: 3.25, to: 3.72 },
+  { f: "Last", from: 3.72, to: 4.8 },
+  { f: "Email", from: 4.8, to: 5.55 },
+  { f: "Dob", from: 5.55, to: 6.2 },
+  { f: "Pwd", from: 6.2, to: 7.38 }
+].map((x) => ({ ...x, ring: $("#r" + x.f), caret: $("#c" + x.f) }));
+const ruleAt = [6.88, 6.3, 6.39, 6.8];
+const obSteps = [
+  [0, 1, "Where are you based?"],
+  [9, 2, "What's your number?"],
+  [9.16, 3, "Where are you in your journey?"],
+  [9.32, 4, "What are you here for?"],
+  [12.28, 5, "Which communities describe you?"],
+  [12.42, 6, "Which industries?"],
+  [12.56, 7, "What can you do?"],
+  [12.7, 8, "What do you want out of this?"]
+];
+const obDescs = {
+  4: "Pick everything that applies. This is the strongest signal in your feed ranking.",
+  8: "The last question. This shapes what we push to you, not just what we show."
+};
+const tapsA = [10.01, 10.54, 11.6];
+const tapsB = [13.18];
+const segs = $$("#segbar span");
+const nodes = {
+  obStep: $("#obStep"),
+  obTitle: $("#obTitle"),
+  obDesc: $("#obDesc"),
+  payAv: $("#payAv"),
+  payAt: $("#payAt"),
+  payBv: $("#payBv"),
+  payBt: $("#payBt"),
+  btnOb: $("#btnOb"),
+  lblOb: $("#lblOb"),
+  obSpin: $("#obSpin"),
+  obHint: $("#obHint"),
+  btnCreate: $("#btnCreate"),
+  lblCreate: $("#lblCreate"),
+  likeN: $("#likeN"),
+  saveN: $("#saveN"),
+  listN: $("#listN"),
+  plCount: $("#plCount"),
+  glow: $("#glow"),
+  oglow: $("#oglow"),
+  tiles: [$("#tileAi"), $("#tileBi"), $("#tileCi")]
+};
+const rules = [0, 1, 2, 3].map((i) => $("#rule" + i));
+const TILE_ROT = [-8, 6, -5];
+const AUD = window.AUDIO_RB;
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const ramp = (t, a, b) => clamp01((t - a) / (b - a));
+const count = (arr, t) => arr.filter((x) => t >= x).length;
+function render(t) {
+  for (const f of typed) {
+    const n = f.bulk != null ? t >= f.bulk ? f.text.length : 0 : count(f.at, t);
+    const s = f.text.slice(0, n);
+    if (f.node.textContent !== s) f.node.textContent = s;
+    f.phNode.style.opacity = n > 0 ? "0" : "1";
+  }
+  for (const x of focus) {
+    const on = t >= x.from && t < x.to;
+    x.ring.style.opacity = on ? "1" : "0";
+    x.caret.style.opacity = on && (t - x.from) % 0.9 < 0.5 ? "1" : "0";
+  }
+  rules.forEach((li, i) => li.dataset.ok = t >= ruleAt[i] ? "1" : "0");
+  nodes.btnCreate.style.opacity = t >= 6.88 ? "1" : "0.5";
+  nodes.lblCreate.textContent = t >= 7.46 ? "Creating your account\u2026" : "Create account";
+  let step = obSteps[0];
+  for (const s of obSteps) if (t >= s[0]) step = s;
+  nodes.obStep.textContent = `Step ${step[1]} of 8`;
+  if (nodes.obTitle.textContent !== step[2]) nodes.obTitle.textContent = step[2];
+  nodes.obDesc.textContent = obDescs[step[1]] || "";
+  segs.forEach((s, i) => s.style.background = i < step[1] ? "#FF6A00" : "#F2EFE8");
+  const nA = count(tapsA, t);
+  nodes.payAv.textContent = nA ? String(nA) : "";
+  nodes.payAt.textContent = nA ? "categories selected. Your feed is built from these first." : "Pick at least one to continue.";
+  const nB = count(tapsB, t);
+  nodes.payBv.textContent = nB ? String(nB) : "";
+  nodes.payBt.textContent = nB ? "goals set. You can change any of this later in Settings." : "Pick at least one to continue.";
+  const last = step[1] === 8;
+  const valid = last ? nB > 0 : step[1] === 4 ? nA > 0 : false;
+  const busy = t >= 13.78;
+  nodes.btnOb.style.opacity = valid || busy ? "1" : "0.4";
+  nodes.lblOb.textContent = busy ? "Setting up your feed\u2026" : last ? "Finish setup" : "Continue";
+  nodes.obSpin.style.display = busy ? "block" : "none";
+  nodes.obSpin.style.transform = `rotate(${(t - 13.78) * 400 % 360}deg)`;
+  nodes.obHint.textContent = valid ? "You can change any of this later in Settings." : "Answer this to continue.";
+  nodes.likeN.textContent = t >= 20.02 ? "129" : "128";
+  nodes.saveN.textContent = t >= 21.07 ? "42" : "41";
+  nodes.listN.textContent = t >= 26.9 ? "13" : "12";
+  nodes.plCount.textContent = t >= 25.81 ? "5 items" : "4 items";
+  const fi = Math.min(AUD.rms.length - 1, Math.max(0, Math.floor(t * AUD.fps)));
+  const rms = AUD.rms[fi];
+  const bass = AUD.bass[fi];
+  const env = ramp(t, 0.9, 1.6) * (1 - ramp(t, 35.8, 36.4));
+  nodes.glow.style.opacity = String(env * (0.5 + 0.5 * rms));
+  nodes.glow.style.transform = `scale(${1 + 0.06 * bass})`;
+  nodes.tiles.forEach((el, i) => {
+    const dy = 7 * Math.sin(t * 0.55 + i * 1.9) - 10 * bass;
+    el.style.transform = `rotate(${TILE_ROT[i]}deg) translateY(${dy.toFixed(2)}px)`;
+  });
+  const oenv = ramp(t, 37.9, 38.6);
+  nodes.oglow.style.opacity = String(oenv * (0.55 + 0.45 * rms));
+}
+document.fonts.ready.then(() => {
+  $$("#plSheet *, #retSheet *, #toast *").forEach((el) => el.setAttribute("data-layout-allow-overlap", ""));
+  const tl = gsap.timeline({ paused: true });
+  const drv = { t: 0 };
+  render(0);
+  tl.to(drv, { t: DUR, duration: DUR, ease: "none", onUpdate: () => render(drv.t) }, 0);
+  const centre = (sel) => {
+    const r = $(sel).getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const P = {
+    phone: { x: 1300, y: 540 },
+    form: centre("#fPwd"),
+    meta: centre("#c1meta"),
+    actions: centre("#c1actions"),
+    plRow: centre("#plRow1"),
+    ret: centre("#retSheet"),
+    nav: centre("#navTrkIc"),
+    trkRow: centre("#trkRow")
+  };
+  const navR = $("#navTrkIc").getBoundingClientRect();
+  const bkShift = ($("#bkWait").getBoundingClientRect().top - $("#bkSub").getBoundingClientRect().top) / Z;
+  const rig = $("#rig");
+  const cam = { s: 1, x: 0, y: 0 };
+  const applyCam = () => rig.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.s})`;
+  applyCam();
+  const pose = (p, s, cx = VIEW_CX, cy = VIEW_CY) => ({ s, x: cx - s * p.x, y: cy - s * p.y });
+  const REST = { s: 1, x: 0, y: 0 };
+  let camFrom = REST;
+  const camTo = (t, dur, to, ease = "power3.inOut") => {
+    tl.fromTo(cam, { ...camFrom }, { ...to, duration: dur, ease, onUpdate: applyCam, immediateRender: false }, t);
+    camFrom = to;
+  };
+  const touchFor = (el, ox, oy) => {
+    const d = document.createElement("div");
+    d.className = "touch";
+    d.style.left = ox;
+    d.style.top = oy;
+    d.innerHTML = '<span class="ring"></span><span class="dot"></span>';
+    el.appendChild(d);
+    return d;
+  };
+  const tap = (sel, t, { ox = "50%", oy = "50%", press = true, pressScale = 0.96 } = {}) => {
+    const el = $(sel);
+    const d = touchFor(el, ox, oy);
+    const dot = d.querySelector(".dot");
+    const ring = d.querySelector(".ring");
+    tl.fromTo(d, { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "power1.out", immediateRender: false }, t - 0.14);
+    tl.fromTo(dot, { scale: 1.35 }, { scale: 1, duration: 0.12, ease: "power2.out", immediateRender: false }, t - 0.14);
+    tl.to(dot, { scale: 0.8, duration: 0.07, ease: "power2.in" }, t);
+    tl.to(dot, { scale: 1, duration: 0.18, ease: "power2.out" }, t + 0.07);
+    tl.fromTo(ring, { scale: 0.7, opacity: 0.85 }, { scale: 2.6, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, t);
+    tl.to(d, { opacity: 0, duration: 0.2, ease: "power1.in" }, t + 0.24);
+    if (press) {
+      tl.to(el, { scale: pressScale, duration: 0.07, ease: "power2.in" }, t);
+      tl.to(el, { scale: 1, duration: 0.3, ease: "back.out(3)" }, t + 0.07);
+    }
+  };
+  const show = (sel, t, dur = 0.2, ease = "power2.out") => tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: dur, ease, immediateRender: false }, t);
+  const hide = (sel, t, dur = 0.2, ease = "power2.in") => tl.fromTo(sel, { opacity: 1 }, { opacity: 0, duration: dur, ease, immediateRender: false }, t);
+  $$(".cap").forEach((cap) => {
+    const parts = [];
+    cap.childNodes.forEach((n) => {
+      if (n.nodeType === 3) n.textContent.split(/\s+/).filter(Boolean).forEach((w) => parts.push(document.createTextNode(w)));
+      else parts.push(n.cloneNode(true));
+    });
+    const words = [];
+    parts.forEach((p) => {
+      const txt = p.nodeType === 3 ? p.textContent : null;
+      if (txt && /^[.,]$/.test(txt) && words.length) words[words.length - 1].push(p);
+      else words.push([p]);
+    });
+    cap.textContent = "";
+    words.forEach((w) => {
+      const s = document.createElement("span");
+      s.className = "w";
+      s.setAttribute("data-layout-allow-overlap", "");
+      w.forEach((n) => s.appendChild(n));
+      cap.appendChild(s);
+    });
+  });
+  const capIn = (i, t) => {
+    tl.fromTo("#eb" + i, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", immediateRender: false }, t);
+    tl.fromTo(`#cap${i} .w`, { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.42, ease: "power3.out", stagger: 0.05, immediateRender: false }, t + 0.06);
+  };
+  const capOut = (i, t) => {
+    tl.to("#eb" + i, { opacity: 0, y: -10, duration: 0.22, ease: "power2.in" }, t);
+    tl.to(`#cap${i} .w`, { opacity: 0, y: -24, duration: 0.22, ease: "power2.in", stagger: 0.015 }, t);
+  };
+  const SEG = [[3.18, 8.44], [8.44, 14.22], [14.22, 19.49], [19.49, 22.65], [22.65, 28.43], [28.43, 34.23]];
+  tl.fromTo("#railBar", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out", immediateRender: false }, 1);
+  SEG.forEach(([a, b], i) => tl.fromTo("#rs" + i, { scaleX: 0 }, { scaleX: 1, duration: b - a, ease: "none" }, a));
+  capIn(0, 1.28);
+  capOut(0, 2.98);
+  capIn(1, 3.3);
+  capOut(1, 8.2);
+  capIn(2, 8.56);
+  capOut(2, 13.98);
+  capIn(3, 14.4);
+  capOut(3, 19.28);
+  capIn(4, 19.6);
+  capOut(4, 22.44);
+  capIn(5, 22.8);
+  capOut(5, 28.22);
+  capIn(6, 28.6);
+  capOut(6, 35.28);
+  tl.to("#railBar", { opacity: 0, duration: 0.3, ease: "power2.in" }, 35.4);
+  tl.fromTo("#window", { "--mx": "900px" }, { "--mx": "-140px", duration: 0.45, ease: "power2.inOut", immediateRender: false }, 35.45);
+  const tileIn = (sel, t, fromRot) => tl.fromTo(sel, { y: -1500, rotation: fromRot }, { y: 0, rotation: 0, duration: 0.75, ease: "back.out(1.1)" }, t);
+  tileIn("#tileA", 0.15, -16);
+  tileIn("#tileB", 0.32, 14);
+  tileIn("#tileC", 0.5, -12);
+  tl.fromTo("#phone", { y: 1560, rotation: 6 }, { y: 0, rotation: 0, duration: 0.75, ease: "power3.out" }, 0.85);
+  gsap.set(["#scrOnb", "#scrFeed", "#scrDetail", "#scrAway", "#scrTrk"], { xPercent: 100, autoAlpha: 0 });
+  gsap.set(["#wipe", "#plSheet", "#retSheet"], { autoAlpha: 0 });
+  gsap.set("#wipe", { y: 820 });
+  gsap.set(["#plSheet", "#retSheet"], { yPercent: 105 });
+  camTo(3.2, 5.1, pose(P.phone, 1.04, 1300), "sine.inOut");
+  tap("#fFirst", 3.25, { press: false });
+  tap("#fLast", 3.72, { press: false });
+  tl.fromTo("#suScroll", { y: 0 }, { y: -120, duration: 0.4, ease: "power2.inOut", immediateRender: false }, 4.3);
+  tap("#fEmail", 4.8, { press: false });
+  tap("#fDob", 5.55, { press: false });
+  tl.fromTo("#suScroll", { y: -120 }, { y: -250, duration: 0.4, ease: "power2.inOut", immediateRender: false }, 5.75);
+  tap("#fPwd", 6.2, { press: false });
+  ruleAt.forEach((at, i) => tl.fromTo("#rok" + i, { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.28, ease: "back.out(3)", immediateRender: false }, at));
+  tap("#btnCreate", 7.38);
+  const push = (inSel, outSel, dimSel, t, dur = 0.45) => {
+    tl.set(inSel, { autoAlpha: 1 }, t);
+    tl.set(outSel, { autoAlpha: 0 }, t + dur);
+    tl.fromTo(inSel, { xPercent: 100 }, { xPercent: 0, duration: dur, ease: "power3.out", immediateRender: false }, t);
+    tl.fromTo(outSel, { xPercent: 0 }, { xPercent: -28, duration: dur, ease: "power3.out", immediateRender: false }, t);
+    if (dimSel) show(dimSel, t, dur, "power1.out");
+  };
+  camTo(8.3, 0.5, REST, "power2.inOut");
+  push("#scrOnb", "#scrSignup", "#dimSignup", 8.44);
+  tl.set(["#optsA", "#obDesc"], { opacity: 0 }, 0);
+  [9, 9.16, 9.32].forEach((t) => tl.fromTo("#obQ", { y: 12, opacity: 0.3 }, { y: 0, opacity: 1, duration: 0.14, ease: "power2.out", immediateRender: false }, t));
+  show("#obDesc", 9.36, 0.25);
+  tl.set("#optsA", { opacity: 1 }, 9.36);
+  tl.fromTo("#optsA > *", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.035, immediateRender: false }, 9.36);
+  tap("#oa1", 10.01, { pressScale: 0.98 });
+  show("#oa1 .on", 10.01, 0.14);
+  tap("#oa0", 10.54, { pressScale: 0.98 });
+  show("#oa0 .on", 10.54, 0.14);
+  tl.fromTo("#obScroll", { y: 0 }, { y: -176, duration: 0.4, ease: "power2.inOut", immediateRender: false }, 10.75);
+  tap("#oa6", 11.6, { pressScale: 0.98 });
+  show("#oa6 .on", 11.6, 0.14);
+  tl.fromTo("#payAv", { scale: 0.6 }, { scale: 1, duration: 0.3, ease: "back.out(3)", immediateRender: false }, 11.6);
+  tap("#btnOb", 12.12);
+  tl.fromTo("#obScroll", { y: -176 }, { y: 0, duration: 0.3, ease: "power2.inOut", immediateRender: false }, 12.15);
+  hide("#optsA", 12.15, 0.12);
+  hide("#obDesc", 12.15, 0.1);
+  [12.28, 12.42, 12.56, 12.7].forEach((t) => tl.fromTo("#obQ", { y: 12, opacity: 0.3 }, { y: 0, opacity: 1, duration: 0.14, ease: "power2.out", immediateRender: false }, t));
+  show("#obDesc", 12.74, 0.25);
+  tl.set("#optsB", { opacity: 1 }, 12.74);
+  tl.fromTo("#optsB > *", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.035, immediateRender: false }, 12.74);
+  tap("#ob0", 13.18, { pressScale: 0.98 });
+  show("#ob0 .on", 13.18, 0.14);
+  tap("#btnOb", 13.7);
+  tl.fromTo("#wipe", { y: 820 }, { y: -1160, duration: 0.72, ease: "power2.inOut", immediateRender: false }, 14.22);
+  tl.set("#wipe", { autoAlpha: 1 }, 14.22);
+  tl.set("#wipe", { autoAlpha: 0 }, 14.95);
+  tl.set("#scrFeed", { xPercent: 0, autoAlpha: 1 }, 14.57);
+  tl.set("#scrOnb", { autoAlpha: 0 }, 14.57);
+  tl.set(["#greet", "#card1", "#card2", "#card3"], { opacity: 0 }, 0);
+  tl.fromTo("#greet", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", immediateRender: false }, 14.62);
+  [["#card1", 14.76], ["#card2", 15.28], ["#card3", 15.81]].forEach(([s, t]) => (
+    // beat-grid: 14.76, 15.28, 15.81
+    tl.fromTo(s, { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, t)
+  ));
+  camTo(16.86, 0.85, pose(P.meta, 1.8));
+  tl.fromTo("#scoreHl", { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.4, ease: "power3.out", immediateRender: false }, 17.35);
+  camTo(18.5, 0.8, pose(P.actions, 1.8));
+  tap("#actLike", 20.02, { pressScale: 0.9 });
+  show("#likeFill", 20.02, 0.08);
+  tl.fromTo("#actLike .icost", { scale: 1 }, { scale: 1.45, duration: 0.12, ease: "power2.out", immediateRender: false }, 20.02);
+  tl.to("#actLike .icost", { scale: 1, duration: 0.35, ease: "back.out(3)" }, 20.14);
+  tl.fromTo("#likeN", { color: "#5B5848" }, { color: "#B8551E", duration: 0.15, immediateRender: false }, 20.02);
+  tap("#actSave", 21.07, { pressScale: 0.9 });
+  show("#saveFill", 21.07, 0.08);
+  tl.fromTo("#actSave .icost", { scale: 1 }, { scale: 1.3, duration: 0.1, ease: "power2.out", immediateRender: false }, 21.07);
+  tl.to("#actSave .icost", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 21.17);
+  tl.fromTo("#saveN", { color: "#5B5848" }, { color: "#0B1233", duration: 0.15, immediateRender: false }, 21.07);
+  tap("#actList", 22.65, { pressScale: 0.9 });
+  camTo(22.75, 0.6, REST, "power2.inOut");
+  show("#plScrim", 22.85, 0.25);
+  tl.set("#plSheet", { autoAlpha: 1 }, 22.95);
+  tl.set("#plSheet", { autoAlpha: 0 }, 26.9);
+  tl.fromTo("#plSheet", { yPercent: 105 }, { yPercent: 0, duration: 0.45, ease: "power3.out", immediateRender: false }, 22.95);
+  camTo(24.95, 0.65, pose(P.plRow, 1.32));
+  tap("#plAdd", 25.29, { pressScale: 0.92 });
+  hide("#pAdd", 25.33, 0.08);
+  show("#pSpin", 25.35, 0.08);
+  tl.fromTo("#pSpinIc", { rotation: 0 }, { rotation: 300, duration: 0.45, ease: "none", immediateRender: false }, 25.35);
+  hide("#pSpin", 25.78, 0.05);
+  tl.fromTo("#pAdded", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.4)", immediateRender: false }, 25.81);
+  camTo(26.4, 0.55, REST, "power2.inOut");
+  tl.to("#plSheet", { yPercent: 105, duration: 0.38, ease: "power2.in" }, 26.5);
+  hide("#plScrim", 26.62, 0.26);
+  tl.fromTo("#toast", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", immediateRender: false }, 26.85);
+  tl.to("#toast", { opacity: 0, y: 12, duration: 0.2, ease: "power2.in" }, 28.2);
+  tap("#card1", 28.43, { ox: "40%", oy: "22%", pressScale: 0.985 });
+  push("#scrDetail", "#scrFeed", "#dimFeed", 28.52);
+  tap("#btnApply", 29.49);
+  tl.set("#scrAway", { autoAlpha: 1 }, 29.72);
+  tl.set("#scrDetail", { autoAlpha: 0 }, 30.09);
+  tl.set("#scrDetail", { autoAlpha: 1 }, 30.86);
+  tl.set("#scrAway", { autoAlpha: 0 }, 31.21);
+  tl.to("#scrDetail", { xPercent: -100, duration: 0.36, ease: "power2.inOut" }, 29.72);
+  tl.fromTo("#scrAway", { xPercent: 100 }, { xPercent: 0, duration: 0.36, ease: "power2.inOut", immediateRender: false }, 29.72);
+  ["#sf1", "#sf2", "#sf3", "#sf4"].forEach((s, i) => tl.fromTo(s, { scaleX: 0 }, { scaleX: 1, duration: 0.18, ease: "power1.out", immediateRender: false }, 30.1 + i * 0.16));
+  tl.fromTo("#later", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)", immediateRender: false }, 30.06);
+  tl.to("#later", { opacity: 0, duration: 0.15, ease: "power1.in" }, 30.78);
+  tl.to("#scrAway", { xPercent: 100, duration: 0.34, ease: "power2.inOut" }, 30.86);
+  tl.to("#scrDetail", { xPercent: 0, duration: 0.34, ease: "power2.inOut" }, 30.86);
+  show("#retScrim", 31.12, 0.25);
+  tl.set("#retSheet", { autoAlpha: 1 }, 31.15);
+  tl.set("#retSheet", { autoAlpha: 0 }, 33.45);
+  tl.fromTo("#retSheet", { yPercent: 105 }, { yPercent: 0, duration: 0.45, ease: "power3.out", immediateRender: false }, 31.15);
+  camTo(31.62, 0.6, pose(P.ret, 1.2));
+  tap("#retOpt1", 32.65, { pressScale: 0.98 });
+  show("#retOpt1 .on", 32.66, 0.14);
+  camTo(33.05, 0.5, REST, "power2.inOut");
+  tl.to("#retSheet", { yPercent: 105, duration: 0.34, ease: "power2.in" }, 33.1);
+  hide("#retScrim", 33.2, 0.2);
+  push("#scrTrk", "#scrDetail", "#dimDetail", 33.3, 0.42);
+  tl.set("#bkSub", { opacity: 0 }, 0);
+  tl.fromTo("#bkWait", { y: -bkShift }, { y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, 34.23);
+  tl.fromTo("#bkSub", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out", immediateRender: false }, 34.23);
+  tl.fromTo("#trkRow", { y: -18, scale: 0.96 }, { y: 0, scale: 1, duration: 0.45, ease: "back.out(1.8)", immediateRender: false }, 34.23);
+  const NAV_POSE = pose(P.nav, 2.6);
+  camTo(35.1, 0.64, NAV_POSE);
+  const iconR = navR.width / 2 * (10 / 12) * NAV_POSE.s;
+  const icx = NAV_POSE.x + NAV_POSE.s * P.nav.x;
+  const icy = NAV_POSE.y + NAV_POSE.s * P.nav.y;
+  const DISC = { x: 967.2, y: 440, r: 94 };
+  gsap.set(["#liftG", "#tick"], { svgOrigin: `${DISC.x} ${DISC.y}`, smoothOrigin: false });
+  tl.set("#liftG", { attr: { opacity: 1 } }, 35.74);
+  tl.set("#navTrkIc", { opacity: 0 }, 35.74);
+  tl.fromTo(
+    "#liftG",
+    { x: icx - DISC.x, y: icy - DISC.y, scale: iconR / DISC.r },
+    { x: 0, y: 0, scale: 1, duration: 0.72, ease: "power3.inOut", immediateRender: false },
+    35.74
+  );
+  tl.fromTo("#phone", { y: 0, rotation: 0 }, { y: 1700, rotation: 5, duration: 0.8, ease: "power2.in", immediateRender: false }, 35.9);
+  tl.to("#phone", { opacity: 0, duration: 0.36, ease: "power1.in" }, 36);
+  tl.set("#window", { autoAlpha: 0 }, 36.72);
+  tl.to("#tileA", { x: -1500, duration: 0.7, ease: "power2.in" }, 35.85);
+  tl.to("#tileB", { x: 900, duration: 0.7, ease: "power2.in" }, 35.9);
+  tl.to("#tileC", { x: 700, y: 400, duration: 0.7, ease: "power2.in" }, 35.95);
+  tl.to("#tick", { opacity: 0, scale: 0.6, duration: 0.26, ease: "power2.in" }, 36.36);
+  tl.to("#disc", { morphSVG: "M966.98,258.8 L1056.96,399.97 L998.02,399.97 L998.02,621.3 L938.03,621.3 L938.03,399.97 L877.52,399.97 Z", duration: 0.78, ease: "power2.inOut" }, 36.4);
+  tl.fromTo("#logoL", { opacity: 1, x: -760 }, { opacity: 1, x: 0, duration: 0.62, ease: "power2.in", immediateRender: false }, 37.3);
+  tl.fromTo("#logoR", { opacity: 1, x: 760 }, { opacity: 1, x: 0, duration: 0.62, ease: "power2.in", immediateRender: false }, 37.3);
+  tl.set(["#logoL", "#logoR"], { opacity: 0 }, 0);
+  tl.set("#disc", { opacity: 0 }, 37.92);
+  tl.set("#logoFull", { opacity: 1 }, 37.92);
+  tl.set(["#logoL", "#logoR"], { opacity: 0 }, 37.92);
+  tl.fromTo("#logoGroup", { scale: 1.045 }, { scale: 1, duration: 0.45, ease: "power2.out", immediateRender: false }, 37.92);
+  tl.fromTo("#logoGroup", { y: 0 }, { y: -26, duration: 3.3, ease: "sine.out", immediateRender: false }, 38.2);
+  tl.fromTo("#ctaLine .w", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.07, immediateRender: false }, 38.44);
+  tl.fromTo("#fine", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, 39.49);
+  window.__timelines["main"] = tl;
+  if (window.__hfForceTimelineRebind) window.__hfForceTimelineRebind();
+});</script></body>
+</html>
