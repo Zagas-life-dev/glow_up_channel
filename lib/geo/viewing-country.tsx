@@ -9,14 +9,16 @@
  * either one testable on its own.
  *
  * Three states:
- *   - `auto`      follow the detected/profile location (the default)
- *   - `anywhere`  ignore location entirely when ranking
+ *   - `auto`      follow where the reader is (the default) — filters the feeds
+ *                 to that country, see `autoCountryName`
+ *   - `anywhere`  ignore location entirely: no filter
  *   - a country   treat that country as the user's location
  */
 
 import * as React from "react"
 
-import { countryByCode } from "@/lib/geo/countries"
+import { countryByCode, lookupCountry } from "@/lib/geo/countries"
+import { countryFromBrowser } from "@/lib/geo/timezone"
 import { reloadWithFreshData } from "@/lib/offline/fresh-reload"
 
 /** Sentinel stored for "anywhere" — not a real ISO code, so it cannot collide. */
@@ -121,13 +123,56 @@ export function readViewingSelection(): ViewingSelection {
   return parse(readStored())
 }
 
+/** Where `useUserLocation` caches its IP reading. Read-only here. */
+const LOCATION_CACHE_KEY = "glowup-location"
+
 /**
- * The country name the feeds filter on, or null for auto / anywhere. Listings
- * store the country as a name ("Nigeria"), not an ISO code.
+ * The country the reader is physically in, for Auto. Readable outside React,
+ * like the rest of this module, so every feed fetch agrees on it.
+ *
+ * Auto used to re-rank only, so a reader in Lagos still got Nairobi listings
+ * further down. The user decided Auto filters like a picked country does.
+ *
+ * Sources, best first: the IP reading `useUserLocation` cached (from CDN geo
+ * headers in production), then the browser's timezone, which is always there —
+ * and the only source on localhost. The profile country is not used: it says
+ * where someone registered, not where they are browsing from. Null when
+ * neither knows, and then nothing is filtered.
+ */
+export function autoCountryName(): string | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = window.localStorage.getItem(LOCATION_CACHE_KEY)
+    const ip = raw ? (JSON.parse(raw) as { ip?: { country?: string; countryCode?: string } }).ip : null
+    const fromIp = ip ? countryByCode(ip.countryCode) ?? lookupCountry(ip.country) : null
+    if (fromIp) return fromIp.name
+  } catch {
+    // Blocked or corrupt storage: fall through to the timezone.
+  }
+  return countryFromBrowser()?.name ?? null
+}
+
+/**
+ * The country name the feeds filter on, or null for anywhere (or an Auto that
+ * cannot tell where the reader is). Listings store the country as a name
+ * ("Nigeria"), not an ISO code.
  */
 export function viewingCountryName(selection: ViewingSelection = readViewingSelection()): string | null {
-  if (selection.mode !== "country") return null
+  if (selection.mode === "anywhere") return null
+  if (selection.mode === "auto") return autoCountryName()
   return countryByCode(selection.countryCode)?.name ?? null
+}
+
+/**
+ * `url` with the picked country added as `?country=`, unchanged when none is
+ * picked. For the promoted endpoints, which apply the same country-plus-Global
+ * rule as the organic feed — without it a sponsored card from another country
+ * lands in a feed that otherwise holds none.
+ */
+export function withViewingCountryParam(url: string): string {
+  const country = viewingCountryName()
+  if (!country) return url
+  return `${url}${url.includes("?") ? "&" : "?"}country=${encodeURIComponent(country)}`
 }
 
 export function ViewingCountryProvider({ children }: { children: React.ReactNode }) {

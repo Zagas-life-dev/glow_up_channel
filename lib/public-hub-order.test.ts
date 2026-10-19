@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   deadlineWeight,
+  matchWeight,
   deriveSeed,
   orderByDeadlineLottery,
   promotedLeadBias,
@@ -197,5 +198,25 @@ describe("orderByDeadlineLottery — invariants the bias must not break", () => 
     // Nothing but promotions: all of them come out, none are lost to the gap.
     const allPaid = Array.from({ length: 5 }, (_, i) => promoted(i))
     expect(orderByDeadlineLottery(allPaid, { seed: 7, now: NOW })).toHaveLength(5)
+  })
+})
+
+describe("match weighting (best for you)", () => {
+  it("leaves unscored items on time alone", () => {
+    expect(matchWeight({ _id: "a" })).toBe(1)
+    expect(matchWeight({ _id: "a", score: 50 })).toBe(1)
+  })
+
+  it("leads with strong matches far more often than weak ones", () => {
+    const strong = { _id: "strong", score: 95 }
+    const weak = Array.from({ length: 9 }, (_, i) => ({ _id: `weak-${i}`, score: 20 }))
+    let strongFirst = 0
+    for (let seed = 1; seed <= 400; seed += 1) {
+      const ordered = orderByDeadlineLottery([...weak, strong], { seed, now: 0 })
+      if (ordered[0]._id === "strong") strongFirst += 1
+    }
+    // Still a draw, not a sort: it leads most of the time, never every time.
+    expect(strongFirst).toBeGreaterThan(300)
+    expect(strongFirst).toBeLessThan(400)
   })
 })

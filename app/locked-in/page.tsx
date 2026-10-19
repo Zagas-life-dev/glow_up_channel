@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import Link from "next/link"
 import ApiClient from "@/lib/api-client"
+import { withViewingCountryParam } from "@/lib/geo/viewing-country"
 import FeedSponsoredSlot, { type PromotedContentItem } from "@/components/feed-sponsored-slot"
 
 const PROMOTED_REFRESH_MS = 20000
@@ -102,7 +103,7 @@ function LockedInPageContent() {
 
   const fetchPromotedFeed = useCallback(() => {
     if (!backendUrl) return
-    fetch(`${backendUrl}/api/promoted/feed?limit=10`)
+    fetch(withViewingCountryParam(`${backendUrl}/api/promoted/feed?limit=10`))
       .then((res) => (res.ok ? res.json() : { success: false, data: {} }))
       .then((data) => {
         const raw = data?.data?.feed ?? data?.data?.recommendations ?? []

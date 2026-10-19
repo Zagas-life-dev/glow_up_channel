@@ -388,42 +388,95 @@ self.addEventListener("message", (event) => {
 })
 
 /* ---------------------------------------------------------------------------
- * Push notifications — unchanged behaviour.
+ * Push notifications
  * ------------------------------------------------------------------------- */
 
 self.addEventListener("push", (event) => {
-  if (!event.data) return
-  let payload = { title: "UP", body: "", url: "/" }
-  try {
-    payload = { ...payload, ...event.data.json() }
-  } catch {
-    payload.body = event.data.text()
+  // A push must always end in a visible notification (userVisibleOnly). Returning
+  // early on an empty or unparseable payload is what gets iOS and Chrome to
+  // revoke the subscription, so those cases show a generic one instead.
+  let payload = { title: "UP", body: "You have a new update.", url: "/" }
+  if (event.data) {
+    try {
+      payload = { ...payload, ...event.data.json() }
+    } catch {
+      payload.body = event.data.text() || payload.body
+    }
   }
   event.waitUntil(
-    self.registration.showNotification(payload.title || "UP", {
-      body: payload.body || "",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/badge-96.png",
-      tag: payload.tag || "glowup-push",
-      data: { url: payload.url || "/" },
-      requireInteraction: false,
-      vibrate: [200, 100, 200],
-    })
+    (async () => {
+      await self.registration.showNotification(payload.title || "UP", {
+        body: payload.body || "",
+        icon: "/icons/icon-192.png",
+        badge: "/icons/badge-96.png",
+        tag: payload.tag || "glowup-push",
+        renotify: true,
+        data: { url: payload.url || "/" },
+        requireInteraction: false,
+        vibrate: [200, 100, 200],
+      })
+      // Home-screen badge where supported (installed Android/desktop, iOS 16.4+).
+      try {
+        const open = await self.registration.getNotifications()
+        if (self.navigator && self.navigator.setAppBadge) await self.navigator.setAppBadge(open.length)
+      } catch {
+        /* badge is a nicety */
+      }
+    })()
+  )
+})
+
+// The browser rotated or expired the subscription. Re-subscribe with the same key
+// and hand it to the server, so delivery survives without the user reopening
+// settings. Needs a session cookie-less path, so it asks any open page to do the
+// authenticated save; the page-side hook re-saves on every load as a backstop.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      const options = (event.oldSubscription && event.oldSubscription.options) || null
+      const key = options && options.applicationServerKey
+      if (!key) return
+      try {
+        await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+      } catch {
+        return
+      }
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      for (const c of clients) c.postMessage({ type: "up-push-resubscribed" })
+    })()
   )
 })
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
-  const url = event.notification.data?.url || "/"
+  const target = event.notification.data?.url || "/"
+  const url = new URL(target.startsWith("/") ? target : "/" + target, self.location.origin).href
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      if (clientList.length > 0) {
-        const client = clientList[0]
-        client.focus();
-        client.navigate(url)
-      } else if (self.clients.openWindow) {
-        self.clients.openWindow(self.location.origin + (url.startsWith("/") ? url : "/" + url))
+    (async () => {
+      try {
+        const left = await self.registration.getNotifications()
+        if (self.navigator && self.navigator.setAppBadge) {
+          if (left.length) await self.navigator.setAppBadge(left.length)
+          else await self.navigator.clearAppBadge()
+        }
+      } catch {
+        /* ignore */
       }
-    })
+      const list = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+      for (const client of list) {
+        if ("focus" in client) {
+          await client.focus()
+          if ("navigate" in client) {
+            try {
+              await client.navigate(url)
+            } catch {
+              /* cross-scope or uncontrolled — fall through to the focus alone */
+            }
+          }
+          return
+        }
+      }
+      if (self.clients.openWindow) await self.clients.openWindow(url)
+    })()
   )
 })

@@ -25,6 +25,12 @@ import {
 } from "@/lib/promotion-placement"
 import { fetchPublicHubPage, type HomeListType } from "@/lib/fetch-public-hub-page"
 import { getPageState, savePageState } from "@/lib/page-state-session"
+import { viewingCountryName, withViewingCountryParam } from "@/lib/geo/viewing-country"
+import { useAuth } from "@/lib/auth-context"
+import {
+  rankingProfileFrom,
+  usePersonalizedRanking,
+} from "@/hooks/use-personalized-ranking"
 import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 
@@ -108,6 +114,19 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+  // "Best for you": every page is scored for the reader (location, language,
+  // interests, tracker history — the same scorer as For You) before the hub
+  // lottery draws it, so strong matches lead while the order still changes on
+  // each refresh. Visitors are scored on location and language alone.
+  //
+  // Read through a ref so the fetcher stays stable: the profile settles after
+  // the first render, and a new fetcher identity would reset the list.
+  const { normalizedUser } = useAuth()
+  const rankingProfile = useMemo(() => rankingProfileFrom(normalizedUser), [normalizedUser])
+  const { rankForFeed } = usePersonalizedRanking(rankingProfile)
+  const rankForFeedRef = useRef(rankForFeed)
+  rankForFeedRef.current = rankForFeed
+
   const fetchPage = useCallback(
     async (cursorLastId: string | null) => {
       if (!backendUrl) {
@@ -119,6 +138,10 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
         backendUrl,
         search: activeSearch,
         sessionSeed: getFeedSessionSeed(),
+        score: (rows) =>
+          rankForFeedRef.current(rows, { preserveOrder: true, dropExpired: false }) as typeof rows,
+        // Read at call time: the picked country reloads the page when changed.
+        viewingCountry: viewingCountryName(),
       })
     },
     [backendUrl, type, activeSearch],
@@ -173,7 +196,7 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
       const headers: HeadersInit = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
 
-      fetch(`${backendUrl}/api/promoted/${type}?limit=20`, { headers })
+      fetch(withViewingCountryParam(`${backendUrl}/api/promoted/${type}?limit=20`), { headers })
         .then((res) => (res.ok ? res.json() : { success: false }))
         .then((data) => {
           const rows = data?.success ? data?.data?.[type] : null

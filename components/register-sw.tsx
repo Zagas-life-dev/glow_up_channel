@@ -103,8 +103,26 @@ export default function RegisterSw() {
       }
     }
 
+    // Opening the app is reading the notifications: drop the icon badge and
+    // the tray entries the push worker raised.
+    const clearBadge = () => {
+      try {
+        void (navigator as Navigator & { clearAppBadge?: () => Promise<void> }).clearAppBadge?.()
+        void navigator.serviceWorker.ready
+          .then((reg) => reg.getNotifications())
+          .then((list) => list.forEach((n) => n.close()))
+          .catch(() => {})
+      } catch {
+        /* badge API is optional */
+      }
+    }
+    clearBadge()
+
     const onVisible = () => {
-      if (document.visibilityState === "visible") void check()
+      if (document.visibilityState === "visible") {
+        clearBadge()
+        void check()
+      }
     }
 
     navigator.serviceWorker

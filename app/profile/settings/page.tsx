@@ -378,6 +378,7 @@ export default function SettingsPage() {
   })
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   const [savingPushPref, setSavingPushPref] = useState(false)
+  const [testingPush, setTestingPush] = useState(false)
 
   const push = usePushNotifications()
 
@@ -1227,7 +1228,7 @@ export default function SettingsPage() {
                 <SettingsSection
                   title="Push"
                   description={
-                    push.isSupported
+                    push.isSupported || push.needsInstall
                       ? 'Notifications on this device, in the browser or the installed app.'
                       : 'Not supported in this browser. Use a modern browser or install the app.'
                   }
@@ -1257,6 +1258,38 @@ export default function SettingsPage() {
                         }
                       }}
                     />
+
+                    {push.needsInstall ? (
+                      <div className="py-3 text-sm text-muted-foreground">
+                        On iPhone and iPad, notifications only work from the installed app. Tap Share, then
+                        Add to Home Screen, and open UP from there.
+                      </div>
+                    ) : null}
+                    {push.permission === 'denied' ? (
+                      <div className="py-3 text-sm text-muted-foreground">
+                        Notifications are blocked for this site. Allow them in your browser or phone settings,
+                        then come back and switch this on.
+                      </div>
+                    ) : null}
+                    {push.isSubscribed && push.isSupported ? (
+                      <div className="flex items-center justify-between gap-3 py-3">
+                        <div className="text-sm text-muted-foreground">Check this device is set up.</div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={testingPush}
+                          onClick={async () => {
+                            setTestingPush(true)
+                            const r = await push.sendTest()
+                            setTestingPush(false)
+                            if (r.ok) toast.success('Sent. It should arrive in a few seconds.')
+                            else toast.error(r.message)
+                          }}
+                        >
+                          {testingPush ? 'Sending…' : 'Send test'}
+                        </Button>
+                      </div>
+                    ) : null}
 
                     {(preferences.pushNotifications || push.isSubscribed) && push.isSupported
                       ? PUSH_TOPICS.map(({ key, label, desc }) => (

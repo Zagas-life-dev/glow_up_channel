@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css"></head><body>
+<svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1080" height="1920" fill="#0B1222"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+<!-- caption, hand-lettered feel -->
+<text x="540" y="260" text-anchor="middle" font-size="58" class="d" fill="#F6EBD9" opacity=".55">every chance</text>
+<text x="540" y="340" text-anchor="middle" font-size="58" class="d" fill="#F6EBD9">just floats by…</text>
+
+<!-- ground line, one stroke, continues into everything -->
+<path d="M0,1640 C200,1640 260,1640 300,1640" stroke="#F6EBD9" stroke-width="5" opacity=".6"/>
+<path d="M780,1640 C860,1640 940,1640 1080,1640" stroke="#F6EBD9" stroke-width="5" opacity=".6"/>
+
+<!-- side figure L: one line, hunched, head bowed -->
+<path stroke="#F6EBD9" stroke-width="6" opacity=".55" d="M100,1640 C110,1560 120,1480 150,1420 C110,1400 90,1330 140,1290 C190,1250 250,1300 230,1350 C220,1380 190,1400 160,1410 C200,1430 240,1450 250,1480 L230,1530 L190,1500 L205,1450 L250,1480 C260,1540 255,1600 260,1640"/>
+<!-- side figure R -->
+<path stroke="#F6EBD9" stroke-width="6" opacity=".55" d="M980,1640 C970,1560 960,1480 930,1420 C970,1400 990,1330 940,1290 C890,1250 830,1300 850,1350 C860,1380 890,1400 920,1410 C880,1430 840,1450 830,1480 L850,1530 L890,1500 L875,1450 L830,1480 C820,1540 825,1600 820,1640"/>
+
+<!-- HERO: one continuous orange line from the ground, up the body, around the head, into the arm, through the phone, and on up into the arrow -->
+<path filter="url(#glow)" stroke="#FF6700" stroke-width="9" d="
+ M300,1640 C380,1640 420,1640 450,1640
+ C455,1560 460,1480 470,1400
+ C430,1380 400,1300 420,1230
+ C440,1150 520,1110 590,1140
+ C660,1170 680,1260 640,1320
+ C620,1350 590,1370 560,1380
+ C600,1400 630,1420 650,1440
+ C700,1380 720,1300 740,1220
+ L700,1160 L780,1130 L800,1210 L740,1220
+ C760,1140 770,1040 790,940
+ C810,820 790,700 760,600
+ L700,640 L780,470 L860,640 L800,610
+ "/>
+<path stroke="#FF6700" stroke-width="9" filter="url(#glow)" d="M470,1400 C480,1480 490,1560 500,1640 C560,1640 620,1640 640,1640 C640,1560 650,1500 650,1440 M640,1640 C700,1640 740,1640 780,1640"/>
+<!-- face: wide eyes looking up (dots) and an open 'o' -->
+<circle cx="510" cy="1210" r="9" fill="#FF6700" stroke="none"/><circle cx="575" cy="1205" r="9" fill="#FF6700" stroke="none"/>
+<circle cx="545" cy="1275" r="16" stroke="#FF6700" stroke-width="6"/>
+<path d="M480,1170 q24,-22 50,-6 M560,1160 q28,-18 52,4" stroke="#FF6700" stroke-width="5"/>
+
+<!-- cards as outline rectangles drifting, dashed = motion path -->
+<g stroke="#F6EBD9" stroke-width="4">
+  <path d="M60,820 C240,700 380,700 520,600 C640,520 800,520 1040,420" stroke-dasharray="4 18" opacity=".5"/>
+  <g transform="translate(220 700) rotate(-14)"><rect x="-100" y="-62" width="200" height="124" rx="16"/><path d="M-76,-30 h80 M-76,0 h130 M-76,26 h90"/></g>
+  <g transform="translate(560 580) rotate(-6)"><rect x="-100" y="-62" width="200" height="124" rx="16"/><path d="M-76,-30 h80 M-76,0 h130 M-76,26 h90"/></g>
+  <g transform="translate(900 470) rotate(8)" opacity=".5"><rect x="-100" y="-62" width="200" height="124" rx="16"/><path d="M-76,-30 h80 M-76,0 h130 M-76,26 h90"/></g>
+</g>
+<g transform="translate(560 580) rotate(-6)"><path d="M-76,-30 h80" stroke="#FF6700" stroke-width="8"/></g>
+<g transform="translate(220 700) rotate(-14)"><path d="M-76,-30 h80" stroke="#FF6700" stroke-width="8"/></g>
+<!-- "pull" lines: the arrow tugging the card down toward the hero -->
+<path d="M640,640 C690,660 720,700 740,760" stroke="#FF6700" stroke-width="4" stroke-dasharray="2 14"/>
+</g>
+<!-- phone screen glow -->
+<circle cx="750" cy="1170" r="70" fill="#FF6700" opacity=".14"/>
+<text x="540" y="1860" text-anchor="middle" font-size="26" fill="#F6EBD9" class="s" opacity=".6">C · One continuous line</text>
+</svg></body></html>

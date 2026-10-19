@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css">
+<style>.ink{mix-blend-mode:multiply}</style></head><body>
+<svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <pattern id="dotsO" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="8" cy="8" r="4.5" fill="#FF6700"/></pattern>
+  <pattern id="dotsN" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="7" cy="7" r="3.2" fill="#1d2a5a"/></pattern>
+  <pattern id="dotsNs" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="7" cy="7" r="1.8" fill="#1d2a5a"/></pattern>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.4 1.1"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3" seed="2"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+</defs>
+<rect width="1080" height="1920" fill="#F3EAD9"/>
+
+<!-- ORANGE INK PLATE -->
+<g class="ink" filter="url(#rough)">
+  <circle cx="560" cy="700" r="330" fill="url(#dotsO)"/>
+  <!-- big arrow the hero rides -->
+  <path d="M470,1700 L470,820 L330,820 L560,420 L790,820 L650,820 L650,1700Z" fill="#FF6700"/>
+  <!-- hero body -->
+  
+  <!-- cards caught, flying with hero -->
+  <g transform="translate(220 760) rotate(-18)"><rect x="-110" y="-70" width="220" height="140" rx="12" fill="#FF6700" opacity=".9"/></g>
+  <g transform="translate(880 660) rotate(16)"><rect x="-110" y="-70" width="220" height="140" rx="12" fill="#FF6700" opacity=".9"/></g>
+  <!-- side characters' phone glows (dim) -->
+  <circle cx="180" cy="1630" r="70" fill="url(#dotsO)"/><circle cx="900" cy="1630" r="70" fill="url(#dotsO)"/>
+  <!-- speed streaks -->
+  <path d="M430,1100 v260 M690,1000 v320 M400,1500 v120 M720,1460 v160" stroke="#FF6700" stroke-width="14" stroke-linecap="round"/>
+</g>
+
+<!-- NAVY INK PLATE (deliberately mis-registered 7px right/down) -->
+<g class="ink" transform="translate(7 6)" filter="url(#rough)">
+  <text x="540" y="240" text-anchor="middle" font-size="96" class="d" fill="#1d2a5a" letter-spacing="-2">STOP</text>
+  <text x="540" y="340" text-anchor="middle" font-size="64" class="d" fill="#1d2a5a">MISSING OUT</text>
+  <!-- hero head + face, riding up -->
+  <circle cx="560" cy="560" r="78" fill="#1d2a5a"/>
+  <circle cx="530" cy="540" r="14" fill="#F3EAD9"/><circle cx="592" cy="540" r="14" fill="#F3EAD9"/>
+  <circle cx="533" cy="534" r="6" fill="#1d2a5a"/><circle cx="595" cy="534" r="6" fill="#1d2a5a"/>
+  <path d="M528,590 q32,30 64,0" stroke="#F3EAD9" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <rect x="505" y="630" width="110" height="180" rx="50" fill="#1d2a5a"/>
+  <!-- arms up in triumph -->
+  <path d="M505,690 L420,560 M615,690 L700,560" stroke="#1d2a5a" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="414" cy="550" r="22" fill="#1d2a5a"/><circle cx="706" cy="550" r="22" fill="#1d2a5a"/>
+  <!-- legs tucked -->
+  <path d="M530,800 L500,880 M590,800 L630,870" stroke="#1d2a5a" stroke-width="26" stroke-linecap="round"/>
+  <!-- card text -->
+  <g transform="translate(220 760) rotate(-18)"><text x="-86" y="-24" font-size="26" class="s" fill="#1d2a5a">SCHOLARSHIP</text><rect x="-86" y="0" width="150" height="12" fill="#1d2a5a"/><rect x="-86" y="26" width="100" height="12" fill="#1d2a5a"/></g>
+  <g transform="translate(880 660) rotate(16)"><text x="-86" y="-24" font-size="26" class="s" fill="#1d2a5a">JOB OFFER</text><rect x="-86" y="0" width="150" height="12" fill="#1d2a5a"/><rect x="-86" y="26" width="100" height="12" fill="#1d2a5a"/></g>
+  <!-- ground -->
+  <rect x="0" y="1700" width="1080" height="220" fill="url(#dotsN)"/>
+  <!-- side characters, heads bowed, still on phones -->
+  <g transform="translate(180 1700)">
+    <path d="M-100,0 C-100,-150 100,-150 100,0Z" fill="#1d2a5a"/>
+    <circle cx="10" cy="-175" r="66" fill="#1d2a5a"/>
+    <path d="M-20,-160 h22 M30,-160 h22" stroke="#F3EAD9" stroke-width="8" stroke-linecap="round"/>
+    <rect x="-30" y="-110" width="56" height="80" rx="10" fill="#F3EAD9"/>
+  </g>
+  <g transform="translate(900 1700)">
+    <path d="M-100,0 C-100,-150 100,-150 100,0Z" fill="#1d2a5a"/>
+    <circle cx="-10" cy="-175" r="66" fill="#1d2a5a"/>
+    <path d="M-52,-160 h22 M0,-160 h22" stroke="#F3EAD9" stroke-width="8" stroke-linecap="round"/>
+    <rect x="-26" y="-110" width="56" height="80" rx="10" fill="#F3EAD9"/>
+  </g>
+  <!-- halftone shading on the arrow's right side -->
+  <path d="M600,820 L650,820 L650,1700 L600,1700Z" fill="url(#dotsNs)"/>
+  <!-- one side character is starting to glance up: a "?" -->
+  <text x="990" y="1400" font-size="90" class="d" fill="#1d2a5a">?</text>
+</g>
+<!-- paper grain over all -->
+<rect width="1080" height="1920" fill="#5b4a30" filter="url(#grain)" opacity=".28"/>
+<rect x="370" y="1822" width="340" height="52" rx="26" fill="#F3EAD9"/><text x="540" y="1858" text-anchor="middle" font-size="26" fill="#1d2a5a" class="s">D · Two-ink risograph</text>
+</svg></body></html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP Music Beds</title>
+<style>
+  @font-face { font-family: "Unbounded"; src: url("fonts/unbounded.woff2") format("woff2"); font-weight: 200 900; }
+  @font-face { font-family: "Plus Jakarta Sans"; src: url("fonts/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 800; }
+  :root { --navy: #0b1222; --panel: #131c38; --line: #26305e; --orange: #ff6700; --cream: #f6ebd9; --muted: #aab0c6; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--navy); color: var(--cream); font-family: "Plus Jakarta Sans", system-ui, sans-serif; padding: 48px 16px 80px; }
+  main { max-width: 920px; margin: 0 auto; }
+  h1 { font-family: "Unbounded", sans-serif; font-weight: 900; font-size: clamp(34px, 6vw, 56px); letter-spacing: -0.02em; line-height: 1.05; }
+  h1 span { color: var(--orange); }
+  .lede { margin-top: 16px; font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 680px; }
+  .rules { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .rule { background: var(--panel); border-radius: 16px; padding: 16px 18px; box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; line-height: 1.45; }
+  .rule b { display: block; font-family: "Unbounded", sans-serif; font-size: 14px; color: var(--orange); margin-bottom: 4px; }
+  .tracks { margin-top: 40px; display: grid; gap: 16px; }
+  .t { background: var(--panel); border-radius: 22px; padding: 24px; box-shadow: inset 0 0 0 1px var(--line); display: grid; grid-template-columns: 64px 1fr; gap: 20px; align-items: start; }
+  .num { width: 64px; height: 64px; border-radius: 18px; background: var(--orange); color: var(--navy); font-family: "Unbounded", sans-serif; font-weight: 900; font-size: 26px; display: flex; align-items: center; justify-content: center; }
+  .t h2 { font-family: "Unbounded", sans-serif; font-weight: 800; font-size: 26px; }
+  .meta { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 999px; background: #1c2650; color: var(--cream); }
+  .chip.o { background: var(--orange); color: var(--navy); }
+  .mood { margin-top: 12px; font-size: 16px; }
+  .for { margin-top: 4px; font-size: 15px; color: var(--muted); }
+  audio { margin-top: 16px; width: 100%; }
+  code, pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .cmd { margin-top: 12px; background: #070b18; border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--cream); overflow-x: auto; white-space: nowrap; }
+  h3 { margin-top: 48px; font-family: "Unbounded", sans-serif; font-weight: 800; font-size: 24px; }
+  .how { margin-top: 14px; background: var(--panel); border-radius: 18px; padding: 20px; box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; line-height: 1.6; }
+  .how pre { margin-top: 10px; background: #070b18; border-radius: 12px; padding: 14px; font-size: 13px; overflow-x: auto; }
+  .how p + p { margin-top: 10px; }
+  @media (max-width: 560px) { .t { grid-template-columns: 1fr; } .num { width: 48px; height: 48px; font-size: 20px; border-radius: 14px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>UP music <span>beds</span></h1>
+  <p class="lede">Five background tracks made entirely in code, so they're ours to use anywhere. They're built to be interchangeable: swap one for another in any film and nothing else has to change.</p>
+
+  <div class="rules">
+    <div class="rule"><b>Any length</b>Render to a film's exact duration. Whole bars fill the time.</div>
+    <div class="rule"><b>Ending on cue</b>The final chord lands where you say, e.g. on the UP end card.</div>
+    <div class="rule"><b>Same loudness</b>Every track is mixed to the same level (~-18.5 dB mean), so the volume never needs resetting.</div>
+    <div class="rule"><b>Same shape</b>2-bar intro, then 8-bar A/B sections. B is fuller, so cuts on section lines feel natural.</div>
+  </div>
+
+  <div class="tracks">
+    <section class="t"><div class="num">1</div><div>
+      <h2>Liftoff</h2>
+      <div class="meta"><span class="chip o">108 BPM</span><span class="chip">C major</span><span class="chip">marimba · claps · pluck</span></div>
+      <p class="mood">Bright, hopeful marimba pop.</p>
+      <p class="for">Best for: opportunity spotlights, scholarship and job promos, CTAs.</p>
+      <audio controls preload="none" src="tracks/liftoff.mp3"></audio>
+      <div class="cmd">node brand-music/make-music.mjs liftoff 101 assets/audio/music.wav --end-at 95.4</div>
+    </div></section>
+
+    <section class="t"><div class="num">2</div><div>
+      <h2>Afro Glow</h2>
+      <div class="meta"><span class="chip o">104 BPM</span><span class="chip">A minor</span><span class="chip">log drum · shaker · kalimba</span></div>
+      <p class="mood">Warm Afrobeats / amapiano groove with a swung shaker and log-drum bass.</p>
+      <p class="for">Best for: community stories, lifestyle, events, Nigerian-audience promos.</p>
+      <audio controls preload="none" src="tracks/afroglow.mp3"></audio>
+      <div class="cmd">node brand-music/make-music.mjs afroglow 60 assets/audio/music.wav</div>
+    </div></section>
+
+    <section class="t"><div class="num">3</div><div>
+      <h2>Night Shift</h2>
+      <div class="meta"><span class="chip o">80 BPM</span><span class="chip">C major 7ths</span><span class="chip">rhodes · vinyl · boom-bap</span></div>
+      <p class="mood">Lo-fi, calm and focused, with lazy swing and vinyl crackle.</p>
+      <p class="for">Best for: how-tos, walkthroughs, explainers, study and productivity content.</p>
+      <audio controls preload="none" src="tracks/nightshift.mp3"></audio>
+      <div class="cmd">node brand-music/make-music.mjs nightshift 45 assets/audio/music.wav</div>
+    </div></section>
+
+    <section class="t"><div class="num">4</div><div>
+      <h2>Headline</h2>
+      <div class="meta"><span class="chip o">120 BPM</span><span class="chip">D minor</span><span class="chip">16th ticks · timpani · brass stabs</span></div>
+      <p class="mood">Newsy, ticking, data-driven tension.</p>
+      <p class="for">Best for: stats, deadlines, "did you know" facts, news-style skits.</p>
+      <audio controls preload="none" src="tracks/headline.mp3"></audio>
+      <div class="cmd">node brand-music/make-music.mjs headline 30 assets/audio/music.wav</div>
+    </div></section>
+
+    <section class="t"><div class="num">5</div><div>
+      <h2>Big Stage</h2>
+      <div class="meta"><span class="chip o">92 BPM</span><span class="chip">E minor</span><span class="chip">pulse synth · toms · risers</span></div>
+      <p class="mood">Cinematic and building: the filter opens and the drums grow each section.</p>
+      <p class="for">Best for: launches, keynotes, big announcements, milestone reveals.</p>
+      <audio controls preload="none" src="tracks/bigstage.mp3"></audio>
+      <div class="cmd">node brand-music/make-music.mjs bigstage 40 assets/audio/music.wav --end-at 36</div>
+    </div></section>
+  </div>
+
+  <h3>Using one in a film</h3>
+  <div class="how">
+    <p>Render the bed at the film's length, with the ending on the end-card time. Run it from the film's project folder, using the path to <code>brand-music/</code> from there:</p>
+    <pre>node ../brand-music/make-music.mjs afroglow 101 assets/audio/music.wav --end-at 95.4</pre>
+    <p>Then place it like any music bed, the same tag every UP film already uses:</p>
+    <pre>&lt;audio id="mx" src="assets/audio/music.wav" data-start="0" data-duration="101" data-track-index="20" data-volume="0.4"&gt;&lt;/audio&gt;</pre>
+    <p>To swap tracks, change only the track name and re-run the command. Length, ending and loudness all stay the same. Under a voice-over, keep <code>data-volume</code> around 0.25–0.3; for music-only cuts, 0.4–0.5.</p>
+    <p>The previews above are 60s renders with the ending at 57s. To rebuild them, run <code>node brand-music/make-music.mjs</code> with no arguments.</p>
+  </div>
+</main>
+</body>
+</html>

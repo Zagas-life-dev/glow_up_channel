@@ -9,6 +9,7 @@ import { getContentCache } from "@/lib/content-cache-session"
 import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page"
 import { getFeedSessionSeed } from "@/lib/feed-session-seed"
 import { fetchForYouPage } from "@/lib/for-you-feed"
+import { deriveSeed, orderByDeadlineLottery } from "@/lib/public-hub-order"
 import { isExtremePromotion, isPromoted } from "@/lib/promotion-boost"
 import {
   MAX_EXTREME_IN_FEED_TOP,
@@ -49,7 +50,7 @@ import {
 import { PageShell } from "@/components/layout/page-shell"
 import { TabStrip } from "@/components/layout/tab-strip"
 import CountrySelector from "@/components/country-selector"
-import { useViewingCountry, viewingCountryName } from "@/lib/geo/viewing-country"
+import { useViewingCountry, viewingCountryName, withViewingCountryParam } from "@/lib/geo/viewing-country"
 import LandingPage from "@/components/landing/landing-page"
 
 type TabType = 'all' | 'opportunities' | 'jobs' | 'events' | 'resources'
@@ -63,9 +64,9 @@ const tabIcons = {
 } as const
 const tabs: { id: TabType; label: string }[] = [
   { id: 'all', label: 'For You' },
-  { id: 'opportunities', label: 'Opportunities' },
-  { id: 'jobs', label: 'Jobs' },
   { id: 'events', label: 'Events' },
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'opportunities', label: 'Opportunities' },
   { id: 'resources', label: 'Resources' },
 ]
 
@@ -97,12 +98,9 @@ export default function Home() {
     if (s?.feed && s.feed.storageKey === `home_${tab}`) {
       return { items: (s.feed.items || []) as any[], lastId: s.feed.lastId ?? null }
     }
-    // The shared per-type cache is also filled by the hub and detail pages, which
-    // don't filter by the picked country — so it can't seed a country feed.
-    if (tab !== 'all' && !viewingCountryName() && (tab === 'opportunities' || tab === 'jobs' || tab === 'events' || tab === 'resources')) {
-      const cached = getContentCache(tab)
-      if (cached?.items?.length) return { items: cached.items as any[], lastId: cached.lastId }
-    }
+    // The shared per-type cache is not used as a seed: it holds pages in the
+    // API's order, and the tabs score and draw each page as it is fetched.
+    // `fetchHomeListPage` still reads that cache, so the first page is instant.
     return null
   })
   const restoredFromCacheRef = useRef(Boolean(initialFeed?.items?.length))
@@ -133,6 +131,11 @@ export default function Home() {
     [backendUrl, isAuthenticated, user, normalizedUser],
   )
 
+  // Assigned below, once the ranker exists; read only when a page is fetched.
+  const rankForFeedRef = useRef<ReturnType<typeof usePersonalizedRanking>["rankForFeed"]>(
+    (items) => items as never,
+  )
+
   // Fetch function for individual content types (same lastId pagination as Opportunities/Jobs)
   const fetchContentByType = useCallback(
     async (type: HomeListType, cursorLastId: string | null) => {
@@ -144,7 +147,7 @@ export default function Home() {
       const token = isAuthenticated && user ? localStorage.getItem("accessToken") : null
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
 
-      return fetchHomeListPage({
+      const page = await fetchHomeListPage({
         type,
         cursorLastId,
         backendUrl,
@@ -153,6 +156,23 @@ export default function Home() {
         // loads the saved choice in an effect, after the first fetch can fire.
         viewingCountry: viewingCountryName(),
       })
+
+      // "Best for you", drawn rather than sorted: score the page for this
+      // reader, then let the hub lottery order it by match and deadline from
+      // this session's seed. Per page, because the cursor is the server's and
+      // rows already on screen must not move when the next page lands. Same
+      // seed, same order, so a re-run or cache read does not reshuffle; a
+      // refresh mints a new seed and a new order.
+      const scored = rankForFeedRef.current(page.items, {
+        preserveOrder: true,
+        dropExpired: false,
+      }) as typeof page.items
+      return {
+        ...page,
+        items: orderByDeadlineLottery(scored, {
+          seed: deriveSeed(getFeedSessionSeed() ?? 0, "home", type, cursorLastId ?? "first"),
+        }),
+      }
     },
     [backendUrl, isAuthenticated, user],
   )
@@ -280,7 +300,7 @@ export default function Home() {
       // Same seed the main feed uses, so the promoted draw is stable for the
       // length of a browsing session and redrawn on refresh — matching how the
       // organic order behaves rather than reshuffling under the reader.
-      fetch(`${backendUrl}/api/promoted/feed?limit=20&seed=${getFeedSessionSeed()}`, { headers })
+      fetch(withViewingCountryParam(`${backendUrl}/api/promoted/feed?limit=20&seed=${getFeedSessionSeed()}`), { headers })
         .then((res) => (res.ok ? res.json() : { success: false }))
         .then((data) => {
           if (data?.success && Array.isArray(data?.data?.feed)) {
@@ -312,14 +332,17 @@ export default function Home() {
    * `dropExpired` stays off so the feed keeps showing closed listings with
    * their "Application Closed" state instead of silently shedding rows.
    *
-   * Scoped to the For You tab: the per-type tabs are a browse of everything of
-   * one kind, not a recommendation, and their rows carry no score today.
+   * The per-type tabs are scored too, at fetch time in `fetchContentByType`,
+   * where the score also drives their order.
    */
   const rankingProfile = useMemo(
     () => rankingProfileFrom(normalizedUser),
     [normalizedUser],
   )
   const { rankForFeed } = usePersonalizedRanking(rankingProfile)
+  // The per-type fetcher scores through this, so it stays stable while the
+  // profile and location settle — a new fetcher identity would reset the list.
+  rankForFeedRef.current = rankForFeed
 
   /**
    * The seed this browsing session draws with, read once.
@@ -332,9 +355,9 @@ export default function Home() {
   const feedSessionSeed = useMemo(() => getFeedSessionSeed(), [])
 
   const rankedContent = useMemo(() => {
-    // The per-type tabs are a browse rather than a recommendation and are not
-    // scored, but a live extreme campaign still leads them — the promise is
-    // about every feed the reader can open, not only For You.
+    // The per-type tabs were scored and drawn per page as they were fetched,
+    // so only the extreme lead is left — the promise is about every feed the
+    // reader can open, not only For You.
     if (activeTab !== 'all') {
       return leadWithExtreme(allContent, {
         isExtreme: isExtremePromotion,

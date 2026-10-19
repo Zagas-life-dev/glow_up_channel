@@ -1,0 +1,80 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css"></head><body>
+<svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <g id="gcard">
+    <rect x="-130" y="-80" width="260" height="160" rx="36" fill="#F6EBD9"/>
+    <rect x="-100" y="-50" width="120" height="30" rx="15" fill="#FF6700"/>
+    <rect x="-100" y="0" width="190" height="16" rx="8" fill="#0B1222" opacity=".25"/>
+    <rect x="-100" y="30" width="130" height="16" rx="8" fill="#0B1222" opacity=".25"/>
+  </g>
+</defs>
+<rect width="1080" height="1920" fill="#0B1222"/>
+<!-- big soft circles -->
+<circle cx="540" cy="760" r="430" fill="#FF6700" opacity=".12"/>
+<circle cx="540" cy="760" r="300" fill="#FF6700" opacity=".14"/>
+
+<!-- caption -->
+<text x="540" y="250" text-anchor="middle" font-size="70" class="d" fill="#F6EBD9">Most people</text>
+<text x="540" y="340" text-anchor="middle" font-size="70" class="d" fill="#F6EBD9">never look <tspan fill="#FF6700">up.</tspan></text>
+
+<!-- cards whipping past in an arc: ghost trail = smear frames -->
+<g opacity=".18"><use href="#gcard" transform="translate(120 700) rotate(-30) scale(.8)"/></g>
+<g opacity=".35"><use href="#gcard" transform="translate(200 600) rotate(-20) scale(.85)"/></g>
+<use href="#gcard" transform="translate(300 530) rotate(-10) scale(.9)"/>
+<g opacity=".25"><use href="#gcard" transform="translate(640 470) rotate(0) scale(.9)"/></g>
+<use href="#gcard" transform="translate(760 500) rotate(10) scale(.95)"/>
+<!-- one card squashing on impact against the hero's head -->
+<g transform="translate(540 892) rotate(-3)"><g transform="scale(1.25 .7)"><use href="#gcard"/></g></g>
+<path d="M370,860 l-40,-20 M710,860 l40,-20 M380,920 l-50,0 M700,920 l50,0" stroke="#F6EBD9" stroke-width="10" stroke-linecap="round"/>
+
+<!-- ground -->
+<rect x="0" y="1640" width="1080" height="280" fill="#070A1C"/>
+<ellipse cx="200" cy="1645" rx="130" ry="20" fill="#000" opacity=".4"/>
+<ellipse cx="880" cy="1645" rx="130" ry="20" fill="#000" opacity=".4"/>
+<ellipse cx="540" cy="1650" rx="190" ry="26" fill="#000" opacity=".45"/>
+
+<!-- side blob L: melted puddle-ish, glued to phone -->
+<g transform="translate(200 1640)">
+  <path d="M-140,0 C-150,-160 -110,-300 0,-300 C110,-300 150,-160 140,0Z" fill="#F6EBD9"/>
+  <rect x="-40" y="-170" width="80" height="120" rx="16" fill="#0B1222"/><rect x="-30" y="-158" width="60" height="96" rx="8" fill="#3a4466"/>
+  <!-- eyes drooping down at phone -->
+  <circle cx="-34" cy="-210" r="30" fill="#fff" stroke="#0B1222" stroke-width="5"/><circle cx="34" cy="-210" r="30" fill="#fff" stroke="#0B1222" stroke-width="5"/>
+  <circle cx="-30" cy="-192" r="13" fill="#0B1222"/><circle cx="30" cy="-192" r="13" fill="#0B1222"/>
+  <path d="M-66,-226 h64 M2,-226 h64" stroke="#F6EBD9" stroke-width="22"/>
+</g>
+<!-- side blob R -->
+<g transform="translate(880 1640)">
+  <path d="M-130,0 C-140,-140 -100,-270 0,-270 C100,-270 140,-140 130,0Z" fill="#FF6700" opacity=".55"/>
+  <rect x="-40" y="-150" width="80" height="120" rx="16" fill="#0B1222"/><rect x="-30" y="-138" width="60" height="96" rx="8" fill="#3a4466"/>
+  <circle cx="-34" cy="-190" r="28" fill="#fff" stroke="#0B1222" stroke-width="5"/><circle cx="34" cy="-190" r="28" fill="#fff" stroke="#0B1222" stroke-width="5"/>
+  <circle cx="-32" cy="-172" r="12" fill="#0B1222"/><circle cx="32" cy="-172" r="12" fill="#0B1222"/>
+  <path d="M-64,-204 h60 M4,-204 h60" stroke="#c9733d" stroke-width="20"/>
+</g>
+
+<!-- HERO: toothpaste stretch upward, eyes bugging -->
+<g transform="translate(540 1650)">
+  <path d="M-170,0 C-180,-120 -120,-260 -110,-480 C-104,-640 -60,-700 0,-700 C60,-700 104,-640 110,-480 C120,-260 180,-120 170,0Z" fill="#FF6700"/>
+  <!-- stretch highlight -->
+  <path d="M-70,-560 C-80,-400 -90,-260 -110,-120" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".35"/>
+  <!-- giant googly eyes, pupils thrown up -->
+  <circle cx="-52" cy="-600" r="62" fill="#fff" stroke="#0B1222" stroke-width="7"/><circle cx="58" cy="-610" r="70" fill="#fff" stroke="#0B1222" stroke-width="7"/>
+  <circle cx="-40" cy="-636" r="24" fill="#0B1222"/><circle cx="70" cy="-652" r="27" fill="#0B1222"/>
+  <circle cx="-34" cy="-644" r="7" fill="#fff"/><circle cx="78" cy="-662" r="8" fill="#fff"/>
+  <!-- mouth: wobbling O -->
+  <path d="M-34,-480 C-40,-440 40,-430 36,-480 C32,-520 -30,-520 -34,-480Z" fill="#0B1222"/>
+  <!-- noodle arms out in a 'ta-da' -->
+  <path d="M-110,-360 C-200,-380 -230,-460 -280,-470" fill="none" stroke="#FF6700" stroke-width="30" stroke-linecap="round"/>
+  <path d="M110,-360 C200,-380 230,-470 250,-560" fill="none" stroke="#FF6700" stroke-width="30" stroke-linecap="round"/>
+  <!-- phone with UP mark bursting -->
+  <g transform="translate(262 -620) rotate(14)">
+    <rect x="-52" y="-80" width="104" height="160" rx="20" fill="#F6EBD9"/>
+    <image href="up-mark-orange.png" x="-44" y="-40" width="88" height="80" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+  <!-- wobble / vibration arcs -->
+  <path d="M-220,-700 q-30,40 0,80 M220,-720 q30,40 0,80" fill="none" stroke="#F6EBD9" stroke-width="9" stroke-linecap="round" opacity=".7"/>
+</g>
+<!-- confetti dots -->
+<g fill="#FF6700"><circle cx="160" cy="980" r="12"/><circle cx="940" cy="1040" r="16"/><circle cx="880" cy="900" r="8"/><circle cx="120" cy="1150" r="9"/></g>
+<g fill="#F6EBD9"><circle cx="980" cy="760" r="10"/><circle cx="90" cy="860" r="14"/></g>
+<text x="540" y="1860" text-anchor="middle" font-size="26" fill="#F6EBD9" class="s" opacity=".6">B · Googly blobs</text>
+</svg></body></html>

@@ -61,6 +61,17 @@ export interface FetchPublicHubPageParams {
    * during SSR, where nothing is rendered from this anyway.
    */
   sessionSeed: number | null
+  /**
+   * Scores a page for the reader (`rankForFeed` with `preserveOrder`). The
+   * score feeds the lottery's match weight, so the best matches lead. Omitted,
+   * the page is drawn on time alone.
+   */
+  score?: (items: HomeListItem[]) => HomeListItem[]
+  /**
+   * The picked country, a name. Limits the page to that country plus Global
+   * listings, the same rule as the home feed.
+   */
+  viewingCountry?: string | null
 }
 
 export async function fetchPublicHubPage({
@@ -69,20 +80,26 @@ export async function fetchPublicHubPage({
   backendUrl,
   search,
   sessionSeed,
+  score,
+  viewingCountry = null,
 }: FetchPublicHubPageParams): Promise<HomeListPageResult> {
   const searchTerm = search?.trim() ?? ""
   const isSearching = Boolean(searchTerm)
   const isFirstPage = !cursorLastId
   const cacheKey = HUB_CACHE_KEY[type]
 
-  // Back-navigation and tab restores read the already-ordered page rather than
-  // refetching it, so returning to a hub shows the list exactly as it was left.
+  // Back-navigation and tab restores read the cached page rather than
+  // refetching it. The cache holds the page as the API sent it, and it is
+  // scored and drawn again below on every read: the seed is the same, so the
+  // order is too — but a page warmed by the background prefetcher, which has no
+  // reader to score for, still gets "best for you" once the hub reads it.
   // A refresh mints a new boot id, which drops these entries and the seed with
   // them — that is what makes every refresh a new order.
+  let page: HomeListPageResult | null = null
   if (isFirstPage && !isSearching) {
     const cached = getContentCache<HomeListItem>(cacheKey)
     if (cached?.items?.length) {
-      return {
+      page = {
         items: cached.items,
         lastId: cached.lastId,
         hasMore: cached.hasMore ?? true,
@@ -90,21 +107,27 @@ export async function fetchPublicHubPage({
     }
   }
 
-  const page = await fetchHomeListPage({
+  const cameFromCache = page !== null
+  page ??= await fetchHomeListPage({
     type,
     cursorLastId,
     backendUrl,
     query: isSearching ? { search: searchTerm } : undefined,
     cache: false,
     throwOnError: true,
+    viewingCountry,
   })
+
+  // Scored for search too: the card shows the match either way. Only the
+  // ordering below is skipped for a search.
+  const scored = score ? score(page.items) : page.items
 
   // Search results keep the API's ordering. Someone who typed a query is
   // looking for specific listings, and reshuffling matches under them would
   // make the same search look broken twice in a row.
   const ordered = isSearching
-    ? page.items
-    : orderByDeadlineLottery(page.items, {
+    ? scored
+    : orderByDeadlineLottery(scored, {
         seed: deriveSeed(sessionSeed ?? 0, type, cursorLastId ?? "first"),
       })
 
@@ -136,9 +159,9 @@ export async function fetchPublicHubPage({
 
   const result: HomeListPageResult = { ...page, items }
 
-  if (isFirstPage && !isSearching && items.length > 0) {
+  if (isFirstPage && !isSearching && !cameFromCache && page.items.length > 0) {
     setContentCache(cacheKey, {
-      items,
+      items: page.items,
       lastId: result.lastId,
       hasMore: result.hasMore,
     })

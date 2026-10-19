@@ -1,8 +1,47 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { ApiClient } from "@/lib/api-client"
 
 const SW_URL = "/sw.js"
+
+/** POST/DELETE with the stored access token; on a 401 refresh it once and retry,
+ *  because the raw token in localStorage is often a stale one and a 401 here used
+ *  to mean the device was never saved. */
+async function authedFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const send = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
+    return fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init.headers || {}),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    })
+  }
+  let res = await send()
+  if (res.status === 401 && (await ApiClient.refreshTokenIfNeeded().catch(() => false))) {
+    res = await send()
+  }
+  return res
+}
+
+async function errorMessage(res: Response, fallback: string): Promise<string> {
+  const data = await res.json().catch(() => null)
+  return data?.error || data?.message || fallback
+}
+
+/** iPhones and iPads only deliver web push to the installed app. */
+function iosNeedsInstall(): boolean {
+  if (typeof window === "undefined") return false
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  const standalone =
+    (navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches
+  return ios && !standalone
+}
 
 export type PushPermissionState = "default" | "granted" | "denied" | "unsupported"
 
@@ -15,6 +54,10 @@ export interface UsePushNotificationsResult {
   subscribe: () => Promise<boolean>
   unsubscribe: () => Promise<void>
   requestPermission: () => Promise<PushPermissionState>
+  /** True on iOS Safari outside the installed app, where push cannot work. */
+  needsInstall: boolean
+  /** Asks the server to push a test message to this user's saved devices. */
+  sendTest: () => Promise<{ ok: boolean; message: string }>
 }
 
 function getPermissionState(permission: NotificationPermission | null): PushPermissionState {
@@ -80,8 +123,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 
       const keyRes = await fetch("/api/push/vapid-public-key")
       if (!keyRes.ok) {
-        const err = await keyRes.json().catch(() => ({}))
-        setError(err?.error || "Could not get push key.")
+        setError(await errorMessage(keyRes, "Could not get push key."))
         return false
       }
       const { publicKey } = await keyRes.json()
@@ -90,24 +132,28 @@ export function usePushNotifications(): UsePushNotificationsResult {
         return false
       }
 
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
-      })
+      const applicationServerKey = urlBase64ToUint8Array(publicKey) as BufferSource
+      let subscription: PushSubscription
+      try {
+        subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })
+      } catch (e) {
+        // An old subscription made under a different key blocks a new one.
+        if (e instanceof DOMException && e.name === "InvalidStateError") {
+          await (await reg.pushManager.getSubscription())?.unsubscribe()
+          subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })
+        } else {
+          throw e
+        }
+      }
 
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
-      const subRes = await fetch("/api/push/subscribe", {
+      const subRes = await authedFetch("/api/push/subscribe", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
         body: JSON.stringify({ subscription: subscription.toJSON() }),
       })
       if (!subRes.ok) {
-        const err = await subRes.json().catch(() => ({}))
-        setError(err?.error || "Failed to save subscription.")
+        // Do not leave the browser holding a subscription the server never stored.
+        await subscription.unsubscribe().catch(() => {})
+        setError(await errorMessage(subRes, "Failed to save subscription."))
         return false
       }
       setIsSubscribed(true)
@@ -128,15 +174,12 @@ export function usePushNotifications(): UsePushNotificationsResult {
     try {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
+      const endpoint = sub?.endpoint
       if (sub) await sub.unsubscribe()
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
-      await fetch("/api/push/unsubscribe", {
+      await authedFetch("/api/push/unsubscribe", {
         method: "POST",
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      })
+        body: JSON.stringify({ endpoint }),
+      }).catch(() => {})
       setIsSubscribed(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to unsubscribe")
@@ -145,17 +188,44 @@ export function usePushNotifications(): UsePushNotificationsResult {
     }
   }, [isSupported])
 
-  // Detect current subscription state
+  // Detect current subscription state, and re-save it on the server. A browser
+  // keeps its subscription across sign-outs, token expiry and a wiped database;
+  // the server row does not follow. The upsert is idempotent, so doing it once
+  // per load keeps the two in step without the user touching anything.
   useEffect(() => {
     if (!isSupported) return
     let cancelled = false
-    navigator.serviceWorker.ready.then((reg) => reg.pushManager.getSubscription()).then((sub) => {
-      if (!cancelled) setIsSubscribed(!!sub)
-    })
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then(async (sub) => {
+        if (cancelled) return
+        setIsSubscribed(!!sub)
+        if (!sub || Notification.permission !== "granted") return
+        if (!localStorage.getItem("accessToken")) return
+        await authedFetch("/api/push/subscribe", {
+          method: "POST",
+          body: JSON.stringify({ subscription: sub.toJSON() }),
+        }).catch(() => {})
+      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [isSupported])
+
+  const sendTest = useCallback(async () => {
+    try {
+      const res = await authedFetch("/api/push/test", { method: "POST" })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) return { ok: false, message: data?.error || data?.message || "Test failed." }
+      return { ok: (data?.sent ?? 0) > 0, message: data?.message || "Test sent." }
+    } catch {
+      return { ok: false, message: "Could not reach the server." }
+    }
+  }, [])
+
+  const [needsInstall, setNeedsInstall] = useState(false)
+  useEffect(() => setNeedsInstall(iosNeedsInstall()), [])
 
   return {
     permission,
@@ -166,6 +236,8 @@ export function usePushNotifications(): UsePushNotificationsResult {
     subscribe,
     unsubscribe,
     requestPermission,
+    needsInstall,
+    sendTest,
   }
 }
 

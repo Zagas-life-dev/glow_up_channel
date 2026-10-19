@@ -32,6 +32,7 @@ import {
 } from "react"
 
 import { useAuth } from "@/lib/auth-context"
+import { withViewingCountryParam } from "@/lib/geo/viewing-country"
 import {
   markAnnounced,
   selectAnnouncement,
@@ -102,7 +103,7 @@ export function PromotionAnnouncementProvider({ children }: { children: ReactNod
 
     lastFetchedAt.current = Date.now()
     try {
-      const res = await fetch(`${backendUrl}/api/promoted/announcements`, {
+      const res = await fetch(withViewingCountryParam(`${backendUrl}/api/promoted/announcements`), {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) return

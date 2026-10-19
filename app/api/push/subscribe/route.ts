@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 /**
  * Saves a push subscription for the current user.
  * Expects Authorization: Bearer <token> and JSON body: { subscription: PushSubscriptionJSON }
- * Forwards to backend if NEXT_PUBLIC_BACKEND_URL has a push-subscription endpoint;
- * otherwise returns success (backend can implement storage and web-push sending).
+ * Forwards to the backend and passes its failure through — never reports success
+ * for a subscription that was not stored.
  */
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization")
@@ -24,29 +24,28 @@ export async function POST(request: NextRequest) {
   }
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
-  if (backendUrl) {
-    try {
-      const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/users/me/push-subscription`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: authHeader,
-        },
-        body: JSON.stringify({ subscription: body.subscription }),
-      })
-      if (!res.ok) {
-        const text = await res.text()
-        return NextResponse.json(
-          { error: text || "Backend rejected subscription" },
-          { status: res.status }
-        )
-      }
-      return NextResponse.json({ success: true })
-    } catch (e) {
-      // Backend may not have the endpoint yet; still accept so client can subscribe
-      console.warn("Push subscribe: backend request failed", e)
-    }
+  if (!backendUrl) {
+    // Reporting success here is what made "enabled" and "never delivered" look the
+    // same: the browser holds a subscription the server never stored.
+    return NextResponse.json({ error: "Push is not configured on this server (no backend URL)." }, { status: 503 })
   }
 
-  return NextResponse.json({ success: true })
+  try {
+    const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/users/me/push-subscription`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify({ subscription: body.subscription }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      return NextResponse.json(
+        { error: data?.message || data?.error || "Backend rejected the subscription" },
+        { status: res.status }
+      )
+    }
+    return NextResponse.json({ success: true })
+  } catch (e) {
+    console.warn("Push subscribe: backend request failed", e)
+    return NextResponse.json({ error: "Could not reach the server to save this device." }, { status: 502 })
+  }
 }

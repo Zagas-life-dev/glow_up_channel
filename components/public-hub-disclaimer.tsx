@@ -5,17 +5,16 @@ import { RiShuffleLine, RiArrowRightLine } from "react-icons/ri"
 import { useAuth } from "@/lib/auth-context"
 
 /**
- * Says plainly that a hub page is not personalized.
+ * Says plainly how a hub page is ordered.
  *
- * These pages list everything that is live, ordered only by how soon it closes
- * (see `lib/public-hub-order`). Nothing here is filtered to the reader, which
- * means an unrelated listing turning up is the page working as designed, not a
- * bad recommendation — worth stating, because everything else in the product
- * that looks like a feed *is* ranked for the person reading it.
+ * These pages list everything that is live — nothing is hidden for being a weak
+ * match — but each page is drawn with the best matches for the reader and the
+ * soonest deadlines most likely near the top, and redrawn on every visit (see
+ * `lib/public-hub-order`). So an unrelated listing turning up lower down is
+ * the page working as designed, not a bad recommendation.
  *
- * Signed-in readers see the same note, since the page really does behave the
- * same for them; only the call to action changes, pointing at the feed they
- * already have rather than at sign-up.
+ * Signed-in readers are matched on their profile as well; visitors on location
+ * and language alone, which is why the call to action for them is sign-up.
  */
 export default function PublicHubDisclaimer({ label }: { label: string }) {
   const { isAuthenticated } = useAuth()
@@ -28,12 +27,12 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
         </div>
         <div className="min-w-0 space-y-2">
           <p className="text-sm font-bold text-foreground">
-            This page isn&apos;t personalized
+            Best for you, reshuffled each visit
           </p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            No recommendation algorithm runs here. You&apos;re seeing every {label}{" "}
-            that&apos;s live, ordered by how soon it closes and reshuffled on each
-            visit — so anything at all can show up, whether or not it fits you.
+            You&apos;re seeing every {label} that&apos;s live. Your best matches and
+            the ones closing soonest are most likely near the top, and the order
+            changes on every visit — so weaker matches still get their turn.
           </p>
           {isAuthenticated ? (
             <Link

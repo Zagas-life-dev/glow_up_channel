@@ -32,6 +32,7 @@ import { getFeedSessionSeed } from "@/lib/feed-session-seed"
 import { fetchForYouPage, hasCachedForYou } from "@/lib/for-you-feed"
 import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page"
 import { fetchPublicHubPage } from "@/lib/fetch-public-hub-page"
+import { viewingCountryName } from "@/lib/geo/viewing-country"
 import { prefetchDiscover } from "@/lib/playlist-engagement"
 import type { NormalizedUser } from "@/lib/user"
 
@@ -137,7 +138,14 @@ export function planPrefetch(reader: PrefetchReader, backendUrl: string): Task[]
     if (getContentCache(HUB_KEY[type])?.items?.length) continue
     tasks.push({
       name: `hub:${type}`,
-      run: () => fetchPublicHubPage({ type, cursorLastId: null, backendUrl, sessionSeed: seed }),
+      run: () =>
+        fetchPublicHubPage({
+          type,
+          cursorLastId: null,
+          backendUrl,
+          sessionSeed: seed,
+          viewingCountry: viewingCountryName(),
+        }),
     })
   }
 

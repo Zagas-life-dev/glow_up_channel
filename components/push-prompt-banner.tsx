@@ -31,7 +31,7 @@ function wasPwaDismissed() {
  * On hold while notifications are rebuilt: the pre-ask stays drawn in the new
  * frame for the rebuild to reuse, but does not open. Settings still subscribes.
  */
-const PROMPT_ON_HOLD = true
+const PROMPT_ON_HOLD = false
 
 export default function PushPromptBanner() {
   const { user } = useAuth()

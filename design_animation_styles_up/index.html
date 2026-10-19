@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UP Animation Styles</title>
+<style>
+@font-face { font-family: "Unbounded"; src: url("frames/unbounded.woff2") format("woff2"); font-weight: 200 900; }
+@font-face { font-family: "Jakarta"; src: url("frames/plus-jakarta-sans.woff2") format("woff2"); font-weight: 200 900; }
+:root { --navy:#0B1222; --orange:#FF6700; --cream:#F6EBD9; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--navy); color:var(--cream); font-family:"Jakarta",sans-serif; padding:48px 40px 64px; }
+h1 { font-family:"Unbounded",sans-serif; font-weight:800; font-size:34px; margin:0 0 6px; }
+h1 span { color:var(--orange); }
+.lede { opacity:.75; margin:0 0 32px; max-width:900px; line-height:1.5; font-size:16px; }
+.grid { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:24px; }
+.card { background:#10173A; border-radius:20px; overflow:hidden; display:flex; flex-direction:column; }
+.card img { width:100%; aspect-ratio:9/16; display:block; object-fit:cover; }
+.body { padding:18px 18px 22px; }
+.tag { font-family:"Unbounded"; font-weight:800; font-size:18px; margin:0 0 4px; }
+.tag b { color:var(--orange); }
+.feel { font-size:13px; opacity:.7; margin:0 0 12px; }
+dl { margin:0; font-size:13px; line-height:1.45; }
+dt { color:var(--orange); font-weight:800; font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-top:10px; }
+dd { margin:2px 0 0; opacity:.9; }
+.pick { display:inline-block; margin-top:14px; background:var(--orange); color:var(--navy); font-weight:800; font-size:12px; padding:5px 12px; border-radius:99px; }
+.story { margin-top:40px; background:#10173A; border-radius:20px; padding:24px 28px; font-size:15px; line-height:1.6; max-width:1200px; }
+.story h2 { font-family:"Unbounded"; font-size:20px; margin:0 0 10px; }
+.story ol { margin:0; padding-left:20px; }
+@media (max-width:1100px){ .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:600px){ body{ padding:24px 16px; } .grid{ grid-template-columns:1fr; } }
+</style></head><body>
+<h1>Look <span>UP</span>: five animation styles</h1>
+<p class="lede">The same 20-second story in five visual languages. Every frame uses only UP navy, orange and cream, and each shows a key beat with its motion cues drawn in (smears, ghost trails, speed lines). Pick one, or mix two (for example B's characters with A's motion).</p>
+<div class="grid">
+
+<div class="card"><img src="a-rubberhose.png" alt="Rubber-hose style frame">
+<div class="body"><p class="tag"><b>A</b> Rubber-hose</p><p class="feel">1930s cartoon, noodle limbs, pie-cut eyes, white gloves</p>
+<dl><dt>Characters</dt><dd>Bean bodies and pie-cut eyes. The opportunity cards have faces and legs and run past the slumped people.</dd>
+<dt>Motion</dt><dd>Bouncy and springy. Limbs swing on curved paths, every move has anticipation and overshoot, and the lines "boil" (jitter) at 12fps.</dd>
+<dt>Eccentric beat</dt><dd>The hero's head stretches up like taffy into a full "take", eyes popping out, while the arrow shoots out of the phone.</dd></dl>
+<span class="pick">Most expressive</span></div></div>
+
+<div class="card"><img src="b-googly.png" alt="Googly blob style frame">
+<div class="body"><p class="tag"><b>B</b> Googly blobs</p><p class="feel">Flat, no outlines, giant googly eyes</p>
+<dl><dt>Characters</dt><dd>Gumdrop blobs. The pupils rattle around inside the eyes on their own physics (lag and jiggle).</dd>
+<dt>Motion</dt><dd>Strong squash and stretch with elastic overshoot. Cards whip past leaving ghost trails. A card lands on the hero's head and squashes flat.</dd>
+<dt>Eccentric beat</dt><dd>The hero stretches like toothpaste toward the cards, then snaps back with a jelly wobble.</dd></dl>
+<span class="pick">Most on-brand / clean</span></div></div>
+
+<div class="card"><img src="c-oneline.png" alt="One continuous line style frame">
+<div class="body"><p class="tag"><b>C</b> One continuous line</p><p class="feel">A glowing orange line on navy, drawn live</p>
+<dl><dt>Characters</dt><dd>Each person is one stroke. The others are dim cream lines, and the hero is the only orange line.</dd>
+<dt>Motion</dt><dd>The line draws itself on, and whole scenes morph by redrawing the same line. Very smooth and fluid, with no cuts at all.</dd>
+<dt>Eccentric beat</dt><dd>The hero's own line runs up the arm, through the phone and becomes the UP arrow, which reels the cards in.</dd></dl>
+<span class="pick">Most elegant</span></div></div>
+
+<div class="card"><img src="d-riso.png" alt="Risograph style frame">
+<div class="body"><p class="tag"><b>D</b> Two-ink risograph</p><p class="feel">Print grain, halftone dots, off-register inks</p>
+<dl><dt>Characters</dt><dd>Chunky cut shapes with halftone shading. The two inks sit slightly off-register on purpose.</dd>
+<dt>Motion</dt><dd>Stepped animation on 3s, like stop-motion prints. The inks drift apart on big hits and grain flickers every frame.</dd>
+<dt>Eccentric beat</dt><dd>The hero rides the giant UP arrow like a rocket while the bowed heads below start to glance up.</dd></dl>
+<span class="pick">Most poster / editorial</span></div></div>
+
+<div class="card"><img src="e-clay.png" alt="Soft clay style frame">
+<div class="body"><p class="tag"><b>E</b> Soft clay / toy</p><p class="feel">Puffy 3D shading, thumbprint texture, warm glow</p>
+<dl><dt>Characters</dt><dd>Squishy toy figures with glossy highlights, bead eyes, and a faint thumbprint texture on the clay.</dd>
+<dt>Motion</dt><dd>Heavy, soft squish with slow settles and a slight stop-motion jitter. The cards bob like inflatables.</dd>
+<dt>Eccentric beat</dt><dd>The hero squashes flat to the table, then boings up on the arrow. A navy figure nearby tilts its head, curious.</dd></dl>
+<span class="pick">Most warm / friendly</span></div></div>
+</div>
+
+<div class="story"><h2>The 20-second story (same in every style)</h2>
+<ol>
+<li><b>0–5s Missing out.</b> Three people are glued to their phones while opportunity cards (scholarship, job offer, grant) drift, run or whip past overhead. One card bonks the hero's head and they still don't notice.</li>
+<li><b>5–9s It gets worse.</b> The cards leave and the light dims. A shrug, a sigh, a yawn.</li>
+<li><b>9–13s Look UP.</b> The hero's phone glows orange and the UP arrow bursts out. A big eccentric "take", then the hero looks up and the cards swoop back as a feed.</li>
+<li><b>13–17s The breakthrough.</b> Tap, "Applied ✓", and the hero rides the arrow up. The others look up and follow.</li>
+<li><b>17–20s Close.</b> The arrow locks into the real UP mark, then "Stop missing out. Find your next breakthrough now." with glowupchannel.com and "UP is a product by Outsidee Solutions".</li>
+</ol>
+<p style="opacity:.7;margin:12px 0 0">No narration and no opening title. Short captions carry the story silently, with SFX only. The final film is 1080×1920 MP4.</p></div>
+</body></html>

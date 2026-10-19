@@ -4,10 +4,12 @@
  * Ordering for the public hub pages (/opportunities, /jobs, /events,
  * /resources).
  *
- * These pages rank for nobody, so there is no personalization score to sort on
- * — every listing is equally "relevant". The only universally true signal left
- * is time: a listing closing on Friday matters more today than one closing in
- * four months. That is the whole algorithm here.
+ * Two signals weight the draw. Time: a listing closing on Friday matters more
+ * today than one closing in four months. And the reader's match score, when
+ * the page was scored for them before it got here (see `matchWeight`) — the
+ * hubs and the home feed's per-type tabs both score each page with
+ * `lib/ranking` first, so "best for you" leads. Unscored items weigh on time
+ * alone, which is how this ordered everything before scores were added.
  *
  * Two things it has to do at once, which is why it is a weighted lottery rather
  * than a sort:
@@ -134,6 +136,32 @@ export function actingDateOf(item: HubOrderItem): number | null {
  */
 export function deadlineWeight(item: HubOrderItem, now: number): number {
   return timePressureFrom(actingDateOf(item), now, HUB_TIME_PRESSURE)
+}
+
+/**
+ * How strongly a reader's match score pulls a listing up the page.
+ *
+ * The lottery used to be time alone, because these lists came unscored. Now
+ * every page is scored for the reader first (`lib/ranking`, the same scorer as
+ * For You), so "best for you" leads — but still as a draw, not a sort, so the
+ * order changes on every refresh and a weaker match still gets its turn.
+ *
+ * Exponential in the score: every `MATCH_SCALE` points multiplies the odds by
+ * e. A 90% match is drawn ~7x as readily as a 60%, ~150x as readily as a 15%.
+ * Centred at 50 so a typical match keeps its time weight unchanged.
+ */
+const MATCH_SCALE = 15
+const MATCH_CENTRE = 50
+
+/**
+ * Pluck multiplier from a listing's match score. An unscored item gets 1, so a
+ * list nobody scored orders exactly as it did before scores existed.
+ */
+export function matchWeight(item: HubOrderItem): number {
+  const score = item.score
+  if (typeof score !== "number" || !Number.isFinite(score)) return 1
+  const clamped = Math.min(100, Math.max(0, score))
+  return Math.exp((clamped - MATCH_CENTRE) / MATCH_SCALE)
 }
 
 /**
@@ -320,7 +348,7 @@ export function orderByDeadlineLottery<T extends HubOrderItem>(
 
   const organicPool = buildPool(
     items.filter((item) => !isPromoted(item)),
-    (item) => deadlineWeight(item, now),
+    (item) => deadlineWeight(item, now) * matchWeight(item),
   )
 
   // Within the promoted pool, what the promoter bought (campaign tier, opening

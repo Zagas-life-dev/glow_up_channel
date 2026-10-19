@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css"></head><body>
+<svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="oC" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFA060"/><stop offset=".55" stop-color="#FF6700"/><stop offset="1" stop-color="#B84300"/></radialGradient>
+  <radialGradient id="cC" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#F3E6D2"/><stop offset="1" stop-color="#C9B79C"/></radialGradient>
+  <radialGradient id="nC" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#3A4777"/><stop offset=".6" stop-color="#1A2347"/><stop offset="1" stop-color="#0A0F24"/></radialGradient>
+  <radialGradient id="bg" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#1A2347"/><stop offset="1" stop-color="#0B1222"/></radialGradient>
+  <radialGradient id="pool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FF6700" stop-opacity=".55"/><stop offset="1" stop-color="#FF6700" stop-opacity="0"/></radialGradient>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="fp"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2 1.2"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+</defs>
+<rect width="1080" height="1920" fill="url(#bg)"/>
+<!-- table top -->
+<ellipse cx="540" cy="1720" rx="760" ry="200" fill="#070A1C"/>
+<ellipse cx="540" cy="1560" rx="420" ry="120" fill="url(#pool)"/>
+
+<!-- caption on a clay plaque -->
+<g transform="translate(540 260) rotate(-2)">
+  <rect x="-380" y="-80" width="760" height="160" rx="80" fill="#000" opacity=".35" filter="url(#sh)" transform="translate(0 20)"/>
+  <rect x="-380" y="-80" width="760" height="160" rx="80" fill="url(#cC)"/>
+  <text text-anchor="middle" y="20" font-size="56" class="d" fill="#0B1222">Your turn is <tspan fill="#FF6700">UP.</tspan></text>
+</g>
+
+<!-- inflatable glossy cards bobbing toward the hero -->
+<g transform="translate(250 860) rotate(-10)">
+  <rect x="-130" y="-80" width="260" height="160" rx="50" fill="#000" opacity=".35" filter="url(#sh)" transform="translate(10 30)"/>
+  <rect x="-130" y="-80" width="260" height="160" rx="50" fill="url(#cC)"/>
+  <rect x="-96" y="-46" width="120" height="34" rx="17" fill="url(#oC)"/><rect x="-96" y="6" width="180" height="20" rx="10" fill="#0B1222" opacity=".25"/><rect x="-96" y="38" width="120" height="20" rx="10" fill="#0B1222" opacity=".25"/>
+  <ellipse cx="-60" cy="-62" rx="50" ry="10" fill="#fff" opacity=".8"/>
+</g>
+<g transform="translate(830 800) rotate(12)">
+  <rect x="-130" y="-80" width="260" height="160" rx="50" fill="#000" opacity=".35" filter="url(#sh)" transform="translate(10 30)"/>
+  <rect x="-130" y="-80" width="260" height="160" rx="50" fill="url(#cC)"/>
+  <rect x="-96" y="-46" width="120" height="34" rx="17" fill="url(#oC)"/><rect x="-96" y="6" width="180" height="20" rx="10" fill="#0B1222" opacity=".25"/><rect x="-96" y="38" width="120" height="20" rx="10" fill="#0B1222" opacity=".25"/>
+  <ellipse cx="-60" cy="-62" rx="50" ry="10" fill="#fff" opacity=".8"/>
+</g>
+<g transform="translate(560 620) rotate(-3) scale(.8)" opacity=".85">
+  <rect x="-130" y="-80" width="260" height="160" rx="50" fill="url(#cC)"/>
+  <rect x="-96" y="-46" width="120" height="34" rx="17" fill="url(#oC)"/>
+</g>
+
+<g transform="translate(540 1600) scale(1.3) translate(-540 -1600)">
+<!-- side clay figures (navy), slumped -->
+<g transform="translate(200 1600)">
+  <ellipse cx="0" cy="10" rx="130" ry="26" fill="#000" opacity=".5" filter="url(#sh)"/>
+  <path d="M-110,0 C-120,-170 120,-170 110,0Z" fill="url(#nC)"/>
+  <circle cx="14" cy="-200" r="82" fill="url(#nC)"/>
+  <ellipse cx="-14" cy="-180" rx="12" ry="5" fill="#0B1222"/><ellipse cx="40" cy="-180" rx="12" ry="5" fill="#0B1222"/>
+  <rect x="-30" y="-130" width="70" height="104" rx="18" fill="#2a3358"/><rect x="-22" y="-120" width="54" height="80" rx="10" fill="#6a76a8" opacity=".7"/>
+  <ellipse cx="-20" cy="-250" rx="30" ry="12" fill="#fff" opacity=".18"/>
+</g>
+<g transform="translate(880 1600)">
+  <ellipse cx="0" cy="10" rx="130" ry="26" fill="#000" opacity=".5" filter="url(#sh)"/>
+  <path d="M-110,0 C-120,-170 120,-170 110,0Z" fill="url(#nC)"/>
+  <!-- head starting to tilt up, curious -->
+  <g transform="rotate(-12 0 -200)"><circle cx="-10" cy="-210" r="82" fill="url(#nC)"/>
+  <circle cx="-36" cy="-226" r="13" fill="#F3E6D2"/><circle cx="18" cy="-226" r="13" fill="#F3E6D2"/><circle cx="-34" cy="-232" r="6" fill="#0B1222"/><circle cx="20" cy="-232" r="6" fill="#0B1222"/>
+  <ellipse cx="-40" cy="-262" rx="30" ry="12" fill="#fff" opacity=".18"/></g>
+  <rect x="-40" y="-120" width="70" height="104" rx="18" fill="#2a3358"/>
+</g>
+
+<!-- HERO: squishy orange clay, squashed down before the jump -->
+<g transform="translate(540 1600)">
+  <ellipse cx="0" cy="10" rx="200" ry="34" fill="#000" opacity=".55" filter="url(#sh)"/>
+  <!-- squash body -->
+  <path d="M-190,0 C-210,-200 -120,-330 0,-330 C120,-330 210,-200 190,0Z" fill="url(#oC)"/>
+  <ellipse cx="-80" cy="-250" rx="50" ry="22" fill="#fff" opacity=".35" transform="rotate(-20 -80 -250)"/>
+  <!-- thumbprint texture -->
+  <path d="M-190,0 C-210,-200 -120,-330 0,-330 C120,-330 210,-200 190,0Z" fill="#7a3000" filter="url(#fp)" opacity=".18"/>
+  <!-- head merged, eyes huge & shining -->
+  <circle cx="-56" cy="-210" r="44" fill="#fff"/><circle cx="56" cy="-210" r="44" fill="#fff"/>
+  <circle cx="-48" cy="-226" r="22" fill="#0B1222"/><circle cx="64" cy="-226" r="22" fill="#0B1222"/>
+  <circle cx="-40" cy="-236" r="8" fill="#fff"/><circle cx="72" cy="-236" r="8" fill="#fff"/>
+  <path d="M-46,-130 C-30,-90 30,-90 46,-130 Z" fill="#0B1222"/><path d="M-26,-112 q26,14 52,0" fill="#FF8a4a"/>
+  <!-- stubby arms clutching the glowing phone -->
+  <ellipse cx="-150" cy="-110" rx="40" ry="60" fill="url(#oC)" transform="rotate(30 -150 -110)"/>
+  <g transform="translate(150 -230) rotate(14)">
+    <rect x="-50" y="-80" width="100" height="160" rx="24" fill="url(#cC)"/>
+    <image href="up-mark-orange.png" x="-38" y="-34" width="76" height="68"/>
+  </g>
+  <ellipse cx="140" cy="-140" rx="40" ry="60" fill="url(#oC)" transform="rotate(-30 140 -140)"/>
+</g>
+</g>
+
+<text x="540" y="1860" text-anchor="middle" font-size="26" fill="#F3E6D2" class="s" opacity=".6">E · Soft clay / toy</text>
+</svg></body></html>
