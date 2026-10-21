@@ -8,11 +8,12 @@ import { usePushNotifications } from "@/hooks/use-push-notifications"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useInterruption } from "@/lib/interruptions"
-import { PWA_DISMISSED_EVENT } from "@/components/pwa-install-banner"
+import { PWA_DISMISSED_EVENT, PWA_SETTLED_EVENT, PWA_SETTLED_KEY } from "@/components/pwa-install-banner"
 import { trackPushEnable } from '@/lib/tracking'
+import { countOpen, isDueOpen } from "@/lib/prompt-cadence"
 
-const STORAGE_KEY = "glowup-push-prompt-dismissed"
-const AUTH_DELAY_MS = 5 * 60 * 1000 // 5 minutes
+/** Lets the page, and the install prompt ahead of it, settle first. */
+const SETTLE_MS = 3000
 
 function isStandalone() {
   if (typeof window === "undefined") return false
@@ -22,9 +23,17 @@ function isStandalone() {
   )
 }
 
-function wasPwaDismissed() {
+/** The install prompt has had its turn this visit (shown and closed, or not showing). */
+function wasPwaSettled() {
   if (typeof window === "undefined") return false
-  return sessionStorage.getItem("glowup-pwa-prompt-dismissed") === "true"
+  try {
+    return (
+      sessionStorage.getItem("glowup-pwa-prompt-dismissed") === "true" ||
+      sessionStorage.getItem(PWA_SETTLED_KEY) === "true"
+    )
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -36,7 +45,10 @@ const PROMPT_ON_HOLD = false
 export default function PushPromptBanner() {
   const { user } = useAuth()
   const push = usePushNotifications()
-  const [dismissed, setDismissed] = useState(true)
+  /** "Not now" this visit. Next visit the cadence decides again. */
+  const [dismissed, setDismissed] = useState(false)
+  /** This open is a due one (lib/prompt-cadence.ts): 1st–3rd, then every other. */
+  const [due, setDue] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [allowAfterDelay, setAllowAfterDelay] = useState(false)
   const [pwaDismissed, setPwaDismissed] = useState(false)
@@ -45,26 +57,30 @@ export default function PushPromptBanner() {
     setMounted(true)
   }, [])
 
+  // Counted only for signed-in readers: a subscription is saved against the
+  // account, so a guest open is not a missed chance.
   useEffect(() => {
-    if (!mounted || typeof window === "undefined") return
-    const wasDismissed = localStorage.getItem(STORAGE_KEY) === "true"
-    setDismissed(wasDismissed)
-  }, [mounted])
+    if (!mounted || !user) return
+    setDue(isDueOpen(countOpen("push")))
+  }, [mounted, user])
 
-  // Only allow push prompt 5 min after user is authenticated
   useEffect(() => {
     if (!user) return
-    const t = setTimeout(() => setAllowAfterDelay(true), AUTH_DELAY_MS)
+    const t = setTimeout(() => setAllowAfterDelay(true), SETTLE_MS)
     return () => clearTimeout(t)
   }, [user])
 
-  // Show push only after PWA was dismissed (or PWA not applicable e.g. standalone)
+  // After the install prompt has had its turn this visit, never on top of it.
   useEffect(() => {
     if (!mounted) return
-    setPwaDismissed(wasPwaDismissed() || isStandalone())
-    const onPwaDismissed = () => setPwaDismissed(true)
-    window.addEventListener(PWA_DISMISSED_EVENT, onPwaDismissed)
-    return () => window.removeEventListener(PWA_DISMISSED_EVENT, onPwaDismissed)
+    setPwaDismissed(wasPwaSettled() || isStandalone())
+    const onSettled = () => setPwaDismissed(true)
+    window.addEventListener(PWA_DISMISSED_EVENT, onSettled)
+    window.addEventListener(PWA_SETTLED_EVENT, onSettled)
+    return () => {
+      window.removeEventListener(PWA_DISMISSED_EVENT, onSettled)
+      window.removeEventListener(PWA_SETTLED_EVENT, onSettled)
+    }
   }, [mounted])
 
   const wantsToShow =
@@ -72,17 +88,18 @@ export default function PushPromptBanner() {
     mounted &&
     !!user &&
     allowAfterDelay &&
+    due &&
     pwaDismissed &&
     push.isSupported &&
+    // iPhone in the browser cannot receive push; the install prompt covers it.
+    !push.needsInstall &&
     !push.isSubscribed &&
     !push.isLoading &&
     !dismissed
   const shouldShow = useInterruption("push", wantsToShow)
 
-  const handleDismiss = () => {
-    setDismissed(true)
-    if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY, "true")
-  }
+  const handleDismiss = () => setDismissed(true)
+  const blocked = push.permission === "denied"
 
   const handleAllow = async () => {
     const ok = await push.subscribe()
@@ -104,7 +121,9 @@ export default function PushPromptBanner() {
           </span>
           <DialogTitle>Get the best experience</DialogTitle>
           <DialogDescription>
-            Allow notifications for deadline reminders and the occasional nudge.
+            {blocked
+              ? "Notifications are blocked for UP. Turn them on in your browser's site settings (the icon left of the address bar), then come back."
+              : "Allow notifications for deadline reminders and the occasional nudge."}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-between">
@@ -119,9 +138,11 @@ export default function PushPromptBanner() {
             <Button variant="ghost" className="h-11" onClick={handleDismiss}>
               Not now
             </Button>
-            <Button onClick={handleAllow} className="h-11 px-6">
-              Allow notifications
-            </Button>
+            {!blocked && (
+              <Button onClick={handleAllow} className="h-11 px-6">
+                Allow notifications
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

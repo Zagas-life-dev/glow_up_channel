@@ -31,6 +31,9 @@ const KEY = "up-interruption-slot"
 /** Who may take the slot from whom, while the holder has not been seen through. */
 const TAKES_OVER: Partial<Record<Interruption, Interruption[]>> = {
   gift: ["extreme"],
+  // The notification prompt follows the install prompt on the same visit. It
+  // only asks once install has closed or stood down (push-prompt-banner.tsx).
+  push: ["install"],
 }
 
 let memoryHolder: Interruption | null = null

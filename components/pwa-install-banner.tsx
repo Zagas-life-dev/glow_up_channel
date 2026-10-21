@@ -4,8 +4,12 @@ import { useState, useEffect } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { claimInterruption } from "@/lib/interruptions"
+import { countOpen, isDueOpen } from "@/lib/prompt-cadence"
 
 export const PWA_DISMISSED_EVENT = "glowup-pwa-dismissed"
+/** The install prompt is done with this visit: shown and closed, or not showing. */
+export const PWA_SETTLED_EVENT = "glowup-pwa-settled"
+export const PWA_SETTLED_KEY = "glowup-pwa-settled"
 
 const BROWSER_LABELS: Record<PwaBrowserKind, string> = {
   safari_ios: "Safari",
@@ -80,43 +84,31 @@ function ShareArrowPointer({
   )
 }
 
-const STORAGE_KEY = "glowup-pwa-install-dismissed"
-const DISMISS_DAYS = 7
-
-function getDismissedUntil(): number | null {
-  if (typeof window === "undefined") return null
+/** Lets the notification prompt, which waits its turn, follow on this visit. */
+function announceSettled() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const t = parseInt(raw, 10)
-    return Number.isNaN(t) ? null : t
-  } catch {
-    return null
-  }
-}
-
-function setDismissedUntil() {
-  try {
-    const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000
-    localStorage.setItem(STORAGE_KEY, String(until))
-    sessionStorage.setItem("glowup-pwa-prompt-dismissed", "true")
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(PWA_DISMISSED_EVENT))
-    }
+    sessionStorage.setItem(PWA_SETTLED_KEY, "true")
   } catch {
     // ignore
   }
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(PWA_SETTLED_EVENT))
+}
+
+/** "Not now" closes it for this visit only; the cadence decides when it returns. */
+function markDismissed() {
+  try {
+    sessionStorage.setItem("glowup-pwa-prompt-dismissed", "true")
+  } catch {
+    // ignore
+  }
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(PWA_DISMISSED_EVENT))
+  announceSettled()
 }
 
 export const PWA_PROMPT_EVENT = "glowup-show-pwa-prompt"
 export function showPwaInstallPrompt() {
   if (typeof window === "undefined") return
-  try {
-    localStorage.removeItem(STORAGE_KEY)
-    window.dispatchEvent(new CustomEvent(PWA_PROMPT_EVENT))
-  } catch {
-    // ignore
-  }
+  window.dispatchEvent(new CustomEvent(PWA_PROMPT_EVENT))
 }
 
 function isStandalone() {
@@ -235,28 +227,6 @@ function getSharePointerPosition(kind: PwaBrowserKind): "bottom" | "topRight" | 
   return null
 }
 
-/**
- * Counts visits — one per browser session — so the prompt can wait for a
- * second one. Someone who came back chose to; someone on their first look has
- * not decided anything yet, and asking them to install is asking too early.
- */
-const VISITS_KEY = "up-visit-count"
-const VISIT_COUNTED_KEY = "up-visit-counted"
-const MIN_VISITS = 2
-
-function countVisit(): number {
-  try {
-    const seen = parseInt(localStorage.getItem(VISITS_KEY) ?? "0", 10) || 0
-    if (sessionStorage.getItem(VISIT_COUNTED_KEY)) return seen
-    sessionStorage.setItem(VISIT_COUNTED_KEY, "1")
-    localStorage.setItem(VISITS_KEY, String(seen + 1))
-    return seen + 1
-  } catch {
-    // Storage blocked: never auto-prompt. The sidebar's "Install app" still works.
-    return 0
-  }
-}
-
 /** Lets the gift and the extreme announcement, fetched on load, claim the
  *  visit's one interruption first (lib/interruptions.ts). */
 const SETTLE_MS = 8000
@@ -267,7 +237,7 @@ export default function PwaInstallBanner() {
   const [isInstalled, setIsInstalled] = useState(false)
   const [browserKind, setBrowserKind] = useState<PwaBrowserKind>("desktop")
   const [ios, setIos] = useState(false)
-  /** Visit count and settle delay both satisfied, so the prompt may open by itself. */
+  /** Due open (lib/prompt-cadence.ts) and settle delay both satisfied, so the prompt may open by itself. */
   const [eligible, setEligible] = useState(false)
 
   useEffect(() => {
@@ -275,9 +245,13 @@ export default function PwaInstallBanner() {
     setIos(isIos())
     if (isStandalone()) {
       setIsInstalled(true)
+      announceSettled()
       return
     }
-    if (countVisit() < MIN_VISITS) return
+    if (!isDueOpen(countOpen("install"))) {
+      announceSettled()
+      return
+    }
     const t = setTimeout(() => setEligible(true), SETTLE_MS)
     return () => clearTimeout(t)
   }, [])
@@ -309,15 +283,18 @@ export default function PwaInstallBanner() {
     }
   }, [])
 
-  // Opening by itself: only from the second visit, only where installing is
-  // actually possible (a native prompt, or iOS's Add to Home Screen), not while
-  // dismissed, and only if no other prompt already has this visit.
+  // Opening by itself: on a due open, only where installing is actually possible
+  // (a native prompt, or iOS's Add to Home Screen), and only if no other prompt
+  // already has this visit. Anything that keeps it shut settles the visit, so
+  // the notification prompt is not left waiting behind it.
   useEffect(() => {
     if (!eligible || isInstalled || open) return
-    if (!deferredPrompt && !ios) return
-    const until = getDismissedUntil()
-    if (until != null && Date.now() < until) return
+    if (!deferredPrompt && !ios) {
+      announceSettled()
+      return
+    }
     if (claimInterruption("install")) setOpen(true)
+    else announceSettled()
   }, [eligible, isInstalled, open, deferredPrompt, ios])
 
   const handleInstall = async () => {
@@ -329,11 +306,12 @@ export default function PwaInstallBanner() {
     setDeferredPrompt(null)
     setOpen(false)
     if (outcome === "accepted") setIsInstalled(true)
+    announceSettled()
   }
 
   const handleDismiss = () => {
     setOpen(false)
-    setDismissedUntil()
+    markDismissed()
   }
 
   if (!open || isInstalled) return null
