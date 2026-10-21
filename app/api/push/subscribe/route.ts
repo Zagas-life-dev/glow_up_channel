@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  let body: { subscription: PushSubscriptionJSON }
+  let body: { subscription: PushSubscriptionJSON; timezone?: string }
   try {
     body = await request.json()
   } catch {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/users/me/push-subscription`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({ subscription: body.subscription }),
+      body: JSON.stringify({ subscription: body.subscription, timezone: body.timezone }),
     })
     if (!res.ok) {
       const data = await res.json().catch(() => null)

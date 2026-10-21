@@ -24,6 +24,9 @@ const JOBS = [
 ]
 // Unanswered tracker asks: hourly at :15, 08:15–21:15 Lagos (07:15–20:15 UTC).
 const HOURLY_ASKS = { minute: 15, fromHour: 7, toHour: 20, job: "trackerPendingAsks" }
+// Quiet-hours outbox: every hour at :05, because 07:00 arrives in a different
+// timezone each hour and held pushes should go out soon after it does.
+const HOURLY_FLUSH = { minute: 5, job: "flushOutbox" }
 
 const MAX_BATCH = 100 // Queue sendBatch limit
 
@@ -35,6 +38,7 @@ function dueJobs(date) {
   if (date.getUTCMinutes() === minute && date.getUTCHours() >= fromHour && date.getUTCHours() <= toHour) {
     due.push(job)
   }
+  if (date.getUTCMinutes() === HOURLY_FLUSH.minute) due.push(HOURLY_FLUSH.job)
   return due
 }
 

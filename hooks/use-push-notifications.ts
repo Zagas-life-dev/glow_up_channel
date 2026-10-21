@@ -112,7 +112,7 @@ export function syncPushSubscription(force = false): Promise<boolean> {
 
     const res = await authedFetch("/api/push/subscribe", {
       method: "POST",
-      body: JSON.stringify({ subscription: sub.toJSON() }),
+      body: JSON.stringify({ subscription: sub.toJSON(), timezone: browserTimezone() }),
     })
     if (!res.ok) return false
     if (oldEndpoint && oldEndpoint !== sub.endpoint) {
@@ -129,6 +129,15 @@ export function syncPushSubscription(force = false): Promise<boolean> {
     return true
   })().catch(() => false)
   return syncing
+}
+
+/** The IANA timezone the device runs in, e.g. "Africa/Lagos". */
+function browserTimezone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
+  } catch {
+    return undefined
+  }
 }
 
 export type PushPermissionState = "default" | "granted" | "denied" | "unsupported"
@@ -236,7 +245,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 
       const subRes = await authedFetch("/api/push/subscribe", {
         method: "POST",
-        body: JSON.stringify({ subscription: subscription.toJSON() }),
+        body: JSON.stringify({ subscription: subscription.toJSON(), timezone: browserTimezone() }),
       })
       if (!subRes.ok) {
         // Do not leave the browser holding a subscription the server never stored.
