@@ -84,6 +84,8 @@ export interface TrackerAnswerOptions {
   issueNote?: string
   /** Only with started. */
   remindWeekday?: string
+  /** Only with started: 1, 3, 7 or 14 days from now, same clock time. */
+  remindInDays?: number
 }
 
 interface TrackerContextValue {

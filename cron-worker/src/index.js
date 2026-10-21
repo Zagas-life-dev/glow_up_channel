@@ -1,46 +1,17 @@
 import { buildPushPayload } from "@block65/webcrypto-web-push"
+import { dueJobs } from "./schedule.js"
 
 /**
  * UP push worker.
  *
- *   scheduled  wakes Express for the daily push jobs (Cloudflare cron is UTC;
- *              the backend's old node-cron ran in Africa/Lagos = UTC+1, so each
- *              time below is the Lagos time minus one hour).
+ *   scheduled  wakes Express for the notification jobs (times in src/schedule.js, UTC).
  *   POST /send Express hands over { messages: [{ subscription, payload }] }; they
  *              are queued so a send is parallel and retried, not a serial loop.
  *   queue      sends each Web Push with VAPID; a 404/410 tells Express to drop
  *              that device.
  */
 
-// [UTC "HH:MM", job name]. Names are the backend's /api/internal/push/run/:job.
-const JOBS = [
-  ["08:00", "deadlineReminders"], // 09:00 Lagos
-  ["08:30", "trackerReminders"], // 09:30
-  ["09:00", "lockedInReminder"], // 10:00
-  ["10:00", "funReminders"], // 11:00
-  ["11:00", "havenVisitedReminder"], // 12:00
-  ["11:30", "extremeAnnouncements"], // 12:30
-  ["12:00", "trackerOutcomeNudges"], // 13:00
-]
-// Unanswered tracker asks: hourly at :15, 08:15–21:15 Lagos (07:15–20:15 UTC).
-const HOURLY_ASKS = { minute: 15, fromHour: 7, toHour: 20, job: "trackerPendingAsks" }
-// Quiet-hours outbox: every hour at :05, because 07:00 arrives in a different
-// timezone each hour and held pushes should go out soon after it does.
-const HOURLY_FLUSH = { minute: 5, job: "flushOutbox" }
-
 const MAX_BATCH = 100 // Queue sendBatch limit
-
-function dueJobs(date) {
-  const hh = String(date.getUTCHours()).padStart(2, "0")
-  const mm = String(date.getUTCMinutes()).padStart(2, "0")
-  const due = JOBS.filter(([t]) => t === `${hh}:${mm}`).map(([, job]) => job)
-  const { minute, fromHour, toHour, job } = HOURLY_ASKS
-  if (date.getUTCMinutes() === minute && date.getUTCHours() >= fromHour && date.getUTCHours() <= toHour) {
-    due.push(job)
-  }
-  if (date.getUTCMinutes() === HOURLY_FLUSH.minute) due.push(HOURLY_FLUSH.job)
-  return due
-}
 
 async function callExpress(env, path, body) {
   return fetch(`${env.EXPRESS_URL.replace(/\/$/, "")}${path}`, {

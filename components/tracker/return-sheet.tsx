@@ -44,15 +44,16 @@ import {
   type TrackerIssue,
 } from "@/lib/tracker/types"
 
-/** The weekday choices offered with "started, not finished". */
-const WEEKDAYS = [
-  { value: "monday", short: "Mon" },
-  { value: "tuesday", short: "Tue" },
-  { value: "wednesday", short: "Wed" },
-  { value: "thursday", short: "Thu" },
-  { value: "friday", short: "Fri" },
-  { value: "saturday", short: "Sat" },
-  { value: "sunday", short: "Sun" },
+/**
+ * The reminder choices offered with "started, not finished". The reminder lands
+ * at the same clock time as now, that many days on, by push and email. The
+ * server only accepts these values (REMIND_IN_DAYS in the tracker controller).
+ */
+const REMIND_IN = [
+  { days: 1, label: "Tomorrow" },
+  { days: 3, label: "In 3 days" },
+  { days: 7, label: "In a week" },
+  { days: 14, label: "In 2 weeks" },
 ]
 
 /** "you were away 14 minutes" — the detail that shows the ask is grounded in something real. */
@@ -321,15 +322,15 @@ function SheetBody({ entry, onAnswer, onDismiss }: SheetBodyProps) {
                   We&apos;ll move it earlier if the deadline lands first.
                 </p>
               )}
-              <div className="mt-3 grid grid-cols-4 gap-2">
-                {WEEKDAYS.map((day) => (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {REMIND_IN.map((choice) => (
                   <button
-                    key={day.value}
+                    key={choice.days}
                     type="button"
-                    onClick={() => onAnswer(middle ?? "started", { remindWeekday: day.value })}
+                    onClick={() => onAnswer(middle ?? "started", { remindInDays: choice.days })}
                     className="h-11 rounded-up-md border-[1.5px] border-border bg-card text-sm font-semibold transition-colors hover:border-up-orange"
                   >
-                    {day.short}
+                    {choice.label}
                   </button>
                 ))}
               </div>

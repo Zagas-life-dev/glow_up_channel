@@ -104,6 +104,8 @@ export async function recordOutcome(
     issue?: TrackerIssue
     issueNote?: string
     remindWeekday?: string
+    /** 1, 3, 7 or 14: remind that many days from now, same clock time. */
+    remindInDays?: number
   },
 ): Promise<TrackerEntry | null> {
   try {
@@ -117,6 +119,7 @@ export async function recordOutcome(
           issue: options?.issue,
           issueNote: options?.issueNote,
           remindWeekday: options?.remindWeekday,
+          remindInDays: options?.remindInDays,
         }),
       },
     )

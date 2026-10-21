@@ -360,7 +360,7 @@ export default function SettingsPage() {
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     pushNotifications: false,
-    marketingEmails: false,
+    marketingEmails: true,
     weeklyDigest: true,
     language: "en",
     timezone: "Africa/Lagos",
@@ -416,6 +416,7 @@ export default function SettingsPage() {
           emailNotifications: ns.emailNotifications !== false,
           pushNotifications: ns.pushNotifications !== false,
           weeklyDigest: ns.weeklyDigest !== false,
+          marketingEmails: ns.marketingEmails !== false,
           newOpportunities: ns.newOpportunities !== false,
           eventReminders: ns.eventReminders !== false,
           jobAlerts: ns.jobAlerts !== false,
@@ -1209,7 +1210,7 @@ export default function SettingsPage() {
                     <ToggleRow
                       id="marketingEmails"
                       label="Marketing emails"
-                      description="Occasional product news and offers."
+                      description="Product news and sponsored listings. At most 2 a week, with the digest."
                       checked={preferences.marketingEmails}
                       disabled={savingPushPref}
                       onChange={(checked) => saveNotificationPreference('marketingEmails', checked)}
