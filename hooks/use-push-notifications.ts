@@ -43,6 +43,94 @@ function iosNeedsInstall(): boolean {
   return ios && !standalone
 }
 
+/**
+ * Bump to make every signed-in device that already granted permission drop its
+ * subscription and make a fresh one on its next load, with no prompt and no
+ * trip to settings. "2" = the move to the Cloudflare push Worker, when the old
+ * subscriptions were accepted by the push services but never reached a screen.
+ */
+const PUSH_SUB_VERSION = "2"
+const VERSION_KEY = "up-push-sub-version"
+
+/** One sync per page load, however many components mount the hook. */
+let syncing: Promise<boolean> | null = null
+
+function sameKey(sub: PushSubscription, publicKey: string): boolean {
+  const current = sub.options?.applicationServerKey
+  if (!current) return false
+  const a = new Uint8Array(current)
+  const b = urlBase64ToUint8Array(publicKey)
+  return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+/**
+ * Keeps this device's subscription fresh and stored on the server.
+ *
+ * - permission granted, no subscription: subscribe silently (the browser only
+ *   prompts when permission is "default", so this never shows a dialog);
+ * - subscription made under another key, or before PUSH_SUB_VERSION: replace it,
+ *   then delete the old endpoint on the server so pushes stop going to it;
+ * - otherwise: re-save it, because a browser keeps its subscription across
+ *   sign-outs, token expiry and a wiped database and the server row does not.
+ *
+ * Resolves true when the device ends up subscribed and saved.
+ */
+export function syncPushSubscription(force = false): Promise<boolean> {
+  if (syncing && !force) return syncing
+  syncing = (async () => {
+    if (typeof window === "undefined") return false
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || typeof Notification === "undefined") return false
+    if (Notification.permission !== "granted") return false
+    if (!localStorage.getItem("accessToken")) return false
+
+    const reg = await navigator.serviceWorker.ready
+    const keyRes = await fetch("/api/push/vapid-public-key")
+    if (!keyRes.ok) return false
+    const { publicKey } = await keyRes.json()
+    if (!publicKey) return false
+
+    let sub = await reg.pushManager.getSubscription()
+    let oldEndpoint: string | null = null
+    const stale = !!sub && (localStorage.getItem(VERSION_KEY) !== PUSH_SUB_VERSION || !sameKey(sub, publicKey))
+    if (sub && stale) {
+      oldEndpoint = sub.endpoint
+      await sub.unsubscribe().catch(() => {})
+      sub = null
+    }
+    if (!sub) {
+      try {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
+        })
+      } catch {
+        // iOS can refuse a subscribe outside a tap. The device now reads as not
+        // subscribed, so the banner and settings offer to turn it on again.
+        return false
+      }
+    }
+
+    const res = await authedFetch("/api/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ subscription: sub.toJSON() }),
+    })
+    if (!res.ok) return false
+    if (oldEndpoint && oldEndpoint !== sub.endpoint) {
+      await authedFetch("/api/push/unsubscribe", {
+        method: "POST",
+        body: JSON.stringify({ endpoint: oldEndpoint }),
+      }).catch(() => {})
+    }
+    try {
+      localStorage.setItem(VERSION_KEY, PUSH_SUB_VERSION)
+    } catch {
+      /* private mode: the sync simply runs again next load */
+    }
+    return true
+  })().catch(() => false)
+  return syncing
+}
+
 export type PushPermissionState = "default" | "granted" | "denied" | "unsupported"
 
 export interface UsePushNotificationsResult {
@@ -156,6 +244,11 @@ export function usePushNotifications(): UsePushNotificationsResult {
         setError(await errorMessage(subRes, "Failed to save subscription."))
         return false
       }
+      try {
+        localStorage.setItem(VERSION_KEY, PUSH_SUB_VERSION)
+      } catch {
+        /* ignore */
+      }
       setIsSubscribed(true)
       return true
     } catch (e) {
@@ -188,28 +281,28 @@ export function usePushNotifications(): UsePushNotificationsResult {
     }
   }, [isSupported])
 
-  // Detect current subscription state, and re-save it on the server. A browser
-  // keeps its subscription across sign-outs, token expiry and a wiped database;
-  // the server row does not follow. The upsert is idempotent, so doing it once
-  // per load keeps the two in step without the user touching anything.
+  // Detect current subscription state, then force it current (see
+  // syncPushSubscription). The service worker posts "up-push-resubscribed" when
+  // the browser rotated the subscription; it has no token, so the page saves it.
   useEffect(() => {
     if (!isSupported) return
     let cancelled = false
-    navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then(async (sub) => {
-        if (cancelled) return
-        setIsSubscribed(!!sub)
-        if (!sub || Notification.permission !== "granted") return
-        if (!localStorage.getItem("accessToken")) return
-        await authedFetch("/api/push/subscribe", {
-          method: "POST",
-          body: JSON.stringify({ subscription: sub.toJSON() }),
-        }).catch(() => {})
-      })
-      .catch(() => {})
+    const refresh = (force: boolean) =>
+      syncPushSubscription(force)
+        .then(() => navigator.serviceWorker.ready)
+        .then((reg) => reg.pushManager.getSubscription())
+        .then((sub) => {
+          if (!cancelled) setIsSubscribed(!!sub)
+        })
+        .catch(() => {})
+    void refresh(false)
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "up-push-resubscribed") void refresh(true)
+    }
+    navigator.serviceWorker.addEventListener("message", onMessage)
     return () => {
       cancelled = true
+      navigator.serviceWorker.removeEventListener("message", onMessage)
     }
   }, [isSupported])
 

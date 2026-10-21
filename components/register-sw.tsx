@@ -103,15 +103,12 @@ export default function RegisterSw() {
       }
     }
 
-    // Opening the app is reading the notifications: drop the icon badge and
-    // the tray entries the push worker raised.
+    // Opening the app clears the icon badge count only. The tray entries stay:
+    // closing them here wiped every push the moment someone opened UP to look,
+    // before they had read it, and made delivered pushes look like they never came.
     const clearBadge = () => {
       try {
         void (navigator as Navigator & { clearAppBadge?: () => Promise<void> }).clearAppBadge?.()
-        void navigator.serviceWorker.ready
-          .then((reg) => reg.getNotifications())
-          .then((list) => list.forEach((n) => n.close()))
-          .catch(() => {})
       } catch {
         /* badge API is optional */
       }

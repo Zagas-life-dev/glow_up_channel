@@ -47,3 +47,6 @@ package-lock.json
 # Brag render tooling: per-project node_modules and ffmpeg binaries, not output
 brag-output-*/node_modules/
 brag-output-*/.hfbin/
+
+# Brag video project outputs (large renders); kept local, never committed
+brag-output*/

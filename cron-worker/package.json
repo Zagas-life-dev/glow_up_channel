@@ -1,0 +1,1 @@
+{"name":"up-push-worker","private":true,"type":"module","scripts":{"dev":"wrangler dev","deploy":"wrangler deploy"},"dependencies":{"@block65/webcrypto-web-push":"^2.0.0"},"devDependencies":{"wrangler":"^4.151.3"}}

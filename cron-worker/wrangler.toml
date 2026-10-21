@@ -1,0 +1,31 @@
+name = "up-push-worker"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+[vars]
+# Express backend on Cloud Run. Change here if the service URL moves.
+EXPRESS_URL = "https://latest-glowup-channel-wwgopnyrjq-ew.a.run.app"
+VAPID_SUBJECT = "mailto:support@mail.glowupchannel.com"
+
+# One trigger, every 5 minutes. The Worker decides which jobs are due (see JOBS in
+# src/index.js), so the free plan's cron-trigger cap is not an issue and Express is
+# only woken when a job actually needs it.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[queues.producers]]
+queue = "up-push"
+binding = "PUSH_QUEUE"
+
+[[queues.consumers]]
+queue = "up-push"
+# Free plan allows 50 subrequests per invocation: 20 sends leaves room for the
+# "subscription expired" callbacks to Express.
+max_batch_size = 20
+max_batch_timeout = 1
+max_retries = 5
+
+# Secrets (wrangler secret put <NAME>):
+#   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  same pair Express uses today
+#   WORKER_SECRET   Express -> Worker  (POST /send)
+#   CRON_SECRET     Worker  -> Express (/api/internal/push/*)
