@@ -10,7 +10,7 @@
 // [UTC "HH:MM", job]: once a day.
 export const DAILY = [
   ["08:00", "countdowns"], // 09:00 Lagos: 4d / 1d / day-of before saved + tracked deadlines
-  ["09:00", "lockedInReminder"], // 10:00
+  ["09:00", "savedNudge"], // 10:00: saved, not applied yet, closing in 6-14 days
   ["09:00", "emailTrickle"], // 10:00: campaign emails, best users first
   ["10:00", "funReminders"], // 11:00
   ["10:00", "onboarding"], // 11:00
