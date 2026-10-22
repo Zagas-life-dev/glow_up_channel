@@ -66,6 +66,7 @@ import { PageShell } from '@/components/layout/page-shell'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
 import { canAccessMonitorPortal, canPublishContent, isMonitor } from '@/lib/roles'
 import { trackProfileEdit } from '@/lib/tracking'
+import { normalizeProfileLink } from '@/lib/profile-links'
 import { IMAGE_TARGETS, prepareErrorMessage, prepareImageUpload } from '@/lib/images/compress-image'
 import { SkillPicker } from '@/components/tags/skill-picker'
 import { LocationControls } from '@/components/settings/location-controls'
@@ -184,11 +185,13 @@ function SettingsField({
   label,
   htmlFor,
   hint,
+  error,
   children,
 }: {
   label: string
   htmlFor?: string
   hint?: string
+  error?: string
   children: React.ReactNode
 }) {
   return (
@@ -197,7 +200,11 @@ function SettingsField({
         {label}
       </Label>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {error ? (
+        <p role="alert" className="text-xs font-medium text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   )
 }
@@ -556,13 +563,9 @@ export default function SettingsPage() {
     if (!isDirty || !user) return
 
     const timer = setTimeout(() => {
-      // Silent auto-save; errors are logged but don't interrupt the flow
-      saveProfile({ silent: true })
-        .then(() => {
-          setIsDirty(false)
-          setLastSavedAt(new Date())
-        })
-        .catch(() => {})
+      // Silent auto-save; errors are logged but don't interrupt the flow.
+      // saveProfile marks the form saved itself, and only when the save landed.
+      saveProfile({ silent: true }).catch(() => {})
     }, 1500)
 
     return () => clearTimeout(timer)
@@ -690,9 +693,24 @@ export default function SettingsPage() {
     setSocialLinks({ ...socialLinks, [platform]: url })
   }
 
+  // What each link field will save as: the URL, "" when empty, null when unreadable.
+  const websiteLink = normalizeProfileLink(website)
+  const socialLinkResults = Object.fromEntries(
+    socialPlatforms.map((platform) => [platform.key, normalizeProfileLink(socialLinks[platform.key], platform.key)])
+  )
+  const LINK_ERROR = 'Use a full link, like https://yoursite.com'
+
   // Save profile (used for manual Save and silent auto-save)
   const saveProfile = async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false
+
+    // A link the backend cannot read used to fail the whole save. Hold the
+    // save instead; the field shows what is wrong under it.
+    if (websiteLink === null || Object.values(socialLinkResults).some((link) => link === null)) {
+      if (!silent) toast.error('One of your links doesn\'t look right. Check the Links section.')
+      return
+    }
+
     setIsSaving(true)
 
     try {
@@ -702,7 +720,7 @@ export default function SettingsPage() {
         lastName: lastName || null,
         bio: bio || null,
         headline: headline || null,
-        website: website || null,
+        website: websiteLink || null,
         phoneNumber: phoneNumber || null,
         skills,
         work: workCompany || workTitle ? { company: workCompany, title: workTitle } : null,
@@ -710,7 +728,7 @@ export default function SettingsPage() {
           ? { school: educationSchool, degree: educationDegree, field: educationField } 
           : null,
         socialLinks: Object.fromEntries(
-          Object.entries(socialLinks).filter(([_, v]) => v)
+          Object.entries(socialLinkResults).filter(([_, v]) => v)
         ),
         isPrivate,
         showConnections
@@ -1065,21 +1083,46 @@ export default function SettingsPage() {
 
                 <SettingsSection title="Links" description="Where people can find you.">
                   <div className="space-y-4">
-                    <SettingsField label="Website" htmlFor="website">
-                      <Input id="website" value={website} onChange={(e) => editField(setWebsite)(e.target.value)} placeholder="https://yoursite.com" className="h-11" />
+                    <SettingsField label="Website" htmlFor="website" error={websiteLink === null ? LINK_ERROR : undefined}>
+                      <Input
+                        id="website"
+                        inputMode="url"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        value={website}
+                        onChange={(e) => editField(setWebsite)(e.target.value)}
+                        // Show what will be saved, e.g. the https:// it was missing.
+                        onBlur={() => { if (websiteLink && websiteLink !== website) setWebsite(websiteLink) }}
+                        aria-invalid={websiteLink === null}
+                        placeholder="https://yoursite.com"
+                        className="h-11"
+                      />
                     </SettingsField>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      {socialPlatforms.map((platform) => (
-                        <SettingsField key={platform.key} label={platform.label} htmlFor={platform.key}>
-                          <Input
-                            id={platform.key}
-                            value={socialLinks[platform.key] || ''}
-                            onChange={(e) => { updateSocialLink(platform.key, e.target.value); setIsDirty(true) }}
-                            placeholder={platform.placeholder}
-                            className="h-11"
-                          />
-                        </SettingsField>
-                      ))}
+                      {socialPlatforms.map((platform) => {
+                        const link = socialLinkResults[platform.key]
+                        return (
+                          <SettingsField
+                            key={platform.key}
+                            label={platform.label}
+                            htmlFor={platform.key}
+                            error={link === null ? 'Paste your profile link or type your @username' : undefined}
+                          >
+                            <Input
+                              id={platform.key}
+                              inputMode="url"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              value={socialLinks[platform.key] || ''}
+                              onChange={(e) => { updateSocialLink(platform.key, e.target.value); setIsDirty(true) }}
+                              onBlur={() => { if (link && link !== socialLinks[platform.key]) updateSocialLink(platform.key, link) }}
+                              aria-invalid={link === null}
+                              placeholder={platform.placeholder}
+                              className="h-11"
+                            />
+                          </SettingsField>
+                        )
+                      })}
                     </div>
                   </div>
                 </SettingsSection>

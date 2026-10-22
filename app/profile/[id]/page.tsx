@@ -64,6 +64,7 @@ import {
 import { PageShell } from "@/components/layout/page-shell"
 import { isFounderBatch } from '@/lib/roles'
 import { trackConnectionRequest } from '@/lib/tracking'
+import { normalizeProfileLink, profileLinkHost } from '@/lib/profile-links'
 
 interface OnboardingData {
   country: string
@@ -673,7 +674,13 @@ export default function ProfilePage() {
     year: 'numeric' 
   })
 
-  const activeSocialLinks = Object.entries(profile.socialLinks || {}).filter(([_, url]) => url)
+  // Stored links predate validation: older ones can lack https:// or be junk.
+  // Normalise before they reach an href, and drop what would not open.
+  const websiteHref = normalizeProfileLink(profile.website) || null
+  const websiteHost = profileLinkHost(websiteHref)
+  const activeSocialLinks = Object.entries(profile.socialLinks || {})
+    .map(([platform, url]) => [platform, normalizeProfileLink(url, platform)] as const)
+    .filter(([_, url]) => url)
 
   return (
     <PageShell fullWidth className="relative font-sans">
@@ -798,17 +805,17 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            {(profile.website || activeSocialLinks.length > 0) && (
+            {(websiteHref || activeSocialLinks.length > 0) && (
               <div className="flex items-center gap-3 mt-3">
-                {profile.website && (
+                {websiteHref && (
                   <a
-                    href={profile.website}
+                    href={websiteHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[13px] font-bold text-up-orange transition-colors hover:opacity-80"
                   >
                     <RiLink className="w-3 h-3" aria-hidden />
-                    {new URL(profile.website).hostname.replace('www.', '')}
+                    {websiteHost}
                   </a>
                 )}
                 {activeSocialLinks.map(([platform, url]) => {
