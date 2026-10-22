@@ -24,7 +24,7 @@
 
 import { useEffect, useState } from "react"
 
-export type Interruption = "gift" | "extreme" | "location-confirm" | "location-consent" | "install" | "push"
+export type Interruption = "gift" | "extreme" | "location-confirm" | "location-consent" | "install" | "push" | "digest"
 
 const KEY = "up-interruption-slot"
 
@@ -34,6 +34,9 @@ const TAKES_OVER: Partial<Record<Interruption, Interruption[]>> = {
   // The notification prompt follows the install prompt on the same visit. It
   // only asks once install has closed or stood down (push-prompt-banner.tsx).
   push: ["install"],
+  // The Monday digest (A/B test) is the week's main event for group A: it goes
+  // ahead of every ad and permission prompt. A gift still beats it.
+  digest: ["extreme", "location-confirm", "location-consent", "install", "push"],
 }
 
 let memoryHolder: Interruption | null = null

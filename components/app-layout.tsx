@@ -8,6 +8,7 @@ import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
 import PushPromptBanner from './push-prompt-banner'
+import DigestPopup from './digest/digest-popup'
 import SignUpBetterExperiencePopup from './sign-up-better-experience-popup'
 
 interface AppLayoutProps {
@@ -106,6 +107,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile Bottom Navigation */}
       <AppBottomNav />
       <PushPromptBanner />
+      <DigestPopup />
       <SignUpBetterExperiencePopup />
     </div>
   )
