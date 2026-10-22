@@ -9,7 +9,7 @@
  * digest and this never renders.
  */
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { CalendarClock, ListChecks, Bookmark, Sparkles, Check } from "lucide-react"
 import { toast } from "sonner"
@@ -97,6 +97,12 @@ function Section({
 
 export default function DigestPopup() {
   const { user } = useAuth()
+  // Keyed on the id: the user object is replaced once its profile loads, and a
+  // second fetch would otherwise race the first.
+  const userId = user?._id || user?.id || null
+  /** Read once per page load, before anything can strip it. */
+  const pushedRef = useRef<boolean | null>(null)
+  const pushLogged = useRef(false)
   const [digest, setDigest] = useState<Digest | null>(null)
   const [fromPush, setFromPush] = useState(false)
   const [settled, setSettled] = useState(false)
@@ -105,15 +111,21 @@ export default function DigestPopup() {
   const [busy, setBusy] = useState<"save" | "track" | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (pushedRef.current === null) pushedRef.current = takeOpenParam()
+  }, [])
+
+  useEffect(() => {
+    if (!userId) return
     let cancelled = false
-    const pushed = takeOpenParam()
     fetchDigest().then((d) => {
       if (cancelled || !d) return
       setDigest(d)
-      if (pushed) {
+      if (pushedRef.current) {
         setFromPush(true)
-        logDigestEvent("push_open")
+        if (!pushLogged.current) {
+          pushLogged.current = true
+          logDigestEvent("push_open")
+        }
       }
     })
     const t = setTimeout(() => setSettled(true), SETTLE_MS)
@@ -121,7 +133,7 @@ export default function DigestPopup() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [user])
+  }, [userId])
 
   const wants = !!digest && digest.items.length > 0 && !closed && (fromPush || (!digest.seen && settled))
   // The push open is something they just did, so it never waits for the slot.
@@ -190,7 +202,7 @@ export default function DigestPopup() {
           <Section title="Closing soon" icon={CalendarClock} items={expiring} onOpen={onOpenItem} />
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border px-5 py-4 sm:flex-row">
+        <div className="flex flex-col gap-2 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:pb-4">
           <Button variant="outline" className="h-11 flex-1" onClick={onSave} disabled={busy !== null || !!digest.savedPlaylistId}>
             {digest.savedPlaylistId ? <Check className="mr-2 h-4 w-4" aria-hidden /> : <Bookmark className="mr-2 h-4 w-4" aria-hidden />}
             {digest.savedPlaylistId ? "Saved" : busy === "save" ? "Saving…" : "Save digest"}
