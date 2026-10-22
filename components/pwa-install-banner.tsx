@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { X, Download, Share } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { claimInterruption } from "@/lib/interruptions"
-import { countOpen, isDueOpen } from "@/lib/prompt-cadence"
+import { isPromptDue, snoozePrompt } from "@/lib/prompt-cadence"
 
 export const PWA_DISMISSED_EVENT = "glowup-pwa-dismissed"
 /** The install prompt is done with this visit: shown and closed, or not showing. */
@@ -94,8 +94,9 @@ function announceSettled() {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(PWA_SETTLED_EVENT))
 }
 
-/** "Not now" closes it for this visit only; the cadence decides when it returns. */
+/** "Later" snoozes it (next day, next day, then every other day) and frees the visit. */
 function markDismissed() {
+  snoozePrompt("install")
   try {
     sessionStorage.setItem("glowup-pwa-prompt-dismissed", "true")
   } catch {
@@ -231,14 +232,40 @@ function getSharePointerPosition(kind: PwaBrowserKind): "bottom" | "topRight" | 
  *  visit's one interruption first (lib/interruptions.ts). */
 const SETTLE_MS = 8000
 
+/**
+ * What the sheet is showing:
+ *   install    — the install offer;
+ *   installed  — just installed on a phone. Android installs and leaves the
+ *                reader in this browser tab (it does not jump to the app), so
+ *                this says where the app now is;
+ *   open-app   — UP is already installed on this device but they came back in
+ *                the browser, so point them at the app instead of offering it again.
+ */
+type SheetMode = "install" | "installed" | "open-app"
+
+/** Chromium on Android can tell whether this site's app is installed (manifest related_applications). */
+async function appInstalledElsewhere(): Promise<boolean> {
+  try {
+    const nav = navigator as Navigator & { getInstalledRelatedApps?: () => Promise<unknown[]> }
+    if (!nav.getInstalledRelatedApps) return false
+    const apps = await nav.getInstalledRelatedApps()
+    return Array.isArray(apps) && apps.length > 0
+  } catch {
+    return false
+  }
+}
+
 export default function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [open, setOpen] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [browserKind, setBrowserKind] = useState<PwaBrowserKind>("desktop")
   const [ios, setIos] = useState(false)
-  /** Due open (lib/prompt-cadence.ts) and settle delay both satisfied, so the prompt may open by itself. */
+  /** Not snoozed (lib/prompt-cadence.ts) and settle delay passed, so the prompt may open by itself. */
   const [eligible, setEligible] = useState(false)
+  const [mode, setMode] = useState<SheetMode>("install")
+  /** UP is installed on this device, but this is the browser. */
+  const [installedElsewhere, setInstalledElsewhere] = useState(false)
 
   useEffect(() => {
     setBrowserKind(getBrowserKind())
@@ -248,7 +275,8 @@ export default function PwaInstallBanner() {
       announceSettled()
       return
     }
-    if (!isDueOpen(countOpen("install"))) {
+    void appInstalledElsewhere().then(setInstalledElsewhere)
+    if (!isPromptDue("install")) {
       announceSettled()
       return
     }
@@ -265,12 +293,23 @@ export default function PwaInstallBanner() {
       setDeferredPrompt(ev)
     }
     const handleInstalled = () => {
-      setIsInstalled(true)
-      setOpen(false)
       setDeferredPrompt(null)
+      // Desktop Chrome and Edge open the installed app window themselves.
+      // Phones stay in this tab, so say where the app went.
+      if (getBrowserKind() === "desktop") {
+        setIsInstalled(true)
+        setOpen(false)
+        announceSettled()
+        return
+      }
+      setMode("installed")
+      setOpen(true)
     }
     const handleShowPrompt = () => {
-      if (!isStandalone()) setOpen(true)
+      if (!isStandalone()) {
+        setMode("install")
+        setOpen(true)
+      }
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener)
@@ -289,23 +328,40 @@ export default function PwaInstallBanner() {
   // the notification prompt is not left waiting behind it.
   useEffect(() => {
     if (!eligible || isInstalled || open) return
+    if (installedElsewhere) {
+      if (claimInterruption("install")) {
+        setMode("open-app")
+        setOpen(true)
+      } else announceSettled()
+      return
+    }
     if (!deferredPrompt && !ios) {
       announceSettled()
       return
     }
-    if (claimInterruption("install")) setOpen(true)
-    else announceSettled()
-  }, [eligible, isInstalled, open, deferredPrompt, ios])
+    if (claimInterruption("install")) {
+      setMode("install")
+      setOpen(true)
+    } else announceSettled()
+  }, [eligible, isInstalled, open, deferredPrompt, ios, installedElsewhere])
 
   const handleInstall = async () => {
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    // The prompt is single-use either way. On accept the browser opens the
-    // installed app itself; this tab just gets out of the way.
+    // The prompt is single-use either way. On accept the appinstalled event
+    // takes over (it shows where the app went on phones).
     setDeferredPrompt(null)
+    if (outcome !== "accepted") {
+      setOpen(false)
+      markDismissed()
+    }
+  }
+
+  /** Done with the "installed" / "open the app" sheet: no snooze, nothing left to ask. */
+  const handleDone = () => {
     setOpen(false)
-    if (outcome === "accepted") setIsInstalled(true)
+    if (mode === "installed") setIsInstalled(true)
     announceSettled()
   }
 
@@ -315,6 +371,58 @@ export default function PwaInstallBanner() {
   }
 
   if (!open || isInstalled) return null
+
+  if (mode === "installed" || mode === "open-app") {
+    const justInstalled = mode === "installed"
+    return (
+      <div className="fixed inset-0 z-[100] flex items-end justify-center duration-200 animate-in fade-in-0 sm:pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6">
+        <div className="absolute inset-0 bg-up-scrim sm:hidden" aria-hidden onClick={justInstalled ? handleDone : handleDismiss} />
+        <div
+          className="pointer-events-auto relative w-full overflow-hidden rounded-t-[28px] bg-card pb-[max(1.5rem,env(safe-area-inset-bottom))] text-card-foreground shadow-up-pop duration-300 animate-in slide-in-from-bottom sm:w-[360px] sm:rounded-up-xl sm:pb-0 sm:slide-in-from-bottom-4"
+          role="dialog"
+          aria-labelledby="pwa-open-title"
+          aria-describedby="pwa-open-desc"
+        >
+          <div aria-hidden className="mx-auto mb-1 mt-2.5 h-[5px] w-10 rounded-full bg-up-sep sm:hidden" />
+          <div className="px-5 pb-1 pt-4 sm:p-5">
+            <div className="flex items-center gap-3">
+              <img src="/icons/icon-192.png" alt="" className="h-11 w-11 shrink-0 rounded-up-md" />
+              <div className="min-w-0">
+                <h2 id="pwa-open-title" className="font-display text-lg font-bold leading-tight text-foreground">
+                  {justInstalled ? "UP is installed" : "You have the UP app"}
+                </h2>
+                <p id="pwa-open-desc" className="mt-0.5 text-[13px] text-muted-foreground">
+                  {justInstalled
+                    ? "Open it from your home screen or app list. Reminders and notifications work best there."
+                    : "You're in the browser. Open UP from your home screen for reminders and a faster app."}
+                </p>
+              </div>
+            </div>
+            <ol className="mt-4 space-y-2.5">
+              {["Go to your home screen or app list", 'Tap the UP icon', "Sign in once if asked"].map((step, i) => (
+                <li key={step} className="flex items-center gap-3 text-sm font-semibold text-foreground">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-up-solid font-display text-xs font-bold text-up-on-solid">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              {!justInstalled && (
+                <Button variant="ghost" className="h-11 sm:h-10" onClick={handleDismiss}>
+                  Later
+                </Button>
+              )}
+              <Button onClick={handleDone} className="h-11 px-5 sm:h-10">
+                Got it
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // One orange "Install" when the browser can do it for them; otherwise the
   // steps are the whole card.
@@ -360,7 +468,7 @@ export default function PwaInstallBanner() {
           {native ? (
             <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="ghost" className="h-11 sm:h-10" onClick={handleDismiss}>
-                Not now
+                Later
               </Button>
               <Button onClick={handleInstall} className="h-11 px-5 sm:h-10">
                 <Download className="h-4 w-4" />
@@ -386,7 +494,7 @@ export default function PwaInstallBanner() {
               </ol>
               <div className="mt-4 flex justify-center sm:justify-end">
                 <Button variant="ghost" className="h-10" onClick={handleDismiss}>
-                  Not now
+                  Later
                 </Button>
               </div>
             </>

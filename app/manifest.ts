@@ -46,6 +46,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     categories: ["social", "lifestyle", "education"],
     prefer_related_applications: false,
+    // Lets the browser tell the page that UP is already installed on this
+    // device (navigator.getInstalledRelatedApps), so a reader back in the
+    // browser is pointed at the app instead of being asked to install again.
+    related_applications: [{ platform: "webapp", url: "https://www.glowupchannel.com/manifest.webmanifest" }],
     // A link or notification tapped while the app is open lands in that window
     // instead of stacking a second copy of the app.
     launch_handler: { client_mode: ["navigate-existing", "auto"] },

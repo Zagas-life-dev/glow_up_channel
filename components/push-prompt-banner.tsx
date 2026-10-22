@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useInterruption } from "@/lib/interruptions"
 import { PWA_DISMISSED_EVENT, PWA_SETTLED_EVENT, PWA_SETTLED_KEY } from "@/components/pwa-install-banner"
 import { trackPushEnable } from '@/lib/tracking'
-import { countOpen, isDueOpen } from "@/lib/prompt-cadence"
+import { isPromptDue, snoozePrompt } from "@/lib/prompt-cadence"
 
 /** Lets the page, and the install prompt ahead of it, settle first. */
 const SETTLE_MS = 3000
@@ -45,9 +45,9 @@ const PROMPT_ON_HOLD = false
 export default function PushPromptBanner() {
   const { user } = useAuth()
   const push = usePushNotifications()
-  /** "Not now" this visit. Next visit the cadence decides again. */
+  /** "Later" this visit. lib/prompt-cadence.ts decides when it asks again. */
   const [dismissed, setDismissed] = useState(false)
-  /** This open is a due one (lib/prompt-cadence.ts): 1st–3rd, then every other. */
+  /** Not snoozed: never asked, or the "Later" wait has passed. */
   const [due, setDue] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [allowAfterDelay, setAllowAfterDelay] = useState(false)
@@ -57,11 +57,10 @@ export default function PushPromptBanner() {
     setMounted(true)
   }, [])
 
-  // Counted only for signed-in readers: a subscription is saved against the
-  // account, so a guest open is not a missed chance.
+  // Signed-in readers only: a subscription is saved against the account.
   useEffect(() => {
     if (!mounted || !user) return
-    setDue(isDueOpen(countOpen("push")))
+    setDue(isPromptDue("push"))
   }, [mounted, user])
 
   useEffect(() => {
@@ -98,7 +97,11 @@ export default function PushPromptBanner() {
     !dismissed
   const shouldShow = useInterruption("push", wantsToShow)
 
-  const handleDismiss = () => setDismissed(true)
+  /** "Later": next day, next day, then every other day. */
+  const handleDismiss = () => {
+    snoozePrompt("push")
+    setDismissed(true)
+  }
   const blocked = push.permission === "denied"
 
   const handleAllow = async () => {
@@ -136,7 +139,7 @@ export default function PushPromptBanner() {
           </Link>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <Button variant="ghost" className="h-11" onClick={handleDismiss}>
-              Not now
+              Later
             </Button>
             {!blocked && (
               <Button onClick={handleAllow} className="h-11 px-6">

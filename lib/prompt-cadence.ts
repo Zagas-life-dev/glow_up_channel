@@ -1,41 +1,45 @@
 "use client"
 
 /**
- * How often the install and notification prompts open by themselves.
+ * When the install and notification prompts may open by themselves.
  *
- * Product call (Oct 2026): on each of the next three opens, then every other
- * open (5th, 7th, 9th ...) until the reader installs or turns notifications on.
- * "Not now" does not stop it; it only waits for the next due open.
+ * Product call (Oct 2026): ask, and if the reader says "Later", ask again the
+ * next day, then the next day, then every other day, until they install or
+ * turn notifications on. Nothing turns it off for good; "Later" only snoozes.
+ * At most once per visit either way (lib/interruptions.ts).
  *
- * An open is one browser session, counted once per prompt however many times
- * the page reloads. The keys are new, so every earlier dismissal is forgotten
- * and everyone starts again at open 1.
+ * The keys are new, so every earlier dismissal is forgotten and everyone is
+ * asked again from the start.
  */
 
 export type CadencedPrompt = "install" | "push"
 
-const COUNT_KEY = (name: CadencedPrompt) => `up-prompt-opens-v2-${name}`
-const COUNTED_KEY = (name: CadencedPrompt) => `up-prompt-counted-v2-${name}`
+const DAY_MS = 24 * 60 * 60 * 1000
+const UNTIL_KEY = (name: CadencedPrompt) => `up-prompt-snooze-until-v3-${name}`
+const COUNT_KEY = (name: CadencedPrompt) => `up-prompt-snooze-count-v3-${name}`
 
-/** The first opens that always prompt. */
-const ALWAYS_FIRST = 3
+/** Days to wait after the 1st, 2nd, 3rd ... "Later": 1, 1, then 2 from then on. */
+export function snoozeDays(laterCount: number): number {
+  return laterCount <= 2 ? 1 : 2
+}
 
-/** Counts this session as an open (once) and returns which open it is. 0 if storage is blocked. */
-export function countOpen(name: CadencedPrompt): number {
+/** Whether the prompt may open now. True when storage is blocked: one ask per visit still applies. */
+export function isPromptDue(name: CadencedPrompt, now = Date.now()): boolean {
   try {
-    const seen = parseInt(localStorage.getItem(COUNT_KEY(name)) ?? "0", 10) || 0
-    if (sessionStorage.getItem(COUNTED_KEY(name))) return seen
-    sessionStorage.setItem(COUNTED_KEY(name), "1")
-    localStorage.setItem(COUNT_KEY(name), String(seen + 1))
-    return seen + 1
+    const until = parseInt(localStorage.getItem(UNTIL_KEY(name)) ?? "0", 10) || 0
+    return now >= until
   } catch {
-    return 0
+    return true
   }
 }
 
-/** Whether open number `n` should prompt: 1, 2, 3, then 5, 7, 9 ... */
-export function isDueOpen(n: number): boolean {
-  if (n <= 0) return false
-  if (n <= ALWAYS_FIRST) return true
-  return (n - ALWAYS_FIRST) % 2 === 0
+/** "Later": snooze until the next ask (next day, next day, then every other day). */
+export function snoozePrompt(name: CadencedPrompt, now = Date.now()): void {
+  try {
+    const count = (parseInt(localStorage.getItem(COUNT_KEY(name)) ?? "0", 10) || 0) + 1
+    localStorage.setItem(COUNT_KEY(name), String(count))
+    localStorage.setItem(UNTIL_KEY(name), String(now + snoozeDays(count) * DAY_MS))
+  } catch {
+    /* storage blocked: the visit's own dismissal still applies */
+  }
 }
