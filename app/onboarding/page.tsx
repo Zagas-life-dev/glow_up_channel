@@ -50,9 +50,11 @@ export default function OnboardingPage() {
   const [stepValid, setStepValid] = useState(false)
   const stepComponentRef = useRef<{ submit: () => void }>(null)
   const router = useRouter()
-  const { user, isLoading: isPending, isOnboardingCompleted } = useAuth()
+  const { user, isLoading: isPending, isOnboardingCompleted, refreshUser } = useAuth()
 
-  // Restore anything cached from a previous attempt
+  // Restore anything cached from a previous attempt. Steps read `initialData` only when they
+  // mount, so nothing renders until this has run — otherwise step 1 mounts empty and ignores it.
+  const [restored, setRestored] = useState(false)
   useEffect(() => {
     for (const key of ['onboardingFormData', 'tempUserData']) {
       const raw = localStorage.getItem(key)
@@ -63,6 +65,7 @@ export default function OnboardingPage() {
         console.error(`Failed to parse ${key}:`, error)
       }
     }
+    setRestored(true)
   }, [])
 
   useEffect(() => {
@@ -75,11 +78,16 @@ export default function OnboardingPage() {
     }
   }, [user, isOnboardingCompleted, isPending, router])
 
-  // Each step reports its own validity; reset the gate when the step changes.
+  // Each step reports its own validity; close the gate when the step changes.
+  // The reset has to happen in the same update as the step change, not in an effect on
+  // `currentStep`: child effects run before the parent's, so an effect here would overwrite
+  // the new step's own report. A step valid on arrival (communities, which is optional, or
+  // any step revisited with Back) then stayed disabled for good.
   const handleValidityChange = useCallback((valid: boolean) => setStepValid(valid), [])
-  useEffect(() => {
+  const goToStep = (step: number) => {
     setStepValid(false)
-  }, [currentStep])
+    setCurrentStep(step)
+  }
 
   const onStepSubmit = async (data: any) => {
     const updated = { ...formData, ...data }
@@ -87,7 +95,7 @@ export default function OnboardingPage() {
     localStorage.setItem('onboardingFormData', JSON.stringify(updated))
 
     if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1)
+      goToStep(currentStep + 1)
       return
     }
 
@@ -105,6 +113,9 @@ export default function OnboardingPage() {
         await ApiClient.createUserProfile(transformOnboardingData(updated))
         localStorage.removeItem('onboardingFormData')
         localStorage.removeItem('tempUserData')
+        // The auth context still holds the pre-onboarding profile; without this the app keeps
+        // treating the user as not onboarded until a full reload.
+        await refreshUser()
       }
 
       router.push('/dashboard')
@@ -115,7 +126,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (isPending) {
+  if (isPending || !restored) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-page">
         <RiLoader4Line className="h-6 w-6 animate-spin text-primary" aria-hidden />
@@ -157,7 +168,7 @@ export default function OnboardingPage() {
           {currentStep > 0 ? (
             <button
               type="button"
-              onClick={() => setCurrentStep((prev) => prev - 1)}
+              onClick={() => goToStep(currentStep - 1)}
               aria-label="Back"
               className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground transition-colors hover:border-up-border-hover"
             >
