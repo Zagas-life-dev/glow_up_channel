@@ -33,6 +33,11 @@ export const HOURLY = [
 // "did you get it in?" lands about 4 hours after leaving, never at night.
 export const ASKS = { minutes: [0, 15, 30, 45], fromHour: 7, toHour: 20, job: "trackerPendingAsks" }
 
+// [UTC weekday (0 = Sunday), UTC "HH:MM", job]: once a week.
+export const WEEKLY = [
+  [1, "02:00", "authCleanup"], // Monday 03:00 Lagos: expired verification + reset codes
+]
+
 // Reminders the user set fire at the minute they chose: checked every tick (5 min).
 export const EVERY_TICK = ["trackerReminders"]
 
@@ -41,8 +46,10 @@ export function dueJobs(date) {
   const mm = String(date.getUTCMinutes()).padStart(2, "0")
   const minute = date.getUTCMinutes()
   const hour = date.getUTCHours()
+  const day = date.getUTCDay()
   const due = [...EVERY_TICK]
   for (const [t, job] of DAILY) if (t === `${hh}:${mm}`) due.push(job)
+  for (const [d, t, job] of WEEKLY) if (d === day && t === `${hh}:${mm}`) due.push(job)
   for (const [m, job] of HOURLY) if (m === minute) due.push(job)
   if (ASKS.minutes.includes(minute) && hour >= ASKS.fromHour && hour <= ASKS.toHour) due.push(ASKS.job)
   return due
