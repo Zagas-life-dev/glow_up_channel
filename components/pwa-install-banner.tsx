@@ -326,9 +326,13 @@ export default function PwaInstallBanner() {
   // (a native prompt, or iOS's Add to Home Screen), and only if no other prompt
   // already has this visit. Anything that keeps it shut settles the visit, so
   // the notification prompt is not left waiting behind it.
+  // Opening (or losing the slot) uses up `eligible`: install already holds the
+  // slot after it opens, so without this, closing it re-ran this effect, the
+  // claim succeeded again, and the sheet popped straight back up.
   useEffect(() => {
     if (!eligible || isInstalled || open) return
     if (installedElsewhere) {
+      setEligible(false)
       if (claimInterruption("install")) {
         setMode("open-app")
         setOpen(true)
@@ -339,6 +343,7 @@ export default function PwaInstallBanner() {
       announceSettled()
       return
     }
+    setEligible(false)
     if (claimInterruption("install")) {
       setMode("install")
       setOpen(true)
