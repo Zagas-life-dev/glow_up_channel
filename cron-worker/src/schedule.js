@@ -38,6 +38,12 @@ export const WEEKLY = [
   [1, "02:00", "authCleanup"], // Monday 03:00 Lagos: expired verification + reset codes
 ]
 
+// ["first" | "last" day of the UTC month, UTC "HH:MM", job]: twice a month.
+export const MONTHLY = [
+  ["first", "02:30", "playlistCleanup"], // 03:30 Lagos: drop public lists dead and idle 30+ days
+  ["last", "02:30", "playlistCleanup"],
+]
+
 // Reminders the user set fire at the minute they chose: checked every tick (5 min).
 export const EVERY_TICK = ["trackerReminders"]
 
@@ -50,6 +56,11 @@ export function dueJobs(date) {
   const due = [...EVERY_TICK]
   for (const [t, job] of DAILY) if (t === `${hh}:${mm}`) due.push(job)
   for (const [d, t, job] of WEEKLY) if (d === day && t === `${hh}:${mm}`) due.push(job)
+  const isFirst = date.getUTCDate() === 1
+  const isLast = new Date(date.getTime() + 864e5).getUTCDate() === 1
+  for (const [which, t, job] of MONTHLY) {
+    if (t === `${hh}:${mm}` && (which === "first" ? isFirst : isLast)) due.push(job)
+  }
   for (const [m, job] of HOURLY) if (m === minute) due.push(job)
   if (ASKS.minutes.includes(minute) && hour >= ASKS.fromHour && hour <= ASKS.toHour) due.push(ASKS.job)
   return due
