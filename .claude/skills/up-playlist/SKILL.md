@@ -1,13 +1,15 @@
 ---
 name: up-playlist
-description: Build and refresh public playlists on UP from what is live on the platform. Reads every live job, opportunity and event with its views and saves, picks themes people will want now (by country and global/remote), makes up to 10 new lists of 8-15 items, refreshes the lists it made before (dead items out, fresh ones in) and deletes its old lists that have nothing live left. Use for /up-playlist, "make playlists", "refresh the playlists".
+description: Build and refresh public playlists on UP from what is live on the platform. Reads every live job, opportunity and event with its views and saves, picks themes people will want now (by country and global/remote), makes up to 10 new lists of 8-15 items (filled toward 15), refreshes the lists it made before (dead items out, fresh ones in) and deletes its old lists that have nothing live left. `--update` only re-checks its existing lists against every live listing and tops them up or swaps in better items. Use for /up-playlist, /up-playlist --update, "make playlists", "refresh the playlists".
 ---
 
 # /up-playlist
 
-Input: nothing, or a focus (a country, a kind, or a theme such as "scholarships") to bias this run toward.
+Input: nothing, a focus (a country, a kind, or a theme such as "scholarships") to bias this run toward, or `--update`.
 
 Output: new public playlists live on UP, old ones refreshed, empty ones deleted, and a short report.
+
+**`--update` mode.** Only work on lists this account already made; create nothing new. Run steps 1-2, then follow "Update mode" below instead of step 3, then steps 5-8.
 
 The run is **fully automatic**. Do not stop to ask before creating, updating or deleting. Anything you are unsure about comes back under "Needs you" and is left untouched.
 
@@ -51,9 +53,23 @@ Everyone else's dead lists are not this skill's job. The Worker runs `playlistCl
 For every list in `mine`, in order:
 
 - `liveCount` is 0: **delete** it. Reason `no live items`.
-- Otherwise update it: dead items drop on their own. Top it back up to at least 8 (aim for 10-12) with live listings that fit its theme and are not already in it. Prefer the newest and the most engaged. Keep its name unless the theme has drifted.
+- Otherwise update it: dead items drop on their own. Top it back up toward 15 (never below 8) with live listings that fit its theme and are not already in it. Prefer the newest and the most engaged. Keep its name unless the theme has drifted.
 - If it can't reach 8 because not enough live listings fit, leave it out of the plan and put it under "Needs you" with how many fit.
 - A list with good `saves`/`views` keeps its name and theme. Never rename a list people have saved.
+
+## Update mode (`--update`)
+
+Go through **every** list in `mine` against the **whole** catalog, not just new listings.
+
+1. Work out each list's theme from its name, description, hashtags and the live items already in it (their kind, country/city, tags, subtype). Write the theme as a filter you can apply to the catalog, the same way a new list is picked.
+2. Run that filter over every catalog listing. Candidates are the matches not already in the list, skipping anything closing within 2 days.
+3. `liveCount` is 0 and nothing fits: delete it, reason `no live items`. If something fits, rebuild it to 8+ instead.
+4. Add candidates until the list holds 15 live items, best first by fit, then `saves`, then newness.
+5. **Already at 15**: swap. Remove a live item (via `remove`) only when a candidate is clearly better: a stronger fit, more saves or views, or the current item closes within 7 days while the candidate stays open longer. Swap at most 5 items per list per run, so saved lists don't change under people.
+6. Keep the filling rules: max 3 items per organisation, no listing in more than 2 of this account's lists.
+7. Leave a list out of the plan when nothing changes. Never rename a list in update mode unless its theme has drifted and nobody has saved it.
+
+Report it in the "Refreshed" section, one line per changed list: `dropped <n> dead, added <n>, swapped <n>`. Add "Unchanged: N lists" at the end.
 
 ## Picking themes
 
@@ -78,7 +94,7 @@ Avoid:
 
 ## Filling a list
 
-- 8-15 items; aim for 10-12. Every item clearly fits the theme.
+- 8-15 items. Fill up to 15 whenever there are enough strong fits; stop short only when the next item would be a weak fit. Every item clearly fits the theme.
 - Best first: order `add` by fit, then engagement (`saves` weighs most), then newness. The list keeps that order.
 - Skip listings that close within 2 days. They will be dead before most people see the list.
 - No more than 3 items from the same organisation in one list.
