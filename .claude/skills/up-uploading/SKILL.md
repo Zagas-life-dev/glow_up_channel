@@ -39,7 +39,7 @@ Resources are **paused**. An item that is a resource (article, guide, toolkit, c
 6. **Tag.** Fill `canonicalTags` with the tag rules below.
 7. **Write the batch** to `~/up-uploads/<YYYY-MM-DD>-<n>.json` as `{ "listings": [ ... ] }`. Each item has `kind`, `sourceUrl` and body fields. `sourceUrl` is the pasted link; for an image or text item it is the official page found by search, else leave it out. Any size; the client sends 25 per request.
 8. **Check.** Run `UPLOAD check ~/up-uploads/<file>.json`. The server runs every rule and the duplicate search but writes nothing. Fix each `invalid` problem from the item or a search. If a problem cannot be fixed (missing country, no description, closed), drop that item and add it to skipped. Repeat until nothing is `invalid`.
-9. **Upload.** Run `UPLOAD upload ~/up-uploads/<file>.json`. The server skips duplicates (same title or apply link already on UP, live or hidden), posts the rest live, and logs each one against your key. The report lands next to the batch as `<file>.upload-report.json`, with a `page` link per uploaded listing.
+9. **Upload.** Run `UPLOAD upload ~/up-uploads/<file>.json`. The server bounces anything already live and approved on UP (same title or apply link) as a duplicate. A copy that is only Pending or Hidden does not block: the new upload goes live beside it. The server posts the rest live, and logs each one against your key. The report lands next to the batch as `<file>.upload-report.json`, with a `page` link per uploaded listing.
 10. **Report back** (see Output).
 
 ## Skip an item when
@@ -51,7 +51,7 @@ Resources are **paused**. An item that is a resource (article, guide, toolkit, c
 - No organisation name, or no description of at least 20 characters.
 - No country and not remote.
 - It is a resource (paused), a news story, or not a listing.
-- Already on UP (the upload step reports these as duplicates).
+- Already live and approved on UP (the server bounces these as duplicates, reason "already live on UP").
 
 ## Field table
 
@@ -106,7 +106,7 @@ Live:
 Skipped (send these back to me or upload by hand):
 1. <pasted link, or "image: <short description>" / "text: <first words>"> - <reason>
 
-Duplicates (already on UP):
+Bounced (already live on UP):
 1. <pasted item> - <title>
 ```
 
