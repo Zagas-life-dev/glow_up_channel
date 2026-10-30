@@ -66,7 +66,7 @@ Common to all kinds:
 | WhatsApp apply | `https://wa.me/<number>`: full international number, digits only, no `+`, spaces or leading 0. Nigerian `0811 341 7773` becomes `https://wa.me/2348113417773`. |
 | Several contacts | Put the best one in `url` (web link, then email, then WhatsApp). Put the rest in the description's "How to apply" line, written out (email address, WhatsApp number). |
 | `location` | `{ country, countryCode, province?, city?, isRemote, remoteCountries? }`. Country by full name ("Nigeria") plus ISO-2 code. Remote: `isRemote: true` and `remoteCountries` (names) when the page restricts who may apply; `country: "Global"` when open worldwide. Several cities in one country: add `places: [{ country, countryCode, province?, city? }]`. Places in other countries also go in `places`; the backend makes one copy per country. |
-| `dates` | ISO-8601 (`2026-11-30T23:59:59Z`). Use the timezone the page states, else end of day UTC. |
+| `dates` | ISO-8601 (`2026-11-30T23:59:59Z`). Use the timezone the page states, else end of day UTC. No closing date anywhere (item or search) on a job or opportunity: leave `applicationDeadline` out. The server sets it to upload day + 30 days and returns it as `defaultDeadline`. Never make up a closer date yourself. |
 | `pricing` | `{ isPaid, amount?, currency?, period?, benefits?[] }`. Job: `isPaid` = it pays a salary, `period` from hourly/daily/weekly/monthly/annually/one-time. Opportunity: funding/stipend amount. Event: `isPaid` = ticket costs money, `amount` = ticket price. Currency as ISO code (NGN, KES, USD, ...). |
 | `tags` | Up to 10 short free-text keywords from the page (each 50 chars max). |
 | `industrySectors` | Any of: `Technology`, `Creative Arts & Media`, `Business & Finance`, `Healthcare & Sciences`, `Education & Training`, `Government & Public Service`. |
@@ -101,7 +101,7 @@ Reply in this shape, nothing else:
 Uploaded N / M items
 
 Live:
-1. <title> (<kind>, <country>) - <page link from report>
+1. <title> (<kind>, <country>) - <page link from report> [add "closes <date> (default +30 days)" when the report has defaultDeadline]
 
 Skipped (send these back to me or upload by hand):
 1. <pasted link, or "image: <short description>" / "text: <first words>"> - <reason>
