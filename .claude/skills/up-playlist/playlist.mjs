@@ -10,6 +10,7 @@
  *   node playlist.mjs mine                  save this account's lists + popular lists to ~/up-playlists/<date>/playlists.json
  *   node playlist.mjs check <plan.json>     server-side dry run, writes nothing
  *   node playlist.mjs apply <plan.json>     create / update / delete for real
+ *   node playlist.mjs cover <id> <image>    set a list's cover (.png/.jpg/.webp, cropped square to 1200)
  *
  * The key is read from UP_UPLOAD_KEY, or from the file ~/.up-uploader.env
  * (line: UP_UPLOAD_KEY=upk_...). Never put it in a plan, the skill files, or the chat.
@@ -103,18 +104,40 @@ async function mine(cfg) {
   console.log(`\nmine (${data.mine.length}):`);
   for (const p of data.mine) {
     const flag = p.liveCount === 0 ? ' EMPTY' : p.liveCount < data.limits.minItems ? ' LOW' : '';
-    console.log(`  ${p.id} "${p.name}" live ${p.liveCount}/${p.itemCount} views ${p.views} saves ${p.saves}${flag}`);
+    console.log(`  ${p.id} "${p.name}" live ${p.liveCount}/${p.itemCount} views ${p.views} saves ${p.saves}${p.coverImage ? '' : ' NO-COVER'}${flag}`);
   }
   console.log(`\npopular (top ${data.popular.length} by saves): ${data.popular.slice(0, 20).map((p) => `"${p.name}" ${p.saves}`).join(', ')}`);
 }
 
+const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+
+async function cover({ key, api }, id, file) {
+  const type = IMAGE_TYPES[file.split('.').pop().toLowerCase()];
+  if (!type) {
+    console.error('cover must be a .png, .jpg or .webp file');
+    process.exit(2);
+  }
+  const form = new FormData();
+  form.append('cover', new Blob([readFileSync(resolve(file))], { type }), file.split(/[\\/]/).pop());
+  const res = await fetch(`${api}/api/uploads/playlists/${id}/cover`, { method: 'POST', headers: { 'x-up-upload-key': key }, body: form });
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON error page */ }
+  if (!res.ok) {
+    console.error(`cover ${id} failed (${res.status}): ${data?.message || res.statusText}`);
+    process.exit(1);
+  }
+  console.log(JSON.stringify({ ...data.data, page: `${SITE}/playlists/${id}` }));
+}
+
 async function main() {
-  const [command, arg] = process.argv.slice(2);
-  if (!['me', 'tags', 'catalog', 'mine', 'check', 'apply'].includes(command) || (['check', 'apply'].includes(command) && !arg)) {
-    console.error('usage: node playlist.mjs me | tags | catalog | mine | check <plan.json> | apply <plan.json>');
+  const [command, arg, arg2] = process.argv.slice(2);
+  const needs = { check: 1, apply: 1, cover: 2 };
+  if (!['me', 'tags', 'catalog', 'mine', 'check', 'apply', 'cover'].includes(command) || [arg, arg2].filter(Boolean).length < (needs[command] || 0)) {
+    console.error('usage: node playlist.mjs me | tags | catalog | mine | check <plan.json> | apply <plan.json> | cover <playlistId> <image.png>');
     process.exit(2);
   }
   const cfg = config();
+  if (command === 'cover') return cover(cfg, arg, arg2);
 
   if (command === 'me') {
     console.log(JSON.stringify(await call(cfg, '/api/uploads/me'), null, 2));

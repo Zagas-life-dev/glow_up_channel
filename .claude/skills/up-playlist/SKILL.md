@@ -1,6 +1,6 @@
 ---
 name: up-playlist
-description: Build and refresh public playlists on UP from what is live on the platform. Reads every live job, opportunity and event with its views and saves, picks themes people will want now (by country and global/remote), makes up to 10 new lists of 8-15 items (filled toward 15), refreshes the lists it made before (dead items out, fresh ones in) and deletes its old lists that have nothing live left. `--update` only re-checks its existing lists against every live listing and tops them up or swaps in better items. Use for /up-playlist, /up-playlist --update, "make playlists", "refresh the playlists".
+description: Build and refresh public playlists on UP from what is live on the platform. Reads every live job, opportunity and event with its views and saves, picks themes people will want now (by country and global/remote), makes up to 10 new lists of 8-15 items (filled toward 15), refreshes the lists it made before (dead items out, fresh ones in) and deletes its old lists that have nothing live left, and gives every list a branded cover image. `--update` only re-checks its existing lists against every live listing and tops them up or swaps in better items. Use for /up-playlist, /up-playlist --update, "make playlists", "refresh the playlists".
 ---
 
 # /up-playlist
@@ -9,7 +9,7 @@ Input: nothing, a focus (a country, a kind, or a theme such as "scholarships") t
 
 Output: new public playlists live on UP, old ones refreshed, empty ones deleted, and a short report.
 
-**`--update` mode.** Only work on lists this account already made; create nothing new. Run steps 1-2, then follow "Update mode" below instead of step 3, then steps 5-8.
+**`--update` mode.** Only work on lists this account already made; create nothing new. Run steps 1-2, then follow "Update mode" below instead of step 3, then steps 5-9.
 
 The run is **fully automatic**. Do not stop to ask before creating, updating or deleting. Anything you are unsure about comes back under "Needs you" and is left untouched.
 
@@ -46,7 +46,19 @@ Everyone else's dead lists are not this skill's job. The Worker runs `playlistCl
    - `why` is for your report; the server ignores it.
 6. **Check.** Run `PL check <plan>`. Nothing is written. Fix every `invalid` item (swap a not-live id, add or cut items to land in 8-15, rename a clashing name) and run check again.
 7. **Apply.** Run `PL apply <plan>`. The report lands next to the plan as `plan.apply-report.json` with a `page` link per list. Do not retry an item more than once.
-8. Report back (see Output).
+8. **Covers** (see "Covers"). Every list gets one; `PL mine` flags lists without one as `NO-COVER`.
+9. Report back (see Output).
+
+## Covers
+
+Every list carries a 1200x1200 cover in the UP look: navy `#0B1222` and orange `#FF6700` only, the real UP logo cropped from `public/images`, the title in Unbounded, and the orange googly-eyed mascot in the corner. Events and founder lists use the orange page; jobs and opportunities use the navy page.
+
+1. For each new or renamed list, add a row to `STYLE` in `covers.cjs`: a regex on the name, a kicker (`JOBS · NIGERIA`, `EVENTS · IBADAN`, `FUNDING · AFRICA`) and the tone.
+2. Run `PL mine`, then `node "<this skill folder>/covers.cjs" ~/up-playlists/<date>/playlists.json ~/up-playlists/<date>/covers [listId]`. It needs this repo checkout (it uses `@napi-rs/canvas` from `node_modules`). Fonts ship in `assets/`.
+3. Open two or three PNGs and look at them before uploading: the title must fit in four lines and clear the mascot.
+4. Upload each with `PL cover <listId> <file.png>`. The server keeps only this account's lists and deletes the old image.
+
+Render covers only for lists that are new, renamed, or `NO-COVER`. Covers carry no item count, so a refresh never makes them stale.
 
 ## Refreshing old lists
 
@@ -56,6 +68,8 @@ For every list in `mine`, in order:
 - Otherwise update it: dead items drop on their own. Top it back up toward 15 (never below 8) with live listings that fit its theme and are not already in it. Prefer the newest and the most engaged. Keep its name unless the theme has drifted.
 - If it can't reach 8 because not enough live listings fit, leave it out of the plan and put it under "Needs you" with how many fit.
 - A list with good `saves`/`views` keeps its name and theme. Never rename a list people have saved.
+- **Move items** when a cluster inside a list deserves its own list (grants inside a founders list, internships inside a remote-jobs list): create the new list with them, `remove` them from the old one, and fill the gap there with fits. Drop any item that never fit (a job ad in a founders list).
+- The catalog has exact duplicate listings (same title, two ids). Put only one of them in a list, the more viewed.
 
 ## Update mode (`--update`)
 
