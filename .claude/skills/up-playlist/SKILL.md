@@ -24,7 +24,7 @@ The run is **fully automatic**. Do not stop to ask before creating, updating or 
 
 You can't break these, but plan to them so `check` passes first time:
 
-- A list holds **8-15 live items** after every create or update.
+- A list holds **at least 8 live items** after every create or update. There is no upper cap on the server; themed lists still aim for 15 (see "Filling a list"), but a list the person asks to hold "everything" of a kind or month takes every match.
 - Only listings live right now can be added. Item titles and organisations are copied from the listing by the server.
 - An update always drops items whose listing is no longer live (expired, taken down, deleted).
 - Name 1-50 chars and unique among this account's lists. Description 20-200 chars. Up to 10 hashtags.

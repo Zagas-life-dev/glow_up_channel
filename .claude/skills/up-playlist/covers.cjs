@@ -14,6 +14,10 @@ const NAVY = '#0B1222', ORANGE = '#FF6700', ARM = '#E35B00', CREAM = '#F6EBD9', 
 // name fragment -> [kicker, tone]. tone 'navy' = navy page, 'orange' = orange page.
 // Events and founder lists are orange, jobs and opportunities navy. Add a row for every new list.
 const STYLE = [
+  [/^November 2026 events/, 'EVENTS · NOVEMBER', 'orange'],
+  [/^Jobs closing in November/, 'JOBS · NOVEMBER', 'navy'],
+  [/^Grants & funding closing/, 'FUNDING · NOVEMBER', 'navy'],
+  [/^Scholarships, fellowships & more/, 'OPPORTUNITIES · NOVEMBER', 'navy'],
   [/^Lagos events/, 'EVENTS · LAGOS', 'orange'],
   [/^Abuja/, 'EVENTS · ABUJA', 'orange'],
   [/^Ghana/, 'EVENTS · GHANA', 'orange'],
