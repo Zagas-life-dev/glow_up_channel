@@ -11,6 +11,8 @@ import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import PlaylistModal from "@/components/playlist-modal"
 import { PlaylistCover } from "@/components/playlists/playlist-cover"
+import SearchBar from "@/components/search-bar"
+import { matchScore } from "@/lib/search-rank"
 import {
   RiAddLine,
   RiMore2Line,
@@ -73,6 +75,30 @@ const EMPTY_COPY: Record<TabType, { title: string; body: string }> = {
   },
 }
 
+const SEARCH_DEBOUNCE_MS = 300
+
+/**
+ * A shelf narrowed to a search, best match first. Same scoring as Discover's
+ * server-side search (`utils/matchScore` there, `matchScore` here): the name in
+ * full, the description and hashtags at half.
+ */
+function searchShelf(lists: Playlist[], term: string): Playlist[] {
+  if (!term) return lists
+  return lists
+    .map((playlist, index) => ({
+      playlist,
+      index,
+      match: Math.max(
+        matchScore(playlist.name ?? "", term),
+        matchScore(playlist.description ?? "", term) * 0.5,
+        matchScore((playlist.hashtags ?? []).join(" "), term) * 0.5,
+      ),
+    }))
+    .filter((entry) => entry.match > 0)
+    .sort((a, b) => b.match - a.match || a.index - b.index)
+    .map((entry) => entry.playlist)
+}
+
 function PlaylistsPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -95,8 +121,17 @@ function PlaylistsPageInner() {
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  // Same search box and beat as the listing hubs. Discover searches on the
+  // server; the reader's own shelves are already loaded and filter in place.
+  const [searchInput, setSearchInput] = useState(() => searchParams.get("q") ?? "")
+  const [activeSearch, setActiveSearch] = useState(searchInput.trim())
+  useEffect(() => {
+    const timer = setTimeout(() => setActiveSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   // Discover is its own ranked, paged feed; the other tabs are the reader's library.
-  const discover = useDiscoverPlaylists(user?._id ?? "anon", activeTab === "public")
+  const discover = useDiscoverPlaylists(user?._id ?? "anon", activeTab === "public", activeSearch)
   const isDiscover = activeTab === "public"
   const isLoading = isDiscover ? discover.isLoading && discover.playlists.length === 0 : isLibraryLoading
   const listRef = useRef<HTMLUListElement | null>(null)
@@ -195,11 +230,11 @@ function PlaylistsPageInner() {
   const getCurrentPlaylists = (): Playlist[] => {
     switch (activeTab) {
       case "my":
-        return playlists
+        return searchShelf(playlists, activeSearch)
       case "shared":
-        return sharedPlaylists
+        return searchShelf(sharedPlaylists, activeSearch)
       case "saved":
-        return savedPlaylists
+        return searchShelf(savedPlaylists, activeSearch)
       case "public":
         return discover.playlists
       default:
@@ -207,10 +242,26 @@ function PlaylistsPageInner() {
     }
   }
 
+  // The term rides in the URL with the tab, so back from a list returns to the
+  // same search rather than an empty box.
+  const playlistsUrl = (tab: TabType, term: string) => {
+    const params = new URLSearchParams()
+    if (tab !== "public") params.set("tab", tab)
+    if (term) params.set("q", term)
+    const qs = params.toString()
+    return qs ? `/playlists?${qs}` : "/playlists"
+  }
+
   const setTab = (tab: TabType) => {
     setActiveTab(tab)
-    router.replace(tab === "public" ? "/playlists" : `/playlists?tab=${tab}`)
+    router.replace(playlistsUrl(tab, activeSearch))
   }
+
+  useEffect(() => {
+    if ((searchParams.get("q") ?? "") === activeSearch) return
+    router.replace(playlistsUrl(activeTab, activeSearch), { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the debounced term changes
+  }, [activeSearch])
 
   const currentPlaylists = getCurrentPlaylists()
 
@@ -221,7 +272,12 @@ function PlaylistsPageInner() {
 
   const countCtx = { playlists, sharedPlaylists, savedPlaylists }
   const visibleTabs = TAB_CONFIG.filter((t) => !(t.authOnly && !isAuthenticated))
-  const empty = EMPTY_COPY[activeTab]
+  const empty = activeSearch
+    ? {
+        title: `No playlists match “${activeSearch}”`,
+        body: "Try a different word, or another tab.",
+      }
+    : EMPTY_COPY[activeTab]
 
   return (
     <PageShell fullWidth className="relative font-sans">
@@ -280,6 +336,14 @@ function PlaylistsPageInner() {
         </header>
 
         <main className="pb-8 pt-2">
+          <div className="mb-3">
+            <SearchBar
+              value={searchInput}
+              onValueChange={setSearchInput}
+              placeholder={isDiscover ? "Search playlists…" : "Search your playlists…"}
+            />
+          </div>
+
           {isLoading ? (
             <ul className="overflow-hidden rounded-up-xl border border-border bg-card divide-y divide-up-hairline" aria-busy="true">
               {[...Array(6)].map((_, i) => (
@@ -307,7 +371,7 @@ function PlaylistsPageInner() {
               </div>
               <h2 className="font-display text-lg font-bold text-foreground">{empty.title}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{empty.body}</p>
-              {isAuthenticated && (activeTab === "my" || activeTab === "public") ? (
+              {isAuthenticated && !activeSearch && (activeTab === "my" || activeTab === "public") ? (
                 <Button
                   type="button"
                   onClick={() => setShowCreateModal(true)}

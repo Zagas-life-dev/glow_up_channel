@@ -47,11 +47,14 @@ export async function fetchDiscoverPage(opts: {
   seed: number | null
   lastId?: string | null
   limit?: number
+  /** A search term: only matching lists come back, best match first. */
+  q?: string
 }): Promise<DiscoverPage> {
   const url = new URL(`${API_BASE_URL}/api/playlists/discover`)
   url.searchParams.set("limit", String(opts.limit ?? 20))
   if (opts.seed !== null) url.searchParams.set("seed", String(opts.seed))
   if (opts.lastId) url.searchParams.set("lastId", opts.lastId)
+  if (opts.q?.trim()) url.searchParams.set("q", opts.q.trim())
 
   const response = await fetch(url.toString(), { headers: headers(false), credentials: "include" })
   if (!response.ok) throw new Error(`Discover failed: ${response.status}`)

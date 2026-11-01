@@ -25,6 +25,8 @@ import {
   describeDateFilter,
 } from "@/lib/search-date-filters"
 import { PageShell } from "@/components/layout/page-shell"
+import { getPageState } from "@/lib/page-state-session"
+import { useSavePageStateOnLeave } from "@/hooks/use-save-page-state-on-leave"
 import { CalendarClock, Loader2, Search, Sparkles, X } from "lucide-react"
 
 const TYPE_TABS: { id: SearchTab; label: string; short: string }[] = [
@@ -36,13 +38,25 @@ const TYPE_TABS: { id: SearchTab; label: string; short: string }[] = [
 ]
 
 /** The URL this page's state describes — shareable, and restored on the way back. */
-function buildQueryString(searchQuery: string, filters: SearchFilters): string {
+function buildQueryString(
+  searchQuery: string,
+  filters: SearchFilters,
+  tab: SearchTab,
+): string {
   const params = new URLSearchParams()
   const term = searchQuery.trim()
   if (term) params.set("q", term)
+  if (tab !== "all") params.set("tab", tab)
   searchFiltersToParams(filters, params)
   return params.toString()
 }
+
+function parseTab(params: URLSearchParams): SearchTab {
+  const tab = params.get("tab")
+  return TYPE_TABS.find((t) => t.id === tab)?.id ?? "all"
+}
+
+const SEARCH_PATH = "/search"
 
 function SearchContent() {
   const router = useRouter()
@@ -56,7 +70,9 @@ function SearchContent() {
   const [filters, setFilters] = useState<SearchFilters>(() =>
     parseSearchFilters(searchParams),
   )
-  const [activeTab, setActiveTab] = useState<SearchTab>("all")
+  const [activeTab, setActiveTab] = useState<SearchTab>(() =>
+    parseTab(searchParams),
+  )
 
   // The query string both sides last agreed on. Whichever changes first claims
   // it, which is what keeps the URL and the state from writing over each other.
@@ -64,6 +80,25 @@ function SearchContent() {
 
   const { items, isLoading, hasMore, error, loadMore, hasQuery } =
     useSearchFeed(searchQuery, activeTab, filters)
+
+  // Coming back from a result lands at the same depth. The results are fetched
+  // again, so the saved depth only applies to the same search and is reached as
+  // far as the reloaded first page allows. Read once, before Strict Mode's
+  // remount in development saves over it.
+  const [savedState] = useState(() => getPageState(SEARCH_PATH))
+  useSavePageStateOnLeave(SEARCH_PATH, () => ({
+    state: { query: buildQueryString(searchQuery, filters, activeTab) },
+  }))
+  const scrollRestoredRef = useRef(false)
+  useEffect(() => {
+    if (scrollRestoredRef.current || isLoading || items.length === 0) return
+    scrollRestoredRef.current = true
+    const scrollY = savedState?.scrollY
+    if (typeof scrollY !== "number" || scrollY <= 0) return
+    if (savedState?.state?.query !== searchParams.toString()) return
+    requestAnimationFrame(() => window.scrollTo(0, scrollY))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the first results land
+  }, [isLoading, items.length])
 
   const { sentinelRef, threshold } = useInfiniteScroll({
     hasMore,
@@ -80,19 +115,20 @@ function SearchContent() {
     syncedRef.current = incoming
     setSearchQuery(searchParams.get("q") ?? "")
     setFilters(parseSearchFilters(searchParams))
+    setActiveTab(parseTab(searchParams))
   }, [searchParams])
 
   // state → URL, on the same beat as the search itself so a keystroke does not
   // push a history entry of its own.
   useEffect(() => {
     const timer = setTimeout(() => {
-      const next = buildQueryString(searchQuery, filters)
+      const next = buildQueryString(searchQuery, filters, activeTab)
       if (next === syncedRef.current) return
       syncedRef.current = next
       router.replace(next ? `/search?${next}` : "/search", { scroll: false })
     }, 400)
     return () => clearTimeout(timer)
-  }, [searchQuery, filters, router])
+  }, [searchQuery, filters, activeTab, router])
 
   const selectTab = (tab: SearchTab) => {
     setActiveTab(tab)

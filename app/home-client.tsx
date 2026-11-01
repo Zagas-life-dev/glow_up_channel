@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { getPageState, savePageState } from "@/lib/page-state-session"
+import { getPageState } from "@/lib/page-state-session"
+import { useSavePageStateOnLeave } from "@/hooks/use-save-page-state-on-leave"
 import { getContentCache } from "@/lib/content-cache-session"
 import { fetchHomeListPage, type HomeListType } from "@/lib/fetch-home-list-page"
 import { getFeedSessionSeed } from "@/lib/feed-session-seed"
@@ -80,18 +80,16 @@ type PromotedFeedItem = {
 const HOME_PATH = '/'
 
 export default function Home() {
-  const pathname = usePathname()
-  const prevPathnameRef = useRef<string | null>(null)
   const scrollRestoredRef = useRef(false)
 
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
-    if (typeof window === 'undefined') return 'all'
-    const s = getPageState(HOME_PATH)
-    return ((s?.state?.activeTab as TabType) || 'all')
-  })
+  // What the last visit this session left behind, read once: Strict Mode's
+  // remount in development saves over it before the restore effect runs.
+  const [savedState] = useState(() => (typeof window === 'undefined' ? null : getPageState(HOME_PATH)))
+  const [activeTab, setActiveTab] = useState<TabType>(
+    () => (savedState?.state?.activeTab as TabType) || 'all',
+  )
   const [initialFeed] = useState<{ items: any[], lastId: string | null } | null>(() => {
-    if (typeof window === 'undefined') return null
-    const s = getPageState(HOME_PATH)
+    const s = savedState
     const tab = (s?.state?.activeTab as TabType) || 'all'
     // Prefer page-state restore (exact tab + scroll). For "all" tab don't use content cache here so
     // signed-in users never get anonymous cached feed as initial state; they'll get recommendations from API.
@@ -228,8 +226,14 @@ export default function Home() {
     estimatedItemHeight: 350,
   })
 
-  // Reset when tab changes (same pattern as community: reset when filters/tab change)
+  // Reset when tab changes. Skipped on mount, where the pagination hook has
+  // already fetched (or restored) the first page — running it there too would
+  // throw away a restored feed and the scroll depth that goes with it.
+  const fetchedTabRef = useRef(activeTab)
   useEffect(() => {
+    if (fetchedTabRef.current === activeTab) return
+    fetchedTabRef.current = activeTab
+    restoredFromCacheRef.current = false
     resetContent()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only when tab changes
   }, [activeTab])
@@ -245,28 +249,22 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when auth state changes
   }, [isAuthenticated, authLoading])
 
-  // Save scroll, state, and feed when navigating away from home (session-scoped; works for all users)
-  useEffect(() => {
-    const prev = prevPathnameRef.current
-    prevPathnameRef.current = pathname ?? null
-    if (prev === HOME_PATH && pathname !== HOME_PATH) {
-      savePageState(HOME_PATH, {
-        scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
-        state: { activeTab },
-        feed: {
-          storageKey,
-          items: allContent,
-          lastId: getLastId?.() ?? null,
-        },
-      })
-    }
-  }, [pathname, activeTab, storageKey, allContent, getLastId])
+  // Save tab, feed and scroll when leaving home, so coming back from a listing
+  // lands on the same tab at the same depth (session-scoped; works for all users).
+  useSavePageStateOnLeave(HOME_PATH, () => ({
+    state: { activeTab },
+    feed: {
+      storageKey,
+      items: allContent,
+      lastId: getLastId?.() ?? null,
+    },
+  }))
 
   // Restore scroll only for cache/session-restored feed, never for API-only initial loads.
   useEffect(() => {
     if (scrollRestoredRef.current) return
     if (!restoredFromCacheRef.current) return
-    const s = getPageState(HOME_PATH)
+    const s = savedState
     if (!s?.feed || s.feed.storageKey !== storageKey) return
     const scrollY = s?.scrollY
     if (typeof scrollY !== 'number' || scrollY <= 0 || allContent.length === 0) return
@@ -284,7 +282,7 @@ export default function Home() {
       cancelAnimationFrame(rafId)
       if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [allContent.length, storageKey])
+  }, [allContent.length, storageKey, savedState])
 
   // Defer promoted feed until after main feed has priority (next tick) to avoid competing for bandwidth
   useEffect(() => {

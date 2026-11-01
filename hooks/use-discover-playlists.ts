@@ -18,8 +18,13 @@ const PAGE_SIZE = 20
  *
  * `viewerKey` restarts the feed when the reader changes (sign in / out), because
  * relevance — and which lists count as "your own" — depends on who is reading.
+ *
+ * `query` (already debounced by the caller) restarts it as a search: the server
+ * returns only matching lists, best match first. Searches skip the session
+ * cache, which holds the unsearched feed alone, so clearing the box goes
+ * straight back to where the reader was.
  */
-export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
+export function useDiscoverPlaylists(viewerKey: string, enabled = true, query = "") {
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
@@ -28,9 +33,12 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
 
   const seedRef = useRef<number | null>(null)
   const viewerKeyRef = useRef(viewerKey)
+  const term = query.trim()
+  const queryRef = useRef(term)
   useEffect(() => {
     viewerKeyRef.current = viewerKey
-  }, [viewerKey])
+    queryRef.current = term
+  }, [viewerKey, term])
   const cursorRef = useRef<string | null>(null)
   const inFlightRef = useRef(false)
   // Bumped on reset, so a page that lands after the reader changed is dropped.
@@ -48,6 +56,7 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
         seed: seedRef.current,
         lastId: first ? null : cursorRef.current,
         limit: PAGE_SIZE,
+        q: queryRef.current,
       })
       if (generation !== generationRef.current) return
       cursorRef.current = page.lastId
@@ -59,7 +68,9 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
           const seen = new Set(prev.map((p) => p._id))
           next = [...prev, ...page.playlists.filter((p) => !seen.has(p._id))]
         }
-        cacheDiscover(viewerKeyRef.current, { playlists: next, lastId: page.lastId, hasMore: page.hasMore })
+        if (!queryRef.current) {
+          cacheDiscover(viewerKeyRef.current, { playlists: next, lastId: page.lastId, hasMore: page.hasMore })
+        }
         return next
       })
     } catch (err) {
@@ -91,9 +102,11 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
   // cached opens instantly, with no request at all.
   const loadedForRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!enabled || loadedForRef.current === viewerKey) return
-    loadedForRef.current = viewerKey
-    const cached = getCachedDiscover(viewerKey)
+    const loadKey = `${viewerKey}\n${term}`
+    if (!enabled || loadedForRef.current === loadKey) return
+    loadedForRef.current = loadKey
+    // The ref effect above has already run this commit, so loadPage sees `term`.
+    const cached = term ? null : getCachedDiscover(viewerKey)
     if (cached) {
       generationRef.current += 1
       seedRef.current = getFeedSessionSeed()
@@ -103,8 +116,10 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
       setIsLoading(false)
       return
     }
+    // Clear first, so the last term's lists are not shown under the new one.
+    setPlaylists([])
     reload()
-  }, [viewerKey, enabled, reload])
+  }, [viewerKey, enabled, term, reload])
 
   const loadMore = useCallback(() => {
     if (!hasMore || isLoading || isLoadingMore) return
@@ -113,12 +128,11 @@ export function useDiscoverPlaylists(viewerKey: string, enabled = true) {
 
   /** Update one card in place after a save or like, without refetching the feed. */
   const patch = useCallback((id: string, update: (p: Playlist) => Playlist) => {
-    setPlaylists((prev) => {
-      const next = prev.map((p) => (p._id === id ? update(p) : p))
-      const cached = getCachedDiscover(viewerKeyRef.current)
-      if (cached) cacheDiscover(viewerKeyRef.current, { ...cached, playlists: next })
-      return next
-    })
+    const apply = (list: Playlist[]) => list.map((p) => (p._id === id ? update(p) : p))
+    setPlaylists(apply)
+    // Patched separately: on a search, what is on screen is not the cached feed.
+    const cached = getCachedDiscover(viewerKeyRef.current)
+    if (cached) cacheDiscover(viewerKeyRef.current, { ...cached, playlists: apply(cached.playlists) })
   }, [])
 
   return { playlists, isLoading, isLoadingMore, hasMore, error, loadMore, reload, patch }

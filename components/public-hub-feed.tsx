@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import FeedCard from "@/components/feed-card"
 import FeedContainer from "@/components/feed-container"
 import FeedSponsoredSlot from "@/components/feed-sponsored-slot"
@@ -24,7 +24,8 @@ import {
   railCarries,
 } from "@/lib/promotion-placement"
 import { fetchPublicHubPage, type HomeListType } from "@/lib/fetch-public-hub-page"
-import { getPageState, savePageState } from "@/lib/page-state-session"
+import { getPageState } from "@/lib/page-state-session"
+import { useSavePageStateOnLeave } from "@/hooks/use-save-page-state-on-leave"
 import { viewingCountryName, withViewingCountryParam } from "@/lib/geo/viewing-country"
 import { useAuth } from "@/lib/auth-context"
 import {
@@ -80,7 +81,6 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
     suggestionTags,
   } = config
 
-  const pathname = usePathname()
   const searchParams = useSearchParams()
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
@@ -92,9 +92,10 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   // Restore a feed left behind by an earlier visit in this session. Only the
   // unsearched list is ever restored — a saved search would strand the reader
   // in results they no longer have the query for.
+  // Read once: Strict Mode's remount in development saves over it before the
+  // scroll restore runs.
+  const [saved] = useState(() => (typeof window === "undefined" ? null : getPageState(path)))
   const [restored] = useState<{ items: unknown[]; lastId: string | null } | null>(() => {
-    if (typeof window === "undefined") return null
-    const saved = getPageState(path)
     if (!saved?.feed || saved.feed.storageKey !== `hub_${type}`) return null
     if (saved.state?.search) return null
     return { items: saved.feed.items ?? [], lastId: saved.feed.lastId ?? null }
@@ -174,12 +175,11 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   // Re-run from page one when the search term changes. Skipped on mount, where
   // the hook has already issued (or restored) the first page — running it there
   // too would fire every visit's first request twice.
-  const searchMountedRef = useRef(false)
+  // Compared by value, so Strict Mode's second run of this effect is a no-op too.
+  const fetchedSearchRef = useRef(activeSearch)
   useEffect(() => {
-    if (!searchMountedRef.current) {
-      searchMountedRef.current = true
-      return
-    }
+    if (fetchedSearchRef.current === activeSearch) return
+    fetchedSearchRef.current = activeSearch
     restoredFromSessionRef.current = false
     reset()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the term changes
@@ -263,28 +263,19 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   // Hand the feed back to the next visit in this session, so returning from a
   // detail page lands on the same list at the same scroll position rather than
   // a freshly drawn one.
-  const prevPathnameRef = useRef<string | null>(null)
-  useEffect(() => {
-    const prev = prevPathnameRef.current
-    prevPathnameRef.current = pathname ?? null
-    if (prev === path && pathname !== path) {
-      savePageState(path, {
-        scrollY: typeof window !== "undefined" ? window.scrollY : 0,
-        state: { search: activeSearch },
-        feed: {
-          storageKey: `hub_${type}`,
-          items,
-          lastId: getLastId?.() ?? null,
-        },
-      })
-    }
-  }, [pathname, path, type, activeSearch, items, getLastId])
+  useSavePageStateOnLeave(path, () => ({
+    state: { search: activeSearch },
+    feed: {
+      storageKey: `hub_${type}`,
+      items,
+      lastId: getLastId?.() ?? null,
+    },
+  }))
 
   // Restore scroll only for a session-restored list, never for a fresh load.
   const scrollRestoredRef = useRef(false)
   useEffect(() => {
     if (scrollRestoredRef.current || !restoredFromSessionRef.current) return
-    const saved = getPageState(path)
     const scrollY = saved?.scrollY
     if (typeof scrollY !== "number" || scrollY <= 0 || items.length === 0) return
 
@@ -301,7 +292,7 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
       cancelAnimationFrame(rafId)
       if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [items.length, path])
+  }, [items.length, saved?.scrollY])
 
   // True only while there is nothing on screen yet. Paging in more keeps the
   // existing cards up and uses the skeletons below the sentinel instead.
