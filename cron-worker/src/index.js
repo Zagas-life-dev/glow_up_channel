@@ -43,8 +43,10 @@ async function sendOne(env, msg) {
         body: payload.body ?? "",
         url: payload.url || "/",
         tag: payload.tag || "glowup-push",
+        alert: !!payload.alert,
       }),
-      options: { ttl: 86400, urgency: "high" },
+      // Express sets ttl to the deadline for deadline alerts, so a late one is dropped.
+      options: { ttl: payload.ttl || 86400, urgency: "high" },
     },
     subscription,
     { subject: env.VAPID_SUBJECT, publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY }

@@ -412,7 +412,8 @@ self.addEventListener("push", (event) => {
         tag: payload.tag || "glowup-push",
         renotify: true,
         data: { url: payload.url || "/" },
-        requireInteraction: false,
+        // Last-day deadlines and reminders the user set stay up until tapped.
+        requireInteraction: !!payload.alert,
         vibrate: [200, 100, 200],
       })
       // Home-screen badge where supported (installed Android/desktop, iOS 16.4+).
