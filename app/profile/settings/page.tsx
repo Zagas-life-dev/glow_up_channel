@@ -38,6 +38,7 @@ import {
   Edit3,
   Trash2,
   Target,
+  Layers,
   GraduationCap,
   Briefcase,
   Star,
@@ -56,6 +57,8 @@ import {
   Lightbulb,
   Crown
 } from 'lucide-react'
+import CountrySelector from "@/components/country-selector"
+import { StorySettingsList } from "@/components/stories/story-settings"
 import { getDatePickerPropsFor16Plus } from '@/lib/date-utils'
 import ApiClient from '@/lib/api-client'
 import { PARTNER_PROGRAMME_ENABLED } from '@/lib/feature-flags'
@@ -133,13 +136,14 @@ const aspirationOptions = [
 ]
 
 /**
- * The five sections, in the order someone actually works through them: who you are, what you
- * are into, what reaches you, who can see you, and finally the account itself — with the
- * destructive actions last.
+ * The sections, in the order someone actually works through them: who you are, what you
+ * are into, what your feed and stories show, what reaches you, who can see you, and finally
+ * the account itself — with the destructive actions last.
  */
 const SETTINGS_SECTIONS = [
   { id: 'basic' as const, label: 'Profile', icon: User },
   { id: 'background' as const, label: 'Background', icon: Target },
+  { id: 'feed' as const, label: 'Feed & stories', icon: Layers },
   { id: 'notifications' as const, label: 'Notifications', icon: Bell },
   { id: 'privacy' as const, label: 'Privacy', icon: Lock },
   { id: 'security' as const, label: 'Account', icon: Shield },
@@ -319,7 +323,7 @@ export default function SettingsPage() {
   const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' })
   const [upgradeError, setUpgradeError] = useState<string | null>(null)
   const [isUpgrading, setIsUpgrading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'privacy' | 'security' | 'notifications'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'feed' | 'privacy' | 'security' | 'notifications'>('basic')
   const [isSaving, setIsSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1233,6 +1237,24 @@ export default function SettingsPage() {
                     selected={aspirations}
                     onToggle={(value) => { toggleArrayItem(aspirations, value, setAspirations); setIsDirty(true) }}
                   />
+                </SettingsSection>
+              </>
+            )}
+
+            {/* Feed & stories */}
+            {activeTab === 'feed' && (
+              <>
+                <SettingsSection
+                  title="Country"
+                  description="Which country your feed and stories show listings from. Moved here from the top of the feed."
+                >
+                  <CountrySelector align="start" />
+                </SettingsSection>
+                <SettingsSection
+                  title="Stories"
+                  description="The rings at the top of your feed, fresh every morning. We add stories for what you save and apply to; turn any of them off, or add one yourself."
+                >
+                  <StorySettingsList />
                 </SettingsSection>
               </>
             )}

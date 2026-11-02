@@ -763,7 +763,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
         <SponsoredLabel />
       ) : null}
       {isLead ? (
-        <article className="group relative w-full overflow-hidden rounded-up-xl bg-up-lead px-5 pb-3 pt-[22px] text-up-on-navy shadow-[0_18px_40px_rgba(11,18,51,0.22)] dark:shadow-[0_0_0_1px_rgba(255,106,0,0.4),0_20px_50px_rgba(0,0,0,0.55)]">
+        <article data-feed-card={item._id} className="group relative w-full overflow-hidden rounded-up-xl bg-up-lead px-5 pb-3 pt-[22px] text-up-on-navy shadow-[0_18px_40px_rgba(11,18,51,0.22)] dark:shadow-[0_0_0_1px_rgba(255,106,0,0.4),0_20px_50px_rgba(0,0,0,0.55)]">
           {/* Card-stack motif: rotated orange and lime tiles off the top-right corner. */}
           <span aria-hidden className="pointer-events-none absolute -right-10 -top-[50px] h-[130px] w-[170px] -rotate-[8deg] rounded-up-xl bg-up-orange" />
           <span aria-hidden className="pointer-events-none absolute -top-[26px] right-[30px] z-[1] h-[70px] w-[90px] rotate-[6deg] rounded-up-lg bg-up-lime" />
@@ -822,6 +822,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
         </article>
       ) : (
       <article
+        data-feed-card={item._id}
         className={cn(
           'group relative w-full overflow-hidden rounded-up-xl border border-border bg-card transition-colors duration-200',
           'hover:border-up-border-hover'

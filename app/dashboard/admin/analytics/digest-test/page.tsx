@@ -1,8 +1,9 @@
 "use client"
 
 /**
- * Admin: the Monday digest A/B test. Assigns the groups, then hands the
- * results to DigestResultsView, which explains them in plain words.
+ * Admin: the Monday digest A/B test, cancelled on 3 Nov 2026 when Stories
+ * replaced the digest. Read-only: the results of the weeks it ran, explained by
+ * DigestResultsView. Stories has its own page (analytics/stories).
  */
 
 import { useCallback, useEffect, useState } from "react"
@@ -12,14 +13,12 @@ import { toast } from "sonner"
 import { AdminShell } from "@/components/admin/admin-shell"
 import { AnalyticsTabs } from "@/components/admin/analytics-tabs"
 import { AdminEmpty, AdminSkeletonStats } from "@/components/admin/ui"
-import { DigestResultsView, DIGEST_GROUP_NAMES, fmtDay } from "@/components/digest/digest-results"
-import { Button } from "@/components/ui/button"
-import { assignDigestGroups, fetchDigestResults, type DigestResults } from "@/lib/digest/api"
+import { DigestResultsView, DIGEST_GROUP_NAMES } from "@/components/digest/digest-results"
+import { fetchDigestResults, type DigestResults } from "@/lib/digest/api"
 
 export default function DigestTestPage() {
   const [data, setData] = useState<DigestResults | null>(null)
   const [loading, setLoading] = useState(true)
-  const [assigning, setAssigning] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -36,25 +35,10 @@ export default function DigestTestPage() {
     load()
   }, [load])
 
-  const assign = async () => {
-    if (!window.confirm("Pick the 1,000 most active users and split them 500 / 500? Groups are frozen once made.")) return
-    setAssigning(true)
-    try {
-      const r = await assignDigestGroups()
-      if (r.assigned) toast.success(`Assigned ${r.count}: ${r.A} in A, ${r.B} in B`)
-      else toast.message(r.reason === "already_assigned" ? "Groups already exist" : "No active users found")
-      await load()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not assign groups")
-    } finally {
-      setAssigning(false)
-    }
-  }
-
   return (
     <AdminShell
-      title="Digest A/B test"
-      description={`Does a Monday digest make people track more opportunities? Half of the 1,000 most active users get it ("${DIGEST_GROUP_NAMES.A}"), half don't ("${DIGEST_GROUP_NAMES.B}").`}
+      title="Digest A/B test (ended)"
+      description={`Cancelled on 3 Nov 2026, when Stories replaced the digest. Half of the 1,000 most active users got a Monday digest ("${DIGEST_GROUP_NAMES.A}"), half didn't ("${DIGEST_GROUP_NAMES.B}"). These are the weeks it ran.`}
       onRefresh={load}
       refreshing={loading}
       width="wide"
@@ -65,16 +49,7 @@ export default function DigestTestPage() {
         {loading && !data ? <AdminSkeletonStats /> : null}
 
         {data && !data.assigned ? (
-          <AdminEmpty
-            icon={RiFlaskLine}
-            title="Groups not assigned yet"
-            description={`Pick the 1,000 most active users and split them 500 / 500, balanced by country and activity. Do this before Monday ${fmtDay(data.weeks[0])}.`}
-            action={
-              <Button onClick={assign} disabled={assigning}>
-                {assigning ? "Assigning…" : "Assign groups"}
-              </Button>
-            }
-          />
+          <AdminEmpty icon={RiFlaskLine} title="No results" description="The test was cancelled before groups were assigned." />
         ) : null}
 
         {data?.assigned ? <DigestResultsView data={data} /> : null}

@@ -49,7 +49,8 @@ import {
 } from "@/hooks/use-personalized-ranking"
 import { PageShell } from "@/components/layout/page-shell"
 import { TabStrip } from "@/components/layout/tab-strip"
-import CountrySelector from "@/components/country-selector"
+import { StoriesRail } from "@/components/stories/stories-rail"
+import { useFeedSeen } from "@/hooks/use-feed-seen"
 import { useViewingCountry, viewingCountryName, withViewingCountryParam } from "@/lib/geo/viewing-country"
 import LandingPage from "@/components/landing/landing-page"
 
@@ -485,6 +486,10 @@ export default function Home() {
     }
   }, [])
 
+  // Feed cards actually seen, for the stories-vs-feed comparison (hooks/use-feed-seen).
+  const feedRef = useRef<HTMLDivElement>(null)
+  useFeedSeen(feedRef, isAuthenticated && !showLanding)
+
   // Placed after every hook so the hook order stays identical on both branches.
   if (showLanding) return <LandingPage />
 
@@ -513,9 +518,8 @@ export default function Home() {
               onChange={(id) => setActiveTab(id as TabType)}
             />
           </div>
-          {/* Which country the feed is ranked for. The bar measures its own
-              height into the spacer below, so this needs no layout changes. */}
-          <CountrySelector align="end" className="shrink-0" />
+          {/* The country the feed is ranked for moved to Settings → Feed & stories
+              (Nov 2026), so the bar holds only the tabs. */}
         </div>
       </div>
 
@@ -523,7 +527,10 @@ export default function Home() {
       <div ref={spacerRef} aria-hidden style={{ height: tabBarOffset }} />
 
       {/* Feed Content */}
-      <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
+      <div ref={feedRef} className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
+        {/* Today's stories, before anything else, like the top of Instagram. */}
+        <StoriesRail className="mb-5" />
+
         {/* The greeting used to be a full emphasised card pushing the first result below the
             fold. It says the same thing in one line, and reserves its own height so the feed
             never shifts when it swaps in. */}
@@ -575,7 +582,7 @@ export default function Home() {
             emptyMessage={
               // Resources have no location, so the country never empties that tab.
               countryName && isAuthenticated && activeTab !== "resources"
-                ? `No listings available for ${countryName} for now.`
+                ? `No listings available for ${countryName} for now. Change the country in Settings → Feed & stories.`
                 : activeTab === "all"
                   ? (isAuthenticated ? "No content available yet. Check back soon!" : "Sign in to get personalized recommendations.")
                   : `No ${activeTab} found. Try another category!`

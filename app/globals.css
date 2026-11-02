@@ -311,6 +311,41 @@
   }
 }
 
+/* Stories (components/stories). One progress segment filling, a slide
+   arriving, and the ring of a story with something closing today. */
+@keyframes story-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes story-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes story-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 106, 0, 0.45);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 106, 0, 0);
+  }
+}
+
 /* Animation Classes */
 .animate-fade-in {
   animation: fade-in 0.4s ease-out forwards;

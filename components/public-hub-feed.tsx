@@ -28,6 +28,7 @@ import { getPageState } from "@/lib/page-state-session"
 import { useSavePageStateOnLeave } from "@/hooks/use-save-page-state-on-leave"
 import { viewingCountryName, withViewingCountryParam } from "@/lib/geo/viewing-country"
 import { useAuth } from "@/lib/auth-context"
+import { StoriesRail } from "@/components/stories/stories-rail"
 import {
   rankingProfileFrom,
   usePersonalizedRanking,
@@ -122,7 +123,7 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   //
   // Read through a ref so the fetcher stays stable: the profile settles after
   // the first render, and a new fetcher identity would reset the list.
-  const { normalizedUser } = useAuth()
+  const { normalizedUser, isAuthenticated, isLoading: authLoading } = useAuth()
   const rankingProfile = useMemo(() => rankingProfileFrom(normalizedUser), [normalizedUser])
   const { rankForFeed } = usePersonalizedRanking(rankingProfile)
   const rankForFeedRef = useRef(rankForFeed)
@@ -302,6 +303,10 @@ export default function PublicHubFeed({ config }: { config: PublicHubConfig }) {
   return (
     <PageShell fullWidth>
       <div className="mx-auto max-w-2xl pb-[max(5rem,env(safe-area-inset-bottom)+4.5rem)] pt-4 sm:pb-10 sm:pt-6">
+        {/* Signed-out visitors never reach the home feed (they get the landing page),
+            so their one story, closing soon, sits here. Signed-in users have the
+            full row on home. */}
+        {!authLoading && !isAuthenticated ? <StoriesRail className="mb-5" /> : null}
         <header className="mb-5">
           <div className="mb-5 flex items-center gap-3.5">
             {/* The hub's type chip, so each hub reads in its own type colour. */}

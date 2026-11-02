@@ -39,7 +39,8 @@ export type PrimaryAction =
   | 'playlist_open'
   | 'playlist_create'
   | 'search'
-  | 'apply';
+  | 'apply'
+  | 'story_engaged';
 
 /**
  * Actions that count only in aggregate — three or more in a day.
@@ -73,6 +74,56 @@ export type ActiveUserAction = PrimaryAction;
 export type NonQualifyingAction = 'repost' | 'post_created' | 'community_engagement';
 
 export type TrackedAction = PrimaryAction | SecondaryAction | NonQualifyingAction;
+
+/**
+ * Where an action happened. Without it a save from a story and a save from the
+ * feed are the same row, and the two can never be compared.
+ *
+ * The story viewer sets it while open (`setTrackingSurface`); otherwise it is
+ * read off the page: `?src=` on a detail page opened from somewhere (a story
+ * links with `?src=story`), then the route.
+ */
+export type Surface =
+  | 'feed'
+  | 'story'
+  | 'digest'
+  | 'playlist'
+  | 'search'
+  | 'tracker'
+  | 'push'
+  | 'detail'
+  | 'other';
+
+let surfaceOverride: Surface | null = null;
+
+export function setTrackingSurface(surface: Surface | null): void {
+  surfaceOverride = surface;
+}
+
+const SRC_SURFACES: Record<string, Surface> = {
+  story: 'story',
+  digest: 'digest',
+  push: 'push',
+  digest_push: 'push',
+  weekly: 'push',
+  playlist: 'playlist',
+  search: 'search',
+  feed: 'feed',
+};
+
+export function currentSurface(): Surface {
+  if (surfaceOverride) return surfaceOverride;
+  if (typeof window === 'undefined') return 'other';
+  const src = new URLSearchParams(window.location.search).get('src');
+  if (src && SRC_SURFACES[src]) return SRC_SURFACES[src];
+  const path = window.location.pathname;
+  if (path === '/' || path === '/home') return 'feed';
+  if (path.startsWith('/playlists')) return 'playlist';
+  if (path.startsWith('/search')) return 'search';
+  if (path.startsWith('/tracker')) return 'tracker';
+  if (/^\/(opportunities|jobs|events|resources)\/[^/]+/.test(path)) return 'detail';
+  return 'other';
+}
 
 /**
  * Get or create a session ID
@@ -162,8 +213,12 @@ export function trackActiveActivity(
     contentType?: 'opportunity' | 'event' | 'job' | 'resource' | 'post' | 'community';
     contentId?: string;
     page?: string;
+    surface?: Surface;
+    storyId?: string;
   } = {}
 ): void {
+  // Read now, not in the timeout: the viewer may close before it fires.
+  const surface = details.surface ?? currentSurface();
   // Fire and forget - use setTimeout to make it truly async and non-blocking
   setTimeout(() => {
     (async () => {
@@ -199,7 +254,9 @@ export function trackActiveActivity(
                 action,
                 contentType: details.contentType,
                 contentId: details.contentId,
-                page: details.page || window.location.pathname
+                page: details.page || window.location.pathname,
+                surface,
+                ...(details.storyId && { storyId: details.storyId })
               }
             }),
             signal: controller.signal
@@ -414,6 +471,15 @@ export function trackApply(
   contentId: string
 ): void {
   trackActiveActivity('apply', { contentType, contentId });
+}
+
+/**
+ * Opened a story and went past its first slide. Primary tier: tapping on to see
+ * more is real engagement; opening a story and leaving on slide one is not.
+ * Sent once per open of a story.
+ */
+export function trackStoryEngaged(storyId: string): void {
+  trackActiveActivity('story_engaged', { surface: 'story', storyId, page: '/' });
 }
 
 /**

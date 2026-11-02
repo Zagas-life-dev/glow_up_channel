@@ -2,9 +2,9 @@
  * When the Worker wakes the backend, and for which job. All times UTC
  * (Africa/Lagos is UTC+1, so 08:00 here is 09:00 Lagos).
  *
- * Local-time jobs (dailyPicks at 09:00, weeklyDigest Sunday 18:00) run every
- * hour and act only on the users for whom it is that hour now; the backend
- * works that out per user from their timezone.
+ * Local-time jobs (dailyPicks at 09:00, weeklyDigest Sunday 18:00, buildStories
+ * at 23:00) run every hour and act only on the users for whom it is that hour
+ * now; the backend works that out per user from their timezone.
  */
 
 // [UTC "HH:MM", job]: once a day.
@@ -27,6 +27,7 @@ export const HOURLY = [
   [10, "dailyPicks"], // 09:00 local for whoever it is 09:00 for
   [10, "newMatches"], // listings that went live in the last hour
   [20, "weeklyDigest"], // Sunday 18:00 local
+  [15, "buildStories"], // 23:15 local: tomorrow's stories built ahead, so the morning open is a read
 ]
 
 // Unanswered tracker asks every 15 minutes, 08:00–21:45 Lagos (07–20 UTC), so the
