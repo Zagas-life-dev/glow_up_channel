@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { clearMyLocation, reportLocation } from "@/lib/geo/location-api"
 import { isUsableLocation, resolveLocation } from "@/lib/geo/resolve"
 import { countryFromBrowser } from "@/lib/geo/timezone"
+import { loadPlaces } from "@/lib/geo/places"
 import { setViewerPlace, shouldReport, viewerPlaceFrom } from "@/lib/geo/viewer-geo"
 import type {
   GeolocationPermission,
@@ -266,10 +267,21 @@ export function useUserLocation(
   // and save it server-side once per session. A timezone guess is good enough
   // to rank with but not to count as someone's location, so it is never sent.
   useEffect(() => {
-    const place = viewerPlaceFrom(location)
-    if (!place || place.source === "locale") return
-    setViewerPlace(place)
-    if (shouldReport(place)) void reportLocation(place)
+    let cancelled = false
+    // Naming a GPS fix's nearest city needs the places table, which loads on
+    // demand; every other source already carries its place.
+    const needsPlaces = location.coordinatesSource === "gps" && Boolean(location.coordinates)
+    const ready = needsPlaces ? loadPlaces().catch(() => undefined) : Promise.resolve()
+    void ready.then(() => {
+      if (cancelled) return
+      const place = viewerPlaceFrom(location)
+      if (!place || place.source === "locale") return
+      setViewerPlace(place)
+      if (shouldReport(place)) void reportLocation(place)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [location])
 
   return {

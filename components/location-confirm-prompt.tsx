@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ApiClient from "@/lib/api-client"
 import { useAuth } from "@/lib/auth-context"
 import { lookupCountry } from "@/lib/geo/countries"
-import { citiesOf, hasRegions, regionLabel, regionsOf, resolveRegionCity } from "@/lib/geo/places"
+import { citiesOf, hasRegions, loadPlaces, regionLabel, regionsOf, resolveRegionCity } from "@/lib/geo/places"
 import { useLocale } from "@/lib/i18n/context"
 
 const DISMISSED_KEY = "glowup-location-confirm-dismissed"
@@ -75,25 +75,38 @@ export function LocationConfirmPrompt() {
   React.useEffect(() => {
     if (!isAuthenticated || !saved || !(profile as { onboardingCompleted?: boolean })?.onboardingCompleted) return
     if (QUIET_PREFIXES.some((prefix) => pathname?.startsWith(prefix))) return
-    if (!needsConfirmation(saved)) return
+    // Cheap check first; the full one needs the places table (below).
+    if (saved.locationConfirmedAt) return
     try {
       if (localStorage.getItem(DISMISSED_KEY)) return
     } catch {
       return
     }
 
-    // Pre-fill from the best guess, so a correct guess is one tap.
-    const guess = lookupCountry(saved.country ?? "")
-    const regionCity = resolveRegionCity(guess?.code, saved.province, saved.city)
-    setCountry(guess ? { code: guess.code, name: guess.name } : null)
-    setState(regionCity.state ?? (guess && !hasRegions(guess.code) ? saved.province ?? "" : ""))
-    setCity(regionCity.city ?? (guess && !hasRegions(guess.code) ? saved.city ?? "" : ""))
+    // The places table loads on demand; nothing below can be decided without it.
+    let cancelled = false
+    let timer: number | undefined
+    loadPlaces()
+      .then(() => {
+        if (cancelled || !needsConfirmation(saved)) return
 
-    const timer = window.setTimeout(() => {
-      // Never on top of another dialog (the location question, a gift).
-      if (!document.querySelector('[role="dialog"]') && claimInterruption("location-confirm")) setOpen(true)
-    }, SHOW_AFTER_MS)
-    return () => window.clearTimeout(timer)
+        // Pre-fill from the best guess, so a correct guess is one tap.
+        const guess = lookupCountry(saved.country ?? "")
+        const regionCity = resolveRegionCity(guess?.code, saved.province, saved.city)
+        setCountry(guess ? { code: guess.code, name: guess.name } : null)
+        setState(regionCity.state ?? (guess && !hasRegions(guess.code) ? saved.province ?? "" : ""))
+        setCity(regionCity.city ?? (guess && !hasRegions(guess.code) ? saved.city ?? "" : ""))
+
+        timer = window.setTimeout(() => {
+          // Never on top of another dialog (the location question, a gift).
+          if (!document.querySelector('[role="dialog"]') && claimInterruption("location-confirm")) setOpen(true)
+        }, SHOW_AFTER_MS)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [isAuthenticated, saved, profile, pathname])
 
   const later = () => {

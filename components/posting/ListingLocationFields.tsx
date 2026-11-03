@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { countryByCode } from "@/lib/geo/countries"
-import { citiesOf, hasRegions, regionLabel, regionsOf } from "@/lib/geo/places"
+import { citiesOf, hasRegions, regionLabel, regionsOf, usePlacesReady } from "@/lib/geo/places"
 import { useLocale } from "@/lib/i18n/context"
 import { cn } from "@/lib/utils"
 
@@ -106,6 +106,9 @@ function RegionCityFields({
   onChange: (patch: { province?: string; city?: string }) => void
 }) {
   const { t } = useLocale()
+  // The state/city lists load on demand. Until then show nothing rather than
+  // free-text boxes that would turn into pickers under the user's cursor.
+  const placesReady = usePlacesReady()
   const structured = hasRegions(countryCode)
   const optional = ` (${t("common.optional").toLowerCase()})`
   const regionName = t(regionKey(countryCode))
@@ -114,6 +117,8 @@ function RegionCityFields({
 
   // A new country starts the city picker over.
   React.useEffect(() => setCityIsFree(false), [countryCode])
+
+  if (!placesReady) return null
 
   return (
     <>

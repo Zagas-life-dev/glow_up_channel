@@ -145,6 +145,12 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
 <div class="item"><h3><span class="tag todo">explained</span>The JavaScript</h3>
 <p>About 235 KB compressed per page (900 KB raw). Roughly half is Next.js + React itself, a fixed cost. The app's own biggest parts: the tag taxonomy (27 KB, used by on-device ranking), 162 icons (46 KB, already tree-shaken), places (9 KB), language files (3 KB each). Lazy-loading taxonomy and places would save ~35 KB (~15%), about a day of work. The real weight problem was the 192 KB of icon CSS, already fixed.</p></div>
 
+<h2>Round 4: data files</h2>
+<div class="item"><h3><span class="tag fixed">fixed</span>Places table off every page</h3>
+<p>The location-confirm prompt and GPS reporting are mounted in the root layout, so <code>places.json</code> shipped on every page, <code>/about</code> included. It now loads on demand (<code>loadPlaces()</code> / <code>usePlacesReady()</code>): only when a signed-in user's location needs checking, a GPS fix needs naming, or the posting form shows state/city pickers. <code>/about</code> went from 710 to 672 KB raw JS, and the same ~38 KB came off every page. Verified the chunk is not fetched on <code>/about</code>.</p></div>
+<div class="item"><h3><span class="tag todo">kept</span>Taxonomy</h3>
+<p>Only feed and listing pages ship it, and they use it synchronously to rank during render. Every field feeds the matcher, so there is nothing to trim. Loading it later would add a request before ranking, and items would reorder after it lands. Left as it is on purpose.</p></div>
+
 <h2>Needs you</h2>
 <div class="item"><ol>
 <li>Push both <code>upgrade/2026-11-03</code> branches and deploy. The code changes are not live yet; only the <code>NODE_ENV</code> setting is.</li>

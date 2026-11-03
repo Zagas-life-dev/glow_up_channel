@@ -9,18 +9,59 @@
  *     state and city — the only form in which a place ever leaves the browser.
  */
 
-import PLACES_JSON from "@/lib/geo/places.json"
+import { useEffect, useState } from "react"
 import { haversineKm } from "@/lib/geo/distance"
 
 type City = { name: string; lat: number; lng: number; aliases: string[] }
 type Region = { name: string; lat: number; lng: number; aliases: string[]; cities: City[] }
+type PlacesData = { regions: Record<string, { label: string; regions: Region[] }> }
 
-const PLACES = PLACES_JSON as unknown as {
-  regions: Record<string, { label: string; regions: Region[] }>
+/**
+ * The table is loaded on demand. Its callers (the location-confirm prompt, GPS
+ * reporting) are mounted on every page but rarely need it, and a static import
+ * put ~80 KB of JSON in the bundle every page downloads. Until `loadPlaces()`
+ * resolves, every helper below answers as if no country had regions.
+ */
+const EMPTY: PlacesData = { regions: {} }
+let PLACES: PlacesData = EMPTY
+let loading: Promise<void> | null = null
+
+export function placesLoaded(): boolean {
+  return PLACES !== EMPTY
 }
 
-/** Countries with a state and city list. Everywhere else takes free text. */
-export const COUNTRIES_WITH_REGIONS = Object.keys(PLACES.regions)
+/** Fetch the table once; later calls share the same promise. */
+export function loadPlaces(): Promise<void> {
+  if (!loading) {
+    loading = import("@/lib/geo/places.json")
+      .then((mod) => {
+        PLACES = ((mod as { default?: unknown }).default ?? mod) as PlacesData
+      })
+      .catch((error) => {
+        loading = null // let a later caller retry
+        throw error
+      })
+  }
+  return loading
+}
+
+/** For components that render pickers: loads the table, true once it is in. */
+export function usePlacesReady(): boolean {
+  const [ready, setReady] = useState(placesLoaded)
+  useEffect(() => {
+    if (ready) return
+    let cancelled = false
+    loadPlaces()
+      .then(() => {
+        if (!cancelled) setReady(true)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [ready])
+  return ready
+}
 
 export function hasRegions(countryCode: string | null | undefined): boolean {
   return Boolean(countryCode && PLACES.regions[countryCode])
