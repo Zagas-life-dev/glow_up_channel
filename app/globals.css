@@ -1,4 +1,8 @@
-@import "@flaticon/flaticon-uicons/css/all/all.css";
+/* Only the two icon styles the app uses (FlaticonIcon defaults to fi-sr, plus
+ * fi-brands). all/all.css carried all nine styles: 1.2 MB of render-blocking
+ * CSS on every page. Add a style file here before using another prefix. */
+@import "@flaticon/flaticon-uicons/css/solid/rounded.css";
+@import "@flaticon/flaticon-uicons/css/brands/all.css";
 
 @tailwind base;
 @tailwind components;

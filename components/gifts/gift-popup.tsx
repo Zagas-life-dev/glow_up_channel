@@ -15,7 +15,6 @@
 
 import { useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import confetti from "canvas-confetti"
 import { RiCloseLine, RiGiftFill, RiArrowRightLine } from "react-icons/ri"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
@@ -26,9 +25,14 @@ import { GIFT_LISTING_LABELS } from "@/lib/gifts/types"
 import { KindChip, toUpKind } from "@/components/up/kind"
 import { useInterruption } from "@/lib/interruptions"
 
-/** Brand-ish confetti; falls back silently if the canvas is unavailable. */
-function celebrate() {
+/**
+ * Brand-ish confetti; falls back silently if the canvas is unavailable. The
+ * library is loaded on first use: this popup sits in the root layout, and
+ * almost no page view ever shows a gift.
+ */
+async function celebrate() {
   try {
+    const { default: confetti } = await import("canvas-confetti")
     confetti({
       particleCount: 140,
       spread: 78,
@@ -63,7 +67,7 @@ export default function GiftPopup() {
     if (!announced) return
     if (celebratedFor.current === announced._id) return
     celebratedFor.current = announced._id
-    celebrate()
+    void celebrate()
     closeRef.current?.focus()
   }, [announced])
 

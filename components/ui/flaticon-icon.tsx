@@ -6,20 +6,11 @@ import { cn } from "@/lib/utils"
  * Flaticon Uicons – icon font via CSS classes.
  * Package: @flaticon/flaticon-uicons (CSS is imported in app/globals.css).
  *
- * Styles: fi-rr (regular rounded), fi-br (bold rounded), fi-sr (solid rounded),
- *         fi-rs, fi-bs, fi-ss (straight), fi-tr, fi-ts (thin), fi-brands.
+ * Styles: fi-sr (solid rounded) and fi-brands. Only those two stylesheets are
+ * loaded; to use another style, import its CSS in globals.css and add it here.
  * Use kebab-case icon names, e.g. "home", "arrow-right", "sign-out".
  */
-export type FlaticonStyle =
-  | "fi-rr"
-  | "fi-br"
-  | "fi-sr"
-  | "fi-rs"
-  | "fi-bs"
-  | "fi-ss"
-  | "fi-tr"
-  | "fi-ts"
-  | "fi-brands"
+export type FlaticonStyle = "fi-sr" | "fi-brands"
 
 export interface FlaticonIconProps {
   /** Flaticon icon name (kebab-case), e.g. "home", "arrow-right" */
