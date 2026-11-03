@@ -132,14 +132,21 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
 <div class="item"><h3><span class="tag todo">next</span>Remaining JS weight (~235 KB brotli per page)</h3>
 <p>Bundle analyzer: <code>taxonomy.json</code> (59 KB) is shipped for client-side tag matching and ranking. Lazy-loading it would make ranking async, a ~1 day change. All i18n dictionaries are bundled together (42 KB); load only the active locale (~half a day). <code>places.json</code> is 21 KB. Also <code>next.config</code> sets <code>images.unoptimized: true</code>.</p></div>
 
+<h2>Round 3</h2>
+<p class="sub">Frontend <code>b4bc240</code>. Tests 504/504, build passes, checked on a local production build.</p>
+
+<div class="item"><h3><span class="tag fixed">live</span><code>NODE_ENV=production</code> on Cloud Run</h3>
+<p>Revision <code>latest-glowup-channel-00097-q7c</code> serves 100% of traffic; health 200. Error details no longer go to clients. It also fixes the device-ID cookie: it was <code>SameSite=Lax</code>, which browsers never send to the cross-site API, and is now <code>SameSite=None; Secure</code>.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Static pages</h3>
+<p>The root layout no longer reads cookies or headers. Locale and country come from cookies on the client; the middleware now also writes a <code>glowup-country</code> cookie. Static routes went from 0 to 75, including <code>/</code>, <code>/jobs</code>, <code>/opportunities</code> and <code>/events</code> (refreshed every 5 min). <code>/jobs</code> was verified to answer from cache. The listing pages (<code>/jobs/[id]</code> etc.) render once and are then cached for 5 min; verified MISS then HIT, with full content and JobPosting data in the HTML.</p>
+<p class="meta">Trade-offs: a reader with a non-English language cookie gets English on the first paint only (most UI text isn't translated anyway, live included). If the backend fails while a listing page is being re-rendered, crawlers can see a page without the listing for up to 5 min; visitors still get it, because the browser loads it itself.</p></div>
+
+<div class="item"><h3><span class="tag todo">explained</span>The JavaScript</h3>
+<p>About 235 KB compressed per page (900 KB raw). Roughly half is Next.js + React itself, a fixed cost. The app's own biggest parts: the tag taxonomy (27 KB, used by on-device ranking), 162 icons (46 KB, already tree-shaken), places (9 KB), language files (3 KB each). Lazy-loading taxonomy and places would save ~35 KB (~15%), about a day of work. The real weight problem was the 192 KB of icon CSS, already fixed.</p></div>
+
 <h2>Needs you</h2>
 <div class="item"><ol>
-<li>Review and push the <code>upgrade/2026-11-03</code> branches, then deploy. Nothing is live yet.</li>
-<li>Cloud Run has <code>NODE_ENV=development</code>. That sends error messages and stack traces to clients and turns on static <code>/uploads</code> serving. Changing it to <code>production</code> is a service setting; it is not mainly about speed.</li>
-</ol></div>
-
-<h2>Questions for you</h2>
-<div class="item"><ol>
-<li>Set <code>NODE_ENV=production</code> on Cloud Run? My pick: yes, together with this deploy.</li>
+<li>Push both <code>upgrade/2026-11-03</code> branches and deploy. The code changes are not live yet; only the <code>NODE_ENV</code> setting is.</li>
 </ol></div>
 </main></body></html>
