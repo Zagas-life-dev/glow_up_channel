@@ -102,16 +102,44 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;p
 <div class="item"><h3><span class="tag todo">unverified</span>JS weight 1.37 MB decoded per page</h3>
 <p>No heavy library (framer-motion, charts, genai) is imported by the app shell. The Turbopack build doesn't print first-load sizes, so a bundle analyzer run is needed to find what fills the 222 KB and 135 KB chunks.</p></div>
 
+<h2>Round 2 (same day, after your answers)</h2>
+<p class="sub">Backend <code>9bb247d</code>, frontend <code>17367f2</code>. Backend tests 649/651 (the same 2 tagging failures as before), frontend 504/504, build passes.</p>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Feed candidate pool cached per country</h3>
+<p>New <code>src/services/candidatePoolCache.js</code>: pools are cached per type + country for 45 s, concurrent misses share one read, and at most 64 pools are kept. Feed pages go from 4 Mongo reads to 0 on a hit. Job deadlines are re-checked on every read. 6 new tests.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Startup no longer waits on indexes</h3>
+<p>Index creation runs after the DB connects without blocking <code>listen</code>, and runs per collection in parallel. 36 entries for dead collections removed (146 → 110). <code>payments</code>, <code>subscriptions</code> and <code>hashtags</code> were kept because live code still uses them. <code>SKIP_INDEX_CREATION</code> is unset on Cloud Run, so the new tracker index builds itself on the next deploy.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Safe at 10 instances</h3>
+<p>Live max is 10, min 0: Cloud Run adds instances only under load. Mongo <code>maxPoolSize</code> went from 80 to 20 per instance (env <code>MONGO_MAX_POOL_SIZE</code>), so the worst case is 200 connections, not 800.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Playlist emails private</h3>
+<p>Creator, item-adder and collaborator emails are now blanked unless the reader is the owner or an accepted collaborator. This covers the list endpoints, the single playlist and Discover. The response shape is unchanged. 5 new tests.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Render-blocking CSS cut by 75%</h3>
+<p><code>globals.css</code> imported all nine Flaticon icon styles, though only solid-rounded and brands are used. Page CSS dropped from 192 KB to ~45 KB over the wire (1,269 KB → 349 KB raw) on every page. <code>FlaticonStyle</code> is now narrowed so an unloaded style fails the build.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Small</h3>
+<p>The anonymous feed has a 60 s in-process memo. <code>canvas-confetti</code> now loads only when a gift celebration fires.</p></div>
+
+<div class="item"><h3><span class="tag todo">checked, dropped</span>"Double" route prefetch</h3>
+<p>No page links trigger it. The two requests per route are Next 16's segment prefetch (route tree ~0.4 KB + segment ~2.2 KB), so there is nothing to fix.</p></div>
+
+<div class="item"><h3><span class="tag todo">not done</span>Static pages</h3>
+<p>The root layout reads cookies and headers only to render the right language on the first paint. Making pages static would mean either a flash of the wrong language or putting the locale in the URL. The gain is limited to low-traffic pages (<code>/about</code>, policies), because <code>/jobs</code> etc. depend on per-country data anyway. Left for your decision.</p></div>
+
+<div class="item"><h3><span class="tag todo">next</span>Remaining JS weight (~235 KB brotli per page)</h3>
+<p>Bundle analyzer: <code>taxonomy.json</code> (59 KB) is shipped for client-side tag matching and ranking. Lazy-loading it would make ranking async, a ~1 day change. All i18n dictionaries are bundled together (42 KB); load only the active locale (~half a day). <code>places.json</code> is 21 KB. Also <code>next.config</code> sets <code>images.unoptimized: true</code>.</p></div>
+
 <h2>Needs you</h2>
 <div class="item"><ol>
-<li>Check <code>SKIP_INDEX_CREATION</code> on the Cloud Run service. If it is <code>true</code>, the new tracker index won't be built: create it once from Atlas or a one-off script.</li>
-<li><code>cloudbuild.yaml</code> still deploys <code>--max-instances 10</code> (last touched Sep 2025), against the 3-instance rule, with <code>maxPoolSize: 80</code>. If this file is still the deploy path, set it to 3 and the pool to ~20.</li>
-<li>Review and push the <code>upgrade/2026-11-03</code> branches. Nothing is deployed.</li>
+<li>Review and push the <code>upgrade/2026-11-03</code> branches, then deploy. Nothing is live yet.</li>
+<li>Cloud Run has <code>NODE_ENV=development</code>. That sends error messages and stack traces to clients and turns on static <code>/uploads</code> serving. Changing it to <code>production</code> is a service setting; it is not mainly about speed.</li>
 </ol></div>
 
 <h2>Questions for you</h2>
 <div class="item"><ol>
-<li><b>Privacy:</b> <code>/api/playlists/public</code> returns each creator's email to anyone. Verified live; today the creators are <code>@up.com</code> accounts, but a user-made public list would expose a real email. The frontend uses <code>createdBy.email</code> as a fallback for owner checks and display names. My pick: drop email from the public and premium responses, and match owners by <code>_id</code> only.</li>
-<li><b>Dead indexes:</b> may the 44 index entries for deprecated collections be deleted from startup? My pick: yes. It only stops creating them; existing data is untouched.</li>
+<li>Set <code>NODE_ENV=production</code> on Cloud Run? My pick: yes, together with this deploy.</li>
 </ol></div>
 </main></body></html>
