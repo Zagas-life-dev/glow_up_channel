@@ -34,7 +34,9 @@ Then run only the sections they picked. Full sweep runs A-F in order.
 
 - Hide **up to 50** live listings per run through `M hide`, for the reasons below. Past 50, stop hiding and list the rest under "Needs you".
 - Fix small code bugs on a local branch and commit them (rules in F).
-- Never: delete anything, edit a live listing's fields, approve or reject a Work with us order, send a message to a customer, push a branch, deploy, change a setting, start the local backend (it talks to the production DB and fires real push crons), or touch `scraper/`, channels/community posts, or promotions billing code (all deprecated).
+- Swap a live listing's `url` for its official apply page through `M link` (only `url` changes).
+- Only when the owner says yes in this run, after showing the dry-run list: delete public playlists with no live item (`M playlists-clear`) and unpaid junk Work with us orders (`M orders-clear`). Both are backed up first.
+- Never: delete listings, edit a live listing's other fields, approve or reject a Work with us order, send a message to a customer, push a branch, deploy, change a setting, start the local backend (it talks to the production DB and fires real push crons), or touch `scraper/`, channels/community posts, or promotions billing code (all deprecated).
 
 ## A. Health
 
@@ -47,10 +49,12 @@ From `cleanup.json`. Check each candidate before you hide it. Write the hides to
 
 1. **Past date still live** (`pastDate`): the feeds already hide these, but they sit in the live collection. Check the source once for a new deadline or edition. New date found: put it under "Needs you" with the date and source (the key can't edit live listings). Otherwise hide, `closed`.
 2. **Duplicates** (`duplicates.groups`, most-viewed first in each group): open both. Same organisation and same role/programme/edition: keep the first (most views), hide the others, `duplicate`, note `kept <id>`. Different listings (other city, other edition): leave them.
-3. **Dead links**: open `links.json` (most-viewed first) and check the top 100 `url`s, WebFetch first, the built-in browser's `get_page_text` when blocked or JS-rendered. A 404, a parked domain, a login wall or an unrelated page is dead. Web-search the title + organisation for the real page. Found: "Needs you" with the new link. Not found and the listing can't be applied to any other way: hide, `dead_link`.
+3. **Dead links**: open `links.json` (most-viewed first) and check the top 100 `url`s, WebFetch first, the built-in browser's `get_page_text` when blocked or JS-rendered. A 404, a parked domain, a login wall or an unrelated page is dead. Web-search the title + organisation for the real page. Found: add it to `link-plan.json` (below). Not found and the listing can't be applied to any other way: hide, `dead_link`.
 4. **Doesn't belong** (party, giveaway, sale, MLM, news with nothing to apply to, spam, test post), spotted anywhere above: hide, `not_for_up`.
 5. **Missing fields** (`missing.listings`, each with `gaps`): don't hide for this. A listing with no link and no other way to apply is `broken`; the rest go in the report grouped by gap, as fixes for the owner.
-6. `M check hide-plan.json`, fix any `invalid`, then `M hide hide-plan.json`. Retry a `failed` item at most once.
+6. **Blog reposts**: a live `url` on an aggregator or blog (opportunitiesforafricans, afterschoolafrica, myjobmag and the like) is not the real link. Find the organisation's own apply page and confirm it is open. Add it to `link-plan.json`.
+7. `M check hide-plan.json`, fix any `invalid`, then `M hide hide-plan.json`. Retry a `failed` item at most once.
+8. Links: write `~/up-maintenance/<date>/link-plan.json` as `{ "items": [ { "kind", "id", "url", "note" } ] }`, then `M link check link-plan.json` and `M link apply link-plan.json`.
 
 ## C. Work with us
 
@@ -58,6 +62,7 @@ From `work-with-us.json` (oldest first). For each item: what was bought, who (na
 - `pending_review` or `needs_clarification` waiting over 2 days: urgent.
 - `awaiting_payment` over 3 days: probably abandoned; suggest a nudge.
 - Draft a short reply for each urgent one, in UP's voice, signed "The UP team". Put it in the report. Never send it.
+- Test or gibberish orders still `awaiting_payment` ("demo", "test", keyboard mash, the owner's own email): list them under "Needs you" as junk. On the owner's yes, write `orders-plan.json` as `{ "orderRefs": [...], "reason": "..." }`, run `M orders-clear check orders-plan.json`, then `apply`. The server refuses any order with an item past `awaiting_payment`.
 Approval and rejection stay with the owner on the Work with us admin page (payment is re-checked there).
 
 ## D. Analytics
@@ -70,7 +75,8 @@ From `analytics.json`:
 
 ## E. Playlists
 
-- From `cleanup.json` `playlists.lists`: lists with under half their items live. `mine: true` ones: offer /up-playlist --update. Others: the monthly cleanup worker handles fully dead public lists; report the half-dead ones with their names.
+- From `cleanup.json` `playlists.lists`: lists with under half their items live. `mine: true` ones: offer /up-playlist --update. Others: report the half-dead ones with their names.
+- Fully dead public lists (no live item): `M playlists-clear check` lists them. Show the names and ask. On a yes, write the returned ids to `playlists-plan.json` as `{ "ids": [...] }`, then run `M playlists-clear apply playlists-plan.json`. Apply always takes the exact ids, never "whatever is empty now", and the server re-checks each one is still dead.
 
 ## F. Bugs and code
 

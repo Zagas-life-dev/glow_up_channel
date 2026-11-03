@@ -14,7 +14,8 @@
  *   node maintain.mjs check <plan.json>       dry run of a hide plan, writes nothing
  *   node maintain.mjs hide <plan.json>        move the plan's live listings to Hidden
  *   node maintain.mjs link check|apply <plan.json>       { items: [{ kind, id, url, note }] } - set a live listing's url
- *   node maintain.mjs playlists-clear check|apply        delete public playlists with no live item
+ *   node maintain.mjs playlists-clear check              list public playlists with no live item
+ *   node maintain.mjs playlists-clear apply <plan.json>  { ids: [...] } - delete exactly those (each re-checked)
  *   node maintain.mjs orders-clear check|apply <plan.json>  { orderRefs, reason } - unpaid junk Work with us orders
  *
  * Reads are saved to ~/up-maintenance/<date>/<name>.json and summarised on stdout.
@@ -126,14 +127,15 @@ async function main() {
 
   if (writes.includes(command)) {
     const [mode, plan] = process.argv.slice(3);
-    if (!['check', 'apply'].includes(mode) || (command !== 'playlists-clear' && !plan)) {
+    if (!['check', 'apply'].includes(mode) || (command !== 'playlists-clear' && !plan) || (command === 'playlists-clear' && mode === 'apply' && !plan)) {
       console.error(`usage: node maintain.mjs ${command} check|apply${command === 'playlists-clear' ? '' : ' <plan.json>'}`);
       process.exit(2);
     }
     const dryRun = mode === 'check';
     const body = command === 'link' ? { items: readItems(plan) }
       : command === 'orders-clear' ? JSON.parse(readFileSync(resolve(plan), 'utf8'))
-      : {};
+      // Apply always names the exact lists (the ids a check returned), never "whatever is empty now".
+      : plan ? { ids: JSON.parse(readFileSync(resolve(plan), 'utf8')).ids } : {};
     const path = { link: 'link', 'playlists-clear': 'playlists/clear', 'orders-clear': 'work-with-us/clear' }[command];
     const data = await call(cfg, `/api/uploads/maintenance/${path}`, { ...body, dryRun });
     console.log(JSON.stringify(data, null, 2));
