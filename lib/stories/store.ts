@@ -178,14 +178,66 @@ function persist() {
 /* ------------------------------------------------------------------ viewer */
 
 /** Which story the full-screen viewer shows, if any. One viewer, mounted in the app layout. */
-export type ViewerState = { storyId: string; source: "rail" | "popup" | "link" } | null
+export type ViewerSource = "rail" | "popup" | "link" | "return"
+/** `frame` opens on that slide rather than the first unseen one. */
+export type ViewerState = { storyId: string; source: ViewerSource; frame?: number } | null
 
 let viewer: ViewerState = null
 const viewerListeners = new Set<() => void>()
 
-export function openStoryViewer(storyId: string, source: "rail" | "popup" | "link" = "rail") {
-  viewer = { storyId, source }
+export function openStoryViewer(storyId: string, source: ViewerSource = "rail", frame?: number) {
+  viewer = { storyId, source, frame }
   for (const l of viewerListeners) l()
+}
+
+/* ------------------------------------------------------------------ return trip */
+
+/**
+ * A story that sent the user to a listing, and where to put them back.
+ *
+ * Set when the viewer hands off to a listing page; read by the viewer host
+ * when the user comes back from that listing to the page the story was open
+ * on, which reopens the story on the same slide. Session-scoped and short-
+ * lived: a return half an hour later is a new visit, not a back.
+ */
+export type StoryReturn = {
+  storyId: string
+  frame: number
+  /** The rail order the viewer had, so swiping on lands where it would have. */
+  order: string[]
+  from: string
+  to: string
+  at: number
+}
+
+const RETURN_KEY = "up-story-return"
+const RETURN_TTL_MS = 30 * 60 * 1000
+
+export function rememberStoryReturn(entry: Omit<StoryReturn, "at">) {
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ ...entry, at: Date.now() }))
+  } catch {
+    // Storage blocked: back lands on the page without the story, as before.
+  }
+}
+
+/** The pending return trip, if it is still fresh. Does not clear it. */
+export function peekStoryReturn(): StoryReturn | null {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(RETURN_KEY) || "null") as StoryReturn | null
+    if (!raw || Date.now() - raw.at > RETURN_TTL_MS) return null
+    return raw
+  } catch {
+    return null
+  }
+}
+
+export function clearStoryReturn() {
+  try {
+    sessionStorage.removeItem(RETURN_KEY)
+  } catch {
+    // Nothing to clear.
+  }
 }
 
 export function closeStoryViewer() {

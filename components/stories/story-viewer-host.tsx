@@ -7,10 +7,21 @@
  *
  * The story order is frozen when the viewer opens: the rail sorts seen stories
  * last, and re-sorting mid-viewing would move the story under the user's thumb.
+ *
+ * Coming back from a listing a story opened puts the user back in that story,
+ * on that slide, in the same order (lib/stories/store `rememberStoryReturn`).
  */
 
 import { useEffect, useRef, useState } from "react"
-import { closeStoryViewer, openStoryViewer, useStories, useStoryViewer } from "@/lib/stories/store"
+import { usePathname } from "next/navigation"
+import {
+  clearStoryReturn,
+  closeStoryViewer,
+  openStoryViewer,
+  peekStoryReturn,
+  useStories,
+  useStoryViewer,
+} from "@/lib/stories/store"
 import type { Story } from "@/lib/stories/api"
 import { StoryViewer } from "@/components/stories/story-viewer"
 import { orderStories, useStoriesKey } from "@/components/stories/stories-rail"
@@ -28,11 +39,20 @@ function takeStoryParam(): string | null {
   return story
 }
 
+/** `stories` in the order of `ids`, anything new after. */
+function inOrder(stories: Story[], ids: string[]): Story[] {
+  const rank = new Map(ids.map((id, i) => [id, i]))
+  return [...stories].sort((a, b) => (rank.get(a.id) ?? ids.length) - (rank.get(b.id) ?? ids.length))
+}
+
 export default function StoryViewerHost() {
   const key = useStoriesKey()
   const { data } = useStories(key)
   const viewer = useStoryViewer()
+  const pathname = usePathname()
   const pending = useRef<string | null | undefined>(undefined)
+  const previousPath = useRef<string | null>(null)
+  const returnOrder = useRef<string[] | null>(null)
   const [frozen, setFrozen] = useState<Story[] | null>(null)
 
   useEffect(() => {
@@ -47,9 +67,30 @@ export default function StoryViewerHost() {
     if (data.stories.some((s) => s.id === wanted)) openStoryViewer(wanted, "link")
   }, [data])
 
+  // Back from the listing a story opened, onto the page the story was open on:
+  // reopen it where they left. Any other move away from the listing drops it.
   useEffect(() => {
-    if (!viewer) setFrozen(null)
-    else if (!frozen && data) setFrozen(orderStories(data.stories))
+    const from = previousPath.current
+    previousPath.current = pathname
+    const trip = peekStoryReturn()
+    if (!trip || !from || from === pathname) return
+    if (from === trip.to && pathname === trip.from && data) {
+      clearStoryReturn()
+      if (!data.stories.some((s) => s.id === trip.storyId)) return
+      returnOrder.current = trip.order
+      openStoryViewer(trip.storyId, "return", trip.frame)
+    } else if (pathname !== trip.to) {
+      clearStoryReturn()
+    }
+  }, [pathname, data])
+
+  useEffect(() => {
+    if (!viewer) {
+      setFrozen(null)
+      returnOrder.current = null
+    } else if (!frozen && data) {
+      setFrozen(returnOrder.current ? inOrder(data.stories, returnOrder.current) : orderStories(data.stories))
+    }
   }, [viewer, data, frozen])
 
   if (!viewer || !frozen || !data) return null
@@ -62,9 +103,10 @@ export default function StoryViewerHost() {
 
   return (
     <StoryViewer
-      key={`${viewer.storyId}:${viewer.source}`}
+      key={`${viewer.storyId}:${viewer.source}:${viewer.frame ?? ""}`}
       stories={stories}
       startIndex={startIndex}
+      startFrame={viewer.frame}
       source={viewer.source}
       showTutorial={!data.tutorialDone}
       onClose={closeStoryViewer}

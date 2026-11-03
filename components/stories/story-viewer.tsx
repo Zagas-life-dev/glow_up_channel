@@ -31,7 +31,9 @@ import {
   newSessionId,
   patchStories,
   queueStoryEvent,
+  rememberStoryReturn,
   setSavedPlaylist,
+  type ViewerSource,
 } from "@/lib/stories/store"
 import { storyDisc, storyIcon, storySlide } from "@/components/stories/story-look"
 import { cn } from "@/lib/utils"
@@ -144,13 +146,16 @@ function StoryCover({ story, first, side }: { story: Story; first: number; side:
 export function StoryViewer({
   stories,
   startIndex,
+  startFrame,
   source,
   showTutorial,
   onClose,
 }: {
   stories: Story[]
   startIndex: number
-  source: "rail" | "popup" | "link"
+  /** Open on this slide (coming back from a listing) instead of the first unseen. */
+  startFrame?: number
+  source: ViewerSource
   showTutorial: boolean
   onClose: () => void
 }) {
@@ -164,7 +169,9 @@ export function StoryViewer({
   }, [])
 
   const [storyIdx, setStoryIdx] = useState(startIndex)
-  const [frame, setFrame] = useState(() => firstFrame(stories[startIndex]))
+  const [frame, setFrame] = useState(() =>
+    startFrame !== undefined ? Math.min(startFrame, stories[startIndex].items.length) : firstFrame(stories[startIndex]),
+  )
   const [held, setHeld] = useState(false)
   const [tutorial, setTutorial] = useState(showTutorial)
   const [saved, setSaved] = useState<Set<string>>(new Set())
@@ -487,9 +494,21 @@ export function StoryViewer({
   /**
    * Go to another page. The viewer lives in the app layout and outlives the
    * route, so it has to close first or it keeps covering the page it opened.
+   *
+   * `comeBack` is for a listing: coming back from it reopens this story on
+   * this slide (story-viewer-host), the way back works in other story apps.
    */
-  const leaveTo = (path: string) => {
+  const leaveTo = (path: string, comeBack = false) => {
     if (!isEnd) log("exit")
+    if (comeBack) {
+      rememberStoryReturn({
+        storyId: story.id,
+        frame,
+        order: stories.map((s) => s.id),
+        from: window.location.pathname,
+        to: path.split("?")[0],
+      })
+    }
     onClose()
     router.push(path)
   }
@@ -531,7 +550,7 @@ export function StoryViewer({
     if (!isAuthenticated) return toSignIn(it.url)
     log("apply", { listingId: it.id })
     if (!it.applyUrl) {
-      leaveTo(`${it.url}?src=story`)
+      leaveTo(`${it.url}?src=story`, true)
       return
     }
     setApplied((s) => new Set(s).add(it.id))
@@ -735,7 +754,7 @@ export function StoryViewer({
                   // A new tab (ctrl/cmd/middle click) keeps the story open here.
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
                   e.preventDefault()
-                  leaveTo(`${item.url}?src=story`)
+                  leaveTo(`${item.url}?src=story`, true)
                 }}
                 className="mx-auto mt-2 flex w-fit items-center gap-0.5 px-3 py-1.5 text-[13px] font-medium text-white/75 hover:text-white"
               >
