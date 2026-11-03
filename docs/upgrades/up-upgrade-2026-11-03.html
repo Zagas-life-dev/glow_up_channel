@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP Speed Audit</title>
+<style>
+:root{--bg:#fff;--fg:#0B1233;--muted:#5a6280;--card:#f5f6fa;--line:#e3e5ee;--accent:#FF6A00;--ok:#1a7f4b;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c}}
+:root[data-theme="dark"]{--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:19px;margin:36px 0 12px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+.sub{color:var(--muted);margin:0 0 20px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.tile b{display:block;font-size:24px;color:var(--accent)}
+.item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
+.item h3{margin:0 0 6px;font-size:16px}
+.meta{color:var(--muted);font-size:13px}
+code{font:13px ui-monospace,Consolas,monospace;background:rgba(127,127,127,.15);padding:1px 4px;border-radius:4px;overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-right:6px}
+.fixed{color:var(--ok)}.todo{color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body><main>
+<h1>UP speed audit</h1>
+<p class="sub">3 Nov 2026 · Speed mode · backend <code>latest-glowup-channel/</code> + Next frontend · fixes on branch <code>upgrade/2026-11-03</code> in both repos (local, not pushed)</p>
+
+<div class="tiles">
+<div class="tile"><b>7</b>fixes committed</div>
+<div class="tile"><b>467 KB</b>JSON no longer parsed on every page</div>
+<div class="tile"><b>~56</b>Mongo ops removed per page view</div>
+<div class="tile"><b>1 → per-IP</b>rate-limit buckets</div>
+</div>
+
+<h2>Baseline (before changes)</h2>
+<div class="scroll"><table>
+<tr><th>Check</th><th>Result</th></tr>
+<tr><td>Frontend tests</td><td>503 / 503 pass</td></tr>
+<tr><td>Backend tests</td><td>638 / 640 pass. 2 tagging tests already failing before this audit (<code>tagging.test.js:116</code>, <code>listingTagging.test.js</code>): a third <code>industry:*</code> tag passes the group limit. Not a speed issue.</td></tr>
+<tr><td><code>next build</code></td><td>Compiles. Every route is dynamic (ƒ), including <code>/about</code> and the policy pages, because the root layout reads <code>cookies()</code>/<code>headers()</code>.</td></tr>
+<tr><td>Live <code>/jobs</code>, phone width</td><td>TTFB 390 ms · 109 KB HTML · 26 JS files, 1.37 MB decoded · 6 API calls + 10 RSC prefetches after load</td></tr>
+<tr><td>Live listing page</td><td>TTFB 431 ms · 7 API calls + 12 RSC prefetches</td></tr>
+<tr><td>Old feed N+1 (~240 trips)</td><td>Gone. The unified feed now does 4 parallel finds + 1 cached promotion query.</td></tr>
+</table></div>
+
+<h2>Fixed by me</h2>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Every visitor shared one rate-limit bucket</h3>
+<p>No <code>trust proxy</code> was set, so on Cloud Run <code>req.ip</code> was Google's front end and not the visitor. Live proof: the limit is 5000 per 15 min, and <code>RateLimit-Remaining</code> dropped by 9 between two of my requests one second apart, so other people were spending my budget. At peak, everyone on an instance gets 429 at the same time.</p>
+<p class="meta">Added <code>app.set('trust proxy', 1)</code> in <code>server.js</code>. Backend, minutes.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Public playlists loaded on every page, used by nothing live</h3>
+<p>The root <code>PlaylistProvider</code> fetched <code>/api/playlists/public?limit=50</code> on every route for every visitor. That is 467 KB of JSON (50 KB brotli), 0.5–1.8 s on the backend, and about 56 Mongo ops. The only readers are the deprecated post composer and <code>/post</code>.</p>
+<p class="meta">The context no longer fetches it on mount. The two composer screens fetch it when they open. <code>contexts/playlist-context.tsx</code>, <code>components/post-composer.tsx</code>, <code>app/post/page.tsx</code>.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Playlist creator lookups: one query per playlist → one query per page</h3>
+<p><code>/my</code>, <code>/shared</code>, <code>/public</code> and <code>/premium</code> each ran a <code>users.findOne</code> for every playlist. Now there is one <code>$in</code> query through the <code>withCreators()</code> helper. The response shape is unchanged. <code>/public</code> goes from 50 queries to 1.</p>
+<p class="meta"><code>src/controllers/playlistController.js</code></p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span><code>/my</code> and <code>/shared</code> were fetched one after the other</h3>
+<p>Every signed-in page load waited for two round trips in series (≈600 ms at the 296 ms RTT measured earlier). They now run in parallel.</p>
+<p class="meta"><code>contexts/playlist-context.tsx</code></p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>3 background prefetches were thrown away every signed-in session</h3>
+<p>The prefetcher warmed the home tabs without a country. The home tab always sends the viewing country (auto mode has one from the timezone), and a country-limited page skips the cache. The test suite showed this: a default reader already has a country. The tabs are now warmed only in Anywhere mode. Tests updated, 7/7 pass.</p>
+<p class="meta"><code>lib/background-prefetch.ts</code>, <code>lib/background-prefetch.test.ts</code></p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Retired Locked In cost a call on every signed-in page</h3>
+<p><code>LockedInProvider</code> sat in the root layout and called <code>getActiveLockedInSession()</code> for every signed-in user. It also ran a 1 s re-render tick when a stale session existed. The provider now lives in <code>app/locked-in/layout.tsx</code> only.</p></div>
+
+<div class="item"><h3><span class="tag fixed">fixed</span>Tracker-reminder cron scanned the whole collection 288×/day</h3>
+<p>The query is <code>{status, reminderSentAt:null, reminderAt ≤ now}</code> and no index covered it. I added <code>{status:1, reminderSentAt:1, reminderAt:1}</code> to <code>src/config/database.js</code>. Collection size not measured.</p>
+<p class="meta">The index is only built when the startup index pass runs (see Needs you).</p></div>
+
+<h2>To do next (ranked by impact ÷ size)</h2>
+
+<div class="item"><h3><span class="tag todo">~2 h</span>Cache the feed candidate pool per country</h3>
+<p>Every feed page, including page 2+, re-reads up to 400 full listings per type with 4 finds, to serve 15–20 items. The pool depends only on country. Add an in-memory cache keyed by <code>country||'*'</code>, 30–60 s TTL, with in-flight dedupe (same pattern as <code>storyService.loadListings</code>). That takes Mongo reads per page from 4 to 0 on a hit.</p>
+<p class="meta"><code>src/services/recommendationService.js:696, 754, 823, 882</code></p></div>
+
+<div class="item"><h3><span class="tag todo">~30 min</span>Cold start waits for 141 index calls in series</h3>
+<p><code>createIndexes()</code> awaits 141 <code>createIndex</code> calls one at a time before <code>app.listen</code>, and <code>min-instances</code> is 0. 44 of those are for deprecated collections (posts, channels, notifications, locked_in, wallet…). Fix: set <code>SKIP_INDEX_CREATION=true</code> on Cloud Run and run index creation once per deploy, or run them after <code>listen</code> in parallel. Delete the dead 44.</p>
+<p class="meta"><code>src/config/database.js:103, 147-466</code></p></div>
+
+<div class="item"><h3><span class="tag todo">a day+</span>Every page is server-rendered on each request</h3>
+<p>The root layout reads cookies/headers for locale and country, so even <code>/about</code> and the policy pages are dynamic, at ≈400 ms TTFB. Move locale/country reading into the client providers, or into the pages that need it, so static pages can be cached at the edge.</p>
+<p class="meta"><code>app/layout.tsx:165</code></p></div>
+
+<div class="item"><h3><span class="tag todo">~1 h</span>Route-code prefetch runs twice</h3>
+<p>Each feed route's RSC payload is fetched twice per page: once by <code>router.prefetch</code> in <code>BackgroundPrefetcher</code> and once by the nav <code>&lt;Link&gt;</code> prefetch. That makes 12 requests where 6 would do. Also, <code>/resources</code> is prefetched while resources are paused. Measure on a local <code>next start</code>, then drop one of the two.</p>
+<p class="meta"><code>components/background-prefetcher.tsx:8, 38</code></p></div>
+
+<div class="item"><h3><span class="tag todo">~1 h</span>Anonymous feed cache is a Mongo read every request</h3>
+<p><code>/api/feed/anonymous</code> does a <code>findOne</code> for a 100-doc cache document each time, with no in-process memo and no <code>Cache-Control</code>. When the cache is stale, concurrent rebuilds can stampede. Add a memo + <code>public, max-age=60</code>. Low impact while visitors land on the marketing page.</p>
+<p class="meta"><code>src/services/publicFeedService.js:271</code></p></div>
+
+<div class="item"><h3><span class="tag todo">unverified</span>JS weight 1.37 MB decoded per page</h3>
+<p>No heavy library (framer-motion, charts, genai) is imported by the app shell. The Turbopack build doesn't print first-load sizes, so a bundle analyzer run is needed to find what fills the 222 KB and 135 KB chunks.</p></div>
+
+<h2>Needs you</h2>
+<div class="item"><ol>
+<li>Check <code>SKIP_INDEX_CREATION</code> on the Cloud Run service. If it is <code>true</code>, the new tracker index won't be built: create it once from Atlas or a one-off script.</li>
+<li><code>cloudbuild.yaml</code> still deploys <code>--max-instances 10</code> (last touched Sep 2025), against the 3-instance rule, with <code>maxPoolSize: 80</code>. If this file is still the deploy path, set it to 3 and the pool to ~20.</li>
+<li>Review and push the <code>upgrade/2026-11-03</code> branches. Nothing is deployed.</li>
+</ol></div>
+
+<h2>Questions for you</h2>
+<div class="item"><ol>
+<li><b>Privacy:</b> <code>/api/playlists/public</code> returns each creator's email to anyone. Verified live; today the creators are <code>@up.com</code> accounts, but a user-made public list would expose a real email. The frontend uses <code>createdBy.email</code> as a fallback for owner checks and display names. My pick: drop email from the public and premium responses, and match owners by <code>_id</code> only.</li>
+<li><b>Dead indexes:</b> may the 44 index entries for deprecated collections be deleted from startup? My pick: yes. It only stops creating them; existing data is untouched.</li>
+</ol></div>
+</main></body></html>

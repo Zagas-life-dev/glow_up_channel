@@ -120,8 +120,10 @@ export function planPrefetch(reader: PrefetchReader, backendUrl: string): Task[]
   // 2. Discover — the other ranked feed.
   tasks.push({ name: "discover", run: () => prefetchDiscover(reader.userId ?? "anon") })
 
-  // 3. The home tabs, for signed-in readers (they sit under For You).
-  if (signedIn) {
+  // 3. The home tabs, for signed-in readers (they sit under For You). A tab
+  //    limited to a viewing country bypasses the cache, so warming it would be
+  //    thrown away; only the Anywhere setting reads what lands here.
+  if (signedIn && !viewingCountryName()) {
     const token = localStorage.getItem("accessToken")
     const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
     for (const type of LIST_TYPES) {

@@ -43,7 +43,11 @@ export default function PostComposer({
   onTypingEnd,
 }: PostComposerProps) {
   const { user } = useAuth()
-  const { playlists, sharedPlaylists, publicPlaylists } = usePlaylist()
+  const { playlists, sharedPlaylists, publicPlaylists, fetchPublicPlaylists } = usePlaylist()
+
+  useEffect(() => {
+    void fetchPublicPlaylists()
+  }, [fetchPublicPlaylists])
 
   const [text, setText] = useState('')
   const [images, setImages] = useState<{ file: File; preview: string }[]>([])

@@ -46,7 +46,11 @@ interface ContentItem {
 function PostPageContent() {
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { playlists, sharedPlaylists, publicPlaylists, canEditPlaylist } = usePlaylist()
+  const { playlists, sharedPlaylists, publicPlaylists, canEditPlaylist, fetchPublicPlaylists } = usePlaylist()
+
+  useEffect(() => {
+    void fetchPublicPlaylists()
+  }, [fetchPublicPlaylists])
   const { setHideNavbar, setHideFooter } = usePage()
 
   useEffect(() => {

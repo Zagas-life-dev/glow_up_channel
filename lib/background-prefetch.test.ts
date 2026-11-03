@@ -4,6 +4,9 @@ import { planPrefetch } from "@/lib/background-prefetch"
 
 const BACKEND = "http://api.test"
 
+/** The viewing-country setting's stored value for "Anywhere" (no country filter). */
+const setAnywhere = () => localStorage.setItem("glowup-viewing-country", "*")
+
 beforeEach(() => {
   sessionStorage.clear()
   localStorage.clear()
@@ -27,10 +30,18 @@ describe("planPrefetch", () => {
     planPrefetch({ userId, normalizedUser: null }, BACKEND).map((t) => t.name)
 
   it("warms For You first for a signed-in reader, then everything else", () => {
+    setAnywhere()
     const plan = names("user-1")
     expect(plan[0]).toBe("for-you")
     expect(plan).toContain("discover")
     expect(plan).toContain("tab:events")
+    expect(plan).toContain("hub:events")
+  })
+
+  it("skips the home tabs when a viewing country limits them, as they bypass the cache", () => {
+    const plan = names("user-1")
+    expect(plan[0]).toBe("for-you")
+    expect(plan.some((n) => n.startsWith("tab:"))).toBe(false)
     expect(plan).toContain("hub:events")
   })
 
@@ -42,6 +53,7 @@ describe("planPrefetch", () => {
   })
 
   it("skips anything already warm", () => {
+    setAnywhere()
     setContentCache("unified_auth", { items: [{ _id: "a" }], lastId: "a", owner: "user-1" })
     setContentCache("events", { items: [{ _id: "e" }], lastId: "e" })
     setContentCache("hub_jobs", { items: [{ _id: "j" }], lastId: "j" })

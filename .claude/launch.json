@@ -43,6 +43,15 @@
       "port": 3002
     },
     {
+      "name": "backend-quiet",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "process.env.PUSH_CRON_MODE='external';process.env.SKIP_INDEX_CREATION='true';process.chdir('latest-glowup-channel');require(require('path').resolve('server.js'))"
+      ],
+      "port": 3002
+    },
+    {
       "name": "web-3001",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

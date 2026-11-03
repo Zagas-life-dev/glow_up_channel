@@ -18,7 +18,6 @@ import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
 import { AuthProvider } from "@/lib/auth-context"
 import { PlaylistProvider } from "@/contexts/playlist-context"
-import { LockedInProvider } from "@/contexts/locked-in-context"
 import { TrackerProvider } from "@/contexts/tracker-context"
 import { GiftProvider } from "@/contexts/gift-context"
 import { PromotionAnnouncementProvider } from "@/contexts/promotion-announcement-context"
@@ -208,7 +207,6 @@ export default async function RootLayout({
             <ViewingCountryProvider>
               <AuthProvider>
                 <PlaylistProvider>
-                  <LockedInProvider>
                     {/* Inside AuthProvider: the tracker is member-only, and the
                         return watcher must never arm for a signed-out visitor. */}
                     <TrackerProvider>
@@ -262,7 +260,6 @@ export default async function RootLayout({
                         </PromotionAnnouncementProvider>
                       </GiftProvider>
                     </TrackerProvider>
-                  </LockedInProvider>
                 </PlaylistProvider>
               </AuthProvider>
             </ViewingCountryProvider>

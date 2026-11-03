@@ -226,10 +226,11 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Fetch own playlists
-      const myResponse = await fetch(`${API_BASE_URL}/api/playlists/my`, {
-        headers: getAuthHeaders()
-      })
+      // Own and shared playlists are independent, so fetch them together.
+      const [myResponse, sharedResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/playlists/my`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE_URL}/api/playlists/shared`, { headers: getAuthHeaders() }),
+      ])
 
       if (myResponse.ok) {
         const myData = await myResponse.json()
@@ -239,11 +240,6 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       } else {
         console.warn(`Failed to fetch own playlists: ${myResponse.status} ${myResponse.statusText}`)
       }
-
-      // Fetch shared playlists
-      const sharedResponse = await fetch(`${API_BASE_URL}/api/playlists/shared`, {
-        headers: getAuthHeaders()
-      })
 
       if (sharedResponse.ok) {
         const sharedData = await sharedResponse.json()
@@ -709,8 +705,9 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
       setSavedPlaylists([])
       setInvitations([])
     }
-    fetchPublicPlaylists()
-  }, [isAuthenticated, fetchPlaylists, fetchPublicPlaylists, fetchInvitations, fetchSavedPlaylists])
+    // Public playlists are not loaded here: the list is ~470 KB of JSON and only
+    // the post composer reads it, so it calls fetchPublicPlaylists itself.
+  }, [isAuthenticated, fetchPlaylists, fetchInvitations, fetchSavedPlaylists])
 
   return (
     <PlaylistContext.Provider value={{
