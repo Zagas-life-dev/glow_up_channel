@@ -1,18 +1,11 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next/types"
-import { cookies, headers } from "next/headers"
 import { Unbounded, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import AppLayout from "@/components/app-layout"
 import { LocaleProvider } from "@/lib/i18n/context"
 import { ViewingCountryProvider } from "@/lib/geo/viewing-country"
-import {
-  LOCALE_COOKIE,
-  localeFromAcceptLanguage,
-  localeFromCountry,
-  normalizeLocale,
-  DEFAULT_LOCALE,
-} from "@/lib/i18n/config"
+import { DEFAULT_LOCALE } from "@/lib/i18n/config"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { PageProvider } from "@/contexts/page-context"
@@ -154,44 +147,18 @@ export const viewport: Viewport = {
 }
 
 /**
- * Resolve the locale on the server so the first paint is already correct.
- *
- * The middleware writes the cookie; this reads it, with the same
- * Accept-Language / country fallbacks in case the request skipped middleware
- * (a prefetch, or a route outside the matcher).
+ * The layout reads no cookies or headers, so pages that need nothing per
+ * request can be prerendered and served from the CDN. The locale and country
+ * are settled on the client from the cookies the middleware writes; a reader
+ * whose language is not English sees English for the first paint only.
  */
-async function resolveInitialLocale() {
-  const [cookieStore, headerList] = await Promise.all([cookies(), headers()])
-
-  const fromCookie = normalizeLocale(cookieStore.get(LOCALE_COOKIE)?.value)
-  if (fromCookie) {
-    return { locale: fromCookie, countryCode: countryFrom(headerList) }
-  }
-
-  const countryCode = countryFrom(headerList)
-  const locale =
-    localeFromAcceptLanguage(headerList.get("accept-language")) ??
-    localeFromCountry(countryCode) ??
-    DEFAULT_LOCALE
-
-  return { locale, countryCode }
-}
-
-function countryFrom(headerList: Headers): string | null {
-  return (
-    headerList.get("x-vercel-ip-country") ?? headerList.get("cf-ipcountry") ?? null
-  )
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const { locale, countryCode } = await resolveInitialLocale()
-
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={DEFAULT_LOCALE} suppressHydrationWarning>
       <head>
         <meta name="google" content="notranslate" />
         {/* Publisher identity every listing's JSON-LD points back to. */}
@@ -203,7 +170,7 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ThemeColorSync />
-          <LocaleProvider initialLocale={locale} countryCode={countryCode}>
+          <LocaleProvider>
             <ViewingCountryProvider>
               <AuthProvider>
                 <PlaylistProvider>

@@ -28,6 +28,12 @@ export const LOCALES = SUPPORTED_LANGUAGES
 export const DEFAULT_LOCALE: Locale = "en"
 
 export const LOCALE_COOKIE = "glowup-locale"
+/**
+ * The CDN's guess at the visitor's country (ISO code), copied into a cookie by
+ * the middleware so the client can read it: the root layout no longer reads
+ * request headers, which is what lets pages be served statically.
+ */
+export const COUNTRY_COOKIE = "glowup-country"
 export const LOCALE_STORAGE_KEY = "glowup-locale"
 
 /** Names written in their own language — never translate a language menu. */

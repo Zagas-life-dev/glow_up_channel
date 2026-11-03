@@ -2,6 +2,17 @@ import { getJob } from "@/lib/seo/fetch-content"
 import JobDetail from "./job-detail"
 
 /**
+ * Rendered on first request, then served from cache and refreshed in the
+ * background every 5 minutes (matching the listing fetch). No ids are built
+ * ahead of time; an empty list just opts the route into static caching.
+ */
+export const revalidate = 300
+
+export function generateStaticParams() {
+  return []
+}
+
+/**
  * Server entry for the job detail page.
  *
  * The listing is fetched here (one cached round trip, shared with the layout's

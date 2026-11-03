@@ -12,6 +12,7 @@
 import * as React from "react"
 
 import {
+  COUNTRY_COOKIE,
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_LABELS,
@@ -54,13 +55,16 @@ function writeCookie(name: string, value: string): void {
 export function LocaleProvider({
   children,
   initialLocale,
-  countryCode,
+  countryCode: countryCodeProp,
   profileLocale,
 }: {
   children: React.ReactNode
   /** From the server (cookie or Accept-Language), to avoid a first-render flash. */
   initialLocale?: Locale
-  /** The user's country, used to guess a locale and infer secondary languages. */
+  /**
+   * The user's country, used to guess a locale and infer secondary languages.
+   * Read from the middleware's country cookie when not passed.
+   */
   countryCode?: string | null
   /** A saved preference on the user's profile, if there is one. */
   profileLocale?: string | null
@@ -70,6 +74,11 @@ export function LocaleProvider({
   )
   // Only an explicit pick should override a later profile or country signal.
   const [explicit, setExplicit] = React.useState<Locale | null>(null)
+  const [countryCode, setCountryCode] = React.useState<string | null>(countryCodeProp ?? null)
+
+  React.useEffect(() => {
+    setCountryCode(countryCodeProp ?? readCookie(COUNTRY_COOKIE))
+  }, [countryCodeProp])
 
   React.useEffect(() => {
     const stored =

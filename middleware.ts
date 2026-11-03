@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { LOCALE_COOKIE, localeFromAcceptLanguage, localeFromCountry, normalizeLocale } from '@/lib/i18n/config'
+import { COUNTRY_COOKIE, LOCALE_COOKIE, localeFromAcceptLanguage, localeFromCountry, normalizeLocale } from '@/lib/i18n/config'
 
 /**
  * Decides the locale before the page renders.
@@ -17,11 +17,21 @@ export async function middleware(request: NextRequest) {
   // BetterAuth handles its own sessions; nothing to check here.
   const response = NextResponse.next()
 
-  const existing = normalizeLocale(request.cookies.get(LOCALE_COOKIE)?.value)
-  if (existing) return response
-
   const countryCode =
     request.headers.get('x-vercel-ip-country') ?? request.headers.get('cf-ipcountry')
+
+  // The root layout no longer reads request headers (so pages can be static),
+  // so the country reaches the client through this cookie instead.
+  if (countryCode && request.cookies.get(COUNTRY_COOKIE)?.value !== countryCode) {
+    response.cookies.set(COUNTRY_COOKIE, countryCode, {
+      path: '/',
+      maxAge: 60 * 60 * 24,
+      sameSite: 'lax',
+    })
+  }
+
+  const existing = normalizeLocale(request.cookies.get(LOCALE_COOKIE)?.value)
+  if (existing) return response
 
   const locale =
     localeFromAcceptLanguage(request.headers.get('accept-language')) ??
