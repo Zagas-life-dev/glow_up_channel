@@ -64,10 +64,12 @@ export default function DigestPopup() {
 
   return (
     <Dialog open onOpenChange={(o) => !o && dismiss()}>
-      <DialogContent className="max-w-[400px] gap-0 overflow-hidden p-0">
+      {/* minmax(0,1fr): without it the grid column grows to the longest
+          untruncated title and the sheet runs off the side of a phone. */}
+      <DialogContent className="max-w-[400px] grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden p-0">
         <div className="relative bg-up-navy px-6 pb-6 pt-7 text-up-on-navy">
           <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-36 -rotate-[8deg] rounded-up-xl bg-up-orange" />
-          <span aria-hidden className="pointer-events-none absolute -right-2 top-8 h-16 w-20 rotate-[6deg] rounded-up-md bg-up-lime" />
+          <span aria-hidden className="pointer-events-none absolute -right-2 top-[4.5rem] h-16 w-20 rotate-[6deg] rounded-up-md bg-up-lime" />
           <DialogHeader className="relative text-left">
             <span className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-up-orange text-white">
               <Sparkles className="h-5 w-5" aria-hidden />

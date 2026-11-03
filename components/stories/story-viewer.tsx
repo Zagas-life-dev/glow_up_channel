@@ -670,26 +670,32 @@ export function StoryViewer({
           onContextMenu={(e) => e.preventDefault()}
         >
           {item ? (
-            <div key={item.id} className="flex min-h-0 flex-1 flex-col motion-safe:animate-[story-in_260ms_ease-out]">
+            // Only the image may shrink: text that shrinks spills onto the next line
+            // of the slide. Short phones get fewer title and blurb lines instead.
+            <div key={item.id} className="flex min-h-0 flex-1 flex-col overflow-hidden motion-safe:animate-[story-in_260ms_ease-out]">
               {item.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={item.image}
                   alt=""
                   draggable={false}
-                  className="mb-5 h-36 w-full shrink-0 rounded-[20px] object-cover ring-1 ring-white/10"
+                  className="mb-5 h-36 min-h-0 w-full shrink rounded-[20px] object-cover ring-1 ring-white/10 [@media(max-height:600px)]:hidden"
                 />
               ) : null}
-              <p className={cn("text-xs font-bold uppercase tracking-[0.14em]", look.accent)}>
+              <p className={cn("shrink-0 text-xs font-bold uppercase tracking-[0.14em]", look.accent)}>
                 {KIND_LABEL[item.type]}
                 {item.place ? <span className="text-white/60"> · {item.place}</span> : null}
               </p>
-              {item.org ? <p className="mt-3 truncate text-base font-semibold text-white/75">{item.org}</p> : null}
-              <h2 className="mt-1 line-clamp-4 font-display text-[clamp(1.75rem,7.5vw,2.25rem)] font-extrabold leading-[1.06] tracking-[-0.01em]">
+              {item.org ? <p className="mt-3 shrink-0 truncate text-base font-semibold text-white/75">{item.org}</p> : null}
+              <h2 className="mt-1 line-clamp-3 shrink-0 font-display text-[clamp(1.6rem,7.5vw,2.25rem)] font-extrabold leading-[1.08] tracking-[-0.01em] [@media(min-height:740px)]:line-clamp-4">
                 {item.title}
               </h2>
-              {item.blurb ? <p className="mt-4 line-clamp-3 text-[15px] leading-snug text-white/75">{item.blurb}</p> : null}
-              <div className="mt-auto flex flex-wrap items-center gap-2 pt-5">
+              {item.blurb ? (
+                <p className="mt-4 line-clamp-3 shrink-0 text-[15px] leading-snug text-white/75 [@media(max-height:700px)]:line-clamp-2">
+                  {item.blurb}
+                </p>
+              ) : null}
+              <div className="mt-auto flex shrink-0 flex-wrap items-center gap-2 pt-5">
                 {countdown ? (
                   <span className={cn("rounded-full px-3 py-1.5 text-sm font-bold tabular-nums", look.pill)}>{countdown}</span>
                 ) : null}
