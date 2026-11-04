@@ -13,6 +13,13 @@ The run is **fully automatic**. Do not stop to ask before approving or deleting.
 
 Resources are **paused**. The queue leaves them out.
 
+## Public name is UP
+
+Everything an UP skill creates, posts, approves or edits shows **UP** as its public name: playlist creators, item "added by", uploads, notes, anything a user can see. Never "Claude", "claude" or "claude.ai". The login email stays `claude.ai@up.com`; only what people see is UP.
+
+- The account's public first name must be `UP`. If a playlist, listing or API reply shows the creator as `claude` (for example `createdBy.firstName`), put it first under "Needs you": the owner renames the account to UP. Do not change the account yourself.
+- Never write "Claude" into a name, title, description, hashtag, cover or message on UP.
+
 ## Setup (once per laptop)
 
 - Needs Node 18+. The client is `approve.mjs` in this skill's folder. Below, `APPROVE` means `node "<this skill folder>/approve.mjs"`.
