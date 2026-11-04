@@ -1,11 +1,9 @@
 import {
   BUNDLES,
   DETAIL_FIELDS,
-  LISTING_TIERS,
+  DURATIONS,
   MAX_LISTINGS,
-  MAX_PROMOTION_QUANTITY,
-  PROMOTION_ITEMS,
-  REVENUE_SHARE_OPTIONS,
+  RESOURCE_COMMISSION,
   allowsMultiple,
   normaliseLink,
   type Duration,
@@ -14,7 +12,6 @@ import {
 } from "../config"
 
 const KINDS = Object.keys(DETAIL_FIELDS) as Kind[]
-const DURATIONS = Object.keys(LISTING_TIERS) as Duration[]
 
 function text(value: unknown, max = 2000): string {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
@@ -81,46 +78,21 @@ export function parsePayload(raw: unknown): { payload: SubmissionPayload } | { e
     entries.push(parsed.entry)
   }
 
-  // A signature bundle, if one was picked.
+  // A package. The old à-la-carte pieces are no longer sold, so they are ignored.
   let bundleId: string | null = null
   if (kind === "promotion") {
     const picked = text(body.bundleId, 60)
-    if (picked) {
-      if (!BUNDLES.some((bundle) => bundle.id === picked)) return { error: "Pick a bundle we sell" }
-      bundleId = picked
-    }
+    if (!BUNDLES.some((bundle) => bundle.id === picked)) return { error: "Pick a package" }
+    bundleId = picked
   }
-
-  // Promotion items
   const promotions: { id: string; quantity: number }[] = []
-  if (kind === "promotion") {
-    const chosen = Array.isArray(body.promotions) ? body.promotions : []
-    for (const entry of chosen) {
-      const item = entry as Record<string, unknown>
-      const id = text(item.id, 60)
-      if (!PROMOTION_ITEMS.some((option) => option.id === id)) continue
-      if (promotions.some((already) => already.id === id)) continue
-      const count = Number(item.quantity)
-      if (!Number.isInteger(count) || count < 1 || count > MAX_PROMOTION_QUANTITY) continue
-      promotions.push({ id, quantity: count })
-    }
-    if (promotions.length === 0 && !bundleId) return { error: "Pick at least one promotion" }
-  }
 
-  // How long a paid listing runs. Everything else is left on the default.
+  // Listings are free and stay up until their deadline; the field is kept for old orders.
   const asked = text(body.duration, 20) as Duration
   const duration: Duration = DURATIONS.includes(asked) ? asked : "standard"
 
-  // Revenue share
-  let revenueShare: number | null = null
-  if (kind === "resource") {
-    const share = Number(body.revenueShare)
-    const option = REVENUE_SHARE_OPTIONS.find((entry) => entry.value === share)
-    if (!option) return { error: "Choose which terms you want" }
-    // The co-created split is scoped in writing, so it never comes in this way.
-    if (option.contactOnly) return { error: "Those terms are agreed with our team first" }
-    revenueShare = share
-  }
+  // One commission for every resource, whatever an older saved order asked for.
+  const revenueShare = kind === "resource" ? RESOURCE_COMMISSION : null
 
   return { payload: { kind, entries, duration, bundleId, promotions, revenueShare, contact } }
 }

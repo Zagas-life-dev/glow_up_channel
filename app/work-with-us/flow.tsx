@@ -7,10 +7,7 @@ import {
   RiArrowRightSLine,
   RiBookOpenLine,
   RiBriefcase4Line,
-  RiCalendar2Line,
-  RiCalendarLine,
   RiCheckLine,
-  RiEmotionHappyLine,
   RiErrorWarningLine,
   RiGraduationCapLine,
   RiLeafLine,
@@ -20,9 +17,7 @@ import {
   RiPlantLine,
   RiRocket2Line,
   RiSeedlingLine,
-  RiTeamLine,
   RiTicket2Line,
-  RiUserSmileLine,
   RiWhatsappLine,
 } from "react-icons/ri"
 
@@ -32,12 +27,12 @@ import { PARTNER_PROGRAMME_ENABLED } from "@/lib/feature-flags"
 import { cn } from "@/lib/utils"
 
 import {
+  AUDIENCE,
   BUNDLES,
-  LISTING_BULK,
-  LISTING_TIERS,
   MAX_LISTINGS,
-  PROMOTION_ITEMS,
+  RESOURCE_COMMISSION,
   buildOrder,
+  earliestStart,
   naira,
   normaliseLink,
   type Contact,
@@ -61,8 +56,6 @@ type PostKind = "job" | "event" | "opp"
 type Answers = {
   goal?: Goal
   kind?: PostKind
-  /** Events only. */
-  free?: boolean
   title?: string
   /** "" means they tapped "I don't have a link". */
   link?: string
@@ -71,12 +64,10 @@ type Answers = {
   deadline?: string
   where?: string
   about?: string
-  /** Paid posts only: 7 → standard, 30 → extended. */
-  length?: 7 | 30
-  /** A bundle id, or "custom" for pick-your-own. */
+  /** A package (bundle) id. */
   size?: string
-  pieces?: Record<string, boolean>
-  split?: 20 | 30
+  /** Packages only: the preferred start date. */
+  start?: string
   rtype?: string
   /** Digits only. */
   price?: string
@@ -89,25 +80,19 @@ type Answers = {
 type StepId =
   | "goal"
   | "kind"
-  | "free"
   | "size"
-  | "pieces"
-  | "split"
   | "title"
   | "link"
   | "date"
   | "deadline"
+  | "start"
   | "where"
   | "rtype"
   | "price"
   | "about"
-  | "length"
   | "name"
   | "reach"
   | "check"
-
-const isPaidPost = (a: Answers) =>
-  a.goal === "post" && (a.kind === "job" || (a.kind === "event" && a.free === false))
 
 /** Which of the copy's per-thing variants applies: job, event, opp, sell or promote. */
 function thing(a: Answers): "job" | "event" | "opp" | "sell" | "promote" {
@@ -121,18 +106,14 @@ const NOUN = { job: "job", event: "event", opp: "opportunity", sell: "course or 
 function path(a: Answers): StepId[] {
   const steps: StepId[] = ["goal"]
   if (a.goal === "post") {
-    steps.push("kind")
-    if (a.kind === "event") steps.push("free")
-    steps.push("title", "link", a.kind === "event" ? "date" : "deadline")
+    steps.push("kind", "title", "link", a.kind === "event" ? "date" : "deadline")
     if (a.kind !== "opp") steps.push("where")
     steps.push("about")
-    if (isPaidPost(a)) steps.push("length")
   } else if (a.goal === "promote") {
-    steps.push("size")
-    if (a.size === "custom") steps.push("pieces")
-    steps.push("title", "link", "about")
+    // Rate card, "How to book": package, start date, then the opportunity itself.
+    steps.push("size", "start", "title", "link", "deadline", "about")
   } else if (a.goal === "sell") {
-    steps.push("split", "title", "rtype", "price", "link", "about")
+    steps.push("title", "rtype", "price", "link", "about")
   }
   if (a.goal) steps.push("name", "reach", "check")
   return steps
@@ -143,14 +124,8 @@ function unanswered(step: StepId, a: Answers): boolean {
   switch (step) {
     case "kind":
       return !a.kind
-    case "free":
-      return a.free === undefined
     case "size":
       return !a.size
-    case "pieces":
-      return !Object.values(a.pieces ?? {}).some(Boolean)
-    case "split":
-      return !a.split
     case "link":
       return a.link === undefined
     case "deadline":
@@ -170,7 +145,8 @@ function kindOf(a: Answers): Kind {
   if (a.goal === "sell") return "resource"
   if (a.kind === "job") return "job"
   if (a.kind === "opp") return "free-opportunity"
-  return a.free === false ? "paid-event" : "free-event"
+  // Every event lists free now, ticketed or not.
+  return "free-event"
 }
 
 /** One listing's form, in the field names config.ts's DETAIL_FIELDS uses. */
@@ -189,24 +165,19 @@ function entryFrom(a: Answers): Record<string, string> {
   if (kind === "resource") {
     Object.assign(entry, { resourceType: a.rtype ?? "", price: a.price ? naira(Number(a.price)) : "" })
   }
+  if (kind === "promotion") Object.assign(entry, { deadline: a.deadline ?? "", startDate: a.start ?? "" })
   return Object.fromEntries(Object.entries(entry).filter(([, value]) => value))
 }
 
 function payloadFrom(a: Answers, earlier: Record<string, string>[]): SubmissionPayload {
   const kind = kindOf(a)
-  const custom = a.size === "custom"
   return {
     kind,
     entries: a.goal === "post" ? [...earlier, entryFrom(a)] : [entryFrom(a)],
-    duration: a.length === 30 ? "extended" : "standard",
-    bundleId: kind === "promotion" && a.size && !custom ? a.size : null,
-    promotions:
-      kind === "promotion" && custom
-        ? Object.entries(a.pieces ?? {})
-            .filter(([, on]) => on)
-            .map(([id]) => ({ id, quantity: 1 }))
-        : [],
-    revenueShare: kind === "resource" ? (a.split ?? null) : null,
+    duration: "standard",
+    bundleId: kind === "promotion" && a.size ? a.size : null,
+    promotions: [],
+    revenueShare: kind === "resource" ? RESOURCE_COMMISSION : null,
     contact: {
       name: a.name?.trim() ?? "",
       email: a.email?.trim() ?? "",
@@ -225,6 +196,7 @@ function answersFrom(payload: SubmissionPayload): { answers: Answers; earlier: R
     about: last.description,
     date: last.date,
     deadline: last.deadline ?? "",
+    start: last.startDate,
     where: last.location,
     rtype: last.resourceType,
     price: last.price?.replace(/\D/g, "") || undefined,
@@ -241,21 +213,18 @@ function answersFrom(payload: SubmissionPayload): { answers: Answers; earlier: R
       Object.assign(answers, { goal: "post", kind: "opp" })
       break
     case "free-event":
-      Object.assign(answers, { goal: "post", kind: "event", free: true })
-      break
     case "paid-event":
-      Object.assign(answers, { goal: "post", kind: "event", free: false })
+      Object.assign(answers, { goal: "post", kind: "event" })
       break
     case "resource":
-      Object.assign(answers, { goal: "sell", split: payload.revenueShare === 30 ? 30 : 20 })
+      answers.goal = "sell"
       break
     case "promotion":
       answers.goal = "promote"
-      answers.size = payload.bundleId ?? "custom"
-      answers.pieces = Object.fromEntries(payload.promotions.map((p) => [p.id, true]))
+      // An old pick-your-own order has no package, so the size question asks again.
+      answers.size = BUNDLES.some((b) => b.id === payload.bundleId) ? payload.bundleId! : undefined
       break
   }
-  if (isPaidPost(answers)) answers.length = payload.duration === "extended" ? 30 : 7
   return { answers, earlier: answers.goal === "post" ? payload.entries.slice(0, -1) : [] }
 }
 
@@ -396,7 +365,10 @@ export default function QuestionFlow({
   error,
   onSubmit,
   onPartner,
+  startAt,
 }: {
+  /** Skip the first question — "See packages" after a free listing opens on the packages. */
+  startAt?: Goal
   /** A saved order to pick back up — opens on the check page with its answers. */
   initial?: SubmissionPayload | null
   /** Remembered from last time, so nobody types their details twice. */
@@ -411,6 +383,7 @@ export default function QuestionFlow({
   const [a, setA] = useState<Answers>(
     () =>
       resumed?.answers ?? {
+        goal: startAt,
         name: contact.name || undefined,
         org: contact.organisation || undefined,
         email: contact.email || undefined,
@@ -418,10 +391,13 @@ export default function QuestionFlow({
       },
   )
   const [earlier, setEarlier] = useState<Record<string, string>[]>(resumed?.earlier ?? [])
-  const [stack, setStack] = useState<StepId[]>(() => (resumed ? path(resumed.answers) : ["goal"]))
+  const [stack, setStack] = useState<StepId[]>(() => {
+    if (resumed) return path(resumed.answers)
+    if (startAt) return ["goal", path({ goal: startAt })[1]]
+    return ["goal"]
+  })
   const [returnToCheck, setReturnToCheck] = useState(false)
   const [problems, setProblems] = useState<Record<string, string>>({})
-  const [together, setTogether] = useState(false)
   const top = useRef<HTMLDivElement>(null)
 
   const step = stack[stack.length - 1]
@@ -438,7 +414,7 @@ export default function QuestionFlow({
       return
     }
     top.current?.scrollIntoView({ block: "start", behavior: "smooth" })
-  }, [step, together])
+  }, [step])
 
   const set = (patch: Answers) => {
     setA((current) => ({ ...current, ...patch }))
@@ -468,8 +444,6 @@ export default function QuestionFlow({
 
   const back = () => {
     setProblems({})
-    // "Let's make it together" sits on top of the split question, not in the stack.
-    if (together) return setTogether(false)
     setStack((current) => (current.length > 1 ? current.slice(0, -1) : current))
   }
 
@@ -491,7 +465,7 @@ export default function QuestionFlow({
         break
       case "link": {
         const fixed = normaliseLink(a.link ?? "")
-        if (!fixed && a.goal === "post") found.link = FLOW.link.error
+        if (!fixed && a.goal !== "sell") found.link = FLOW.link.error
         else if (fixed && !/\w\.\w/.test(fixed)) found.link = FLOW.link.bad
         next = { ...a, link: fixed }
         break
@@ -502,6 +476,9 @@ export default function QuestionFlow({
       case "deadline":
         next = { ...a, deadline: a.deadline ?? "" }
         break
+      case "start":
+        if (blank(a.start) || a.start! < earliestStart()) found.start = FLOW.startDate.error
+        break
       case "where":
         if (blank(a.where)) found.where = FLOW.where.error
         break
@@ -511,9 +488,6 @@ export default function QuestionFlow({
         break
       case "about":
         if ((a.about?.trim().length ?? 0) < 10) found.about = FLOW.about.error
-        break
-      case "pieces":
-        if (!Object.values(a.pieces ?? {}).some(Boolean)) found.pieces = FLOW.pieces.error
         break
       case "name":
         if (blank(a.name)) found.name = FLOW.name.error
@@ -557,7 +531,7 @@ export default function QuestionFlow({
   const frame = (title: string, hint: string, body: ReactNode, footer?: ReactNode) => (
     <div ref={top} className="mx-auto w-full max-w-xl scroll-mt-24">
       <div className="flex items-center gap-3">
-        {stack.length > 1 || together ? (
+        {stack.length > 1 ? (
           <button
             type="button"
             onClick={back}
@@ -570,7 +544,7 @@ export default function QuestionFlow({
           <span className="h-11 w-11" />
         )}
         <span className="flex-1 text-sm font-semibold text-muted-foreground">
-          {together ? "" : a.goal ? FLOW.step(index + 1, steps.length) : FLOW.start}
+          {a.goal ? FLOW.step(index + 1, steps.length) : FLOW.start}
         </span>
         <a
           href={whatsappHref("Hi UP, I need help on the Work with us page.")}
@@ -637,20 +611,6 @@ export default function QuestionFlow({
     </>
   )
 
-  // --- "Let's make it together" -------------------------------------------
-  if (together) {
-    return frame(
-      FLOW.together.title,
-      FLOW.together.body,
-      <Button asChild size="lg" className="h-14 w-full rounded-up-lg text-lg font-bold">
-        <a href={whatsappHref(FLOW.together.message)} target="_blank" rel="noopener noreferrer">
-          <RiWhatsappLine className="mr-2 h-5 w-5" aria-hidden />
-          {FLOW.together.cta}
-        </a>
-      </Button>,
-    )
-  }
-
   // --- The screens ----------------------------------------------------------
   switch (step) {
     case "goal":
@@ -658,7 +618,7 @@ export default function QuestionFlow({
         FLOW.goal.title,
         FLOW.goal.hint,
         <div role="radiogroup" aria-labelledby="wwu-q" className="grid gap-3">
-          <Tile icon={RiMegaphoneLine} {...FLOW.goal.post} selected={a.goal === "post"} onClick={() => pick({ goal: "post" })} />
+          <Tile icon={RiMegaphoneLine} {...FLOW.goal.post} price={FLOW.check.free} selected={a.goal === "post"} onClick={() => pick({ goal: "post" })} />
           <Tile icon={RiRocket2Line} {...FLOW.goal.promote} selected={a.goal === "promote"} onClick={() => pick({ goal: "promote" })} />
           <Tile icon={RiBookOpenLine} {...FLOW.goal.sell} selected={a.goal === "sell"} onClick={() => pick({ goal: "sell" })} />
           {PARTNER_PROGRAMME_ENABLED && onPartner && (
@@ -675,33 +635,24 @@ export default function QuestionFlow({
           <Tile
             icon={RiBriefcase4Line}
             {...FLOW.kind.job}
-            price={`from ${naira(LISTING_BULK.price)}`}
+            price={FLOW.check.free}
             selected={a.kind === "job"}
             onClick={() => pick({ kind: "job" })}
           />
-          <Tile icon={RiTicket2Line} lime {...FLOW.kind.event} selected={a.kind === "event"} onClick={() => pick({ kind: "event" })} />
+          <Tile
+            icon={RiTicket2Line}
+            lime
+            {...FLOW.kind.event}
+            price={FLOW.check.free}
+            selected={a.kind === "event"}
+            onClick={() => pick({ kind: "event" })}
+          />
           <Tile
             icon={RiGraduationCapLine}
             {...FLOW.kind.opp}
             price={FLOW.check.free}
             selected={a.kind === "opp"}
             onClick={() => pick({ kind: "opp" })}
-          />
-        </div>,
-      )
-
-    case "free":
-      return frame(
-        FLOW.free.title,
-        FLOW.free.hint,
-        <div role="radiogroup" aria-labelledby="wwu-q" className="grid gap-3">
-          <Tile icon={RiEmotionHappyLine} label={FLOW.free.no} price={FLOW.check.free} selected={a.free === true} onClick={() => pick({ free: true })} />
-          <Tile
-            icon={RiTicket2Line}
-            label={FLOW.free.yes}
-            price={`from ${naira(LISTING_TIERS.standard.price)}`}
-            selected={a.free === false}
-            onClick={() => pick({ free: false })}
           />
         </div>,
       )
@@ -721,70 +672,53 @@ export default function QuestionFlow({
               list={bundle.contents}
               price={naira(bundle.price)}
               selected={a.size === bundle.id}
-              onClick={() => pick({ size: bundle.id, pieces: {} })}
+              onClick={() => pick({ size: bundle.id })}
             />
           ))}
-          <SkipLink onClick={() => pick({ size: "custom" })}>{FLOW.size.custom}</SkipLink>
+          <a
+            href={whatsappHref(FLOW.size.tailoredMessage)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block w-full py-2 text-center text-base font-semibold underline underline-offset-4"
+          >
+            {FLOW.size.tailored}
+          </a>
+
+          <section className="mt-6 rounded-up-xl border border-border bg-card p-4">
+            <h2 className="font-bold">{FLOW.size.includes}</h2>
+            <div className="mt-3 space-y-4">
+              {BUNDLES.map((bundle) => (
+                <div key={bundle.id}>
+                  <p className="flex justify-between gap-3 font-semibold">
+                    <span>{bundle.label}</span>
+                    <span className="text-up-orange-ink">{naira(bundle.price)}</span>
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                    {bundle.details.map((line) => (
+                      <li key={line} className="flex gap-1.5">
+                        <RiCheckLine className="mt-0.5 h-3.5 w-3.5 shrink-0 text-up-orange-ink" aria-hidden />
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="mt-5 border-t border-border pt-4 font-bold">{FLOW.size.reach}</h2>
+            <ul className="mt-2 space-y-1 text-sm">
+              {AUDIENCE.map((stat) => (
+                <li key={stat.label}>
+                  <span className="font-semibold tabular-nums">{stat.figure}</span>{" "}
+                  <span className="text-muted-foreground">{stat.label}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-muted-foreground">{FLOW.size.measured}</p>
+          </section>
         </div>,
       )
     }
-
-    case "pieces": {
-      const chosen = a.pieces ?? {}
-      const sum = PROMOTION_ITEMS.reduce((total, item) => total + (chosen[item.id] ? item.price : 0), 0)
-      return frame(
-        FLOW.pieces.title,
-        FLOW.pieces.hint,
-        <>
-          <div className="grid gap-2.5">
-            {PROMOTION_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role="checkbox"
-                aria-checked={Boolean(chosen[item.id])}
-                onClick={() => set({ pieces: { ...chosen, [item.id]: !chosen[item.id] } })}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-up-xl border-2 bg-card p-4 text-left transition-colors",
-                  chosen[item.id] ? "border-up-orange bg-up-orange-tint" : "border-border hover:border-up-border-hover",
-                )}
-              >
-                <span
-                  className={cn(
-                    "grid h-6 w-6 shrink-0 place-items-center rounded-md border-2",
-                    chosen[item.id] ? "border-up-orange bg-up-orange text-up-navy" : "border-up-sep",
-                  )}
-                  aria-hidden
-                >
-                  {chosen[item.id] && <RiCheckLine />}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-bold">{item.label}</span>
-                  <span className="block text-sm text-muted-foreground">{item.blurb}</span>
-                </span>
-                <span className="shrink-0 font-bold text-up-orange-ink">{naira(item.price)}</span>
-              </button>
-            ))}
-          </div>
-          {problems.pieces && <Problem>{problems.pieces}</Problem>}
-        </>,
-        <BigButton onClick={submitTyped}>
-          {returnToCheck ? FLOW.saveAndBack : FLOW.next}
-          {sum > 0 && ` · ${naira(sum)}`}
-        </BigButton>,
-      )
-    }
-
-    case "split":
-      return frame(
-        FLOW.split.title,
-        FLOW.split.hint,
-        <div role="radiogroup" aria-labelledby="wwu-q" className="grid gap-3">
-          <Tile icon={RiUserSmileLine} {...FLOW.split.me} selected={a.split === 20} onClick={() => pick({ split: 20 })} />
-          <Tile icon={RiMegaphoneLine} {...FLOW.split.up} selected={a.split === 30} onClick={() => pick({ split: 30 })} />
-          <Tile icon={RiTeamLine} {...FLOW.split.together} onClick={() => setTogether(true)} />
-        </div>,
-      )
 
     case "title":
       return frame(
@@ -795,12 +729,10 @@ export default function QuestionFlow({
 
     case "link": {
       const question =
-        a.goal !== "post"
-          ? FLOW.link.question.other
-          : a.kind === "event"
-            ? a.free === false
-              ? FLOW.link.question.paidEvent
-              : FLOW.link.question.freeEvent
+        a.goal === "promote"
+          ? FLOW.link.question.promote
+          : a.goal !== "post"
+            ? FLOW.link.question.other
             : FLOW.link.question[a.kind ?? "job"]
       return frame(
         question,
@@ -813,7 +745,7 @@ export default function QuestionFlow({
             spellCheck: false,
             onBlur: () => set({ link: normaliseLink(a.link ?? "") }),
           }),
-          a.goal !== "post" && (
+          a.goal === "sell" && (
             <SkipLink onClick={() => pick({ link: "" })}>{FLOW.link.skip}</SkipLink>
           ),
         ),
@@ -855,6 +787,32 @@ export default function QuestionFlow({
           <SkipLink onClick={() => pick({ deadline: "" })}>{FLOW.deadline.skip}</SkipLink>,
         ),
       )
+
+    case "start": {
+      const limited = BUNDLES.find((b) => b.id === a.size)?.limitedDates
+      return frame(
+        FLOW.startDate.title,
+        FLOW.startDate.hint,
+        typed(
+          <>
+            <input
+              type="date"
+              aria-labelledby="wwu-q"
+              min={earliestStart()}
+              className={cn(INPUT, "h-14", problems.start ? "border-destructive" : "border-input")}
+              value={a.start ?? ""}
+              onChange={(event) => set({ start: event.target.value })}
+            />
+            {problems.start && <Problem>{problems.start}</Problem>}
+            {limited && (
+              <p className="mt-3 rounded-up-md bg-up-fill px-3.5 py-2.5 text-sm text-muted-foreground">
+                {FLOW.startDate.limited}
+              </p>
+            )}
+          </>,
+        ),
+      )
+    }
 
     case "where": {
       const chips = a.kind === "job" ? FLOW.where.jobChips : FLOW.where.eventChips
@@ -924,28 +882,6 @@ export default function QuestionFlow({
             </p>
           </>,
         ),
-      )
-
-    case "length":
-      return frame(
-        FLOW.length.title,
-        FLOW.length.hint,
-        <div role="radiogroup" aria-labelledby="wwu-q" className="grid gap-3">
-          <Tile
-            icon={RiCalendarLine}
-            {...FLOW.length.week}
-            price={naira(LISTING_TIERS.standard.price)}
-            selected={a.length === 7}
-            onClick={() => pick({ length: 7 })}
-          />
-          <Tile
-            icon={RiCalendar2Line}
-            {...FLOW.length.month}
-            price={naira(LISTING_TIERS.extended.price)}
-            selected={a.length === 30}
-            onClick={() => pick({ length: 30 })}
-          />
-        </div>,
       )
 
     case "name":
@@ -1024,17 +960,9 @@ export default function QuestionFlow({
     const add = (id: StepId, label: string, value?: string) => {
       if (steps.includes(id)) rows.push([id, label, value ?? ""])
     }
-    add("kind", "Posting", { job: "A job", event: "An event", opp: "An opportunity" }[a.kind ?? "job"])
-    add("free", "Tickets", a.free ? "Free to attend" : "People pay")
-    add("size", "Push", a.size === "custom" ? "My own pieces" : bundle && `${FLOW.size.names[bundle.id]} · ${bundle.label}`)
-    add(
-      "pieces",
-      "Pieces",
-      PROMOTION_ITEMS.filter((item) => a.pieces?.[item.id])
-        .map((item) => item.label)
-        .join(", "),
-    )
-    add("split", "UP's share", `${a.split}% of each sale`)
+    add("kind", "Posting", { job: "A job vacancy", event: "An event", opp: "An opportunity" }[a.kind ?? "job"])
+    add("size", "Package", bundle && `${bundle.label} · ${naira(bundle.price)} + VAT`)
+    add("start", "Preferred start", prettyDate(a.start))
     add("title", "Name", a.title)
     add("link", "Link", a.link || "No link")
     add("date", "Date", prettyDate(a.date))
@@ -1043,16 +971,11 @@ export default function QuestionFlow({
     add("rtype", "Kind", a.rtype)
     add("price", "Price", a.price ? naira(Number(a.price)) : "")
     add("about", "About", a.about && a.about.length > 110 ? `${a.about.slice(0, 110)}…` : a.about)
-    add("length", "Stays up", a.length === 30 ? "1 month" : "1 week")
     add("name", "You", [a.name, a.org].filter(Boolean).join(" · "))
     add("reach", "Contact", [a.email, a.phone].filter(Boolean).join("\n"))
 
     const paid = order.total > 0
     const count = payload.entries.length
-    const packNudge =
-      isPaidPost(a) && a.length !== 30 && count < LISTING_BULK.from
-        ? FLOW.check.pack(LISTING_BULK.from, naira(LISTING_BULK.price))
-        : null
 
     return (
       <form
@@ -1124,12 +1047,13 @@ export default function QuestionFlow({
             {paid ? naira(order.total) : FLOW.check.free}
           </span>
         </div>
-        <p className="mt-3 px-1 text-sm text-muted-foreground">{paid ? PAY.terms : PAY.freeTerms}</p>
+        <p className="mt-3 px-1 text-sm text-muted-foreground">
+          {paid ? PAY.terms : a.goal === "sell" ? PAY.resourceTerms : PAY.freeTerms}
+        </p>
 
         {a.goal === "post" && count < MAX_LISTINGS && (
           <div className="mt-2 text-center">
             <SkipLink onClick={addAnother}>+ {FLOW.check.addAnother(NOUN[t])}</SkipLink>
-            {packNudge && <p className="text-sm text-muted-foreground">{packNudge}</p>}
           </div>
         )}
 

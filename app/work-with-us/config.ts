@@ -3,7 +3,8 @@
  * Prices live here only — the browser uses them to show a breakdown, the server
  * uses the same numbers to charge, so the two can never drift apart.
  *
- * The numbers follow UP's Official Pricing & Services Guide, sections 2–7.
+ * The numbers follow the UP Rate Card: Launch Copy (3 Nov 2026). Launch prices
+ * are in naira and exclude VAT, which is added at checkout.
  */
 
 import {
@@ -75,157 +76,40 @@ export function naira(amount: number): string {
   return `₦${amount.toLocaleString("en-NG")}`
 }
 
-// ---------------------------------------------------------------------------
-// Listings — guide section 2
-// ---------------------------------------------------------------------------
+/** VAT is added on top of every launch price at checkout. */
+export const VAT_RATE = 0.075
 
-/** A listing is sold by how long it stays up. */
-export type Duration = "standard" | "extended"
-
-export const LISTING_TIERS: Record<
-  Duration,
-  { label: string; days: number; price: number; blurb: string }
-> = {
-  standard: {
-    label: "Standard",
-    days: 7,
-    price: 5000,
-    blurb: "7 days on the platform, with its own page and an application link.",
-  },
-  extended: {
-    label: "Extended",
-    days: 30,
-    price: 15000,
-    blurb: "30 days on the platform, with priority placement in the database.",
-  },
-}
+// ---------------------------------------------------------------------------
+// Listings — rate card, "01. List: FREE"
+// ---------------------------------------------------------------------------
 
 /**
- * Five or more standard listings drop to the pack rate, which makes a pack of
- * five the guide's ₦20,000 and keeps working past five — seven is ₦28,000.
- * Extended listings have no pack rate.
+ * Listings are free and stay up until their deadline. `Duration` survives only
+ * because older orders stored one; nothing is priced by it any more.
  */
-export const LISTING_BULK = {
-  price: 4000,
-  from: 5,
-}
+export type Duration = "standard" | "extended"
+export const DURATIONS: Duration[] = ["standard", "extended"]
 
-/** How many listings can go in one submission, free or paid. */
+/** How many listings can go in one submission. */
 export const MAX_LISTINGS = 50
 
-export function listingUnitPrice(quantity: number, duration: Duration = "standard"): number {
-  if (duration === "extended") return LISTING_TIERS.extended.price
-  return quantity >= LISTING_BULK.from ? LISTING_BULK.price : LISTING_TIERS.standard.price
-}
+// ---------------------------------------------------------------------------
+// Resources — rate card, "Submit your resource"
+// ---------------------------------------------------------------------------
+
+/** UP's commission on each successful sale. Terms are agreed before publication. */
+export const RESOURCE_COMMISSION = 15
+
+// ---------------------------------------------------------------------------
+// Promotion — no longer sold one piece at a time
+// ---------------------------------------------------------------------------
 
 /**
- * The pipeline's product-card formula (§4.1): name, one-line outcome, price,
- * what's included, timing, one CTA. `blurb` is the outcome — what the buyer
- * gets done — and `includes` is the deliverable, in that order deliberately.
+ * The old à-la-carte menu. Nothing here can be bought any more — the rate card
+ * sells three packages and sends anything tailored to the team. It stays so
+ * orders placed before the rate card still resolve their run length and labels
+ * in the review queue.
  */
-export const SUBMIT_OPTIONS: {
-  kind: Kind
-  label: string
-  /** What one of them is called, for "Add another ___". */
-  noun: string
-  blurb: string
-  price: string
-  includes: string[]
-  timing: string
-  cta: string
-}[] = [
-  {
-    kind: "free-opportunity",
-    label: "Opportunity",
-    noun: "opportunity",
-    blurb: "Get a scholarship, grant, fellowship or competition in front of people looking for one.",
-    price: "Free",
-    includes: ["Its own opportunity page", "Application link", "Indexed in the database"],
-    timing: "Live once we have reviewed it",
-    cta: "List it on UP",
-  },
-  {
-    kind: "free-event",
-    label: "Free event",
-    noun: "event",
-    blurb: "Fill a room, or a call, with people who want to be there.",
-    price: "Free",
-    includes: ["Event page", "Registration link", "Indexed in the database"],
-    timing: "Live once we have reviewed it",
-    cta: "List my event",
-  },
-  {
-    kind: "job",
-    label: "Job",
-    noun: "job",
-    blurb: "Put a role in front of young Africans who are actively looking for work.",
-    price: `From ${naira(LISTING_BULK.price)} a listing`,
-    includes: ["Role page", "Application link", "Indexed in the database"],
-    timing: "7 or 30 days, your choice",
-    cta: "List this role",
-  },
-  {
-    kind: "paid-event",
-    label: "Paid event",
-    noun: "event",
-    blurb: "Sell tickets to an audience that turns up for things worth attending.",
-    price: `From ${naira(LISTING_BULK.price)} a listing`,
-    includes: ["Event page", "Ticket link", "Indexed in the database"],
-    timing: "7 or 30 days, your choice",
-    cta: "List my event",
-  },
-  {
-    kind: "resource",
-    label: "Resource",
-    noun: "resource",
-    blurb: "Sell a course, guide, template or toolkit to people who need it.",
-    price: "Revenue share — nothing up front",
-    includes: ["Resource page", "Checkout through UP", "Payouts on what it earns"],
-    timing: "Listed once we have reviewed it",
-    cta: "Sell it on UP",
-  },
-]
-
-// ---------------------------------------------------------------------------
-// Resources — guide section 7
-// ---------------------------------------------------------------------------
-
-export const REVENUE_SHARE_OPTIONS: {
-  value: number
-  label: string
-  blurb: string
-  /** Needs a written deal, so it goes to the team instead of straight to a form. */
-  contactOnly?: boolean
-}[] = [
-  {
-    value: 20,
-    label: "20% — you promote it",
-    blurb: "We list your resource and it stays up. Getting people to it is on you.",
-  },
-  {
-    value: 30,
-    label: "30% — we promote it",
-    blurb: "We list it and push it across the platform, the community and our socials.",
-  },
-  {
-    value: 50,
-    label: "50 / 50 — we build it with you",
-    blurb:
-      "We help develop the resource itself. Costs and responsibilities are agreed in writing, deal by deal.",
-    contactOnly: true,
-  },
-]
-
-/** Terms that hold for every resource deal, shown next to the choice. */
-export const RESOURCE_TERMS = [
-  `Once you pass ${naira(500000)} in sales through UP in a rolling three months, everything after that drops to 25%.`,
-  "You are paid once the customer's payment has cleared and the refund window has closed.",
-]
-
-// ---------------------------------------------------------------------------
-// Promotion — guide sections 3, 4 and 5
-// ---------------------------------------------------------------------------
-
 export type PromotionItem = {
   id: string
   group: string
@@ -308,63 +192,114 @@ export const PROMOTION_ITEMS: PromotionItem[] = [
 export const MAX_PROMOTION_QUANTITY = 20
 
 // ---------------------------------------------------------------------------
-// Bundles — guide section 6
+// Packages — rate card, "Our distribution packages" 02–04
 // ---------------------------------------------------------------------------
 
 /**
- * The three signature bundles, which lead the flow: a bundle is one decision
- * where the menu above is nine. The price is fixed, so `contents` is only ever
- * read out on the card — nothing in it is added up.
+ * The three paid packages. The price is fixed, so `contents` is only ever read
+ * out on the card — nothing in it is added up. Ids are unchanged from the old
+ * bundles so earlier orders still resolve.
  */
 export type Bundle = {
   id: string
   label: string
+  /** The one-line promise under the name. */
   blurb: string
+  /** Who it is for. */
+  forWho: string
   price: number
+  /** The short version, on the tile. */
   contents: string[]
+  /** Everything in it, word for word from the rate card, listed under the tiles. */
+  details: string[]
   /** How long the platform placement inside it runs. */
   runDays: number
+  /** Distribute and Campaign start dates are limited and go in payment order. */
+  limitedDates?: boolean
 }
 
 export const BUNDLES: Bundle[] = [
   {
     id: "bundle-boost",
-    label: "BOOST",
-    blurb: "Get one thing seen.",
-    price: 40000,
-    contents: ["Platform listing", "7-day platform boost", "One community push"],
-    runDays: 7,
-  },
-  {
-    id: "bundle-distribute",
-    label: "DISTRIBUTE",
-    blurb: "Reach the community everywhere it is.",
-    price: 100000,
-    contents: [
-      "Platform listing",
-      "14-day feature",
-      "Two community pushes",
-      "Story push",
-      "Weekly roundup inclusion",
+    label: "Boost",
+    blurb: "Give your opportunity an extra push.",
+    forWho: "More visibility and a targeted push.",
+    price: 20000,
+    contents: ["14 days featured", "Email to 2,000 matched subscribers", "One community push", "Stories + roundup"],
+    details: [
+      "14 days featured on the UP platform",
+      "One email to a targeted group of up to 2,000 subscribers matched to your opportunity",
+      "Inclusion in one opportunity roundup",
+      "One community push",
+      "Social media stories",
+      "A performance summary",
     ],
     runDays: 14,
   },
   {
-    id: "bundle-campaign",
-    label: "CAMPAIGN",
-    blurb: "Drive applications, registrations or sales.",
-    price: 250000,
-    contents: [
-      "Platform listing",
-      "30-day featured placement",
-      "Four community pushes",
-      "Dedicated carousel",
-      "Two story pushes",
-      "Roundup inclusion",
+    id: "bundle-distribute",
+    label: "Distribute",
+    blurb: "Reach more people. Stay visible for a month.",
+    forWho: "Broader reach and repeated exposure across UP's channels.",
+    price: 50000,
+    contents: ["30 days featured", "Top of the midweek email (10,000)", "Two community pushes", "A dedicated carousel"],
+    details: [
+      "30 days featured on the UP platform",
+      "Top placement in the midweek email to our full list of 10,000 subscribers",
+      "Inclusion in two opportunity roundups",
+      "Two community pushes",
+      "One dedicated social media carousel",
+      "Social media stories",
+      "A performance summary",
     ],
     runDays: 30,
+    limitedDates: true,
+  },
+  {
+    id: "bundle-campaign",
+    label: "Campaign",
+    blurb: "Make your opportunity hard to miss.",
+    forWho: "A coordinated 30-day campaign with content made for your opportunity.",
+    price: 125000,
+    contents: ["30 days featured", "Its own email to all 10,000", "Two carousels + a video", "Four community pushes"],
+    details: [
+      "30 days featured on the UP platform",
+      "A dedicated email about your opportunity only, sent to all 10,000 subscribers",
+      "Two dedicated social media carousels",
+      "One dedicated promotional video",
+      "Inclusion in four opportunity roundups",
+      "Four community pushes",
+      "Social media stories",
+      "A performance summary with recommendations for what to do next",
+    ],
+    runDays: 30,
+    limitedDates: true,
   },
 ]
+
+/** Who a package reaches — rate card, "The UP audience". */
+export const AUDIENCE: { figure: string; label: string }[] = [
+  { figure: "11,500+", label: "registered platform users" },
+  { figure: "10,000+", label: "email subscribers" },
+  { figure: "7,500+", label: "social media followers" },
+  { figure: "5,200+", label: "community members" },
+]
+
+/** Bookings need this many working days' notice before the start date. */
+export const BOOKING_NOTICE_DAYS = 5
+
+/** The earliest start date that leaves `BOOKING_NOTICE_DAYS` working days, as YYYY-MM-DD. */
+export function earliestStart(from: Date = new Date()): string {
+  const date = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+  let left = BOOKING_NOTICE_DAYS
+  while (left > 0) {
+    date.setDate(date.getDate() + 1)
+    const day = date.getDay()
+    if (day !== 0 && day !== 6) left -= 1
+  }
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
 
 /**
  * How many days of platform placement an order bought. Bundles and individual
@@ -453,8 +388,9 @@ export const DETAIL_FIELDS: Record<Kind, DetailField[]> = {
   promotion: [
     { name: "title", label: "What are you promoting?", type: "text", placeholder: "Name of the brand, product or post" },
     { name: "description", label: "What should we say?", type: "textarea", placeholder: "The message you want out there" },
-    { ...LINK_FIELD, optional: true },
-    { name: "startDate", label: "Preferred start date", type: "date", optional: true },
+    { ...LINK_FIELD, label: "Link to apply or register" },
+    { name: "deadline", label: "Deadline", type: "date", optional: true },
+    { name: "startDate", label: "Preferred start date", type: "date" },
   ],
 }
 
@@ -498,7 +434,7 @@ export type SubmissionPayload = {
   bundleId: string | null
   /** Chosen promotion items. Empty for every other track. */
   promotions: { id: string; quantity: number }[]
-  /** 20, 30 or 50, for resources only. */
+  /** UP's commission, for resources only. Always `RESOURCE_COMMISSION` now. */
   revenueShare: number | null
   contact: Contact
 }
@@ -517,50 +453,30 @@ export type OrderLine = {
 
 export type Order = {
   lines: OrderLine[]
+  /** What is charged, VAT included. */
   total: number
 }
 
-/** Turns a payload into what it costs. Used by the page and by the server. */
+export const VAT_LABEL = `VAT (${VAT_RATE * 100}%)`
+
+/**
+ * Turns a payload into what it costs. Used by the page and by the server.
+ * VAT goes in as its own line because the backend stores only lines and a
+ * total — so the receipt and the queue add up without knowing about VAT.
+ */
 export function buildOrder(payload: SubmissionPayload): Order {
-  if (payload.kind === "job" || payload.kind === "paid-event") {
-    const quantity = payload.entries.length
-    const unitPrice = listingUnitPrice(quantity, payload.duration)
-    const tier = LISTING_TIERS[payload.duration]
-    const noun = payload.kind === "job" ? "job" : "paid event"
-    return {
-      lines: [
-        {
-          label: `${tier.label} ${noun} listing · ${tier.days} days`,
-          quantity,
-          unitPrice,
-          total: unitPrice * quantity,
-        },
-      ],
-      total: unitPrice * quantity,
-    }
+  const bundle =
+    payload.kind === "promotion" ? BUNDLES.find((entry) => entry.id === payload.bundleId) : undefined
+
+  // Listings are free and resources pay by commission, so only a package costs anything.
+  if (!bundle) return { lines: [], total: 0 }
+
+  const vat = Math.round(bundle.price * VAT_RATE)
+  return {
+    lines: [
+      { label: `${bundle.label} package`, quantity: 1, unitPrice: bundle.price, total: bundle.price },
+      { label: VAT_LABEL, quantity: 1, unitPrice: vat, total: vat },
+    ],
+    total: bundle.price + vat,
   }
-
-  if (payload.kind === "promotion") {
-    const lines: OrderLine[] = []
-
-    const bundle = BUNDLES.find((entry) => entry.id === payload.bundleId)
-    if (bundle) {
-      lines.push({ label: bundle.label, quantity: 1, unitPrice: bundle.price, total: bundle.price })
-    }
-
-    for (const chosen of payload.promotions) {
-      const item = PROMOTION_ITEMS.find((i) => i.id === chosen.id)
-      if (!item) continue
-      lines.push({
-        label: item.label,
-        quantity: chosen.quantity,
-        unitPrice: item.price,
-        total: item.price * chosen.quantity,
-      })
-    }
-    return { lines, total: lines.reduce((sum, line) => sum + line.total, 0) }
-  }
-
-  // Free listings and resources cost nothing up front.
-  return { lines: [], total: 0 }
 }

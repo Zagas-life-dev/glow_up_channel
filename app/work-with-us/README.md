@@ -25,11 +25,11 @@ research behind it are in `design_workwithus_simple/index.html` (Option 1).
 
 ```
 What do you want to do?
-  ├─ Post something → Job / Event / Opportunity → (event) free or paid?
-  │     → name → link → date or deadline → where → about → (paid) 1 week or 1 month
-  ├─ Get more people to see it → Small / Medium / Big (or pick my own pieces)
-  │     → what is it → link → what should we say
-  └─ Sell a course or guide → who promotes it (20% / 30%; 50/50 → WhatsApp)
+  ├─ List it for free → Job / Event / Opportunity
+  │     → name → link → date or deadline → where → about
+  ├─ Get more people to see it → Boost / Distribute / Campaign (tailored → WhatsApp)
+  │     → start date (≥5 working days) → name → link → deadline → about
+  └─ Submit a resource (15% commission)
         → name → kind → price → link → about
   → your name → how we reach you → Check it looks right → Pay ₦X / Send it in
                                                   │
@@ -220,17 +220,18 @@ None of them email anybody — use **Email them** on the same card.
 
 All in `config.ts`:
 
-- `LISTING_TIERS` — standard is ₦5,000 for 7 days, extended ₦15,000 for 30 days.
-- `LISTING_BULK` — 5 or more standard listings drop to ₦4,000 each, so five come
-  to the guide's ₦20,000 and seven to ₦28,000. Extended listings have no pack rate.
-- `PROMOTION_ITEMS` — the à-la-carte menu. Prices add up as items are picked, and
-  `runDays` is what a platform boost grants once an admin approves it.
-- `BUNDLES` — BOOST ₦40,000, DISTRIBUTE ₦100,000, CAMPAIGN ₦250,000. Fixed price;
-  `contents` is only ever displayed, never added up. A bundle and à-la-carte items
-  are mutually exclusive, so the same work is never charged twice.
-- `REVENUE_SHARE_OPTIONS` — 20% / 30% self-serve, and the 50/50 co-created split,
-  which is `contactOnly` because it needs a written deal. `RESOURCE_TERMS` carries
-  the 25% volume rate and the settlement rule.
+Source: the **UP Rate Card: Launch Copy** (3 Nov 2026).
+
+- Listings (jobs, events, opportunities) are **free** and stay up until their deadline.
+- `BUNDLES` — Boost ₦20,000 (14 days), Distribute ₦50,000 (30 days), Campaign
+  ₦125,000 (30 days). Fixed price; `contents` is only ever displayed. Distribute
+  and Campaign are `limitedDates`.
+- `VAT_RATE` — 7.5%, added on top as its own order line so the stored order adds up.
+- `BOOKING_NOTICE_DAYS` — 5 working days between booking and start date.
+- `RESOURCE_COMMISSION` — 15% of each successful sale.
+
+- `PROMOTION_ITEMS` — the retired à-la-carte menu, kept only so older orders
+  still resolve their run length. It cannot be bought.
 - `PARTNER` — the founding partner price and where the button goes.
 
 The server recomputes every total from this file before charging, so a price can't

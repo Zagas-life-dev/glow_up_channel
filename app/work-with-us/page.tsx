@@ -41,6 +41,8 @@ function Flow() {
   const [stack, setStack] = useState<Screen[]>(["flow"])
   // Bumped to start the question flow over, or to reopen it on a saved order.
   const [flowKey, setFlowKey] = useState(0)
+  // "See packages" after a free listing reopens the questions on the packages.
+  const [startAt, setStartAt] = useState<"promote" | undefined>(undefined)
   const [draft, setDraft] = useState<SubmissionPayload | null>(null)
   const [pending, setPending] = useState<PendingOrder | null>(null)
   const [result, setResult] = useState<Result | null>(null)
@@ -176,7 +178,8 @@ function Flow() {
     }
   }
 
-  const startOver = () => {
+  const startOver = (at?: "promote") => {
+    setStartAt(at)
     setDraft(null)
     setResult(null)
     setError(null)
@@ -250,6 +253,7 @@ function Flow() {
       <QuestionFlow
         key={flowKey}
         initial={draft}
+        startAt={startAt}
         contact={loadContact()}
         busy={busy}
         error={error}
@@ -380,7 +384,7 @@ function Flow() {
         <div className="rounded-2xl border border-border/70 bg-card/80 p-5">
           <p className="font-medium">What happens next</p>
           <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
-            {SUCCESS.next.map((step, index) => (
+            {(result.paid ? SUCCESS.nextPaid : SUCCESS.next).map((step, index) => (
               <li key={step} className="flex gap-3">
                 <span className="font-medium text-foreground tabular-nums">{index + 1}.</span>
                 {step}
@@ -395,7 +399,12 @@ function Flow() {
         <p className="text-sm text-muted-foreground">{crossSell}</p>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button variant="outline" className="flex-1" onClick={startOver}>
+          {result.track !== "promotion" && (
+            <Button className="flex-1" onClick={() => startOver("promote")}>
+              {SUCCESS.seePackages}
+            </Button>
+          )}
+          <Button variant="outline" className="flex-1" onClick={() => startOver()}>
             Post something else
           </Button>
           <Button asChild className="flex-1">
@@ -421,7 +430,7 @@ function Flow() {
   // Nothing sensible to show (a stale link, say) — start again.
   return (
     <Step title="Let's start again" onBack={undefined}>
-      <Button size="lg" className="w-full" onClick={startOver}>
+      <Button size="lg" className="w-full" onClick={() => startOver()}>
         Start over
       </Button>
     </Step>

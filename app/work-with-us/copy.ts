@@ -35,49 +35,29 @@ export const FLOW = {
     hint: "Tap one. You can go back any time.",
     post: { label: "Post something", sub: "A job, an event or an opportunity" },
     promote: { label: "Get more people to see it", sub: "Promote something you already have" },
-    sell: { label: "Sell a course or guide", sub: "We only take a share when it sells" },
+    sell: { label: "Sell a course or guide", sub: "We only take 15% when it sells" },
     partner: "Posting a lot? Talk about partnership",
   },
   kind: {
     title: "What are you posting?",
-    hint: "Pick the one that fits best.",
+    hint: "Pick the one that fits best. Posting is free.",
     job: { label: "A job", sub: "Someone gets paid to work for you" },
     event: { label: "An event", sub: "People come along, in person or online" },
-    opp: { label: "An opportunity", sub: "Scholarship, grant, fellowship, competition" },
-  },
-  free: {
-    title: "Do people pay to come?",
-    hint: "Free events are posted for free.",
-    no: "No, it's free",
-    yes: "Yes, people buy tickets",
+    opp: { label: "An opportunity", sub: "Scholarship, grant, fellowship, programme, competition" },
   },
   size: {
     title: "How big a push?",
-    hint: "Bigger means more places, for longer.",
+    hint: "Bigger means more places, for longer. VAT is added at checkout.",
     names: {
       "bundle-boost": "Small",
       "bundle-distribute": "Medium",
       "bundle-campaign": "Big",
     } as Record<string, string>,
-    custom: "Pick my own pieces instead",
-  },
-  pieces: {
-    title: "Pick what you want",
-    hint: "Tap as many as you like.",
-    error: "Tap at least one thing.",
-  },
-  split: {
-    title: "Who will tell people about it?",
-    hint: "It's free to put it on UP. We take a share only when someone buys it.",
-    me: { label: "I will", sub: "We list it — you bring the buyers", price: "We take 20%" },
-    up: { label: "UP will", sub: "We push it on UP, the community and socials", price: "We take 30%" },
-    together: { label: "Let's make it together", sub: "We help build it. Needs a chat first", price: "50 / 50" },
-  },
-  together: {
-    title: "Let's have a chat first",
-    body: "Making something together means agreeing the work and the costs in writing. A real person will reply.",
-    cta: "Chat on WhatsApp",
-    message: "Hi UP, I'd like to make a course or guide together with you.",
+    tailored: "Need something tailored? Reach out",
+    includes: "What each package includes",
+    reach: "Who you reach",
+    measured: "Every package ends with a performance summary: what we delivered, clicks through to your link, and what happened next.",
+    tailoredMessage: "Hi UP, I'd like a custom promotion, partnership or larger campaign.",
   },
   title: {
     question: {
@@ -85,7 +65,7 @@ export const FLOW = {
       event: "What is the event called?",
       opp: "What is it called?",
       sell: "What is it called?",
-      promote: "What are we promoting?",
+      promote: "What is the opportunity called?",
     },
     hint: "Just the name. Keep it short.",
     placeholder: {
@@ -93,7 +73,7 @@ export const FLOW = {
       event: "e.g. Lagos Tech Meetup",
       opp: "e.g. Tech4Her Scholarship",
       sell: "e.g. Excel for Beginners",
-      promote: "e.g. My bakery's new menu",
+      promote: "e.g. Tech4Her Scholarship",
     },
     error: "Type the name so people know what it is.",
   },
@@ -101,8 +81,8 @@ export const FLOW = {
     question: {
       job: "Where do people apply?",
       opp: "Where do people apply?",
-      freeEvent: "Where do people sign up?",
-      paidEvent: "Where do people buy tickets?",
+      event: "Where do people register or get tickets?",
+      promote: "Where do people apply or register?",
       other: "Is there a link?",
     },
     hint: "Paste the link. “mysite.com” is fine — we add the rest.",
@@ -120,6 +100,12 @@ export const FLOW = {
     title: "What's the last day to apply?",
     hint: "If there isn't one, tap “No deadline”.",
     skip: "No deadline",
+  },
+  startDate: {
+    title: "When should it start?",
+    hint: "Book at least 5 working days before your start date. We confirm your go-live date.",
+    limited: "Distribute and Campaign start dates are limited, so we confirm them in the order payments arrive.",
+    error: "Pick a start date at least 5 working days from today.",
   },
   where: {
     job: "Where is the job?",
@@ -143,7 +129,7 @@ export const FLOW = {
   },
   about: {
     question: (thing: string) => `Tell people about the ${thing}`,
-    promote: "What should we tell people?",
+    promote: "Tell people about it",
     hint: "Two or three sentences is plenty. It doesn't need to be perfect.",
     placeholder: "Write it like you'd tell a friend…",
     example: {
@@ -151,15 +137,9 @@ export const FLOW = {
       event: "A free evening of talks for young people starting in tech. Food and drinks included.",
       opp: "Full scholarship for African students to study in the UK. Open to anyone under 30.",
       sell: "Learn Excel from zero in one weekend. 12 short videos and practice sheets.",
-      promote: "Our new menu has 5 new cakes. 10% off for the first week.",
+      promote: "A 6-month paid fellowship for young African founders. Open to anyone under 30.",
     },
     error: "Write a sentence or two so people know what it is.",
-  },
-  length: {
-    title: "How long should it stay up?",
-    hint: "You can boost it later if you want more.",
-    week: { label: "1 week", sub: "Its own page and a link to apply" },
-    month: { label: "1 month", sub: "Stays up longer, shown higher" },
   },
   name: {
     title: "What's your name?",
@@ -189,7 +169,6 @@ export const FLOW = {
     addAnother: (thing: string) => `Add another ${thing}`,
     also: "Also in this order",
     remove: "Remove",
-    pack: (count: number, each: string) => `${count} or more and each one drops to ${each}.`,
   },
   /** What each kind is called in a sentence — "You didn't finish paying for a job". */
   kindName: {
@@ -209,8 +188,10 @@ export const FLOW = {
  */
 export const PAY = {
   terms:
-    "By paying you confirm the details are correct. We review everything before it goes live, so payment does not guarantee publication.",
-  freeTerms: "We review everything before it goes live.",
+    "By paying you confirm the details are correct. A booking is confirmed when payment is received. We review everything before it goes live and may decline or edit it. We deliver and report on your package but cannot guarantee applications, registrations or sales.",
+  freeTerms: "We review everything before it goes live. Listings stay up until their deadline.",
+  resourceTerms:
+    "UP earns a 15% commission on successful sales. Commercial and payment terms are agreed with you before publication.",
   payCta: (amount: string) => `Pay ${amount}`,
   freeCta: "Send it in",
   paystackNote: "You'll pay on Paystack's secure page, then come straight back here.",
@@ -239,17 +220,24 @@ export const SUCCESS = {
     "Thanks — we have your payment and the details you submitted. Your order is now with UP for review.",
   freeBody: "Thanks — we have your submission. It's now with UP for review.",
   next: [
-    "We review the submission and assets.",
+    "We review the submission.",
     "If anything needs clarification, we'll contact you.",
-    "Once approved, we move it into delivery.",
-    "We confirm when the purchased deliverable is complete.",
+    "Once approved, it goes live on UP.",
+  ],
+  /** Paid packages — rate card, "How to book" steps 3 and 4. */
+  nextPaid: [
+    "We review your opportunity.",
+    "Email us your logo, quoting your order ID, if you'd like it on the promotion.",
+    "We confirm your go-live date and publish.",
+    "Your performance summary follows within 5 working days of your package ending.",
   ],
   support: "Need to update something? Get in touch and quote your order ID.",
+  seePackages: "See packages",
   crossSell: {
     listing:
-      "Your listing is sorted. If you want to push it further before the deadline, a platform boost is the usual next step.",
+      "Want more people to see it? Boost, Distribute and Campaign put your listing in front of more of our audience.",
     promotion:
-      "Your distribution is sorted. If you're going to be doing this regularly, there are better ways to buy it — just ask.",
+      "Need something more tailored? For custom promotions, partnerships and larger campaigns, get in touch.",
   },
 }
 

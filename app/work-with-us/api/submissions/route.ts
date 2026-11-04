@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 
 import {
   BUNDLES,
-  PROMOTION_ITEMS,
   buildOrder,
   contentTypeForKind,
   trackForKind,
@@ -24,17 +23,10 @@ import { initializePayment } from "../../server/paystack"
 function buildItems(payload: SubmissionPayload): ItemDraft[] {
   if (payload.kind === "promotion") {
     const bundle = BUNDLES.find((entry) => entry.id === payload.bundleId)
-    // A bundle is stored as the items it contains so the queue shows the work,
-    // even though the price came from the bundle, not from adding these up.
-    const bought = payload.promotions.flatMap((chosen) => {
-      const item = PROMOTION_ITEMS.find((entry) => entry.id === chosen.id)
-      return item
-        ? [{ id: item.id, label: item.label, quantity: chosen.quantity, price: item.price }]
-        : []
-    })
-    if (bundle) {
-      bought.unshift({ id: bundle.id, label: bundle.label, quantity: 1, price: bundle.price })
-    }
+    // The package is the purchase; its contents are listed in the queue's fields.
+    const bought = bundle
+      ? [{ id: bundle.id, label: `${bundle.label} package`, quantity: 1, price: bundle.price }]
+      : []
 
     return [
       {
