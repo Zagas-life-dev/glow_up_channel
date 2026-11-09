@@ -36,6 +36,11 @@ const config = [
 
   {
     name: "glowup/severities",
+    // Same files as eslint-config-next's main block, which is where the react,
+    // react-hooks and @next/next plugins live. Without this the block also hits
+    // `.cjs` scripts, which that block skips, and ESLint dies with "could not
+    // find plugin react-hooks" before linting anything.
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     rules: {
       /*
        * `eslint-plugin-react-hooks` v7 added the React Compiler rules, and they
