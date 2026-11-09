@@ -21,7 +21,7 @@ import {
   RiShareFill,
 } from 'react-icons/ri'
 import { useAuth } from '@/lib/auth-context'
-import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-popup'
+import { promptGuestSignUp } from '@/components/sign-up-better-experience-popup'
 import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import { trackLike, trackSave, trackShare } from '@/lib/tracking'
@@ -330,7 +330,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     e.stopPropagation()
 
     if (!isAuthenticated) {
-      dispatchGuestEngaged()
+      promptGuestSignUp(undefined, 'Sign up to like this')
       return
     }
 
@@ -396,7 +396,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     e.stopPropagation()
 
     if (!isAuthenticated) {
-      dispatchGuestEngaged()
+      promptGuestSignUp({ action: 'save', kind: contentKind, id: item._id }, 'Sign up to save this')
       return
     }
 
@@ -502,7 +502,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     // The button is visible to guests so its public count reads like the others;
     // pressing it asks them to sign up rather than doing nothing.
     if (!isAuthenticated) {
-      dispatchGuestEngaged()
+      promptGuestSignUp({ action: 'playlist', kind: contentKind, id: item._id }, 'Sign up to add this to a playlist')
       return
     }
     setShowPlaylistModal(true)

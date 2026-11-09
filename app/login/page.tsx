@@ -21,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   // Remember ?callbackUrl= / ?intent= so the user lands back where they were.
+  // Stored in localStorage, so switching to /signup keeps it too.
   useEffect(() => { captureIntentFromSearch(window.location.search) }, [])
 
   const handleLogin = async (e: React.FormEvent) => {

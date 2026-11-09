@@ -7,7 +7,8 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { UpLogo } from "@/components/up/up-logo"
-import { authHref, savePendingIntent } from "@/lib/pending-intent"
+import { toast } from "sonner"
+import { authHref, savePendingIntent, type IntentAction, type IntentKind } from "@/lib/pending-intent"
 
 /** The reasons from the old one-line copy: save content, personal picks, deadlines. */
 const PERKS = [
@@ -22,6 +23,27 @@ const ENGAGEMENT_EVENT = "glowup-guest-engaged"
 export function dispatchGuestEngaged() {
   if (typeof window === "undefined") return
   window.dispatchEvent(new CustomEvent(ENGAGEMENT_EVENT))
+}
+
+/**
+ * A guest tapped something that needs an account. Remember the page and the tap
+ * (so sign-up can bring them back and replay a save), then ask: the popup the first
+ * time in a session, a toast with a Sign up button after it has been dismissed.
+ * Before, taps after a dismissed popup did nothing at all.
+ */
+export function promptGuestSignUp(intent?: { action: IntentAction; kind: IntentKind; id: string }, label = "Sign up to do that") {
+  if (typeof window === "undefined") return
+  const returnTo = window.location.pathname + window.location.search
+  savePendingIntent({ returnTo, ...(intent ?? {}), source: intent ? `guest_${intent.action}` : "guest_tap" })
+  if (!wasDismissed()) {
+    dispatchGuestEngaged()
+    return
+  }
+  const href = authHref("/signup", { returnTo, ...(intent ?? {}) })
+  toast(label, {
+    description: "Free, and you come straight back here.",
+    action: { label: "Sign up", onClick: () => window.location.assign(href) },
+  })
 }
 
 function wasDismissed(): boolean {

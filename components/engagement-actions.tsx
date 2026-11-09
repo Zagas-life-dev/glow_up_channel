@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 import { trackLike, trackSave, trackShare } from '@/lib/tracking'
 import { cn } from '@/lib/utils'
 import { useReadOnly } from '@/hooks/use-online-status'
+import { promptGuestSignUp } from '@/components/sign-up-better-experience-popup'
+import type { IntentKind } from '@/lib/pending-intent'
 import {
   RiHeartLine,
   RiHeartFill,
@@ -15,6 +17,13 @@ import {
   RiShareLine,
   RiShareFill,
 } from 'react-icons/ri'
+
+const GUEST_KIND: Record<EngagementActionsProps['type'], IntentKind> = {
+  opportunities: 'opportunity',
+  events: 'event',
+  jobs: 'job',
+  resources: 'resource',
+}
 
 interface EngagementActionsProps {
   type: 'opportunities' | 'events' | 'jobs' | 'resources'
@@ -80,7 +89,7 @@ export default function EngagementActions({
     e.preventDefault()
     e.stopPropagation()
     if (!isAuthenticated) {
-      toast.error('Please sign in to like items')
+      promptGuestSignUp(undefined, 'Sign up to like this')
       return
     }
 
@@ -137,7 +146,7 @@ export default function EngagementActions({
     e.preventDefault()
     e.stopPropagation()
     if (!isAuthenticated) {
-      toast.error('Please sign in to save items')
+      promptGuestSignUp({ action: 'save', kind: GUEST_KIND[type], id }, 'Sign up to save this')
       return
     }
 

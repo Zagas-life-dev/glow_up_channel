@@ -10,6 +10,7 @@ import PushPromptBanner from './push-prompt-banner'
 import DigestPopup from './digest/digest-popup'
 import StoryViewerHost from './stories/story-viewer-host'
 import SignUpBetterExperiencePopup from './sign-up-better-experience-popup'
+import PendingIntentRunner from './pending-intent-runner'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -107,6 +108,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <DigestPopup />
       <StoryViewerHost />
       <SignUpBetterExperiencePopup />
+      <PendingIntentRunner />
     </div>
   )
 }

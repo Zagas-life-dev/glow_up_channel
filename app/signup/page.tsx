@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { captureIntentFromSearch } from '@/lib/pending-intent'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -44,6 +45,9 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const { registerOpportunitySeeker } = useAuth()
   const router = useRouter()
+
+  // Keep ?callbackUrl= / ?intent= so the new account lands back on the listing.
+  useEffect(() => { captureIntentFromSearch(window.location.search) }, [])
 
   const {
     control,
