@@ -3,7 +3,6 @@
 import { ReactNode, useState, useEffect, Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import { usePage } from '@/contexts/page-context'
-import { useCleanupPastContent } from '@/hooks/use-cleanup-past-content'
 import AppSidebar from './app-sidebar'
 import AppBottomNav from './app-bottom-nav'
 import AppTopBar from './app-top-bar'
@@ -24,9 +23,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { hideNavbar, hideFooter } = usePage()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
-
-  // Auto-trigger backend cleanup of past/expired events, opportunities, jobs (once per session)
-  useCleanupPastContent()
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)')

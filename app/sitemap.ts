@@ -28,10 +28,7 @@ const STATIC_PATHS = [
   "/",
   "/about",
   "/contact",
-  "/community",
   "/search",
-  "/channels",
-  "/channels/create",
   "/jobs",
   "/events",
   "/opportunities",
@@ -39,8 +36,6 @@ const STATIC_PATHS = [
   "/playlists",
   "/privacy-policy",
   "/work-with-us",
-  "/post",
-  "/locked-in",
 ] as const
 
 /** Hubs are the crawl entry points, so they outrank ordinary detail pages. */
