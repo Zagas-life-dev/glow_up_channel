@@ -126,7 +126,7 @@ export async function GET() {
 
     return NextResponse.json(table, {
       headers: {
-        "Cache-Control": `public, s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=${REVALIDATE_SECONDS * 7}`,
+        "Cache-Control": `public, max-age=3600, s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=${REVALIDATE_SECONDS * 7}`,
       },
     })
   } catch (error) {
