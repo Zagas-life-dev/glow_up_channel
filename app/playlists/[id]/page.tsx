@@ -600,7 +600,7 @@ export default function PlaylistDetailPage() {
                 {playlist.hashtags.map((tag) => (
                   <Link
                     key={tag}
-                    href={`/community?hashtag=${tag}`}
+                    href={`/playlists?q=${encodeURIComponent(tag)}`}
                     className="text-[13px] font-semibold text-muted-foreground transition-colors hover:text-up-orange-ink"
                   >
                     #{tag}

@@ -16,7 +16,6 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
-import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -94,7 +93,6 @@ function OpportunityPageContent({ id, initialOpportunity }: OpportunityPageProps
   const [opportunity, setOpportunity] = useState<any>(initialOpportunity)
   const [loading, setLoading] = useState(!initialOpportunity)
   const [error, setError] = useState(false)
-  const [showShareComposer, setShowShareComposer] = useState(false)
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
 
@@ -285,22 +283,6 @@ function OpportunityPageContent({ id, initialOpportunity }: OpportunityPageProps
             }}
           />
 
-          {showShareComposer && opportunity && (
-            <ContentShareComposer
-              content={{
-                _id: opportunity._id,
-                title: opportunity.title,
-                description: opportunity.description,
-                type: 'opportunity',
-                organization: opportunity.organization || opportunity.provider,
-                location: opportunity.location,
-                dates: opportunity.dates,
-                financial: opportunity.financial
-              }}
-              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-              onClose={() => setShowShareComposer(false)}
-            />
-          )}
         </>
       }
     >
@@ -405,7 +387,6 @@ function OpportunityPageContent({ id, initialOpportunity }: OpportunityPageProps
             type="opportunities"
             id={id}
             likeCount={opportunity.metrics?.likeCount ?? 0}
-            onPostClick={() => setShowShareComposer(true)}
           />
         </div>
       )}

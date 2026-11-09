@@ -24,7 +24,6 @@ import { useAuth } from '@/lib/auth-context'
 import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-popup'
 import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
-import ContentShareComposer from './content-share-composer'
 import { trackLike, trackSave, trackShare } from '@/lib/tracking'
 import { useReadOnly } from '@/hooks/use-online-status'
 import {
@@ -226,7 +225,6 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0
   )
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
-  const [showShareComposer, setShowShareComposer] = useState(false)
   const [justShared, setJustShared] = useState(false)
   const [engagementStatusLoaded, setEngagementStatusLoaded] = useState(false)
 
@@ -884,17 +882,6 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
       </article>
       )}
 
-      {/* Content Share Composer */}
-      {showShareComposer && (
-        <ContentShareComposer
-          content={item}
-          onPostCreated={(post) => {
-            setShowShareComposer(false)
-            onEngage?.()
-          }}
-          onClose={() => setShowShareComposer(false)}
-        />
-      )}
 
       {/* Add to Playlist Modal */}
       <AddToPlaylistModal

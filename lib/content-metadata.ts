@@ -52,49 +52,6 @@ export async function buildPlaylistMetadata(id: string): Promise<Metadata> {
   }
 }
 
-export async function buildPostMetadata(id: string): Promise<Metadata> {
-  const base = backendBase()
-  const fallback: Metadata = {
-    title: "Post",
-    description: "Community discussion on UP.",
-  }
-  if (!base) return fallback
-  const j = await fetchJson<{
-    success?: boolean
-    data?: { post?: { content?: { text?: string }; author?: { firstName?: string } } }
-  }>(`${base}/api/posts/${id}`)
-  const post = j?.success && j?.data?.post ? j.data.post : null
-  const text = post?.content?.text
-  const author = post?.author?.firstName
-  if (!text && !author) return fallback
-  const snippet = text ? truncateMeta(text, 140) : "Community post on UP."
-  return {
-    title: author ? `Post by ${author}` : "Post",
-    description: snippet,
-  }
-}
-
-export async function buildChannelMetadata(slug: string): Promise<Metadata> {
-  const base = backendBase()
-  const fallback: Metadata = {
-    title: "Channel",
-    description: "Community channels for focused conversation on UP.",
-  }
-  if (!base) return fallback
-  const j = await fetchJson<{
-    success?: boolean
-    data?: { channel?: { name?: string; description?: string } }
-  }>(`${base}/api/channels/${encodeURIComponent(slug)}`)
-  const c = j?.success && j?.data?.channel ? j.data.channel : null
-  if (!c?.name) return fallback
-  return {
-    title: c.name,
-    description: c.description
-      ? truncateMeta(String(c.description))
-      : `Channel: ${c.name} on UP.`,
-  }
-}
-
 export async function buildProfileMetadata(userId: string): Promise<Metadata> {
   const base = backendBase()
   const fallback: Metadata = {

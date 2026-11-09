@@ -13,7 +13,6 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
-import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -97,7 +96,6 @@ function JobPageContent({ id, initialJob }: JobPageProps) {
   const [job, setJob] = useState<any>(initialJob)
   const [loading, setLoading] = useState(!initialJob)
   const [error, setError] = useState(false)
-  const [showShareComposer, setShowShareComposer] = useState(false)
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
   const tracker = useOptionalTracker()
@@ -270,22 +268,6 @@ function JobPageContent({ id, initialJob }: JobPageProps) {
             }}
           />
 
-          {showShareComposer && job && (
-            <ContentShareComposer
-              content={{
-                _id: job._id,
-                title: job.title,
-                description: job.description,
-                type: 'job',
-                company: job.company,
-                location: job.location,
-                dates: job.dates,
-                pay: job.pay,
-              }}
-              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-              onClose={() => setShowShareComposer(false)}
-            />
-          )}
         </>
       }
     >
@@ -385,7 +367,6 @@ function JobPageContent({ id, initialJob }: JobPageProps) {
             type="jobs"
             id={id}
             likeCount={job.metrics?.likeCount ?? 0}
-            onPostClick={() => setShowShareComposer(true)}
           />
         </div>
       )}

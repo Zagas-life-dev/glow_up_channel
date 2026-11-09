@@ -89,15 +89,7 @@ export default function AppBottomNav() {
     pathname?.startsWith("/login") ||
     pathname?.startsWith("/signup") ||
     pathname?.startsWith("/dashboard/provider/posting") ||
-    pathname?.startsWith("/onboarding") ||
-    pathname?.startsWith("/post")
-  ) {
-    return null
-  }
-
-  if (
-    pathname &&
-    (/^\/channels\/(?!create$)[^/]+$/.test(pathname) || /^\/channels\/[^/]+\/details$/.test(pathname))
+    pathname?.startsWith("/onboarding")
   ) {
     return null
   }

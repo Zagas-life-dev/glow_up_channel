@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useGoBack } from '@/lib/navigation/in-app-history'
-import { useAuth } from '@/lib/auth-context'
 import { usePlaylist, findSavedPlaylist, type Playlist as PlaylistWithItems } from '@/contexts/playlist-context'
 import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
@@ -15,10 +14,8 @@ import {
   typeConfigFor,
   playlistItemHref,
 } from '@/lib/playlist-item-display'
-import PostCard from '@/components/post-card'
 import GiftList from '@/components/gifts/gift-list'
 import { GIFTS_TAB } from '@/lib/gifts/routes'
-import ConnectionRequestsModal from '@/components/connection-requests-modal'
 import ProfileSkeleton from '@/components/skeletons/profile-skeleton'
 import {
   DropdownMenu,
@@ -50,7 +47,6 @@ import {
   RiToolsLine,
   RiSettingsLine,
   RiTimeLine,
-  RiUserAddLine,
   RiBookmarkLine,
   RiGiftLine,
   RiGlobalLine,
@@ -63,7 +59,6 @@ import {
 } from "react-icons/ri"
 import { PageShell } from "@/components/layout/page-shell"
 import { isFounderBatch } from '@/lib/roles'
-import { trackConnectionRequest } from '@/lib/tracking'
 import { normalizeProfileLink, profileLinkHost } from '@/lib/profile-links'
 
 interface OnboardingData {
@@ -101,49 +96,6 @@ interface ProfileData {
   createdAt: string
   playlistCount: number
   onboarding: OnboardingData | null
-}
-
-interface ConnectionStatus {
-  isFollowing: boolean
-  isPending: boolean
-  followsYou: boolean
-}
-
-interface Post {
-  _id: string
-  author: {
-    _id: string
-    firstName: string
-    email: string
-    profileImage?: string
-  }
-  content: {
-    text: string
-    images: { url: string; publicId?: string }[]
-    playlist?: {
-      _id: string
-      name: string
-      description: string
-      itemCount: number
-      items: { _id: string; title: string; contentType: string }[]
-    }
-  }
-  hashtags: string[]
-  mentions: { userId: string; username: string }[]
-  visibility: 'public' | 'private'
-  likeCount: number
-  replyCount: number
-  repostCount: number
-  bookmarkCount: number
-  isRepost: boolean
-  originalPost?: string
-  repostedBy?: { _id: string; email: string; firstName?: string }
-  createdAt: string
-  updatedAt: string
-  isEdited: boolean
-  hasLiked?: boolean
-  hasBookmarked?: boolean
-  hasReposted?: boolean
 }
 
 interface Playlist {
@@ -341,9 +293,7 @@ function ChipList({
 
 export default function ProfilePage() {
   const params = useParams()
-  const router = useRouter()
   const goBack = useGoBack()
-  const { isAuthenticated } = useAuth()
   const {
     savedPlaylists,
     fetchSavedPlaylists,
@@ -355,7 +305,6 @@ export default function ProfilePage() {
   const userId = params.id as string
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null)
   const [isOwner, setIsOwner] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -363,9 +312,7 @@ export default function ProfilePage() {
   // Tabs data
   const [activeTab, setActiveTab] = useState('playlists')
   const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [bookmarks, setBookmarks] = useState<Post[]>([])
   const [loadingPlaylists, setLoadingPlaylists] = useState(false)
-  const [loadingBookmarks, setLoadingBookmarks] = useState(false)
 
   /**
    * Deep link into the Gifts tab.
@@ -393,12 +340,6 @@ export default function ProfilePage() {
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [loadingCompletion, setLoadingCompletion] = useState(false)
 
-  // Modals
-  const [showConnectionRequests, setShowConnectionRequests] = useState(false)
-
-  // Connection action
-  const [connectLoading, setConnectLoading] = useState(false)
-
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('accessToken')
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -422,7 +363,6 @@ export default function ProfilePage() {
       if (data.success) {
         setProfile(data.data.profile)
         setIsOwner(data.data.isOwner)
-        setConnectionStatus(data.data.connectionStatus)
       } else {
         setError(data.message || 'Failed to load profile')
       }
@@ -451,26 +391,6 @@ export default function ProfilePage() {
       setLoadingPlaylists(false)
     }
   }, [userId, getAuthHeaders])
-
-  // Fetch bookmarks (owner only)
-  const fetchBookmarks = useCallback(async () => {
-    if (!isOwner) return
-    
-    setLoadingBookmarks(true)
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/profile/me/bookmarks?page=1&limit=50`, {
-        headers: getAuthHeaders()
-      })
-      const data = await response.json()
-      if (data.success) {
-        setBookmarks(data.data.posts)
-      }
-    } catch (err) {
-      console.error('Error fetching bookmarks:', err)
-    } finally {
-      setLoadingBookmarks(false)
-    }
-  }, [isOwner, getAuthHeaders])
 
   // Saves live in the account's own "Saved" playlist, so it only resolves on your own profile.
   const savedPlaylistSummary = useMemo(
@@ -522,49 +442,6 @@ export default function ProfilePage() {
     }
   }, [isOwner, profile, calculateProfileCompletion])
 
-  // Handle connect/disconnect
-  const handleConnect = async () => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
-
-    setConnectLoading(true)
-    try {
-      if (connectionStatus?.isFollowing || connectionStatus?.isPending) {
-        const response = await fetch(`${API_BASE_URL}/api/connections/${userId}`, {
-          method: 'DELETE',
-          headers: getAuthHeaders()
-        })
-        const data = await response.json()
-        if (data.success) {
-          setConnectionStatus({ ...connectionStatus, isFollowing: false, isPending: false })
-        }
-      } else {
-        const response = await fetch(`${API_BASE_URL}/api/connections/${userId}`, {
-          method: 'POST',
-          headers: getAuthHeaders()
-        })
-        const data = await response.json()
-        if (data.success) {
-          // Only the connect direction reports. Disconnecting is a real action
-          // too, but counting it would make a user churning a connection on and
-          // off look like a busy day.
-          trackConnectionRequest(userId)
-          if (profile?.isPrivate) {
-            setConnectionStatus({ ...connectionStatus!, isFollowing: false, isPending: true })
-          } else {
-            setConnectionStatus({ ...connectionStatus!, isFollowing: true, isPending: false })
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error updating connection:', err)
-    } finally {
-      setConnectLoading(false)
-    }
-  }
-
   // Initial load
   useEffect(() => {
     fetchProfile()
@@ -586,17 +463,13 @@ export default function ProfilePage() {
           console.error('Error fetching saved playlists for profile:', err)
         })
       }
-    } else if (activeTab === 'bookmarks' && bookmarks.length === 0 && isOwner) {
-      fetchBookmarks()
     }
   }, [
     activeTab,
     playlists.length,
-    bookmarks.length,
     isOwner,
     savedPlaylists.length,
     fetchPlaylists,
-    fetchBookmarks,
     fetchSavedPlaylists
   ])
 
@@ -839,7 +712,8 @@ export default function ProfilePage() {
 
             {/* Action buttons: in top container under join date */}
             <div className="mt-5 flex flex-wrap gap-2">
-              {isOwner ? (
+              {/* Partner (connections) and messaging were community features, now retired. */}
+              {isOwner && (
                 /* Editing lives in Settings, which already holds every field the old modal did. */
                 <Link href="/profile/settings" className="min-w-0 flex-1">
                   <Button
@@ -851,44 +725,6 @@ export default function ProfilePage() {
                     Edit profile
                   </Button>
                 </Link>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    onClick={handleConnect}
-                    disabled={connectLoading}
-                    className={cn(
-                      "h-11 min-h-11 min-w-0 flex-1 border text-sm font-bold transition-all",
-                      connectionStatus?.isFollowing
-                        ? "border-up-border-on-navy bg-up-navy-subtle text-up-on-navy hover:bg-white/[0.12]"
-                        : connectionStatus?.isPending
-                          ? "border-up-border-on-navy bg-transparent text-up-on-navy-muted"
-                          : "border-transparent bg-up-orange text-up-navy hover:brightness-105",
-                    )}
-                  >
-                    {connectionStatus?.isFollowing ? (
-                      "Partnering"
-                    ) : connectionStatus?.isPending ? (
-                      <>
-                        <RiTimeLine className="w-4 h-4 mr-1.5" aria-hidden />
-                        Requested
-                      </>
-                    ) : (
-                      <>
-                        <RiUserAddLine className="w-4 h-4 mr-1.5" aria-hidden />
-                        Partner
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled
-                    className="h-11 min-h-11 min-w-0 flex-1 border-up-border-on-navy bg-transparent text-sm font-semibold text-up-on-navy-faint"
-                  >
-                    Message soon
-                  </Button>
-                </>
               )}
             </div>
           </div>
@@ -1025,13 +861,6 @@ export default function ProfilePage() {
             </section>
           )
         })()}
-
-        {/* Follows You: soft pill */}
-        {!isOwner && connectionStatus?.followsYou && (
-          <div className="mb-5 rounded-full bg-up-lime-tint px-4 py-2.5 text-center">
-            <span className="text-xs text-muted-foreground font-medium">Partners you</span>
-          </div>
-        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Only owners get a second tab (Saved) — a lone always-active tab is noise, so hide the bar. */}
@@ -1320,36 +1149,6 @@ export default function ProfilePage() {
                         </div>
                       )}
                     </section>
-
-                    {/* Bookmarked community posts — a different kind of save, kept separate */}
-                    {(loadingBookmarks || bookmarks.length > 0) && (
-                      <section className="space-y-3">
-                        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
-                          Saved posts
-                        </h3>
-                        {loadingBookmarks ? (
-                          <div className="space-y-4 animate-pulse" role="status" aria-busy="true">
-                            <span className="sr-only">Loading your saved posts…</span>
-                            {[...Array(3)].map((_, i) => (
-                              <div key={i} className="rounded-2xl bg-card border border-border p-5">
-                                <div className="flex items-center gap-3 mb-3">
-                                  <div className="w-10 h-10 rounded-full bg-muted" />
-                                  <div className="h-4 bg-muted rounded w-32" />
-                                </div>
-                                <div className="h-4 bg-muted rounded w-full mb-2" />
-                                <div className="h-4 bg-muted rounded w-5/6" />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {bookmarks.map((post) => (
-                              <PostCard key={post._id} post={post} onUpdate={fetchBookmarks} />
-                            ))}
-                          </div>
-                        )}
-                      </section>
-                    )}
                   </div>
                 )
               })()}
@@ -1365,14 +1164,6 @@ export default function ProfilePage() {
           )}
         </Tabs>
       </div>
-
-      {isOwner && (
-        <ConnectionRequestsModal
-          isOpen={showConnectionRequests}
-          onClose={() => setShowConnectionRequests(false)}
-          onUpdate={fetchProfile}
-        />
-      )}
     </PageShell>
   )
 }

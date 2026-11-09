@@ -338,24 +338,6 @@ export function trackShare(
 }
 
 /**
- * Track repost action
- */
-export function trackRepost(
-  postId: string
-): void {
-  trackActiveActivity('repost', {
-    contentType: 'post',
-    contentId: postId
-  });
-  
-  // Also track as community engagement
-  trackActiveActivity('community_engagement', {
-    contentType: 'community',
-    contentId: postId
-  });
-}
-
-/**
  * Track save/bookmark action
  */
 export function trackSave(
@@ -381,32 +363,6 @@ export function trackSave(
       contentId
     });
   }
-}
-
-/**
- * Track post creation
- */
-export function trackPostCreated(postId: string): void {
-  trackActiveActivity('post_created', {
-    contentType: 'post',
-    contentId: postId
-  });
-  
-  // Also track as community engagement
-  trackActiveActivity('community_engagement', {
-    contentType: 'community',
-    contentId: postId
-  });
-}
-
-/**
- * Track community engagement (when user opens community and engages with posts)
- */
-export function trackCommunityEngagement(action: 'view' | 'like' | 'reply' | 'repost' | 'save' | 'vote' | 'share', postId?: string): void {
-  trackActiveActivity('community_engagement', {
-    contentType: 'community',
-    contentId: postId
-  });
 }
 
 /**
@@ -480,26 +436,6 @@ export function trackApply(
  */
 export function trackStoryEngaged(storyId: string): void {
   trackActiveActivity('story_engaged', { surface: 'story', storyId, page: '/' });
-}
-
-/**
- * Track comment/reply action
- */
-export function trackComment(postId: string): void {
-  trackActiveActivity('community_engagement', {
-    contentType: 'community',
-    contentId: postId
-  });
-}
-
-/**
- * Track vote in poll
- */
-export function trackVote(postId: string): void {
-  trackActiveActivity('community_engagement', {
-    contentType: 'community',
-    contentId: postId
-  });
 }
 
 /* ------------------------------------------------------------------------- *
@@ -621,10 +557,6 @@ export function trackFilterApply(): void {
 
 export function trackProfileEdit(): void {
   trackActiveActivity('profile_edit');
-}
-
-export function trackConnectionRequest(userId: string): void {
-  trackActiveActivity('connection_request', { contentId: userId });
 }
 
 /** Accepted or declined a connection request. */

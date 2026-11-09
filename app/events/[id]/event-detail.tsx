@@ -14,7 +14,6 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
-import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -101,7 +100,6 @@ function EventPageContent({ id, initialEvent }: EventPageProps) {
   const [event, setEvent] = useState<any>(initialEvent)
   const [loading, setLoading] = useState(!initialEvent)
   const [error, setError] = useState(false)
-  const [showShareComposer, setShowShareComposer] = useState(false)
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
   const tracker = useOptionalTracker()
@@ -291,23 +289,6 @@ function EventPageContent({ id, initialEvent }: EventPageProps) {
             }}
           />
 
-          {showShareComposer && event && (
-            <ContentShareComposer
-              content={{
-                _id: event._id,
-                title: event.title,
-                description: event.description,
-                type: 'event',
-                organization: event.organizer,
-                location: event.location,
-                dates: event.dates,
-                isPaid: event.isPaid,
-                price: event.price,
-              }}
-              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-              onClose={() => setShowShareComposer(false)}
-            />
-          )}
         </>
       }
     >
@@ -464,7 +445,6 @@ function EventPageContent({ id, initialEvent }: EventPageProps) {
             type="events"
             id={id}
             likeCount={event.metrics?.likeCount ?? 0}
-            onPostClick={() => setShowShareComposer(true)}
           />
         </div>
       )}

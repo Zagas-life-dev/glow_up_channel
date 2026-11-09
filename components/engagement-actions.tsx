@@ -14,7 +14,6 @@ import {
   RiBookmarkFill,
   RiShareLine,
   RiShareFill,
-  RiChat1Line,
 } from 'react-icons/ri'
 
 interface EngagementActionsProps {
@@ -25,7 +24,6 @@ interface EngagementActionsProps {
   /** Optional like count to display (e.g. from item.metrics.likeCount) */
   likeCount?: number
   /** If provided, shows a "Post" button that calls this (e.g. open share composer) */
-  onPostClick?: () => void
 }
 
 interface EngagementStatus {
@@ -38,7 +36,6 @@ export default function EngagementActions({
   id,
   className = '',
   likeCount: initialLikeCount = 0,
-  onPostClick,
 }: EngagementActionsProps) {
   const { isAuthenticated } = useAuth()
   // Offline is read-only. Like, save and post all write to the API and nothing
@@ -280,21 +277,6 @@ export default function EngagementActions({
         )}
       </button>
 
-      {/* Post – same as feed card, only when onPostClick provided */}
-      {onPostClick && isAuthenticated && !readOnly && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onPostClick()
-          }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-orange-500 hover:bg-primary/10 transition-all"
-        >
-          <RiChat1Line className="w-4 h-4" aria-hidden />
-          <span className="hidden sm:inline">Post</span>
-        </button>
-      )}
     </div>
   )
 }

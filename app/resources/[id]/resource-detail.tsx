@@ -25,7 +25,6 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
-import ContentShareComposer from '@/components/content-share-composer'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -100,7 +99,6 @@ function ResourcePageContent({ id, initialResource }: ResourcePageProps) {
   const [resource, setResource] = useState<any>(initialResource)
   const [loading, setLoading] = useState(!initialResource)
   const [error, setError] = useState(false)
-  const [showShareComposer, setShowShareComposer] = useState(false)
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const promotionClickSent = useRef(false)
   const tracker = useOptionalTracker()
@@ -322,21 +320,6 @@ function ResourcePageContent({ id, initialResource }: ResourcePageProps) {
             }}
           />
 
-          {showShareComposer && resource && (
-            <ContentShareComposer
-              content={{
-                _id: resource._id,
-                title: resource.title,
-                description: resource.description,
-                type: 'resource',
-                author: resource.author,
-                category: resource.category,
-                duration: resource.duration,
-              }}
-              onPostCreated={() => { setShowShareComposer(false); toast.success('Post created!') }}
-              onClose={() => setShowShareComposer(false)}
-            />
-          )}
         </>
       }
     >
@@ -429,7 +412,6 @@ function ResourcePageContent({ id, initialResource }: ResourcePageProps) {
             type="resources"
             id={id}
             likeCount={resource.metrics?.likeCount ?? 0}
-            onPostClick={() => setShowShareComposer(true)}
           />
         </div>
       )}
