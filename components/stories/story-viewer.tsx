@@ -35,7 +35,7 @@ import {
   setSavedPlaylist,
   type ViewerSource,
 } from "@/lib/stories/store"
-import { storyDisc, storyIcon, storySlide } from "@/components/stories/story-look"
+import { StoryIcon, storyDisc, storySlide } from "@/components/stories/story-look"
 import { cn } from "@/lib/utils"
 
 const SLIDE_MS = 7000
@@ -110,7 +110,6 @@ function Tutorial({ onDone }: { onDone: () => void }) {
  */
 function StoryCover({ story, first, side }: { story: Story; first: number; side: -1 | 1 }) {
   const look = storySlide(story)
-  const Icon = storyIcon(story)
   const item = story.items[first]
   return (
     <div
@@ -125,7 +124,7 @@ function StoryCover({ story, first, side }: { story: Story; first: number; side:
       </div>
       <div className="flex items-center gap-2.5 px-4 pt-3">
         <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full ring-2 ring-white/20", storyDisc(story))}>
-          <Icon className="h-[18px] w-[18px]" />
+          <StoryIcon story={story} className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold leading-tight">{story.title}</p>
@@ -183,7 +182,6 @@ export function StoryViewer({
   const item = isEnd ? undefined : story.items[frame]
   const paused = held || tutorial
   const look = storySlide(story)
-  const Icon = storyIcon(story)
   const countdown = useCountdown(item)
 
   /* ---------------------------------------------------------- session + events */
@@ -643,7 +641,7 @@ export function StoryViewer({
         {/* Header */}
         <div className="relative z-20 flex items-center gap-2.5 px-4 pt-3">
           <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full ring-2 ring-white/20", storyDisc(story))}>
-            <Icon className="h-[18px] w-[18px]" aria-hidden />
+            <StoryIcon story={story} className="h-[18px] w-[18px]" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold leading-tight">{story.title}</p>

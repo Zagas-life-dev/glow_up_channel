@@ -1,5 +1,7 @@
 "use client"
 
+import { createElement } from "react"
+
 /**
  * How each story looks: its ring icon and its slide palette. Shared by the
  * rail, the viewer and the settings list so a story reads the same everywhere.
@@ -56,6 +58,21 @@ export function storyIcon(story: { kind: string; categoryId?: string | null }): 
   if (story.kind === "digest") return Sparkles
   if (story.kind === "expiring") return Clock
   return (story.categoryId && CATEGORY_ICONS[story.categoryId]) || CalendarDays
+}
+
+/**
+ * The story's icon as an element. Rendering `storyIcon(x)` through a local
+ * `const Icon = …` reads to the React Compiler as a component created during
+ * render (react-hooks/static-components), even though it is a fixed lookup.
+ */
+export function StoryIcon({
+  story,
+  className,
+}: {
+  story: { kind: string; categoryId?: string | null }
+  className?: string
+}) {
+  return createElement(storyIcon(story), { className, "aria-hidden": true })
 }
 
 /** The disc inside the ring. */

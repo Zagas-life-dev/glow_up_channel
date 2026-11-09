@@ -12,7 +12,7 @@ import { useMemo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { openStoryViewer, useRingImpression, useStories } from "@/lib/stories/store"
 import type { Story } from "@/lib/stories/api"
-import { storyDisc, storyIcon } from "@/components/stories/story-look"
+import { StoryIcon, storyDisc } from "@/components/stories/story-look"
 import { cn } from "@/lib/utils"
 
 export function useStoriesKey(): string | null {
@@ -28,7 +28,6 @@ export function orderStories(stories: Story[]): Story[] {
 }
 
 function Ring({ story, onOpen }: { story: Story; onOpen: () => void }) {
-  const Icon = storyIcon(story)
   return (
     <li className="w-[72px] shrink-0">
       <button
@@ -48,7 +47,7 @@ function Ring({ story, onOpen }: { story: Story; onOpen: () => void }) {
         >
           <span className="grid h-full w-full place-items-center rounded-full bg-background p-[2px]">
             <span className={cn("grid h-full w-full place-items-center rounded-full", storyDisc(story), story.seen && "opacity-70")}>
-              <Icon className="h-6 w-6" aria-hidden />
+              <StoryIcon story={story} className="h-6 w-6" />
             </span>
           </span>
           {story.urgent && !story.seen ? (

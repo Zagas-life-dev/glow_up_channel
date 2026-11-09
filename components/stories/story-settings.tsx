@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch"
 import { fetchStorySettings, setStoryCategory, type StorySettings } from "@/lib/stories/api"
 import { loadStories } from "@/lib/stories/store"
 import { useStoriesKey } from "@/components/stories/stories-rail"
-import { storyDisc, storyIcon } from "@/components/stories/story-look"
+import { StoryIcon, storyDisc } from "@/components/stories/story-look"
 import { cn } from "@/lib/utils"
 
 function Row({
@@ -29,11 +29,10 @@ function Row({
   icon: { kind: string; categoryId?: string | null }
   children: React.ReactNode
 }) {
-  const Icon = storyIcon(icon)
   return (
     <li className="flex items-center gap-3 py-3">
       <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", storyDisc(icon))}>
-        <Icon className="h-4 w-4" aria-hidden />
+        <StoryIcon story={icon} className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
