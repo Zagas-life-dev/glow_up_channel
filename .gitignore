@@ -50,3 +50,6 @@ brag-output-*/.hfbin/
 
 # Brag video project outputs (large renders); kept local, never committed
 brag-output*/
+
+# Deprecated scraper (ingestion moved to a third-party tool). Kept on disk, not tracked.
+Scraper/
