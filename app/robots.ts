@@ -29,8 +29,6 @@ const PRIVATE_PATHS = [
   "/verify-email",
   "/onboarding",
   "/redirect",
-  "/under-construction",
-  "/promotions-demo",
   "/profile/settings",
   // Gifts are members-only. The route also sends noindex headers; this keeps
   // crawlers from spending requests on a subtree they can only get a sign-in
