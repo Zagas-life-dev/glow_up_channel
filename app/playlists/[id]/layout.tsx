@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { buildPlaylistMetadata } from "@/lib/content-metadata"
+import { JsonLd } from "@/components/seo/json-ld"
+import { buildPlaylistJsonLd, buildPlaylistMetadata } from "@/lib/content-metadata"
 
 export async function generateMetadata({
   params,
@@ -10,6 +11,19 @@ export async function generateMetadata({
   return buildPlaylistMetadata(id)
 }
 
-export default function PlaylistDetailLayout({ children }: { children: React.ReactNode }) {
-  return children
+export default async function PlaylistDetailLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const jsonLd = await buildPlaylistJsonLd(id)
+  return (
+    <>
+      {jsonLd && <JsonLd data={jsonLd} />}
+      {children}
+    </>
+  )
 }

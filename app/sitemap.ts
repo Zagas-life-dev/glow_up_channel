@@ -5,6 +5,7 @@ import {
   listJobs,
   listOpportunities,
   listResources,
+  listPlaylists,
 } from "@/lib/seo/fetch-content"
 import type { SitemapItem } from "@/lib/seo/content-types"
 
@@ -74,11 +75,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
   // One slow content type must not cost us the whole sitemap.
-  const [events, jobs, opportunities, resources] = await Promise.all([
+  const [events, jobs, opportunities, resources, playlists] = await Promise.all([
     listEvents().catch(() => []),
     listJobs().catch(() => []),
     listOpportunities().catch(() => []),
     listResources().catch(() => []),
+    listPlaylists().catch(() => []),
   ])
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
@@ -95,5 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...toEntries(jobs, base, "/jobs", 0.8, "daily", now),
     ...toEntries(opportunities, base, "/opportunities", 0.8, "daily", now),
     ...toEntries(resources, base, "/resources", 0.7, "weekly", now),
+    // Curated lists are 6 of the 15 most-viewed pages (9 Nov) and were absent here.
+    ...toEntries(playlists, base, "/playlists", 0.7, "daily", now),
   ]
 }

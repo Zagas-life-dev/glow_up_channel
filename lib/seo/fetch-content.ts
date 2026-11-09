@@ -110,7 +110,7 @@ interface ListEnvelope {
  * and support cursor paging via `lastId`, which stays stable while items are
  * inserted mid-crawl.
  */
-async function crawlList(path: string, key: string): Promise<SitemapItem[]> {
+async function crawlList(path: string, key: string, extra: Record<string, string> = {}): Promise<SitemapItem[]> {
   const base = backendBase()
   if (!base) return []
 
@@ -118,7 +118,7 @@ async function crawlList(path: string, key: string): Promise<SitemapItem[]> {
   let lastId: string | null = null
 
   while (items.length < SITEMAP_MAX_ITEMS) {
-    const params = new URLSearchParams({ limit: String(SITEMAP_PAGE_SIZE) })
+    const params = new URLSearchParams({ limit: String(SITEMAP_PAGE_SIZE), ...extra })
     if (lastId) params.set("lastId", lastId)
 
     const json: ListEnvelope | null = await fetchJson<ListEnvelope>(
@@ -167,6 +167,12 @@ export const listOpportunities = cache(() =>
   crawlList("opportunities", "opportunities"),
 )
 export const listResources = cache(() => crawlList("resources", "resources"))
+/**
+ * Public playlists, read through Discover: it already leaves out stale lists (nothing
+ * live left), premium shelves and Saved lists. A fixed seed keeps the cursor stable
+ * across pages.
+ */
+export const listPlaylists = cache(() => crawlList("playlists/discover", "playlists", { seed: "1" }))
 
 /* -------------------------------------------------------------------------- */
 /* Hub previews                                                               */
