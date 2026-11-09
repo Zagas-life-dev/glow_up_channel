@@ -17,6 +17,7 @@ import {
   RiShareLine,
   RiShareFill,
 } from 'react-icons/ri'
+import { markValueMoment } from '@/lib/push-ask'
 
 const GUEST_KIND: Record<EngagementActionsProps['type'], IntentKind> = {
   opportunities: 'opportunity',
@@ -170,6 +171,7 @@ export default function EngagementActions({
         setEngagementStatus((prev) => ({ ...prev, isSaved: true }))
         toast.success('Added to saved items')
         trackSave(type === 'opportunities' ? 'opportunity' : type === 'events' ? 'event' : type === 'jobs' ? 'job' : 'resource', id)
+        markValueMoment('save')
       }
     } catch (error: any) {
       if (error?.message?.includes('Authentication')) {

@@ -48,6 +48,7 @@ import { useAuth } from '@/lib/auth-context'
 import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { useOptionalTracker } from '@/contexts/tracker-context'
+import { markValueMoment } from '@/lib/push-ask'
 
 type OpportunityPageProps = {
   id: string
@@ -212,6 +213,7 @@ function OpportunityPageContent({ id, initialOpportunity }: OpportunityPageProps
             ApiClient.recordPromotionClick(id, 'opportunity', 'apply').catch(() => {})
             ApiClient.recordApply('opportunity', id).catch(() => {})
             trackApply('opportunity', id)
+            markValueMoment('apply')
             // Arms the honesty tracker: this is the last moment the platform can
             // see anything, so the exit is recorded before the browser leaves.
             void tracker?.startTracking('opportunity', id, 'apply_button')

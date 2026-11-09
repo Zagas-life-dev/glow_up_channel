@@ -45,6 +45,7 @@ import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { formatListingPrice } from '@/lib/currency/listing-price'
 import { useOptionalTracker } from '@/contexts/tracker-context'
+import { markValueMoment } from '@/lib/push-ask'
 
 type JobPageProps = {
   id: string
@@ -110,6 +111,7 @@ function JobPageContent({ id, initialJob }: JobPageProps) {
     ApiClient.recordPromotionClick(id, 'job', 'apply').catch(() => {})
     ApiClient.recordApply('job', id).catch(() => {})
     trackApply('job', id)
+    markValueMoment('apply')
     void tracker?.startTracking('job', id, 'apply_button')
   }, [id, tracker])
 

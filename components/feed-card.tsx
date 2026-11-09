@@ -36,6 +36,7 @@ import { useListingPrice } from '@/lib/currency/use-listing-price'
 import { KindChip, DeadlinePill, SponsoredLabel, UP_KIND } from '@/components/up/kind'
 import { isExtremePromotion } from '@/lib/promotion-boost'
 import { cardLocationLine } from '@/lib/content-detail/format'
+import { markValueMoment } from '@/lib/push-ask'
 
 interface FeedCardProps {
   item: {
@@ -418,6 +419,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
         // Track active user activity (fire-and-forget, won't throw errors)
         trackSave(contentKind, item._id)
+        markValueMoment('save')
       }
       onEngage?.()
     } catch (error: any) {

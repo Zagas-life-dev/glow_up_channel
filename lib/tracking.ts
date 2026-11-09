@@ -215,6 +215,8 @@ export function trackActiveActivity(
     page?: string;
     surface?: Surface;
     storyId?: string;
+    /** Where an ask was shown, e.g. after_save for push_enable. */
+    source?: string;
   } = {}
 ): void {
   // Read now, not in the timeout: the viewer may close before it fires.
@@ -256,7 +258,8 @@ export function trackActiveActivity(
                 contentId: details.contentId,
                 page: details.page || window.location.pathname,
                 surface,
-                ...(details.storyId && { storyId: details.storyId })
+                ...(details.storyId && { storyId: details.storyId }),
+                ...(details.source && { source: details.source })
               }
             }),
             signal: controller.signal
@@ -574,7 +577,7 @@ export function trackLockedInSession(): void {
   trackActiveActivity('locked_in_session');
 }
 
-/** Turned push notifications on. */
-export function trackPushEnable(): void {
-  trackActiveActivity('push_enable');
+/** Turned push notifications on. `source` says where the ask was (e.g. after_save). */
+export function trackPushEnable(source?: string): void {
+  trackActiveActivity('push_enable', source ? { source } : {});
 }

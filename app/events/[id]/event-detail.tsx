@@ -46,6 +46,7 @@ import { trackApply, trackContentView } from '@/lib/tracking'
 import ApiClient from '@/lib/api-client'
 import { formatListingPrice } from '@/lib/currency/listing-price'
 import { useOptionalTracker } from '@/contexts/tracker-context'
+import { markValueMoment } from '@/lib/push-ask'
 
 type EventPageProps = {
   id: string
@@ -116,6 +117,7 @@ function EventPageContent({ id, initialEvent }: EventPageProps) {
     ApiClient.recordPromotionClick(id, 'event', 'apply').catch(() => {})
     // Registering for an event is this page's apply.
     trackApply('event', id)
+    markValueMoment('apply')
     void tracker?.startTracking('event', id, 'register_button')
   }, [id, tracker])
 
