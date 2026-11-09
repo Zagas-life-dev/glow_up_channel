@@ -5,194 +5,136 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>UP Upgrade Audit</title>
 <style>
-:root{--bg:#fff;--fg:#0B1233;--muted:#5a6280;--card:#f5f6fa;--line:#e3e5ee;--accent:#FF6A00;--ok:#1a7f4b;--warn:#b54708;--bad:#b42318}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c;--bad:#ff8a80}}
-:root[data-theme="dark"]{--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c;--bad:#ff8a80}
+:root{--bg:#fff;--fg:#0B1233;--muted:#5a6280;--card:#f5f6fa;--line:#e3e5ee;--accent:#FF6A00;--ok:#1a7f4b;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c}}
+:root[data-theme="dark"]{--bg:#0B1233;--fg:#eef0f7;--muted:#a3a9c2;--card:#141c45;--line:#26306a;--ok:#4cc38a;--warn:#ffb15c}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
 h1{font-size:28px;margin:0 0 4px}h2{font-size:19px;margin:36px 0 12px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+h3{font-size:16px;margin:0 0 6px}
 .sub{color:var(--muted);margin:0 0 20px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
 .tile b{display:block;font-size:24px;color:var(--accent)}
 .item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
-.item h3{margin:0 0 6px;font-size:16px}
 .item p{margin:6px 0}
 .meta{color:var(--muted);font-size:13px}
 code{font:13px ui-monospace,Consolas,monospace;background:rgba(127,127,127,.15);padding:1px 4px;border-radius:4px;overflow-wrap:anywhere}
 .tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-right:6px}
-.fixed{color:var(--ok)}.todo{color:var(--warn)}.bad{color:var(--bad)}
+.fixed{color:var(--ok)}.todo{color:var(--warn)}
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .scroll{overflow-x:auto}
-ul{padding-left:20px}li{margin:4px 0}
+ul,ol{padding-left:20px}li{margin:4px 0}
 .best{background:var(--accent);color:#fff;border-radius:10px;padding:14px;font-weight:600}
 </style>
 </head>
 <body>
 <main>
 <h1>UP upgrade audit</h1>
-<p class="sub">9 Nov 2026 · Speed, Bugs, Deprecate, Growth · backend <code>latest-glowup-channel/</code> + Next frontend · fixes on local branch <code>upgrade/2026-11-09</code> in both repos (not pushed, not deployed)</p>
+<p class="sub">9 Nov 2026 · Speed, Bugs, Deprecate, Growth · two rounds, both on local branch <code>upgrade/2026-11-09</code> in the frontend repo and in <code>latest-glowup-channel/</code>. Nothing pushed or deployed.</p>
 
 <div class="tiles">
-<div class="tile"><b>13</b>commits on the branch (7 frontend, 6 backend)</div>
-<div class="tile"><b>0</b>cleanup scans per visitor (was 1 full 6-collection scan per new session)</div>
-<div class="tile"><b>~4,400</b>dead lines removed (18 files)</div>
-<div class="tile"><b>3</b>backend jobs that never ran (sweep, reconcile, stats)</div>
-<div class="tile"><b>0</b>guest applies from ≥1,447 guest views</div>
+<div class="tile"><b>46</b>commits (27 frontend incl. 4 by the maintenance session, 19 backend)</div>
+<div class="tile"><b>~101k</b>lines removed (84,100 frontend, 16,954 backend)</div>
+<div class="tile"><b>0</b>ESLint errors (was: lint crashed)</div>
+<div class="tile"><b>42 / 673</b>frontend test files / backend tests, all passing</div>
+<div class="tile"><b>30</b>packages removed (27 frontend, 3 backend)</div>
 </div>
 
-<div class="best" style="margin-top:20px">Biggest help this week: deploy this branch (it stops a full listing scan on every new visit and cuts a 300–450 ms preflight from most API calls), then ship the guest-apply 50/50 test (2–3 days).</div>
+<div class="best" style="margin-top:20px">Next: deploy both repos and the push worker together, then read the guest-apply test and push open rates in the maintenance analytics after a week.</div>
 
-<h2>Baseline (before changes)</h2>
+<h2>Checks</h2>
 <div class="scroll"><table>
-<tr><th>Check</th><th>Before</th><th>After (branch)</th></tr>
-<tr><td>Frontend tests</td><td>504/504 pass (39 files)</td><td>40/40 files pass</td></tr>
-<tr><td>Backend tests</td><td>655/657 (2 tagging tests failed: industry cap 5 vs test's 2)</td><td>657/657</td></tr>
-<tr><td>ESLint</td><td>Crashed before linting any file: <code>react-hooks</code> plugin not found for the severities block</td><td>Runs: 226 problems, 4 errors, 222 warnings</td></tr>
-<tr><td><code>next build</code></td><td>Compiles</td><td>Compiles</td></tr>
-<tr><td>JS per page (live, decoded)</td><td><code>/</code> 1,340 KB · <code>/jobs</code> 1,405 KB (441 KB br, 32 files) · job page 1,443 KB</td><td>unchanged (not deployed)</td></tr>
-<tr><td>Round trip from here</td><td>~320 ms (<code>/api/stats/public</code>)</td><td></td></tr>
-</table></div>
-<p class="meta">Note: the "Platform maintenance check" session was running in the same checkout and committed 4 of these (ESLint, disclaimer space, tracker 401, tagging test cap) onto this branch while the audit ran. They are listed below as "by the maintenance session".</p>
-
-<h2>Fixed on the branch</h2>
-<div class="item"><span class="tag fixed">fixed</span><h3>Every new visitor started a full listing cleanup, with no login</h3>
-<p><code>components/app-layout.tsx</code> called <code>useCleanupPastContent</code>, which POSTed the public Next proxy <code>/api/cleanup/past-content</code> once per browser session. Each run reads every document in 6 collections (live + inactive jobs, events, opportunities). Seen live on the first load of <code>/</code>. Anyone could also start parallel scans (<code>?dryRun=1</code> skips the lease).</p>
-<p>Hook and Next proxy deleted; backend route now <code>authenticateToken + requireRole('admin','super_admin')</code>. The admin page keeps its authenticated call and the 10:00/13:00/21:00 schedule still runs. <b>Before:</b> 1 full scan per new session, anonymous POST runs. <b>After:</b> 0 per session, anonymous POST → 401 (tested).</p>
-<p class="meta">frontend 16ca220 · backend baebd8d</p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>CORS preflights were never cached</h3>
-<p>No <code>maxAge</code>, so Chrome kept each preflight 5 s. Every authenticated GET sends <code>Content-Type</code> + <code>X-Viewer-Geo</code>, which forces one. Measured OPTIONS 454 ms. Now <code>Access-Control-Max-Age: 7200</code> (tested). Saves ~300–450 ms on 3–4 calls per page after the first.</p>
-<p class="meta">backend baebd8d · <code>server.js</code></p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>Uploaded deadlines showed one day late and stayed live ~23 h past close</h3>
-<p>The uploader wrote end of day UTC (<code>T23:59:59Z</code>), which is 00:59 the next day in Lagos. Job <code>6af0649b…</code> says "by 15 Nov", the page showed "Nov 16". <code>defaultDeadline</code> now uses <code>contentExpiry.endOfLocalDay</code> (<code>T22:59:59.999Z</code>) and <code>/up-uploading</code> SKILL.md says Lagos end of day. Existing rows are not changed (see Needs you).</p>
-<p class="meta">backend 340c8f4 · skill line rode into 8fc73af</p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>Feed opens were credited to "detail" and counted twice</h3>
-<p>The card logged <code>content_view</code> after an await; by then the route was the detail page, which logged a second one. 9 Nov: feed 14,741 seen vs 110 content_view. Cards on <code>/</code> link with <code>?src=feed</code> (search with <code>?src=search</code>), like stories use <code>?src=story</code>, and the card no longer logs its own view. Hub pages stay "detail". Also fixed: "undefined left" under 1 min, "Application Closed left", "1 views". Not verified live (needs a signed-in session after deploy).</p>
-<p class="meta">frontend bb9be97 · <code>components/feed-card.tsx</code> · your call: fix now, read holdout lift from the deploy date</p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>Sign-up allowed age 5; Terms say 13</h3>
-<p>One constant <code>MIN_SIGNUP_AGE = 13</code> drives the check, message and date picker; the backend validator matches.</p>
-<p class="meta">frontend 32d1ef6 · backend a3b062d</p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>Maintenance analytics showed top playlists as <code>title:null, closed:true</code></h3>
-<p>Playlist views share <code>content_engagement_events</code> but aren't in <code>COLLECTIONS_BY_TYPE</code>. They are now looked up in <code>playlists</code> and labelled <code>kind:'playlist'</code>.</p>
-<p class="meta">backend 2fb49e9</p></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>Dead code removed (zero importers, grep-proved)</h3>
-<ul>
-<li>Backend, 11 files, 2,771 lines: never-mounted <code>routes/follows.js</code>, <code>routes/subscriptions.js</code>, their controllers, <code>Follow</code>, plus unrequired models <code>Bookmark</code>, <code>Engagement</code>, <code>EventRegistration</code>, <code>Like</code>, <code>SavedItem</code>, <code>PopularItem</code> (330db7c).</li>
-<li>Frontend, 7 files, 1,611 lines: wallet, promotion-billing, Locked In indicator, <code>post-context</code> (9f45090).</li>
-<li>Sitemap no longer offers <code>/community</code>, <code>/channels</code>, <code>/channels/create</code>, <code>/post</code>, <code>/locked-in</code> to crawlers (16ca220).</li>
-</ul></div>
-
-<div class="item"><span class="tag fixed">fixed</span><h3>By the maintenance session (same branch)</h3>
-<ul>
-<li>ESLint runs again (f6a3909).</li>
-<li>"every job<b> </b>that's live" space restored on hubs (bf83511).</li>
-<li>Signed-out visitors no longer call <code>/api/tracker/signals</code> (a 401 + ~300–430 ms per page) (8fc73af).</li>
-<li>Tagging tests updated to the industry cap of 5 (backend ec65f4e).</li>
-</ul></div>
-
-<h2>To do next (ranked by impact ÷ size)</h2>
-<div class="item"><span class="tag todo">~1 day</span><h3>Run the never-started backend jobs from the Cloudflare Worker</h3>
-<p><code>schedulerService</code> is only required by the unmounted <code>routes/promotionCleanup.js</code>, so in production these never run: 03:00 dead playlist/save items sweep, 03:30 metrics reconciliation, 00:05 daily platform stats snapshot (plus hourly promotion expiry, 6-hourly promo stats). Your call: Worker cron hitting a key-auth route per job, like push, so each runs once, not once per instance. Also put the hourly <code>promotionExpiryService</code>, <code>pastPostsService</code> (02:00 + every cold start) and <code>founderBatchService</code> on the Worker or the <code>job_locks</code> lease: today they run on every instance.</p>
-<p class="meta"><code>src/services/schedulerService.js:168,200,250</code> · <code>server.js:425-445</code> · <code>cron-worker/</code></p></div>
-
-<div class="item"><span class="tag todo">2–3 days</span><h3>Guest apply 50/50 test (your call: yes)</h3>
-<p>Guests see "Sign in to apply": ≥1,447 guest views, 0 applies in 14 days; signed-in users apply on ~26% of views. Arm B gets the real apply button, then on return a "Did you apply? Track it and we'll remind you" sheet → <code>/signup?callbackUrl=…&amp;intent=track:job:id</code>. Randomise separately from the Stories buckets. Compare sign-ups + applies per arm.</p>
-<p class="meta"><code>app/jobs/[id]/job-detail.tsx:110,193</code>, event-detail, opportunity-detail, <code>lib/tracker</code></p></div>
-
-<div class="item"><span class="tag todo">hours</span><h3>Discover is the slowest call and every visitor prefetches it</h3>
-<p><code>/api/playlists/discover</code>: 624 ms in browser, 840–1,100 ms curl, 288 KB decoded for 20 cards (273 KB is <code>items</code>). Loads 300 full playlists, no projection, no cache, 4 sequential stages. Cache the pool ~60 s (candidatePoolCache pattern), project, send preview items + <code>itemCount</code>, reuse <code>liveItems</code> in <code>hideDeadItems</code>.</p>
-<p class="meta"><code>src/services/playlistRankingService.js:90,550-585</code> · <code>playlistController.js:1515-1542</code> · <code>lib/background-prefetch.ts:121</code></p></div>
-
-<div class="item"><span class="tag todo">minutes each</span><h3>Cache headers on daily data</h3>
-<p><code>/api/fx/rates</code> (443–685 ms, <code>public</code> with no max-age → <code>s-maxage=86400, max-age=3600</code>); visitor <code>/api/stories</code> (354–591 ms every page → <code>private, max-age=300</code>, visitor path only, holdout safe); <code>/api/promoted/*</code> (→ <code>max-age=30</code>).</p>
-<p class="meta"><code>app/api/fx/rates/route.ts</code> · <code>src/routes/stories.js:31</code></p></div>
-
-<div class="item"><span class="tag todo">minutes</span><h3>Route prefetch: 20–24 RSC requests per page</h3>
-<p>Next 16 splits each <code>router.prefetch</code> into ~4 segment requests: 20 on <code>/jobs</code> (152 KB decoded), 24 on a job page, 160–330 ms each. Prefetch only the 2 likeliest routes, or rely on viewport <code>&lt;Link&gt;</code> prefetch.</p>
-<p class="meta"><code>components/background-prefetcher.tsx:38</code></p></div>
-
-<div class="item"><span class="tag todo">minutes</span><h3>Detail pages fetch their own listing twice</h3>
-<p>ISR already rendered it (<code>revalidate=300</code>); the client refetches <code>/api/jobs/:id</code> with <code>no-store</code> (298 ms) for counts only. Fetch counts only, or drop it.</p>
-<p class="meta"><code>app/jobs/[id]/job-detail.tsx:124,139</code> (+ events, opportunities)</p></div>
-
-<div class="item"><span class="tag todo">hours</span><h3>Taxonomy JSON ships on every page</h3>
-<p>115 KB decoded (33 KB br) chunk with <code>lib/taxonomy/taxonomy.json</code> loads even on signed-out <code>/</code>. Dynamic <code>import()</code> after first paint like <code>lib/geo/places.ts</code>.</p>
-<p class="meta"><code>lib/nlp/taxonomy.ts:24</code> · <code>lib/taxonomy/index.ts:11</code></p></div>
-
-<div class="item"><span class="tag todo">hours</span><h3>Push ask at the moment of value</h3>
-<p>174 devices. 39% of countdown sends (408/1,048) and reminder sends (51/130) hit users with saves but no device. The ask waits 3 s, queues behind the install prompt, and says "Get the best experience". After the first save/apply show "Remind me 4 days and 1 day before it closes". Countdown/reminder sit inside the agreed caps.</p>
-<p class="meta"><code>components/push-prompt-banner.tsx</code> · <code>lib/interruptions.ts</code> · <code>lib/prompt-cadence.ts</code></p></div>
-
-<div class="item"><span class="tag todo">~1 h</span><h3>Stories readout: "unknown" surface</h3>
-<p>The 1,001 views / 214 applies under "unknown" are the 28-day window reaching before surface tracking began (3 Nov). Clamp the per-surface table's <code>since</code> to 3 Nov (and to this branch's deploy date for feed). Reporting only; doesn't touch the holdout.</p>
-<p class="meta"><code>src/services/storyService.js:877,897</code></p></div>
-
-<h2>Bugs still open</h2>
-<div class="scroll"><table>
-<tr><th>Bug</th><th>Repro</th><th>Severity</th><th>Where</th><th>Size</th></tr>
-<tr><td>Guest save taps do nothing after the sign-up popup is dismissed once</td><td>Signed out: tap save, dismiss popup, tap save again → nothing</td><td>broken for some</td><td><code>components/feed-card.tsx:388</code></td><td>minutes</td></tr>
-<tr><td>Sign-up link loses where the user was</td><td>Login → "Sign up" is bare <code>/signup</code>; after sign-up → <code>/verify-email</code>, not back to the listing</td><td>broken for some</td><td><code>app/login/page.tsx:109</code>, <code>app/signup/page.tsx:81</code></td><td>hours</td></tr>
-<tr><td>Unescaped <code>new RegExp(company/location)</code> on list filters</td><td>A crafted filter string can be a slow regex</td><td>broken for some</td><td><code>src/services/pagedDeadlineListService.js</code></td><td>minutes</td></tr>
-<tr><td>ESLint: 4 errors</td><td><code>npx eslint .</code></td><td>tooling</td><td>see lint output</td><td>minutes</td></tr>
-<tr><td>Dead post page redirects to <code>/feed</code> (404)</td><td><code>app/posts/[id]/page.tsx:143</code></td><td>cosmetic, dead feature</td><td>delete with posts</td><td>minutes</td></tr>
+<tr><th>Check</th><th>Start of day</th><th>Now (branch)</th></tr>
+<tr><td>Frontend tests</td><td>504 / 504 (39 files)</td><td>42 / 42 files</td></tr>
+<tr><td>Backend tests</td><td>655 / 657</td><td>673 / 673</td></tr>
+<tr><td>ESLint</td><td>Crashed before linting</td><td>0 errors, 178 warnings</td></tr>
+<tr><td><code>next build</code></td><td>Passes</td><td>Passes</td></tr>
 </table></div>
 
-<h2>Deprecate (needs your OK, ranked by saving)</h2>
+<h2>Round 1: first fixes</h2>
 <ul>
-<li><b>Channels + community posts.</b> Backend still mounted: channels, posts, replies, connections, notifications routes; controllers, models and <code>feedAlgorithmService</code> (1,782 lines): ~7,500 lines. Frontend: <code>app/channels/**</code>, <code>app/community</code>, <code>app/post</code>, <code>app/posts/[id]</code>, composer/post/reply/channel components: ~6,000 lines. Live leaks to trim first: <code>app/profile/[id]/page.tsx</code> (PostCard, connections) and <code>app/playlists/[id]/page.tsx:603</code> link to <code>/community?hashtag=</code>.</li>
-<li><b>Promotions billing.</b> Wallet routes/controllers/services/models, payments, receipts. <code>promotionController</code> still requires <code>walletService</code>, <code>Payment</code>, <code>paystackService</code>, so decouple first. Keep Paystack for <code>founderBatchController</code>.</li>
-<li><b>~55 more frontend orphans</b> (navbar, footer, hero-carousel, 25 unused <code>components/ui/*</code>, enhanced-search…), with packages only they use (vaul, embla, react-day-picker, react-resizable-panels, react-hook-form, 10 Radix packages, <code>@paystack/inline-js</code>) and never-imported <code>framer-motion</code> (except locked-in), <code>uuid</code>, <code>@vercel/analytics</code>, <code>autoprefixer</code>. 37 unused <code>ApiClient</code> methods (~500 lines).</li>
-<li><b>Locked In:</b> <code>app/locked-in/**</code>, context, backend <code>lockedIn</code> route + controller (855 lines); dead <code>runLockedInReminder</code>.</li>
-<li><b>Backend packages never required:</b> <code>node-fetch</code>, <code>xss</code>, <code>zod</code>. <b>Root clutter:</b> generate-*-posts.js, test-posts-500.json (1.1 MB), test-*.js, README.md.backup, zero-byte *.md; backend <code>temp_settings.tsx</code>, <code>tesst.md</code>, ten one-off fix/test scripts. 307 <code>brag-output*</code> files are tracked despite <code>.gitignore</code> (untrack, don't delete).</li>
-<li><b>Scraper/</b> is an orphan gitlink (no <code>.gitmodules</code>), 280 MB inside OneDrive (249 MB venv). Keep the three <code>x-scraper-api-key</code> ingest endpoints if the third-party tool will post through them.</li>
-<li><b>Not dead:</b> digest popup + <code>digestExperimentService</code> still serve the Digest story; <code>embeddingService</code> kept for the AI assistant.</li>
+<li><span class="tag fixed">fixed</span>Every new visitor started a full scan of 6 listing collections, with no login. The hook and proxy are gone, and the route is admin-only (anonymous request: 401).</li>
+<li><span class="tag fixed">fixed</span>CORS preflights are now cached for 2 h (they used to cost 454 ms each).</li>
+<li><span class="tag fixed">fixed</span>Uploaded deadlines now end at 23:59 Lagos, not 23:59 UTC; cards had shown the next day.</li>
+<li><span class="tag fixed">fixed</span>Feed opens are credited to the feed (<code>?src=feed</code>) and counted once.</li>
+<li><span class="tag fixed">fixed</span>Minimum sign-up age is 13, matching the Terms; analytics now name top playlists correctly.</li>
 </ul>
 
-<h2>Growth: funnel and features</h2>
-<div class="scroll"><table>
-<tr><th>Step (14 days)</th><th>Number</th></tr>
-<tr><td>Visits</td><td><b>missing</b>: session id is per tab; use the anon-id cookie</td></tr>
-<tr><td>Listing views (1 per viewer per day)</td><td>5,836 (peak 833 on 1 Nov → ~300 on 7–8 Nov)</td></tr>
-<tr><td>Signed-in content views</td><td>~4,389 · guest views ≥1,447 (≥25%)</td></tr>
-<tr><td>Apply clicks</td><td>1,146 signed-in (~26% of views) · <b>0 guest</b> (walled)</td></tr>
-<tr><td>Saves</td><td>~212</td></tr>
-<tr><td>Sign-ups · 7-day return</td><td><b>missing</b> (<code>users.createdAt</code>, <code>user_activities</code>)</td></tr>
-<tr><td>Active signed-in users</td><td>~394 · push devices 174</td></tr>
-</table></div>
-<p><b>Biggest leak:</b> guest → account. Apply is walled, intent is lost through sign-up, guest saves fail silently, and push only asks signed-in users late.</p>
-<ol>
-<li><b>Guest apply 50/50</b>: in To do next. ~+13 applies/day (half the signed-in rate on ≥103 guest views/day), sign-up effect measured by the test. 2–3 days.</li>
-<li><b>Keep intent through sign-up</b>: carry <code>callbackUrl</code> + <code>intent</code> through login, signup, verify, onboarding; replay the pending save; move date of birth to onboarding. 2 days (Google sign-in later, 3–4 days).</li>
-<li><b>Push ask after a save</b>: +25–40% devices if 30–50% of no-device savers accept (assumption; measure with <code>push_enable</code> by surface). 1–2 days.</li>
-<li><b>Playlists as landing pages</b>: 6 of the top 15 items are playlists (424 views, ~7% of all). Add public playlists to <code>app/sitemap.ts</code>, ItemList JSON-LD, cover as OG image; guest "Get new items" → sign-up. The top list (148 views) needs <code>/up-playlist --update</code>. 2 days.</li>
-<li><b>WhatsApp share cards</b>: next/og image per listing (title, org, deadline, UP mark) + <code>?src=share</code>. Base too small to size (27 shares). 1.5 days.</li>
-<li><b>Fresh-supply boost</b>: 98 live listings (11%) have 0 views, 40 of 50 sampled from one Nigerian batch. Feed-only boost for &lt;72 h, 0 views, same in both Stories arms. ~+300 views / 2 weeks. 1 day.</li>
-</ol>
-<p class="meta">Instrument first (~1–1.5 days): daily unique visitors, sign-ups/day + source, guest taps on the apply wall and save, 7-day return cohorts, push open beacon in <code>public/sw.js:451</code> (only 11 views + 2 applies credited to 7,645 pushes), device count + prunes per day, a <code>save</code> row in perDay.</p>
+<h2>Round 2: everything you approved</h2>
+
+<h3>Deprecations</h3>
+<div class="item">
+<ul>
+<li><b>Channels, community posts, connections, old notifications.</b> Removed from both repos (backend routes, controllers, models, feedAlgorithmService, hashtagAffinityService; frontend pages and components). Trimmed to match:
+  <ul>
+  <li>Profile: no Partner button, no saved posts. Each profile view runs 4 fewer Mongo queries.</li>
+  <li>Listing pages: no community "Post" button.</li>
+  <li>Playlist hashtags now open Discover search.</li>
+  <li>Settings: the Privacy tab is gone (it only controlled connections).</li>
+  </ul></li>
+<li><b>Locked In.</b> Removed from both repos: route, page, context, reminder method, XP keys and the settings toggle.</li>
+<li><b>Promotions billing.</b> Promotions were separated from billing first. Then wallet, Paystack top-up, payments, receipts, the bank-transfer flow and the admin receipts page were removed. Free start, admin grant and the other live promotion paths still work. Kept: <code>paystackService</code> (founder batch uses it) and <code>/api/webhooks</code> (Paystack posts there).</li>
+<li><b>Dead code:</b> 61 orphan frontend files, 27 frontend packages (pnpm), 3 backend packages, 68 uncalled API client methods, the subscription proxies, and unused routes: rotation, public stats, promotion expiry admin, <code>/api/email</code>, WWU stats, promotions-demo, under-construction.</li>
+<li><b>Root clean-up:</b> 30 old docs moved to <code>docs/archive/</code>; one-off scripts deleted; 307 <code>brag-output*</code> files and the Scraper gitlink untracked (the files stay on disk).</li>
+</ul></div>
+
+<h3>Bugs</h3>
+<div class="item"><ul>
+<li><b>Unescaped user input in search filters</b> (company, location, category, admin searches): <code>(a+)+$</code> took 46.5 s on one short string; now 0 ms. A lone <code>(</code> no longer causes a 500.</li>
+<li><b>ESLint:</b> 4 errors → 0 (story icons go through one <code>StoryIcon</code> component).</li>
+<li><b>Guest taps:</b> save, like and playlist taps after a dismissed popup did nothing. They now show a toast with a Sign up button.</li>
+<li><b>Sign-up keeps the guest's place:</b> the page and the tap are remembered through login, sign-up, email verification and onboarding, and the save is replayed after sign-in. Date of birth stays on the sign-up form on purpose: it is the 13+ age check the Terms rely on.</li>
+</ul></div>
+
+<h3>Speed</h3>
+<div class="item"><ul>
+<li><b>Background jobs that never ran:</b> the dead-items sweep, metrics reconciliation and daily stats snapshot are now push-worker jobs (00:30, 02:00 and 02:30 UTC), once per day in total.</li>
+<li><b>Discover:</b> the pool is cached for 60 s and shared, and each card carries 6 preview items. Before: 624–1,100 ms and 288 KB. After: a cache hit skips the 2 biggest reads; size expected ~25 KB (not measured until deployed).</li>
+<li><b>Browser caching:</b> promoted rails 30 s, guest stories 5 min (signed-in readers stay no-store, so the holdout is safe), FX rates 1 h.</li>
+<li><b>Duplicate route prefetch removed</b> (20–24 requests per page).</li>
+<li><b>Detail pages</b> no longer re-download a listing the server already rendered (~300 ms each).</li>
+<li><b>Landing page</b> no longer downloads the feed's ranking code: the 115 KB taxonomy chunk is out of <code>/</code> (checked in the build manifest).</li>
+<li><b>Stories readout</b> starts at launch (3 Nov), so there is no fake "unknown" surface.</li>
+</ul></div>
+
+<h3>Growth</h3>
+<div class="item"><ul>
+<li><b>Guest-apply 50/50 test</b> on job, opportunity and event pages.
+  <ul>
+  <li>Arm "wall": today's "Sign in to apply".</li>
+  <li>Arm "open": the real Apply button, then "Did you apply? Track it", which leads to sign-up and tracking.</li>
+  <li>Readout: <code>guestApplyTest</code> in the maintenance analytics (applies and sign-ups per arm).</li>
+  </ul>
+  Checked locally against a stub API.</li>
+<li><b>Push ask after a save or apply</b> ("Remind you before it closes?"). iPhone Safari gets install steps instead. At most once a fortnight; the source is logged on <code>push_enable</code>.</li>
+<li><b>Playlists as landing pages:</b> added to the sitemap, with an Open Graph cover image and ItemList structured data.</li>
+<li><b>Share cards:</b> a generated 1200×630 card per listing (real logo, deadline in Lagos time) is used when a listing has no picture. Shared links carry <code>?src=share</code>, and listing pages have a WhatsApp button.</li>
+<li><b>New listings with no views</b> get 3× pick weight in the feed for 72 h. Their score is unchanged, and both Stories arms see the same feed.</li>
+<li><b>Metrics added</b> (<code>funnel</code> in the maintenance analytics): unique viewers per day, saves per day, sign-ups with verified and onboarded counts, 7-day return, and push open rate per kind (push links carry <code>n=&lt;log id&gt;</code> and the service worker reports taps).</li>
+</ul></div>
 
 <h2>Needs you</h2>
 <ol>
-<li>Review and deploy branch <code>upgrade/2026-11-09</code> (both repos). After deploy, read the Stories holdout content_view lift only from the deploy date.</li>
-<li>Backfill existing <code>applicationDeadline</code> values ending <code>T23:59:59Z</code> to <code>T22:59:59Z</code> (one-off production write; run a dry count first).</li>
-<li>Add a Cloudflare Worker cron for the sweep, reconciliation and stats snapshot (needs a key-auth route; I can build it on a branch).</li>
-<li><code>CLEANUP_API.md:36</code> still says "no auth required": the route now needs an admin token.</li>
+<li><b>Deploy, together:</b>
+  <ul>
+  <li>the backend (Cloud Build),</li>
+  <li>the frontend,</li>
+  <li><code>wrangler deploy</code> in <code>cron-worker/</code>, so the 3 new jobs get their schedule.</li>
+  </ul>
+  After the deploy, read the Stories holdout's content_view lift only from the deploy date.</li>
+<li><b>One-off backfill</b> of old <code>T23:59:59Z</code> deadlines to <code>T22:59:59Z</code> (a production write; do a dry count first).</li>
+<li><code>CLEANUP_API.md</code> still says "no auth required".</li>
+<li><b>Dev cache:</b> today I deleted <code>.next/dev</code> (15 GB) because the disk was full. A <code>next dev</code> on port 3000 that you or another session started was running at the time. If it shows errors, restart it.</li>
 </ol>
 
-<h2>Unverified</h2>
+<h2>Still open</h2>
 <ul>
-<li>Real duration of one full cleanup scan and collection sizes (dry run not timed).</li>
-<li>Feed-tracking fix live behaviour (needs a signed-in session after deploy).</li>
-<li>Country-filter leaks while signed in (code paths look right; not tested signed-in).</li>
-<li>Whether <code>anon_visitors.anonId</code> has an index in Atlas (none in code).</li>
-<li>One console 404 on the homepage, source unknown.</li>
-<li>Any async Express handler throwing outside a try would restart the instance (<code>server.js:475</code> exits on unhandledRejection); not fully swept.</li>
+<li>A per-instance timer still fires on every instance: promotion expiry (hourly), past posts (02:00 and every cold start) and founder batch. These are idempotent; move them to the worker later.</li>
+<li><code>schedulerService</code> and <code>routes/promotionCleanup.js</code> are now fully unused; delete them once the worker jobs are confirmed in production.</li>
+<li>Push device adds/prunes per day are not tracked yet.</li>
+<li>Not seen in a live browser: anything that needs a signed-in session (feed attribution, save replay, push ask). The local frontend has no backend, and the backend launch config uses the production DB.</li>
 </ul>
 </main>
 </body>
