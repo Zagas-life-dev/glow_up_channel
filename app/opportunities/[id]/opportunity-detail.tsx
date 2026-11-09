@@ -103,6 +103,14 @@ function OpportunityPageContent({ id, initialOpportunity }: OpportunityPageProps
       setError(false)
     }
     try {
+      if (quiet) {
+        // The server already rendered this listing (ISR, 5 min). Re-downloading it
+        // here only refreshed the counts and cost a ~300 ms no-store request per
+        // view; the view beacon is the part that matters.
+        void ApiClient.recordFeedContentView('opportunity', id, 'detail_page')
+        if (isAuthenticated) trackContentView('opportunity', id)
+        return
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/opportunities/${id}`, { cache: 'no-store' })
       if (!response.ok) { if (!quiet) setError(true); return }
       const result = await response.json()

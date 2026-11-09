@@ -133,6 +133,14 @@ function ResourcePageContent({ id, initialResource }: ResourcePageProps) {
       setError(false)
     }
     try {
+      if (quiet) {
+        // The server already rendered this listing (ISR, 5 min). Re-downloading it
+        // here only refreshed the counts and cost a ~300 ms no-store request per
+        // view; the view beacon is the part that matters.
+        void ApiClient.recordFeedContentView('resource', id, 'detail_page')
+        if (isAuthenticated) trackContentView('resource', id)
+        return
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/resources/${id}`, { cache: 'no-store' })
       if (!response.ok) { if (!quiet) setError(true); return }
       const result = await response.json()
