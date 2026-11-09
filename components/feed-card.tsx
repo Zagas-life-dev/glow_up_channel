@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { IconType } from 'react-icons'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   RiFocus3Line,
@@ -24,7 +25,7 @@ import { dispatchGuestEngaged } from '@/components/sign-up-better-experience-pop
 import ApiClient from '@/lib/api-client'
 import AddToPlaylistModal from './add-to-playlist-modal'
 import ContentShareComposer from './content-share-composer'
-import { trackLike, trackSave, trackShare, trackContentView } from '@/lib/tracking'
+import { trackLike, trackSave, trackShare } from '@/lib/tracking'
 import { useReadOnly } from '@/hooks/use-online-status'
 import {
   resolveFeedContentKind,
@@ -232,8 +233,18 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
   const contentKind: FeedContentKind = resolveFeedContentKind(item.type)
   const engagementApiType = toEngagementApiPlural(contentKind)
   const config = typeConfig[contentKind] || typeConfig.opportunity
-  /** The post's own page — everything about this item lives there. */
-  const detailHref = `/${config.path}/${item._id}`
+  /**
+   * The post's own page — everything about this item lives there.
+   *
+   * `?src=` tells the detail page where it was opened from, the same way story links
+   * carry `?src=story`, so its one content_view (and any apply) is credited to the feed
+   * or search. The card used to log its own content_view after an await, by which time
+   * the route was already the detail page: feed opens were credited to 'detail' and
+   * counted twice. Hub pages (/jobs, /events…) add no src and stay 'detail'.
+   */
+  const pathname = usePathname()
+  const openedFrom = pathname === '/' || pathname === '/home' ? 'feed' : pathname?.startsWith('/search') ? 'search' : null
+  const detailHref = `/${config.path}/${item._id}${openedFrom ? `?src=${openedFrom}` : ''}`
 
   // Load engagement status (like/save) when component mounts
   useEffect(() => {
@@ -274,7 +285,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     if (!item._id) return
     const counted = await ApiClient.recordFeedContentView(contentKind, item._id, source)
     if (counted) setViewCount((v) => v + 1)
-    if (isAuthenticated) trackContentView(contentKind, item._id)
+    // No trackContentView here: the detail page logs it once, credited via ?src= above.
   }
 
   const loadEngagementStatus = async () => {
@@ -613,12 +624,9 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     const minutes = Math.floor((totalSeconds % 3600) / 60)
 
 
-    if (hours > 0) {
-      return `${hours}h ${minutes}m `
-    } else if (minutes > 0) {
-      return `${minutes}m `
-    }
-
+    if (hours > 0) return `${hours}h ${minutes}m`
+    if (minutes > 0) return `${minutes}m`
+    return '<1m'
   }
 
   /**
@@ -641,7 +649,9 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
 
   const deadlineLabel =
     urgency === 'urgent' && timeRemaining !== null
-      ? `${formatCountdown(timeRemaining, contentKind)} left`
+      ? timeRemaining > 0
+        ? `${formatCountdown(timeRemaining, contentKind)} left`
+        : formatCountdown(timeRemaining, contentKind)
       : deadlineInfo
         ? `${deadlineInfo.daysLeft} ${deadlineInfo.daysLeft === 1 ? 'day' : 'days'} left`
         : null
@@ -677,7 +687,7 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
       </span>
     )
   }
-  if (viewCount > 0) metaParts.push(<span key="views">{viewCount.toLocaleString()} views</span>)
+  if (viewCount > 0) metaParts.push(<span key="views">{viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}</span>)
 
   const kindMeta = UP_KIND[contentKind] || UP_KIND.opportunity
   /**
