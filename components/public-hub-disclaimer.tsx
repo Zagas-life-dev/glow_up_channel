@@ -30,7 +30,7 @@ export default function PublicHubDisclaimer({ label }: { label: string }) {
             Best for you, reshuffled each visit
           </p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            You&apos;re seeing every {label} that&apos;s live. Your best matches and
+            You&apos;re seeing every {label}{" "}that&apos;s live. Your best matches and
             the ones closing soonest are most likely near the top, and the order
             changes on every visit — so weaker matches still get their turn.
           </p>
