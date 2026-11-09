@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "gq-code-user"
+    "gq-code-user",
+    "documentation for development"
   ]
 }

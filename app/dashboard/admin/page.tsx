@@ -83,7 +83,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   },
   {
     label: "Promotions",
-    description: "Requests, revenue and receipts",
+    description: "Requests and running promotions",
     href: "/dashboard/admin/promotions",
     icon: RiMegaphoneLine,
     superAdminOnly: true,

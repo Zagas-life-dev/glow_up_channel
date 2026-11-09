@@ -2093,12 +2093,6 @@ export default function AdminContent() {
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2 sm:col-span-2">
-                      <Button variant="outline" size="sm" className="rounded-xl" asChild>
-                        <Link href="/dashboard/admin/receipts" target="_blank" rel="noopener noreferrer">
-                          <RiExternalLinkLine className="w-4 h-4 mr-2" />
-                          View all receipts
-                        </Link>
-                      </Button>
                       {(selectedContent.paymentReceipt && String(selectedContent.paymentReceipt).startsWith("http")) && (
                         <Button variant="outline" size="sm" className="rounded-xl" asChild>
                           <a href={String(selectedContent.paymentReceipt)} target="_blank" rel="noopener noreferrer">

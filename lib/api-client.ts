@@ -439,18 +439,6 @@ export class ApiClient {
     return response;
   }
 
-  /**
-   * Subscription endpoints: in the browser, call same-origin Next.js proxies under /api/subscriptions/*
-   * so fetch does not cross origins (fixes CORS / "Failed to fetch" to localhost:3001).
-   * On the server, use the configured backend URL directly.
-   */
-  private static subscriptionsApiUrl(path: "initialize" | "verify" | "cancel" | "status"): string {
-    if (typeof window !== "undefined") {
-      return `/api/subscriptions/${path}`;
-    }
-    return `${API_BASE_URL}/api/subscriptions/${path}`;
-  }
-
   // Authentication Methods
   static async login(email: string, password: string): Promise<LoginResponse> {
     // Raw fetch, so the read-only rule is restated rather than inherited.
@@ -489,12 +477,6 @@ export class ApiClient {
   static async getCurrentUser(): Promise<{ user: User; profile: UserProfile | null; preferences: any }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`);
     return this.handleResponse(response);
-  }
-
-  // Glow Score / gamification
-  static async getGlowScore(): Promise<GlowScoreResponse> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/me/glow`);
-    return this.handleResponse<GlowScoreResponse>(response);
   }
 
   static async logout(): Promise<void> {
@@ -562,39 +544,6 @@ export class ApiClient {
   static async getUserProfile(): Promise<{ profile: UserProfile | null, hasProfile: boolean }> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/profile`);
     return this.handleResponse<{ profile: UserProfile | null, hasProfile: boolean }>(response);
-  }
-
-  /** Get normalized user (user + profile + onboarding merged). Used by recommendation algo and for consistent user shape. */
-  static async getNormalizedUserProfile(): Promise<{ normalizedUser: Record<string, unknown> | null, hasProfile: boolean }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/users/profile/normalized`);
-    return this.handleResponse<{ normalizedUser: Record<string, unknown> | null, hasProfile: boolean }>(response);
-  }
-
-  // Opportunities Methods
-  static async getOpportunities(params?: {
-    page?: number;
-    limit?: number;
-    category?: string;
-    type?: string;
-    country?: string;
-    isRemote?: boolean;
-    isPaid?: boolean;
-    search?: string;
-  }): Promise<{ opportunities: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/opportunities?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
   }
 
   static async getOpportunityById(id: string): Promise<any> {
@@ -739,178 +688,6 @@ export class ApiClient {
     await this.handleResponse(response);
   }
 
-  // Channels
-  static async getChannels(params?: {
-    page?: number;
-    limit?: number;
-    type?: 'public' | 'private' | 'pro';
-    search?: string;
-  }): Promise<{ channels: Channel[]; total: number; page: number; limit: number; totalPages: number }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          searchParams.append(key, String(value));
-        }
-      });
-    }
-    const url = `${API_BASE_URL}/api/channels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    const response = await this.makeAuthenticatedRequest(url, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getChannelBySlug(slug: string): Promise<{ channel: Channel; membership: ChannelMembership | null }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${encodeURIComponent(slug)}`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async createChannel(payload: { name: string; description?: string; type?: 'public' | 'private' | 'pro' }): Promise<Channel> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async updateChannel(id: string, payload: { name?: string; description?: string; type?: 'public' | 'private' | 'pro' }): Promise<Channel> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async joinChannel(id: string, options?: { viaInvite?: boolean }): Promise<{ status: 'joined' | 'pending'; viaInvite?: boolean }> {
-    const searchParams = new URLSearchParams();
-    if (options?.viaInvite) {
-      searchParams.append('invite', '1');
-    }
-    const qs = searchParams.toString();
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join${qs ? `?${qs}` : ''}`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async leaveChannel(id: string): Promise<{ status: 'left' }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/leave`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getChannelMembers(id: string): Promise<{ members: Array<{ userId: string; role: string; joinedAt: string; user: any | null }> }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members`);
-    return this.handleResponse(response);
-  }
-
-  static async getChannelJoinRequests(id: string): Promise<{ requests: Array<{ userId: string; status: string; createdAt: string; user: any | null }> }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests`);
-    return this.handleResponse(response);
-  }
-
-  static async approveChannelJoinRequest(id: string, userId: string): Promise<{ status: 'approved' }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests/${userId}/approve`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async rejectChannelJoinRequest(id: string, userId: string): Promise<{ status: 'rejected' }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/join-requests/${userId}/reject`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async promoteChannelMember(id: string, userId: string): Promise<{ status: 'updated'; role: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/promote`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async demoteChannelMember(id: string, userId: string): Promise<{ status: 'updated'; role: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/demote`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async removeChannelMember(id: string, userId: string): Promise<{ status: 'removed' }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/members/${userId}/remove`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getChannelPosts(
-    id: string,
-    params?: { page?: number; limit?: number; after?: string }
-  ): Promise<{
-    posts: any[];
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    incremental?: boolean;
-  }> {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.append('page', String(params.page));
-    if (params?.limit) searchParams.append('limit', String(params.limit));
-    if (params?.after) searchParams.append('after', params.after);
-    const qs = searchParams.toString();
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/posts${qs ? `?${qs}` : ''}`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async markChannelRead(channelId: string, lastReadPostId: string): Promise<{ lastReadPostId: string; lastReadAt: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/read`, {
-      method: 'POST',
-      body: JSON.stringify({ lastReadPostId }),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getChannelReadSummary(channelId: string): Promise<{
-    readers: { userId: string; firstName: string | null; lastReadPostId: string | null; lastReadAt: string | null }[];
-    capped: boolean;
-  }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/read-summary`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async setChannelTyping(channelId: string, active: boolean): Promise<{ ok: boolean }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/typing`, {
-      method: 'POST',
-      body: JSON.stringify({ active }),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getChannelTyping(channelId: string): Promise<{ typers: { userId: string; firstName: string }[] }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${channelId}/typing`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async createChannelPost(id: string, payload: { text?: string; images?: any[]; visibility?: string }): Promise<any> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/channels/${id}/posts`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse(response);
-  }
-
   // Delete Methods
   static async deleteOpportunity(id: string): Promise<void> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/opportunities/${id}`, {
@@ -981,61 +758,8 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Events Methods
-  static async getEvents(params?: {
-    page?: number;
-    limit?: number;
-    eventType?: string;
-    country?: string;
-    isVirtual?: boolean;
-    isPaid?: boolean;
-    search?: string;
-  }): Promise<{ events: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/events?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
   static async getEventById(id: string): Promise<any> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/events/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  // Jobs Methods
-  static async getJobs(params?: {
-    page?: number;
-    limit?: number;
-    jobType?: string;
-    company?: string;
-    country?: string;
-    isRemote?: boolean;
-    isPaid?: boolean;
-    search?: string;
-  }): Promise<{ jobs: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/jobs?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -1050,239 +774,8 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Resources Methods
-  static async getResources(params?: {
-    page?: number;
-    limit?: number;
-    category?: string;
-    featured?: boolean;
-    search?: string;
-  }): Promise<{ resources: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
   static async getResourceById(id: string): Promise<any> {
     const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/resources/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  // Engagement Methods
-  static async saveOpportunity(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/save`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  static async unsaveOpportunity(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/unsave`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  static async likeOpportunity(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/like`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  static async unlikeOpportunity(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/unlike`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  static async getSavedOpportunities(params?: { page?: number; limit?: number }): Promise<{ savedOpportunities: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/saved?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  static async getLikedOpportunities(params?: { page?: number; limit?: number }): Promise<{ likedOpportunities: any[]; pagination: any }> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/liked?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  // Similar methods for events, jobs, and resources...
-  static async saveEvent(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/save`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  static async likeEvent(id: string): Promise<void> {
-    await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/like`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-
-  // Recommendations
-  static async getRecommendedOpportunities(limit?: number): Promise<any[]> {
-    const searchParams = new URLSearchParams();
-    if (limit) {
-      searchParams.append('limit', limit.toString());
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/opportunities?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  static async getRecommendedEvents(limit?: number): Promise<any[]> {
-    const searchParams = new URLSearchParams();
-    if (limit) {
-      searchParams.append('limit', limit.toString());
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/events?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  static async getRecommendedJobs(limit?: number): Promise<any[]> {
-    const searchParams = new URLSearchParams();
-    if (limit) {
-      searchParams.append('limit', limit.toString());
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/jobs?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  static async getRecommendedResources(limit?: number): Promise<any[]> {
-    const searchParams = new URLSearchParams();
-    if (limit) {
-      searchParams.append('limit', limit.toString());
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/resources?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  // Enhanced unified recommendations with hybrid scoring
-  static async getUnifiedRecommendations(options?: {
-    includeOpportunities?: boolean;
-    includeEvents?: boolean;
-    includeJobs?: boolean;
-    includeResources?: boolean;
-    minScore?: number;
-    limit?: number;
-  }): Promise<{
-    content: any[];
-    total: number;
-    userProfile: any;
-  }> {
-    const searchParams = new URLSearchParams();
-
-    if (options?.includeOpportunities !== undefined) {
-      searchParams.append('includeOpportunities', options.includeOpportunities.toString());
-    }
-    if (options?.includeEvents !== undefined) {
-      searchParams.append('includeEvents', options.includeEvents.toString());
-    }
-    if (options?.includeJobs !== undefined) {
-      searchParams.append('includeJobs', options.includeJobs.toString());
-    }
-    if (options?.includeResources !== undefined) {
-      searchParams.append('includeResources', options.includeResources.toString());
-    }
-    if (options?.minScore !== undefined) {
-      searchParams.append('minScore', options.minScore.toString());
-    }
-    if (options?.limit !== undefined) {
-      searchParams.append('limit', options.limit.toString());
-    }
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/unified?${searchParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse(response);
-  }
-
-  // Get detailed scoring breakdown for debugging and transparency
-  static async getScoringBreakdown(contentType: string, contentId: string): Promise<{
-    finalScore: number;
-    personalizationScore: number;
-    popularityScore: number;
-    breakdown: {
-      personalization: {
-        interestMatch: number;
-        locationMatch: number;
-        careerStageMatch: number;
-        skillMatch: number;
-        freshness: number;
-        timing: number;
-      };
-      popularity: {
-        views: number;
-        likes: number;
-        saves: number;
-        clicks: number;
-        agePenalty: number;
-      };
-    };
-  }> {
-    const searchParams = new URLSearchParams();
-    searchParams.append('contentType', contentType);
-    searchParams.append('contentId', contentId);
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/recommended/scoring-breakdown?${searchParams}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -1409,23 +902,6 @@ export class ApiClient {
     }
   }
 
-  /** Read the current public counts for one listing. */
-  static async getContentMetrics(
-    itemType: FeedMetricItemType,
-    contentId: string
-  ): Promise<ContentMetrics | null> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/metrics/${itemType}/${contentId}`, {
-        credentials: 'include',
-      });
-      if (!response.ok) return null;
-      const result = await response.json();
-      return result?.data?.metrics ?? null;
-    } catch {
-      return null;
-    }
-  }
-
   // Utility method to check if user is authenticated
   static isAuthenticated(): boolean {
     return !!this.getAccessToken();
@@ -1511,35 +987,6 @@ export class ApiClient {
     await this.handleResponse(response);
   }
 
-  static async applyForOpportunity(id: string): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/opportunities/${id}/apply`, {
-      method: 'POST',
-    });
-    await this.handleResponse(response);
-  }
-
-  static async applyForJob(id: string, notes?: string): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/jobs/${id}/apply`, {
-      method: 'POST',
-      body: notes ? JSON.stringify({ notes }) : undefined,
-    });
-    await this.handleResponse(response);
-  }
-
-  static async registerForEvent(id: string): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/register`, {
-      method: 'POST',
-    });
-    await this.handleResponse(response);
-  }
-
-  static async unregisterFromEvent(id: string): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/engagement/events/${id}/unregister`, {
-      method: 'POST',
-    });
-    await this.handleResponse(response);
-  }
-
   /**
    * Record an "apply" engagement for external jobs/opportunities/events.
    * This does not perform a full in-platform application; it just logs
@@ -1566,63 +1013,6 @@ export class ApiClient {
     );
 
     await this.handleResponse(response);
-  }
-
-  // Search Methods
-  static async searchContent(query: string, _filters?: {
-    type?: string;
-    location?: string;
-    industry?: string[];
-    skills?: string[];
-  }): Promise<{
-    opportunities: any[];
-    events: any[];
-    jobs: any[];
-    resources: any[];
-  }> {
-    if (!query.trim()) {
-      return {
-        opportunities: [],
-        events: [],
-        jobs: [],
-        resources: []
-      };
-    }
-
-    try {
-      const searchParams = new URLSearchParams();
-      searchParams.append('search', query.trim());
-      searchParams.append('limit', '20');
-
-      const [opportunitiesRes, eventsRes, jobsRes, resourcesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/opportunities?${searchParams.toString()}`),
-        fetch(`${API_BASE_URL}/api/events?${searchParams.toString()}`),
-        fetch(`${API_BASE_URL}/api/jobs?${searchParams.toString()}`),
-        fetch(`${API_BASE_URL}/api/resources?${searchParams.toString()}`)
-      ]);
-
-      const [opportunitiesData, eventsData, jobsData, resourcesData] = await Promise.all([
-        opportunitiesRes.json(),
-        eventsRes.json(),
-        jobsRes.json(),
-        resourcesRes.json()
-      ]);
-
-      return {
-        opportunities: opportunitiesData.success ? (opportunitiesData.data?.opportunities || []) : [],
-        events: eventsData.success ? (eventsData.data?.events || []) : [],
-        jobs: jobsData.success ? (jobsData.data?.jobs || []) : [],
-        resources: resourcesData.success ? (resourcesData.data?.resources || []) : []
-      };
-    } catch (error) {
-      console.error('Search error:', error);
-      return {
-        opportunities: [],
-        events: [],
-        jobs: [],
-        resources: []
-      };
-    }
   }
 
   // Admin API methods
@@ -2078,22 +1468,6 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async uploadPaymentReceipt(contentId: string, contentType: string, receiptUrl: string, paymentCode?: string): Promise<any> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/upload-receipt`, {
-      method: 'POST',
-      body: JSON.stringify({
-        receiptUrl,
-        paymentCode: paymentCode || null
-      }),
-    });
-    return this.handleResponse(response);
-  }
-
-  static async getPaymentDetails(contentId: string, contentType: string): Promise<any> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/${contentType}/${contentId}/details`);
-    return this.handleResponse(response);
-  }
-
   /** Admin: update content fields (title, description, status, urls, location, payment, benefits, dates). Backend may accept PATCH/PUT. */
   static async updateContentByAdmin(
     contentId: string,
@@ -2137,26 +1511,6 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  static async getContentAwaitingPayment(page = 1, limit = 20, contentType?: string): Promise<any> {
-    const searchParams = new URLSearchParams();
-    searchParams.append('page', page.toString());
-    searchParams.append('limit', limit.toString());
-    if (contentType) searchParams.append('contentType', contentType);
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/awaiting-payment?${searchParams.toString()}`);
-    return this.handleResponse(response);
-  }
-
-  static async getContentWithUploadedPayments(page = 1, limit = 20, contentType?: string): Promise<any> {
-    const searchParams = new URLSearchParams();
-    searchParams.append('page', page.toString());
-    searchParams.append('limit', limit.toString());
-    if (contentType) searchParams.append('contentType', contentType);
-
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/payments/uploaded-payments?${searchParams.toString()}`);
-    return this.handleResponse(response);
-  }
-
   /** Provider wallet: get balance (NGN). */
   // Founder Batch: paid tier granting publishing rights for a fixed term.
 
@@ -2195,81 +1549,6 @@ export class ApiClient {
       body: JSON.stringify({ reference }),
     });
     return this.handleResponse(response);
-  }
-
-  static async getWallet(): Promise<{ balanceNg: number; currency: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet`);
-    const result = await this.handleResponse<{ balanceNg: number; currency: string } | { data: { balanceNg: number; currency: string } }>(response);
-    const payload: any = (result as any)?.data ?? result;
-    return {
-      balanceNg: typeof payload.balanceNg === 'number' ? payload.balanceNg : 0,
-      currency: typeof payload.currency === 'string' ? payload.currency : 'NGN',
-    };
-  }
-
-  /** Provider wallet: initiate top-up; returns authorizationUrl for Paystack redirect/popup. */
-  static async topUpWallet(amountNg: number, callbackUrl?: string): Promise<{ authorizationUrl: string; reference: string; accessCode: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet/top-up`, {
-      method: 'POST',
-      body: JSON.stringify({ amountNg, callbackUrl: callbackUrl || undefined }),
-    });
-    const result = await this.handleResponse<{ authorizationUrl?: string; reference?: string; accessCode?: string } | { data: { authorizationUrl: string; reference: string; accessCode: string } }>(response);
-    const payload: any = (result as any)?.data ?? result;
-    return {
-      authorizationUrl: typeof payload.authorizationUrl === 'string' ? payload.authorizationUrl : '',
-      reference: typeof payload.reference === 'string' ? payload.reference : '',
-      accessCode: typeof payload.accessCode === 'string' ? payload.accessCode : '',
-    };
-  }
-
-  /** Provider wallet: verify inline Paystack top-up by reference and return new balance. */
-  static async verifyWalletTopUp(reference: string): Promise<{ balanceNg: number }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/wallet/verify-topup`, {
-      method: 'POST',
-      body: JSON.stringify({ reference }),
-    });
-    let json: any = null;
-    try {
-      json = await response.json();
-    } catch {
-      // ignore, handled below
-    }
-    if (!response.ok || !json) {
-      throw new Error(json?.message || `Failed to verify wallet top-up (HTTP ${response.status})`);
-    }
-    if (json.success === false) {
-      throw new Error(json.message || 'Failed to verify wallet top-up');
-    }
-    const payload = json.data ?? json;
-    return { balanceNg: typeof payload.balanceNg === 'number' ? payload.balanceNg : 0 };
-  }
-
-  /** Provider wallet: recent transactions for the current provider. */
-  static async getWalletTransactions(limit = 50): Promise<{
-    transactions: {
-      _id: string;
-      amount: number;
-      type: 'topup' | 'deduction';
-      reference: string | null;
-      paystackReference: string | null;
-      status: string;
-      promotionId?: string | null;
-      contentId?: string | null;
-      contentType?: 'opportunity' | 'event' | 'job' | 'resource' | null;
-      matchPercent?: number | null;
-      costNg?: number | null;
-      createdAt: string;
-    }[];
-  }> {
-    const searchParams = new URLSearchParams();
-    if (limit) searchParams.append('limit', String(limit));
-    const url = `${API_BASE_URL}/api/wallet/transactions${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    const response = await this.makeAuthenticatedRequest(url);
-    const result = await this.handleResponse<{ transactions: any[] } | { data: { transactions: any[] } }>(response);
-    const payload: any = (result as any)?.data ?? result;
-    return {
-      transactions: Array.isArray(payload.transactions) ? payload.transactions : [],
-    };
   }
 
   /** Record a promoted click (signed-in user viewed promoted content). Call from detail pages once per load. */
@@ -2431,76 +1710,6 @@ export class ApiClient {
     await this.handleResponse(response);
   }
 
-  /** Initialize Paystack one-time payment for a promotion. Returns authorizationUrl to redirect user. spendLimitNg is required. */
-  static async initializePromotionPayment(params: {
-    contentId: string;
-    contentType: 'opportunity' | 'event' | 'job' | 'resource';
-    durationDays: number;
-    spendLimitNg: number;
-    callbackUrl?: string;
-  }): Promise<{ authorizationUrl: string; reference: string }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/initialize-payment`, {
-      method: 'POST',
-      body: JSON.stringify({
-        contentId: params.contentId,
-        contentType: params.contentType,
-        durationDays: params.durationDays,
-        spendLimitNg: params.spendLimitNg,
-        ...(params.callbackUrl && { callbackUrl: params.callbackUrl }),
-      }),
-    });
-    const json = await this.handleResponse(response) as ApiResponse<{ authorizationUrl: string; reference: string }>;
-    const data = (json as any)?.data ?? json;
-    if (!data?.authorizationUrl) throw new Error((json as any)?.message || 'Failed to initialize promotion payment');
-    return { authorizationUrl: data.authorizationUrl, reference: data.reference || '' };
-  }
-
-  /** Verify Paystack promotion payment and create promotion. Call after user returns from Paystack. */
-  static async verifyPromotionPayment(reference: string): Promise<{ promotion: any; spendLimitNg: number; duration: number }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/verify-payment`, {
-      method: 'POST',
-      body: JSON.stringify({ reference }),
-    });
-    const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; spendLimitNg?: number; duration?: number }>;
-    const data = (json as any)?.data ?? json;
-    if (!data?.promotion) throw new Error((json as any)?.message || 'Failed to verify promotion payment');
-    return {
-      promotion: data.promotion,
-      spendLimitNg: data.spendLimitNg ?? 0,
-      duration: data.duration ?? 0,
-    };
-  }
-
-  /** Start a promotion: N100/day upfront + optional per-click budget. Returns chargedNg (upfront) and balanceNg. */
-  static async startPromotionWithWallet(params: {
-    contentId: string;
-    contentType: 'opportunity' | 'event' | 'job' | 'resource';
-    durationDays: number;
-    spendLimitNg?: number | null;
-  }): Promise<{ promotion: any; spendLimitNg: number | null; duration: number; chargedNg: number; balanceNg: number }> {
-    const body: Record<string, unknown> = {
-      contentId: params.contentId,
-      contentType: params.contentType,
-      durationDays: params.durationDays,
-    };
-    if (params.spendLimitNg != null && params.spendLimitNg > 0) {
-      body.spendLimitNg = params.spendLimitNg;
-    }
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/promotions/start-with-wallet`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    const json = await this.handleResponse(response) as ApiResponse<{ promotion: any; spendLimitNg?: number | null; duration?: number; chargedNg?: number; balanceNg?: number }>;
-    if (!json?.data) throw new Error((json as any)?.message || 'Failed to start promotion');
-    return {
-      promotion: json.data.promotion,
-      spendLimitNg: json.data.spendLimitNg ?? null,
-      duration: json.data.duration ?? params.durationDays,
-      chargedNg: json.data.chargedNg ?? params.durationDays * 100,
-      balanceNg: json.data.balanceNg ?? 0,
-    };
-  }
-
   // Helper method to get the correct endpoint for content type
   private static getContentEndpoint(contentType: string, contentId: string, action: string): string {
     // Map content types to their correct API endpoints
@@ -2514,48 +1723,6 @@ export class ApiClient {
     const apiPath = endpointMap[contentType] || `${contentType}s`;
     const baseUrl = `${API_BASE_URL}/api/${apiPath}/${contentId}/${action}`;
     return baseUrl;
-  }
-
-  // Helper method to normalize content items from different types
-  private static normalizeContentItem(item: any, type: string): any {
-    const normalized = {
-      ...item,
-      type,
-      // Ensure financial information is properly mapped
-      isPaid: item.isPaid || item.financial?.isPaid || false,
-      price: item.price || item.financial?.amount || null,
-      currency: item.currency || item.financial?.currency || 'NGN',
-      // Ensure location information is properly mapped
-      location: {
-        country: item.location?.country || null,
-        province: item.location?.province || null,
-        city: item.location?.city || null,
-        address: item.location?.address || null,
-        isRemote: item.location?.isRemote || false,
-        isHybrid: item.location?.isHybrid || false,
-        isVirtual: item.location?.isVirtual || false
-      },
-      // Ensure dates are properly mapped
-      dates: {
-        startDate: item.dates?.startDate || null,
-        endDate: item.dates?.endDate || null,
-        applicationDeadline: item.dates?.applicationDeadline || null,
-        registrationDeadline: item.dates?.registrationDeadline || null,
-        duration: item.dates?.duration || null
-      },
-      // Ensure metrics are properly mapped
-      metrics: {
-        viewCount: item.metrics?.viewCount || 0,
-        likeCount: item.metrics?.likeCount || 0,
-        saveCount: item.metrics?.saveCount || 0,
-        shareCount: item.metrics?.shareCount ?? 0,
-        playlistAddCount: item.metrics?.playlistAddCount ?? item.metrics?.playlistCount ?? 0,
-        applicationCount: item.metrics?.applicationCount || 0,
-        registrationCount: item.metrics?.registrationCount || 0
-      }
-    };
-
-    return normalized;
   }
 
   // Fetch poster information for content items
@@ -2618,13 +1785,6 @@ export class ApiClient {
       body: JSON.stringify(data),
     });
     return this.handleResponse<{ isCompleted: boolean; completionPercentage: number; onboarding?: any }>(response);
-  }
-
-  static async completeProviderOnboarding(): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/provider-onboarding/complete`, {
-      method: 'POST',
-    });
-    return this.handleResponse(response);
   }
 
   static async checkPostingPermission(): Promise<{ canPost: boolean, completionPercentage: number, isCompleted: boolean, reason: string }> {
@@ -2735,160 +1895,6 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
-  // Locked In (focus session) methods — available to all authenticated users. Pass signal for timeout (e.g. 10s AbortController).
-  static async createLockedInSession(options?: {
-    startedAt?: string;
-    intention?: string;
-    todoList?: Array<{ id?: string; text: string; done?: boolean }>;
-    signal?: AbortSignal;
-  }): Promise<{
-    sessionId: string;
-    startedAt: string;
-    intention?: string | null;
-    todoList?: Array<{ id: string; text: string; done: boolean }>;
-    existing?: boolean;
-  }> {
-    const startedAt = options?.startedAt ?? new Date().toISOString();
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions`, {
-      method: 'POST',
-      body: JSON.stringify({
-        startedAt,
-        intention: options?.intention,
-        todoList: options?.todoList,
-      }),
-      signal: options?.signal,
-    });
-    const result = (await response.json()) as {
-      success?: boolean;
-      data?: { sessionId: string; startedAt: string; intention?: string | null; todoList?: Array<{ id: string; text: string; done: boolean }> };
-      message?: string;
-      error?: string;
-    };
-    if (response.status === 409 && result?.data) {
-      const d = result.data as { sessionId: string; startedAt: string; intention?: string | null; todoList?: Array<{ id: string; text: string; done: boolean }> };
-      return {
-        sessionId: d.sessionId,
-        startedAt: typeof d.startedAt === 'string' ? d.startedAt : new Date(d.startedAt).toISOString(),
-        intention: d.intention ?? null,
-        todoList: Array.isArray(d.todoList) ? d.todoList : [],
-        existing: true,
-      };
-    }
-    if (!response.ok) {
-      throw new Error(result?.message || result?.error || `HTTP ${response.status}`);
-    }
-    const data = result?.data;
-    if (!data?.sessionId) {
-      throw new Error('Invalid response: missing session data');
-    }
-    return {
-      sessionId: data.sessionId,
-      startedAt: typeof data.startedAt === 'string' ? data.startedAt : new Date(data.startedAt).toISOString(),
-      intention: data.intention ?? null,
-      todoList: Array.isArray(data.todoList) ? data.todoList : [],
-    };
-  }
-
-  static async updateLockedInSession(sessionId: string, payload: { intention?: string; todoList?: Array<{ id?: string; text: string; done?: boolean }> }): Promise<{ intention: string | null; todoList: Array<{ id: string; text: string; done: boolean }> }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    });
-    const result = await this.handleResponse<{ intention: string | null; todoList: Array<{ id: string; text: string; done: boolean }> }>(response);
-    return result;
-  }
-
-  static async getLockedInDailyStats(date?: string): Promise<{ date: string; liveCount: number; totalToday: number }> {
-    const url = date ? `${API_BASE_URL}/api/locked-in/stats?date=${encodeURIComponent(date)}` : `${API_BASE_URL}/api/locked-in/stats`;
-    const response = await fetch(url);
-    const result = (await response.json()) as { success?: boolean; data?: { date: string; liveCount: number; totalToday: number } };
-    if (!response.ok || !result?.data) {
-      return { date: date || new Date().toISOString().slice(0, 10), liveCount: 0, totalToday: 0 };
-    }
-    return result.data;
-  }
-
-  static async getLockedInUsage(): Promise<{
-    weeklyUsed: number;
-    weeklyLimit: number;
-    remaining: number | null;
-  }> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/usage`);
-    return this.handleResponse(response);
-  }
-
-  static async endLockedInSession(sessionId: string, payload: { endedAt: string; durationSeconds: number; endReason?: 'user_ended' | 'tab_closed' }): Promise<void> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/end`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-    });
-    await this.handleResponse(response);
-  }
-
-  static async getLockedInSessions(params?: { page?: number; limit?: number }): Promise<{
-    sessions: Array<{ _id: string; durationSeconds: number; startedAt: string; endedAt: string; endReason?: string }>;
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    const searchParams = new URLSearchParams();
-    if (params?.page != null) searchParams.append('page', String(params.page));
-    if (params?.limit != null) searchParams.append('limit', String(params.limit));
-    const qs = searchParams.toString();
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions${qs ? `?${qs}` : ''}`);
-    const result = await this.handleResponse<{ sessions: any[]; total: number; page: number; limit: number; totalPages: number }>(response);
-    return result;
-  }
-
-  static async getActiveLockedInSession(): Promise<{
-    sessionId: string;
-    startedAt: string;
-    elapsedSeconds: number | null;
-    intention: string | null;
-    todoList: Array<{ id: string; text: string; done: boolean }>;
-  } | null> {
-    const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}/api/locked-in/sessions/active`);
-    const result = await this.handleResponse<{
-      sessionId: string;
-      startedAt: string;
-      elapsedSeconds?: number | null;
-      intention?: string | null;
-      todoList?: Array<{ id: string; text: string; done: boolean }>;
-    } | null>(response);
-    if (!result) return null;
-    return {
-      ...result,
-      elapsedSeconds: typeof result.elapsedSeconds === 'number' ? result.elapsedSeconds : null,
-      intention: result.intention ?? null,
-      todoList: Array.isArray(result.todoList) ? result.todoList : [],
-    };
-  }
-
-  /** Call when page is unloading (visibility hidden / beforeunload). Uses keepalive so request can complete after navigation. */
-  static endLockedInSessionOnUnload(sessionId: string, durationSeconds: number, endReason: 'user_ended' | 'tab_closed' = 'tab_closed'): void {
-    const token = this.getAccessToken();
-    if (!token || typeof fetch === 'undefined') return;
-    const payload = { endedAt: new Date().toISOString(), durationSeconds, endReason };
-    fetch(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/end`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    }).catch(() => { });
-  }
-
-  static pauseLockedInSession(sessionId: string, elapsedSeconds: number, options?: { keepalive?: boolean }): void {
-    const token = this.getAccessToken();
-    if (!token || typeof fetch === 'undefined') return;
-    const payload = { elapsedSeconds };
-    fetch(`${API_BASE_URL}/api/locked-in/sessions/${sessionId}/pause`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-      keepalive: options?.keepalive ?? false,
-    }).catch(() => { });
-  }
 }
 
 export default ApiClient;
