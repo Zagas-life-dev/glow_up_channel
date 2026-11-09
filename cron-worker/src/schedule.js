@@ -9,6 +9,9 @@
 
 // [UTC "HH:MM", job]: once a day.
 export const DAILY = [
+  ["00:30", "statsSnapshot"], // 01:30 Lagos: yesterday's (UTC) platform stats row
+  ["02:00", "deadItemsSweep"], // 03:00: dead listings out of playlists, their saves archived
+  ["02:30", "metricsReconcile"], // 03:30: engagement counters recounted from the ledgers
   ["08:00", "countdowns"], // 09:00 Lagos: 4d / 1d / day-of before saved + tracked deadlines
   ["09:00", "savedNudge"], // 10:00: saved, not applied yet, closing in 6-14 days
   ["09:00", "emailTrickle"], // 10:00: campaign emails, best users first
