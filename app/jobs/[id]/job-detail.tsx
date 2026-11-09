@@ -13,6 +13,7 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
+import GuestApplyButton from '@/components/guest-apply-button'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -197,12 +198,7 @@ function JobPageContent({ id, initialJob }: JobPageProps) {
       No application link on this listing yet.
     </p>
   ) : !isAuthenticated ? (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
-      <Link href={`/login?callbackUrl=${encodeURIComponent(`/jobs/${id}`)}`}>
-        Sign in to apply
-        <RiExternalLinkLine className="h-4 w-4" aria-hidden />
-      </Link>
-    </Button>
+    <GuestApplyButton kind="job" id={id} href={cleanUrl(job.url)} label={host ? `Apply on ${host}` : 'Apply now'} />
   ) : (
     <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <a

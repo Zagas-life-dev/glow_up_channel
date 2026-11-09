@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context"
 import ApiClient from "@/lib/api-client"
 import { trackSave } from "@/lib/tracking"
 import { takePendingAction, type IntentKind } from "@/lib/pending-intent"
+import { startTracking } from "@/lib/tracker/api"
 
 const PLURAL: Record<IntentKind, "jobs" | "opportunities" | "events" | "resources"> = {
   job: "jobs",
@@ -38,6 +39,14 @@ export default function PendingIntentRunner() {
         .catch(() => {
           // Closed or removed since the tap: nothing to save, nothing to tell.
         })
+    } else if ((intent.action === "track" || intent.action === "apply") && intent.kind !== "resource") {
+      // From the guest-apply test: "Track it" after applying, or the apply wall.
+      // Tracking starts now, so the deadline reminders work from day one.
+      startTracking(intent.kind, intent.id, `guest_${intent.action}`)
+        .then(({ tracked }) => {
+          if (tracked) toast.success("Tracking it. We'll remind you before it closes.")
+        })
+        .catch(() => {})
     } else if (intent.action === "playlist") {
       toast("You're in. Tap + on the listing to add it to a playlist.")
     }

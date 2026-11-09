@@ -14,6 +14,7 @@ import {
 } from 'react-icons/ri'
 import { toast } from 'sonner'
 import EngagementActions from '@/components/engagement-actions'
+import GuestApplyButton from '@/components/guest-apply-button'
 import ContentDetailSkeleton from '@/components/skeletons/content-detail-skeleton'
 import ErrorState from '@/components/error-state'
 import AddToPlaylistModal from '@/components/add-to-playlist-modal'
@@ -213,12 +214,7 @@ function EventPageContent({ id, initialEvent }: EventPageProps) {
       Registration closed {formatDate(event.dates.registrationDeadline, event.dates.timezone)}.
     </p>
   ) : !isAuthenticated ? (
-    <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
-      <Link href={`/login?callbackUrl=${encodeURIComponent(`/events/${id}`)}`}>
-        Sign in to register
-        <RiExternalLinkLine className="h-4 w-4" aria-hidden />
-      </Link>
-    </Button>
+    <GuestApplyButton kind="event" id={id} href={cleanUrl(registrationUrl)} label={host ? `Register on ${host}` : 'Register'} wallLabel="Sign in to register" />
   ) : (
     <Button asChild size="lg" className="h-14 w-full rounded-full text-base font-bold">
       <a
