@@ -152,7 +152,6 @@ const PUSH_TOPICS = [
   { key: 'pushOpportunities', label: 'Saved opportunities', desc: 'Deadline reminders for opportunities you saved' },
   { key: 'pushEvents', label: 'Saved events', desc: 'Reminders for events you saved' },
   { key: 'pushJobs', label: 'Saved jobs', desc: 'Deadline reminders for jobs you saved' },
-  { key: 'pushLockedInReminders', label: 'Locked In reminders', desc: 'A daily nudge to lock in' },
   // "When connections post" and "Channel posts" were dropped from this list:
   // both belong to the deprecated community/channels features, and
   // notifications are being rebuilt. The stored prefs are left untouched.
