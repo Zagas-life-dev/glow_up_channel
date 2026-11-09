@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { RiCheckLine, RiCloseLine, RiEyeLine, RiEyeOffLine, RiFlashlightLine, RiPlayList2Line, RiUserLine } from 'react-icons/ri'
 import { cn } from '@/lib/utils'
 import { AuthShell, AuthHeading, AuthError } from '@/components/up/auth-shell'
-import { getDatePickerPropsFor5Plus, calculateAge } from '@/lib/date-utils'
+import { getDatePickerPropsForSignup, calculateAge, MIN_SIGNUP_AGE } from '@/lib/date-utils'
 
 /** Mirrors the password rules in the schema below, so the checklist ticks live. */
 const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
@@ -67,8 +67,8 @@ export default function SignupPage() {
     try {
       // Validate age
       const age = calculateAge(data.dateOfBirth)
-      if (age < 5) {
-        setError('You must be at least 5 years old to create an account')
+      if (age < MIN_SIGNUP_AGE) {
+        setError(`You must be at least ${MIN_SIGNUP_AGE} years old to create an account`)
         setIsLoading(false)
         return
       }
@@ -160,13 +160,13 @@ export default function SignupPage() {
             name="dateOfBirth"
             control={control}
             render={({ field }) => {
-              const { min, max } = getDatePickerPropsFor5Plus()
+              const { min, max } = getDatePickerPropsForSignup()
               return (
                 <Input {...field} id="dateOfBirth" type="date" min={min} max={max} className="h-12" disabled={isLoading} required />
               )
             }}
           />
-          <p className="text-xs text-muted-foreground">You must be at least 5 years old to create an account.</p>
+          <p className="text-xs text-muted-foreground">You must be at least {MIN_SIGNUP_AGE} years old to create an account.</p>
           {fieldError(errors.dateOfBirth?.message)}
         </div>
 

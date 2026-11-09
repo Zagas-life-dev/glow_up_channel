@@ -2,13 +2,16 @@
  * Date utility functions for age validation and date restrictions
  */
 
+/** Minimum age to create an account. Matches the Terms of Service and the backend signup validator. */
+export const MIN_SIGNUP_AGE = 13
+
 /**
- * Calculate the maximum date that ensures the user is at least 5 years old
+ * Calculate the maximum date that ensures the user is at least MIN_SIGNUP_AGE years old
  * @returns ISO date string (YYYY-MM-DD) for the maximum allowed date
  */
-export function getMaxDateFor5Plus(): string {
+export function getMaxDateForMinAge(): string {
   const today = new Date()
-  const maxDate = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate())
+  const maxDate = new Date(today.getFullYear() - MIN_SIGNUP_AGE, today.getMonth(), today.getDate())
   return maxDate.toISOString().split('T')[0]
 }
 
@@ -42,27 +45,27 @@ export function calculateAge(dateOfBirth: string): number {
 }
 
 /**
- * Check if a date of birth makes the person at least 5 years old
+ * Check if a date of birth makes the person at least MIN_SIGNUP_AGE years old
  * @param dateOfBirth - Date of birth string (YYYY-MM-DD)
- * @returns true if the person is at least 5 years old
+ * @returns true if the person is old enough to sign up
  */
-export function isAtLeast5(dateOfBirth: string): boolean {
-  return calculateAge(dateOfBirth) >= 5
+export function isAtLeastMinAge(dateOfBirth: string): boolean {
+  return calculateAge(dateOfBirth) >= MIN_SIGNUP_AGE
 }
 
 /**
- * Get date picker props for forms that require 5+ age validation
+ * Get date picker props for the signup date-of-birth field
  * @returns Object with min and max date strings for date input
  */
-export function getDatePickerPropsFor5Plus() {
+export function getDatePickerPropsForSignup() {
   return {
     min: getMinDateForReasonableAge(),
-    max: getMaxDateFor5Plus()
+    max: getMaxDateForMinAge()
   }
 }
 
 /**
- * @deprecated Use getMaxDateFor5Plus instead
+ * @deprecated Use getMaxDateForMinAge instead
  * Calculate the maximum date that ensures the user is at least 16 years old
  * @returns ISO date string (YYYY-MM-DD) for the maximum allowed date
  */
@@ -73,7 +76,7 @@ export function getMaxDateFor16Plus(): string {
 }
 
 /**
- * @deprecated Use isAtLeast5 instead
+ * @deprecated Use isAtLeastMinAge instead
  * Check if a date of birth makes the person at least 16 years old
  * @param dateOfBirth - Date of birth string (YYYY-MM-DD)
  * @returns true if the person is at least 16 years old
@@ -83,7 +86,7 @@ export function isAtLeast16(dateOfBirth: string): boolean {
 }
 
 /**
- * @deprecated Use getDatePickerPropsFor5Plus instead
+ * @deprecated Use getDatePickerPropsForSignup instead
  * Get date picker props for forms that require 16+ age validation
  * @returns Object with min and max date strings for date input
  */
