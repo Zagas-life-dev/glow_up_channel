@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { takeReturnTo } from '@/lib/pending-intent'
 import { useRouter } from 'next/navigation'
 import { RiArrowLeftLine, RiLoader4Line } from 'react-icons/ri'
 
@@ -118,7 +119,7 @@ export default function OnboardingPage() {
         await refreshUser()
       }
 
-      router.push('/dashboard')
+      router.push(takeReturnTo('/dashboard'))
     } catch (error) {
       console.error('Failed to save onboarding data:', error)
       toast.error('Could not save your profile. Please try again.')

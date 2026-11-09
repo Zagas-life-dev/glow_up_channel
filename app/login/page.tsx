@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { captureIntentFromSearch, takeReturnTo } from '@/lib/pending-intent';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
@@ -19,13 +20,16 @@ export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
 
+  // Remember ?callbackUrl= / ?intent= so the user lands back where they were.
+  useEffect(() => { captureIntentFromSearch(window.location.search) }, [])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
     try {
       await login(email, password)
-      router.push('/dashboard')
+      router.push(takeReturnTo('/dashboard'))
     } catch (err: any) {
       setError(err.message || 'Failed to login')
     } finally {

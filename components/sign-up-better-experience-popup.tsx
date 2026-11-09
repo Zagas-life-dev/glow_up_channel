@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { UpLogo } from "@/components/up/up-logo"
+import { authHref, savePendingIntent } from "@/lib/pending-intent"
 
 /** The reasons from the old one-line copy: save content, personal picks, deadlines. */
 const PERKS = [
@@ -56,6 +57,10 @@ export default function SignUpBetterExperiencePopup() {
     return () => window.removeEventListener(ENGAGEMENT_EVENT, handleEngaged)
   }, [isAuthenticated])
 
+  // Carry the current page through sign-up so the user comes back to it.
+  const here = typeof window === "undefined" ? undefined : window.location.pathname + window.location.search
+  const rememberHere = () => savePendingIntent({ returnTo: here, source: "guest_popup" })
+
   const handleDismiss = () => {
     setDismissed()
     setShow(false)
@@ -104,14 +109,14 @@ export default function SignUpBetterExperiencePopup() {
 
         <div className="grid gap-2 px-6 pb-6 pt-5">
           <Button asChild className="h-11 w-full">
-            <Link href="/signup" onClick={handleDismiss}>
+            <Link href={authHref("/signup", { returnTo: here })} onClick={() => { rememberHere(); handleDismiss() }}>
               Sign up free
             </Link>
           </Button>
           <div className="flex items-center justify-between gap-3 text-[13px]">
             <span className="text-muted-foreground">
               Already on UP?{" "}
-              <Link href="/login" onClick={handleDismiss} className="font-bold text-foreground hover:underline">
+              <Link href={authHref("/login", { returnTo: here })} onClick={() => { rememberHere(); handleDismiss() }} className="font-bold text-foreground hover:underline">
                 Sign in
               </Link>
             </span>

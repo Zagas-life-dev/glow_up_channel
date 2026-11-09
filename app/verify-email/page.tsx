@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { takeReturnTo } from '@/lib/pending-intent'
 import { useRouter } from 'next/navigation'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,7 +74,7 @@ function VerifyEmailContent() {
         if (!isOnboardingCompleted) {
           router.push('/onboarding')
         } else {
-          router.push('/dashboard')
+          router.push(takeReturnTo('/dashboard'))
         }
       }, 1500)
     } catch (error: any) {
