@@ -15,6 +15,7 @@ import {
   RiBookmarkLine,
   RiBookmarkFill,
   RiShareLine,
+  RiWhatsappLine,
   RiShareFill,
 } from 'react-icons/ri'
 import { markValueMoment } from '@/lib/push-ask'
@@ -184,13 +185,25 @@ export default function EngagementActions({
     }
   }
 
+  const sharePath = type === 'opportunities' ? 'opportunities' : type === 'events' ? 'events' : type === 'jobs' ? 'jobs' : 'resources'
+  const [whatsAppHref, setWhatsAppHref] = useState(`https://wa.me/?text=${encodeURIComponent(`/${sharePath}/${id}?src=share`)}`)
+  useEffect(() => {
+    // The absolute URL needs the origin, known only in the browser.
+    const link = `${window.location.origin}/${sharePath}/${id}?src=share`
+    // Page titles read "Title — Org — Place | UP"; the listing title alone is enough here.
+    const title = document.title.replace(/\s*\|\s*UP\s*$/, '').split(' — ')[0]
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWhatsAppHref(`https://wa.me/?text=${encodeURIComponent(`${title}\n${link}`)}`)
+  }, [sharePath, id])
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     const normalizedType = type === 'opportunities' ? 'opportunity' : type === 'events' ? 'event' : type === 'jobs' ? 'job' : 'resource'
     const promotionContentType = normalizedType
     const path = type === 'opportunities' ? 'opportunities' : type === 'events' ? 'events' : type === 'jobs' ? 'jobs' : 'resources'
-    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${path}/${id}`
+    // ?src=share: visits that come back through a shared link are counted as such.
+    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${path}/${id}?src=share`
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ url, title: 'Share' })
@@ -287,6 +300,22 @@ export default function EngagementActions({
           <RiShareLine className="w-4 h-4" aria-hidden />
         )}
       </button>
+
+      {/* WhatsApp: where most UP links travel. The link unfurls as the listing's
+          share card (app/og) and carries ?src=share. */}
+      <a
+        href={whatsAppHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => {
+          trackShare(type === 'opportunities' ? 'opportunity' : type === 'events' ? 'event' : type === 'jobs' ? 'job' : 'resource', id)
+        }}
+        aria-label="Share on WhatsApp"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:bg-muted"
+      >
+        <RiWhatsappLine className="w-4 h-4" aria-hidden />
+        <span className="hidden sm:inline">WhatsApp</span>
+      </a>
 
     </div>
   )

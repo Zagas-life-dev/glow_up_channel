@@ -458,7 +458,8 @@ export default function FeedCard({ item, onEngage, onPromotionReadMore }: FeedCa
     e.preventDefault()
     e.stopPropagation()
 
-    const url = `${window.location.origin}/${engagementApiType}/${item._id}`
+    // ?src=share: visits that come back through a shared link are counted as such.
+    const url = `${window.location.origin}/${engagementApiType}/${item._id}?src=share`
 
     // Shares count for signed-out visitors too, and only once per viewer per day —
     // so the displayed number follows what the server actually recorded.

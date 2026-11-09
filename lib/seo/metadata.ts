@@ -59,8 +59,12 @@ interface PageMetaInput {
 
 function buildPageMetadata(input: PageMetaInput): Metadata {
   const url = `${getSiteUrl()}${input.path}`
-  // Listings without their own picture still get a card: the logo, shown small.
-  const images = [{ url: input.image || BRAND.logo }]
+  // Listings without their own picture get a generated share card (app/og): title,
+  // organisation and deadline on the brand navy. Before, they unfurled as the bare
+  // logo, which told a WhatsApp group nothing about the listing.
+  const card = /^\/(jobs|opportunities|events)\/[a-f0-9]{24}$/i.test(input.path) ? `${getSiteUrl()}/og${input.path}` : null
+  const image = input.image || card
+  const images = [image ? { url: image, ...(!input.image && { width: 1200, height: 630 }) } : { url: BRAND.logo }]
   const keywords = Array.from(
     new Set(
       (input.keywords ?? [])
@@ -86,10 +90,10 @@ function buildPageMetadata(input: PageMetaInput): Metadata {
       ...(input.modifiedTime ? { modifiedTime: input.modifiedTime } : {}),
     },
     twitter: {
-      card: input.image ? "summary_large_image" : "summary",
+      card: image ? "summary_large_image" : "summary",
       title: input.title,
       description: input.description,
-      images: [input.image || BRAND.logo],
+      images: [image || BRAND.logo],
     },
   }
 }

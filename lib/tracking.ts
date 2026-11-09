@@ -92,6 +92,7 @@ export type Surface =
   | 'tracker'
   | 'push'
   | 'detail'
+  | 'share'
   | 'other';
 
 let surfaceOverride: Surface | null = null;
@@ -109,6 +110,7 @@ const SRC_SURFACES: Record<string, Surface> = {
   playlist: 'playlist',
   search: 'search',
   feed: 'feed',
+  share: 'share',
 };
 
 export function currentSurface(): Surface {
