@@ -137,7 +137,7 @@ const aspirationOptions = [
 
 /**
  * The sections, in the order someone actually works through them: who you are, what you
- * are into, what your feed and stories show, what reaches you, who can see you, and finally
+ * are into, what your feed and stories show, what reaches you, and finally
  * the account itself — with the destructive actions last.
  */
 const SETTINGS_SECTIONS = [
@@ -145,7 +145,6 @@ const SETTINGS_SECTIONS = [
   { id: 'background' as const, label: 'Background', icon: Target },
   { id: 'feed' as const, label: 'Feed & stories', icon: Layers },
   { id: 'notifications' as const, label: 'Notifications', icon: Bell },
-  { id: 'privacy' as const, label: 'Privacy', icon: Lock },
   { id: 'security' as const, label: 'Account', icon: Shield },
 ]
 
@@ -323,7 +322,7 @@ export default function SettingsPage() {
   const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' })
   const [upgradeError, setUpgradeError] = useState<string | null>(null)
   const [isUpgrading, setIsUpgrading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'feed' | 'privacy' | 'security' | 'notifications'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'background' | 'feed' | 'security' | 'notifications'>('basic')
   const [isSaving, setIsSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1392,31 +1391,6 @@ export default function SettingsPage() {
             )}
 
             {/* Privacy */}
-            {activeTab === 'privacy' && (
-              <SettingsSection title="Visibility" description="Who can see you and what you share.">
-                <div className="divide-y divide-border">
-                  <ToggleRow
-                    id="isPrivate"
-                    label="Private account"
-                    description="New partners need your approval before they can connect."
-                    checked={isPrivate}
-                    onChange={(checked) => editField(setIsPrivate)(checked)}
-                  />
-                  <ToggleRow
-                    id="showConnections"
-                    label="Show connections"
-                    description="Let others see how many partners you have."
-                    checked={showConnections}
-                    onChange={(checked) => editField(setShowConnections)(checked)}
-                  />
-                </div>
-                <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                  Hiding connections only affects the count shown on your profile. Visibility for an
-                  individual post is set on that post.
-                </p>
-              </SettingsSection>
-            )}
-
             {/* Account */}
             {activeTab === 'security' && (
               <>
