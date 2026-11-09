@@ -182,6 +182,9 @@ export async function getTracker(includeClosed = true): Promise<TrackerBuckets> 
 
 /** Compact outcome history the feed re-ranker folds into its scores. */
 export async function getSignals(): Promise<TrackerSignal[]> {
+  // Signed out there is no tracker, and the backend answers 401 — on every feed
+  // page, for every visitor who never signed in. Skip the round trip.
+  if (!ApiClient.isAuthenticated()) return []
   try {
     const response = await ApiClient.makeAuthenticatedRequest(`${API_BASE_URL}/api/tracker/signals`)
     const data = await unwrap<{ signals: TrackerSignal[] }>(response)
