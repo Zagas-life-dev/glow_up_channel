@@ -452,6 +452,24 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close()
   const target = event.notification.data?.url || "/"
   const url = new URL(target.startsWith("/") ? target : "/" + target, self.location.origin).href
+  // The dispatcher tags each push link with n=<notification_log id>; report the tap so
+  // open rates per kind can be measured. Fire and forget: never delays opening.
+  let openId = null
+  try {
+    openId = new URL(url).searchParams.get("n")
+  } catch {
+    /* ignore */
+  }
+  if (openId && /^[a-f0-9]{24}$/i.test(openId)) {
+    event.waitUntil(
+      fetch("/api/push/opened", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ n: openId }),
+        keepalive: true,
+      }).catch(() => {}),
+    )
+  }
   event.waitUntil(
     (async () => {
       try {
