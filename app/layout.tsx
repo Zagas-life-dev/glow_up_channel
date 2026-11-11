@@ -16,6 +16,7 @@ import { GiftProvider } from "@/contexts/gift-context"
 import { PromotionAnnouncementProvider } from "@/contexts/promotion-announcement-context"
 import TrackerReturnSheet from "@/components/tracker/return-sheet"
 import GiftPopup from "@/components/gifts/gift-popup"
+import ProgramInvitePopup from "@/components/creator/program-invite-popup"
 import PromotionAnnouncementPopup from "@/components/promotion/promotion-announcement-popup"
 import AnnouncementAttribution from "@/components/promotion/announcement-attribution"
 import LocationConsent from "@/components/location-consent"
@@ -204,6 +205,7 @@ export default function RootLayout({
                                 fixed-position so it overlays whichever layout
                                 branch AppLayout took. */}
                             <GiftPopup />
+                            <ProgramInvitePopup />
                             {/* Ordered after GiftPopup so that when both would
                                 render, the gift paints on top; the announcement
                                 also returns null of its own accord while a gift

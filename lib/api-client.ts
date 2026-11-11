@@ -1,6 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 import { getOrCreateAnonId, clearAnonId } from '@/lib/anon-id';
+import { takeSignupPlaylist } from '@/lib/playlist-attribution';
 import { viewerGeoHeaders } from '@/lib/geo/viewer-geo';
 
 /** Listing kinds that carry public engagement metrics. */
@@ -86,7 +87,6 @@ export interface UserProfile {
   profileImage?: string;
   phoneNumber?: string;
   isPrivate?: boolean;
-  showConnections?: boolean;
   onboarding?: {
     country?: string;
     /** ISO code. The backend normalises free-text country input to this on save
@@ -103,18 +103,6 @@ export interface UserProfile {
     aspirations?: string[];
     skills?: string[];
   };
-  // Optional gamification fields (Glow Score)
-  xp_total?: number;
-  level?: number;
-  current_streak?: number;
-}
-
-// Glow Score response (backend shape)
-export interface GlowScoreResponse {
-  xp_total: number;
-  level: number;
-  current_streak: number;
-  xp_to_next_level?: number;
 }
 
 interface AuthTokens {
@@ -460,11 +448,17 @@ export class ApiClient {
     const body: Record<string, unknown> = { email, password, firstName, lastName, dateOfBirth };
     if (typeof window !== 'undefined') {
       body.anonId = getOrCreateAnonId();
+      // Creators Program: the public playlist that brought this visitor, if any.
+      const sourcePlaylist = takeSignupPlaylist();
+      if (sourcePlaylist) body.signupSourcePlaylistId = sourcePlaylist;
     }
     const response = await fetch(`${API_BASE_URL}/api/auth/register/opportunity-seeker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      // Sends the signed device cookie, so this signup and an earlier anonymous view
+      // of the same playlist count as one viewer.
+      credentials: 'include',
     });
 
     const data = await this.handleResponse<RegisterResponse>(response);

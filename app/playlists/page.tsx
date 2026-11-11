@@ -36,21 +36,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageShell } from "@/components/layout/page-shell"
+import { SubscriptionsTab } from "@/components/playlists/subscriptions-tab"
 import { trackPlaylistDiscover } from '@/lib/tracking'
 import { useDiscoverPlaylists } from '@/hooks/use-discover-playlists'
 import { formatCount, queuePlaylistImpression } from '@/lib/playlist-engagement'
 import { useTranslation } from '@/lib/i18n/context'
 import type { TranslationKey } from '@/lib/i18n/translate'
 
-type TabType = "my" | "shared" | "saved" | "public"
+type TabType = "my" | "shared" | "saved" | "public" | "subscriptions"
 
 const TAB_CONFIG: {
   id: TabType
   label: string
-  count?: (ctx: { playlists: Playlist[]; sharedPlaylists: Playlist[]; savedPlaylists: Playlist[] }) => number
+  /** Label on phones, where five tabs share the width. */
+  short?: string
+  count?: (ctx: { playlists: Playlist[]; sharedPlaylists: Playlist[]; savedPlaylists: Playlist[]; subscriptionCount: number }) => number
   authOnly?: boolean
 }[] = [
   { id: "public", label: "Discover" },
+  { id: "subscriptions", label: "Subscriptions", short: "Subs", count: (c) => c.subscriptionCount, authOnly: true },
   { id: "saved", label: "Saved", count: (c) => c.savedPlaylists.length, authOnly: true },
   { id: "my", label: "Mine", count: (c) => c.playlists.length, authOnly: true },
   { id: "shared", label: "Shared", count: (c) => c.sharedPlaylists.length, authOnly: true },
@@ -68,6 +72,10 @@ const EMPTY_COPY: Record<TabType, { title: string; body: string }> = {
   saved: {
     title: "Nothing saved yet",
     body: "Save public playlists you love — they will live here for quick access.",
+  },
+  subscriptions: {
+    title: "No subscriptions yet",
+    body: "Subscribe to creators to see their new playlists here.",
   },
   public: {
     title: "Nothing in Discover yet",
@@ -114,12 +122,13 @@ function PlaylistsPageInner() {
     savePlaylist,
     unsavePlaylist,
   } = usePlaylist()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth()
   const t = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>("public")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [subscriptionCount, setSubscriptionCount] = useState(0)
 
   // Same search box and beat as the listing hubs. Discover searches on the
   // server; the reader's own shelves are already loaded and filter in place.
@@ -139,7 +148,9 @@ function PlaylistsPageInner() {
 
   useEffect(() => {
     const tabParam = searchParams.get("tab")
-    if (tabParam === "my" || tabParam === "shared" || tabParam === "saved") {
+    if (tabParam === "my" || tabParam === "shared" || tabParam === "saved" || tabParam === "subscriptions") {
+      // Wait for sign-in to load, or a shared ?tab= link bounces to Discover.
+      if (isAuthLoading) return
       if (isAuthenticated) {
         setActiveTab(tabParam as TabType)
       } else {
@@ -152,7 +163,7 @@ function PlaylistsPageInner() {
     if (tabParam !== null && tabParam !== "public") {
       router.replace("/playlists")
     }
-  }, [searchParams, isAuthenticated, router])
+  }, [searchParams, isAuthenticated, isAuthLoading, router])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -270,7 +281,7 @@ function PlaylistsPageInner() {
     return user._id === playlist.createdBy._id || user.email === playlist.createdBy.email
   }
 
-  const countCtx = { playlists, sharedPlaylists, savedPlaylists }
+  const countCtx = { playlists, sharedPlaylists, savedPlaylists, subscriptionCount }
   const visibleTabs = TAB_CONFIG.filter((t) => !(t.authOnly && !isAuthenticated))
   const empty = activeSearch
     ? {
@@ -305,7 +316,7 @@ function PlaylistsPageInner() {
             ) : null}
           </div>
 
-          {/* Segmented control — four tabs share the width on mobile, no horizontal scroll. */}
+          {/* Segmented control — five tabs share the width on mobile (short labels), no horizontal scroll. */}
           <nav className="mb-3 flex w-full gap-1 rounded-full bg-up-fill p-1 sm:w-max" aria-label="Playlist categories">
             {visibleTabs.map((tab) => {
               const count = tab.count?.(countCtx) ?? 0
@@ -323,7 +334,14 @@ function PlaylistsPageInner() {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {tab.label}
+                  {tab.short ? (
+                    <>
+                      <span className="sm:hidden">{tab.short}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </>
+                  ) : (
+                    tab.label
+                  )}
                   {tab.count && count > 0 ? (
                     <span className="text-xs tabular-nums opacity-70">
                       {count}
@@ -340,11 +358,13 @@ function PlaylistsPageInner() {
             <SearchBar
               value={searchInput}
               onValueChange={setSearchInput}
-              placeholder={isDiscover ? "Search playlists…" : "Search your playlists…"}
+              placeholder={isDiscover ? "Search playlists…" : activeTab === "subscriptions" ? "Search your creators…" : "Search your playlists…"}
             />
           </div>
 
-          {isLoading ? (
+          {activeTab === "subscriptions" ? (
+            <SubscriptionsTab search={activeSearch} onCount={setSubscriptionCount} />
+          ) : isLoading ? (
             <ul className="overflow-hidden rounded-up-xl border border-border bg-card divide-y divide-up-hairline" aria-busy="true">
               {[...Array(6)].map((_, i) => (
                 <li key={i} className="flex animate-pulse items-center gap-3.5 px-[18px] py-3.5">

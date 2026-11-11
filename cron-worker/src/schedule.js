@@ -12,7 +12,9 @@ export const DAILY = [
   ["00:30", "statsSnapshot"], // 01:30 Lagos: yesterday's (UTC) platform stats row
   ["02:00", "deadItemsSweep"], // 03:00: dead listings out of playlists, their saves archived
   ["02:30", "metricsReconcile"], // 03:30: engagement counters recounted from the ledgers
+  ["07:30", "programDaily"], // 08:30 Lagos: Creators Program holds released, invite reminders, ring check
   ["08:00", "countdowns"], // 09:00 Lagos: 4d / 1d / day-of before saved + tracked deadlines
+  ["08:30", "groupDeadlineNudges"], // 09:30: group members who have not applied, 2 days out
   ["09:00", "savedNudge"], // 10:00: saved, not applied yet, closing in 6-14 days
   ["09:00", "emailTrickle"], // 10:00: campaign emails, best users first
   ["10:00", "funReminders"], // 11:00
@@ -31,6 +33,7 @@ export const HOURLY = [
   [10, "newMatches"], // listings that went live in the last hour
   [20, "weeklyDigest"], // Sunday 18:00 local
   [15, "buildStories"], // 23:15 local: tomorrow's stories built ahead, so the morning open is a read
+  [25, "playlistSpikeCheck"], // Creators Program: flag playlists whose last hour of unique views looks farmed
 ]
 
 // Unanswered tracker asks every 15 minutes, 08:00–21:45 Lagos (07–20 UTC), so the
@@ -49,7 +52,9 @@ export const MONTHLY = [
 ]
 
 // Reminders the user set fire at the minute they chose: checked every tick (5 min).
-export const EVERY_TICK = ["trackerReminders"]
+// notificationBatches: playlist updates (2h windows) and creator updates (15 min) go out
+// as their windows close; a cheap indexed query when nothing is due.
+export const EVERY_TICK = ["trackerReminders", "notificationBatches"]
 
 export function dueJobs(date) {
   const hh = String(date.getUTCHours()).padStart(2, "0")

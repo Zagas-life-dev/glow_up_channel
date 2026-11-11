@@ -43,6 +43,9 @@ function buildPlaylistCreatePayload(raw: Record<string, unknown>) {
     payload.items = items
   }
 
+  // Groups (Playlist Features): the backend makes a group private regardless.
+  if (raw.isGroup === true) payload.isGroup = true
+
   return { payload, name }
 }
 

@@ -21,6 +21,9 @@ import {
   RiMapPin2Line,
   RiPieChartLine,
   RiFileCopy2Line,
+  RiLinkM,
+  RiTrophyLine,
+  RiWallet3Line,
 } from "react-icons/ri"
 
 export interface AdminNavItem {
@@ -59,6 +62,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Tagging", href: "/dashboard/admin/tagging", icon: RiPriceTag3Line },
       { label: "Local tagger", href: "/dashboard/admin/tagging/local", icon: RiComputerLine },
       { label: "Work with us", href: "/dashboard/admin/work-with-us", icon: RiInboxUnarchiveLine },
+      { label: "Listing requests", href: "/dashboard/admin/listing-requests", icon: RiLinkM },
+      { label: "Creators Program", href: "/dashboard/admin/creators-program", icon: RiTrophyLine },
     ],
   },
   {
@@ -77,6 +82,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Promotions", href: "/dashboard/admin/promotions", icon: RiMegaphoneLine, superAdminOnly: true },
       { label: "Extreme", href: "/dashboard/admin/promotions/extreme", icon: RiFlashlightLine, superAdminOnly: true },
+      // Full account numbers on screen: super admins only (the API enforces it too).
+      { label: "Creator payouts", href: "/dashboard/admin/payouts", icon: RiWallet3Line, superAdminOnly: true },
     ],
   },
   {

@@ -54,7 +54,6 @@ export interface NormalizedUser {
   };
   socialLinks?: Record<string, string>;
   isPrivate?: boolean;
-  showConnections?: boolean;
 
   // Raw objects for advanced use-cases if ever needed
   _rawUser?: User | null;
@@ -158,7 +157,6 @@ export function normalizeUser(user: User | null, profile: UserProfile | null): N
     education: profile?.education,
     socialLinks: profile?.socialLinks,
     isPrivate: profile?.isPrivate,
-    showConnections: profile?.showConnections,
 
     _rawUser: user,
     _rawProfile: profile,

@@ -34,6 +34,14 @@
       "port": 3002
     },
     {
+      "name": "backend-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "latest-glowup-channel/scripts/start-dev.cjs"
+      ],
+      "port": 3002
+    },
+    {
       "name": "backend-scratch",
       "runtimeExecutable": "node",
       "runtimeArgs": [

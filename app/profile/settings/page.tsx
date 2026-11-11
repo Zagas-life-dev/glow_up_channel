@@ -148,6 +148,15 @@ const SETTINGS_SECTIONS = [
   { id: 'security' as const, label: 'Account', icon: Shield },
 ]
 
+/**
+ * Subscription notifications go to the inbox and to push, so they are shown whether or
+ * not push is on. Each playlist's own bell still applies on top of these.
+ */
+const SUBSCRIPTION_TOPICS = [
+  { key: 'playlistUpdates', label: 'Playlist updates', desc: 'New listings in playlists you saved with the bell on, at most every 2 hours' },
+  { key: 'creatorUpdates', label: 'Creators you subscribe to', desc: 'New public playlists from them, at most 3 a day' },
+]
+
 const PUSH_TOPICS = [
   { key: 'pushOpportunities', label: 'Saved opportunities', desc: 'Deadline reminders for opportunities you saved' },
   { key: 'pushEvents', label: 'Saved events', desc: 'Reminders for events you saved' },
@@ -363,7 +372,6 @@ export default function SettingsPage() {
 
   // Privacy State
   const [isPrivate, setIsPrivate] = useState(false)
-  const [showConnections, setShowConnections] = useState(true)
 
   // Preferences State (notificationSettings from backend + local UI)
   const [preferences, setPreferences] = useState({
@@ -383,7 +391,9 @@ export default function SettingsPage() {
     pushConnectionPosts: true,
     pushFunReminders: true,
     pushPromotions: true,
-    promotionPopups: true
+    promotionPopups: true,
+    playlistUpdates: true,
+    creatorUpdates: true
   })
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   const [savingPushPref, setSavingPushPref] = useState(false)
@@ -418,7 +428,12 @@ export default function SettingsPage() {
     fetch(`${API_BASE_URL}/api/users/preferences`, { headers: getAuthHeaders() })
       .then((r) => r.json())
       .then((data) => {
-        if (cancelled || !data?.data?.preferences) return
+        if (cancelled) return
+        // No preferences row yet (404): the defaults stand, and switches must still work.
+        if (!data?.data?.preferences) {
+          setPreferencesLoaded(true)
+          return
+        }
         const ns = data.data.preferences.notificationSettings || {}
         setPreferences((p) => ({
           ...p,
@@ -438,7 +453,9 @@ export default function SettingsPage() {
           pushConnectionPosts: ns.pushConnectionPosts !== false,
           pushFunReminders: ns.pushFunReminders !== false,
           pushPromotions: ns.pushPromotions !== false,
-          promotionPopups: ns.promotionPopups !== false
+          promotionPopups: ns.promotionPopups !== false,
+          playlistUpdates: ns.playlistUpdates !== false,
+          creatorUpdates: ns.creatorUpdates !== false
         }))
         setPreferencesLoaded(true)
       })
@@ -500,7 +517,6 @@ export default function SettingsPage() {
       
       // Privacy
       setIsPrivate((user as any).isPrivate || false)
-      setShowConnections((user as any).showConnections !== false)
 
     }
   }, [user, profile])
@@ -593,7 +609,6 @@ export default function SettingsPage() {
     fieldOfStudy,
     institution,
     isPrivate,
-    showConnections,
     // Arrays/objects – stringify to keep deps simple
     JSON.stringify(skills),
     JSON.stringify(socialLinks),
@@ -732,8 +747,7 @@ export default function SettingsPage() {
         socialLinks: Object.fromEntries(
           Object.entries(socialLinkResults).filter(([_, v]) => v)
         ),
-        isPrivate,
-        showConnections
+        isPrivate
       }
 
       const response = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -1368,6 +1382,25 @@ export default function SettingsPage() {
                           />
                         ))
                       : null}
+                  </div>
+                </SettingsSection>
+
+                <SettingsSection
+                  title="Subscriptions"
+                  description="Updates from playlists and creators you subscribe to, in your inbox and as push."
+                >
+                  <div>
+                    {SUBSCRIPTION_TOPICS.map(({ key, label, desc }) => (
+                      <ToggleRow
+                        key={key}
+                        id={key}
+                        label={label}
+                        description={desc}
+                        checked={!!(preferences as Record<string, unknown>)[key]}
+                        disabled={!preferencesLoaded}
+                        onChange={(checked) => saveNotificationPreference(key, checked)}
+                      />
+                    ))}
                   </div>
                 </SettingsSection>
 

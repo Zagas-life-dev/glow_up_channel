@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
@@ -33,7 +33,24 @@ import {
   RiHeartLine,
   RiHeartFill,
   RiEyeLine,
+  RiNotification3Fill,
+  RiGroupLine,
+  RiNotificationOffLine,
 } from "react-icons/ri"
+import { SubscribeCreatorButton } from "@/components/up/subscribe-creator-button"
+import { setPlaylistBell } from "@/lib/subscriptions"
+import { ItemStatusRow, GroupActivityFeed, InviteLinkBox } from "@/components/playlists/group-parts"
+import {
+  getGroupActivity,
+  getGroupTracking,
+  getMyStatuses,
+  leavePlaylist,
+  setGroupStatus,
+  setStatusVisible,
+  type DirectStatus,
+  type GroupActivity,
+  type GroupTrackingItem,
+} from "@/lib/groups"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +69,7 @@ import { toast } from "sonner"
 import { typeConfigFor, playlistItemHref } from "@/lib/playlist-item-display"
 import { KindChip, toUpKind } from "@/components/up/kind"
 import { trackPlaylistOpen, trackPlaylistShare } from '@/lib/tracking'
+import { playlistViewSource, rememberSignupPlaylist } from "@/lib/playlist-attribution"
 import {
   formatCount,
   recordPlaylistClick,
@@ -80,6 +98,7 @@ export default function PlaylistDetailPage() {
     savePlaylist,
     unsavePlaylist,
     isPlaylistSaved,
+    fetchSavedPlaylists,
   } = usePlaylist()
   const { user, isAuthenticated } = useAuth()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
@@ -115,7 +134,11 @@ export default function PlaylistDetailPage() {
             trackPlaylistOpen(playlistId)
             // The public view count. Deduped server-side to one per viewer per day,
             // and the owner's own visits never count, so this is safe on every open.
-            void recordPlaylistView(playlistId)
+            // The source feeds the creator dashboard's traffic sources.
+            void recordPlaylistView(playlistId, playlistViewSource())
+            // Creators Program: a signed-out visitor who signs up later counts as a
+            // view of the public playlist that brought them.
+            if (found.isPublic) rememberSignupPlaylist(playlistId)
           }
         }
       } catch (err: unknown) {
@@ -155,6 +178,73 @@ export default function PlaylistDetailPage() {
   }, [playlist?._id])
 
   const items = useMemo(() => playlist?.items ?? [], [playlist])
+
+  // Groups + shared tracking: members' statuses per item, the viewer's own status
+  // badge on every playlist, and the group feed.
+  const isGroup = playlist?.isGroup === true
+  const [groupTracking, setGroupTracking] = useState<Record<string, GroupTrackingItem>>({})
+  const [myStatuses, setMyStatuses] = useState<Record<string, string>>({})
+  const [activity, setActivity] = useState<GroupActivity[] | null>(null)
+  const [groupTab, setGroupTab] = useState<"listings" | "activity">("listings")
+
+  const loadTracking = useCallback(async () => {
+    if (!playlist || !isAuthenticated) return
+    try {
+      if (playlist.isGroup && playlist.myRole) {
+        const t = await getGroupTracking(playlist._id)
+        setGroupTracking(Object.fromEntries(t.items.map((i) => [i.contentId, i])))
+        setMyStatuses(Object.fromEntries(t.items.filter((i) => i.myStatus).map((i) => [i.contentId, i.myStatus as string])))
+      } else {
+        setMyStatuses((await getMyStatuses(playlist._id)).statuses)
+      }
+    } catch {
+      // Badges are extra: the list still shows without them.
+    }
+  }, [playlist, isAuthenticated])
+
+  useEffect(() => {
+    void loadTracking()
+  }, [loadTracking])
+
+  useEffect(() => {
+    if (!isGroup || groupTab !== "activity" || !playlist?.myRole) return
+    setActivity(null)
+    getGroupActivity(playlist._id).then((d) => setActivity(d.activity)).catch(() => setActivity([]))
+  }, [isGroup, groupTab, playlist?._id, playlist?.myRole])
+
+  const handleSetGroupStatus = async (contentType: string, contentId: string, status: DirectStatus) => {
+    if (!playlist) return
+    try {
+      await setGroupStatus(playlist._id, contentType, contentId, status)
+      toast.success("Status saved")
+      await loadTracking()
+    } catch (err) {
+      toast.error((err as Error).message || "Couldn't save your status")
+    }
+  }
+
+  const handleStatusVisible = async (visible: boolean) => {
+    if (!playlist) return
+    setPlaylist((current) => (current ? { ...current, myStatusVisible: visible } : current))
+    try {
+      await setStatusVisible(playlist._id, visible)
+      await loadTracking()
+    } catch (err) {
+      setPlaylist((current) => (current ? { ...current, myStatusVisible: !visible } : current))
+      toast.error((err as Error).message)
+    }
+  }
+
+  const handleLeave = async () => {
+    if (!playlist) return
+    try {
+      await leavePlaylist(playlist._id)
+      toast.success(playlist.isGroup ? "You left the group" : "You left this playlist")
+      router.push("/playlists")
+    } catch (err) {
+      toast.error((err as Error).message)
+    }
+  }
 
   const typeCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -283,6 +373,20 @@ export default function PlaylistDetailPage() {
     }
   }
 
+  // The bell: notifications for a saved public list. The list stays saved either way.
+  const handleBell = async () => {
+    if (!playlist) return
+    const next = !playlist.bell
+    setPlaylist((current) => (current ? { ...current, bell: next } : current))
+    try {
+      await setPlaylistBell(playlist._id, next)
+      toast.success(next ? "You'll get updates from this playlist" : "Updates turned off. It stays saved.")
+    } catch (err) {
+      setPlaylist((current) => (current ? { ...current, bell: !next } : current))
+      toast.error((err as Error).message || "Couldn't change notifications")
+    }
+  }
+
   const handleSavePlaylist = async () => {
     if (!playlist || !isAuthenticated) return
 
@@ -293,10 +397,20 @@ export default function PlaylistDetailPage() {
         toast.success("Playlist unsaved")
       } else {
         await savePlaylist(playlist._id)
-        toast.success("Playlist saved")
+        toast.success(playlist.subscribable ? "Saved. You'll get its updates." : "Playlist saved")
       }
+      // Save = subscribe: saving a public list turns the bell on, unsaving turns it off.
       setPlaylist((current) =>
-        current ? { ...current, saveCount: Math.max(0, (current.saveCount ?? 0) + (isSaved ? -1 : 1)) } : current,
+        current
+          ? {
+              ...current,
+              saveCount: Math.max(0, (current.saveCount ?? 0) + (isSaved ? -1 : 1)),
+              subscriberCount: current.subscribable
+                ? Math.max(0, (current.subscriberCount ?? 0) + (isSaved ? -1 : 1))
+                : current.subscriberCount,
+              bell: isSaved ? false : Boolean(current.subscribable),
+            }
+          : current,
       )
     } catch (err) {
       console.error("Error saving playlist:", err)
@@ -340,7 +454,9 @@ export default function PlaylistDetailPage() {
    * for owners of a private one.
    */
   const primaryAction: "save" | "share" | "edit" | null =
-    isAuthenticated && !isOwner ? "save" : playlist.isPublic ? "share" : canEdit ? "edit" : null
+    // A group is not saved or shared: its owner edits it, members just use it.
+    isGroup ? (isOwner ? "edit" : null)
+    : isAuthenticated && !isOwner ? "save" : playlist.isPublic ? "share" : canEdit ? "edit" : null
 
   const renderPrimaryAction = (variant: "full" | "compact") => {
     if (!primaryAction) return null
@@ -492,8 +608,8 @@ export default function PlaylistDetailPage() {
                 </h1>
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
-                    {playlist.isPublic ? <RiGlobalLine className="h-3.5 w-3.5" /> : <RiLockLine className="h-3.5 w-3.5" />}
-                    {playlist.isPublic ? "Public" : "Private"}
+                    {isGroup ? <RiGroupLine className="h-3.5 w-3.5" /> : playlist.isPublic ? <RiGlobalLine className="h-3.5 w-3.5" /> : <RiLockLine className="h-3.5 w-3.5" />}
+                    {isGroup ? `Group · ${playlist.memberCount ?? creatorCount} members` : playlist.isPublic ? "Public" : "Private"}
                   </span>
                   <span aria-hidden>·</span>
                   <span className="tabular-nums">{playlist.itemCount ?? items.length} items</span>
@@ -509,7 +625,12 @@ export default function PlaylistDetailPage() {
                   {(playlist.saveCount ?? 0) > 0 ? (
                     <>
                       <span aria-hidden>·</span>
-                      <span className="tabular-nums">{formatCount(playlist.saveCount)} saved</span>
+                      {/* A public list's saves are its subscribers (save = subscribe). */}
+                      <span className="tabular-nums">
+                        {playlist.subscribable
+                          ? `${formatCount(playlist.subscriberCount ?? playlist.saveCount)} ${(playlist.subscriberCount ?? playlist.saveCount) === 1 ? "subscriber" : "subscribers"}`
+                          : `${formatCount(playlist.saveCount)} saved`}
+                      </span>
                     </>
                   ) : null}
                   {(playlist.metrics?.likeCount ?? 0) > 0 ? (
@@ -520,7 +641,7 @@ export default function PlaylistDetailPage() {
                   ) : null}
                 </p>
                 {/* Reach is the owner's number: only owners and collaborators receive these fields. */}
-                {playlist.metrics?.impressionCount !== undefined ? (
+                {playlist.metrics?.impressionCount !== undefined && !isGroup ? (
                   <p className="mt-1 text-[12px] tabular-nums text-muted-foreground/80">
                     Seen {formatCount(playlist.metrics.impressionCount)} times in Discover
                     {" · "}
@@ -563,9 +684,41 @@ export default function PlaylistDetailPage() {
               </span>
             </button>
 
+            {/* Subscribe to the creator, from the list (replaces Follow). */}
+            {!isOwner && !isGroup && playlist.createdBy?._id ? (
+              <SubscribeCreatorButton
+                creatorId={playlist.createdBy._id}
+                initialCount={playlist.creatorSubscriberCount}
+                size="sm"
+                className="mt-2"
+                onSubscribed={(alsoPlaylists) => {
+                  // "+ all their public playlists" saved this one and turned its bell on.
+                  if (!alsoPlaylists || !playlist.subscribable) return
+                  void fetchSavedPlaylists()
+                  setPlaylist((current) => (current ? { ...current, bell: true } : current))
+                }}
+              />
+            ) : null}
+
             <div className="mt-4 flex items-center gap-2 lg:flex-col lg:items-stretch">
               {renderPrimaryAction("full")}
-              {isAuthenticated && !canEdit ? (
+              {isAuthenticated && isSaved && playlist.subscribable && !isOwner ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBell}
+                  aria-pressed={Boolean(playlist.bell)}
+                  aria-label={playlist.bell ? "Turn off updates from this playlist" : "Get updates from this playlist"}
+                  className={cn(
+                    "h-11 min-w-11 px-3 lg:w-full",
+                    playlist.bell && "border-transparent bg-up-orange-tint text-up-orange-ink hover:bg-up-orange-tint",
+                  )}
+                >
+                  {playlist.bell ? <RiNotification3Fill className="h-5 w-5" /> : <RiNotificationOffLine className="h-5 w-5" />}
+                  <span className="ml-1.5 hidden text-sm lg:inline">{playlist.bell ? "Updates on" : "Updates off"}</span>
+                </Button>
+              ) : null}
+              {isAuthenticated && !canEdit && !isGroup ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -614,6 +767,29 @@ export default function PlaylistDetailPage() {
 
           {/* Items — one list at every width, hairline-separated instead of stacked cards. */}
           <section className="pb-8 lg:py-8">
+            {isGroup && playlist.myRole ? (
+              <div className="mb-3 flex gap-1" role="tablist">
+                {(["listings", "activity"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    role="tab"
+                    aria-selected={groupTab === t}
+                    onClick={() => setGroupTab(t)}
+                    className={cn(
+                      "min-h-9 rounded-full px-4 text-sm font-medium transition-colors",
+                      groupTab === t ? "bg-foreground text-background" : "bg-up-fill text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {t === "listings" ? "Listings" : "Activity"}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {isGroup && groupTab === "activity" ? (
+              <GroupActivityFeed items={activity} />
+            ) : (
+            <>
             <div className="flex items-center justify-between gap-3 pb-3">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 {items.length} {items.length === 1 ? "item" : "items"}
@@ -702,6 +878,15 @@ export default function PlaylistDetailPage() {
                             <span className="font-bold text-foreground">{config.label}</span>
                             {meta ? ` · ${meta}` : null}
                           </p>
+                          {/* Your status on every playlist; in a group, members' statuses and a quick set. */}
+                          {isAuthenticated && item.contentType !== "gift" ? (
+                            <ItemStatusRow
+                              myStatus={myStatuses[String(item.contentId)]}
+                              selfId={user?._id}
+                              group={isGroup ? groupTracking[String(item.contentId)] : null}
+                              onSet={isGroup && playlist.myRole ? (status) => handleSetGroupStatus(item.contentType, String(item.contentId), status) : undefined}
+                            />
+                          ) : null}
                         </div>
 
                         <div className="relative z-10 flex shrink-0 items-center">
@@ -739,6 +924,8 @@ export default function PlaylistDetailPage() {
                 No {typeConfigFor(typeFilter).label.toLowerCase()} items in this playlist.
               </p>
             ) : null}
+            </>
+            )}
           </section>
         </div>
       </div>
@@ -747,9 +934,11 @@ export default function PlaylistDetailPage() {
       <Sheet open={showCreators} onOpenChange={setShowCreators}>
         <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto rounded-t-3xl sm:mx-auto sm:max-w-md">
           <SheetHeader className="mb-4">
-            <SheetTitle>Creators</SheetTitle>
+            <SheetTitle>{isGroup ? "Members" : "Creators"}</SheetTitle>
             <SheetDescription>
-              {creatorCount === 1 ? "This playlist has one creator." : `${creatorCount} people build this playlist.`}
+              {isGroup
+                ? `${creatorCount} ${creatorCount === 1 ? "member" : "members"}. No member limit.`
+                : creatorCount === 1 ? "This playlist has one creator." : `${creatorCount} people build this playlist.`}
             </SheetDescription>
           </SheetHeader>
 
@@ -779,7 +968,7 @@ export default function PlaylistDetailPage() {
             ))}
           </ul>
 
-          {isOwner ? (
+          {isOwner || (isGroup && playlist.myRole === "editor") ? (
             <Button
               type="button"
               variant="outline"
@@ -790,7 +979,33 @@ export default function PlaylistDetailPage() {
               }}
             >
               <RiUserAddLine className="mr-2 h-4 w-4" />
-              Invite collaborators
+              {isGroup ? "Invite by email" : "Invite collaborators"}
+            </Button>
+          ) : null}
+          {isGroup && (playlist.myRole === "owner" || playlist.myRole === "editor") ? (
+            <InviteLinkBox
+              playlistId={playlist._id}
+              link={playlist.inviteLink}
+              onChange={(link) => setPlaylist((current) => (current ? { ...current, inviteLink: link } : current))}
+            />
+          ) : null}
+          {isGroup && playlist.myRole ? (
+            <label className="mt-4 flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-up-lg border border-border px-3">
+              <span>
+                <span className="block text-sm font-semibold text-foreground">Keep my status private</span>
+                <span className="block text-[12px] text-muted-foreground">Members won't see where you are on each listing.</span>
+              </span>
+              <input
+                type="checkbox"
+                className="h-5 w-5 accent-[#FF6A00]"
+                checked={playlist.myStatusVisible === false}
+                onChange={(e) => void handleStatusVisible(!e.target.checked)}
+              />
+            </label>
+          ) : null}
+          {playlist.myRole && playlist.myRole !== "owner" ? (
+            <Button type="button" variant="outline" className="mt-4 h-11 w-full text-destructive" onClick={handleLeave}>
+              {isGroup ? "Leave group" : "Leave playlist"}
             </Button>
           ) : null}
         </SheetContent>

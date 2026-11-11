@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP Phones 3D</title>
+<style>
+  :root { --navy: #0B1233; --navy-deep: #060a1f; --orange: #FF6A00; }
+  html, body { margin: 0; height: 100%; background: var(--navy-deep); overflow: hidden; }
+  #stage {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(60% 55% at 50% 62%, rgba(255,106,0,.30), rgba(255,106,0,0) 70%),
+      radial-gradient(40% 40% at 12% 18%, rgba(70,90,200,.25), rgba(0,0,0,0) 70%),
+      radial-gradient(120% 90% at 50% 40%, var(--navy) 0%, var(--navy-deep) 100%);
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+// Screens shown, left to right. Each screenshot is 1170x2400 (390x800 @3x).
+const PHONES = [
+  { img: "shots/events.png",    pos: [-2.45, -0.22, -1.1], rot: [0.10,  0.70,  0.14] },
+  { img: "shots/oppdetail.png", pos: [-1.28,  0.10, -0.25], rot: [0.02,  0.42,  0.05] },
+  { img: "shots/home.png",      pos: [ 0.00,  0.05,  0.45], rot: [-0.04, -0.10, 0.02] },
+  { img: "shots/playlists.png", pos: [ 1.28,  0.16, -0.25], rot: [0.02, -0.42, -0.06] },
+  { img: "shots/jobdetail.png", pos: [ 2.45, -0.18, -1.1], rot: [0.10, -0.70, -0.14] },
+];
+
+const Q = new URLSearchParams(location.search);
+// ?single=<shot>&ry=<yaw>&rx=<pitch>&rz=<roll> renders one phone on a transparent page.
+const SINGLE = Q.get("single");
+if (SINGLE) document.getElementById("stage").style.display = "none", document.body.style.background = "transparent", document.documentElement.style.background = "transparent";
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Number(new URLSearchParams(location.search).get("dpr")) || Math.min(devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(26, W / H, 0.1, 100);
+camera.position.set(0, 0.75, 7.3);
+camera.lookAt(0, -0.02, 0);
+
+// Lights: warm key, orange rim from behind, cool fill.
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(1.5, 9, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -6; key.shadow.camera.right = 6;
+key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
+key.shadow.radius = 14;
+key.shadow.blurSamples = 24;
+key.shadow.bias = -0.0005;
+scene.add(key);
+const rim = new THREE.PointLight(0xff6a00, 30, 14);
+rim.position.set(0, 1.5, -3);
+scene.add(rim);
+const fill = new THREE.PointLight(0x6f86ff, 12, 14);
+fill.position.set(-5, 2, 3);
+scene.add(fill);
+
+// Floor that only shows shadows.
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.32 }));
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -1.2;
+floor.receiveShadow = true;
+if (!SINGLE) scene.add(floor);
+
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+
+// Shape UVs come out in local units; map them to 0..1 so a texture fills the shape.
+function fitUVs(geo, w, h) {
+  const p = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / w + 0.5, p.getY(i) / h + 0.5);
+  uv.needsUpdate = true;
+}
+
+const loadImage = src => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+
+// Screen texture: status bar (time + island) on top, screenshot below, rounded corners.
+function screenTexture(img) {
+  const cw = 1170, ch = 2532, bar = ch - img.height;
+  const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+  const g = c.getContext("2d");
+  // Status bar takes the page's own top colour.
+  const probe = document.createElement("canvas"); probe.width = 1; probe.height = 1;
+  const pg = probe.getContext("2d"); pg.drawImage(img, 20, 6, 1, 1, 0, 0, 1, 1);
+  const [r, gg, b] = pg.getImageData(0, 0, 1, 1).data;
+  g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, cw, bar);
+  g.drawImage(img, 0, bar);
+  g.fillStyle = "#fff";
+  g.font = "600 46px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.textBaseline = "middle";
+  g.fillText("9:41", 118, bar / 2 + 4);
+  // Signal bars, wifi-ish dots and battery on the right.
+  for (let i = 0; i < 4; i++) g.fillRect(842 + i * 18, bar / 2 + 14 - (i + 1) * 7, 12, (i + 1) * 7);
+  g.beginPath(); g.arc(940, bar / 2 + 12, 22, Math.PI * 1.22, Math.PI * 1.78); g.lineWidth = 7; g.strokeStyle = "#fff"; g.stroke();
+  g.beginPath(); g.arc(940, bar / 2 + 12, 9, Math.PI * 1.22, Math.PI * 1.78); g.stroke();
+  g.lineWidth = 4; g.strokeRect(990, bar / 2 - 14, 66, 32);
+  g.fillRect(996, bar / 2 - 8, 50, 20);
+  g.fillRect(1060, bar / 2 - 5, 5, 14);
+  // Dynamic island.
+  g.fillStyle = "#000";
+  g.beginPath(); g.roundRect(cw / 2 - 185, 30, 370, 106, 53); g.fill();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+
+const SW = 0.72, SH = SW * 2532 / 1170;      // screen
+const BW = SW + 0.06, BH = SH + 0.06, BD = 0.09; // body
+
+const frameMat = new THREE.MeshPhysicalMaterial({ color: 0x2b3042, metalness: 0.9, roughness: 0.28, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x050505, metalness: 0.1, roughness: 0.08, clearcoat: 1 });
+const buttonMat = new THREE.MeshStandardMaterial({ color: 0x3a4055, metalness: 0.9, roughness: 0.3 });
+
+function makePhone(texture) {
+  const phone = new THREE.Group();
+  const body = new THREE.Mesh(new RoundedBoxGeometry(BW, BH, BD, 8, 0.11), frameMat);
+  body.castShadow = true;
+  phone.add(body);
+  const glass = new THREE.Mesh(new THREE.ShapeGeometry(roundedRectShape(BW - 0.012, BH - 0.012, 0.105), 24), glassMat);
+  glass.position.z = BD / 2 + 0.0006;
+  phone.add(glass);
+  const sg = new THREE.ShapeGeometry(roundedRectShape(SW, SH, 0.085), 24);
+  fitUVs(sg, SW, SH);
+  const screen = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
+  screen.position.z = BD / 2 + 0.0012;
+  phone.add(screen);
+  // Side buttons.
+  const btn = (x, y, h) => { const m = new THREE.Mesh(new RoundedBoxGeometry(0.014, h, 0.03, 2, 0.006), buttonMat); m.position.set(x, y, 0); phone.add(m); };
+  btn(-BW / 2 - 0.004, 0.48, 0.07);
+  btn(-BW / 2 - 0.004, 0.33, 0.13);
+  btn(-BW / 2 - 0.004, 0.17, 0.13);
+  btn(BW / 2 + 0.004, 0.3, 0.2);
+  // Subtle glare across the glass.
+  const glare = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ map: glareTexture, transparent: true, depthWrite: false, toneMapped: false }));
+  glare.position.z = BD / 2 + 0.0018;
+  phone.add(glare);
+  return phone;
+}
+
+const glareTexture = (() => {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 512;
+  const g = c.getContext("2d");
+  const grad = g.createLinearGradient(0, 0, 256, 512);
+  grad.addColorStop(0, "rgba(255,255,255,0.10)");
+  grad.addColorStop(0.35, "rgba(255,255,255,0.03)");
+  grad.addColorStop(0.36, "rgba(255,255,255,0)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad; g.fillRect(0, 0, 256, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+
+const list = SINGLE
+  ? [{ img: `shots/${SINGLE}.png`, pos: [0, 0, 0], rot: [Number(Q.get("rx") || 0), Number(Q.get("ry") || 0), Number(Q.get("rz") || 0)] }]
+  : PHONES;
+if (SINGLE) {
+  // Frame one phone so it fills the portrait page with a small margin.
+  camera.fov = 22; camera.aspect = W / H;
+  const dist = (BH * 1.12) / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camera.position.set(0, 0, dist); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+  rim.position.set(0, 1.5, -2); rim.intensity = 18; fill.position.set(-3, 1, 3); fill.intensity = 4;
+}
+const images = await Promise.all(list.map(p => loadImage(p.img)));
+list.forEach((p, i) => {
+  const phone = makePhone(screenTexture(images[i]));
+  phone.position.set(...p.pos);
+  phone.rotation.set(...p.rot);
+  scene.add(phone);
+});
+
+renderer.render(scene, camera);
+window.READY = true;
+
+// Live view: slow drift so the page is nice to look at; ?still keeps it fixed for export.
+if (!Q.has("still") && !SINGLE) {
+  const t0 = performance.now();
+  renderer.setAnimationLoop(() => {
+    const t = (performance.now() - t0) / 1000;
+    camera.position.x = Math.sin(t * 0.25) * 0.6;
+    camera.lookAt(0, -0.05, 0);
+    renderer.render(scene, camera);
+  });
+}
+</script>
+</body>
+</html>

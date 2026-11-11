@@ -91,6 +91,21 @@ export interface Playlist {
   isSaved?: boolean
   /** Whether the signed-in viewer has liked it. Absent when signed out. */
   isLiked?: boolean
+  /** Saved and the bell is on: the viewer gets this list's updates. */
+  bell?: boolean
+  /** Public, not a group, not the Saved list: can be subscribed to. */
+  subscribable?: boolean
+  /** Playlist subscribers (saves while public). */
+  subscriberCount?: number
+  /** The creator's own subscriber count. */
+  creatorSubscriberCount?: number
+  /** Groups only. */
+  isGroup?: boolean
+  myRole?: "owner" | "editor" | "viewer" | null
+  memberCount?: number
+  /** Owners and editors only, while the link is live. */
+  inviteLink?: { token: string; expiresAt: string }
+  myStatusVisible?: boolean | null
   /** Discover only: the 0–100 rank score and the one-line reason it was shown. */
   score?: number
   reason?: "matchesInterests" | "popular" | "justPosted" | null
@@ -171,6 +186,8 @@ export interface CreatePlaylistData {
   description: string
   hashtags: string[]
   isPublic: boolean
+  /** A group: private, invited members, invite link, activity feed, shared tracking. */
+  isGroup?: boolean
   /** Up to 100 items; duplicates by contentId return 409. */
   items?: PlaylistCreateInitialItem[]
 }
@@ -671,7 +688,10 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
   const getPlaylistById = useCallback(async (id: string): Promise<Playlist | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/playlists/${id}`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        // Receives the signed device cookie before the view beacon fires, so a
+        // first-time visitor's one view can count toward unique viewers.
+        credentials: 'include'
       })
 
       const result = await response.json()

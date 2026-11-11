@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creators & Playlists Build Plan</title>
+<style>
+:root{--bg:#fff;--ink:#0B1233;--muted:#5a6280;--line:#e3e6ef;--accent:#FF6A00;--soft:#fff4ec;--ok:#1d7a46;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1233;--ink:#eef0f7;--muted:#a3a9c2;--line:#26305a;--soft:#1a2247}}
+:root[data-theme="dark"]{--bg:#0B1233;--ink:#eef0f7;--muted:#a3a9c2;--line:#26305a;--soft:#1a2247}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px}
+h2{font-size:20px;margin:40px 0 10px;padding-top:16px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 6px}
+p.sub{color:var(--muted);margin:0 0 24px}
+code{font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--soft);padding:1px 5px;border-radius:4px}
+table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+.wrap{overflow-x:auto}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--soft);color:var(--accent);margin-right:4px}
+.phase{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin:14px 0}
+.phase h3{margin-top:0}
+.meta{color:var(--muted);font-size:13px}
+ul{padding-left:20px}li{margin:3px 0}
+.note{background:var(--soft);border-radius:8px;padding:12px 16px;margin:12px 0}
+.lane{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.lane div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+.lane b{display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>Creators Program + Playlist Features: build plan</h1>
+<p class="sub">Merges the two specs of 9 Nov 2026 (UP Creators Program Build Spec, UP Playlist Features Build Spec) into one dependency-ordered build, mapped onto the current code. Written 10 Nov 2026.</p>
+
+<h2>1. What the two specs ask for</h2>
+<div class="wrap"><table>
+<tr><th>Feature</th><th>Spec</th><th>Depends on</th></tr>
+<tr><td>Glow XP removal</td><td>Playlist</td><td>nothing</td></tr>
+<tr><td>Followers removal</td><td>Both</td><td>nothing (see finding A)</td></tr>
+<tr><td>Lifetime unique view counting + anti-fraud + signup attribution</td><td>Creators</td><td>nothing; needs 1-2 weeks silent soak</td></tr>
+<tr><td>Public-playlist rules (limit 5, grandfather, freeze on unpublish, cleanup changes)</td><td>Creators</td><td>nothing</td></tr>
+<tr><td>Playlist subscriptions (save = subscribe, bell) + creator subscriptions</td><td>Both</td><td>notification batching</td></tr>
+<tr><td>Notification batching (2h) + new uncapped types</td><td>Playlist</td><td>nothing</td></tr>
+<tr><td>Creator dashboard (analytics)</td><td>Creators</td><td>counting, subscriptions</td></tr>
+<tr><td>Listing requests</td><td>Creators</td><td>notifications only</td></tr>
+<tr><td>Groups (invite link, activity feed, going public)</td><td>Playlist</td><td>batching; public rules for "going public"</td></tr>
+<tr><td>Shared tracking (badges, group view, direct status, deadline nudges)</td><td>Playlist</td><td>groups (badges don't)</td></tr>
+<tr><td>Program + earnings ledger (invite, terms, blocks, collab splits, held/pending)</td><td>Creators</td><td>counting proven, public rules, notifications</td></tr>
+<tr><td>Payouts (bank + Paystack resolve, cash out, admin list, tax)</td><td>Creators</td><td>ledger; tax rate from accountant</td></tr>
+</table></div>
+
+<h2>2. What the code already has (and gaps)</h2>
+<div class="wrap"><table>
+<tr><th>Spec assumes</th><th>Code today</th><th>Gap</th></tr>
+<tr><td>Followers collection to migrate and delete</td><td>None found. Only <code>showConnections</code> flag on <code>models/User.js:38</code></td><td><b>Finding A:</b> nothing to migrate. Removal = drop the flag. <code>creator_subscriptions</code> starts empty.</td></tr>
+<tr><td>Glow XP</td><td><code>services/glowScoreService</code>, <code>config/glowScoreConfig.js</code>, callers in <code>engagementController.js</code> (save/like/register) and <code>applicationTrackerController.js:324</code>; frontend in <code>app/home-client.tsx</code>, <code>lib/api-client.ts</code></td><td>Straight removal. Keep <code>engagementScore</code>.</td></tr>
+<tr><td>Viewer key shared by logged-in + anon</td><td><code>middleware/viewerIdentity.js:148</code>: key is <code>u:userId</code> OR <code>d:deviceId</code></td><td><b>Finding B:</b> anon view then login on same device = 2 keys = counted twice. Fix: write a device row and a user row; count only if neither existed.</td></tr>
+<tr><td>Per-IP cap</td><td>IP not stored in the ledger</td><td>Store a hashed IP on <code>playlistViews</code>; daily count per (playlist, ipHash).</td></tr>
+<tr><td>Owner/collab/bot exclusion</td><td><code>playlistMetricsService.js</code> <code>isManager</code> + <code>skipReasonFor</code></td><td>Reuse as is.</td></tr>
+<tr><td>Signup attribution</td><td>None in <code>authController.js</code></td><td>Add <code>signupSourcePlaylistId</code>; frontend passes it from the playlist page.</td></tr>
+<tr><td>Email verification mandatory</td><td><code>emailVerified</code> flag exists; enforcement not confirmed</td><td>Counting must check <code>emailVerified</code> itself.</td></tr>
+<tr><td>Tracker entry without click</td><td><code>models/ApplicationTracker.js:166</code> defaults <code>clickedAt</code> to now</td><td>Allow null when <code>source: "group"</code>, else the return sheet fires.</td></tr>
+<tr><td>Uncapped dispatcher types</td><td><code>notificationDispatcher.js:48</code> type table (e.g. <code>tracker_ask</code> uncapped)</td><td>Add 5 types. Creator cap of 3/day is a new per-type ceiling.</td></tr>
+<tr><td>Crons</td><td><code>cron-worker/wrangler.toml</code> runs every 5 min</td><td>Add 2h batch flush + daily deadline nudge + daily pending→available as branches of the same tick.</td></tr>
+<tr><td>Monthly cleanup</td><td><code>playlistCleanupService.js</code> deletes idle dead lists</td><td>Skip lists with ledger rows (make private), skip groups with 2+ members, log swept items.</td></tr>
+<tr><td>Paystack</td><td>Used in promotion/WWU/webhook code</td><td>Reuse secret + client for bank account resolve.</td></tr>
+</table></div>
+
+<h2>3. Conflicts between the two specs</h2>
+<ul>
+<li><b>Subscriptions data model.</b> Creators spec: one <code>subscriptions</code> collection. Playlist spec: <code>creator_subscriptions</code> + <code>users.savedPlaylists[].notify</code>. <b>Use the Playlist spec version</b> (it says so itself). Playlist subscriber count = saves while public.</li>
+<li><b>Subscriptions stage.</b> Creators stage 2 is replaced by Playlist stage 2.</li>
+<li><b>Member limits.</b> Groups have no member limit; public collabs have max 5 earning members. Only enforced when a group goes public.</li>
+<li><b>Cleanup.</b> Both specs change the monthly cleanup. Do both rule changes in one edit.</li>
+</ul>
+
+<h2>4. Build order</h2>
+<p>Two lanes run side by side. Counting starts first because it needs a silent soak before money moves. Playlist features fill the soak window.</p>
+<div class="lane">
+<div><b>Lane A: counting → money</b>P1 counting (soak) → P6 program + ledger → P7 payouts</div>
+<div><b>Lane B: playlist features</b>P0 removals → P2 rules → P3 subscriptions → P4 dashboard + requests → P5 groups + shared tracking</div>
+</div>
+
+<div class="phase">
+<h3>P0 · Removals <span class="tag">~half day</span></h3>
+<ul>
+<li>Delete <code>glowScoreService</code>, <code>glowScoreConfig</code> and every <code>addXp</code> call; remove XP UI (home, return sheet, profile).</li>
+<li>Followers: drop <code>showConnections</code>. No migration needed (finding A).</li>
+</ul>
+<p class="meta">Blocks nothing. Ship first: it shrinks the surface every later phase touches.</p>
+</div>
+
+<div class="phase">
+<h3>P1 · Unique view counting, silent <span class="tag">2-3 days build</span><span class="tag">1-2 weeks soak</span></h3>
+<ul>
+<li><code>playlistViews</code>: lifetime unique index (playlistId, viewerKey), written next to the existing daily ledger insert in <code>playlistMetricsService.recordView</code>. Device + user rows (finding B).</li>
+<li>Drop unverified accounts, anon without valid cookie, owner/collabs, bots. Per-IP daily cap from <code>programConfig.perIpDailyCap</code>.</li>
+<li><code>playlistStats</code>: uniqueViews, views30d, lastViewAt, frozen.</li>
+<li><code>playlists.publishedAt</code>/<code>unpublishedAt</code>; private = frozen, no counting.</li>
+<li><code>users.signupSourcePlaylistId</code> + count signup as a view.</li>
+<li><code>fraudFlags</code> + spike detector (hourly, new accounts / same IP range). Ring detection can wait for P6.</li>
+<li><code>programConfig</code> collection seeded with all rates.</li>
+</ul>
+<p class="meta">Depends on nothing. Starts the soak clock, so start it day 1 next to P0.</p>
+</div>
+
+<div class="phase">
+<h3>P2 · Public playlist rules + cleanup <span class="tag">1-2 days</span></h3>
+<ul>
+<li>Limit 5 public per creator (owner + accepted editor counts). 6th publish prompts "make one private".</li>
+<li>Grandfather existing public lists; creators over 5 pick which 5 earn (<code>earning</code> flag).</li>
+<li>Exclusions: premium, reserved Saved list, UP's own account.</li>
+<li>Cleanup: lists with ledger rows go private, never deleted; groups with 2+ members skipped; nightly sweep logs removed items for the owner.</li>
+</ul>
+<p class="meta">Needed by P5 (going public checks) and P6 (who earns).</p>
+</div>
+
+<div class="phase">
+<h3>P3 · Subscriptions + notification plumbing <span class="tag">3-4 days</span></h3>
+<ul>
+<li><code>notification_batches</code> + 2h flush in the cron worker. Reused by groups.</li>
+<li>Dispatcher types: <code>playlist_update</code>, <code>creator_update</code> (3/day ceiling), <code>group_invite</code>, <code>group_activity</code>, <code>group_deadline</code>. All outside the 5/day cap. Program types added in P6.</li>
+<li>Save = subscribe: <code>savedPlaylists[].notify</code>, migration sets existing to <code>false</code>. <code>PATCH /playlists/saved/:id/notify</code>.</li>
+<li>Triggers: items added, name/description change. Made private/deleted = drop subscribers silently.</li>
+<li><code>creator_subscriptions</code> + <code>POST/DELETE /creators/:id/subscribe</code>, "also their playlists" toggle, Subscribe on profile and card creator name.</li>
+<li>Public subscriber counts; one notification settings screen.</li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>P4 · Creator dashboard + listing requests <span class="tag">3 days</span></h3>
+<ul>
+<li>Analytics: unique viewers per list and total, progress to next 1,000, subscribers, top lists, traffic sources, active/inactive.</li>
+<li>Non-member view: progress bar on best public list. Earnings panels added in P6.</li>
+<li><code>listingRequests</code> + admin review + notify both outcomes. Static "tips" content.</li>
+</ul>
+<p class="meta">Needs P1 data and P3 counts. Doubles as the tool to eyeball soak numbers.</p>
+</div>
+
+<div class="phase">
+<h3>P5 · Groups, then shared tracking <span class="tag">groups 3-4 days</span><span class="tag">tracking 3 days</span></h3>
+<ul>
+<li>Groups: <code>isGroup</code>, invite link (7-day, revocable, joins as viewer), <code>POST /playlists/join/:token</code>, leave/remove, <code>group_activity</code> feed, batched activity pushes, going-public check against P2 limits, cleanup rule.</li>
+<li>Status badge on every playlist item (can ship early; no group needed).</li>
+<li><code>collaborators[].statusVisible</code>, <code>GET /playlists/:id/tracking</code> with the simplified status map, direct Started/Submitted/Not for me via existing <code>PATCH /:id/status</code> with <code>source: "group"</code> and null <code>clickedAt</code>.</li>
+<li>Daily deadline nudge (2 days out, once per item per member, replaces same-day started reminder).</li>
+</ul>
+<p class="meta">Navigation placement on hold; build behind a direct route until the nav restructure lands.</p>
+</div>
+
+<div class="phase">
+<h3>P6 · Program + earnings ledger <span class="tag">5-7 days</span></h3>
+<ul>
+<li><code>creatorProgram</code>, append-only <code>earningsLedger</code> (bonus, block, collab_share, reversal).</li>
+<li>Block crediter: on each unique view, if uniqueViews crosses a block boundary, credit. Idempotent by (playlistId, blockNumber) unique index so nothing pays twice at 10 instances.</li>
+<li>First-1,000 trigger: held 5,000, email + in-app popup, 7-day reminder, terms acceptance, release held on join.</li>
+<li>Collab splits: even, round down, remainder to owner; non-member shares held.</li>
+<li>Pending → available after <code>holdDays</code> (daily cron). Flagged lists pause crediting.</li>
+<li>Dashboard earnings panel, block notifications, ring detection.</li>
+</ul>
+<p class="meta">Gate: soak numbers signed off. Terms text must exist before launch.</p>
+</div>
+
+<div class="phase">
+<h3>P7 · Payouts <span class="tag">3-4 days</span></h3>
+<ul>
+<li>Bank details + optional TIN; Paystack resolve and name match vs typed name; fallback save if unresolvable; change re-checks and pauses that week.</li>
+<li>Cash out at ≥ 5,000 available locks the amount; <code>payoutRequests</code>.</li>
+<li>Admin weekly list, mark paid, notify + email. Tax as config percentage shown on statement.</li>
+</ul>
+<p class="meta">Gate: accountant's tax rate (can ship at 0% pending, if allowed).</p>
+</div>
+
+<h2>5. Timeline (one dev, rough)</h2>
+<div class="wrap"><table>
+<tr><th>Week</th><th>Lane A</th><th>Lane B</th></tr>
+<tr><td>1</td><td>P1 counting live, silent</td><td>P0 removals, P2 rules</td></tr>
+<tr><td>2</td><td>soak</td><td>P3 subscriptions</td></tr>
+<tr><td>3</td><td>soak, review via P4</td><td>P4 dashboard, P5 groups</td></tr>
+<tr><td>4</td><td>P6 ledger</td><td>P5 shared tracking</td></tr>
+<tr><td>5</td><td>P7 payouts</td><td>polish, nav placement</td></tr>
+</table></div>
+
+<h2>6. Decisions taken (recommended defaults, 10 Nov 2026)</h2>
+<ul>
+<li>The 9 fit rules: all accepted as written in the Creators spec.</li>
+<li>Subscriptions: Playlist spec model wins (<code>creator_subscriptions</code> + <code>savedPlaylists[].notify</code>). Old <code>connections</code> rows (35, unread by any code) migrate into <code>creator_subscriptions</code>.</li>
+<li>Collab first block: the 5,000 pool applies only if at least one earning member has not yet had a first bonus; otherwise the block pays 2,000 like any other.</li>
+<li>Same device, second account: does not count. Accepted as anti-fraud.</li>
+<li>Email for subscription and group notifications: none in v1 (push + inbox only).</li>
+<li>Config: holdDays 7, perIpDailyCap 5, invite reminder 7 days, invite link expiry 7 days, taxRate 0 until the accountant confirms.</li>
+<li>Nothing ships to production. All testing on localhost:3000 + a dev backend on :3002 pointed at <code>glowup_dev</code>, never <code>glowup_channel</code>.</li>
+</ul>
+
+<h2>Progress</h2>
+<ul>
+<li><b>P0 done (local, uncommitted):</b> Glow XP removed (service, config, 10 award calls, tracker +XP, onboarding XP, <code>/api/users/me/glow</code>, profile fields, frontend types). <code>showConnections</code> removed end to end.</li>
+<li><b>P1 done (local):</b> <code>playlistViews</code> lifetime unique count beside the daily ledger; device + user rows; signed-cookie-only anon; verified-only accounts; per-IP daily cap; <code>playlistStats</code>; <code>publishedAt</code>/<code>unpublishedAt</code> + freeze; signup attribution counted at email verification; hourly <code>playlistSpikeCheck</code> job writing <code>fraudFlags</code>; <code>programConfig</code> with defaults. Frontend sends view source (shared/direct/in-app) and the attributed playlist at signup.</li>
+<li><b>P2 done (local):</b> 5-public limit on create/publish/editor-accept, 5 earning members on invite/publish, 409 with <code>code</code> PUBLIC_LIMIT / TOO_MANY_EDITORS; grandfathered <code>earningPicks</code> (<code>GET /api/playlists/public-limit</code>, <code>PUT /api/playlists/earning-picks</code>); sweep logs removed items (<code>GET /api/playlists/:id/removed-items</code>); monthly cleanup keeps groups with 2+ members and makes earning lists private instead of deleting.</li>
+<li><b>P3 done (local, tested on glowup_dev):</b> save = subscribe with a bell, stored as <code>users.savedPlaylistBells</code> beside <code>savedPlaylists</code> (same meaning as the spec's <code>savedPlaylists[].notify</code>, no change to existing readers, existing saves are bell-off with no migration); <code>PATCH /api/playlists/saved/:id/notify</code>; <code>creator_subscriptions</code> + <code>users.subscriberCount</code> with <code>/api/creators/:id/subscribe</code> and the "+ all their public playlists" toggle; 35 old follows (<code>connections</code>) migrated by <code>scripts/migrate-followers-to-subscriptions.cjs</code> (run on dev only; prod run pending); <code>notification_batches</code> flushed every Worker tick (playlist updates 2h, creator updates 15 min); new dispatcher kinds outside the 5/day cap; creator updates 3/day; per-kind switches in Settings (new "Subscriptions" section); in-app inbox <code>user_inbox</code> + <code>/api/inbox</code> + an unlinked <code>/inbox</code> page (nav placement on hold). Fixed on the way: settings switches never saved for users whose preferences row came only from the timezone report, and never enabled when a user had no preferences row.</li>
+<li><b>P4 done (local, tested on glowup_dev):</b> <code>/creator</code> dashboard (Overview: unique viewers, creator + playlist subscribers, active lists, progress to the 1,000 invite on the best public list, traffic sources from counted unique views, top lists; Playlists: per-list unique viewers, progress to the next 1,000, subscribers, views in 30 days, live items, active/inactive, private lists marked not counted, earning picks for grandfathered creators; Request a listing; Tips). Entry point: "Creator dashboard" button on your own profile. Backend <code>GET /api/creators/me/dashboard</code>, <code>/api/creators/tips</code> (team-editable in <code>content_blocks</code> id <code>creator_tips</code>), <code>listingRequests</code> with max 10 pending, http(s) links only, no duplicate pending link; admin queue at <code>/dashboard/admin/listing-requests</code> (nav: Content → Listing requests); creator notified either way via the new <code>listing_request</code> kind (inbox + push). Bar colour validated with the dataviz checker (#FF6A00 light, #E85F00 dark).</li>
+<li><b>P5 done (local, tested on glowup_dev):</b> groups = private lists with <code>isGroup</code>, created from a third "Group" option in the new-playlist form; editors can invite in groups; 7-day revocable invite link (<code>/playlists/join/[token]</code>, joins as viewer, survives the login round trip); leave; activity feed (joined/left/item added/removed/status change/deadline) with one <code>group_activity</code> push per group per 2 hours; email invites also notify in-app (<code>group_invite</code>); going public turns a group into a normal collab under the Creators Program limits and kills its link. Shared tracking: "You: …" status badge on every playlist item, members' simplified statuses in groups (reasons/notes never shown), "keep my status private", Set my status (Started/Submitted/Not for me) via <code>POST /api/playlists/:id/status</code> and the spec's <code>PATCH /api/tracker/:id/status</code> with <code>source: "group"</code> (entry created with no clickedAt). Daily <code>groupDeadlineNudges</code> (09:30 Lagos): "Deadline in 2 days. 2 of 3 in &lt;group&gt; haven't applied.", once per item per member, replacing a same-day started reminder. Inside a group the Save/Like/Subscribe buttons and Discover reach line are hidden.</li>
+<li><b>P6 done (local, tested on glowup_dev, 11 Nov):</b> <code>creatorProgram</code> + append-only <code>earningsLedger</code> (amounts never edited; mistakes undone by reversal rows; a unique key makes double crediting impossible). Blocks credit right after the view that completes them. Invite = inbox + push + email (email off on dev) + in-app popup (once a day, not on /creator); terms acceptance (draft terms, version-checked); held → available on joining; pending → available after 7 days (daily <code>programDaily</code> job, also 7-day invite reminder and ring detection). Earnings tab on <code>/creator</code>; admin page Content → Creators Program (fraud review, members, removal). Money-moving admin actions are super-admin only.
+  <br><b>Crediting rules pinned:</b> (1) each 1,000 unique viewers is a block; (2) earning members = owner + accepted editors, not UP, not removed, only on their earning lists, max 5; (3) pool 2,000, or 5,000 for block 1 if any earning member hasn't had a first bonus; (4) split evenly, rounded down, remainder to the owner; (5) the owner's share of block 1 is their first bonus (solo list: the whole 5,000); (6) members' shares pending 7 days, non-members' held until they join; (7) a block with no program member pays nothing, except block 1, which invites the owner and credits the held pool; (8) frozen lists and lists with an open fraud flag pause and catch up later. All of the spec's worked examples pass as unit tests.
+  <br><b>Dev only:</b> <code>programConfig.blockSize</code> is 5 in <code>glowup_dev</code> so the flow can be tested by hand; prod uses the default 1,000.</li>
+<li><b>P7 done (local, tested on glowup_dev, 11 Nov):</b> bank details on the Earnings tab (account name, bank, 10-digit number, optional TIN); Paystack resolves the number and every word of the typed name must appear in the bank's name (a mismatch is refused without revealing the bank's name; if Paystack can't be reached the details save as "not checked" and the payout list warns the payer). Account number and TIN encrypted at rest (AES-256-GCM, <code>BANK_DETAILS_KEY</code>); only the last 4 digits leave the server except on the super-admin payout list. Changing the account pauses cash-out for 7 days. Cash out at ₦5,000 available locks the amount (ledger state <code>requested</code>), one open request at a time (enforced by a unique index). Admin → Revenue → Creator payouts (super admin): weekly list with full bank details, Mark paid (rows → paid, tax row recorded, creator gets notification + email) or Not paid (money back to available). Tax is a config percentage (<code>taxRate</code>, 0 until the accountant confirms) shown on each payout.</li>
+<li><b>Full test, 11 Nov:</b> backend 760/760 unit tests (58 suites), frontend 514/514 (42 files), type-check clean, cron schedule verified, and every phase's end-to-end test on dev green (P0–P2 22/22, first visit, P3 20/20, P4 20/20, P5 25/25, P6 18/18, P7 20/20). Fixed during the run: the dashboard's program card ignored invite/member status; group activity pushes counted the reader's own actions; invite copy hardcoded 1,000 / 5,000. The QA super admin (<code>qa+payer-mwbdd8d8@example.test</code>) is set up as a creator for hand testing.
+  <br><b>Dev only:</b> <code>scripts/start-dev.cjs</code> runs a 1-minute ticker (notification batches, pending releases) and shrinks batch windows to 2 minutes via <code>NOTIFY_BATCH_MS</code>; <code>glowup_dev</code>'s <code>programConfig</code> has blockSize 5 and holdDays ≈ 7 minutes. Production keeps 2 hours, 1,000 and 7 days.</li>
+<li><b>Before any of this goes live:</b> set <code>BANK_DETAILS_KEY</code> (64 hex chars) and keep it; Paystack secret key on the backend; final program terms; tax rate; run the followers migration on prod; deploy the cron-worker schedule (notificationBatches, playlistSpikeCheck, groupDeadlineNudges, programDaily); reset or delete <code>glowup_dev</code>'s <code>programConfig</code> (blockSize 5) and drop <code>glowup_dev</code> when testing ends (512 MB cluster).</li>
+<li><b>Tested 10 Nov on glowup_dev:</b> 22/22 API checks (limit, freeze, unique counting, same-device dedupe, unverified/owner excluded, signup attribution, removed-items permissions) + first-visit check; playlist page in the browser on :3000. Fix found in testing: <code>GET /api/playlists/:id</code> now issues the device cookie (and the frontend sends credentials) so a first-time visitor's single view counts.</li>
+<li><b>Cluster quota:</b> the Atlas cluster is a free 512 MB tier shared with prod. A full copy hit the cap and blocked prod writes briefly; the seed script now copies a slim set (~68 MB) and refuses above 400 MB. Drop <code>glowup_dev</code> when testing ends.</li>
+<li><b>Local stack:</b> <code>backend-dev</code> launch config runs <code>scripts/start-dev.cjs</code> on :3002 against <code>glowup_dev</code> with push, email, Cloudinary and Paystack off. <code>scripts/seed-dev-db.cjs</code> fills <code>glowup_dev</code> from prod (read-only on prod).</li>
+</ul>
+
+<h2>7. Still open (needs people, not code)</h2>
+<ul>
+<li>Sign off the 9 "fit" rules (esp. 3, 4, 8).</li>
+<li>Confirm Playlist spec's subscription model wins over Creators spec's <code>subscriptions</code> collection.</li>
+<li>Collab first block: does the 5,000 pool apply if every member already got a bonus?</li>
+<li>Same-device rule: second account on one device does not count (side effect of finding B). OK?</li>
+<li>Email for subscription/group notifications: weekly digest or none?</li>
+<li>Config values: holdDays (7?), perIpDailyCap, invite reminder (7 days), invite link expiry (7 days).</li>
+<li>Program terms text; tax rate; tips content.</li>
+</ul>
+</main>
+</body>
+</html>

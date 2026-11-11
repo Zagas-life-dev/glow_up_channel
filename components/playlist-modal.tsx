@@ -17,6 +17,7 @@ import {
   RiImageAddLine,
   RiLoader4Line,
   RiLockLine,
+  RiGroupLine,
   RiDeleteBinLine,
 } from "react-icons/ri"
 
@@ -78,6 +79,8 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
   const [hashtags, setHashtags] = useState<string[]>([])
   const [tagDraft, setTagDraft] = useState("")
   const [isPublic, setIsPublic] = useState(false)
+  // Groups: chosen at creation; a group can later only go public (becoming a normal collab).
+  const [isGroup, setIsGroup] = useState(false)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [coverRemoved, setCoverRemoved] = useState(false)
@@ -87,6 +90,18 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
   const [error, setError] = useState("")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  /**
+   * New lists: Public, Private or Group. Editing a group: stay a group or go public
+   * (it becomes a normal collab under the Creators Program limits). Editing any other
+   * list: Public or Private as before.
+   */
+  const editingGroup = editPlaylist?.isGroup === true
+  const visibilityOptions: { key: "public" | "private" | "group"; icon: typeof RiGlobalLine; title: string; body: string }[] = [
+    { key: "public", icon: RiGlobalLine, title: "Public", body: editingGroup ? "Becomes a normal public collab" : "Anyone, and it can appear in Discover" },
+    ...(editingGroup ? [] : [{ key: "private" as const, icon: RiLockLine, title: "Private", body: "Only you and people you invite" }]),
+    ...(editingGroup || !editPlaylist ? [{ key: "group" as const, icon: RiGroupLine, title: "Group", body: "Private, with members, a feed and shared tracking" }] : []),
+  ]
+
   // Reset the form whenever it opens, or the playlist being edited changes.
   useEffect(() => {
     if (!isOpen) return
@@ -94,6 +109,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
     setDescription(editPlaylist?.description ?? "")
     setHashtags(editPlaylist?.hashtags ?? [])
     setIsPublic(editPlaylist?.isPublic ?? false)
+    setIsGroup(editPlaylist?.isGroup === true)
     setTagDraft("")
     setCoverFile(null)
     setCoverPreview(null)
@@ -176,7 +192,7 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
     setError("")
     setPhase("saving")
     try {
-      const details = { name: name.trim(), description: description.trim(), hashtags: tags, isPublic }
+      const details = { name: name.trim(), description: description.trim(), hashtags: tags, isPublic: isGroup ? false : isPublic, ...(isGroup && !editPlaylist ? { isGroup: true } : {}) }
       let saved = editPlaylist
         ? await updatePlaylist(editPlaylist._id, details)
         : await createPlaylist(details)
@@ -426,12 +442,9 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
               {/* Visibility — two real choices, so two options rather than a switch. */}
               <fieldset>
                 <legend className="mb-1.5 text-sm font-bold text-foreground">Who can see it</legend>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: true, icon: RiGlobalLine, title: "Public", body: "Anyone, and it can appear in Discover" },
-                    { value: false, icon: RiLockLine, title: "Private", body: "Only you and people you invite" },
-                  ] as const).map((option) => {
-                    const selected = isPublic === option.value
+                <div className={cn("grid gap-2", visibilityOptions.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+                  {visibilityOptions.map((option) => {
+                    const selected = option.key === (isGroup ? "group" : isPublic ? "public" : "private")
                     const Icon = option.icon
                     return (
                       <button
@@ -439,7 +452,10 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
                         type="button"
                         role="radio"
                         aria-checked={selected}
-                        onClick={() => setIsPublic(option.value)}
+                        onClick={() => {
+                          setIsGroup(option.key === "group")
+                          setIsPublic(option.key === "public")
+                        }}
                         className={cn(
                           "rounded-up-lg border-[1.5px] p-3 text-left transition-colors",
                           selected

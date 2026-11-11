@@ -60,6 +60,7 @@ import {
 import { PageShell } from "@/components/layout/page-shell"
 import { isFounderBatch } from '@/lib/roles'
 import { normalizeProfileLink, profileLinkHost } from '@/lib/profile-links'
+import { SubscribeCreatorButton } from '@/components/up/subscribe-creator-button'
 
 interface OnboardingData {
   country: string
@@ -91,7 +92,6 @@ interface ProfileData {
   education: { school?: string; degree?: string; field?: string } | null
   socialLinks: { linkedin?: string; twitter?: string; instagram?: string; github?: string; youtube?: string; tiktok?: string }
   isPrivate: boolean
-  showConnections: boolean
   role: string
   createdAt: string
   playlistCount: number
@@ -642,6 +642,13 @@ export default function ProfilePage() {
                 </span>
               )}
             </div>
+            {/* Subscribe (replaces Follow) with the public subscriber count. On your own
+                profile it shows the count only. */}
+            <SubscribeCreatorButton
+              creatorId={userId}
+              size="sm"
+              className="mb-3 [&>span]:text-up-on-navy-muted"
+            />
             {profile.headline && <p className="mb-2 text-[15px] font-semibold text-up-orange">{profile.headline}</p>}
             {profile.bio && (
               <p className="whitespace-pre-line text-sm leading-relaxed text-up-on-navy-muted">{profile.bio}</p>
@@ -723,6 +730,14 @@ export default function ProfilePage() {
                   >
                     <RiSettingsLine className="mr-2 h-4 w-4" aria-hidden />
                     Edit profile
+                  </Button>
+                </Link>
+              )}
+              {isOwner && (
+                /* Creators Program: analytics, listing requests and tips. */
+                <Link href="/creator" className="min-w-0 flex-1">
+                  <Button type="button" className="h-11 min-h-11 w-full bg-up-orange text-white hover:bg-up-orange">
+                    Creator dashboard
                   </Button>
                 </Link>
               )}
