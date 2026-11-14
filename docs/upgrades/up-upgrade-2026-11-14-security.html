@@ -39,11 +39,11 @@
 <p class="lead"><b>Do this first:</b> change the MongoDB Atlas password. Two connection strings with a user and password are in the backend's git history, and <code>.env.production</code> is tracked there too. Code fixes cannot undo that; only rotation can.</p>
 
 <div class="stats">
-  <div class="stat"><b>16</b><small>holes fixed on the branch</small></div>
-  <div class="stat"><b>14</b><small>left to do, ranked</small></div>
-  <div class="stat"><b>785 / 785</b><small>backend tests pass after</small></div>
-  <div class="stat"><b>519 / 519</b><small>frontend tests pass after</small></div>
-  <div class="stat"><b>48</b><small>backend npm advisories (2 critical, 18 high)</small></div>
+  <div class="stat"><b>33</b><small>holes fixed on the branch (3 rounds)</small></div>
+  <div class="stat"><b>5</b><small>left to do</small></div>
+  <div class="stat"><b>800 / 800</b><small>backend tests pass</small></div>
+  <div class="stat"><b>519 / 519</b><small>frontend tests pass; build passes</small></div>
+  <div class="stat"><b>48 → 12</b><small>backend npm advisories (critical 2 → 0, high 18 → 2)</small></div>
 </div>
 
 <p class="k">How it was done: three read-only audit agents (backend access control; auth, spoofing and injection; frontend and worker). Every fixed item below was re-read at the line before the change. Nothing was pushed, deployed or run against production. The fixes are local commits on branch <code>upgrade/2026-11-14</code> in both repos.</p>
@@ -94,38 +94,69 @@
 <li><b>Connection string in source</b>: <code>scripts/cleanup-all-indexes.js</code> and <code>readMe.md</code> no longer hold one. The old values stay in git history until rotated.</li>
 </ul></div>
 
-<h2>To do next, ranked by impact ÷ size</h2>
+<h2>Fixed in rounds 2 and 3 (same day)</h2>
+
+<div class="item"><h3><span class="tag high">HIGH</span>CORS now allows only UP's own sites</h3>
+<p>The live site is <code>https://www.glowupchannel.com</code> (the bare domain redirects there). Allowed: both of those, <code>glowup-diaries-main.vercel.app</code> and its preview URLs, and localhost outside production. <code>CORS_ORIGIN=*</code> stays as it is and adds nothing; a comma list there adds sites. A cross-site POST/PUT/PATCH/DELETE from any other site gets 403, because CORS alone still lets a simple cross-site POST run. Refused origins are logged once per instance as <code>CORS: refused origin …</code>. <code>src/config/allowedOrigins.js</code>, 6 tests.</p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>View and unique-view farming</h3>
+<ul>
+<li>A device cookie created on the same request no longer counts. Real browsers still count on their first view because they send <code>X-Anon-Id</code>.</li>
+<li>Rotated guest ids: at most 3 per IP per listing per action per day.</li>
+<li>Paid unique views (Creators Program) need a device cookie at least 10 minutes old. The cookie now carries a signed issue time; older cookies stay valid and count as old.</li>
+<li>External click count: once per user per listing per day.</li>
+</ul></div>
+
+<div class="item"><h3><span class="tag med">MEDIUM</span>Accounts</h3>
+<ul>
+<li><b>Token revocation:</b> tokens carry the user's <code>tokenVersion</code>. A password reset or change bumps it, which signs out every older session; the device that changed it gets a fresh pair. Refresh now checks the token type and approval state. Nobody is signed out by the change itself.</li>
+<li><b>Login lockout:</b> 10 wrong passwords in 15 minutes locks password sign-in for that email, counted in Mongo so all instances agree. Reset by email still works. The password is now checked before "deactivated" is said.</li>
+<li><b>Codes:</b> reset and verification codes at most once a minute per account; verification codes now use <code>crypto.randomInt</code> and an atomic attempt cap.</li>
+<li><b>Admins</b> can no longer deactivate other admins; super admins can.</li>
+</ul></div>
+
+<div class="item"><h3><span class="tag med">MEDIUM</span>Abuse and exposure</h3>
+<ul>
+<li>JSON body limit 1 MB (was 10 MB); Work with us orders at most 20 items.</li>
+<li><code>/api/contact</code>: inputs escaped in the team email, name kept to one line, lengths and email checked, 5 per 10 minutes per address, provider errors no longer returned.</li>
+<li>Promotion analytics need sign-in, and only the owner or an admin can read them.</li>
+<li>Push subscriptions must point at a real browser push service (FCM, Mozilla, Apple, Windows), not any URL.</li>
+<li><code>/docs</code> and <code>/api-docs</code> are off in production unless <code>ENABLE_API_DOCS=true</code>.</li>
+<li>Scraper <code>/ingest</code> key compared in constant time.</li>
+</ul></div>
+
+<div class="item"><h3><span class="tag med">MEDIUM</span>Upload keys</h3>
+<p>Per key per 24 hours: 50 hides, 50 link changes, 25 playlist deletions, counted from <code>maintenance_log</code>. Playlist clear no longer deletes a list that earned in the Creators Program (the nightly cleanup already spared those).</p></div>
+
+<div class="item"><h3><span class="tag low">LOW</span>Dead routes retired</h3>
+<p><code>/api/auth/upgrade-to-provider</code> (an unauthenticated password checker), <code>/register/admin</code> and <code>/register/super-admin</code> now answer 410. <code>/api/webhooks/paystack</code> is unmounted: it fed the retired subscriptions billing and called a function that no longer exists. The settings page's upgrade form calls the first one, but nothing opens that form.</p></div>
+
+<div class="item"><h3><span class="tag med">MEDIUM</span>Dependencies</h3>
+<p><code>npm audit fix</code> without breaking upgrades: 48 production advisories down to 12, both criticals (<code>fast-xml-parser</code>, <code>proxy-addr</code>) gone. <code>package.json</code> unchanged; the Docker image installs from the lockfile with <code>npm ci</code>.</p></div>
+
+<h2>Still to do</h2>
 <ol>
-<li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets.</b> Atlas password first, then everything in the tracked <code>.env.production</code> (JWT secrets, Cloudinary, super-admin key). Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
-<li><span class="tag high">HIGH</span><b>Lock CORS to UP's own sites.</b> <code>server.js:124-131</code> allows every origin with credentials. With it, a third-party page can fire counted view beacons from real visitors. Size: 1 hour, needs the list of real origins.</li>
-<li><span class="tag high">HIGH</span><b>Views and Creators Program unique views can be farmed.</b> A cookieless request is given a device id and counted at once (<code>middleware/viewerIdentity.js:127-129</code>). Fix: never count on the request that issues the cookie; require a cookie older than a few minutes for paid counts; reject beacons from other origins. Size: a day. This is money once payouts run.</li>
-<li><span class="tag high">HIGH</span><b>Founder Batch can start an Extreme promotion for up to 365 days.</b> <code>routes/promotions.js:39</code>, <code>promotionController.js:166-320</code>. See Questions. Size: minutes.</li>
-<li><span class="tag med">MEDIUM</span><b>Work with us "paid" is open.</b> <code>POST /api/work-with-us/orders/:ref/paid</code> marks an order paid from the caller's word and returns the order with contact details. Verify the Paystack reference in the backend. <code>routes/workWithUs.js:36</code>. Size: hours.</li>
-<li><span class="tag med">MEDIUM</span><b>Tokens can't be revoked.</b> Logout does nothing server-side and a password reset leaves old tokens valid for up to 30 days. Add a <code>tokenVersion</code> on the user, bump on reset and logout. <code>authController.js:609, 1073</code>. Size: hours.</li>
-<li><span class="tag med">MEDIUM</span><b>Login has no per-account lockout</b>, and the rate limit is per instance in memory (3 to 10 instances). Reset, register and login also reveal which emails exist. Per-email counter in Mongo, uniform replies. Size: hours.</li>
-<li><span class="tag med">MEDIUM</span><b>Body limit and open order route.</b> <code>express.json({ limit: '10mb' })</code> at <code>server.js:176</code>; <code>POST /api/work-with-us/orders</code> takes unbounded <code>items[]</code> and is skipped by the global limiter. Drop the limit to 100 kb where uploads don't need it, cap items at 20. Size: 1 hour.</li>
-<li><span class="tag med">MEDIUM</span><b>Email abuse on open forms.</b> <code>/api/contact</code> puts unescaped name and message into the team email and has no rate limit; Work with us submissions and sign-up codes mail any address with no cooldown. Escape, cap lengths, 60-second cooldown per address. Size: hours.</li>
-<li><span class="tag med">MEDIUM</span><b>Tokens live in localStorage.</b> Any script injection reads the 30-day refresh token. Move the refresh token to an httpOnly cookie; add a full Content-Security-Policy in report-only mode first. <code>lib/api-client.ts:241</code>. Size: a day or more.</li>
-<li><span class="tag med">MEDIUM</span><b>Upload keys are broad.</b> A key can rewrite the link on any live listing and clear other users' empty playlists. Add daily caps per key. <code>maintenanceController.js:512-567</code>. Size: hours.</li>
-<li><span class="tag med">MEDIUM</span><b>48 backend npm advisories</b>, 2 critical (<code>fast-xml-parser</code>, <code>proxy-addr</code>). Run <code>npm audit fix</code> on a branch and re-test. Frontend not audited: <code>pnpm</code> is not installed on this machine. Size: 1 to 2 hours.</li>
-<li><span class="tag low">LOW</span><b>Dead routes still mounted</b> (remove, don't fix): <code>/api/auth/register/admin</code>, <code>/api/auth/upgrade-to-provider</code>, <code>/api/auth/register/super-admin</code>, the three <code>/ingest</code> routes, the Paystack subscriptions webhook. See Questions.</li>
-<li><span class="tag low">LOW</span><b>Small ones.</b> Promotion analytics open with no sign-in (<code>routes/analytics.js:11</code>); click beacon has no dedup (<code>engagementController.js:444</code>); push endpoint URL not checked against real push hosts (<code>pushSubscriptionService.js:23</code>); <code>/docs</code> and <code>/api-docs</code> public; an admin can deactivate another admin (<code>adminController.js:300</code>); fallback encryption key for bank details derives from the JWT secret (<code>fieldCrypto.js:12</code>).</li>
+<li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets</b> (you moved this to later). Atlas password first, then everything in the tracked <code>.env.production</code>. Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
+<li><span class="tag med">MEDIUM</span><b>Work with us "paid" is open.</b> A forged "paid" is caught when an admin approves, because the storefront asks Paystack again then. The gap: the first caller of <code>/paid</code> gets the order's contact details, and forged orders land in the review queue. Fix: the backend verifies the Paystack reference itself. Waiting on Questions 2. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>Tokens live in localStorage.</b> Moving the refresh token to an httpOnly cookie needs the API on a subdomain of the site (for example <code>api.glowupchannel.com</code>), or Safari blocks the cookie. Add a full Content-Security-Policy in report-only mode first. Size: a day or more.</li>
+<li><span class="tag med">MEDIUM</span><b>12 npm advisories left</b> (2 high in <code>cloudinary</code> &lt; 2.7). Fixing needs <code>cloudinary</code> 2.x plus a replacement for <code>multer-storage-cloudinary</code>, and <code>resend</code> 6.x. Frontend packages not audited: <code>pnpm</code> is not installed on this machine. Size: half a day.</li>
+<li><span class="tag low">LOW</span><b>Left as is on purpose:</b> forgot-password still says when an email has no account (sign-up's 409 reveals the same, so hiding it only hurts real users); the bank-detail encryption fallback key (<code>fieldCrypto.js:12</code>) stays, because changing it would make existing saved bank details unreadable. Set <code>BANK_DETAILS_KEY</code> only together with a re-encryption of saved details.</li>
 </ol>
 
 <h2>Needs you</h2>
 <ol>
-<li>Rotate the Atlas database password (Atlas → Database Access), then update the Cloud Run secret.</li>
-<li>Rotate every secret in <code>latest-glowup-channel/.env.production</code>, then <code>git rm --cached .env.production</code> and purge it from history.</li>
+<li>Rotate the Atlas password and the secrets in <code>latest-glowup-channel/.env.production</code> (you moved this to later).</li>
 <li>Check whether <code>github.com/eaaniwezi/latest-glowup-channel</code> is private and who has access.</li>
 <li>Review and merge branch <code>upgrade/2026-11-14</code> in both repos, then deploy. Nothing is live until you do.</li>
-<li>Give me the list of real site origins for the CORS allow-list.</li>
+<li>After deploying, check Cloud Run logs for <code>CORS: refused origin</code>. Any real site there goes into <code>CORS_ORIGIN</code>, comma-separated.</li>
+<li>Optional: a TTL index so old lock records expire: <code>db.login_failures.createIndex({ updatedAt: 1 }, { expireAfterSeconds: 86400 })</code>. Not required; locks end on their own.</li>
 </ol>
 
 <h2>Questions for you</h2>
 <ol>
-<li><b>Should Founder Batch listings go live without review?</b> The old code let the request decide. I set it to always Pending. My pick: keep Pending.</li>
-<li><b>Should Founder Batch be able to start an Extreme promotion themselves?</b> My pick: no, admin grant only.</li>
-<li><b>May I remove the dead sign-up routes</b> (<code>register/admin</code>, <code>upgrade-to-provider</code>, <code>register/super-admin</code>) and the scraper <code>/ingest</code> routes? My pick: yes.</li>
+<li><b>Should Founder Batch be able to start an Extreme promotion themselves?</b> The provider's promote screen offers it on purpose, so I did not block it. Listings now need review before going live, which limits the damage. My pick: admin grant only.</li>
+<li><b>Do the storefront and the backend use the same Paystack account?</b> If yes, the backend can check each payment itself before marking a Work with us order paid. My pick: yes, do it.</li>
+<li><b>Founder Batch listings now always start as Pending.</b> Keep it? My pick: keep.</li>
 </ol>
 
 <h2>Unverified</h2>
@@ -134,7 +165,8 @@
 <li>Whether <code>.env.production</code> holds real values or placeholders. I did not open it.</li>
 <li>Whether the Founder Batch post limit is enforced on create (only seen in the status response).</li>
 <li>Whether the refresh secret differs from the access secret. If equal, an access token works as a refresh token.</li>
-<li>The fixes were proven by tests and build only, not by running the app against a database.</li>
+<li>The fixes were proven by tests and build only, not by running the app against a database or the live site.</li>
+<li>Whether every real browser sends <code>X-Anon-Id</code> on its first view beacon (the code does; old cached app versions may not).</li>
 </ul>
 
 <h2>Checked and fine</h2>
@@ -149,7 +181,7 @@
 <li>Frontend: one raw-HTML sink, and it escapes; no open proxy or image fetch of user URLs; no secrets in <code>NEXT_PUBLIC_*</code>; <code>.env*</code> and key files never committed in the frontend repo.</li>
 </ul>
 
-<p class="k">Baseline before changes: frontend 519/519 tests, lint 0 errors (184 warnings), build compiles. After: frontend 519/519 plus 3 new redirect cases, build compiles; backend 785/785.</p>
+<p class="k">Baseline before changes: frontend 519/519 tests, lint 0 errors (184 warnings), build compiles; backend 785/785. After round 3: frontend 519/519 plus 3 new redirect cases, build passes type checks and all 88 pages; backend 800/800. One full backend run timed out in payouts.test.js under machine load; that file passes alone 3 of 3 and its code was not changed.</p>
 </main>
 </body>
 </html>
