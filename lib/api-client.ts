@@ -1097,7 +1097,11 @@ export class ApiClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword }),
     });
-    return this.handleResponse(response);
+    const result = await this.handleResponse<{ message?: string; tokens?: AuthTokens }>(response);
+    // A password change signs out every other device (the backend bumps the token
+    // version), and hands this one a fresh pair so it stays signed in.
+    if (result?.tokens?.accessToken && result.tokens.refreshToken) this.setTokens(result.tokens);
+    return result;
   }
 
   static async getPlatformStats(): Promise<{

@@ -116,18 +116,26 @@ export async function sendContactEmail(params: ContactEmailParams): Promise<Emai
     }
   }
 
-  const subject = `New contact message from ${name || fromEmail}`
+  // One line, no control characters: the name lands in the subject header.
+  const oneLine = (v: string) => v.replace(/[\u0000-\u001f\u007f]+/g, " ").trim()
+  const subject = `New contact message from ${oneLine(name || fromEmail)}`
 
   const safeMessage = message.trim()
+
+  // Everything the visitor typed is escaped: it goes into an HTML email the team opens.
+  const esc = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+  const safeName = name ? esc(oneLine(name)) : ""
+  const safeFrom = esc(fromEmail)
 
   const htmlBody = `
     <html>
       <body>
         <h2>New Contact Message</h2>
-        <p><strong>From:</strong> ${name ? `${name} &lt;${fromEmail}&gt;` : fromEmail}</p>
-        <p><strong>Email:</strong> ${fromEmail}</p>
+        <p><strong>From:</strong> ${safeName ? `${safeName} &lt;${safeFrom}&gt;` : safeFrom}</p>
+        <p><strong>Email:</strong> ${safeFrom}</p>
         <p><strong>Message:</strong></p>
-        <p>${safeMessage.replace(/\n/g, "<br />")}</p>
+        <p>${esc(safeMessage).replace(/\n/g, "<br />")}</p>
       </body>
     </html>
   `
