@@ -53,6 +53,9 @@ const BOGUS_HOSTNAMES = ['automationcontrolled', 'automationcontrolled.']
 export function cleanUrl(url: string): string {
   if (!url) return url
 
+  // A listing link is opened in the browser: never hand back a script or data URL.
+  if (/^[\s\u0000-\u001f]*(javascript|data|vbscript|file|blob)\s*:/i.test(url)) return ''
+
   // Reject known bogus hostnames (e.g. from browser automation flags mistaken as URLs)
   try {
     const parsed = new URL(url.startsWith('http') ? url : `https://${url}`)

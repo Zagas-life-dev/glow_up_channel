@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
 import { EMAIL_TEMPLATES, type EmailTemplateId } from "@/lib/email/templates"
+import { requireSuperAdmin } from "@/lib/server/require-super-admin"
 
 const VALID_DESIGN_IDS = new Set(EMAIL_TEMPLATES.map((t) => t.id))
 
@@ -12,6 +13,9 @@ function sanitize(str: string, maxLen: number): string {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin(req)
+  if (denied) return denied
+
   try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_STUDIO_API_KEY
     if (!apiKey) {
@@ -21,7 +25,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { subject = "", body = "", tone = "", campaignType = "" } = await req.json()
+    const raw = await req.json()
+    // Bounded: the draft goes into the prompt, so its length is the cost of the call.
+    const subject = sanitize(raw?.subject ?? "", 200)
+    const body = sanitize(raw?.body ?? "", 5000)
+    const tone = sanitize(raw?.tone ?? "", 40)
+    const campaignType = sanitize(raw?.campaignType ?? "", 40)
 
     const ai = new GoogleGenAI({ apiKey })
 

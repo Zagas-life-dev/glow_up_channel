@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UP security upgrade, 14 Nov 2026</title>
+<style>
+  :root { --bg:#ffffff; --card:#f6f7fb; --ink:#0B1233; --mute:#5b6280; --line:#e2e5ef; --accent:#FF6A00; --crit:#c62828; --high:#d9480f; --med:#a16207; --low:#3f6212; --ok:#1b7f4b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0B1233; --card:#141c45; --ink:#f3f4fa; --mute:#aab0cc; --line:#27306a; --crit:#ff8a80; --high:#ffab70; --med:#f5d06b; --low:#b5e48c; --ok:#7ee0a8; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:920px; margin:0 auto; padding:28px 16px 64px; }
+  h1 { font-size:1.7rem; margin:0 0 4px; line-height:1.2; }
+  h1 span { color:var(--accent); }
+  h2 { font-size:1.2rem; margin:36px 0 10px; padding-top:14px; border-top:2px solid var(--accent); }
+  p.sub { color:var(--mute); margin:0 0 18px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:18px 0; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .stat b { display:block; font-size:1.5rem; color:var(--accent); }
+  .stat small { color:var(--mute); }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:10px 0; }
+  .item h3 { margin:0 0 6px; font-size:1rem; }
+  .item p { margin:4px 0; }
+  .tag { display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em; padding:1px 8px; border-radius:99px; border:1px solid currentColor; margin-right:6px; vertical-align:middle; }
+  .crit{color:var(--crit)} .high{color:var(--high)} .med{color:var(--med)} .low{color:var(--low)} .ok{color:var(--ok)}
+  code { font:0.86em ui-monospace,Consolas,monospace; background:rgba(127,127,160,.16); padding:1px 5px; border-radius:5px; overflow-wrap:anywhere; }
+  .k { color:var(--mute); font-size:.9rem; }
+  ol,ul { padding-left:22px; } li { margin:5px 0; }
+  .lead { background:var(--card); border-left:4px solid var(--accent); border-radius:8px; padding:12px 14px; }
+</style>
+</head>
+<body>
+<main>
+<h1><span>UP</span> security upgrade</h1>
+<p class="sub">14 November 2026 · access control, spoofing, injection, abuse · frontend (Next app), backend (<code>latest-glowup-channel/</code>), push worker</p>
+
+<p class="lead"><b>Do this first:</b> change the MongoDB Atlas password. Two connection strings with a user and password are in the backend's git history, and <code>.env.production</code> is tracked there too. Code fixes cannot undo that; only rotation can.</p>
+
+<div class="stats">
+  <div class="stat"><b>16</b><small>holes fixed on the branch</small></div>
+  <div class="stat"><b>14</b><small>left to do, ranked</small></div>
+  <div class="stat"><b>785 / 785</b><small>backend tests pass after</small></div>
+  <div class="stat"><b>519 / 519</b><small>frontend tests pass after</small></div>
+  <div class="stat"><b>48</b><small>backend npm advisories (2 critical, 18 high)</small></div>
+</div>
+
+<p class="k">How it was done: three read-only audit agents (backend access control; auth, spoofing and injection; frontend and worker). Every fixed item below was re-read at the line before the change. Nothing was pushed, deployed or run against production. The fixes are local commits on branch <code>upgrade/2026-11-14</code> in both repos.</p>
+
+<h2>Fixed on the branch</h2>
+
+<div class="item"><h3><span class="tag crit">CRITICAL</span>Anyone could send email as UP</h3>
+<p><code>POST /api/marketing/send-campaign</code> had no sign-in check. The only gate was the admin page hiding itself. One request could mail any list from UP's verified sender.</p>
+<p><b>Fix:</b> the route now asks the backend who the token belongs to and allows super admins only (<code>lib/server/require-super-admin.ts</code>). Recipients are validated and capped at 500 per send. The admin page now sends its token.</p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Anyone could spend the Gemini key</h3>
+<p><code>POST /api/marketing/ai-generate</code> was open with no length limit.</p>
+<p><b>Fix:</b> same super-admin gate; subject capped at 200 characters, body at 5,000.</p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Founder Batch accounts could edit or delete listings nobody owns</h3>
+<p>The ownership check was skipped when a listing had no owner, which is every ingested listing. Six places: job update and delete, event delete, opportunity delete, resource update and delete.</p>
+<p><b>Fix:</b> no owner now means admin only. <code>src/controllers/{job,event,opportunity,resource}Controller.js</code></p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Publishers could approve their own listing</h3>
+<p>Create routes copied <code>isApproved</code> from the request for non-admins, so <code>"isApproved": true</code> skipped moderation. Four controllers.</p>
+<p><b>Fix:</b> non-admin creates are always unapproved. <b>Behaviour change, see Questions.</b></p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Job update could steal ownership and forge view counts</h3>
+<p>The update built the job from the request body; <code>providerId</code> and <code>metrics</code> came from the caller.</p>
+<p><b>Fix:</b> both are now kept from the stored job. <code>src/controllers/jobController.js</code></p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Any signed-in user could read every provider's onboarding record</h3>
+<p><code>GET /api/provider-onboarding/admin/all</code> returned email, phone, address, registration number and document link with no role check.</p>
+<p><b>Fix:</b> <code>requireAdmin</code> added; the open <code>/admin/test</code> debug route removed. <code>src/routes/providerOnboarding.js</code></p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Password reset code could be guessed</h3>
+<p>The 6-digit code came from <code>Math.random</code>, and the 5-attempt cap was read and incremented in two steps, so parallel guesses all passed it.</p>
+<p><b>Fix:</b> <code>crypto.randomInt</code>; each guess claims an attempt in one atomic update before the compare. <code>src/services/passwordResetService.js</code></p></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Open routes stored ids of any size</h3>
+<p><code>POST /api/feed/anonymous/engage</code> saved <code>anonId</code> uncapped under a 10 MB body limit. About 50 requests could fill the 512 MB cluster and block production writes.</p>
+<p><b>Fix:</b> <code>anonId</code> must be 1 to 64 letters, digits, <code>_</code> or <code>-</code>; visit <code>sessionId</code> must be a string of at most 128.</p></div>
+
+<div class="item"><h3><span class="tag med">MEDIUM</span>Smaller fixes</h3>
+<ul>
+<li><b>Founder Batch payment check</b> accepted a transaction with no user on it. Now the transaction must name this user. <code>founderBatchController.js</code></li>
+<li><b>JWT verify</b> now pins <code>HS256</code> in all four verify calls. <code>middleware/auth.js</code>, <code>utils/jwt.js</code></li>
+<li><b>Open redirect</b>: <code>/login?callbackUrl=/%09/evil.com</code> passed the check. Control characters and backslashes are now rejected, with 3 new test cases. <code>lib/pending-intent.ts</code></li>
+<li><b>Listing links</b>: <code>cleanUrl</code> returned <code>javascript:</code> URLs unchanged. It now returns empty for script, data, file and blob schemes. <code>lib/url-utils.ts</code></li>
+<li><b>Push tap</b> could open another site if the payload url was <code>//host</code>. The service worker now opens this origin only. <code>public/sw.js</code></li>
+<li><b>Security headers</b>: none were set. Added frame blocking (<code>X-Frame-Options</code>, <code>frame-ancestors 'self'</code>), <code>nosniff</code>, <code>Referrer-Policy</code>, HSTS. <code>next.config.mjs</code></li>
+<li><b>Log leak</b>: a profile update logged the whole user object, password hash included. Line removed. <code>authController.js</code></li>
+<li><b>Connection string in source</b>: <code>scripts/cleanup-all-indexes.js</code> and <code>readMe.md</code> no longer hold one. The old values stay in git history until rotated.</li>
+</ul></div>
+
+<h2>To do next, ranked by impact ÷ size</h2>
+<ol>
+<li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets.</b> Atlas password first, then everything in the tracked <code>.env.production</code> (JWT secrets, Cloudinary, super-admin key). Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
+<li><span class="tag high">HIGH</span><b>Lock CORS to UP's own sites.</b> <code>server.js:124-131</code> allows every origin with credentials. With it, a third-party page can fire counted view beacons from real visitors. Size: 1 hour, needs the list of real origins.</li>
+<li><span class="tag high">HIGH</span><b>Views and Creators Program unique views can be farmed.</b> A cookieless request is given a device id and counted at once (<code>middleware/viewerIdentity.js:127-129</code>). Fix: never count on the request that issues the cookie; require a cookie older than a few minutes for paid counts; reject beacons from other origins. Size: a day. This is money once payouts run.</li>
+<li><span class="tag high">HIGH</span><b>Founder Batch can start an Extreme promotion for up to 365 days.</b> <code>routes/promotions.js:39</code>, <code>promotionController.js:166-320</code>. See Questions. Size: minutes.</li>
+<li><span class="tag med">MEDIUM</span><b>Work with us "paid" is open.</b> <code>POST /api/work-with-us/orders/:ref/paid</code> marks an order paid from the caller's word and returns the order with contact details. Verify the Paystack reference in the backend. <code>routes/workWithUs.js:36</code>. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>Tokens can't be revoked.</b> Logout does nothing server-side and a password reset leaves old tokens valid for up to 30 days. Add a <code>tokenVersion</code> on the user, bump on reset and logout. <code>authController.js:609, 1073</code>. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>Login has no per-account lockout</b>, and the rate limit is per instance in memory (3 to 10 instances). Reset, register and login also reveal which emails exist. Per-email counter in Mongo, uniform replies. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>Body limit and open order route.</b> <code>express.json({ limit: '10mb' })</code> at <code>server.js:176</code>; <code>POST /api/work-with-us/orders</code> takes unbounded <code>items[]</code> and is skipped by the global limiter. Drop the limit to 100 kb where uploads don't need it, cap items at 20. Size: 1 hour.</li>
+<li><span class="tag med">MEDIUM</span><b>Email abuse on open forms.</b> <code>/api/contact</code> puts unescaped name and message into the team email and has no rate limit; Work with us submissions and sign-up codes mail any address with no cooldown. Escape, cap lengths, 60-second cooldown per address. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>Tokens live in localStorage.</b> Any script injection reads the 30-day refresh token. Move the refresh token to an httpOnly cookie; add a full Content-Security-Policy in report-only mode first. <code>lib/api-client.ts:241</code>. Size: a day or more.</li>
+<li><span class="tag med">MEDIUM</span><b>Upload keys are broad.</b> A key can rewrite the link on any live listing and clear other users' empty playlists. Add daily caps per key. <code>maintenanceController.js:512-567</code>. Size: hours.</li>
+<li><span class="tag med">MEDIUM</span><b>48 backend npm advisories</b>, 2 critical (<code>fast-xml-parser</code>, <code>proxy-addr</code>). Run <code>npm audit fix</code> on a branch and re-test. Frontend not audited: <code>pnpm</code> is not installed on this machine. Size: 1 to 2 hours.</li>
+<li><span class="tag low">LOW</span><b>Dead routes still mounted</b> (remove, don't fix): <code>/api/auth/register/admin</code>, <code>/api/auth/upgrade-to-provider</code>, <code>/api/auth/register/super-admin</code>, the three <code>/ingest</code> routes, the Paystack subscriptions webhook. See Questions.</li>
+<li><span class="tag low">LOW</span><b>Small ones.</b> Promotion analytics open with no sign-in (<code>routes/analytics.js:11</code>); click beacon has no dedup (<code>engagementController.js:444</code>); push endpoint URL not checked against real push hosts (<code>pushSubscriptionService.js:23</code>); <code>/docs</code> and <code>/api-docs</code> public; an admin can deactivate another admin (<code>adminController.js:300</code>); fallback encryption key for bank details derives from the JWT secret (<code>fieldCrypto.js:12</code>).</li>
+</ol>
+
+<h2>Needs you</h2>
+<ol>
+<li>Rotate the Atlas database password (Atlas → Database Access), then update the Cloud Run secret.</li>
+<li>Rotate every secret in <code>latest-glowup-channel/.env.production</code>, then <code>git rm --cached .env.production</code> and purge it from history.</li>
+<li>Check whether <code>github.com/eaaniwezi/latest-glowup-channel</code> is private and who has access.</li>
+<li>Review and merge branch <code>upgrade/2026-11-14</code> in both repos, then deploy. Nothing is live until you do.</li>
+<li>Give me the list of real site origins for the CORS allow-list.</li>
+</ol>
+
+<h2>Questions for you</h2>
+<ol>
+<li><b>Should Founder Batch listings go live without review?</b> The old code let the request decide. I set it to always Pending. My pick: keep Pending.</li>
+<li><b>Should Founder Batch be able to start an Extreme promotion themselves?</b> My pick: no, admin grant only.</li>
+<li><b>May I remove the dead sign-up routes</b> (<code>register/admin</code>, <code>upgrade-to-provider</code>, <code>register/super-admin</code>) and the scraper <code>/ingest</code> routes? My pick: yes.</li>
+</ol>
+
+<h2>Unverified</h2>
+<ul>
+<li>Whether the committed database passwords still work. Not tested: connecting would be a production action.</li>
+<li>Whether <code>.env.production</code> holds real values or placeholders. I did not open it.</li>
+<li>Whether the Founder Batch post limit is enforced on create (only seen in the status response).</li>
+<li>Whether the refresh secret differs from the access secret. If equal, an access token works as a refresh token.</li>
+<li>The fixes were proven by tests and build only, not by running the app against a database.</li>
+</ul>
+
+<h2>Checked and fine</h2>
+<ul>
+<li>Monitor role: cannot write; empty assignment reads nothing; <code>?monitorId=</code> honoured for admins only.</li>
+<li>Sign-up role is fixed to seeker; profile, playlist, event and opportunity updates are whitelisted.</li>
+<li>Role and active status are re-read from the database on every request; a deleted user's token fails.</li>
+<li>Passwords: bcrypt cost 12. No JWT secret fallback; the server exits without one.</li>
+<li>Mongo operator injection: <code>express-mongo-sanitize</code> is global; user-fed regexes are escaped.</li>
+<li>Internal cron routes and the push worker: constant-time secret check, closed when the secret is unset.</li>
+<li>Upload keys: 256-bit, stored hashed, user re-checked per request, revocable.</li>
+<li>Frontend: one raw-HTML sink, and it escapes; no open proxy or image fetch of user URLs; no secrets in <code>NEXT_PUBLIC_*</code>; <code>.env*</code> and key files never committed in the frontend repo.</li>
+</ul>
+
+<p class="k">Baseline before changes: frontend 519/519 tests, lint 0 errors (184 warnings), build compiles. After: frontend 519/519 plus 3 new redirect cases, build compiles; backend 785/785.</p>
+</main>
+</body>
+</html>

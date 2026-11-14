@@ -20,6 +20,14 @@ import { RiMailLine, RiErrorWarningLine, RiMagicLine } from "react-icons/ri"
 import { cn } from "@/lib/utils"
 import { EMAIL_TEMPLATES, type EmailTemplateId } from "@/lib/email/templates"
 
+/** These routes check the caller is a super admin, so the token goes with every call. */
+function authedJsonHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined" ? window.localStorage.getItem("accessToken") : null
+  return token
+    ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    : { "Content-Type": "application/json" }
+}
+
 const TONE_OPTIONS = [
   { value: "any", label: "Any" },
   { value: "Professional", label: "Professional" },
@@ -65,7 +73,7 @@ export default function MarketingEmailDesignerPage() {
     try {
       const res = await fetch("/api/marketing/email-preview", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authedJsonHeaders(),
         body: JSON.stringify({
           designId: selectedDesignId,
           subject: subject || "Your subject",
@@ -128,7 +136,7 @@ export default function MarketingEmailDesignerPage() {
     try {
       const response = await fetch("/api/marketing/ai-generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authedJsonHeaders(),
         body: JSON.stringify({
           subject: subject.trim() || undefined,
           body: body.trim() || undefined,
@@ -179,9 +187,7 @@ export default function MarketingEmailDesignerPage() {
     try {
       const response = await fetch("/api/marketing/send-campaign", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authedJsonHeaders(),
         body: JSON.stringify({
           subject: subject.trim(),
           previewText: previewText.trim() || undefined,

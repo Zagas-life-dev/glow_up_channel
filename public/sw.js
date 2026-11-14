@@ -451,7 +451,10 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
   const target = event.notification.data?.url || "/"
-  const url = new URL(target.startsWith("/") ? target : "/" + target, self.location.origin).href
+  // Only ever open a page of this site: "//other.host" would otherwise resolve off-origin.
+  const resolved = new URL(target.startsWith("/") ? target : "/" + target, self.location.origin)
+  const url =
+    resolved.origin === self.location.origin ? resolved.href : new URL("/", self.location.origin).href
   // The dispatcher tags each push link with n=<notification_log id>; report the tap so
   // open rates per kind can be measured. Fire and forget: never delays opening.
   let openId = null

@@ -35,6 +35,8 @@ export function safeReturnTo(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
   const v = value.trim()
   if (!v.startsWith('/') || v.startsWith('//') || v.startsWith('/\\')) return undefined
+  // URL parsers drop tabs and newlines, so "/<tab>/evil.com" would resolve to "//evil.com".
+  if (/[\u0000-\u001f\u007f\\]/.test(v)) return undefined
   if (/^\/(login|signup|verify-email|onboarding)(\/|\?|$)/.test(v)) return undefined
   return v
 }

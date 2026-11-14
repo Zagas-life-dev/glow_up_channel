@@ -1,14 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sendCampaignEmail } from "@/lib/email/service"
 import { getTemplateHtml, type EmailTemplateId } from "@/lib/email/templates"
+import { requireSuperAdmin } from "@/lib/server/require-super-admin"
+
+/** One campaign call sends to at most this many addresses. */
+const MAX_RECIPIENTS = 500
+const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin(req)
+  if (denied) return denied
+
   try {
     const { subject, previewText, content, recipients, designId } = await req.json()
 
     if (!subject || !content || !Array.isArray(recipients) || recipients.length === 0) {
       return NextResponse.json(
         { error: "Subject, body, and at least one recipient are required." },
+        { status: 400 }
+      )
+    }
+
+    if (
+      recipients.length > MAX_RECIPIENTS ||
+      !recipients.every((r: unknown) => typeof r === "string" && r.length <= 254 && EMAIL_RE.test(r))
+    ) {
+      return NextResponse.json(
+        { error: `Recipients must be valid email addresses, at most ${MAX_RECIPIENTS} per send.` },
         { status: 400 }
       )
     }
