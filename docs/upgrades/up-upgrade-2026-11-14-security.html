@@ -39,9 +39,9 @@
 <p class="lead"><b>Do this first:</b> change the MongoDB Atlas password. Two connection strings with a user and password are in the backend's git history, and <code>.env.production</code> is tracked there too. Code fixes cannot undo that; only rotation can.</p>
 
 <div class="stats">
-  <div class="stat"><b>34</b><small>holes fixed on the branch</small></div>
-  <div class="stat"><b>4</b><small>left to do</small></div>
-  <div class="stat"><b>808 / 808</b><small>backend tests pass</small></div>
+  <div class="stat"><b>36</b><small>holes fixed on the branch</small></div>
+  <div class="stat"><b>2</b><small>left to do</small></div>
+  <div class="stat"><b>814 / 814</b><small>backend tests pass</small></div>
   <div class="stat"><b>519 / 519</b><small>frontend tests pass; build passes</small></div>
   <div class="stat"><b>48 → 12</b><small>backend npm advisories (critical 2 → 0, high 18 → 2)</small></div>
 </div>
@@ -137,11 +137,30 @@
 <div class="item"><h3><span class="tag med">MEDIUM</span>Work with us payments are checked with Paystack (15 Nov)</h3>
 <p><code>POST /api/work-with-us/orders/:ref/paid</code> used to take the caller's word, move items into the review queue and return the customer's contact details. The backend now asks Paystack by the order's ref first (same account as the storefront, confirmed by you). It needs a successful NGN payment of at least the order amount, and writes Paystack's payment details, not the request's. Not paid gives 402; Paystack down gives 503 and the webhook retries. 5 tests. <code>src/services/workWithUsService.js</code></p></div>
 
+<div class="item"><h3><span class="tag med">MEDIUM</span>Sign-in tokens: refresh token out of page reach, rotating (15 Nov)</h3>
+<ul>
+<li>The refresh token now lives in an httpOnly cookie that your own Next app sets on the site's domain (<code>app/api/session</code>). No API subdomain needed. Page scripts cannot read it, and only UP's own pages can call those routes.</li>
+<li>Every refresh rotates it per device. Two tabs refreshing together are fine; a replayed old copy ends that device's session.</li>
+<li>Access tokens last 1 hour and are renewed silently 5 minutes before they run out, so pages that read them directly keep working.</li>
+<li>Already signed-in users are moved over on their next refresh; nobody is signed out by the change.</li>
+<li>Checked on the local dev stack: real sign-in through the form, silent renewal after a forced expiry, logout, replay refused, other sites refused (403).</li>
+</ul></div>
+
+<div class="item"><h3><span class="tag high">HIGH</span>Extreme promotion is admin-only (15 Nov, your decision)</h3>
+<p>The backend refuses <code>packageType: extreme</code> from anyone but admins, and the promote screen shows it only to admins (others see a line saying it is granted by the UP team).</p></div>
+
+<div class="item"><h3>The 12 package advisories, broken down</h3>
+<p>None is reachable from user input today. Three groups, each fixed by one major upgrade:</p>
+<ul>
+<li><b>cloudinary (2 high)</b>: <code>cloudinary</code> 1.41 and <code>multer-storage-cloudinary</code>. The bug needs user text inside upload parameters; UP's are fixed folder names and no caller sets a public id. Fix: <code>cloudinary</code> 2.x with an npm override for <code>multer-storage-cloudinary</code>, or replace that package with ~40 lines on <code>upload_stream</code>. Needs one real upload test (Cloudinary is off on the dev stack). About 2 hours.</li>
+<li><b>resend (1 low + 7 inside it)</b>: <code>resend</code> 3.2 pulls <code>@react-email/render</code>, <code>html-to-text</code>, <code>deepmerge</code>, <code>js-beautify</code>, <code>editorconfig</code>, <code>glob</code>, <code>minimatch</code>. UP sends plain HTML strings, so that rendering code never runs. Fix: <code>resend</code> 6.x (same <code>emails.send</code> call). About 1 hour plus one real test email.</li>
+<li><b>exceljs / uuid (2 moderate)</b>: only the admin Excel export. The uuid bug needs a buffer argument exceljs does not pass. Fix: an npm override to <code>uuid</code> 11 (npm's suggested fix is a downgrade, worse). About 30 minutes.</li>
+</ul></div>
+
 <h2>Still to do</h2>
 <ol>
 <li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets</b> (you moved this to later). Atlas password first, then everything in the tracked <code>.env.production</code>. Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
-<li><span class="tag med">MEDIUM</span><b>Tokens live in localStorage.</b> Moving the refresh token to an httpOnly cookie needs the API on a subdomain of the site (for example <code>api.glowupchannel.com</code>), or Safari blocks the cookie. Add a full Content-Security-Policy in report-only mode first. Size: a day or more.</li>
-<li><span class="tag med">MEDIUM</span><b>12 npm advisories left</b> (2 high in <code>cloudinary</code> &lt; 2.7). Fixing needs <code>cloudinary</code> 2.x plus a replacement for <code>multer-storage-cloudinary</code>, and <code>resend</code> 6.x. Frontend packages not audited: <code>pnpm</code> is not installed on this machine. Size: half a day.</li>
+<li><span class="tag med">MEDIUM</span><b>The 3 package upgrades above</b> (cloudinary, resend, exceljs override). About half a day with real upload and email tests.</li>
 <li><span class="tag low">LOW</span><b>Left as is on purpose:</b> forgot-password still says when an email has no account (sign-up's 409 reveals the same, so hiding it only hurts real users); the bank-detail encryption fallback key (<code>fieldCrypto.js:12</code>) stays, because changing it would make existing saved bank details unreadable. Set <code>BANK_DETAILS_KEY</code> only together with a re-encryption of saved details.</li>
 </ol>
 
@@ -156,7 +175,6 @@
 
 <h2>Questions for you</h2>
 <ol>
-<li><b>Should Founder Batch be able to start an Extreme promotion themselves?</b> The provider's promote screen offers it on purpose, so I did not block it. Listings now need review before going live, which limits the damage. My pick: admin grant only.</li>
 <li><b>Founder Batch listings now always start as Pending.</b> Keep it? My pick: keep.</li>
 </ol>
 

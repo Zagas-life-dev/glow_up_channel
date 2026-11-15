@@ -38,6 +38,7 @@ import { announcementCount } from '@/lib/promotions/announcement'
 import { cn } from '@/lib/utils'
 import { KindChip, toUpKind } from '@/components/up/kind'
 import { toast } from 'sonner'
+import { useAuth } from '@/lib/auth-context'
 import {
   Bell,
   Check,
@@ -185,6 +186,8 @@ export function PromoteContentModal({
   item,
   onSuccess,
 }: PromoteContentModalProps) {
+  const { user } = useAuth()
+  const canStartExtreme = user?.role === 'admin' || user?.role === 'super_admin'
   const [tier, setTier] = useState<Tier>('standard')
   const [durationDays, setDurationDays] = useState(7)
   const [submitting, setSubmitting] = useState(false)
@@ -305,6 +308,9 @@ export function PromoteContentModal({
               meta="You choose the length"
             />
 
+            {/* Extreme is granted by the UP team, so only admins see it here. The
+                backend refuses it for everyone else either way. */}
+            {canStartExtreme ? (
             <TierCard
               selected={isExtreme}
               onSelect={() => {
@@ -334,6 +340,11 @@ export function PromoteContentModal({
                 </ul>
               )}
             </TierCard>
+            ) : (
+              <p className="text-xs leading-relaxed text-muted-foreground sm:self-center">
+                Want Extreme reach (first in every feed, plus announcements)? It is granted by the UP team: contact us.
+              </p>
+            )}
             </div>
           </div>
 

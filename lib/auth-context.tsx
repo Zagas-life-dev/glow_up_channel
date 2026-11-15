@@ -97,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializeAuth = async () => {
     try {
       if (ApiClient.isAuthenticated()) {
+        // Renew the 1-hour access token before it runs out, from page load on.
+        ApiClient.scheduleRefresh();
         const userData = await ApiClient.getCurrentUser();
         setUser(userData.user);
         setProfile(userData.profile);

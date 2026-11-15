@@ -236,16 +236,62 @@ export class ApiClient {
     return localStorage.getItem('accessToken');
   }
 
+  /**
+   * The access token (1 hour) stays in localStorage: many pages send it themselves.
+   * The refresh token goes into an httpOnly cookie on this site's own domain via
+   * /api/session, so no page script can read it. If that call fails (offline, a
+   * deploy in flight), it is kept in localStorage for now and moved on the next
+   * refresh, so nobody is signed out by a hiccup.
+   */
   private static setTokens(tokens: AuthTokens): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
+    if (tokens.refreshToken) {
+      void fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+      })
+        .then((r) => {
+          if (r.ok) localStorage.removeItem('refreshToken');
+          else localStorage.setItem('refreshToken', tokens.refreshToken);
+        })
+        .catch(() => localStorage.setItem('refreshToken', tokens.refreshToken));
+    }
+    this.scheduleRefresh();
   }
 
   private static clearTokens(): void {
     if (typeof window === 'undefined') return;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = null;
+  }
+
+  private static refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Renew the access token five minutes before it runs out, so pages that read it
+   * straight from localStorage (admin screens, review queue) never send an expired one.
+   */
+  public static scheduleRefresh(): void {
+    if (typeof window === 'undefined') return;
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = null;
+    const token = this.getAccessToken();
+    if (!token) return;
+    let expMs: number | null = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      expMs = typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    } catch {
+      expMs = null;
+    }
+    if (!expMs) return;
+    const wait = Math.max(10_000, expMs - Date.now() - 5 * 60 * 1000);
+    this.refreshTimer = setTimeout(() => { void this.refreshTokenIfNeeded(); }, Math.min(wait, 2 ** 31 - 1));
   }
 
   private static async handleResponse<T>(response: Response): Promise<T> {
@@ -290,41 +336,56 @@ export class ApiClient {
     }
   }
 
-  public static async refreshTokenIfNeeded(): Promise<boolean> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return false;
+  private static refreshInFlight: Promise<boolean> | null = null;
 
+  /**
+   * Swap the refresh cookie for a new access token through /api/session/refresh.
+   *
+   * The backend rotates the refresh token on every call and treats a spent one
+   * coming back as a stolen copy, so concurrent 401s must share ONE refresh: the
+   * in-flight promise is reused. (Two tabs at once are covered by a short grace
+   * window on the backend.)
+   */
+  public static async refreshTokenIfNeeded(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    if (this.refreshInFlight) return this.refreshInFlight;
+    this.refreshInFlight = this.doRefresh().finally(() => { this.refreshInFlight = null; });
+    return this.refreshInFlight;
+  }
+
+  private static async doRefresh(): Promise<boolean> {
+    // Signed in before the cookie existed: hand the old token over once.
+    const legacyRefreshToken = localStorage.getItem('refreshToken');
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      const response = await fetch('/api/session/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'same-origin',
+        body: JSON.stringify(legacyRefreshToken ? { legacyRefreshToken } : {}),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          this.setTokens(data.data.tokens);
+        const data = await response.json().catch(() => null);
+        if (typeof data?.accessToken === 'string') {
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.removeItem('refreshToken');
+          this.scheduleRefresh();
           return true;
         }
-      } else if (response.status >= 500) {
-        // Don't clear tokens on server errors
-        console.error('Server error during token refresh');
         return false;
       }
-      
-      // If we got a 4xx error (like 401 Invalid Refresh Token), clear tokens
-      if (response.status >= 400 && response.status < 500) {
+      if (response.status === 401) {
+        // Spent, revoked or expired session: sign in again on this device.
         this.clearTokens();
         return false;
       }
+      // 5xx / 502 (backend unreachable): keep everything and try again later.
+      console.error('Token refresh failed with status', response.status);
+      return false;
     } catch (error) {
       console.error('Token refresh failed (network error?):', error);
-      // Don't clear tokens on network errors
       return false;
     }
-
-    return false;
   }
 
   /**
@@ -475,10 +536,8 @@ export class ApiClient {
 
   static async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-      });
+      // Ends this device's refresh session on the backend and drops the cookie.
+      await fetch('/api/session', { method: 'DELETE', credentials: 'same-origin' });
     } catch (error) {
       // Ignore network errors - clear tokens anyway
       // Backend might be down, but we still want to logout locally
