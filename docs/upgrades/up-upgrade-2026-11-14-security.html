@@ -39,9 +39,9 @@
 <p class="lead"><b>Do this first:</b> change the MongoDB Atlas password. Two connection strings with a user and password are in the backend's git history, and <code>.env.production</code> is tracked there too. Code fixes cannot undo that; only rotation can.</p>
 
 <div class="stats">
-  <div class="stat"><b>33</b><small>holes fixed on the branch (3 rounds)</small></div>
-  <div class="stat"><b>5</b><small>left to do</small></div>
-  <div class="stat"><b>800 / 800</b><small>backend tests pass</small></div>
+  <div class="stat"><b>34</b><small>holes fixed on the branch</small></div>
+  <div class="stat"><b>4</b><small>left to do</small></div>
+  <div class="stat"><b>808 / 808</b><small>backend tests pass</small></div>
   <div class="stat"><b>519 / 519</b><small>frontend tests pass; build passes</small></div>
   <div class="stat"><b>48 → 12</b><small>backend npm advisories (critical 2 → 0, high 18 → 2)</small></div>
 </div>
@@ -134,10 +134,12 @@
 <div class="item"><h3><span class="tag med">MEDIUM</span>Dependencies</h3>
 <p><code>npm audit fix</code> without breaking upgrades: 48 production advisories down to 12, both criticals (<code>fast-xml-parser</code>, <code>proxy-addr</code>) gone. <code>package.json</code> unchanged; the Docker image installs from the lockfile with <code>npm ci</code>.</p></div>
 
+<div class="item"><h3><span class="tag med">MEDIUM</span>Work with us payments are checked with Paystack (15 Nov)</h3>
+<p><code>POST /api/work-with-us/orders/:ref/paid</code> used to take the caller's word, move items into the review queue and return the customer's contact details. The backend now asks Paystack by the order's ref first (same account as the storefront, confirmed by you). It needs a successful NGN payment of at least the order amount, and writes Paystack's payment details, not the request's. Not paid gives 402; Paystack down gives 503 and the webhook retries. 5 tests. <code>src/services/workWithUsService.js</code></p></div>
+
 <h2>Still to do</h2>
 <ol>
 <li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets</b> (you moved this to later). Atlas password first, then everything in the tracked <code>.env.production</code>. Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
-<li><span class="tag med">MEDIUM</span><b>Work with us "paid" is open.</b> A forged "paid" is caught when an admin approves, because the storefront asks Paystack again then. The gap: the first caller of <code>/paid</code> gets the order's contact details, and forged orders land in the review queue. Fix: the backend verifies the Paystack reference itself. Waiting on Questions 2. Size: hours.</li>
 <li><span class="tag med">MEDIUM</span><b>Tokens live in localStorage.</b> Moving the refresh token to an httpOnly cookie needs the API on a subdomain of the site (for example <code>api.glowupchannel.com</code>), or Safari blocks the cookie. Add a full Content-Security-Policy in report-only mode first. Size: a day or more.</li>
 <li><span class="tag med">MEDIUM</span><b>12 npm advisories left</b> (2 high in <code>cloudinary</code> &lt; 2.7). Fixing needs <code>cloudinary</code> 2.x plus a replacement for <code>multer-storage-cloudinary</code>, and <code>resend</code> 6.x. Frontend packages not audited: <code>pnpm</code> is not installed on this machine. Size: half a day.</li>
 <li><span class="tag low">LOW</span><b>Left as is on purpose:</b> forgot-password still says when an email has no account (sign-up's 409 reveals the same, so hiding it only hurts real users); the bank-detail encryption fallback key (<code>fieldCrypto.js:12</code>) stays, because changing it would make existing saved bank details unreadable. Set <code>BANK_DETAILS_KEY</code> only together with a re-encryption of saved details.</li>
@@ -155,7 +157,6 @@
 <h2>Questions for you</h2>
 <ol>
 <li><b>Should Founder Batch be able to start an Extreme promotion themselves?</b> The provider's promote screen offers it on purpose, so I did not block it. Listings now need review before going live, which limits the damage. My pick: admin grant only.</li>
-<li><b>Do the storefront and the backend use the same Paystack account?</b> If yes, the backend can check each payment itself before marking a Work with us order paid. My pick: yes, do it.</li>
 <li><b>Founder Batch listings now always start as Pending.</b> Keep it? My pick: keep.</li>
 </ol>
 
