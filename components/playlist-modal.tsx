@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -96,10 +97,11 @@ export default function PlaylistModal({ isOpen, onClose, editPlaylist, onSuccess
    * list: Public or Private as before.
    */
   const editingGroup = editPlaylist?.isGroup === true
+  const { allowed: creatorPreview } = useCreatorPreview()
   const visibilityOptions: { key: "public" | "private" | "group"; icon: typeof RiGlobalLine; title: string; body: string }[] = [
     { key: "public", icon: RiGlobalLine, title: "Public", body: editingGroup ? "Becomes a normal public collab" : "Anyone, and it can appear in Discover" },
     ...(editingGroup ? [] : [{ key: "private" as const, icon: RiLockLine, title: "Private", body: "Only you and people you invite" }]),
-    ...(editingGroup || !editPlaylist ? [{ key: "group" as const, icon: RiGroupLine, title: "Group", body: "Private, with members, a feed and shared tracking" }] : []),
+    ...(editingGroup || (!editPlaylist && creatorPreview) ? [{ key: "group" as const, icon: RiGroupLine, title: "Group", body: "Private, with members, a feed and shared tracking" }] : []),
   ]
 
   // Reset the form whenever it opens, or the playlist being edited changes.

@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -306,6 +307,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [isOwner, setIsOwner] = useState(false)
+  const { allowed: creatorPreview } = useCreatorPreview()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -733,7 +735,7 @@ export default function ProfilePage() {
                   </Button>
                 </Link>
               )}
-              {isOwner && (
+              {isOwner && creatorPreview && (
                 /* Creators Program: analytics, listing requests and tips. */
                 <Link href="/creator" className="min-w-0 flex-1">
                   <Button type="button" className="h-11 min-h-11 w-full bg-up-orange text-white hover:bg-up-orange">

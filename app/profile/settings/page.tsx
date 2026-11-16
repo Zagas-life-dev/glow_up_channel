@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useState, useEffect, useRef } from 'react'
 import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import Link from 'next/link'
@@ -324,6 +325,7 @@ function AccessRow({
 export default function SettingsPage() {
   const router = useRouter()
   const { user, profile, logout, refreshUser, isLoading, upgradeToProvider } = useAuth()
+  const { allowed: creatorPreview } = useCreatorPreview()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
@@ -1385,6 +1387,7 @@ export default function SettingsPage() {
                   </div>
                 </SettingsSection>
 
+                {creatorPreview ? (
                 <SettingsSection
                   title="Subscriptions"
                   description="Updates from playlists and creators you subscribe to, in your inbox and as push."
@@ -1403,6 +1406,7 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </SettingsSection>
+                ) : null}
 
                 <SettingsSection
                   title="In-app"

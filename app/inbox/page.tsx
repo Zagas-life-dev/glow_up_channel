@@ -6,6 +6,7 @@
  * Not linked from the navigation yet: placement waits for the navigation restructure.
  */
 
+import { CreatorPreviewGate } from "@/components/creator/creator-preview-gate"
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { RiInboxLine, RiLoader4Line, RiCheckDoubleLine } from "react-icons/ri"
@@ -23,7 +24,7 @@ function timeAgo(iso: string) {
   return `${Math.floor(s / 86400)}d ago`
 }
 
-export default function InboxPage() {
+function InboxPageInner() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [items, setItems] = useState<InboxItem[]>([])
   const [unread, setUnread] = useState(0)
@@ -109,5 +110,14 @@ export default function InboxPage() {
         )}
       </div>
     </PageShell>
+  )
+}
+
+/** Staff preview: admins and super admins only for now (lib/creator-preview.ts). */
+export default function InboxPage() {
+  return (
+    <CreatorPreviewGate>
+      <InboxPageInner />
+    </CreatorPreviewGate>
   )
 }

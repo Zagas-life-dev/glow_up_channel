@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import Link from "next/link"
@@ -101,6 +102,7 @@ export default function PlaylistDetailPage() {
     fetchSavedPlaylists,
   } = usePlaylist()
   const { user, isAuthenticated } = useAuth()
+  const { allowed: creatorPreview } = useCreatorPreview()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -627,7 +629,7 @@ export default function PlaylistDetailPage() {
                       <span aria-hidden>·</span>
                       {/* A public list's saves are its subscribers (save = subscribe). */}
                       <span className="tabular-nums">
-                        {playlist.subscribable
+                        {playlist.subscribable && creatorPreview
                           ? `${formatCount(playlist.subscriberCount ?? playlist.saveCount)} ${(playlist.subscriberCount ?? playlist.saveCount) === 1 ? "subscriber" : "subscribers"}`
                           : `${formatCount(playlist.saveCount)} saved`}
                       </span>
@@ -702,7 +704,7 @@ export default function PlaylistDetailPage() {
 
             <div className="mt-4 flex items-center gap-2 lg:flex-col lg:items-stretch">
               {renderPrimaryAction("full")}
-              {isAuthenticated && isSaved && playlist.subscribable && !isOwner ? (
+              {creatorPreview && isAuthenticated && isSaved && playlist.subscribable && !isOwner ? (
                 <Button
                   type="button"
                   variant="outline"

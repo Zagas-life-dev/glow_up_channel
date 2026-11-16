@@ -7,6 +7,7 @@
  * itself (the Earnings tab already shows the invite there).
  */
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { RiTrophyLine, RiCloseLine } from "react-icons/ri"
@@ -22,9 +23,10 @@ export default function ProgramInvitePopup() {
   const router = useRouter()
   const [held, setHeld] = useState<number | null>(null)
   const [blockSize, setBlockSize] = useState(1000)
+  const { allowed } = useCreatorPreview()
 
   useEffect(() => {
-    if (!isAuthenticated || pathname?.startsWith("/creator")) return
+    if (!allowed || !isAuthenticated || pathname?.startsWith("/creator")) return
     try {
       if (localStorage.getItem(SEEN_KEY) === new Date().toISOString().slice(0, 10)) return
     } catch {
@@ -42,7 +44,7 @@ export default function ProgramInvitePopup() {
     return () => {
       live = false
     }
-  }, [isAuthenticated, pathname])
+  }, [allowed, isAuthenticated, pathname])
 
   if (held === null) return null
 

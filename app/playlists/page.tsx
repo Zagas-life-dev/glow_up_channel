@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useState, useEffect, useRef, Suspense } from "react"
 import { ConfirmDialog } from "@/components/up/confirm-dialog"
 import { toast } from "sonner"
@@ -52,9 +53,11 @@ const TAB_CONFIG: {
   short?: string
   count?: (ctx: { playlists: Playlist[]; sharedPlaylists: Playlist[]; savedPlaylists: Playlist[]; subscriptionCount: number }) => number
   authOnly?: boolean
+  /** Staff preview only (lib/creator-preview.ts). */
+  staffOnly?: boolean
 }[] = [
   { id: "public", label: "Discover" },
-  { id: "subscriptions", label: "Subscriptions", short: "Subs", count: (c) => c.subscriptionCount, authOnly: true },
+  { id: "subscriptions", label: "Subscriptions", short: "Subs", count: (c) => c.subscriptionCount, authOnly: true, staffOnly: true },
   { id: "saved", label: "Saved", count: (c) => c.savedPlaylists.length, authOnly: true },
   { id: "my", label: "Mine", count: (c) => c.playlists.length, authOnly: true },
   { id: "shared", label: "Shared", count: (c) => c.sharedPlaylists.length, authOnly: true },
@@ -123,6 +126,7 @@ function PlaylistsPageInner() {
     unsavePlaylist,
   } = usePlaylist()
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth()
+  const { allowed: creatorPreview } = useCreatorPreview()
   const t = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>("public")
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -151,7 +155,7 @@ function PlaylistsPageInner() {
     if (tabParam === "my" || tabParam === "shared" || tabParam === "saved" || tabParam === "subscriptions") {
       // Wait for sign-in to load, or a shared ?tab= link bounces to Discover.
       if (isAuthLoading) return
-      if (isAuthenticated) {
+      if (isAuthenticated && (tabParam !== "subscriptions" || creatorPreview)) {
         setActiveTab(tabParam as TabType)
       } else {
         setActiveTab("public")
@@ -163,7 +167,7 @@ function PlaylistsPageInner() {
     if (tabParam !== null && tabParam !== "public") {
       router.replace("/playlists")
     }
-  }, [searchParams, isAuthenticated, isAuthLoading, router])
+  }, [searchParams, isAuthenticated, isAuthLoading, creatorPreview, router])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -282,7 +286,7 @@ function PlaylistsPageInner() {
   }
 
   const countCtx = { playlists, sharedPlaylists, savedPlaylists, subscriptionCount }
-  const visibleTabs = TAB_CONFIG.filter((t) => !(t.authOnly && !isAuthenticated))
+  const visibleTabs = TAB_CONFIG.filter((t) => !(t.authOnly && !isAuthenticated) && !(t.staffOnly && !creatorPreview))
   const empty = activeSearch
     ? {
         title: `No playlists match “${activeSearch}”`,

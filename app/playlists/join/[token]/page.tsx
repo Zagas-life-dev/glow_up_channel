@@ -5,6 +5,7 @@
  * group; signed out, it sends you to log in and brings you back here.
  */
 
+import { CreatorPreviewGate } from "@/components/creator/creator-preview-gate"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { joinGroup } from "@/lib/groups"
 
-export default function JoinGroupPage() {
+function JoinGroupPageInner() {
   const params = useParams()
   const router = useRouter()
   const token = String(params.token || "")
@@ -66,5 +67,14 @@ export default function JoinGroupPage() {
         )}
       </div>
     </PageShell>
+  )
+}
+
+/** Staff preview: admins and super admins only for now (lib/creator-preview.ts). */
+export default function JoinGroupPage() {
+  return (
+    <CreatorPreviewGate>
+      <JoinGroupPageInner />
+    </CreatorPreviewGate>
   )
 }

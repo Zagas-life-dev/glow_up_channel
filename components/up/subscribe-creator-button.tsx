@@ -1,5 +1,6 @@
 "use client"
 
+import { useCreatorPreview } from "@/lib/creator-preview"
 import { useEffect, useState } from "react"
 import { RiNotification3Line, RiCheckLine, RiLoader4Line } from "react-icons/ri"
 import { toast } from "sonner"
@@ -45,8 +46,10 @@ export function SubscribeCreatorButton({
   )
   const [busy, setBusy] = useState(false)
   const isSelf = Boolean(user && user._id === creatorId)
+  const { allowed } = useCreatorPreview()
 
   useEffect(() => {
+    if (!allowed) return
     let live = true
     getCreatorSubscription(creatorId)
       .then((s) => live && setState(s))
@@ -54,7 +57,7 @@ export function SubscribeCreatorButton({
     return () => {
       live = false
     }
-  }, [creatorId, isAuthenticated])
+  }, [allowed, creatorId, isAuthenticated])
 
   const count = state?.subscriberCount ?? 0
   const label = count === 1 ? "1 subscriber" : `${formatCount(count)} subscribers`
@@ -88,6 +91,8 @@ export function SubscribeCreatorButton({
       setBusy(false)
     }
   }
+
+  if (!allowed) return null
 
   if (isSelf) {
     return <span className={cn("text-[13px] tabular-nums text-muted-foreground", className)}>{label}</span>

@@ -14,6 +14,7 @@
  * WARN, relieved by the printed values) and #E85F00 dark.
  */
 
+import { CreatorPreviewGate } from "@/components/creator/creator-preview-gate"
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -519,10 +520,19 @@ function CreatorDashboard() {
 }
 
 /** useSearchParams needs a Suspense boundary above it. */
-export default function CreatorDashboardPage() {
+function CreatorDashboardPageInner() {
   return (
     <Suspense fallback={null}>
       <CreatorDashboard />
     </Suspense>
+  )
+}
+
+/** Staff preview: admins and super admins only for now (lib/creator-preview.ts). */
+export default function CreatorDashboardPage() {
+  return (
+    <CreatorPreviewGate>
+      <CreatorDashboardPageInner />
+    </CreatorPreviewGate>
   )
 }
