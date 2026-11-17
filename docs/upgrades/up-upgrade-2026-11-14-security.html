@@ -157,15 +157,27 @@
 <li><b>exceljs / uuid (2 moderate)</b>: only the admin Excel export. The uuid bug needs a buffer argument exceljs does not pass. Fix: an npm override to <code>uuid</code> 11 (npm's suggested fix is a downgrade, worse). About 30 minutes.</li>
 </ul></div>
 
+<div class="item"><h3><span class="tag med">MEDIUM</span>Packages: 0 advisories (17 Nov, branch upgrade/2026-11-17)</h3>
+<ul>
+<li><b>Docker image moved to Node 22 LTS</b> (<code>node:22-alpine</code>). Node 18 has had no security fixes since April 2025, and current <code>resend</code> needs Node 20+. The image was not built locally (no Docker on this machine); if the Cloud Build fails, the old revision keeps serving.</li>
+<li><b>resend 3.2 → 6.38</b>: removes the 8-package rendering chain. One field renamed (<code>reply_to</code> → <code>replyTo</code>).</li>
+<li><b>cloudinary 1.41 → 2.11</b>: generated URLs and signatures checked identical to 1.x (the new SDK's tracking parameter is switched off). An upload with fake credentials reaches Cloudinary and is refused, so the request path works.</li>
+<li><b>exceljs</b> uses uuid 11.1.1; an Excel export with the feature that calls uuid writes and reads back.</li>
+<li>Not tested: a real Cloudinary upload and a real Resend email (both are off on the dev stack). After deploying, upload one profile picture and send one password-reset email to yourself.</li>
+</ul></div>
+
+<div class="item"><h3><span class="tag crit">CRITICAL</span>Atlas cluster is full: writes are blocked (seen 17 Nov)</h3>
+<p>The dev backend got <code>you are over your space quota, using 514 MB of 512 MB. Writes are blocked on your cluster.</code> The cluster is shared with production, so sign-ups, logins, saves and views fail until space is freed or the tier is raised. Not caused by these changes. I did not inspect or delete anything.</p></div>
+
 <h2>Still to do</h2>
 <ol>
 <li><span class="tag crit">CRITICAL</span><b>Rotate leaked secrets</b> (you moved this to later). Atlas password first, then everything in the tracked <code>.env.production</code>. Then untrack the file and purge history. Size: 1 to 2 hours. Owner only.</li>
-<li><span class="tag med">MEDIUM</span><b>The 3 package upgrades above</b> (cloudinary, resend, exceljs override). About half a day with real upload and email tests.</li>
 <li><span class="tag low">LOW</span><b>Left as is on purpose:</b> forgot-password still says when an email has no account (sign-up's 409 reveals the same, so hiding it only hurts real users); the bank-detail encryption fallback key (<code>fieldCrypto.js:12</code>) stays, because changing it would make existing saved bank details unreadable. Set <code>BANK_DETAILS_KEY</code> only together with a re-encryption of saved details.</li>
 </ol>
 
 <h2>Needs you</h2>
 <ol>
+<li><b>Now:</b> free space on the Atlas cluster or raise its tier (Atlas → your cluster → Collections shows sizes per database). <code>glowup_dev</code> is the first thing to empty: it is a test copy.</li>
 <li>Rotate the Atlas password and the secrets in <code>latest-glowup-channel/.env.production</code> (you moved this to later).</li>
 <li>Check whether <code>github.com/eaaniwezi/latest-glowup-channel</code> is private and who has access.</li>
 <li>Review and merge branch <code>upgrade/2026-11-14</code> in both repos, then deploy. Nothing is live until you do.</li>
