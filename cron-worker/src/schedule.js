@@ -10,6 +10,7 @@
 // [UTC "HH:MM", job]: once a day.
 export const DAILY = [
   ["00:30", "statsSnapshot"], // 01:30 Lagos: yesterday's (UTC) platform stats row
+  ["01:45", "archives"], // 02:45 Lagos: old story decks + past listings to Cloudinary, then out of Mongo
   ["02:00", "deadItemsSweep"], // 03:00: dead listings out of playlists, their saves archived
   ["02:30", "metricsReconcile"], // 03:30: engagement counters recounted from the ledgers
   ["07:30", "programDaily"], // 08:30 Lagos: Creators Program holds released, invite reminders, ring check
