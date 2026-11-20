@@ -16,6 +16,7 @@ import {
   RiUserLine,
   
   RiVipCrownLine,
+  RiBarChartBoxLine,
   RiEyeLine,
   RiLogoutBoxRLine,
   RiArrowLeftLine,
@@ -29,6 +30,7 @@ import {
 } from "react-icons/ri"
 import { useTheme } from "next-themes"
 import { canAccessMonitorPortal, canPublishContent } from '@/lib/roles'
+import { isInCreatorProgram, useCreatorProgramStatus } from '@/lib/creator-preview'
 import { useGoBack } from "@/hooks/use-go-back"
 import { useNavAudience } from "@/hooks/use-nav-audience"
 import { UpLogo } from "@/components/up/up-logo"
@@ -92,6 +94,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
+  // Creator dashboard link: only once you are in the Creators Program (invited or a member).
+  const creatorStatus = useCreatorProgramStatus()
   const { playlists } = usePlaylist()
   const isStandalone = useIsStandalone()
   const goBack = useGoBack()
@@ -234,6 +238,16 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                   >
                     <RiVipCrownLine className="h-5 w-5 shrink-0" aria-hidden />
                     {!isCollapsed && <span className="truncate">Provider hub</span>}
+                  </Link>
+                )}
+                {isInCreatorProgram(creatorStatus) && (
+                  <Link
+                    href="/creator"
+                    title={isCollapsed ? "Creator dashboard" : undefined}
+                    className={navLinkClass({ isCollapsed, active: isActive("/creator") })}
+                  >
+                    <RiBarChartBoxLine className="h-5 w-5 shrink-0" aria-hidden />
+                    {!isCollapsed && <span className="truncate">Creator dashboard</span>}
                   </Link>
                 )}
                 {canAccessMonitorPortal(user.role) && (

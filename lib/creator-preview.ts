@@ -13,13 +13,54 @@
  * as a soft launch, not an access control.
  */
 
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { isAdminOrSuperAdmin } from "@/lib/roles"
+import { getMyProgram } from "@/lib/creator"
 
 export const STAFF_ONLY = true
 
 export function canSeeCreatorFeatures(role: string | null | undefined): boolean {
   return !STAFF_ONLY || isAdminOrSuperAdmin(role)
+}
+
+/**
+ * "Added to the Creators Program": invited or a member. Used for the Creator dashboard
+ * link in the sidebar, the way Provider hub and Monitor show only for their roles.
+ * Removed creators and people never invited do not get the link.
+ */
+export function isInCreatorProgram(status: string | null | undefined): boolean {
+  return status === "invited" || status === "member"
+}
+
+// One program lookup per user per page session, shared by every caller.
+const programStatusCache = new Map<string, Promise<string | null>>()
+
+/** Program status for the signed-in user, or null while loading / signed out / not allowed. */
+export function useCreatorProgramStatus(): string | null {
+  const { user, isLoading } = useAuth()
+  const allowed = !isLoading && canSeeCreatorFeatures(user?.role)
+  const [status, setStatus] = useState<string | null>(null)
+  const uid = user?._id ?? null
+
+  useEffect(() => {
+    if (!allowed || !uid) {
+      setStatus(null)
+      return
+    }
+    let live = true
+    let pending = programStatusCache.get(uid)
+    if (!pending) {
+      pending = getMyProgram().then((p) => p.status).catch(() => null)
+      programStatusCache.set(uid, pending)
+    }
+    pending.then((s) => live && setStatus(s))
+    return () => {
+      live = false
+    }
+  }, [allowed, uid])
+
+  return status
 }
 
 /** `allowed` is false while sign-in is still loading, so nothing flashes for everyone. */
