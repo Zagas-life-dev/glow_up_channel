@@ -29,7 +29,7 @@ import {
   RiSunLine,
 } from "react-icons/ri"
 import { useTheme } from "next-themes"
-import { canAccessMonitorPortal, canPublishContent } from '@/lib/roles'
+import { canAccessMonitorPortal, canPublishContent, isAdminOrSuperAdmin } from '@/lib/roles'
 import { isInCreatorProgram, useCreatorProgramStatus } from '@/lib/creator-preview'
 import { useGoBack } from "@/hooks/use-go-back"
 import { useNavAudience } from "@/hooks/use-nav-audience"
@@ -94,7 +94,8 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
-  // Creator dashboard link: only once you are in the Creators Program (invited or a member).
+  // Creator dashboard link: admins and super admins always; everyone else once they are
+  // in the Creators Program (invited or a member).
   const creatorStatus = useCreatorProgramStatus()
   const { playlists } = usePlaylist()
   const isStandalone = useIsStandalone()
@@ -240,7 +241,7 @@ export default function AppSidebar({ isCollapsed, onToggleCollapse }: AppSidebar
                     {!isCollapsed && <span className="truncate">Provider hub</span>}
                   </Link>
                 )}
-                {isInCreatorProgram(creatorStatus) && (
+                {(isAdminOrSuperAdmin(user.role) || isInCreatorProgram(creatorStatus)) && (
                   <Link
                     href="/creator"
                     title={isCollapsed ? "Creator dashboard" : undefined}
